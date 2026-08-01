@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { addSubjectsToActiveDeck, updatePlankNames } from './layout';
+import { MAX_SEEDED_PLANKS, addSubjectsToActiveDeck, resolveSeededPlanks, updatePlankNames } from './layout';
 
 describe('addSubjectsToActiveDeck', () => {
   test('appends to the end without a pivot', ({ expect }) => {
@@ -77,5 +77,37 @@ describe('updatePlankNames', () => {
 
   test('ignores a binding to a plank that did not end up open', ({ expect }) => {
     expect(updatePlankNames({}, ['a'], { name: 'message', plankId: 'gone' })).toEqual({});
+  });
+});
+
+describe('resolveSeededPlanks', () => {
+  const children = ['doc-1', 'doc-2', 'doc-3'];
+
+  test('seeds a navigation with the node children', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children })).toEqual(children);
+  });
+
+  test('does not seed when the type declares nothing', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: undefined, addBesideOrigin: false, children })).toBeUndefined();
+    expect(resolveSeededPlanks({ initial: 'none', addBesideOrigin: false, children })).toBeUndefined();
+  });
+
+  // An add is a request to put this node beside what is already open; replacing the deck there would
+  // discard the planks the user was working in.
+  test('does not seed an add', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: true, children })).toBeUndefined();
+  });
+
+  test('falls through for an empty collection rather than emptying the deck', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children: [] })).toBeUndefined();
+  });
+
+  // Every plank mounts an article surface, so a large collection must not instantiate an editor per
+  // document on one navtree click.
+  test('caps how many planks a single navigation opens', ({ expect }) => {
+    const many = Array.from({ length: 40 }, (_, index) => `doc-${index}`);
+    const seeded = resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children: many });
+    expect(seeded).toHaveLength(MAX_SEEDED_PLANKS);
+    expect(seeded?.[0]).toBe('doc-0');
   });
 });

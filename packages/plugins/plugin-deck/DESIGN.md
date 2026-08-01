@@ -275,9 +275,9 @@ derives only from that list's length, and every plugin opens into the same deck 
 3. A plugin cannot influence initial sizing. A new message plank takes `DEFAULT_PLANK_SIZE` (50rem)
    regardless; the mailbox wants its first two planks to fill the viewport.
 
-### The key observation
+### The key observation — and its limit
 
-**Most of this already exists.** `StoredDeckState` is already a _map_ of decks:
+`StoredDeckState` is already a _map_ of decks:
 
 ```ts
 {
@@ -287,13 +287,21 @@ derives only from that list's length, and every plugin opens into the same deck 
 }
 ```
 
-`LayoutOperation.SwitchWorkspace` already lazily creates `decks[id] = defaultDeck` and switches
-`activeDeck` to it, and every mutation already routes through `updateActiveDeck`. Only _workspaces_
-currently key a deck. So "a deck per collection" is not new plumbing — it is letting something other
-than a workspace be a deck root, and giving that root a spec.
+`LayoutOperation.SwitchWorkspace` already lazily creates `decks[id]` and switches to it, and every
+mutation routes through `updateActiveDeck`. It is tempting to conclude that a deck per collection is
+free — just let something other than a workspace key a deck.
 
-That reframes the work: the deck does not need a new state model, it needs (a) a spec attached to graph
-nodes, (b) levels, and (c) a sizing intent.
+**That is wrong, and it was the first thing implementation disproved.** `activeDeck` does double duty
+as the _workspace identity_:
+
+- `url-handler` serializes it into the URL's workspace slot (`bareWorkspace(state.activeDeck)`).
+- `url-handler` compares the parsed workspace against it and calls `SwitchWorkspace` when they differ,
+  so a non-workspace value would be fought back on every URL parse.
+- The `Layout` capability publishes it app-wide as `workspace`.
+
+Re-keying `decks[]` by a collection id therefore breaks URL round-tripping immediately. Giving a deck
+its own identity needs a key separate from the workspace, and agreement on where it belongs in the
+pair-chain grammar — which is why adoption below _seeds_ the active deck instead.
 
 ### The model
 
@@ -338,18 +346,25 @@ Worked examples:
 
 ### Adoption
 
-Selecting a node that carries a spec switches the deck to it, reusing the existing machinery: key
-`decks[]` by the node id and set `activeDeck`. Per-collection plank sets and widths then persist
-independently and for free, and `previousDeck` already gives a back affordance.
+Navigating to a node whose type declares `initial: 'children'` **seeds** the active deck with that
+node's openable graph children, in place of a plank showing the node itself. No new deck is created and
+`activeDeck` is untouched, so nothing about the URL or the workspace changes.
+
+Seeding applies only to a navigation, never an add: an `add`, a shift-forced add, or an `auto` that
+grew a sliding deck are all requests to put _this_ node beside what is already open, and replacing the
+deck there would discard the planks the user was working in.
 
 This is what fixes (1): selecting a Collection currently leaves attention alone because the selection
-does not change the deck at all. Once the collection _is_ the deck, adopting it opens its children and
-attends the first.
+does not change the deck at all. Seeding makes the collection's documents the deck, and attention
+follows the first.
 
-Open question: which nodes are deck roots. A spec on the node is the trigger, but a Collection nested
-in a Collection should probably not switch decks on every click — likely `initial: 'children'` only
-applies when the node is opened `'solo'`, not `'auto'` (§8's dispositions already carry that
-intent).
+Two consequences of seeding rather than re-keying, both deliberate:
+
+- **No per-collection persistence.** Plank sets and widths are not remembered per collection; that
+  wants the deck-identity work above.
+- **A cap.** Every plank mounts an article surface, so `MAX_SEEDED_PLANKS` bounds how many a single
+  click opens. An arbitrary constant, and the first thing to revisit once the deck can virtualize
+  planks it is not showing.
 
 ### Levels
 
@@ -397,7 +412,8 @@ depending on the deck plugin — the same reason `LayoutOperation` lives there.
 
 - **Companion vs level.** A companion is arguably level 2 of exactly such a chain, and having both
   mechanisms is a redundancy worth resolving before this spreads.
-- **URL.** The pair-chain grammar serializes `deck.active`; a per-collection deck adds a dimension the
-  URL has no slot for. Needs agreement with the url-deck owner.
+- **URL and deck identity.** Blocking, not merely open: `activeDeck` _is_ the workspace in the URL and
+  in the `Layout` capability, so a deck cannot be keyed by anything else until the two are separated
+  and the pair-chain grammar gains a slot for which deck. Needs the url-deck owner.
 - **Deck lifetime.** `decks` is persisted and currently bounded by workspace count. Keyed by collection
   it grows without bound and wants eviction.

@@ -124,6 +124,10 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   canDrop: CAN_DROP_COLLECTION_ITEM,
+  // Navigating to a collection shows what it contains, not a plank of the collection itself. Declared
+  // here rather than as a schema annotation because `Collection` is a core ECHO type, which cannot
+  // depend on this package.
+  [DeckSpec.DECK_SPEC_PROPERTY]: { initial: 'children' } satisfies DeckSpec.DeckSpec,
   onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
     if (!isCollectionItem(child.data)) {
       return;

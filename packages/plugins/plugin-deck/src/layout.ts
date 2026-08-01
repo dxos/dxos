@@ -98,3 +98,35 @@ export const incrementPlank = (deck: string[], adjustment: DeckAction.Adjustment
     }
   });
 };
+
+/**
+ * Upper bound on the planks a seeded deck opens at once. Every plank mounts its article surface, so a
+ * large collection would otherwise instantiate an editor per document on a single navtree click.
+ */
+export const MAX_SEEDED_PLANKS = 8;
+
+/**
+ * The planks a deck opens when navigating to a node whose type declares `initial: 'children'`, or
+ * `undefined` when the open should proceed normally.
+ *
+ * Seeds only a navigation (`addBesideOrigin === false`): an `add`, a shift-forced add, or an `auto`
+ * that grew a sliding deck are all requests to put *this* node beside what is already open, and
+ * replacing the deck there would discard the planks the user was working in.
+ */
+export const resolveSeededPlanks = ({
+  initial,
+  addBesideOrigin,
+  children,
+}: {
+  initial: 'children' | 'none' | undefined;
+  addBesideOrigin: boolean;
+  /** Ids of the node's openable graph children, in order. */
+  children: readonly string[];
+}): string[] | undefined => {
+  // An empty collection falls through to the ordinary open, which shows the collection itself rather
+  // than leaving the user on an empty deck.
+  if (addBesideOrigin || initial !== 'children' || children.length === 0) {
+    return undefined;
+  }
+  return children.slice(0, MAX_SEEDED_PLANKS);
+};

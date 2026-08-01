@@ -13,20 +13,27 @@ belong in [DESIGN.md](./DESIGN.md); this file is the list.
 Design: [DESIGN.md §12](./DESIGN.md#12-proposed--plugin-declared-decks). The deck stops being one
 global mode; a graph node may declare a deck spec, and the deck adopts it when that node is the root.
 
-The key finding from the design pass: **most of the state plumbing already exists.** `StoredDeckState`
-is already `decks: Record<string, DeckState>` with `activeDeck`/`previousDeck`, and `SwitchWorkspace`
-already lazily creates and switches decks — only workspaces currently key one. Levels are the
-generalization of the named planks that shipped in #12424, whose only production caller (the mailbox
-passing `<mailbox>/message`) becomes the degenerate case. So this is mostly wiring, not new machinery.
+Levels are the generalization of the named planks that shipped in #12424, whose only production caller
+(the mailbox passing `<mailbox>/message`) becomes the degenerate case.
+
+**Correction from implementation:** the design pass claimed the state plumbing was free because
+`StoredDeckState` is already `decks: Record<string, DeckState>`. It is not. `activeDeck` doubles as the
+_workspace identity_ — `url-handler` serializes it into the URL's workspace slot and switches the
+workspace back whenever the parsed URL disagrees, and the `Layout` capability publishes it app-wide as
+`workspace`. Re-keying it by a collection breaks URL round-tripping immediately. P2 therefore _seeds_
+the active deck rather than creating one; a deck with its own identity is blocked on separating the two
+and on the URL grammar (see below).
 
 Phased so each step is independently landable and verifiable:
 
-- [ ] **P1 — spec on the node.** `DeckSpec` type + an `AppNode` annotation so a plugin can attach one;
-      resolve it from the graph in the deck. No behaviour change yet. Unit-testable in isolation.
-- [ ] **P2 — adoption.** Opening a spec-carrying node `'solo'` keys `decks[]` by its id and switches
-      `activeDeck` (reusing `SwitchWorkspace`'s lazy-create path). Collection declares
-      `initial: 'children'`. This alone fixes "selecting a Collection leaves attention on the current
-      document" — the selection now changes the deck.
+- [x] **P1 — spec on the node.** `DeckSpec` + `AppAnnotation.DeckAnnotation`; `makeObject` surfaces it
+      onto the node beside the existing graph props. No behaviour change. 13 unit tests, including the
+      schema round trip that guards the module-init cycle between `AppAnnotation` and `DeckSpec`.
+- [x] **P2 — seeding.** Navigating to a node whose type declares `initial: 'children'` opens that
+      node's openable children instead of a plank of the node itself; Collection declares it. Seeds a
+      navigation only, never an add. Capped by `MAX_SEEDED_PLANKS` because every plank mounts an
+      article surface. `openableChildren` is shared with `SwitchWorkspace`, which had the same filter
+      inline. NOT verified in a browser yet — see below.
 - [ ] **P3 — levels + pruning.** Opening at level `i` reuses that level's plank (existing `name`
       mechanism) and closes levels `> i`. Pure function beside `addSubjectsToActiveDeck`, so it gets
       unit tests. Mailbox declares `mailbox / message / attachment` and drops its hand-built name.
@@ -41,8 +48,11 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
 - [ ] **Companion vs level** — a companion is arguably level 2 of exactly such a chain; two mechanisms
       for one idea should be resolved before this spreads.
-- [ ] **URL** — the pair-chain grammar serializes `deck.active` and has no slot for _which_ deck. Needs
-      agreement with the url-deck owner (josiah).
+- [ ] **URL and deck identity** — BLOCKING for per-collection decks, not merely open: `activeDeck` _is_
+      the workspace in both the URL and the `Layout` capability, so a deck cannot be keyed by anything
+      else until the two are separated and the grammar gains a slot for which deck. Needs josiah.
+- [ ] **Verify P2 in a browser** — seeding is navtree-driven and the unit tests only cover the pure
+      helper; the wiring (graph children order, attention landing on the first plank) needs the app.
 - [ ] **Deck lifetime** — `decks` is persisted and today bounded by workspace count; keyed by collection
       it grows without bound and wants eviction.
 

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, GraphPath, LayoutOperation, NotFound } from '@dxos/app-toolkit';
+import { AppCapabilities, DeckSpec, GraphPath, LayoutOperation, NotFound } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -14,9 +14,9 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { addSubjectsToActiveDeck, updatePlankNames } from '../layout';
+import { addSubjectsToActiveDeck, resolveSeededPlanks, updatePlankNames } from '../layout';
 import { DeckCapabilities } from '../types';
-import { computeActiveUpdates } from '../util';
+import { computeActiveUpdates, openableChildren } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -137,8 +137,20 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const anchorToOrigin = disposition === 'auto';
         const addBesideOrigin = shift || disposition === 'add' || (anchorToOrigin && sliding);
 
+        // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
+        // the documents it contains rather than a plank showing the collection itself.
+        const seeded = resolveSeededPlanks({
+          initial: DeckSpec.fromNode(
+            input.subject[0] ? Option.getOrUndefined(Graph.getNode(graph, input.subject[0])) : undefined,
+          )?.initial,
+          addBesideOrigin,
+          children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
+        });
+
         let next: string[];
-        if (addBesideOrigin) {
+        if (seeded) {
+          next = seeded;
+        } else if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
           // A named open reuses the plank already holding that name, the way a browser tab is reused.
