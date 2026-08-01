@@ -37,7 +37,9 @@ Finding the inputs for a Composer profile:
 
 - **Identity key**: after the browser registers its agent, from D1 —
   `pnpm wrangler d1 execute agent-registry --local --config wrangler.jsonc --json --command
-"SELECT * FROM UserAgent"` — or grep `edge-dev.log` for `identityKey`.
+"SELECT * FROM UserAgent"` — or grep `edge-dev.log` for `identityKey`. NOTE: the identity key
+  is a public key, but the dev stub treats knowledge of it as authorization — treat local-dev
+  keys/logs as dev-only artifacts and never reuse an identity key from a shared environment.
 - **Space id**: the personal space shows up as the busiest `B…` id in `edge-dev.log`
   (`queue-replicator` traffic), or from Composer devtools.
 - **Agent required**: `/authorize` resolves the HALO space via
@@ -70,10 +72,10 @@ DX_SOURCE=1 ./bin/dx -p mcp-local halo share --open --host http://localhost:5173
 1. **`halo create`/`share` are unregistered** — superseded-by-account-login comment in
    `plugin-client/src/commands/halo/index.ts`. Re-registration patch exists (uncommitted in the
    session worktree); run with `DX_SOURCE=1` so bun resolves TS sources.
-2. **Composer `deviceInvitationCode` race** — navigation-handler strips the param and opens the
-   join dialog while onboarding-manager (no hub → `skipAuth`) auto-creates an identity
-   underneath; the join spins on "Connecting…" forever, on any profile. Spun off as its own
-   task/session. Until fixed, no browser at :5173 can join a device invitation.
+2. **Composer `deviceInvitationCode` race** — FIXED in dxos (#12423 carries the merged fix:
+   onboarding is the single param owner + reset-and-join dialog). Applies at runtime only when
+   the served Composer includes the fix; a checkout without it (e.g. main before merge) still
+   hangs on "Connecting…".
 3. **CLI outside bun** — `tsx src/bin.ts` fails on `.tpl` imports from `@dxos/assistant`
    (bun-only text loader), so the p2p-under-bun question is untestable under node for now.
 4. **`halo share --open`** swallows browser-launch failures and suppresses printing the

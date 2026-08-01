@@ -26,15 +26,14 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 - [ ] Shared composer space to track projects and tasks (tracked 2026-08-01)
 
 - [ ] Prototype: task-planning skill reads/writes DESIGN.md/TASKS.md as Composer documents via MCP
-- [ ] BLOCKER for outlines: MCP updateDocument fails on Outline objects — MarkdownOperation.Update pins `doc: Ref.Ref(Markdown.Document)` (isInstanceOf invariant, Database.ts:408) while Open duck-types on the content ref, so readDocument works on outlines but updateDocument does not. Fix: widen Update (and listDocuments?) to any text-bearing document, or add an outline operation; note the fix only reaches the MCP stack after edge bumps its @dxos pin (operation-service bundles plugin-markdown)
-- [ ] querySpace is NOT broken (README stale): returned the Outline by typename with full documentJson — fix the README claim; listSpaces still untested
+- [x] Outline text edits via MCP: RESOLVED in source (markdown.update widened, rides #12423; edge README claim fixed in #785). Runtime condition only: the running mcp/operation-service stack edits outlines once its @dxos pin is ≥ dd552dfc74 — until then `updateObject.edits` on an outline fails at runtime; `properties` CRUD unaffected
 - [ ] Reference: edge PR #781 (mcp-space-service README: commands, deploy, dx CLI round-trip)
 
 ## Backlog
 
-- [ ] Composer: deviceInvitationCode RACE — navigation-handler strips the param + opens JOIN_DIALOG while onboarding-manager (skipAuth=no hub) auto-creates an identity underneath, so device-join hangs on "Connecting…" forever even on a fresh profile; with an existing identity it dies silently (Effect.orDie). Root cause of the failed CLI→browser pairing; task chip filed; fix IN PROGRESS on branch claude/funny-chaplygin-89274c (separate session). (plugin-client navigation-handler.ts ~L26/L44 vs plugin-onboarding onboarding-manager.ts ~L156/L170)
+- [x] Composer: deviceInvitationCode RACE — FIXED (claude/funny-chaplygin-89274c merged into #12423): onboarding is the single param owner + reset-and-join dialog. Runtime note: any composer served from a checkout without the fix (e.g. primary checkout on main) still hangs
 - [ ] CLI under node: tsx chokes on `.tpl` imports from @dxos/assistant (bun-only text loader) — blocks testing invitations outside bun
 - [ ] CLI: `halo share --open` swallows browser-launch failures AND suppresses printing the invitation code — print the URL always; surface open errors
 - [ ] CLI: decide where the halo create/share re-registration lands (currently uncommitted in worktree: plugin-client/src/commands/halo/index.ts; needs DX_SOURCE=1 to run from source)
 
-- [ ] `listSpaces` / `querySpace` marked BROKEN in mcp-space-service — investigate if needed
+- [ ] `listSpaces` still untested (querySpace verified working; README corrected in edge #785)
