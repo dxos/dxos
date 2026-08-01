@@ -138,7 +138,8 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
         const count = await importMessages(mailbox, serialized, space.db);
         setStatus({ action: 'uploaded', count });
       } catch (error) {
-        log.warn('feed upload failed', { error });
+        log.warn('feed import failed', { error });
+        setStatus({ action: `import failed: ${error instanceof Error ? error.message : String(error)}`, count: 0 });
       } finally {
         setBusy(false);
       }
