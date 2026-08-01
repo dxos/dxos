@@ -17,47 +17,30 @@ import { trim } from '@dxos/util';
 
 import { printProfileCreated } from './util';
 
+// `edgeFeatures` must match Composer's defaults (see composer-app/dx.yml): without
+// `signaling: true` the client silently falls back to an isolated in-memory signal manager and
+// device invitations hang at "Connecting…" (host and guest never meet in the swarm).
+const makeTemplate = (edgeUrl: string) => trim`
+  version: 1
+  runtime:
+    client:
+      storage:
+        persistent: true
+      edgeFeatures:
+        signaling: true
+        subductionReplicator: true
+        feedReplicator: true
+        agents: true
+    services:
+      edge:
+        url: ${edgeUrl}
+`;
+
 const TEMPLATES = {
-  default: trim`
-    version: 1
-    runtime:
-      client:
-        storage:
-          persistent: true
-      services:
-        edge:
-          url: https://edge-production.dxos.workers.dev
-  `,
-  main: trim`
-    version: 1
-    runtime:
-      client:
-        storage:
-          persistent: true
-      services:
-        edge:
-          url: https://edge-main.dxos.workers.dev
-  `,
-  dev: trim`
-    version: 1
-    runtime:
-      client:
-        storage:
-          persistent: true
-      services:
-        edge:
-          url: https://edge.dxos.workers.dev
-  `,
-  local: trim`
-    version: 1
-    runtime:
-      client:
-        storage:
-          persistent: true
-      services:
-        edge:
-          url: http://localhost:8787
-  `,
+  default: makeTemplate('https://edge-production.dxos.workers.dev'),
+  main: makeTemplate('https://edge-main.dxos.workers.dev'),
+  dev: makeTemplate('https://edge.dxos.workers.dev'),
+  local: makeTemplate('http://localhost:8787'),
 } as const;
 
 export const create = Command.make(
