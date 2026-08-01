@@ -69,8 +69,10 @@ Phased so each step is independently landable and verifiable:
 
 Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
-- [ ] **Companion vs level** — a companion is arguably level 2 of exactly such a chain; two mechanisms
-      for one idea should be resolved before this spreads.
+- [x] **Companion vs level — RESOLVED: they are orthogonal, keep both.** A level is a _position in the
+      chain_; a companion is a _per-plank affordance_. Every plank in `mailbox → message → attachment`
+      can independently show or hide its own companion, so companions are cross-cutting and a plugin
+      author never chooses between the two. Nothing about companions changes.
 - [ ] **URL and deck identity** — BLOCKING for per-collection decks, not merely open: `activeDeck` _is_
       the workspace in both the URL and the `Layout` capability, so a deck cannot be keyed by anything
       else until the two are separated and the grammar gains a slot for which deck. Needs josiah.

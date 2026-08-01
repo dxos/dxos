@@ -410,8 +410,9 @@ depending on the deck plugin — the same reason `LayoutOperation` lives there.
 
 ### What this does not settle
 
-- **Companion vs level.** A companion is arguably level 2 of exactly such a chain, and having both
-  mechanisms is a redundancy worth resolving before this spreads.
+- **Companion vs level — settled: orthogonal.** A level is a position in the chain; a companion is a
+  per-plank affordance. Every plank in `mailbox → message → attachment` can independently show its own
+  companion, so the two compose rather than compete and §4 stands unchanged.
 - **URL and deck identity.** Blocking, not merely open: `activeDeck` _is_ the workspace in the URL and
   in the `Layout` capability, so a deck cannot be keyed by anything else until the two are separated
   and the pair-chain grammar gains a slot for which deck. Needs the url-deck owner.
