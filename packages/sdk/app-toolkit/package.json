@@ -31,6 +31,11 @@
       "types": "./dist/types/src/echo/Query.d.ts",
       "import": "./dist/lib/echo/Query.mjs"
     },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
     "./ui": {
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
