@@ -9,6 +9,7 @@ import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -43,19 +44,20 @@ describe('AssistantPlugin', () => {
       plugins: [ClientPlugin({}), AssistantPlugin()],
     });
 
-    // All dependency-mode roots, so they all activate immediately during the startup dependency pass.
+    // Dependency-mode roots activate immediately during the startup dependency pass.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('AppGraphBuilder'),
-        moduleId('CreateObject'),
         moduleId('schema'),
-        moduleId('SkillDefinition'),
         moduleId('OperationHandler'),
         moduleId('AiService'),
         moduleId('AiContext'),
         moduleId('AgentRuntime'),
       ]),
     );
+    // Demand-gated modules park until their events fire (CreateObjectRequested / SkillsRequested).
+    expect(harness.manager.getActive()).not.toContain(moduleId('CreateObject'));
+    expect(harness.manager.getActive()).not.toContain(moduleId('SkillDefinition'));
 
     // Space-affinity LayerSpec — resolution requires a space context.
     const { personalSpace } = await EffectEx.runAndForwardErrors(
@@ -163,6 +165,10 @@ describe('AssistantPlugin', () => {
       const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
         EffectEx.runAndForwardErrors,
       );
+
+      // Skills are demand-gated: fire SkillsRequested (the toolkit-materialization demand
+      // signal) deterministically before resolving them from the registry.
+      await EffectEx.runAndForwardErrors(harness.manager.activate(ActivationEvents.SkillsRequested));
 
       await harness.runPromise(
         Effect.gen(function* () {

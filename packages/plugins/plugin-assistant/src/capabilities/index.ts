@@ -46,7 +46,7 @@ export const AutomationTemplates = Capability.lazyModule(
   () => import('./automation-templates'),
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
-  provides: [Capabilities.OperationHandler, RoutineCapabilities.AgentDelegationStrategy],
+  provides: [RoutineCapabilities.AgentDelegationStrategy],
 });
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
