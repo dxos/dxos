@@ -91,3 +91,13 @@ DX_SOURCE=1 ./bin/dx -p mcp-local halo share --open --host http://localhost:5173
 - `whoami` reports `haloSpaceId` for the session — don't confuse it with the data space id.
 - `querySpace` WORKS despite the README's BROKEN label; `listSpaces` untested.
 - Since edge PR #785 the document tools are REPLACED by object CRUD (createObject/getObject/updateObject/deleteObject/queryObjects) + discovery (listPlugins/listTypes/listOperations). `updateObject` takes `properties` (field patch) or `edits` (text edits via markdown.update; non-markdown text types need the dxos pin ≥ dd552dfc74).
+
+## Morning steps (2026-08-01, tunnel live)
+
+- Tunnel: https://degree-italic-italia-saskatchewan.trycloudflare.com → localhost:8791 (dies with
+  the cloudflared process; restart: `cloudflared tunnel --url http://localhost:8791`, re-record URL).
+  Verified: OAuth+whoami round-trip through it.
+- Claude Desktop: Settings → Connectors → Add Custom Connector → URL `<tunnel>/mcp` → complete
+  OAuth at `<tunnel>/authorize` with your identity key (TESTING.md Path A). Tools incl. object
+  CRUD + discovery (edge #785 build running locally).
+- E2E: `node .agents/projects/mcp/scripts/e2e-oauth-smoke.mjs` (self-contained, PASSING).
