@@ -10,7 +10,7 @@ import { Context } from '@dxos/context';
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
-import { type TestReplicator, TestReplicationNetwork } from '@dxos/echo-host/testing';
+import { TestReplicationNetwork, type TestReplicator } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
@@ -159,15 +159,15 @@ const applyThreeWayMerge = (
 ): boolean => {
   const { merged, conflicts } = mergeThreeWay(readFields(winner), readFields(loser), baseline, loser.id);
   let wrote = false;
-  Obj.update(winner, (obj) => {
+  Obj.update(winner, (winner) => {
     for (const field of DATA_FIELDS) {
-      if ((obj[field] ?? '') !== merged[field]) {
-        obj[field] = merged[field];
+      if ((winner[field] ?? '') !== merged[field]) {
+        winner[field] = merged[field];
         wrote = true;
       }
     }
-    if (!conflictsEqual(obj.conflicts, conflicts)) {
-      obj.conflicts = conflicts;
+    if (!conflictsEqual(winner.conflicts, conflicts)) {
+      winner.conflicts = conflicts;
       wrote = true;
     }
   });
@@ -285,16 +285,16 @@ const setUpMigrationDuplicateScenario = async (
   await db2.flush();
 
   // Peer 1 edits its own copy only: street plus one side of the city conflict.
-  Obj.update(dup1, (obj) => {
-    obj.street = '221B Baker Street (renovated)';
-    obj.city = 'City of Westminster';
+  Obj.update(dup1, (dup1) => {
+    dup1.street = '221B Baker Street (renovated)';
+    dup1.city = 'City of Westminster';
   });
   await db1.flush();
 
   // Peer 2 edits its own copy only: a disjoint field (note) plus the OTHER side of the city conflict.
-  Obj.update(dup2, (obj) => {
-    obj.note = 'gate code 4471';
-    obj.city = 'Greater London';
+  Obj.update(dup2, (dup2) => {
+    dup2.note = 'gate code 4471';
+    dup2.city = 'Greater London';
   });
   await db2.flush();
 
@@ -449,14 +449,14 @@ describe('migration research (M0) — baseline-aware three-way merge', () => {
     const loserOnDb1 = await queryDeletedById(db1, loserId);
     expect(loserOnDb1.city).to.eq(theirsValue);
 
-    Obj.update(winner, (obj) => {
-      obj.city = theirsValue;
+    Obj.update(winner, (winner) => {
+      winner.city = theirsValue;
       // A `conflicts` entry represents a PENDING decision; once resolved there is nothing left to
       // inspect that the tombstoned loser doesn't already carry, so the entry is removed rather than
       // kept as stale swapped bookkeeping.
-      if (obj.conflicts) {
-        const { city: _city, ...rest } = obj.conflicts;
-        obj.conflicts = rest;
+      if (winner.conflicts) {
+        const { city: _city, ...rest } = winner.conflicts;
+        winner.conflicts = rest;
       }
     });
     await db1.flush();

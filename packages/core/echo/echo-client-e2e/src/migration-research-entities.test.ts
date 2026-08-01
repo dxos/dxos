@@ -523,11 +523,11 @@ describe('migration research (M0) — entity lifecycle', () => {
     const parentGoodOnPeer2 = (await db2.query(Filter.id(parentGood.id)).run())[0];
     const parentBadOnPeer2 = (await db2.query(Filter.id(parentBad.id)).run())[0];
     invariant(parentGoodOnPeer2 && parentBadOnPeer2, 'expected both parents to be present on peer 2');
-    Obj.update(parentGoodOnPeer2, (obj) => {
-      obj.address = '42 Elm St';
+    Obj.update(parentGoodOnPeer2, (parentGoodOnPeer2) => {
+      parentGoodOnPeer2.address = '42 Elm St';
     });
-    Obj.update(parentBadOnPeer2, (obj) => {
-      obj.address = 'garbage';
+    Obj.update(parentBadOnPeer2, (parentBadOnPeer2) => {
+      parentBadOnPeer2.address = 'garbage';
     });
     await db2.flush();
 
@@ -628,14 +628,14 @@ describe('migration research (M0) — entity lifecycle', () => {
     await peer2.host.removeReplicator(replicator2);
 
     db1.add(Obj.make(TaskDoc, { title: 'source A', assigneeName: 'Alice' }));
-    Obj.update(parent, (obj) => {
-      obj.assigneeName = 'Alice';
+    Obj.update(parent, (parent) => {
+      parent.assigneeName = 'Alice';
     });
     await db1.flush();
 
     db2.add(Obj.make(TaskDoc, { title: 'source B', assigneeName: 'Bob' }));
-    Obj.update(parentOnPeer2, (obj) => {
-      obj.assigneeName = 'Bob';
+    Obj.update(parentOnPeer2, (parentOnPeer2) => {
+      parentOnPeer2.assigneeName = 'Bob';
     });
     await db2.flush();
 
