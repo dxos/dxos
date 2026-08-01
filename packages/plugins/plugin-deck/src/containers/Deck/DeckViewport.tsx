@@ -1049,7 +1049,11 @@ export const DeckPlanks = () => {
                   // gap (which encapsulates each plank in its own container) only applies to the desktop
                   // sliding deck; it is a gap only, so the deck runs flush to both ends of the viewport.
                   classNames={
-                    breakpoint === 'mobile' ? 'h-full w-full' : isSliding ? 'h-full gap-(--main-spacing)' : 'h-full'
+                    breakpoint === 'mobile'
+                      ? 'h-full w-full'
+                      : isSliding
+                        ? mx('h-full gap-(--main-spacing)', overscrollPx > 0 && 'pe-(--deck-overscroll)')
+                        : 'h-full'
                   }
                   getId={getPlankId}
                   items={planks}

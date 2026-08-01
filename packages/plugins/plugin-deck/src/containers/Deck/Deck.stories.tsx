@@ -10,7 +10,7 @@ import { expect, waitFor, within } from 'storybook/test';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapabilityState, usePluginManager } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
@@ -275,13 +275,31 @@ type DefaultStoryProps = {
   sidebarState?: StoredDeckState['sidebarState'];
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
+  /**
+   * Layout experiments to switch on (see `Settings`). They are settings rather than props, so the story
+   * seeds them into the settings atom the deck actually reads.
+   */
+  settings?: Partial<Pick<Settings.Settings, 'flatten' | 'overscroll'>>;
 };
+
+/** Stable identity, for the same reason as `NO_COMPANIONS`. */
+const NO_SETTINGS: DefaultStoryProps['settings'] = {};
 
 // Stable identity, so the default does not re-fire the seeding effect it is a dependency of on every render.
 const NO_COMPANIONS: number[] = [];
 
-const DefaultStory = ({ count = 0, sidebarState = 'closed', companionPlanks = NO_COMPANIONS }: DefaultStoryProps) => {
-  const settings = useAtomCapability(DeckCapabilities.Settings);
+const DefaultStory = ({
+  count = 0,
+  sidebarState = 'closed',
+  companionPlanks = NO_COMPANIONS,
+  settings: settingsOverrides = NO_SETTINGS,
+}: DefaultStoryProps) => {
+  const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
+
+  // The deck reads its experiments from settings, not from props, so the story writes them there.
+  useEffect(() => {
+    updateSettings((current) => ({ ...current, ...settingsOverrides }));
+  }, [settingsOverrides, updateSettings]);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
   const { state, deck, updateState } = useDeckState();
@@ -364,6 +382,17 @@ export const TwoPlanks: Story = {
 export const ManyPlanks: Story = {
   args: {
     count: 6,
+  },
+};
+
+// `overscroll`: the deck keeps scrolling once the last plank reaches the right edge, so Archive can be
+// brought fully forward with the other five collapsed to spines and empty space beside it.
+export const ManyPlanksOverscroll: Story = {
+  args: {
+    count: 6,
+    settings: {
+      overscroll: true,
+    },
   },
 };
 
