@@ -9,35 +9,52 @@ import { type DeckAction } from '#types';
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
   pivotId?: string;
-  /** Replace an existing plank whose id shares this key prefix, instead of inserting. */
-  key?: string;
+  /** The plank currently holding the requested name, replaced in place instead of inserting. */
+  replaceId?: string;
 };
 
 /**
  * Computes the next `active` list for an `'add'` disposition {@link LayoutOperation.Open}: inserts
  * subjects immediately after `pivotId` when present, else appends them at the end. Subjects already
- * open keep their position; a subject whose `key` matches an existing plank replaces it in place.
+ * open keep their position; when the open is named, the plank holding that name (`replaceId`) is
+ * replaced in place so the deck reuses it rather than growing.
  */
 export const addSubjectsToActiveDeck = (
   active: readonly string[],
   subject: readonly string[],
   options?: AddSubjectsToActiveDeckOptions,
 ): string[] => {
-  const { pivotId, key } = options ?? {};
+  const { pivotId, replaceId } = options ?? {};
   const next = [...active];
   const pivotIndex = pivotId ? next.indexOf(pivotId) : -1;
   let insertAt = pivotIndex !== -1 ? pivotIndex + 1 : next.length;
+  // Only the first subject takes over the name; the rest insert after it, as an unnamed open would.
+  let replaceIndex = replaceId ? next.indexOf(replaceId) : -1;
   for (const entryId of subject) {
     if (next.includes(entryId)) {
       continue;
     }
-    const keyIndex = key ? next.findIndex((id) => id.split('+')[0] === key) : -1;
-    if (keyIndex !== -1) {
-      next[keyIndex] = entryId;
+    if (replaceIndex !== -1) {
+      next[replaceIndex] = entryId;
+      insertAt = replaceIndex + 1;
+      replaceIndex = -1;
       continue;
     }
     next.splice(insertAt, 0, entryId);
     insertAt += 1;
+  }
+  return next;
+};
+
+/** `names` with entries for planks no longer open removed, and `name` (when given) bound to `plankId`. */
+export const updatePlankNames = (
+  names: Record<string, string>,
+  active: readonly string[],
+  binding?: { name: string; plankId: string },
+): Record<string, string> => {
+  const next = Object.fromEntries(Object.entries(names).filter(([, plankId]) => active.includes(plankId)));
+  if (binding && active.includes(binding.plankId)) {
+    next[binding.name] = binding.plankId;
   }
   return next;
 };

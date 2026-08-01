@@ -311,9 +311,13 @@ export const Open = Operation.make({
       }),
     ),
     variant: Schema.optional(Schema.String.annotations({ description: 'The variant of the item to open.' })),
-    key: Schema.optional(
+    name: Schema.optional(
       Schema.String.annotations({
-        description: 'If provided, will replace item with a matching key (id prefix).',
+        description:
+          'Optional name for the plank, which behaves like a browser tab: opening under a name that ' +
+          'is already taken reuses that plank in place rather than adding another. Callers that open ' +
+          'a stream of one-at-a-time items (a message from a mailbox, say) pass a constant name so the ' +
+          'deck does not grow an entry per item.',
       }),
     ),
     workspace: Schema.optional(Schema.String.annotations({ description: 'The workspace to open the items in.' })),

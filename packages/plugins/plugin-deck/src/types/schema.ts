@@ -33,6 +33,12 @@ export const DeckState = Schema.Struct({
    * back to it, while the one you left it open on reopens it.
    */
   companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
+  /**
+   * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
+   * like a browser tab: opening under a name that is already taken replaces its occupant in place.
+   * Entries are pruned as their plank closes.
+   */
+  plankNames: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String })),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -48,6 +54,7 @@ export const defaultDeck: DeckState = {
   inactive: [],
   plankSizing: {},
   companionPlanks: [],
+  plankNames: {},
 };
 
 //
