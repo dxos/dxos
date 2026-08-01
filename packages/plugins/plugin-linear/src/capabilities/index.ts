@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
+
+import { LinearEvents } from '#types';
 
 export const Connector = Capability.lazyModule(
   'LinearConnector',
-  { provides: [ConnectorCapability], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: LinearEvents.Start,
 });

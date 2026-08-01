@@ -3,3 +3,4 @@
 //
 
 export * as Book from './Book';
+export * as LibraryEvents from './LibraryEvents';

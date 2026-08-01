@@ -2,14 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
+
+import { KanbanEvents } from '#types';
 
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: KanbanEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -20,5 +21,5 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
   ],
 });
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: KanbanEvents.Start,
 });

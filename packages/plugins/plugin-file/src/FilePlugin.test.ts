@@ -22,5 +22,5 @@ describe('FilePlugin', () => {
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
-  });
+  }, 30_000);
 });

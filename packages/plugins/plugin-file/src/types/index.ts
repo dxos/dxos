@@ -8,5 +8,6 @@ export * from './limits';
 export * from './types';
 
 export * as FileCapabilities from './FileCapabilities';
+export * as FileEvents from './FileEvents';
 export * as FileOperation from './FileOperation';
 export * as Settings from './Settings';

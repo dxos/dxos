@@ -4,24 +4,23 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
-import { InboxCapabilities } from '#types';
+import { InboxCapabilities, InboxEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: InboxEvents.Start,
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const Connector = Capability.lazyModule(
   'Connector',
-  { provides: [ConnectorCapability], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
 export const ContactExtractor = Capability.inlineModule(
@@ -36,10 +35,10 @@ export const SummarizeExtractor = Capability.inlineModule(
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
   requires: [ClientCapabilities.Client],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: InboxEvents.Start,
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: InboxEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -53,5 +52,5 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const InboxSettings = AppCapability.settings(() => import('./settings'), {
   provides: [InboxCapabilities.Settings],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: InboxEvents.Start,
 });

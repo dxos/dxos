@@ -2,18 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
 import { StudioCapabilities } from '@dxos/plugin-studio/types';
+
+import { HeyGenEvents } from '../events';
 
 export const Connector = Capability.lazyModule(
   'Connector',
-  { provides: [ConnectorCapability], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
 export const GenerationService = Capability.lazyModule(
   'GenerationService',
-  { provides: [StudioCapabilities.GenerationService], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [StudioCapabilities.GenerationService], activatesOn: HeyGenEvents.Start },
   () => import('./generation-service'),
 );

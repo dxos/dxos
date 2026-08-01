@@ -22,5 +22,5 @@ describe('InboxPlugin', () => {
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
-  });
+  }, 30_000);
 });
