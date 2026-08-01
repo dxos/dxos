@@ -124,10 +124,6 @@ export const buildCollectionPartials = (collection: Collection.Collection, db: D
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   canDrop: CAN_DROP_COLLECTION_ITEM,
-  // Navigating to a collection shows what it contains, not a plank of the collection itself. Declared
-  // here rather than as a schema annotation because `Collection` is a core ECHO type, which cannot
-  // depend on this package.
-  [DeckSpec.DECK_SPEC_PROPERTY]: { initial: 'children' } satisfies DeckSpec.DeckSpec,
   onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
     if (!isCollectionItem(child.data)) {
       return;
@@ -193,6 +189,7 @@ export const makeObject = ({
   draggable = true,
   droppable = true,
   navigable = false,
+  deck,
   onRearrange,
   canDrop: canDropOverride,
 }: {
@@ -204,6 +201,13 @@ export const makeObject = ({
   draggable?: boolean;
   droppable?: boolean;
   navigable?: boolean;
+  /**
+   * How the deck should behave when this object is its root, for types whose answer depends on the
+   * enabled plugins rather than the type alone (a collection opens its own article when one exists,
+   * else the deck seeded with its contents). Types with a fixed answer use
+   * {@link AppAnnotation.DeckAnnotation} instead.
+   */
+  deck?: DeckSpec.DeckSpec;
   /** Rearrange callback invoked with the next sibling order on drop. */
   onRearrange?: (nextOrder: unknown[]) => void;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
@@ -240,7 +244,8 @@ export const makeObject = ({
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
-  const deckSpec = schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined;
+  // The caller wins: it knows the enabled plugins, which the schema annotation cannot.
+  const deckSpec = deck ?? (schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined);
 
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ db, collection: object })

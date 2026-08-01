@@ -33,7 +33,30 @@ Phased so each step is independently landable and verifiable:
       node's openable children instead of a plank of the node itself; Collection declares it. Seeds a
       navigation only, never an add. Capped by `MAX_SEEDED_PLANKS` because every plank mounts an
       article surface. `openableChildren` is shared with `SwitchWorkspace`, which had the same filter
-      inline. NOT verified in a browser yet — see below.
+      inline.
+- [x] **P2a — make a collection a navigation target.** Found by verifying P2 in Composer: the seeding
+      never ran, because `makeObject` sets `selectable: false` on a Collection unless `navigable` is
+      passed, and the navtree gates `handleSelect` on exactly that (`NavTreeContainer.tsx:125`).
+      `plugin-space` passed `navigable: ephemeralState.navigableCollections`, true only when
+      `plugin-stack` or `plugin-simpleLayout` is enabled — because until now only those could _render_
+      a collection. The deck is a third answer to "what does navigating here show", so collections are
+      now always navigable and `plugin-space` supplies the deck spec (`collectionDeck`), keeping the
+      policy where it belongs: with stack/simple-layout enabled the collection still opens its own
+      article, otherwise the deck opens its contents. `makeObject` gained a `deck` option for exactly
+      this "depends on enabled plugins" case; the schema annotation stays for types with a fixed answer.
+      Verified in Composer: clicking a collection with three documents opens three planks.
+- [ ] **The top-level "Collections" row can never navigate** — it is not a collection object but a
+      synthetic section node (`Node.make({ …, data: null })`,
+      `plugin-space/.../extensions/collections.ts`), and the navtree's `handleSelect` returns early on
+      `!node.data`. So clicking it only expands, regardless of any of the above. If selecting it should
+      show the space's root collection as a deck, that node needs to carry the root collection as its
+      `data` — which changes what the node _is_ (drag/drop, URL addressing), so it wants a decision
+      rather than a patch.
+- [ ] **Rename the `flatten` setting** — it is the top-level deck mode, gating whether the deck is
+      locked to one plank (+ companion) with a breadcrumb trail, or may show several. The name
+      describes the old implementation rather than the choice; it also interacts with everything above,
+      since a seeded collection under `flatten` shows one plank plus breadcrumbs rather than a row of
+      planks. Both behaviours are correct — the setting just needs a name that says which it is.
 - [ ] **P3 — levels + pruning.** Opening at level `i` reuses that level's plank (existing `name`
       mechanism) and closes levels `> i`. Pure function beside `addSubjectsToActiveDeck`, so it gets
       unit tests. Mailbox declares `mailbox / message / attachment` and drops its hand-built name.
