@@ -22,17 +22,11 @@ export const DeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   /** Item IDs of planks that have been closed; used for state persistence and reopening. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  //
-  // Sizing. Both in rem, differing in what they key on (see `useDeckPresentation`): a sliding plank
-  // owns its width wherever it sits, while the tiling split belongs to the deck's single seam.
-  //
-  /** Sliding: absolute plank widths in rem, keyed by item ID — a plank keeps its width wherever it sits. */
-  plankSizing: Schema.mutable(PlankSizing),
   /**
-   * Tiling: the start pane's width in rem; the end pane fills the remainder, so the split survives a
-   * viewport resize and swapping which plank occupies a slot. Absent means an even split.
+   * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
+   * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
    */
-  tilingSizing: Schema.optional(Schema.Number),
+  plankSizing: Schema.mutable(PlankSizing),
   /**
    * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
    * restores what each was left in — a plank you closed the companion on stays closed when you come

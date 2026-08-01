@@ -139,6 +139,18 @@ describe('migratePersistedState', () => {
     expect(JSON.parse(storage.getItem(STORAGE_KEY)!).decks.default.companionPlanks).toEqual([]);
   });
 
+  test('strips the removed tiling split point', ({ expect }) => {
+    const storage = makeStorage(
+      legacyBlob({
+        default: { active: ['item-a'], inactive: [], plankSizing: {}, companionPlanks: [], tilingSizing: 42 },
+      }),
+    );
+
+    migratePersistedState(STORAGE_KEY, storage);
+
+    expect(JSON.parse(storage.getItem(STORAGE_KEY)!).decks.default.tilingSizing).toBeUndefined();
+  });
+
   test('removes the key on corrupt (unparseable) JSON', ({ expect }) => {
     const storage = makeStorage('{not json');
 

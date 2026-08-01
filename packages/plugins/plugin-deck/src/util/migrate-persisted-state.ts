@@ -11,8 +11,9 @@ import { PlankSizing } from '#types';
 
 /**
  * Superset of the current on-disk deck shape that additionally accepts fields absent from the current
- * deck schema (`solo`, `initialized`, `fullscreen`, `companionOrientation`, `companionFrameSizing`), so
- * a pre-migration blob decodes without error and its legacy fields can be detected and stripped.
+ * deck schema (`solo`, `initialized`, `fullscreen`, `companionOrientation`, `companionFrameSizing`,
+ * `companionOpen`, `tilingSizing`), so a pre-migration blob decodes without error and its legacy fields
+ * can be detected, converted where they carry meaning, and stripped.
  */
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
@@ -20,6 +21,7 @@ const LegacyDeckState = Schema.Struct({
   plankSizing: Schema.mutable(PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   companionOpen: Schema.optional(Schema.Boolean),
+  tilingSizing: Schema.optional(Schema.Number),
   companionFrameSizing: Schema.optional(Schema.mutable(PlankSizing)),
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
@@ -50,7 +52,8 @@ const hasLegacyFields = (state: LegacyStoredDeckState): boolean =>
       deck.initialized !== undefined ||
       deck.fullscreen !== undefined ||
       deck.companionOrientation !== undefined ||
-      deck.companionOpen !== undefined,
+      deck.companionOpen !== undefined ||
+      deck.tilingSizing !== undefined,
   );
 
 /** Strips fields absent from the current deck schema from a legacy deck, promoting a solo plank to the front of `active`. */
@@ -61,6 +64,7 @@ const migrateDeck = ({
   fullscreen: _fullscreen,
   companionOrientation: _companionOrientation,
   companionFrameSizing: _companionFrameSizing,
+  tilingSizing: _tilingSizing,
   ...deck
 }: LegacyDeckState) => {
   const active = solo ? [solo, ...deck.active.filter((id) => id !== solo)] : deck.active;
