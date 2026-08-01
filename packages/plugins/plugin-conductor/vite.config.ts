@@ -14,6 +14,7 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    types: 'src/types/index.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

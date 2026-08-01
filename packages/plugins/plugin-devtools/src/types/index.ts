@@ -3,3 +3,4 @@
 //
 
 export * as Devtools from './Devtools';
+export * as DevtoolsEvents from './DevtoolsEvents';

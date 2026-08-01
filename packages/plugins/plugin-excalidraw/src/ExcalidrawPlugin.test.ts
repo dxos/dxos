@@ -15,7 +15,9 @@ import { meta } from './meta';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ExcalidrawPlugin', () => {
-  test('modules activate on the expected events', async ({ expect }) => {
+  // Boot imports start-gated module bodies (the harness fires the plugin's start event), which
+  // can exceed the default 15s under vite-node transform load.
+  test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), IllustratorPlugin(), ExcalidrawPlugin()],
     });

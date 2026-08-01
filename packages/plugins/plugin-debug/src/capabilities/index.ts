@@ -2,16 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { DebugCapabilities, type DebugPluginOptions } from '#types';
+import { DebugCapabilities, DebugEvents, type DebugPluginOptions } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: DebugEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -27,7 +26,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const DebugSettings = AppCapability.settings(() => import('./settings'), {
   provides: [DebugCapabilities.Settings],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: DebugEvents.Start,
 });
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
@@ -35,12 +34,12 @@ export const StatsPanel = Capability.lazyModule(
     requires: [Capabilities.AtomRegistry],
     provides: [AppCapabilities.StatsPanel],
     props: ({ persistStats }: DebugPluginOptions) => ({ persist: persistStats ?? true }),
-    activatesOn: ActivationEvents.DeferredStartup,
+    activatesOn: DebugEvents.Start,
   },
   () => import('./stats-panel'),
 );
 export const LogRecording = Capability.lazyModule(
   'LogRecording',
-  { provides: [], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [], activatesOn: DebugEvents.Start },
   () => import('./log-recording'),
 );
