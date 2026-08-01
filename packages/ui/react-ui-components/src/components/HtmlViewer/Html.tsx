@@ -218,6 +218,9 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
   const hostRef = useRef<HTMLDivElement>(null);
   // Resolved src cache, persisted across content rebuilds; blob: urls are revoked on unmount.
   const srcCacheRef = useRef<Map<string, string>>(new Map());
+  // Resolution is async, so a promise can settle after unmount — past the cleanup that would have
+  // revoked its url. The flag lets the late completion revoke its own.
+  const disposedRef = useRef(false);
   // Read at rebuild time rather than depended on, so an inline (unmemoized) dialect doesn't re-parse
   // the document on every render. `key` is what declares a rebuild is actually needed.
   const dialectRef = useRef(dialect);
@@ -225,11 +228,13 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
 
   useEffect(
     () => () => {
+      disposedRef.current = true;
       for (const url of srcCacheRef.current.values()) {
         if (url.startsWith('blob:')) {
           URL.revokeObjectURL(url);
         }
       }
+      srcCacheRef.current.clear();
     },
     [],
   );
@@ -299,7 +304,7 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
 
     const resolveSrc = dialectRef.current?.resolveSrc;
     if (resolveSrc) {
-      resolvePendingSrc(content, resolveSrc, srcCacheRef.current);
+      resolvePendingSrc(content, resolveSrc, srcCacheRef.current, () => disposedRef.current);
     }
   }, [sanitized, loadRemoteImages, css, dialectKey, colorScheme, themeMode]);
 
@@ -308,8 +313,19 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
 
 Html.displayName = 'Html';
 
-/** Swaps each unresolved (non-http, non-data) `src` in place once the caller's resolver returns. */
-const resolvePendingSrc = (content: HTMLElement, resolveSrc: HtmlSrcResolver, cache: Map<string, string>): void => {
+/**
+ * Swaps each unresolved (non-http, non-data) `src` in place once the caller's resolver returns.
+ *
+ * `isDisposed` closes a leak on unmount: the resolver may settle after the cleanup that revokes cached
+ * urls, and a `blob:` minted then would be cached into a map nobody visits again. A late completion
+ * revokes its own url instead.
+ */
+const resolvePendingSrc = (
+  content: HTMLElement,
+  resolveSrc: HtmlSrcResolver,
+  cache: Map<string, string>,
+  isDisposed: () => boolean,
+): void => {
   for (const img of content.querySelectorAll('img')) {
     const src = img.getAttribute('src');
     if (!src || /^(https?|data|blob):/i.test(src)) {
@@ -326,12 +342,19 @@ const resolvePendingSrc = (content: HTMLElement, resolveSrc: HtmlSrcResolver, ca
     // and must not leave the unresolved src to render broken either.
     void resolveSrc(src).then(
       (url) => {
-        if (url) {
-          cache.set(src, url);
-          img.setAttribute('src', url);
-        } else {
+        if (!url) {
           hideImage(img);
+          return;
         }
+        if (isDisposed()) {
+          if (url.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
+          return;
+        }
+
+        cache.set(src, url);
+        img.setAttribute('src', url);
       },
       () => hideImage(img),
     );
