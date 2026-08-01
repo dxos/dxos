@@ -436,3 +436,14 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 - **top1 is no longer the Client module** — it's idle-trickle skill/graph chunks
   (SkillDefinition ~2.3–2.8s under load). Client init is off the measured critical path;
   the goal directive (module work ≤ client activation) is now inverted.
+
+## Definitive A/B: main vs branch, real hardware (2026-08-01, user-run, warm-cold, N=4 each)
+
+| metric        |            main (mean) |       branch (mean) |    delta |
+| ------------- | ---------------------: | ------------------: | -------: |
+| profilerTotal |    8335 ms (8168–8626) | 2847 ms (2791–2885) | **−66%** |
+| navToReady    | 14369 ms (13965–14860) | 9134 ms (8941–9302) | **−36%** |
+
+Branch variance ±1.7% — stable enough for CI budget gates (task #22 RUM/CI remainder).
+Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot floor
+(chunk eval; client chunk split is the next lever).
