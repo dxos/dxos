@@ -391,13 +391,14 @@ the mechanism.
       assume it.
 - [ ] **Claim 4 · chains.** Object migrated `A → B → C`, late write arrives in shape `A`. Does lens
       composition fold it all the way, and is the composition still idempotent?
-- [ ] **Claim 5 · genuine conflicts surface — but NOT as CRDT conflicts.** Premise corrected in
-      review: when the mapping renames, the late write and the direct write hit _different keys_
-      (`title` vs `name` — only the lens knows they correspond), and the fold is causally downstream
-      of the direct write it just merged, so Automerge sees plain sequential overwrites and its
-      conflict machinery never engages. The fold must detect the semantic conflict itself (target
-      property changed since the migration heads) and record it at the application level instead of
-      overwriting. Verify the detection, and that neither side is silently lost.
+- [x] **Claim 5 · genuine conflicts surface — but NOT as CRDT conflicts. — CONFIRMED, both halves.**
+      Automerge merged `title='late edit'` + `name='direct edit'` silently (different keys, no CRDT
+      conflict). The fold detects the semantic conflict itself with TWO head-marks: source-prop diff
+      from _pre_-migration heads (names late writes), target-prop diff from _post_-migration heads
+      (names direct edits, excluding the migration's own writes). On conflict it records
+      `{property, theirs}` as data instead of overwriting — winner intact, loser preserved, record
+      replicates. Non-conflict path (`status`→`done`, no direct edit) folds cleanly with no record.
+      Consequence: a real fold stores two heads per migration event, not one.
 - [ ] **Claim 6 · fan-out converges via identity keys + the merge engine — NOT derived ids.**
       Premise falsified by the object-merging research (PR #12410,
       `.agents/projects/object-merging/DESIGN.md` §3.1/§4.5): two peers minting the same object id
@@ -437,10 +438,19 @@ the mechanism.
       plus its gaps (markdown links, feed blocks, side maps, relation endpoints as bare EIDs). What
       remains to decide: whether a shared child blocks or duplicates, and whether the gap list is
       acceptable for the cardinality check.
-- [ ] **Claim 12 · late entity _creation_, not just late writes.** An offline peer on the old schema
-      adds an `Address` to a `Person` after the fan-in ran. Fold-forward must absorb an entity that
-      did not exist at migration time. **Fan-out never surfaces this, and it is the most likely thing
-      to break the bar — look at it before the cheaper claims give false confidence.**
+- [x] **Claim 12 · late entity _creation_, not just late writes. — SURVIVES (single-object form).**
+      (a) A partition-created old-shape object replicates and becomes queryable after heal (the heal
+      idiom walks the root doc's `links`, so new object docs are picked up for free). (b) It is
+      distinguishable from migrated objects by shape (`name === undefined`), and — better — a
+      per-object marker via `Annotation.set` on `EntityMeta.annotations` works and replicates, so
+      migration state can ride on the object without touching its data schema (`EntityMeta.version`
+      itself is creation-time-fixed; the annotations dictionary is the mutable escape hatch).
+      (c) Both peers folding the new entity independently with the same deterministic derivation
+      converge with no oscillation. Structural finding: new-entity detection has no heads to diff by
+      construction — a real fold needs a query-based "old-shaped, unmigrated" path as a SEPARATE code
+      path beside the heads-based property fold. The fan-in variant (late child absorbed into a
+      tombstoned parent property, two late children colliding) is NOT yet exercised — that residue
+      belongs to claims 10/11 and the §10.3 writeup must say so.
 - [ ] **Write up what survives** in DESIGN.md §10.3 — including, if it comes to it, the honest
       finding that the bar is unreachable and why.
 
