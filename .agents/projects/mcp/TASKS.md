@@ -18,6 +18,14 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 - [ ] cloudflared tunnel :8791; repeat one round-trip via tunnel; record URL + morning Claude Desktop steps
 - [ ] Runbook (commands, ports, ids, tunnel URL, morning steps)
 
+## Milestone 3 — overnight 2026-08-01 (user-directed)
+
+- [ ] E2E smoke script #1 (device-invitation path): start EDGE services, `halo create` CLI identity, open browser with device invitation (race fix now on main via #12426), complete join, MCP createObject document → assert it appears in the browser (playwright)
+- [ ] E2E smoke script #2 (OAuth-stub path): same assertion via the identity-key OAuth flow (scripted mcp-smoke pattern)
+- [ ] Design: claude skill ⇄ Composer space sync — TASKS document per project; registry.yml optionally carries the ECHO DXN (spaceid/objectid) of the TASKS doc
+- [ ] Design/track: dedicated task-list plugin — reconcile plugin-outliner vs plugin-projects (different notion of project); consider task/project-specific MCP verbs vs the generic object verbs
+- [ ] Land #12423 first (auto-merge armed), keep working in this worktree
+
 ## Milestone 2 — task-planning ⇄ Composer documents (next)
 
 - [x] MCP object CRUD + discovery (edge PR #785): createObject/getObject/updateObject/deleteObject/queryObjects + listPlugins/listTypes/listOperations; Task+ExternalProject registered; live-verified full Task/ExternalProject lifecycle in user's space
