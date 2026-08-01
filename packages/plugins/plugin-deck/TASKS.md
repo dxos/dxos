@@ -94,11 +94,12 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
 ## Defects
 
-- [ ] **Opening a companion slides the plank out and back** — the plank jumps right, off the viewport,
-      then settles once the companion has opened. `useCollapseAfterAttended` re-runs on `companionId`
-      by design (the companion arrives a commit after the attention that summoned it, so the first pass
-      measures the deck before the pair widened) — the correction is landing as a visible round trip
-      instead of before paint. Reported on 5174 with a real mailbox.
+- [x] **Opening a companion made the plank jump repeatedly** — measured: six `scrollTo` calls to one
+      destination inside 30ms. Three distinct effect runs (attention lands, the companion resolves a
+      commit later, the width cap recomputes), each doubled by StrictMode, and every `scrollTo`
+      _restarts_ the smooth animation rather than continuing it. `scrollPlankToPile` now drops a repeat
+      command to the same destination within `SCROLL_DEDUPE_MS`; measured one call after the fix. The
+      re-runs are all legitimate, so deduping the command is the right layer — not removing a dep.
 - [ ] **Opening/closing a message resets the mailbox list scroll** — the mailbox's own Mosaic stack
       appears to re-render wholesale and lose its scroll offset. Suspect the message open changing a
       prop identity that remounts the list rather than updating it; the deck's own planks are known not

@@ -83,6 +83,12 @@ left pile, which pushes everything after it off the trailing edge into the right
 cannot come from a rect or `offsetLeft` — while sticky, both report the _pinned_ position — so
 `scrollPlankToPile` sums the preceding planks' widths and gaps and backs off one spine each.
 
+It also drops a repeat command to the same destination inside a short window. One interaction settles
+over several commits — attention lands, the companion resolves a commit later, the width cap
+recomputes — and `scrollTo` _restarts_ a smooth animation rather than continuing it, so the repeats
+read as a stutter rather than a glide. Opening a companion measured six commands to one destination
+in 30ms. The re-runs are all legitimate, so the command is deduped rather than a dependency dropped.
+
 ---
 
 ## 4. Companion

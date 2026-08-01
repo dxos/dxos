@@ -867,6 +867,15 @@ const useFoldedPlanks = ({
 };
 
 /**
+ * The last scroll this module commanded per viewport, so a burst of re-runs settling one interaction
+ * does not restart the smooth animation repeatedly. Keyed weakly: the entry dies with the viewport.
+ */
+const lastScrollCommand = new WeakMap<HTMLElement, { left: number; at: number }>();
+
+/** Window in which a repeat command to the same destination is treated as the same scroll. */
+const SCROLL_DEDUPE_MS = 600;
+
+/**
  * Scrolls a plank flush against the left pile — the deck's one notion of "bring this plank to the front",
  * shared by navigation, a folded spine returning its plank to view, and attention moving between planks.
  *
@@ -893,7 +902,20 @@ const scrollPlankToPile = ({
   for (let plank = 0; plank < index; plank++) {
     naturalLeft += tiles[plank].offsetWidth + gap;
   }
-  viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
+  const left = Math.max(0, naturalLeft - index * SPINE_PX);
+
+  // The collapse legitimately re-runs while one interaction settles — attention lands, the companion
+  // resolves a commit later, the width cap recomputes — and each `scrollTo` *restarts* the smooth
+  // animation rather than continuing it, so repeats to the same destination read as a stutter. Opening
+  // a companion measured six commands to one target inside 30ms.
+  const previous = lastScrollCommand.get(viewport);
+  const now = performance.now();
+  if (previous && previous.left === left && now - previous.at < SCROLL_DEDUPE_MS) {
+    return;
+  }
+  lastScrollCommand.set(viewport, { left, at: now });
+
+  viewport.scrollTo({ left, behavior: 'smooth' });
 };
 
 /** Scrolls a plank into view for the one-shot navigation flag, then clears it. */
