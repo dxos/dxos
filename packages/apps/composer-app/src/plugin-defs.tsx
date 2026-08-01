@@ -16,7 +16,6 @@ import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -69,6 +68,7 @@ import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
+import { TerraPlugin } from '@dxos/plugin-terra/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
@@ -161,7 +161,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin(),
     ReviewPlugin(),
     ConductorPlugin(),
-    ConnectorPlugin(),
     !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
     DevtoolsPlugin(),
@@ -208,6 +207,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     StackPlugin(),
     SupportPlugin({ helpSteps: steps }),
     TablePlugin(),
+    TerraPlugin(),
     ThreadPlugin(),
     TranscriptionPlugin(),
 

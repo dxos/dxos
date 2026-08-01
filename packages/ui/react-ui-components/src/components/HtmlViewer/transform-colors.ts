@@ -16,8 +16,19 @@
 //   shared lower-level color utility (e.g. under react-ui-theme) so other surfaces can reuse them,
 //   leaving only the email-specific recoloring policy in this module.
 
-type RGBA = { r: number; g: number; b: number; a: number };
-type OKLCH = { l: number; c: number; h: number; a?: number };
+type RGBA = {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+};
+
+type OKLCH = {
+  l: number;
+  c: number;
+  h: number;
+  a?: number;
+};
 
 type TextNodeContrast = {
   fg: OKLCH | null;
@@ -47,7 +58,6 @@ export const processEmailColors = (root: Element, theme: ThemeColorParams): void
   const themeIsDark = inkL > panelL;
 
   stripContentBackgrounds(root);
-
   for (const textNode of computeTextNodeColors(root)) {
     // Links are colored by the shadow's accent CSS rule (which also covers non-recolored emails), so
     // skip them here to avoid inverting their color to a dim mid-tone.
@@ -97,6 +107,7 @@ export const cssColorToOklch = (color: string): OKLCH | null => {
   if (!color) {
     return null;
   }
+
   const value = color.trim().toLowerCase();
   const oklch = value.match(/^oklch\(\s*([\d.]+)(%?)\s+([\d.]+)(%?)\s+([\d.]+)/);
   if (oklch) {
@@ -148,6 +159,7 @@ const hasOpaqueAncestorBackground = (el: HTMLElement, root: Element): boolean =>
     }
     ancestor = ancestor.parentElement;
   }
+
   return false;
 };
 
@@ -192,7 +204,12 @@ const findClosestContrastingColor = (fg: OKLCH, bgL: number): OKLCH => {
   const dir = fg.l > bgL ? 1 : -1;
   const candidate = bgL + dir * CONTRAST_THRESHOLD;
   const l = candidate >= 0 && candidate <= 1 ? candidate : bgL - dir * CONTRAST_THRESHOLD;
-  return { l, c: fg.c, h: fg.h, a: fg.a ?? 1 };
+  return {
+    l,
+    c: fg.c,
+    h: fg.h,
+    a: fg.a ?? 1,
+  };
 };
 
 const setNodeColor = (node: Node, color: string): void => {
@@ -211,6 +228,7 @@ const parseRGBA = (color: string): RGBA | null => {
   if (!match) {
     return null;
   }
+
   return {
     r: parseFloat(match[1]),
     g: parseFloat(match[2]),
@@ -221,7 +239,12 @@ const parseRGBA = (color: string): RGBA | null => {
 
 const normalizeRGBA = (rgba: RGBA): RGBA => {
   const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
-  return { r: clamp01(rgba.r / 255), g: clamp01(rgba.g / 255), b: clamp01(rgba.b / 255), a: rgba.a };
+  return {
+    r: clamp01(rgba.r / 255),
+    g: clamp01(rgba.g / 255),
+    b: clamp01(rgba.b / 255),
+    a: rgba.a,
+  };
 };
 
 /** sRGB (0–1 channels) → OKLCH. */
@@ -248,5 +271,10 @@ const rgbaToOklch = (rgba: RGBA): OKLCH => {
   const chroma = Math.sqrt(aAxis * aAxis + bAxis * bAxis);
   const hueDeg = (Math.atan2(bAxis, aAxis) * 180) / Math.PI;
 
-  return { l: lightness, c: chroma, h: hueDeg < 0 ? hueDeg + 360 : hueDeg, a };
+  return {
+    l: lightness,
+    c: chroma,
+    h: hueDeg < 0 ? hueDeg + 360 : hueDeg,
+    a,
+  };
 };

@@ -46,12 +46,16 @@ export const handler = Effect.fn(function* ({
             yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
           }
 
+          if (!json) {
+            yield* Console.log(`\nInvitation: ${invitationCode}\n`);
+          }
+
           if (open) {
             const url = new URL(host);
             url.searchParams.append('deviceInvitationCode', invitationCode);
-            yield* openBrowser(url.toString()).pipe(Effect.catchAll(() => Effect.void));
-          } else if (!json) {
-            yield* Console.log(`\nInvitation: ${invitationCode}\n`);
+            yield* openBrowser(url.toString()).pipe(
+              Effect.catchAll(() => Console.error(`Failed to open browser: ${url.toString()}`)),
+            );
           }
         }),
     },

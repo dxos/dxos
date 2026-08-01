@@ -133,6 +133,7 @@
     "@dxos/plugin-studio": "workspace:*",
     "@dxos/plugin-support": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
+    "@dxos/plugin-terra": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/plugin-tldraw": "workspace:*",

@@ -6,6 +6,7 @@ import { getIndentUnit } from '@codemirror/language';
 import { type ChangeSpec, EditorSelection, type EditorState, type Extension } from '@codemirror/state';
 import { type Command, type EditorView, keymap } from '@codemirror/view';
 
+import { escapeLinkLabel } from '../../language/markdown';
 import { blockSelectionField, setBlockSelection } from '../blocks';
 import { mergeRanges, selectAllItems, selectDown, selectNoneItems, selectUp } from './dnd';
 import { type Item, getRange, treeFacet } from './tree';
@@ -142,6 +143,47 @@ export const moveItemUp: Command = (view: EditorView) => {
       scrollIntoView: true,
     });
   }
+
+  return true;
+};
+
+//
+// Link commands.
+//
+
+/** Content of the action scope's first item, excluding its indentation and list/task marker. */
+export const getItemText = (state: EditorState): string | undefined => {
+  const [item] = getActionScope(state);
+  return item && state.doc.sliceString(item.contentRange.from, item.contentRange.to);
+};
+
+export type ItemLink = {
+  label: string;
+  url: string;
+};
+
+/**
+ * Replaces the action scope's first item with a markdown link to `url`.
+ * A task marker is demoted to a bullet since completion state now belongs to the linked object.
+ */
+export const replaceItemWithLink = (view: EditorView, { label, url }: ItemLink): boolean => {
+  const { state } = view;
+  const [item] = getActionScope(state);
+  if (!item) {
+    return false;
+  }
+
+  const marker = ' '.repeat(getIndentUnit(state) * item.level) + '- ';
+  const insert = `[${escapeLinkLabel(label)}](${url})`;
+  view.dispatch({
+    changes: [
+      { from: item.lineRange.from, to: item.contentRange.from, insert: marker },
+      { from: item.contentRange.from, to: item.contentRange.to, insert },
+    ],
+    selection: EditorSelection.cursor(item.lineRange.from + marker.length + insert.length),
+    effects: setBlockSelection.of([]),
+    userEvent: 'input.link',
+  });
 
   return true;
 };

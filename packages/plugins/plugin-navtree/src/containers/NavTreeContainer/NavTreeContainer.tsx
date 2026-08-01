@@ -145,7 +145,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           // handler, which upgrades any disposition to add when shift is held).
           void invokePromise(LayoutOperation.Open, {
             subject: [node.id],
-            key: node.properties.key,
             disposition: 'solo',
             modifiers: { shift },
           });

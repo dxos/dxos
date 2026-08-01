@@ -9,6 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
+import { updatePlankNames } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
@@ -24,7 +25,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperati
         deck,
         attention,
       });
-      yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+      yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+        updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, deckUpdates.active) }),
+      );
 
       if (toAttend) {
         yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: toAttend });

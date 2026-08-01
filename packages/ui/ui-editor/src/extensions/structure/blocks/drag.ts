@@ -95,8 +95,10 @@ const DRAG_THRESHOLD = 4;
 // `GUTTER_WIDTH` (3rem) is the strip width; `CONTENT_WIDTH` reserves one on each side (`6rem` = 2×3rem) and
 // centers the column — keep the two in sync. Shared by the grip (`drag.ts`), menu (`menu.ts`), and the
 // outliner content (`outliner.ts`).
+// Both utilities need `!`: CodeMirror's own `.ͼ1 .cm-content` rule sets `margin: 0` at a higher
+// specificity, which otherwise drops the centering and collapses both gutters onto one side.
 export const GUTTER_WIDTH = 48;
-export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-6rem)]! mx-auto';
+export const CONTENT_WIDTH = 'max-w-[min(50rem,100%-6rem)]! mx-auto!';
 
 // Square grip size (px) and its drag-handle icon. Matches `dx-button` density `xs` + `aspect-square`
 // (`size-6`), so the button's own box lines up with the centering math below.

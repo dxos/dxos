@@ -2,36 +2,33 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { getDeckPresentation } from './useDeckPresentation';
 
 describe('getDeckPresentation', () => {
-  test('a singleton active deck renders fullbleed on desktop', () => {
+  test('a singleton deck renders fullbleed off mobile', ({ expect }) => {
     expect(getDeckPresentation(1, 'desktop')).toEqual('fullbleed');
-  });
-
-  test('a singleton active deck renders fullbleed on tablet', () => {
     expect(getDeckPresentation(1, 'tablet')).toEqual('fullbleed');
   });
 
-  test('exactly two active planks render tiling on desktop', () => {
-    expect(getDeckPresentation(2, 'desktop')).toEqual('tiling');
-    expect(getDeckPresentation(2, 'tablet')).toEqual('tiling');
+  test('two planks slide, each in its own container', ({ expect }) => {
+    expect(getDeckPresentation(2, 'desktop')).toEqual('sliding');
+    expect(getDeckPresentation(2, 'tablet')).toEqual('sliding');
   });
 
-  test('three or more active planks render sliding on desktop', () => {
+  test('three or more planks render sliding off mobile', ({ expect }) => {
     expect(getDeckPresentation(3, 'desktop')).toEqual('sliding');
     expect(getDeckPresentation(5, 'desktop')).toEqual('sliding');
   });
 
-  test('mobile always renders sliding, regardless of plank count', () => {
+  test('mobile always renders sliding, regardless of plank count', ({ expect }) => {
     expect(getDeckPresentation(0, 'mobile')).toEqual('sliding');
     expect(getDeckPresentation(1, 'mobile')).toEqual('sliding');
     expect(getDeckPresentation(2, 'mobile')).toEqual('sliding');
   });
 
-  test('zero active planks render sliding (empty stack) off mobile', () => {
+  test('zero planks render sliding (empty stack) off mobile', ({ expect }) => {
     expect(getDeckPresentation(0, 'desktop')).toEqual('sliding');
   });
 });

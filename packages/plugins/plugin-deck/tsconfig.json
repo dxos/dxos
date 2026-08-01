@@ -89,6 +89,9 @@
       "path": "../../ui/react-ui-dnd"
     },
     {
+      "path": "../../ui/react-ui-editor"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -105,6 +108,9 @@
     },
     {
       "path": "../../ui/react-ui-tabs"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"

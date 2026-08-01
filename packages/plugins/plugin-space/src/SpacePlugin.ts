@@ -50,8 +50,8 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
-    activate: () => NavigationHandler({ invitationProp }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp, invitationUrlHandler }) => ({
+    activate: () => NavigationHandler({ invitationProp, invitationUrlHandler }),
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './HtmlViewer';
+export * from './withAttention';
