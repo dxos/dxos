@@ -247,11 +247,14 @@ type DefaultStoryProps = {
   companionPlanks?: number[];
 };
 
+// Stable identity, so the default does not re-fire the seeding effect it is a dependency of on every render.
+const NO_COMPANIONS: number[] = [];
+
 const DefaultStory = ({
   count = 0,
   foldAnimation = 'slide',
   sidebarState = 'closed',
-  companionPlanks = [],
+  companionPlanks = NO_COMPANIONS,
 }: DefaultStoryProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
