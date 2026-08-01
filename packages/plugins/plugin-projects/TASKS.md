@@ -358,9 +358,16 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       FOLLOW-UPS: re-correlate live sub-agent trace activity in TaskList via a Process
       annotation carrying the task ref; reactive parent-project outline resolution in
       ChatTaskList; promotion eval (agent promotes, human completes, reconcile observes).
-- [ ] **Phase 2 — plugin-outliner → plugin-tasks takeover** — rename; TaskList container,
-      Actor-aware assignee chips, task cards, TaskOperation set, app-graph nodes; ProjectArticle
-      Goals + Tasks sections; templates scaffold/adopt a TaskSet; stories-projects play tests.
+- [ ] **Phase 2 — plugin-outliner → plugin-tasks takeover** — CORE DONE 2026-08-01:
+      plugin renamed (`@dxos/plugin-tasks`, `org.dxos.plugin.tasks`, `TasksPlugin`, all
+      dependents + lockfile + vite entry); `TaskOperation` verbs
+      (taskCreate/taskUpdate/taskComplete/taskAssign — parent-edge filing, sub-task support,
+      4/4 handler tests); `TaskSetArticle` (Linear-order status groups, Actor-aware assignee
+      chips, role-aware: bare list as Section embed, surface-registered, story);
+      ProjectArticle **Goals** (read-only GoalList) + **Tasks** (per-TaskSet Section surface
+      embed — composition via surfaces, no cross-imports) sections.
+      REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
+      goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
 - [ ] **Phase 4 — MCP verbs** — operation sets per MILESTONE-5.md §7.2 + McpToolAnnotation;
       edge mcp-space-service projection PR (identity-through-invokeOperation prerequisite from
       the 2026-08-01 service review); TESTING.md runbook extension; dx-mcp smoke
