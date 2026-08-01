@@ -47,6 +47,8 @@ const EDGE_LOG = process.env.EDGE_DEV_LOG ?? `${process.env.HOME}/Code/dxos/edge
 const { chromium } = await import('@playwright/test');
 const { readFileSync } = await import('node:fs');
 const browser = await chromium.launch({ headless: args.headless });
+// `fail` exits the process mid-flow; kill the browser child on every exit path.
+process.on('exit', () => browser.process()?.kill());
 const page = await (await browser.newContext()).newPage();
 
 if (!args.identity || !args.space) {
@@ -89,6 +91,7 @@ const reg = await (
     }),
   })
 ).json();
+if (!reg.client_id) fail('register', JSON.stringify(reg).slice(0, 300));
 const codeVerifier = randomBytes(32).toString('base64url');
 const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
 const authorizeUrl = new URL(`${baseUrl}/authorize`);
@@ -138,6 +141,7 @@ const mcp = async (method, params, id) => {
     body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
   });
   const text = await resp.text();
+  if (!resp.ok) fail(`mcp ${method}`, `${resp.status}: ${text.slice(0, 300)}`);
   return text.includes('data: ') ? JSON.parse(text.split('data: ')[1].split('\n')[0]) : JSON.parse(text);
 };
 

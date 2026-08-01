@@ -14,7 +14,8 @@ const fail = (step, detail) => {
   console.error(`FAIL ${step}: ${detail}`);
   process.exit(1);
 };
-if (!identity || !space) fail('args', 'usage: task-sync-prototype.mjs <identityKeyHex> <spaceId> [haloSpaceId] [docName] [taskText]');
+if (!identity || !space)
+  fail('args', 'usage: task-sync-prototype.mjs <identityKeyHex> <spaceId> [haloSpaceId] [docName] [taskText]');
 
 // --- OAuth stub (TESTING.md Path A) ---
 const reg = await (
@@ -30,6 +31,7 @@ const reg = await (
     }),
   })
 ).json();
+if (!reg.client_id) fail('register', JSON.stringify(reg).slice(0, 200));
 const codeVerifier = randomBytes(32).toString('base64url');
 const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
 const authorizeUrl = new URL(`${baseUrl}/authorize`);
@@ -80,6 +82,7 @@ const mcp = async (method, params, id) => {
     body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
   });
   const text = await resp.text();
+  if (!resp.ok) fail(`mcp ${method}`, `${resp.status}: ${text.slice(0, 300)}`);
   return text.includes('data: ') ? JSON.parse(text.split('data: ')[1].split('\n')[0]) : JSON.parse(text);
 };
 const call = async (name, args, id) => {
@@ -88,12 +91,18 @@ const call = async (name, args, id) => {
   return resp.result.structuredContent;
 };
 
-await mcp('initialize', { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'task-sync', version: '0' } }, 1);
+await mcp(
+  'initialize',
+  { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'task-sync', version: '0' } },
+  1,
+);
 
 // --- 1. Locate the tasks document by name (outline or markdown document). ---
 // In the full design registry.yml carries the echo:// DXN directly; name lookup is the bootstrap path.
 const { results } = await call('queryObjects', { typename: 'org.dxos.type.outline', includeContent: true }, 2);
-const doc = results.find((candidate) => candidate?.name === docName) ?? fail('locate', `no outline named "${docName}" — found: ${results.map((r) => r?.name).join(', ')}`);
+const doc =
+  results.find((candidate) => candidate?.name === docName) ??
+  fail('locate', `no outline named "${docName}" — found: ${results.map((r) => r?.name).join(', ')}`);
 const docId = doc.id ?? doc['@id'] ?? fail('locate', `no id on result: ${JSON.stringify(doc).slice(0, 200)}`);
 console.log(`1. located "${docName}" → ${docId}`);
 

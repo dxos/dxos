@@ -8,27 +8,30 @@
 // the invitation fix, `halo create`/`share` registered (this branch; run CLI with DX_SOURCE=1).
 //
 // Usage: node e2e-invitation-smoke.mjs [--app http://localhost:5173] [--url http://localhost:8791]
-//        [--cli <path to packages/devtools/cli>] [--headless] [--keep-profile]
+//        [--cli <path to packages/devtools/cli>] [--headed]
 //
 // Legs: 1 cli identity → 2 host invitation → 3 browser join (playwright) → 4 whoami via MCP
-//       (OAuth stub with the CLI identity) → 5 createObject document + attach → 6 assert in browser.
-// NOTE: leg 3 is the open question (invitation handshake with a bun-hosted CLI peer). The script
-// reports PASS/FAIL per leg so a leg-3 hang is itself a result.
+//       (OAuth stub with the CLI identity, at --url) → 5 createObject document + attach → 6 assert
+//       in browser. NOTE: leg 3 is the open question (invitation handshake with a bun-hosted CLI
+//       peer). The script reports PASS/FAIL per leg so a leg-3 hang is itself a result.
 //
 
 import { spawn } from 'node:child_process';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+
+// The script lives at <repo>/.agents/projects/mcp/scripts.
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
 
 const { values: args } = parseArgs({
   options: {
     'app': { type: 'string', default: 'http://localhost:5173' },
+    // MCP base for legs 4-6 (currently stubbed pending leg 3).
     'url': { type: 'string', default: 'http://localhost:8791' },
-    'cli': {
-      type: 'string',
-      default: `${process.env.HOME}/Code/dxos/dxos/.claude/worktrees/plugin-outliner-task-management-60c3ad/packages/devtools/cli`,
-    },
+    'cli': { type: 'string', default: resolve(repoRoot, 'packages/devtools/cli') },
     'profile': { type: 'string', default: `e2e-inv-${Date.now()}` },
-    'headless': { type: 'boolean', default: true },
+    'headed': { type: 'boolean', default: false },
     'join-timeout': { type: 'string', default: '60000' },
   },
 });
@@ -39,8 +42,8 @@ const fail = (step, detail) => {
 };
 const step = (name) => console.log(`--- ${name}`);
 
-const dx = (cliArgs, { profile = true, ...opts } = {}) =>
-  new Promise((resolve, reject) => {
+const dx = (cliArgs, { profile = true, timeout = 120000, ...opts } = {}) =>
+  new Promise((resolvePromise, reject) => {
     const child = spawn('./bin/dx', [...(profile ? ['-p', args.profile] : []), ...cliArgs], {
       cwd: args.cli,
       env: { ...process.env, DX_SOURCE: '1' },
@@ -49,9 +52,18 @@ const dx = (cliArgs, { profile = true, ...opts } = {}) =>
     let out = '';
     child.stdout.on('data', (data) => (out += data));
     child.stderr.on('data', (data) => (out += data));
-    child.on('exit', (code) =>
-      code === 0 ? resolve(out) : reject(new Error(`dx ${cliArgs[0]} exit ${code}: ${out.slice(-400)}`)),
-    );
+    const timer = setTimeout(() => {
+      child.kill('SIGKILL');
+      reject(new Error(`dx ${cliArgs[0]} timed out after ${timeout}ms: ${out.slice(-400)}`));
+    }, timeout);
+    child.on('error', (err) => {
+      clearTimeout(timer);
+      reject(new Error(`dx ${cliArgs[0]} spawn failed (check --cli): ${err.message}`));
+    });
+    child.on('exit', (code) => {
+      clearTimeout(timer);
+      code === 0 ? resolvePromise(out) : reject(new Error(`dx ${cliArgs[0]} exit ${code}: ${out.slice(-400)}`));
+    });
   });
 
 // 1. Fresh CLI profile + identity (identity + agent + personal space on the local edge).
@@ -80,6 +92,8 @@ const share = spawn('./bin/dx', ['-p', args.profile, 'halo', 'share', '--lifetim
 let shareOut = '';
 share.stdout.on('data', (data) => (shareOut += data));
 share.stderr.on('data', (data) => (shareOut += data));
+// `fail` exits the process; make sure the long-running host does not survive any exit path.
+process.on('exit', () => share.kill());
 const waitFor = async (pattern, timeout, what) => {
   const start = Date.now();
   while (Date.now() - start < timeout) {
@@ -96,7 +110,7 @@ console.log('authCode', authCode, 'invitation', `${invitationCode.slice(0, 16)}�
 // 3. Browser joins (fresh profile; the reset-and-join dialog from #12426 handles onboarding).
 step('browser join');
 const { chromium } = await import('@playwright/test');
-const browser = await chromium.launch({ headless: args.headless });
+const browser = await chromium.launch({ headless: !args.headed });
 const page = await (await browser.newContext()).newPage();
 const joinTimeout = Number(args['join-timeout']);
 try {
@@ -111,6 +125,7 @@ try {
   console.log('joined');
 } catch (err) {
   await page.screenshot({ path: '/tmp/e2e-invitation-join-fail.png' }).catch(() => {});
+  await browser.close().catch(() => {});
   fail(
     'browser join',
     `${err.message} (screenshot /tmp/e2e-invitation-join-fail.png; share output tail: ${shareOut.slice(-300)})`,

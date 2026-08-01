@@ -64,6 +64,30 @@ describe('ObjectCreate', () => {
   );
 
   it.effect(
+    'object-create: default leaves the root collection untouched',
+    Effect.fnUntraced(
+      function* (_) {
+        const collection = yield* Database.add(Collection.make({ objects: [] }));
+        const properties = yield* Database.add(Obj.make(SpaceProperties, {}));
+        Obj.update(properties, (properties) => {
+          const meta = Obj.getMeta(properties);
+          meta.annotations ??= {};
+          Annotation.setDictionary(meta.annotations, AppAnnotation.RootCollectionAnnotation, Ref.make(collection));
+        });
+
+        yield* Operation.invoke(ObjectCreate, {
+          typename: Type.getTypename(Collection.Collection),
+          properties: { name: 'Unattached', objects: [] },
+        });
+
+        expect(collection.objects).toHaveLength(0);
+      },
+      Effect.provide(OperationTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'object-create: attach files the object in the space root collection',
     Effect.fnUntraced(
       function* (_) {

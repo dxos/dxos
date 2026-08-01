@@ -24,6 +24,13 @@ export const handler = Effect.fn(function* ({
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
 
+  // Validate up front — an invalid host inside `onConnecting` would abort after the invitation
+  // is already hosted, without printing the codes.
+  yield* Effect.try({
+    try: () => new URL(host),
+    catch: () => new Error(`--host must be an absolute URL: ${host}`),
+  });
+
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = client.halo.share({
     authMethod: Invitation.AuthMethod.SHARED_SECRET,

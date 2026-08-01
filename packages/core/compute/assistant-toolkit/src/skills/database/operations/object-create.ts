@@ -4,7 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel } from '@dxos/app-toolkit';
+// Narrow subpath: the app-toolkit barrel drags `@dxos/client` (→ protobufjs), which the workerd
+// bundle guard (env-tests) forbids for assistant-toolkit.
+import { CollectionModel } from '@dxos/app-toolkit/types';
 import { Operation } from '@dxos/compute';
 import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
