@@ -14,6 +14,9 @@ import * as Blockstore from '../blockstore';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
+    // `config` is initialized-only, and this event wave can land before the forked client
+    // initialization completes.
+    yield* Effect.promise(() => client.waitUntilInitialized());
     const apiHost = client.config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
     const blockstore = Blockstore.create(apiHost);
     yield* Effect.tryPromise(() => blockstore.open());

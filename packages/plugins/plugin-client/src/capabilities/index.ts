@@ -14,10 +14,19 @@ export const AccountCache = Capability.lazyModule(
   { provides: [ClientCapabilities.AccountCache] },
   () => import('./account-cache'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+// Its connectors read `client.halo`/`client.mesh` inside atom computations (initialized-only,
+// and a pre-init throw is not re-evaluated when initialization lands).
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  activatesOn: ClientEvents.Initialized,
+});
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
-  { requires: [ClientCapabilities.Client], provides: [ClientCapabilities.HubHttpClient] },
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [ClientCapabilities.HubHttpClient],
+    // Reads `client.config` (initialized-only) for the hub URL.
+    activatesOn: ClientEvents.Initialized,
+  },
   () => import('./hub-http-client'),
 );
 export const Client = Capability.lazyModule(
