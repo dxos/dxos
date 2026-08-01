@@ -51,6 +51,34 @@ anything a session needs beyond its feed has to be handed to it explicitly.
 
 ## Types
 
+### Type inventory (by package)
+
+All types relevant to the project/task/plan model in one place. "M5 target" is the Milestone 5
+end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01); blank = unchanged.
+
+| Type           | Package (today)            | Role                                                                | M5 target                                                              |
+| -------------- | -------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `Project`      | `@dxos/compute`            | Umbrella container: instructions, routines, artifacts, chats        | 0.3.0 adds `goals` / `outline` / `tasks: Ref<TaskSet>` / `plan`; stays in compute |
+| `Instructions` | `@dxos/compute`            | Prompt text + skills + objects + commands                           |                                                                        |
+| `Routine`      | `@dxos/compute`            | Triggered automation (instructions or runnable operation)           |                                                                        |
+| `Skill`        | `@dxos/compute`            | Toolkit definition bound into sessions                              |                                                                        |
+| `ExternalProject` | `@dxos/types`           | Task container (name lies — used natively since #12423)             | **Renamed `TaskSet`** (`org.dxos.type.taskSet@0.2.0`): lightweight, possibly externally synced |
+| `Task`         | `@dxos/types`              | Work item: title/status/priority/assigned/estimate/project          | 0.2.0: `assignee: Actor` (was `assigned: Ref<Person>`), `taskSet` (was `project`), +`failed`/`cancelled` |
+| `Actor`        | `@dxos/types` (struct)     | Identity shape (`Message.sender`): role/contact/DID/email/name      | Also `Task.assignee` — agents by DID, no `Ref<Agent>` variant          |
+| `Person`       | `@dxos/types`              | Contact record; target of `Actor.contact`                           |                                                                        |
+| `Milestone`    | — (does not exist)         | Phasing marker                                                      | DEFERRED; when added: ECHO type, `Task.milestone?: Ref<Milestone>`, owned by TaskSet |
+| `Outline`      | `plugin-outliner`          | `{name, content: Ref<Text>}` hierarchical checklist document        | **Moves to `@dxos/types`**; `project` field renamed `taskSet`          |
+| `Plan`         | `@dxos/assistant-toolkit`  | Conversation working set: embedded tasks driving supervisor loop    | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)    |
+| `Chat`         | `@dxos/assistant-toolkit`  | Conversation: feed + `instructions` ref + `plan`                    |                                                                        |
+| `Agent`        | `@dxos/assistant-toolkit`  | Identity/preset owning no conversation state                        | Assignment target only via DID on `Actor`                              |
+| `Collection`   | `@dxos/echo`               | Ordered ref collection (used by `Project.artifacts`)                |                                                                        |
+| `Text`         | `@dxos/schema`             | CRDT text (content of `Outline`, documents)                         |                                                                        |
+
+Plugin ownership after M5: **plugin-tasks** (renamed plugin-outliner) owns the TaskSet/Task/
+Outline surfaces and `TaskOperation.*`; **plugin-projects** owns Project lifecycle, agentic
+wiring, and composition; **plugin-github / plugin-linear** sync into `TaskSet`/`Task` via meta
+foreign keys; **plugin-kanban** adopts the plugin-tasks model.
+
 ### `Project` (`@dxos/compute`)
 
 `org.dxos.type.project@0.2.0`:

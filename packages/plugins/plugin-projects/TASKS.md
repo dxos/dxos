@@ -1,6 +1,8 @@
 # plugin-projects — Tasks
 
-_Resume: Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
+_Resume: Milestone 5 design v3 ([`MILESTONE-5.md`](./MILESTONE-5.md)) — Phase 0 ALL DECIDED 2026-08-01: ExternalProject→`TaskSet` (Project.tasks owns one; Task.taskSet backref), plugin-outliner→plugin-tasks takeover, milestones deferred (Ref object lean), Actor assignee (agents by DID), Project stays in @dxos/compute, kanban adopts, taskList paginates day one. Type inventory table added to DESIGN.md § Types. Next: Phase 1 (schema + migrations) on a branch. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
+
+_Superseded pointer (2026-07-29): Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
 PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
@@ -308,6 +310,45 @@ summaries), and the `stories-projects` storybook strategy.
 - [ ] **Tagged scaffold errors** — `ProjectCapabilities.Template.scaffold` and
       `RoutineCapabilities.Template.scaffold` both expose bare `Error`; convert BOTH to a tagged
       Effect error in one change (review follow-up from #12389 — the contracts must stay parallel).
+
+## Milestone 5: project model unification — Tasks, Plan, Milestones, MCP surface
+
+Design: [`MILESTONE-5.md`](./MILESTONE-5.md) (2026-08-01, v3 — Phase 0 DECIDED). Project
+optionally composes Goals / Outline / Tasks / Plan (Milestones DEFERRED);
+**ExternalProject → `TaskSet`** (lightweight, possibly externally synced task container;
+`Project.tasks: Ref<TaskSet>` owns one; `Task.taskSet` backref); plugin-outliner is taken over
+as `plugin-tasks`; `Task.assignee` becomes `Actor`; Plan⇄Task promotion path; Linear-shaped
+camelCase MCP verbs layered over the generic object API (the §2.7 "fourth channel"). Type
+inventory table added to DESIGN.md § Types. Stage is dogfooded over MCP
+(Claude ⇔ EDGE ⇔ Composer). Intersects the `mcp` registry project (milestone 3, task 4) — the
+task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
+
+### Tasks
+
+- [x] **Phase 0 — decisions** (user, 2026-08-01) — ALL DECIDED: `TaskSet` naming
+      (`Project.tasks` owns it; Project keeps name/DXN/package); plugin-outliner takeover (no
+      new plugin); milestones DEFERRED (lean `Ref<Milestone>` object — may need metadata — over
+      label); DID-based agent assignment (no Ref<Agent> variant); Project stays in
+      @dxos/compute (TaskSet dissolved the placement question); kanban adopts the task surface;
+      taskList paginates Linear-style from day one.
+- [ ] **Phase 1 — schema + migrations** — ExternalProject → TaskSet typename migration;
+      Task 0.2.0 (assignee: Actor, taskSet rename, +failed/cancelled) + migration
+      (assigned → {contact} wrap); Project 0.3.0 (goals/outline/tasks/plan);
+      Outline → @dxos/types (+ taskSet rename); call-site sweep (outliner, github/linear sync,
+      space, onboarding, translations); migration tests.
+- [ ] **Phase 2 — plugin-outliner → plugin-tasks takeover** — rename; TaskList container,
+      Actor-aware assignee chips, task cards, TaskOperation set, app-graph nodes; ProjectArticle
+      Goals + Tasks sections; templates scaffold/adopt a TaskSet; stories-projects play tests.
+- [ ] **Phase 3 — Plan reconciliation** — Plan.Task.taskRef write-through; planning-skill
+      promote-task/adopt-tasks; Project.plan; promotion eval (agent promotes, human completes,
+      reconcile observes).
+- [ ] **Phase 4 — MCP verbs** — operation sets per MILESTONE-5.md §7.2 + McpToolAnnotation;
+      edge mcp-space-service projection PR (identity-through-invokeOperation prerequisite from
+      the 2026-08-01 service review); TESTING.md runbook extension; dx-mcp smoke
+      projectCreate → taskCreate → taskComplete live in Composer.
+- [ ] **Phase 5 — MCP-first dogfood** (alongside 2–4) — this milestone as a Project in the
+      shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync
+      spec lands; Claude Desktop demo over the tunnel.
 
 ## Milestone 4 (scoping): what comes after this PR
 
