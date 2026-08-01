@@ -306,13 +306,25 @@ export class PluginCatalog {
       // modules are excluded: they wait for their events, and the pending-reset dispatch above
       // re-fires any of their events that already fired.
       if (yield* this.#state.isStarted()) {
-        const result = yield* this.#scheduler
+        const pass = this.#scheduler
           .runDependencyPass({
             candidateModules: plugin.modules.filter((module) => module.activation.mode === 'dependency'),
           })
-          .pipe(Effect.either);
-        if (result._tag === 'Left') {
-          this.#state.recordFailure(id, 'activation', result.left);
+          .pipe(
+            Effect.either,
+            Effect.map((result) => {
+              if (result._tag === 'Left') {
+                this.#state.recordFailure(id, 'activation', result.left);
+              }
+            }),
+          );
+        // Streaming bootstrap: fork so `enable` (and thus `initialized`, which event dispatch
+        // awaits) completes on REGISTRATION — awaiting here would serialize the entire startup
+        // fan-out into the enable chain. `start()` waits for loader quiescence before ready.
+        if (yield* Deferred.isDone(this.#state.initialized)) {
+          yield* pass;
+        } else {
+          yield* pass.pipe(Effect.forkDaemon);
         }
       }
 

@@ -1339,6 +1339,117 @@ describe('PluginManager', () => {
     }),
   );
 
+  describe('streaming start', () => {
+    const slowMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.slowdef'), name: 'SlowDef' });
+
+    // Real macrotask hops (bounded): the constructor's enable chain runs on a separate
+    // runtime whose fibers need actual event-loop turns.
+    const settle = (condition: () => boolean, iterations = 100) =>
+      Effect.gen(function* () {
+        for (let i = 0; i < iterations && !condition(); i++) {
+          yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve)));
+        }
+      });
+
+    it.effect('activates registered modules while another plugin definition is still loading', () =>
+      Effect.gen(function* () {
+        let releaseLoader!: () => void;
+        const gate = new Promise<void>((resolve) => {
+          releaseLoader = resolve;
+        });
+        const SlowReal = Plugin.define<void>(slowMeta).pipe(
+          Plugin.addModule({
+            id: 'slow',
+            provides: [Number],
+            activate: () => Effect.succeed([Capability.contribute(Number, { number: 2 })]),
+          }),
+          Plugin.make,
+        );
+        const SlowLazy = Plugin.lazy(slowMeta, async () => {
+          await gate;
+          return { default: SlowReal };
+        });
+        const Fast = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'fast',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'fast' })]),
+            }),
+          ),
+        );
+        plugins = [Fast(), SlowLazy()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, slowMeta.profile.key],
+        });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        // Streaming: the fast plugin's module activates while the slow definition still loads.
+        yield* settle(() => manager.capabilities.getAll(String).length > 0);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'fast' }]);
+        // The ready signal still waits for the complete registry.
+        assert.strictEqual((yield* Fiber.poll(startupFiber))._tag, 'None');
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), []);
+
+        releaseLoader();
+        yield* Fiber.join(startupFiber);
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 2 }]);
+      }),
+    );
+
+    it.effect('a consumer of a not-yet-registered provider waits instead of failing structurally', () =>
+      Effect.gen(function* () {
+        let releaseLoader!: () => void;
+        const gate = new Promise<void>((resolve) => {
+          releaseLoader = resolve;
+        });
+        const ProviderReal = Plugin.define<void>(slowMeta).pipe(
+          Plugin.addModule({
+            id: 'provider',
+            provides: [Number],
+            activate: () => Effect.succeed([Capability.contribute(Number, { number: 7 })]),
+          }),
+          Plugin.make,
+        );
+        const ProviderLazy = Plugin.lazy(slowMeta, async () => {
+          await gate;
+          return { default: ProviderReal };
+        });
+        const Consumer = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [Number],
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'consumer' })]),
+            }),
+          ),
+        );
+        plugins = [Consumer(), ProviderLazy()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, slowMeta.profile.key],
+        });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        // Give the streaming pass real turns: the consumer must wait (provider's definition
+        // has not registered), not be recorded as a structural MissingProvider failure.
+        yield* settle(() => manager.getFailed().length > 0, 30);
+        assert.deepStrictEqual(manager.getFailed(), []);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        releaseLoader();
+        yield* Fiber.join(startupFiber);
+        assert.deepStrictEqual(manager.getFailed(), []);
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 7 }]);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'consumer' }]);
+      }),
+    );
+  });
+
   describe('Plugin.lazy', () => {
     const lazyMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.lazy'), name: 'Lazy' });
 

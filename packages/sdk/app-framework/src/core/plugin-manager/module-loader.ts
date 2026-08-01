@@ -117,6 +117,34 @@ export class ModuleLoader {
   }
 
   /**
+   * Awaits every in-flight load until none remain, to a fixpoint (a settling load can start
+   * new ones). Returns whether anything was pending. Used by streaming startup: forked
+   * enable-chain passes load modules outside `start()`'s own passes, and the ready signal
+   * must not publish while any of them are mid-load.
+   */
+  awaitQuiescent(): Effect.Effect<boolean> {
+    return Effect.gen(this, function* () {
+      let waited = false;
+      for (;;) {
+        const pending: Deferred.Deferred<any, Error>[] = [];
+        for (const deferred of this.#memo.values()) {
+          if (!(yield* Deferred.isDone(deferred))) {
+            pending.push(deferred);
+          }
+        }
+        if (pending.length === 0) {
+          return waited;
+        }
+        waited = true;
+        yield* Effect.all(
+          pending.map((deferred) => Deferred.await(deferred).pipe(Effect.ignore)),
+          { concurrency: 'unbounded', discard: true },
+        );
+      }
+    });
+  }
+
+  /**
    * Ingests a module's expanded capabilities into the registry and marks it active. A module
    * may be reached by more than one activation path; the load is memoized, so contribution is
    * memoized too.

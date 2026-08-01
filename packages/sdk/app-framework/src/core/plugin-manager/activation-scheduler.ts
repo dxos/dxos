@@ -61,6 +61,12 @@ export class ActivationScheduler {
    * concurrently with the event dispatch for any module explicitly targeting the Startup
    * event. The event-level Startup `activated` message publishes only after both passes
    * complete. Idempotent — subsequent calls activate whatever registered since.
+   *
+   * Streaming: activation does NOT wait for the constructor's full enable chain. `started`
+   * flips immediately and a pass runs over whatever has registered; each still-in-flight
+   * `enable()` runs its own incremental pass on completion (see `PluginCatalog`), so early
+   * definitions (e.g. the client) begin activating while later ones are still importing.
+   * The ready signal below still waits for the complete set.
    */
   start(): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
@@ -69,10 +75,22 @@ export class ActivationScheduler {
         return false;
       }
 
-      // Wait for the constructor's core/enabled `enable()` chain to finish registering
-      // modules (see the note in `activate`).
-      yield* Deferred.await(this.#state.initialized);
+      // With streaming, activation work is spread across this call's passes AND the enable
+      // chain's incremental passes — the return value reports whether anything activated.
+      const activeBefore = this.#state.getActiveIds().length;
+
       yield* Ref.set(this.#state.started, true);
+      // Early pass over already-registered modules. Failures here are re-evaluated by the
+      // complete pass below, so they log rather than fail start.
+      yield* this.runDependencyPass().pipe(
+        Effect.catchAll((error) =>
+          Effect.sync(() => log.warn('streaming startup pass failed', { error: String(error) })),
+        ),
+      );
+
+      // The complete pass and the Startup event wait for the enable chain: the ready signal
+      // must reflect the full registry (see the note in `activate`).
+      yield* Deferred.await(this.#state.initialized);
 
       const key = ActivationEvent.eventKey(ActivationEvent.Startup);
 
@@ -104,12 +122,30 @@ export class ActivationScheduler {
         ),
       );
 
+      // Streaming quiescence: the enable chain forked its incremental passes, so loads may
+      // still be in flight outside the passes above. Ready must reflect a settled world —
+      // alternate between awaiting in-flight loads and mop-up passes until both are idle.
+      for (;;) {
+        const settledAny = yield* this.#loader.awaitQuiescent();
+        const ranAny = yield* this.runDependencyPass().pipe(
+          Effect.catchAll((error) =>
+            Effect.sync(() => {
+              log.warn('startup mop-up pass failed', { error: String(error) });
+              return false;
+            }),
+          ),
+        );
+        if (!settledAny && !ranAny) {
+          break;
+        }
+      }
+
       // The event-level Startup `activated` message (no `module` field) is the app-ready
       // signal (see useApp); it must not publish before dependency-mode modules finish.
       this.#state.markEventFired(key);
       yield* PubSub.publish(this.#state.activation, { event: key, state: 'activated' });
 
-      return results.some(Boolean);
+      return this.#state.getActiveIds().length > activeBefore || results.some(Boolean);
     });
   }
 
@@ -582,7 +618,15 @@ export class ActivationScheduler {
       for (const waits of waiting) {
         log('module waiting on capability', { module: waits.module.id, capability: waits.capability });
       }
+      // During the streaming bootstrap the provider's plugin definition may simply not have
+      // registered yet — the module waits and the post-initialization pass re-evaluates;
+      // a missing provider is structural only once the registry is complete.
+      const registryComplete = yield* Deferred.isDone(this.#state.initialized);
       for (const miss of missing) {
+        if (!registryComplete) {
+          log('module waiting on unregistered provider', { module: miss.module.id, capability: miss.capability });
+          continue;
+        }
         yield* this.#reportStructuralError(
           [miss.module.id],
           new MissingProviderError({
