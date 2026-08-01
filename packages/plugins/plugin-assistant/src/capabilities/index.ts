@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -16,7 +17,7 @@ import { AssistantCapabilities } from '#types';
 
 export const AgentHydrator = Capability.lazyModule(
   'AgentHydrator',
-  { requires: [Capabilities.ProcessManagerRuntime], provides: [] },
+  { requires: [Capabilities.ProcessManagerRuntime], provides: [], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./agent-hydrator'),
 );
 export const AgentRuntime = Capability.lazyModule(
@@ -36,13 +37,15 @@ export const AiService = Capability.lazyModule(
 );
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
-  { provides: [ConnectorCapability] },
+  { provides: [ConnectorCapability], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./connector'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  activatesOn: ActivationEvents.DeferredStartup,
+});
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
-  { provides: [RoutineCapabilities.Template] },
+  { provides: [RoutineCapabilities.Template], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./automation-templates'),
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
@@ -63,26 +66,29 @@ export const CompanionChatProvisioner = Capability.lazyModule(
       AttentionCapabilities.ViewState,
     ],
     provides: [],
+    activatesOn: ActivationEvents.DeferredStartup,
   },
   () => import('./companion-chat-provisioner'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
-  { provides: [AppCapabilities.AiModelResolver] },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./edge-model-resolver'),
 );
 export const LocalModelResolver = Capability.lazyModule(
   'LocalModelResolver',
-  { provides: [AppCapabilities.AiModelResolver] },
+  { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./local-model-resolver'),
 );
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
-  { provides: [MarkdownCapabilities.ExtensionProvider] },
+  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./markdown-extension'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.DeferredStartup,
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.plugin.assistant.role.chatSurface',
@@ -97,6 +103,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [AssistantCapabilities.Settings],
+  activatesOn: ActivationEvents.DeferredStartup,
 });
 export const AssistantState = Capability.lazyModule(
   'AssistantState',
@@ -106,11 +113,12 @@ export const AssistantState = Capability.lazyModule(
       AssistantCapabilities.CompanionChatCache,
       AssistantCapabilities.HomeSuggestionsCache,
     ],
+    activatesOn: ActivationEvents.DeferredStartup,
   },
   () => import('./state'),
 );
 export const Toolkit = Capability.lazyModule(
   'Toolkit',
-  { provides: [AppCapabilities.Toolkit] },
+  { provides: [AppCapabilities.Toolkit], activatesOn: ActivationEvents.DeferredStartup },
   () => import('./toolkit'),
 );

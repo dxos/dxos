@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
@@ -11,18 +12,24 @@ import { CallsCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [CallsCapabilities.Manager],
+  activatesOn: ActivationEvents.DeferredStartup,
 });
 export const CallManager = Capability.lazyModule(
   'CallManager',
   {
     requires: [ClientCapabilities.Client, Capabilities.AtomRegistry, ClientCapabilities.IdentityService],
     provides: [CallsCapabilities.Manager],
+    activatesOn: ActivationEvents.DeferredStartup,
   },
   () => import('./call-manager'),
 );
 export const CallTransport = Capability.lazyModule(
   'CallTransport',
-  { requires: [ClientCapabilities.Client], provides: [CallsCapabilities.CallTransportProvider] },
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [CallsCapabilities.CallTransportProvider],
+    activatesOn: ActivationEvents.DeferredStartup,
+  },
   () => import('./call-transport'),
 );
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));

@@ -7,15 +7,20 @@
 // module's code loads) with the deferred loader, enabling code-splitting; plugin-local
 // capabilities that have no maker use `Capability.lazyModule()` directly.
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 import { SampleCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  activatesOn: ActivationEvents.DeferredStartup,
+});
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.DeferredStartup,
+});
 
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
@@ -29,4 +34,5 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 
 export const SampleSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SampleCapabilities.Settings],
+  activatesOn: ActivationEvents.DeferredStartup,
 });
