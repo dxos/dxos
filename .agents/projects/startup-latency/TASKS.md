@@ -402,3 +402,22 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 - [ ] appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
 - [ ] Tier-aware per-commit trend line (Phase 1 leftover)
 - [ ] Warm-reload race root-cause — still gates any scheduling change (round barriers)
+
+## Checkpoint 2026-08-01 (per-plugin start events landed)
+
+- DeferredStartup and SkillsRequested deleted. Every off-critical-path module rides a
+  per-plugin `<Name>Events.Start` (`ActivationEvent.pluginStart` convention); cross-plugin
+  contributions ride the consumer's event (skills → assistant via maker default; markdown
+  extensions, connectors, game variants, routine/project templates, thread/file/map/studio/
+  calls/trip/inbox/crx/illustrator/blogger integrations → consumer events; meeting call
+  extension uses allOf(calls, meeting)).
+- Fire sites: composer idle hook trickles all core+enabled starts sequentially; catalog fires
+  own start on post-boot enable; deck URL parse-miss fires all; chat/toolkit/routine-editor
+  fire assistant. Harness + withPluginManager fire all starts after Startup.
+- Verification: app-framework 220/220, all 67 swept plugins build+test green (agents),
+  navtree stories green, composer-app builds, warm-cold e2e green — modules at ready 259
+  (was 310 pre-migration; ready-set shrank further because start-gated modules now wait for
+  their feature's event, not a blanket idle wave that the harness counted).
+- Next lever: prune plugins from the idle trickle once precise demand sites (object-open
+  typename map, data-presence scan, settings-open) cover them; then per-feature loading is
+  fully data-driven.
