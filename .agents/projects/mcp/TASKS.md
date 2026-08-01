@@ -23,4 +23,8 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 
 ## Backlog
 
+- [ ] Composer: deviceInvitationCode with an existing identity fails silently — navigation-handler invokes ClientOperation.JoinIdentity (opens JOIN_DIALOG accept-halo-invitation) but nothing surfaces; dev mode should show a reset-and-accept dialog (path: plugin-client navigation-handler.ts → join-identity.ts → shell JoinDialog)
+- [ ] CLI: `halo share --open` swallows browser-launch failures AND suppresses printing the invitation code — print the URL always; surface open errors
+- [ ] CLI: decide where the halo create/share re-registration lands (currently uncommitted in worktree: plugin-client/src/commands/halo/index.ts; needs DX_SOURCE=1 to run from source)
+
 - [ ] `listSpaces` / `querySpace` marked BROKEN in mcp-space-service — investigate if needed
