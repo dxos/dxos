@@ -6,6 +6,7 @@ import { type Observer } from '@babylonjs/core/Misc/observable';
 import { type Scene } from '@babylonjs/core/scene';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -14,9 +15,9 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm } from '#components';
 import { meta } from '#meta';
-import { Terra, TerraObject } from '#types';
+import { Terra, TerraCapabilities, TerraObject } from '#types';
 
-import { SceneFpsWidget, SceneManager, type TerraConfigValues, generatePlanet, seaRadius } from '../../engine';
+import { PlanetCache, SceneFpsWidget, SceneManager, type TerraConfigValues, seaRadius } from '../../engine';
 import { ChaseCamera, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
 import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
 
@@ -91,6 +92,10 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const telemetrySampleRef = useRef(0);
   const [config, updateConfig] = useObject(terra, 'config');
   const [objectRefs] = useObject(terra, 'objects');
+  // The plugin owns the cache so it survives this article's remounts (resize, companion, navigation);
+  // rendered without a plugin manager (stories, tests) the mount owns a private one instead.
+  const fallbackCache = useMemo(() => new PlanetCache(), []);
+  const planetCache = useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
   const [isPlaying, setIsPlaying] = useState(true);
   const [gizmosVisible, setGizmosVisible] = useState(false);
   const [cameraMode, setCameraMode] = useState<CameraMode>('orbit');
@@ -177,12 +182,19 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       return;
     }
 
+    // Already generated (a remount, or a config the user has been on before): nothing to debounce,
+    // and waiting would leave the canvas empty for no reason.
+    if (planetCache.has(values)) {
+      manager.render(planetCache.resolve(values));
+      return;
+    }
+
     // Debounce regeneration so slider/form drags do not thrash the mesh builder.
     const handle = setTimeout(() => {
-      manager.render(generatePlanet(values));
+      manager.render(planetCache.resolve(values));
     }, 150);
     return () => clearTimeout(handle);
-  }, [values]);
+  }, [values, planetCache]);
 
   useEffect(() => {
     // Debounced like the terrain regen above, but kept in its own effect so adding an object (which
