@@ -94,7 +94,15 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
 ## Defects
 
-- [x] **Opening a companion moved the plank** — two separate faults. The visible stutter was six
+- [x] **The deck scrolled on inference; now it scrolls on intent** — the real fix behind the companion
+      bugs. `useCollapseAfterAttended` watched attention and guessed the user had chosen a plank; six
+      guards accumulated to un-guess the false positives (focus handoff, in-flight navigation, exposé
+      close, companion arrival, repeat commands) and it still moved the deck when a companion opened.
+      Deleted. Scroll is now written by exactly two explicit triggers — `ScrollIntoView` for outside
+      navigation, a delegated `pointerdown` for an in-deck click — and `handoffRef` went with it, since
+      nothing infers any more. Measured: click brings a plank forward (0 → 768); opening its companion
+      leaves scroll and the plank's edge unchanged.
+- [x] **Opening a companion moved the plank** (superseded by the above) — two separate faults. The visible stutter was six
       `scrollTo` calls to one destination in 30ms (see below). The remaining jump was the collapse
       running at all: `companionId` is a dependency so that a companion landing _as part of a
       navigation_ corrects a scroll measured before the pair widened, but it also fired when the

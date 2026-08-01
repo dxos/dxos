@@ -74,25 +74,28 @@ instead of folding.
 **Attention hysteresis.** Attention must always point at a plank the user can see, so when the
 attended plank folds (or leaves the viewport on mobile) `useFoldedPlanks` moves focus to the unfolded
 plank nearest the viewport centre. Attention is focus-driven, so it moves focus rather than setting
-attention directly. Two guards keep this from fighting the user: `scrollIntentRef` holds focus on a
-plank a navigation is still travelling to, and `handoffRef` marks attention this hook handed over so
-`useCollapseAfterAttended` does not read it as a deliberate choice and scroll back against the gesture.
+attention directly. `scrollIntentRef` holds that focus on a plank a navigation is still travelling to,
+so the hysteresis does not hand it straight back on the first scroll frame.
 
-**Collapse on attend.** `useCollapseAfterAttended` scrolls a newly attended plank flush against the
-left pile, which pushes everything after it off the trailing edge into the right pile. The offset
-cannot come from a rect or `offsetLeft` — while sticky, both report the _pinned_ position — so
-`scrollPlankToPile` sums the preceding planks' widths and gaps and backs off one spine each.
+**The deck scrolls only when asked.** There are exactly two animated writers of scroll position, and
+both are explicit:
 
-Opening a companion is not a navigation, so it does not scroll: the collapse follows up a
-`companionId` change only when attention has just moved, which is the case the dependency exists for
-(the companion resolves a commit later, so the first pass measures the deck before the pair widened).
-Toggling a companion on the plank you are already reading leaves the deck where it is.
+- `useScrollIntoView`, for navigation from outside the deck (`LayoutOperation.ScrollIntoView`). It also
+  focuses the plank, which is why an in-deck click does not reuse it — that would take the caret away
+  from a click landing in a document.
+- A delegated `pointerdown` on the stack: clicking a plank asks for it. Delegated because `Mosaic.Tile`
+  forwards no pointer handlers, and captured so it settles before the click reaches an editor.
 
-`scrollPlankToPile` also drops a repeat command to the same destination inside a short window. One interaction settles
-over several commits — attention lands, the companion resolves a commit later, the width cap
-recomputes — and `scrollTo` _restarts_ a smooth animation rather than continuing it, so the repeats
-read as a stutter rather than a glide. Opening a companion measured six commands to one destination
-in 30ms. The re-runs are all legitimate, so the command is deduped rather than a dependency dropped.
+The deck deliberately does **not** scroll in response to attention. This was tried and removed. A hook
+watched `attendedPlankId` and `companionId` and inferred "the user chose this plank", but attention also
+moves for reasons that are not a choice — a companion resolving a commit later, the fold hysteresis
+handing focus on, an exposé closing, a width cap recomputing. Each false positive earned a guard, and
+the hook ended up with six of them plus a scroll-command dedupe, while still moving the deck under the
+user when a companion opened. Intent is stated now, not deduced.
+
+The corollary matters when adding features: a layout change must never scroll. A companion widens its
+own tile, so the attended plank's edge does not move — nothing needs correcting, and correcting it is
+what caused the jump.
 
 ---
 
