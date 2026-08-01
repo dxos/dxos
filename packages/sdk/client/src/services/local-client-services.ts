@@ -32,7 +32,6 @@ import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platfor
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { isBun } from '@dxos/util';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
   new Promise((resolve) => {
@@ -96,14 +95,13 @@ const setupNetworking = async (
       // EdgeSignalManager needs an EdgeConnection and is created in the services host; without edge
       // signaling fall back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
       signalManager = edgeFeatures?.signaling ? undefined : new MemorySignalManager(new MemorySignalManagerContext()),
-      // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
-      transportFactory = isBun()
-        ? MemoryTransportFactory
-        : createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          ),
+      // NOTE: the former bun → MemoryTransportFactory guard ("P2P causes seg fault in bun") was a
+      // node-datachannel@0.30.0 darwin-arm64 binary crash, fixed by the 0.32.3 bump — RTC works
+      // under bun and node alike (loopback repro: .agents/projects/mcp/scripts/bun-rtc-loopback.mjs).
+      transportFactory = createRtcTransportFactory(
+        { iceServers: config.get('runtime.services.ice') },
+        config.get('runtime.services.iceProviders') && createIceProvider(config.get('runtime.services.iceProviders')!),
+      ),
     } = options;
 
     return {

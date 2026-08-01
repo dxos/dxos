@@ -22,6 +22,7 @@ Date: 2026-08-01 · Status: **RESOLVED by `claude/competent-curie-20057f`** (kep
 >   `plugin-projects/MILESTONE-5.md` §7.2; placement §7.3 (edge mcp-space-service projects the
 >   operations; `McpToolAnnotation` planned for phase 4; identity-through-the-call is the edge
 >   prerequisite for assignee-bearing writes).
+
 Project: `mcp` (milestone 3, task 4). Companion to
 [task-planning ⇄ Composer sync](./2026-08-01-task-planning-composer-sync-design.md).
 
@@ -68,7 +69,7 @@ plugin-projects consumes via the `outline` ref. Sync engines (Linear/GitHub) plu
 ### Dedicated MCP verbs vs generic object verbs
 
 > **Superseding input (2026-08-01):** the user is producing an updated spec on another branch
-> (`claude/competent-curie-20057f`) introducing `TaskOperation` in a `plugin-tasks`. The MCP task
+> (`claude/competent-curie-20057f`) introducing `TaskOperation` in a `plugin-tasks` plugin. The MCP task
 > verbs below must **match those operations** (thin projections over the same operation keys —
 > the object-toolkit pattern), and `plugin-tasks` gets registered in the edge operation-service.
 > Constraint from the outliner registration attempt: the worker resolves all lazy operation
