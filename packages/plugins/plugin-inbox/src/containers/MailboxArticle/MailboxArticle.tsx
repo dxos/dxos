@@ -235,9 +235,11 @@ export const MailboxArticle = ({
       }
       // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
       // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
+      // Named after the mailbox so reading down it reuses one plank instead of adding one per message.
       void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
       void invokePromise(LayoutOperation.Open, {
         subject: [`${id}/${message.id}`],
+        name: `${id}/message`,
         pivotId: id,
         disposition: 'add',
         navigation: 'immediate',

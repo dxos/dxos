@@ -16,7 +16,6 @@ import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -162,7 +161,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ChessComPlugin(),
     ReviewPlugin(),
     ConductorPlugin(),
-    ConnectorPlugin(),
     !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
     DevtoolsPlugin(),

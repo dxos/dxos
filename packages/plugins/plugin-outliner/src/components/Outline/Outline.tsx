@@ -180,7 +180,7 @@ const OUTLINE_CONTENT_NAME = 'Outline.Content';
 
 type OutlineContentProps = {};
 
-const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ children, ...props }, forwardedRef) => {
+const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, forwardedRef) => {
   const { id, text, scrollable, showSelected, autoFocus, onConvertToTask, onSelectLink, resolveLinkLabel, viewRef } =
     useOutlineContext(OUTLINE_CONTENT_NAME);
   const { t } = useTranslation(meta.profile.key);
@@ -262,6 +262,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
       return item.onSelect({ view, head: view.state.selection.main.head });
     }
   }, []);
+
   const getView = useCallback(() => view ?? null, [view]);
 
   // Reconcile stale link labels whenever the resolver reports new values (targets rename independently).
@@ -290,9 +291,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
 
   return (
     <EditorMenuProvider getView={getView} groups={commandGroups} onSelect={handleSelect}>
-      <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef, setRoot)}>
-        {children}
-      </div>
+      <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef, setRoot)} />
     </EditorMenuProvider>
   );
 });

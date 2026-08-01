@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+export * from './companion-anchor';
 export * from './companion-view-state';
 export * from './layoutAppliesTopbar';
 export * from './migrate-persisted-state';

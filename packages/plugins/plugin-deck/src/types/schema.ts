@@ -22,19 +22,23 @@ export const DeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   /** Item IDs of planks that have been closed; used for state persistence and reopening. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  //
-  // Sizing. Both in rem, differing in what they key on (see `useDeckPresentation`): a sliding plank
-  // owns its width wherever it sits, while the tiling split belongs to the deck's single seam.
-  //
-  /** Sliding: absolute plank widths in rem, keyed by item ID — a plank keeps its width wherever it sits. */
+  /**
+   * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
+   * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
+   */
   plankSizing: Schema.mutable(PlankSizing),
   /**
-   * Tiling: the start pane's width in rem; the end pane fills the remainder, so the split survives a
-   * viewport resize and swapping which plank occupies a slot. Absent means an even split.
+   * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
+   * restores what each was left in — a plank you closed the companion on stays closed when you come
+   * back to it, while the one you left it open on reopens it.
    */
-  tilingSizing: Schema.optional(Schema.Number),
-  /** Whether the companion pane is visible alongside the active plank(s). */
-  companionOpen: Schema.Boolean,
+  companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
+  /**
+   * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
+   * like a browser tab: opening under a name that is already taken replaces its occupant in place.
+   * Entries are pruned as their plank closes.
+   */
+  plankNames: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String })),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -49,7 +53,8 @@ export const defaultDeck: DeckState = {
   active: [],
   inactive: [],
   plankSizing: {},
-  companionOpen: false,
+  companionPlanks: [],
+  plankNames: {},
 };
 
 //
@@ -82,6 +87,13 @@ export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 export const EphemeralDeckState = Schema.Struct({
   /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */
   fullscreen: Schema.optional(Schema.String),
+  /**
+   * Item ID of the plank currently expanded to fill the deck, leaving only the other planks' spines
+   * beside it. Transient, and separate from `plankSizing` so collapsing restores the plank's own width.
+   */
+  expanded: Schema.optional(Schema.String),
+  /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
+  expose: Schema.optional(Schema.Boolean),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
@@ -119,6 +131,9 @@ export namespace DeckAction {
     Schema.Literal('close').annotations({ description: 'Close the plank.' }),
     Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
     Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
+    Schema.Literal('expand').annotations({
+      description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
+    }),
     Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
     Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
   );
