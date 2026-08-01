@@ -982,6 +982,39 @@ Shared plumbing, so it is built once: their Phase 1 exposes relation-endpoint mu
 (`ObjectCore.setSource`/`setTarget`) for ref rewriting — the same internal API fan-out-to-relation
 writes need here.
 
+**Baseline-aware three-way merge — verified proposal for PR #12412 (2026-08-01).** Their PR ships
+per-field merge ("smallest-id-defining-candidate wins per field"), which is already better than
+whole-object replace — but for migration-minted duplicates it still loses unconflicted edits,
+because the deterministic transform wrote _every_ field on _both_ copies, so "the winner defines
+it" is vacuously true and the winner's untouched baseline value beats the loser's real edit.
+Demonstrated, then fixed, in `echo-client-e2e/src/migration-research-merge.test.ts` (4 tests):
+
+- **The defect, quantified**: field-wise winner-preference on two migration duplicates (each edited
+  disjointly, plus one genuinely contested field) drops the loser's disjoint edit with no conflict
+  existing — and drops the contested field silently, with no record.
+- **The fix**: classify each field against the shared **baseline** — for migration duplicates a
+  free, pure recomputation of the transform (`deriveBaseline(parent)`). Winner==baseline &&
+  loser!=baseline → take the loser's (unconflicted edit preserved); loser==baseline or equal values
+  → keep, writing nothing (the claim-3 value-compare rule); both diverged and disagree → **genuine
+  conflict**: keep the winner's value, record `conflicts[field] = { mine, theirs, loserId }`.
+  Result: loss only where two peers actually contradict each other — goal (a).
+- **Inspectable and reversible**: the conflict record is a Record keyed by field (not an array, so
+  independent identical merges converge instead of duplicating entries), and the loser is
+  tombstoned, never erased — every field readable under `deleted: 'include'`, agreeing with the
+  record. A UI flip ("choose theirs") applied from either source converges on both peers — goal
+  (b).
+- **Convergent and idempotent**: two peers merging independently while partitioned converge to the
+  identical winner state _including_ the conflicts record; re-running the merge on the converged
+  state performs zero writes (asserted by empty `A.diff`). Requires the value-compare guard and an
+  idempotent tombstone (skip `db.remove` when already deleted).
+
+What #12412 needs to adopt this: a baseline per duplicate. Migration duplicates get it free
+(recompute the deterministic transform). General duplicates have no pure function to re-run — the
+extension path is storing creation heads (or a fork-time snapshot) alongside the natural key so the
+baseline can be diffed out later, the same `A.diff` machinery claims 2/5 use; unbuilt, flagged
+only. This also bears on their open collaborative-text policy: min-id-wins discards a loser's
+entire text, and a text baseline would allow the same only-on-conflict discipline there.
+
 ### 10.6 Convergence between peers
 
 A preference order, not a menu.
