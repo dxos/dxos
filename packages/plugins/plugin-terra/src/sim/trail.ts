@@ -15,6 +15,7 @@ export type TrailSpec = {
   lifetimeMs: number;
   capacity: number;
   startRadius: number;
+  /** Puff radius at the end of its life, relative to `startRadius`: above 1 it spreads, 0 tapers it away to nothing. */
   endScale: number;
   startAlpha: number;
   /** Angular distance the emission point sits behind the object's own origin, clearing its tail. */
@@ -49,12 +50,16 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
     color: [1, 1, 1],
   },
   rocket: {
-    spacing: 0.0025,
-    lifetimeMs: 1400,
-    capacity: 30,
-    startRadius: 0.012,
-    endScale: 2,
-    startAlpha: 0.45,
+    // A short, dense plume rather than a smoke column back to the pad: exhaust dissipates fast, and
+    // a long one hides the very thing the trail is there to show, which is the rocket's attitude.
+    spacing: 0.002,
+    lifetimeMs: 500,
+    capacity: 12,
+    startRadius: 0.022,
+    // Tapers to nothing: a plume is widest at the nozzle and thins out behind, where a wake or a
+    // vapour trail spreads as it disperses.
+    endScale: 0,
+    startAlpha: 0.5,
     aftOffset: 0.024,
     // Burning propellant, shading toward the flame at the nozzle rather than the white of a wake.
     color: [1, 0.55, 0.16],
@@ -97,6 +102,13 @@ export const trailPuffs = (
     return [];
   }
 
+  // A rocket burns for the first part of its arc and coasts the rest, and a cut engine leaves no
+  // plume: the exhaust goes with it rather than hanging in the air behind. Read off the *current*
+  // phase, so the whole trail disappears the instant the burn ends.
+  if (definition.kind === 'rocket' && state.phase !== 'boost') {
+    return [];
+  }
+
   const intervalMs = (spec.spacing / definition.speed) * 1000;
   const elapsedNowMs = nowMs - definition.spawnedAt;
   // The largest tick strictly before `elapsedNowMs`, so the freshest puff never sits exactly on the
@@ -115,19 +127,10 @@ export const trailPuffs = (
     }
     const context: MotionContext = { config, elapsed: birthMs / 1000 };
     const historical = evaluate(state, definition, context);
-    // A rocket only exhausts on the way up. Testing the puff's own birth-time fraction (not the
-    // rocket's current one) keeps ascent puffs visible as it falls, instead of the plume vanishing
-    // the instant it tips over the apex.
-    if (definition.kind === 'rocket' && historical.flightFraction >= APEX_FRACTION) {
-      continue;
-    }
     puffs.push({ position: behindHull(historical, spec), age: age / spec.lifetimeMs });
   }
   return puffs;
 };
-
-/** Flight fraction at which a ballistic arc stops climbing; past this the rocket is descending. */
-const APEX_FRACTION = 0.5;
 
 /**
  * `historical`'s world position, moved back along the axis it was *flying* at that instant by the

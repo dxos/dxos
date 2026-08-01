@@ -41,7 +41,7 @@ describe('trailPuffs', () => {
   test('puff count is capped at spec.capacity', () => {
     // A very fast object would otherwise pack far more than `capacity` emission ticks into `lifetimeMs`.
     // At speed 10 the quarter-turn flight lasts ~157ms, so sampling at 70ms keeps the rocket below
-    // its apex — rockets only exhaust while climbing, and a post-apex sample would emit nothing.
+    // its burn — a rocket exhausts for the first third of its arc, and a later sample emits nothing.
     const rocket = makeRocket(10);
     const state = initialState(rocket, config);
     const puffs = trailPuffs(state, rocket, config, 70, SPEC);

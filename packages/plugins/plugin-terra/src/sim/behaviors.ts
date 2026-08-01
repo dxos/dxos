@@ -50,8 +50,8 @@ const PLANE_MAX_PITCH = 25 * DEG;
  */
 const PLANE_PITCH_BASELINE = 0.015;
 
-/** Flight fraction below which a rocket is still in its boost phase. */
-export const BOOST_FRACTION = 0.15;
+/** How much of the arc the engine burns for; past it the rocket is coasting, well short of apogee. */
+export const BOOST_FRACTION = 1 / 4;
 
 /** Flight fraction above which a rocket has entered descent. */
 export const DESCENT_FRACTION = 0.85;
