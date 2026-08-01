@@ -115,7 +115,7 @@ const matrixFor = ({ state, definition }: SimObject, axis: Axis, heading: number
   const objectScale = state.radius * SCALE_FACTOR;
   const transform = axisTransform(
     new Vector3(position[0], position[1], position[2]),
-    objectFrame(state, definition.kind, heading),
+    objectFrame(state, heading),
     objectScale,
     axis,
   );
