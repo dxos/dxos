@@ -542,11 +542,14 @@ const useMaxPlankWidth = ({
   stackRef,
   isSliding,
   plankCount,
+  mountKey,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   isSliding: boolean;
   plankCount: number;
+  /** Changes whenever the stack is torn down and rebuilt (the exposé), so the observers re-attach. */
+  mountKey: unknown;
 }): { maxPlankWidthPx: number; viewportWidthPx: number } => {
   const [measured, setMeasured] = useState({
     maxPlankWidthPx: Number.POSITIVE_INFINITY,
@@ -577,7 +580,7 @@ const useMaxPlankWidth = ({
     const observer = new ResizeObserver(measure);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [isSliding, plankCount, viewportRef, stackRef]);
+  }, [isSliding, plankCount, viewportRef, stackRef, mountKey]);
 
   return measured;
 };
@@ -635,12 +638,15 @@ const useFoldedPlanks = ({
   maxPlankWidthPx,
   scrollIntentRef,
   handoffRef,
+  mountKey,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
   isSliding: boolean;
   plankCount: number;
   maxPlankWidthPx: number;
+  /** See `useMaxPlankWidth`: the fold state has to be recomputed against the rebuilt tiles. */
+  mountKey: unknown;
   scrollIntentRef: RefObject<string | undefined>;
   /** Set to the plank this hook hands attention to, so the collapse can tell it apart from a real choice. */
   handoffRef: RefObject<string | undefined>;
@@ -730,7 +736,17 @@ const useFoldedPlanks = ({
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [isSliding, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef, handoffRef]);
+  }, [
+    isSliding,
+    plankCount,
+    maxPlankWidthPx,
+    getPlankTiles,
+    attention,
+    viewportRef,
+    scrollIntentRef,
+    handoffRef,
+    mountKey,
+  ]);
 };
 
 /**
@@ -1009,6 +1025,7 @@ export const DeckPlanks = () => {
     stackRef,
     isSliding,
     plankCount: planks.length,
+    mountKey: state.expose,
   });
   usePreservedScroll({ viewportRef, isSliding });
   useFoldedPlanks({
@@ -1019,6 +1036,7 @@ export const DeckPlanks = () => {
     maxPlankWidthPx,
     scrollIntentRef,
     handoffRef,
+    mountKey: state.expose,
   });
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
   useCollapseAfterAttended({
