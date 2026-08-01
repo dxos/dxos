@@ -14,12 +14,13 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
   requires: [CallsCapabilities.Manager],
   activatesOn: ActivationEvents.DeferredStartup,
 });
+// CallManager/CallTransport stay eager with the ReactRoot: its components read the manager
+// via strict useCapability, so deferring either trips the missing-capability invariant.
 export const CallManager = Capability.lazyModule(
   'CallManager',
   {
     requires: [ClientCapabilities.Client, Capabilities.AtomRegistry, ClientCapabilities.IdentityService],
     provides: [CallsCapabilities.Manager],
-    activatesOn: ActivationEvents.DeferredStartup,
   },
   () => import('./call-manager'),
 );
@@ -28,7 +29,6 @@ export const CallTransport = Capability.lazyModule(
   {
     requires: [ClientCapabilities.Client],
     provides: [CallsCapabilities.CallTransportProvider],
-    activatesOn: ActivationEvents.DeferredStartup,
   },
   () => import('./call-transport'),
 );

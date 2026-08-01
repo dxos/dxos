@@ -19,14 +19,30 @@ const meta = Plugin.makeMeta({
   tags: ['system'],
 });
 
-/** Resolves at host idle (`requestIdleCallback` when available, macrotask fallback). */
+/**
+ * Resolves once the app shell has painted (`app-framework:first-interactive`, bounded wait) and
+ * the host reaches idle. Anchoring on the mark matters: the ready *message* precedes the shell
+ * render by hundreds of ms, and `requestIdleCallback` can find an idle gap mid-render-pipeline —
+ * firing there floods the main thread with the deferred wave ahead of the workspace paint.
+ */
 const idle = (): Promise<void> =>
   new Promise((resolve) => {
-    if (typeof requestIdleCallback === 'function') {
-      requestIdleCallback(() => resolve(), { timeout: 2_000 });
-    } else {
-      setTimeout(resolve, 0);
-    }
+    const start = Date.now();
+    const awaitIdle = () => {
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(() => resolve(), { timeout: 15_000 });
+      } else {
+        setTimeout(resolve, 0);
+      }
+    };
+    const awaitPaint = () => {
+      if (performance.getEntriesByName('app-framework:first-interactive').length > 0 || Date.now() - start > 10_000) {
+        awaitIdle();
+      } else {
+        setTimeout(awaitPaint, 100);
+      }
+    };
+    awaitPaint();
   });
 
 const FireDeferredStartup = Capability.inlineModule('FireDeferredStartup', { provides: [] }, () =>
