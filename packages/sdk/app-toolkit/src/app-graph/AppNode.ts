@@ -194,7 +194,7 @@ export const makeObject = ({
   get: Atom.Context;
   db: Database.Database;
   object: Obj.Unknown;
-  disposition?: string;
+  disposition?: string | string[];
   draggable?: boolean;
   droppable?: boolean;
   navigable?: boolean;
@@ -447,6 +447,107 @@ export const makeSettingsPanel = ({
     ...(iconHue !== undefined && { iconHue }),
     ...(position !== undefined && { position }),
   },
+});
+
+//
+// Toolbar action helpers.
+//
+
+// Mirrors `TOOLBAR_DISPOSITION`/`MenuSeparatorType` in `@dxos/react-ui-menu` — duplicated rather
+// than imported so this foundational package doesn't gain a new dependency edge on a UI package.
+const TOOLBAR_DISPOSITION = 'toolbar';
+const MENU_SEPARATOR_TYPE = '@dxos/react-ui-toolbar/separator';
+
+/**
+ * Build a toolbar action node — a graph action that opts into the object toolbar
+ * (`disposition: 'toolbar'`) instead of context-menu-only placement. Return these from a
+ * `GraphBuilder.createExtension`/`createTypeExtension` `actions:` callback.
+ *
+ * @idiom org.dxos.app-toolkit.toolbarGraphAction
+ *   applies: Contributing a toolbar action from an app-graph-builder extension
+ *   instead-of: Hand-rolling `Node.makeAction({ ..., properties: { disposition: 'toolbar', ... } })`
+ *   uses: {@link makeToolbarAction}
+ *   related: org.dxos.react-ui-menu.graphActionsToolbar
+ */
+export const makeToolbarAction = <R = never>({
+  id,
+  label,
+  icon,
+  data,
+  disabled,
+  testId,
+  keyBinding,
+}: {
+  id: string;
+  label: Translations.Label;
+  icon?: string;
+  data: Node.ActionData<R>;
+  disabled?: boolean;
+  testId?: string;
+  keyBinding?: string;
+}): Node.NodeArg<Node.ActionData<R>> =>
+  Node.makeAction({
+    id,
+    data,
+    properties: {
+      label,
+      disposition: TOOLBAR_DISPOSITION,
+      ...(icon !== undefined && { icon }),
+      ...(disabled !== undefined && { disabled }),
+      ...(testId !== undefined && { testId }),
+      ...(keyBinding !== undefined && { keyBinding }),
+    },
+  });
+
+/**
+ * Build a toolbar action-GROUP node (a dropdown of child actions) that opts into the object
+ * toolbar. Unlike a flat {@link makeToolbarAction}, a group MUST be returned from a `connector:`
+ * extension callback — not `actions:`, which always stamps `type: Node.ActionType` on every
+ * returned node and would clobber the group's type — with the extension's `relation` set to
+ * `Node.actionRelation()` so `graph.actions(nodeId)` picks the group up as one of the node's
+ * actions. The group's own nested `actions` are wired automatically by `@dxos/app-graph` (it
+ * recurses into any `NodeArg.actions` field), so the children need no separate extension.
+ */
+export const makeToolbarActionGroup = ({
+  id,
+  label,
+  icon,
+  iconOnly = true,
+  actions,
+}: {
+  id: string;
+  label: Translations.Label;
+  icon?: string;
+  /** Render the trigger as icon-only (label becomes tooltip/aria). Defaults to `true` for compact
+   * toolbars; set `false` to show the label text next to the icon. */
+  iconOnly?: boolean;
+  actions: Node.NodeArg<Node.ActionData<any>>[];
+}): Node.NodeArg<typeof Node.actionGroupSymbol> =>
+  Node.makeActionGroup({
+    id,
+    actions,
+    properties: {
+      label,
+      // Without `variant: 'dropdownMenu'`, `Menu`/`ToolbarMenu` renders a group as a toggle-button
+      // group (radio/checkbox semantics) instead of an actual dropdown — the group would render but
+      // clicking it would do nothing, since toggle groups don't invoke arbitrary action callbacks.
+      variant: 'dropdownMenu',
+      iconOnly,
+      disposition: TOOLBAR_DISPOSITION,
+      ...(icon !== undefined && { icon }),
+    },
+  });
+
+/** Build a separator node for a {@link makeToolbarActionGroup}'s `actions` list, e.g. between a
+ * "reuse existing" section and a "connect new" section. Carries `disposition: 'toolbar'` so it
+ * survives the `isToolbarAction` filter alongside the actions it separates. */
+export const makeToolbarSeparator = (
+  id: string,
+  variant: 'gap' | 'line' = 'line',
+): Node.NodeArg<Node.ActionData<any>> => ({
+  id,
+  type: MENU_SEPARATOR_TYPE,
+  properties: { variant, disposition: TOOLBAR_DISPOSITION },
 });
 
 //

@@ -12,6 +12,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
+import * as Scope from 'effect/Scope';
 import * as TestClock from 'effect/TestClock';
 
 import { invariant } from '@dxos/invariant';
@@ -390,11 +391,10 @@ describe('PluginManager', () => {
           Plugin.addModule({
             activatesOn: DefectEvent,
             id: 'DefectImmediate',
-            activate: () => {
+            activate: (): Effect.Effect<void> => {
               // This throws immediately before even returning an Effect.
               // This is the most severe type of defect.
               throw new Error('immediate throw before Effect');
-              return Effect.succeed(undefined);
             },
           }),
           Plugin.make,
@@ -1030,6 +1030,41 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getActive(), []);
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
       assert.strictEqual(manager.capabilities.getAll(Number).length, 0);
+    }),
+  );
+
+  it.effect('should close module scope during deactivation', () =>
+    Effect.gen(function* () {
+      let scopeClosed = false;
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'WithScope',
+          activatesOn: ActivationEvents.Startup,
+          activate: () =>
+            Effect.gen(function* () {
+              const scope = yield* Scope.Scope;
+              yield* Scope.addFinalizer(
+                scope,
+                Effect.sync(() => {
+                  scopeClosed = true;
+                }),
+              );
+              return Capability.contributes(String, { string: 'hello' });
+            }),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.profile.key);
+      yield* manager.enable(testMeta.profile.key);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.isFalse(scopeClosed);
+
+      yield* manager.shutdown();
+      assert.isTrue(scopeClosed);
     }),
   );
 

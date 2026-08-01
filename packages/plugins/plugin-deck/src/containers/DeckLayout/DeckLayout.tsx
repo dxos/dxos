@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Dnd } from '@dxos/react-ui-dnd';
 
 import { useDeckState } from '#hooks';
 import { DeckCapabilities, getMode } from '#types';
@@ -35,7 +35,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   );
 
   return (
-    <Mosaic.Root>
+    <Dnd.Root>
       <PopoverRoot>
         <ActiveNode />
         <Deck.Root
@@ -57,6 +57,8 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
         <Dialog />
         <Toaster toasts={toasts} onDismissToast={onDismissToast} />
       </PopoverRoot>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
+
+DeckLayout.displayName = 'DeckLayout';

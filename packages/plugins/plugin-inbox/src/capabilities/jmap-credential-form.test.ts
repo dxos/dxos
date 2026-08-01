@@ -11,6 +11,7 @@ import { buildJmapCredential, jmapCredentialForm } from './jmap-credential-form'
 
 const session = (username?: string): Jmap.Session => ({
   apiUrl: 'https://api.fastmail.com/jmap/api/',
+  downloadUrl: 'https://api.fastmail.com/jmap/download/{accountId}/{blobId}/{name}?type={type}',
   primaryAccounts: { 'urn:ietf:params:jmap:mail': 'u1' },
   username,
 });

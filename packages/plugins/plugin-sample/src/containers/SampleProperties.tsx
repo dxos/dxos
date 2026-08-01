@@ -41,3 +41,5 @@ export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
 };
 
 export default SampleProperties;
+
+SampleProperties.displayName = 'SampleProperties';

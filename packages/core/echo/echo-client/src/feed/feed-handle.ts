@@ -3,20 +3,27 @@
 //
 
 import * as Predicate from 'effect/Predicate';
+import * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Entity, type Feed, Obj, type Query, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { Entity, type Feed, Obj, type Ref } from '@dxos/echo';
+import {
+  type ObjectJSON,
+  ParentId,
+  SelfURIId,
+  assertObjectModel,
+  isProxy,
+  setRefResolverOnData,
+} from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { runServiceCall } from '@dxos/protocols';
+import { type FeedService } from '@dxos/protocols/rpc';
 
 import { type DatabaseImpl } from '../proxy-db';
-import { QueryResultCache, QueryResultImpl } from '../query';
-import { FeedQueryContext } from './feed-query-context';
 
 const TRACE_FEED_LOAD = false;
 
@@ -41,13 +48,16 @@ export class FeedHandle {
     try {
       TRACE_FEED_LOAD &&
         log.info('feed refresh begin', { currentObjects: this._objects.length, refreshId: thisRefreshId });
-      const { objects } = await this._service.queryQueue({
-        query: {
-          queuesNamespace: this._namespace,
-          spaceId: this._spaceId,
-          queueIds: [this._feedId],
-        },
-      });
+      const { objects } = await runServiceCall(
+        this._runtime,
+        this._service.FeedService.queryFeed({
+          query: {
+            feedNamespace: this._namespace,
+            spaceId: this._spaceId,
+            feedIds: [this._feedId],
+          },
+        }),
+      );
       TRACE_FEED_LOAD && log.info('items fetched', { refreshId: thisRefreshId, count: objects?.length ?? 0 });
       if (thisRefreshId !== this._refreshId) {
         return;
@@ -127,12 +137,9 @@ export class FeedHandle {
   private _refreshId = 0;
   private _loadObjectsPromise: Promise<Entity.Unknown[]> | undefined;
 
-  // Shares one QueryResult instance (and its subscription) across repeated calls with the same
-  // serialized query against this feed.
-  readonly #queryResultCache = new QueryResultCache();
-
   constructor(
-    private readonly _service: FeedProtocol.QueueService,
+    private readonly _service: FeedService.Client,
+    private readonly _runtime: Runtime.Runtime<never>,
     private readonly _refResolver: Ref.Resolver,
     private readonly _echoUri: EID.EID,
     private readonly _database: DatabaseImpl,
@@ -144,6 +151,10 @@ export class FeedHandle {
 
   get uri(): EID.EID {
     return this._echoUri;
+  }
+
+  get namespace(): string {
+    return this._namespace;
   }
 
   get refResolver(): Ref.Resolver {
@@ -169,6 +180,13 @@ export class FeedHandle {
    * Insert into feed with optimistic update.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
+    for (const item of items) {
+      if (!isProxy(item) && !Entity.isEntity(item)) {
+        throw new TypeError(
+          'feed.append expects reactive ECHO objects. Plain objects must be created using Obj.make(Type, props).',
+        );
+      }
+    }
     items.forEach((item) => assertObjectModel(item));
 
     for (const item of items) {
@@ -190,12 +208,15 @@ export class FeedHandle {
 
     try {
       for (let i = 0; i < encoded.length; i += FEED_APPEND_BATCH_SIZE) {
-        await this._service.insertIntoQueue({
-          subspaceTag: this._namespace,
-          spaceId: this._spaceId,
-          queueId: this._feedId,
-          objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
-        });
+        await runServiceCall(
+          this._runtime,
+          this._service.FeedService.insertIntoFeed({
+            subspaceTag: this._namespace,
+            spaceId: this._spaceId,
+            feedId: this._feedId,
+            objects: encoded.slice(i, i + FEED_APPEND_BATCH_SIZE),
+          }),
+        );
       }
     } catch (err) {
       log.catch(err);
@@ -213,49 +234,49 @@ export class FeedHandle {
     this.updated.emit();
 
     try {
-      await this._service.deleteFromQueue({
-        subspaceTag: this._namespace,
-        spaceId: this._spaceId,
-        queueId: this._feedId,
-        objectIds: ids,
-      });
+      await runServiceCall(
+        this._runtime,
+        this._service.FeedService.deleteFromFeed({
+          subspaceTag: this._namespace,
+          spaceId: this._spaceId,
+          feedId: this._feedId,
+          objectIds: ids,
+        }),
+      );
     } catch (err) {
       this._error = err as Error;
       this.updated.emit();
     }
   }
 
-  // Odd way to define method's types from a typedef.
-  declare query: Database.QueryFn;
-  static {
-    this.prototype.query = this.prototype._query;
-  }
-
-  private _query(query: Query.Any) {
-    return this.#queryResultCache.getOrCreate(
-      query,
-      () => new QueryResultImpl(new FeedQueryContext(this, this._ctx), query),
-    );
-  }
-
   async sync({
     shouldPush = true,
     shouldPull = true,
   }: { shouldPush?: boolean; shouldPull?: boolean } = {}): Promise<void> {
-    await this._service.syncQueue({
-      subspaceTag: this._namespace,
-      spaceId: this._spaceId,
-      queueId: this._feedId,
-      shouldPush,
-      shouldPull,
-    });
+    await runServiceCall(
+      this._runtime,
+      this._service.FeedService.syncFeed({
+        subspaceTag: this._namespace,
+        spaceId: this._spaceId,
+        feedId: this._feedId,
+        shouldPush,
+        shouldPull,
+      }),
+    );
+  }
+
+  async refresh(): Promise<void> {
+    await this._refreshTask.runBlocking();
   }
 
   async getSyncState(): Promise<Feed.SyncState> {
-    const response = await this._service.getSyncState({
-      spaceId: this._spaceId,
-      namespaces: [this._namespace],
-    });
+    const response = await runServiceCall(
+      this._runtime,
+      this._service.FeedService.getSyncState({
+        spaceId: this._spaceId,
+        namespaces: [this._namespace],
+      }),
+    );
     const entry = response.namespaces?.find((state) => state.namespace === this._namespace);
     return {
       blocksToPull: Number(entry?.blocksToPull ?? 0),
@@ -265,13 +286,16 @@ export class FeedHandle {
   }
 
   async fetchObjectsJSON(): Promise<ObjectJSON[]> {
-    const { objects } = await this._service.queryQueue({
-      query: {
-        queuesNamespace: this._namespace,
-        spaceId: this._spaceId,
-        queueIds: [this._feedId],
-      },
-    });
+    const { objects } = await runServiceCall(
+      this._runtime,
+      this._service.FeedService.queryFeed({
+        query: {
+          feedNamespace: this._namespace,
+          spaceId: this._spaceId,
+          feedIds: [this._feedId],
+        },
+      }),
+    );
     return (objects ?? []).flatMap((encoded) => {
       try {
         return [JSON.parse(encoded) as ObjectJSON];
@@ -301,8 +325,10 @@ export class FeedHandle {
     return this._objects;
   }
 
-  getCachedObjectById(id: EntityId): Entity.Unknown | undefined {
-    return this._objectCache.get(id);
+  getCachedObjectById<T extends Entity.Unknown = Entity.Unknown>(id: EntityId): T | undefined {
+    // Feed entries may be objects or relations; callers narrow via the generic, mirroring
+    // DatabaseImpl.getObjectById. The cache holds fully-decoded entities keyed by id.
+    return this._objectCache.get(id) as T | undefined;
   }
 
   /**

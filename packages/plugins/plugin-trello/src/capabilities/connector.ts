@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';
@@ -40,6 +40,21 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.orDie);
 
 /**
+ * Trello `testConnection`: `GET /members/me` with the stored token. A rejected
+ * token or transport failure surfaces as a user-facing error so the connection
+ * UI can offer to reauthenticate.
+ */
+const testConnection: TestConnection = ({ accessToken }) =>
+  Effect.gen(function* () {
+    const creds = yield* TrelloApi.credentialsFromAccessToken(accessToken);
+    yield* TrelloApi.fetchMember().pipe(Effect.provide(Layer.succeed(TrelloApi.TrelloCredentials, creds)));
+  }).pipe(
+    Effect.mapError(
+      () => new ConnectionTestError({ message: 'Trello rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
+  );
+
+/**
  * Contributes a single `Connector` entry that wires Trello's discovery,
  * target materialization, sync operation, and token-created hook to the
  * `'trello.com'` source. plugin-connector routes connections to connectors
@@ -60,6 +75,7 @@ export default Capability.makeModule(
         materializeTarget: TrelloOperation.MaterializeTrelloTarget,
         sync: TrelloOperation.SyncTrelloBoard,
         onTokenCreated,
+        testConnection,
       },
     ]);
   }),

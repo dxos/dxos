@@ -22,3 +22,5 @@ export const CollectionSection = ({ role, subject }: CollectionSectionProps) => 
     </div>
   );
 };
+
+CollectionSection.displayName = 'CollectionSection';

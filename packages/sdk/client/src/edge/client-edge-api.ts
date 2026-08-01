@@ -86,6 +86,11 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return [];
   }
 
+  isSynchronous(): boolean {
+    // Remote edge queries resolve asynchronously and do not support reactive results.
+    return false;
+  }
+
   async run(
     _ctx: Context,
     query: QueryAST.Query,

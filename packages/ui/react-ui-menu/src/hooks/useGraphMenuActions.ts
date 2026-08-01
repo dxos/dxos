@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 
 import { type Graph, Node } from '@dxos/app-graph';
 
+import { applyPresentation } from '../presentation';
 import {
   type ActionGraphEdges,
   type ActionGraphNodes,
@@ -20,6 +21,12 @@ export type GraphMenuOptions = {
   rootId?: string;
   /** Keep only the actions the predicate accepts (e.g. by `disposition`). */
   filter?: (action: Node.ActionLike) => boolean;
+  /**
+   * Disposition key this surface renders — when set, each action's `presentation[surface]` chrome
+   * override (if any) is merged into its properties, letting one action multi-target dispositions
+   * (e.g. `['toolbar', 'list-item']`) with per-surface chrome.
+   */
+  surface?: string;
 };
 
 /**
@@ -36,7 +43,7 @@ export const buildGraphMenu = (
   nodeId: string,
   options: GraphMenuOptions = {},
 ): ActionGraphProps => {
-  const { rootId = Node.RootId, filter } = options;
+  const { rootId = Node.RootId, filter, surface } = options;
   const nodes: ActionGraphNodes = [];
   const edges: ActionGraphEdges = [];
   const seen = new Set<string>();
@@ -52,7 +59,7 @@ export const buildGraphMenu = (
         continue;
       }
       seen.add(action.id);
-      nodes.push(action as ActionGraphNodes[number]);
+      nodes.push((surface ? applyPresentation(action, surface) : action) as ActionGraphNodes[number]);
       // A group's children are the actions contributed for the group's own id.
       if (Node.isActionGroup(action)) {
         visit(action.id, action.id);
@@ -68,6 +75,12 @@ export const buildGraphMenu = (
  * Read a node's contributed actions from the app-graph as menu `ActionGraphProps`, for splicing into a
  * hand-built toolbar via `MenuBuilder.subgraph(graphActions(graph, get, nodeId))`. Reactive: reads the
  * graph's action atoms through `get`, so contributed actions appear/disappear as extensions update.
+ *
+ * @idiom org.dxos.react-ui-menu.graphActionsToolbar
+ *   applies: Splicing a node's app-graph-contributed toolbar actions into a hand-built object toolbar
+ *   instead-of: Reading `graph.actions(nodeId)` and filtering/wiring `nodes`/`edges` by hand in every toolbar
+ *   uses: {@link graphActions}, {@link MenuBuilder}, {@link useMenuBuilder}
+ *   related: org.dxos.react-ui-menu.toolbarMenu
  */
 export const graphActions = (
   graph: Graph.ReadableGraph | undefined,

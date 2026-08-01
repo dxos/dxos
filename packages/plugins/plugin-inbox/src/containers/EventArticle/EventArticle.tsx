@@ -143,3 +143,5 @@ export const EventArticle = ({ role, subject, attendableId, companionTo: calenda
     </Event.Root>
   );
 };
+
+EventArticle.displayName = 'EventArticle';

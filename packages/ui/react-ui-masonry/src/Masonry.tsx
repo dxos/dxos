@@ -8,6 +8,7 @@ import React, {
   type ComponentType,
   type CSSProperties,
   type JSX,
+  type MouseEvent,
   type PropsWithChildren,
   type Ref,
   useMemo,
@@ -27,8 +28,8 @@ import { useMasonryLayout } from './useMasonryLayout';
 //
 
 type MasonryContextValue = {
-  /** Render component for each masonry item. */
-  Tile: ComponentType<{ data: any; index: number }>;
+  /** Render component for each masonry item. Receives `selected` when the grid is selectable. */
+  Tile: ComponentType<{ data: any; index: number; selected?: boolean }>;
   /** Override auto-calculated column count. */
   columns: number | undefined;
   /** Upper bound on number of columns. */
@@ -132,10 +133,19 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
+  /**
+   * Ids of the currently-selected tiles. When `onSelect` is also provided the grid becomes
+   * selectable: selected tiles render an outline + `aria-selected`, and clicking a tile emits
+   * {@link onSelect}. Selection STATE (single/multi semantics) is owned by the consumer — pair this
+   * with `useListSelection` from `@dxos/react-ui-list`.
+   */
+  selectedIds?: ReadonlySet<string>;
+  /** Emitted when a tile is clicked while selectable. The consumer toggles its own selection state. */
+  onSelect?: (id: string, event: MouseEvent) => void;
 }>;
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, ...props }, forwardedRef) => {
+  ({ items, getId, selectedIds, onSelect, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap } = useMasonryContext('Masonry.Viewport');
     const remInPx = usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
@@ -143,7 +153,13 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // width for any ScrollArea density (thin/scrollbars/padding) without duplicating
     // the theme's gutter math.
     const viewportRef = useRef<HTMLDivElement | null>(null);
-    const { width: contentWidth = 0 } = useResizeDetector({ targetRef: viewportRef });
+    // Throttle width changes: each update recomputes the column count and the full tile layout,
+    // so coalesce rapid resizes (drag, ScrollArea reflow) into at most one relayout per interval.
+    const { width: contentWidth = 0 } = useResizeDetector({
+      targetRef: viewportRef,
+      refreshMode: 'throttle',
+      refreshRate: 200,
+    });
     const columnCount = useColumnCount(contentWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gap);
 
     // The grid fills the measured content box; the layout caps columns at
@@ -188,15 +204,25 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
             {items.map((item, index) => {
               const id = ids[index];
               const rect = rects[index];
+              const selectable = !!onSelect;
+              const selected = selectedIds?.has(id) ?? false;
               return (
                 <div
                   key={id}
                   // Let the tile clamp its card: a card's own min-width must not exceed
                   // the column, or a narrow (single-column, mobile) container overflows
                   // and shows a horizontal scrollbar.
-                  className='[&>*]:min-w-0!'
+                  className={[
+                    '[&>*]:min-w-0!',
+                    selectable && 'cursor-pointer',
+                    selected && 'rounded-md ring-2 ring-inset ring-primary-500',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   ref={getTileRef(id)}
                   role='listitem'
+                  aria-selected={selectable ? selected : undefined}
+                  onClick={onSelect ? (event) => onSelect(id, event) : undefined}
                   style={{
                     position: 'absolute',
                     insetBlockStart: 0,
@@ -205,7 +231,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                     transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
                   }}
                 >
-                  <Tile index={index} data={item} />
+                  <Tile index={index} data={item} selected={selected} />
                 </div>
               );
             })}

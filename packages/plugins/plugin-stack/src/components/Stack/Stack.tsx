@@ -27,7 +27,8 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { type DndContainerHandler } from '@dxos/react-ui-dnd';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 
@@ -60,7 +61,7 @@ export type StackContextValue = {
 type StackContextType = StackContextValue & {
   /** Container id used to scope Mosaic drag/drop. */
   id: string;
-  eventHandler: MosaicEventHandler;
+  eventHandler: DndContainerHandler;
   /** Scroll viewport element; threaded to the Mosaic container for autoscroll. */
   viewport: HTMLElement | null;
   setViewport: (element: HTMLElement | null) => void;
@@ -88,7 +89,7 @@ type StackRootProps = PropsWithChildren<
     /** Container id used to scope Mosaic drag/drop. */
     id: string;
     /** Drag/drop event handler; defaults to a read-only (no-drop) handler. */
-    eventHandler?: MosaicEventHandler;
+    eventHandler?: DndContainerHandler;
   }
 >;
 

@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
+import { Dnd } from '@dxos/react-ui-dnd';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -40,13 +41,13 @@ const DefaultStory = ({ segmentIndex, current }: StoryArgs) => {
     console.log('SegmentCard action', action);
   };
   return (
-    <Mosaic.Root>
+    <Dnd.Root>
       <Focus.Group asChild>
         <Mosaic.Container withFocus currentId={current ? segment.id : undefined}>
           <SegmentTile data={{ segment, onAction: handleAction }} location='story' current={current} />
         </Mosaic.Container>
       </Focus.Group>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
 

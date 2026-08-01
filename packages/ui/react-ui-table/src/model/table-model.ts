@@ -361,6 +361,24 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   /**
+   * Reports the grid's currently-visible cell range (called by the presentation from `getCells`). Drives the
+   * per-row subscriptions that keep cells reactive to external mutations, so it must be wired for the grid to
+   * reflect edits made outside it. Guarded so identical ranges don't churn the subscriptions.
+   */
+  public setVisibleRange(range: DxGridPlaneRange): void {
+    const current = this._registry.get(this._visibleRange);
+    if (
+      current.start.row === range.start.row &&
+      current.end.row === range.end.row &&
+      current.start.col === range.start.col &&
+      current.end.col === range.end.col
+    ) {
+      return;
+    }
+    this._registry.set(this._visibleRange, range);
+  }
+
+  /**
    * Change a row using the configured change callback.
    * Use this instead of directly mutating to ensure consistent mutation handling.
    */
@@ -492,7 +510,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       // The `frozenColsStart` plane holds the selection column (if enabled) followed by the pinned fields.
       const frozenColsStart: Record<number, { size: number; resizeable: boolean }> = {};
       if (selectionColumns > 0) {
-        frozenColsStart[0] = { size: 30, resizeable: false };
+        frozenColsStart[0] = {
+          size: 32,
+          resizeable: false,
+        };
       }
       fields.slice(0, pin).forEach((field, index: number) => {
         frozenColsStart[selectionColumns + index] = fieldSize(field);
@@ -501,7 +522,12 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       return {
         grid,
         frozenColsStart,
-        frozenColsEnd: { 0: { size: 32, resizeable: false } },
+        frozenColsEnd: {
+          0: {
+            size: 32,
+            resizeable: false,
+          },
+        },
       };
     });
   }
@@ -516,9 +542,10 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
     // Track row subscriptions for cleanup.
     const rowSubscriptions = new Map<string, () => void>();
 
-    // Subscribe to visible range changes to set up row subscriptions.
-    const visibleRangeUnsubscribe = this._registry.subscribe(this._visibleRange, () => {
-      // Unsubscribe from old row subscriptions.
+    // (Re)subscribe to each visible row's mutations so external edits (e.g. from a companion form) bump the
+    // cell-update counter and repaint the affected cells. Must re-run when either the visible range changes (scroll)
+    // or the row set changes (data load / sort), since rows arrive asynchronously after the range is first reported.
+    const subscribeVisibleRows = () => {
       for (const [id, unsub] of rowSubscriptions) {
         unsub();
         rowSubscriptions.delete(id);
@@ -527,21 +554,25 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       const { start, end } = this._registry.get(this._visibleRange);
       const sortedRows = this._registry.get(this._sortedRows);
 
-      // Subscribe to each visible row's changes.
       for (let row = start.row; row <= end.row && row < sortedRows.length; row++) {
         const obj = sortedRows[row];
         if (Obj.isObject(obj) && !rowSubscriptions.has(obj.id)) {
+          const cell = { row, col: start.col, plane: 'grid' as const };
           const unsub = Obj.subscribe(obj, () => {
             // Increment cell update counter to notify UI of changes.
             this._registry.set(this._cellUpdateCounter, this._registry.get(this._cellUpdateCounter) + 1);
-            this._onCellUpdate?.({ row, col: start.col, plane: 'grid' });
+            this._onCellUpdate?.(cell);
           });
           rowSubscriptions.set(obj.id, unsub);
         }
       }
-    });
+    };
+
+    const visibleRangeUnsubscribe = this._registry.subscribe(this._visibleRange, subscribeVisibleRows);
+    const sortedRowsUnsubscribe = this._registry.subscribe(this._sortedRows, subscribeVisibleRows);
     this._ctx.onDispose(() => {
       visibleRangeUnsubscribe();
+      sortedRowsUnsubscribe();
       for (const unsub of rowSubscriptions.values()) {
         unsub();
       }

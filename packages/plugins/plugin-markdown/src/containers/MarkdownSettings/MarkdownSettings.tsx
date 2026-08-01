@@ -52,3 +52,5 @@ const SnippetsField = ({ type, readonly, onValueChange, onBlur, ...props }: Form
     )}
   </FormRow>
 );
+
+MarkdownSettings.displayName = 'MarkdownSettings';

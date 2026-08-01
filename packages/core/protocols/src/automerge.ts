@@ -225,6 +225,35 @@ export type SubductionFrameEnvelope = {
   subductionFrame: SubductionConnectionMessage;
 };
 
+/** Wire literal for {@link SubductionBatchEnvelope}. */
+export const MESSAGE_TYPE_SUBDUCTION_BATCH = 'subduction-batch';
+
+/**
+ * DXOS-specific wire envelope carrying multiple {@link SubductionConnectionMessage} frames for a
+ * single connection lifetime in one router message.
+ *
+ * @remarks
+ * A throughput optimization over sending each {@link SubductionFrameEnvelope} separately: at bulk
+ * sync (hundreds–thousands of frames) the per-frame cost is dominated by transport overhead —
+ * one WebSocket message + router relay + edge storage transaction inbound, and one edge→router
+ * subrequest outbound — none of which is the (cheap) opaque-byte handling itself. Coalescing
+ * frames amortizes that overhead across the batch.
+ *
+ * All `frames` share the envelope's `connectionId` (batching never mixes connections). The
+ * array is non-empty and ordered; receivers MUST feed the frames to the subduction transport in
+ * array order so the byte stream stays FIFO. The handshake frame is never batched — session
+ * establishment stays a lone {@link SubductionFrameEnvelope} so it is version-independent.
+ *
+ * Decoders accept both this and {@link SubductionFrameEnvelope}; emitters gate multi-frame
+ * batches behind config so a mixed-version fleet interoperates (a batch is only emitted once the
+ * peer is known to understand it).
+ */
+export type SubductionBatchEnvelope = {
+  type: typeof MESSAGE_TYPE_SUBDUCTION_BATCH;
+  connectionId: string;
+  frames: SubductionConnectionMessage[];
+};
+
 // ─── DXOS collection sync protocol ────────────────────────────────────────────
 // DXOS extension on top of the automerge-repo Message type, used by
 // `CollectionSynchronizer` to negotiate per-collection sync state. Carried
@@ -369,4 +398,5 @@ export type SubductionProtocolMessageEnveloped =
   | CollectionQueryMessage
   | CollectionStateMessage
   | SubductionFrameEnvelope
+  | SubductionBatchEnvelope
   | ErrorProtocolMessage;

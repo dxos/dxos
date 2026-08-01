@@ -2,7 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
+
 import { type Database, Obj, Ref, Tag } from '@dxos/echo';
+import { type EntityId } from '@dxos/keys';
 import { Tagging, TagIndex } from '@dxos/schema';
 
 /**
@@ -28,10 +31,27 @@ export const getStarredIds = (container: StarContainer, starredUri: string | und
     ? new Set(TagIndex.bind(container.tags.target).objects(starredUri))
     : new Set<string>();
 
+const NOT_STARRED = Atom.make(() => false);
+
+/** Per-message starred boolean atom family over a container's TagIndex. */
+export type StarredFamily = (messageId: EntityId) => Atom.Atom<boolean>;
+
+/**
+ * Per-message starred atom family. Each atom yields whether one object carries the starred tag and
+ * re-renders only when that membership changes.
+ */
+export const atom = (tagIndex: TagIndex.TagIndex | undefined, starredUri: string | undefined): StarredFamily => {
+  if (!tagIndex || !starredUri) {
+    return () => NOT_STARRED;
+  }
+  return (messageId: EntityId) => TagIndex.atom(tagIndex, messageId, starredUri);
+};
+
 /** Toggle the starred tag on a member object, provisioning the container's tag index on first use. */
 export const toggleStarred = async (
   container: Obj.Any & StarContainer,
-  object: Obj.Any,
+  // Member is tagged via the container's index (keyed by id), so an immutable snapshot works too.
+  object: Obj.Any | Obj.Snapshot<Obj.Any>,
   db: Database.Database,
 ): Promise<void> => {
   // Lazily provision the tag index for containers created before the `tags` field existed.

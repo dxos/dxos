@@ -260,3 +260,5 @@ export const CreateObjectDialog = ({
     </Dialog.Content>
   );
 };
+
+CreateObjectDialog.displayName = 'CreateObjectDialog';

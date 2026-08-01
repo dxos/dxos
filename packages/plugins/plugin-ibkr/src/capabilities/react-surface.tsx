@@ -45,7 +45,9 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Ibkr.Report),
           AppSurface.companion(AppSurface.Article, Ibkr.Portfolio),
         ),
-        component: ({ data, role }) => <PortfolioReportDetail role={role} subject={data.subject} />,
+        component: ({ data, role }) => (
+          <PortfolioReportDetail role={role} subject={data.subject} companionTo={data.companionTo} />
+        ),
       }),
       Surface.create({
         id: 'instrumentArticle',

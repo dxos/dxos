@@ -231,3 +231,5 @@ const runPrompt = Effect.fn(function* ({
     },
   });
 });
+
+NotebookArticle.displayName = 'NotebookArticle';

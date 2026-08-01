@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       invariant(url, 'Feed URL is required.');
       const echoFeed = yield* Database.load(subscriptionFeed.feed);
       invariant(echoFeed, 'Backing ECHO feed not found.');
-      invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
+      invariant(Feed.getFeedUri(echoFeed), 'Feed not stored in a space.');
 
       const fetcher = getFetcher(subscriptionFeed.type);
       const { feed: feedMeta, posts } = yield* fetcher(url, { corsProxy: browserCorsProxy() });

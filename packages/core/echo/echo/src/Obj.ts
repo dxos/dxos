@@ -897,6 +897,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.uri - Override object URI. Changes the result of `Obj.getURI`.
  * @param options.database - Database to associate with the object.
+ * @param options.parent - Parent entity to associate with the object (used when the JSON has no `@parent`). Changes the result of `Obj.getParent`.
  */
 export const fromJSON: (
   json: unknown,

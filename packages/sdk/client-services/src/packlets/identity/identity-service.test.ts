@@ -2,12 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
-import { type Identity, type IdentityService } from '@dxos/protocols/proto/dxos/client/services';
+import { subscribeStream } from '@dxos/protocols';
+import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -15,7 +18,7 @@ import { IdentityServiceImpl } from './identity-service';
 
 describe('IdentityService', () => {
   let serviceContext: ServiceContext;
-  let identityService: IdentityService;
+  let identityService: IdentityServiceImpl;
 
   beforeEach(async () => {
     serviceContext = await createServiceContext();
@@ -29,14 +32,16 @@ describe('IdentityService', () => {
 
   describe('createIdentity', () => {
     test('creates a new identity', async () => {
-      const identity = await identityService.createIdentity({});
+      const identity = await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
 
       expect(identity.identityKey).to.be.instanceof(PublicKey);
       expect(identity.spaceKey).to.be.instanceof(PublicKey);
     });
 
     test('creates a new identity with a display name', async () => {
-      const identity = await identityService.createIdentity({ profile: { displayName: 'Example' } });
+      const identity = await EffectEx.runPromise(
+        identityService['IdentityService.createIdentity']({ profile: { displayName: 'Example' } }),
+      );
 
       expect(identity.identityKey).to.be.instanceof(PublicKey);
       expect(identity.spaceKey).to.be.instanceof(PublicKey);
@@ -44,12 +49,14 @@ describe('IdentityService', () => {
     });
 
     test('fails to create identity if one already exists', async () => {
-      await identityService.createIdentity({});
-      await expect(identityService.createIdentity({})).rejects.toThrowError('Identity already exists');
+      await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
+      await expect(EffectEx.runPromise(identityService['IdentityService.createIdentity']({}))).rejects.toThrowError(
+        'Identity already exists',
+      );
     });
 
     test('creates identity with no spaces', async () => {
-      await identityService.createIdentity({});
+      await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
       const dataSpaces = [...(serviceContext.dataSpaceManager?.spaces?.values() ?? [])];
       expect(dataSpaces.length).to.eq(0);
     });
@@ -59,36 +66,38 @@ describe('IdentityService', () => {
 
   describe('updateProfile', () => {
     test('updates profile', async () => {
-      const identity = await identityService.createIdentity({});
+      const identity = await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
       expect(identity.profile?.displayName).to.be.undefined;
 
-      const updatedIdentity = await identityService.updateProfile({ displayName: 'Example' });
+      const updatedIdentity = await EffectEx.runPromise(
+        identityService['IdentityService.updateProfile']({ displayName: 'Example' }),
+      );
       expect(updatedIdentity.profile?.displayName).to.equal('Example');
     });
   });
 
   describe('queryIdentity', () => {
     test('returns undefined if no identity is available', async () => {
-      const query = identityService.queryIdentity();
+      const stream = identityService['IdentityService.queryIdentity']();
       const result = new Trigger<Identity | undefined>();
-      query.subscribe(({ identity }) => {
-        result.wake(identity);
+      const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+        onData: ({ identity }) => result.wake(identity),
       });
-      onTestFinished(() => query.close());
+      onTestFinished(cleanup);
       expect(await result.wait()).to.be.undefined;
     });
 
     test('updates when identity is created', async () => {
-      const query = identityService.queryIdentity();
+      const stream = identityService['IdentityService.queryIdentity']();
       let result = new Trigger<Identity | undefined>();
-      query.subscribe(({ identity }) => {
-        result.wake(identity);
+      const cleanup = subscribeStream(Runtime.defaultRuntime, stream, {
+        onData: ({ identity }) => result.wake(identity),
       });
-      onTestFinished(() => query.close());
+      onTestFinished(cleanup);
       expect(await result.wait()).to.be.undefined;
 
       result = new Trigger<Identity | undefined>();
-      const identity = await identityService.createIdentity({});
+      const identity = await EffectEx.runPromise(identityService['IdentityService.createIdentity']({}));
       expect(await result.wait()).to.deep.equal(identity);
     });
   });

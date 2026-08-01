@@ -36,3 +36,5 @@ export const ResultTile = ({ result, current, starred, onSelect, onToggleStar }:
     </Focus.Item>
   );
 };
+
+ResultTile.displayName = 'ResultTile';

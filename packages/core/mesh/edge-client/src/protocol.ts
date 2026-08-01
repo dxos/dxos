@@ -97,9 +97,14 @@ export const toUint8Array = async (data: any): Promise<Uint8Array> => {
     return bufferToArray(data);
   }
 
-  // Browser.
+  // Browser with `binaryType = 'arraybuffer'`.
+  if (data instanceof ArrayBuffer) {
+    return new Uint8Array(data);
+  }
+
+  // Browser fallback (`binaryType = 'blob'`, the WebSocket default).
   if (data instanceof Blob) {
-    return new Uint8Array(await (data as Blob).arrayBuffer());
+    return new Uint8Array(await data.arrayBuffer());
   }
 
   throw new Error(`Unexpected datatype: ${data}`);

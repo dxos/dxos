@@ -9,3 +9,5 @@ export class ServiceNotAvailableError extends BaseError.extend('ServiceNotAvaila
 export class ProcessNotFoundError extends BaseError.extend('ProcessNotFoundError') {}
 
 export class LayerDependencyCycleError extends BaseError.extend('LayerDependencyCycleError') {}
+
+export class FunctionServiceError extends BaseError.extend('FunctionServiceError') {}

@@ -34,6 +34,14 @@ const DEBUG_TIMEOUT_MS = 3_600_000;
 const VITEST_LOG_GLOBAL_SETUP = new URL('./tools/vite-plugin-log/src/vitest/global-setup.ts', import.meta.url).pathname;
 const VITEST_LOG_SETUP = new URL('./tools/vite-plugin-log/src/vitest/setup.ts', import.meta.url).pathname;
 
+// Browser tests have no filesystem, so `@dxos/log` entries are POSTed to the `DxosLogPlugin` dev-server
+// sink (page realm installs the runtime via this setup file; worker realms via the plugin's worker-entry
+// injection). Output lands in `<package>/test-browser.log` (NDJSON, `query-logs`-compatible).
+const VITEST_BROWSER_LOG_SETUP = new URL('./tools/vite-plugin-log/src/vitest/browser-setup.ts', import.meta.url)
+  .pathname;
+const BROWSER_LOG_FILE = 'test-browser.log';
+const BROWSER_LOG_FILTER = process.env.DX_TEST_LOG_FILTER ?? process.env.LOG_FILTER ?? 'debug';
+
 // Browser/storybook tests transitively import `@anthropic-ai/tokenizer` via
 // `@dxos/ai`, which pulls in `tiktoken/lite` — a WASM bundle whose top-level
 // `await` cannot be rewrapped by esbuild's dep pre-bundler. Composer-app's
@@ -139,6 +147,12 @@ const createBrowserProject = ({
       nodeStdPlugin(),
       WasmPlugin(),
       ...plugins,
+      // Resolve `@dxos/*` to their `source` export (src/*.ts) so browser tests exercise source
+      // instead of stale `dist/` build artifacts (mirrors the node project).
+      PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      // NDJSON log sink: browser realms (page + workers) POST `@dxos/log` entries to the dev-server
+      // middleware, which appends them to `<package>/test-browser.log`. Mirrors the node file sink.
+      DxosLogPlugin({ logToFile: { enabled: true, filename: BROWSER_LOG_FILE, logFilter: BROWSER_LOG_FILTER } }),
       // Inspect()
     ],
     resolve: {
@@ -191,6 +205,8 @@ const createBrowserProject = ({
       testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
       isolate: false,
       maxWorkers: 1,
+
+      setupFiles: [VITEST_BROWSER_LOG_SETUP],
 
       browser: {
         enabled: true,

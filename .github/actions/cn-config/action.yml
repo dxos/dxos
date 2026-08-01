@@ -5,6 +5,12 @@ inputs:
   version:
     description: 'Version'
     required: true
+  ios-bundle-version:
+    description: >-
+      Optional override for bundle.iOS.bundleVersion (Apple's CFBundleVersion, which must be plain digits
+      separated by dots — a prerelease-tagged `version` fails Apple's validation). Skipped if empty.
+    required: false
+    default: ''
   working-directory:
     description: 'Working directory'
     default: '.'
@@ -44,6 +50,16 @@ runs:
         jq \
           --arg version "${{ inputs.version }}" \
           '.version = $version' \
+          "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > temp.json && \
+        mv temp.json "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
+      shell: bash
+
+    - name: Update iOS bundle version in tauri.conf.json
+      if: inputs.ios-bundle-version != ''
+      run: |
+        jq \
+          --arg version "${{ inputs.ios-bundle-version }}" \
+          '.bundle.iOS.bundleVersion = $version' \
           "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}" > temp.json && \
         mv temp.json "${{ steps.find-tauri-config.outputs.tauri_conf_json_path }}"
       shell: bash

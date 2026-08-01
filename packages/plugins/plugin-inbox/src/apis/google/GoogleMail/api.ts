@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import type { Credential } from '@dxos/compute';
 
 import { createUrl, makeGoogleApiRequest } from '../google-api';
-import { ErrorResponse, GoogleError, LabelsResponse, ListMessagesResponse, Message } from './types';
+import { ErrorResponse, GoogleError, LabelsResponse, ListMessagesResponse, Message, MessagePartBody } from './types';
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
 const decodeAndHandleErrors =
@@ -84,6 +84,15 @@ export const listMessages = Effect.fn(function* (
 export const getMessage = Effect.fn(function* (userId: string, messageId: string) {
   const url = createUrl([API_URL, 'users', userId, 'messages', messageId]).toString();
   return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(Message)));
+});
+
+/**
+ * Gets an attachment's bytes (base64url-encoded in `data`).
+ * https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages.attachments/get
+ */
+export const getAttachment = Effect.fn(function* (userId: string, messageId: string, attachmentId: string) {
+  const url = createUrl([API_URL, 'users', userId, 'messages', messageId, 'attachments', attachmentId]).toString();
+  return yield* makeGoogleApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(MessagePartBody)));
 });
 
 /**

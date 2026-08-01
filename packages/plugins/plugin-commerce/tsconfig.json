@@ -37,13 +37,13 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
       "path": "../../core/compute/assistant-toolkit"
     },
     {
       "path": "../../core/compute/compute"
-    },
-    {
-      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"

@@ -84,6 +84,7 @@
     "@dxos/teleport": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "effect": "catalog:",
     "node-datachannel": "catalog:"
   },
   "devDependencies": {

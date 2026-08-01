@@ -14,6 +14,7 @@ import {
   Menu,
   MenuBuilder,
   graphActions,
+  isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
@@ -24,7 +25,7 @@ export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
 /**
  * Per-space Home article shell. Owns only the chrome: a toolbar sourced from graph actions
- * contributed with `disposition: 'toolbar'` (e.g. Start tour / Hide Welcome from plugin-support),
+ * contributed with `disposition: 'toolbar'` (e.g. Start / Hide Welcome from plugin-support),
  * and a Column layout that delegates its body to surface contributors:
  *
  * - `space-home-content`: scrollable region (Welcome panel, recent-objects masonry, starter prompts).
@@ -81,9 +82,7 @@ const useMenuActions = (
         return MenuBuilder.make().build();
       }
       return MenuBuilder.make()
-        .subgraph(
-          graphActions(graph, get, attendableId, { filter: (action) => action.properties.disposition === 'toolbar' }),
-        )
+        .subgraph(graphActions(graph, get, attendableId, { filter: isToolbarAction }))
         .build();
     },
     [graph, attendableId],
@@ -98,3 +97,5 @@ const useMenuActions = (
 
   return { actions: menuActions, onAction };
 };
+
+SpaceHomeArticle.displayName = 'SpaceHomeArticle';

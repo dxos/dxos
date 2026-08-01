@@ -33,17 +33,17 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           ? get(db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).atom)
           : [];
 
-      const builder = MenuBuilder.make()
-        .root({
-          label: ['chat-toolbar.title', { ns: meta.profile.key }],
-        })
-        .action(
+      const builder = MenuBuilder.make().root({
+        label: ['chat-toolbar.title', { ns: meta.profile.key }],
+      });
+
+      if (companionTo) {
+        builder.action(
           'new',
           {
             label: ['new-thread.button', { ns: meta.profile.key }],
             icon: 'ph--plus--regular',
             type: 'new',
-            disabled: !companionTo,
           },
           () => {
             invariant(companionTo);
@@ -52,6 +52,23 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               chat: undefined,
             }).pipe(EffectEx.runAndForwardErrors);
           },
+        );
+      }
+
+      builder
+        .action(
+          'branch',
+          {
+            label: ['branch-thread.menu', { ns: meta.profile.key }],
+            icon: 'ph--git-branch--regular',
+            type: 'branch',
+            disabled: !chat || !db,
+          },
+          () =>
+            Effect.gen(function* () {
+              invariant(chat);
+              yield* invoke(AssistantOperation.ForkChat, { chat, companionTo }, { spaceId: db?.spaceId });
+            }).pipe(EffectEx.runAndForwardErrors),
         )
         .action(
           'rename',
@@ -65,20 +82,6 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
             Effect.gen(function* () {
               invariant(chat);
               yield* invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db?.spaceId });
-            }).pipe(EffectEx.runAndForwardErrors),
-        )
-        .action(
-          'branch',
-          {
-            label: ['branch-thread.menu', { ns: meta.profile.key }],
-            icon: 'ph--git-branch--regular',
-            type: 'branch',
-            disabled: !chat || !db,
-          },
-          () =>
-            Effect.gen(function* () {
-              invariant(chat);
-              yield* invoke(AssistantOperation.ForkChat, { chat, companionTo }, { spaceId: db?.spaceId });
             }).pipe(EffectEx.runAndForwardErrors),
         );
 

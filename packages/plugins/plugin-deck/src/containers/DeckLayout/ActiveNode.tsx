@@ -30,3 +30,5 @@ export const ActiveNode = () => {
     </div>
   );
 };
+
+ActiveNode.displayName = 'ActiveNode';

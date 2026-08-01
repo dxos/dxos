@@ -5,18 +5,19 @@
 import { Atom } from '@effect-atom/atom-react';
 import * as Data from 'effect/Data';
 
+import { log } from '@dxos/log';
 import { Position } from '@dxos/util';
 
 import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
-import { type Definition } from './types';
+import { type Definition, isValidLocalId } from './types';
 
 const EMPTY_CANDIDATES: ReadonlyArray<Definition> = Data.array<Definition[]>([]);
 
 /**
  * Groups definitions by role with each bucket pre-sorted by {@link Position}, so
- * dispatch avoids a full scan and re-sort on every render. Pure helper shared by
- * {@link SurfaceManager} and `isSurfaceAvailable`.
+ * dispatch avoids a full scan and re-sort on every render. Pure helper — callers
+ * are responsible for filtering out invalid definitions before calling this.
  */
 export const indexByRole = (definitions: Definition[]): Map<string, Definition[]> => {
   const index = new Map<string, Definition[]>();
@@ -48,9 +49,10 @@ export class SurfaceManager {
   readonly #capabilities: CapabilityManager.CapabilityManager;
 
   // Role index (each bucket position-sorted); rebuilt once per contribution change.
-  readonly #index = Atom.make((get) =>
-    indexByRole(get(this.#capabilities.atom(Capabilities.ReactSurface)).flat()),
-  ).pipe(Atom.keepAlive);
+  readonly #index = Atom.make((get) => {
+    const definitions = get(this.#capabilities.atom(Capabilities.ReactSurface)).flat();
+    return indexByRole(this.#dropInvalid(definitions));
+  }).pipe(Atom.keepAlive);
 
   // Per-role candidate atoms. `Data.array` gives the result structural equality, so a
   // contribution to a different role recomputes to an equal value and is dropped —
@@ -62,6 +64,10 @@ export class SurfaceManager {
     }).pipe(Atom.keepAlive),
   );
 
+  // Ids already reported as invalid on this manager, so a persistently-malformed
+  // contribution warns once rather than on every index rebuild.
+  #warnedInvalidIds = new Set<string>();
+
   constructor(capabilities: CapabilityManager.CapabilityManager) {
     this.#capabilities = capabilities;
   }
@@ -69,5 +75,21 @@ export class SurfaceManager {
   /** Derived atom yielding the (position-sorted) candidates for a single role. */
   candidatesAtom(role: string): Atom.Atom<ReadonlyArray<Definition>> {
     return this.#candidates(role);
+  }
+
+  /** Drops definitions with an invalid local id, warning once per id. */
+  #dropInvalid(definitions: Definition[]): Definition[] {
+    return definitions.filter((definition) => {
+      if (isValidLocalId(definition.id)) {
+        return true;
+      }
+      if (!this.#warnedInvalidIds.has(definition.id)) {
+        this.#warnedInvalidIds.add(definition.id);
+        log.warn('dropping surface with invalid id; the final segment must be camelCase (no hyphens or underscores)', {
+          id: definition.id,
+        });
+      }
+      return false;
+    });
   }
 }

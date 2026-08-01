@@ -36,3 +36,5 @@ export const TicTacToeCard = ({ variant }: TicTacToeCardProps) => {
     </Card.Body>
   );
 };
+
+TicTacToeCard.displayName = 'TicTacToeCard';

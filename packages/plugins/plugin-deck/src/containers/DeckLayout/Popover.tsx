@@ -181,3 +181,7 @@ export const PopoverContent = () => {
     </Popover.Portal>
   );
 };
+
+PopoverRoot.displayName = 'PopoverRoot';
+
+PopoverContent.displayName = 'PopoverContent';

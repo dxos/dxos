@@ -27,7 +27,6 @@ export class Text extends Type.makeObject<Text>(DXN.make('org.dxos.type.bladeRun
   }),
 ) {}
 
-@trace.resource()
 export class WsReplicant {
   private _edgeConnection?: EdgeClient = undefined;
   private _peerInfo?: PeerInfo = undefined;

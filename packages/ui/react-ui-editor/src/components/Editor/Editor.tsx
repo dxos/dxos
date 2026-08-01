@@ -6,9 +6,11 @@ import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useImperativeHandle, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { type XmlWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -39,6 +41,8 @@ type EditorContextValue = {
   controller?: EditorController;
   setController: (controller: EditorController) => void;
   extensions?: Extension[];
+  /** xmlTags widget portals (embedded blocks); rendered by `Editor.Blocks`, fed via `setWidgets`. */
+  widgets?: XmlWidgetState[];
   state: Atom.Writable<EditorToolbarState>;
 };
 
@@ -54,7 +58,7 @@ export { useEditorContext };
 //
 
 type EditorRootProps = PropsWithChildren<
-  Pick<EditorContextValue, 'extensions'> &
+  Pick<EditorContextValue, 'extensions' | 'widgets'> &
     Omit<UseEditorMenuProps, 'viewRef'> &
     Pick<EditorMenuProviderProps, 'numItems'> & {
       viewMode?: EditorToolbarState['viewMode'];
@@ -66,7 +70,7 @@ type EditorRootProps = PropsWithChildren<
  * Provides context for all child components and manages the editor controller state.
  */
 const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
-  ({ children, extensions: extensionsProp, viewMode, numItems, ...props }, forwardedRef) => {
+  ({ children, extensions: extensionsProp, widgets, viewMode, numItems, ...props }, forwardedRef) => {
     // TODO(wittjosiah): Including initialState in the deps causes reactivity issues.
     const state = useMemo(() => Atom.make<EditorToolbarState>({ viewMode }), [viewMode]);
 
@@ -87,6 +91,7 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
         controller={controller}
         setController={setController}
         extensions={extensions}
+        widgets={widgets}
         state={state}
       >
         <EditorMenuProvider getView={getView} groups={groupsRef.current} numItems={numItems} {...menuProps}>
@@ -110,6 +115,7 @@ type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
 /**
  * Content component that wraps the toolbar and editor view area.
  */
+// TODO(burdon): Use Panel.
 const EditorContent = ({ classNames, children }: EditorContentProps) => {
   return <div className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>{children}</div>;
 };
@@ -165,6 +171,29 @@ const EditorToolbar = (props: EditorToolbarProps) => {
 EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 //
+// Blocks
+//
+
+const EDITOR_BLOCKS_NAME = 'Editor.Blocks';
+
+/**
+ * Renders the xmlTags widget portals (embedded blocks) contributed via the editor's `setWidgets`
+ * callback. Place inside `Editor.Root`; the widgets come from context (pass them to `Editor.Root`).
+ */
+const EditorBlocks = () => {
+  const { widgets = [] } = useEditorContext(EDITOR_BLOCKS_NAME);
+  return (
+    <>
+      {widgets.map(({ id, root, Component, props }) => (
+        <div key={id}>{createPortal(<Component {...props} />, root)}</div>
+      ))}
+    </>
+  );
+};
+
+EditorBlocks.displayName = EDITOR_BLOCKS_NAME;
+
+//
 // Editor
 //
 
@@ -173,6 +202,7 @@ export const Editor = {
   Toolbar: EditorToolbar,
   Content: EditorContent,
   View: EditorView,
+  Blocks: EditorBlocks,
 };
 
 export type {

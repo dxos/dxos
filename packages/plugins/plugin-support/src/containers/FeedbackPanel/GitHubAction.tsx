@@ -183,3 +183,5 @@ export const GitHubAction = () => {
 
   return <FeedbackForm.SubmitGitHub onSubmit={handleGitHub} />;
 };
+
+GitHubAction.displayName = 'GitHubAction';

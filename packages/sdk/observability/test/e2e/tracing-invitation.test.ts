@@ -42,7 +42,7 @@ const createEdgeConfig = () =>
       },
       client: {
         edgeFeatures: {
-          echoReplicator: true,
+          subductionReplicator: true,
           feedReplicator: true,
           signaling: true,
           agents: true,
@@ -73,7 +73,7 @@ const initTracing = (config: Config): Promise<Observability> =>
     EffectEx.runAndForwardErrors,
   );
 
-describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0, tags: ['tracing-e2e'] }, () => {
+describe.skip('tracing invitation e2e (dev-only)', { timeout: 300_000, retry: 0, tags: ['manual'] }, () => {
   test('host + guest complete a DELEGATED space invitation via edge-main (tagged for SigNoz)', async ({ expect }) => {
     const clientTag = process.env.DX_TELEMETRY_TAG;
     expect(clientTag, 'DX_TELEMETRY_TAG must be set').toBeTruthy();

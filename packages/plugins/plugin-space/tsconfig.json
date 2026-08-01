@@ -110,6 +110,9 @@
       "path": "../../ui/react-ui-dashboard"
     },
     {
+      "path": "../../ui/react-ui-dnd"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -129,6 +132,9 @@
     },
     {
       "path": "../../ui/react-ui-search"
+    },
+    {
+      "path": "../../ui/react-ui-table"
     },
     {
       "path": "../../ui/ui-theme"

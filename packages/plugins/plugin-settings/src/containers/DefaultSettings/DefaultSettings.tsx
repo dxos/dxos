@@ -44,3 +44,5 @@ export const DefaultSettings = ({ subject }: DefaultSettingsProps) => {
     </Form.Root>
   );
 };
+
+DefaultSettings.displayName = 'DefaultSettings';

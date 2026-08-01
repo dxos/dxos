@@ -155,9 +155,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           void invokePromise(LayoutOperation.ScrollIntoView, { subject: node.id });
         }
 
-        const defaultAction = Graph.getActions(graph, node.id).find(
-          (action) => action.properties?.disposition === 'default',
-        );
+        const defaultAction = Graph.getActions(graph, node.id).find((action) => Node.hasDisposition(action, 'default'));
         if (Node.isAction(defaultAction)) {
           void runAction(defaultAction);
         }
@@ -237,7 +235,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const workspaceChildren = useAtomValue(graph.connections(tab, 'child'));
     useEffect(() => {
       for (const child of workspaceChildren) {
-        if (child.properties.disposition === 'group') {
+        if (Node.hasDisposition(child, 'group')) {
           setItem([Node.RootId, tab, child.id], 'open', true);
           Graph.expand(graph, child.id, 'child');
         }
@@ -283,3 +281,5 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
 );
 
 export const NavTreeContainer = memo(NavTreeContainer$);
+
+NavTreeContainer.displayName = 'NavTreeContainer';

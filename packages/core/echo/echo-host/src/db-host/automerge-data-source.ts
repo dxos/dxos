@@ -10,11 +10,9 @@ import { type Context } from '@dxos/context';
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { objectStructureToJson } from '@dxos/echo/internal';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
-import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge';
-import { createIdFromSpaceKey } from '../common';
 
 const HEADS_DELIMITER = '|';
 
@@ -105,14 +103,12 @@ export class AutomergeDataSource implements IndexDataSource {
             continue;
           }
 
-          // Extract spaceId from document.
-          const spaceKeyHex = DatabaseDirectory.getSpaceKey(doc);
-          if (!spaceKeyHex) {
-            // Skip documents without a space key.
+          // Extract spaceId from document, coalescing legacy space key fields.
+          const spaceId = yield* Effect.promise(() => DatabaseDirectory.getSpaceId(doc));
+          if (!spaceId) {
+            // Skip documents without a space identifier.
             continue;
           }
-          const spaceKey = PublicKey.fromHex(spaceKeyHex);
-          const spaceId = yield* Effect.promise(() => createIdFromSpaceKey(spaceKey));
 
           const existingCursor = cursorMap.get(documentId);
           const { changedObjectIds, updatedAt } = inspectDocChanges(doc, existingCursor);

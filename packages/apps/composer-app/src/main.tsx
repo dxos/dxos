@@ -334,27 +334,12 @@ const main = async () => {
   // Decide the deployment mode for client services. The factory is a dumb switch on
   // `runtime.client.services_mode` — the app is responsible for picking the right mode from its
   // env / platform constraints. Worker factories are passed unconditionally; the factory only
-  // invokes the one required by the configured mode.
+  // invokes the one required by the configured mode. Host mode (in-thread services) is opt-in via
+  // DX_HOST; otherwise services run in a dedicated worker elected via a lock (leader/follower).
   const useLocalServices = isTrue(config.values.runtime?.app?.env?.DX_HOST);
-  const useSharedWorker = isTrue(config.values.runtime?.app?.env?.DX_SHARED_WORKER);
-  // iOS has a SharedWorker crash bug (Apple FB11723920); if a caller asks for SharedWorker there,
-  // transparently fall back to in-process host mode instead of letting the factory throw later.
-  const isIos = typeof navigator !== 'undefined' && /iP(hone|ad|od)/.test(navigator.userAgent);
-  const sharedWorkerSupported = typeof SharedWorker !== 'undefined' && !isIos;
   const servicesMode = useLocalServices
     ? defs.Runtime.Client.ServicesMode.HOST
-    : useSharedWorker
-      ? sharedWorkerSupported
-        ? defs.Runtime.Client.ServicesMode.SHARED_WORKER
-        : defs.Runtime.Client.ServicesMode.HOST
-      : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
-
-  // Host and dedicated worker use OPFS-backed SQLite. SharedWorker still uses in-memory SQLite
-  // because OPFS is not available there (see `onconnect.ts`).
-  const sqliteMode =
-    servicesMode === defs.Runtime.Client.ServicesMode.SHARED_WORKER
-      ? defs.Runtime.Client.Storage.SqliteMode.MEMORY
-      : defs.Runtime.Client.Storage.SqliteMode.OPFS;
+    : defs.Runtime.Client.ServicesMode.DEDICATED_WORKER;
 
   config = new Config(
     {
@@ -364,18 +349,14 @@ const main = async () => {
           signalTelemetryEnabled: !observabilityDisabled,
           singleClientMode: useSingleClientMode,
           servicesMode,
-          storage: { sqliteMode },
+          // Host and dedicated worker both use OPFS-backed SQLite.
+          storage: { sqliteMode: defs.Runtime.Client.Storage.SqliteMode.OPFS },
         },
       },
     },
     config.values,
   );
   const services = await createClientServices(config, {
-    createWorker: () =>
-      new SharedWorker(new URL('./workers/shared-worker', import.meta.url), {
-        type: 'module',
-        name: 'dxos-client-worker',
-      }),
     createDedicatedWorker: () =>
       new Worker(new URL('./workers/dedicated-worker', import.meta.url), {
         type: 'module',

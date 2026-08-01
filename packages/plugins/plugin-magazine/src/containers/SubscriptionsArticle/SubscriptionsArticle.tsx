@@ -97,3 +97,5 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
     </Panel.Root>
   );
 };
+
+SubscriptionsArticle.displayName = 'SubscriptionsArticle';

@@ -105,3 +105,5 @@ const ensureSyncFeedOperation = async (db: NonNullable<ReturnType<typeof Obj.get
 
   return db.add(Operation.serialize(FeedOperation.SyncFeed));
 };
+
+FeedProperties.displayName = 'FeedProperties';

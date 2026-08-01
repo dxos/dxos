@@ -31,6 +31,23 @@ tasks:
       - /tools/storybook-react/.storybook/main.ts
       - static/*
     preset: server
+  # Fast dev variant: DX_FASTBUNDLE skips the `importSource` source-resolution plugin and
+  # pre-bundles heavy deps, shrinking the live module graph so long sessions are less likely
+  # to wedge the browser renderer. Trades granular HMR on DXOS source for lower memory/churn.
+  serve-fast:
+    command: storybook dev
+    args:
+      - --port=9009
+      - --no-open
+    env:
+      DX_FASTBUNDLE: '1'
+    deps:
+      - ^:compile
+    inputs:
+      - .storybook/*
+      - /tools/storybook-react/.storybook/main.ts
+      - static/*
+    preset: server
   # TODO(wittjosiah): No inputs or deps to avoid moon re-building things when running e2e tests.
   serve-e2e:
     command: storybook dev

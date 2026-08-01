@@ -664,7 +664,7 @@ describe('Spaces', () => {
 
     const feedObj = space.db.add(Obj.make(Feed.Feed, { name: 'test-feed' }));
     await space.db.flush();
-    const feedDXN = Feed.getQueueUri(feedObj);
+    const feedDXN = Feed.getFeedUri(feedObj);
     expect(feedDXN).toBeDefined();
     await space.db.appendToFeed(feedObj, [
       createObject({ name: 'queue-item-1' }),
@@ -705,7 +705,7 @@ describe('Spaces', () => {
     const space = await client1.spaces.create();
     const feedObj = space.db.add(Feed.make({ name: 'test-feed' }));
     await space.db.flush();
-    const feedDXN = Feed.getQueueUri(feedObj);
+    const feedDXN = Feed.getFeedUri(feedObj);
     expect(feedDXN).toBeDefined();
     await space.db.appendToFeed(feedObj, [createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
 
@@ -780,8 +780,8 @@ describe('Spaces', () => {
     const feedObj = sourceSpace.db.add(Feed.make({ name: 'test-feed', namespace: 'data' }));
     await sourceSpace.db.flush();
 
-    const feedQueueDXN = Feed.getQueueUri(feedObj);
-    expect(feedQueueDXN).toBeDefined();
+    const feedURI = Feed.getFeedUri(feedObj);
+    expect(feedURI).toBeDefined();
     await sourceSpace.db.appendToFeed(feedObj, [createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
 
     // Export: ECHO objects + feed data.
@@ -790,7 +790,7 @@ describe('Spaces', () => {
 
     // Read feed messages for export.
     const queueMessages = await sourceSpace.db
-      .query(Query.select(Filter.everything()).from(Scope.feed(feedQueueDXN!)))
+      .query(Query.select(Filter.everything()).from(Scope.feed(feedURI!)))
       .run();
     exported.feeds = [
       {
@@ -819,8 +819,8 @@ describe('Spaces', () => {
     expect(importedFeed).toBeDefined();
 
     // Import feed messages.
-    const targetFeedQueueDXN = Feed.getQueueUri(importedFeed);
-    expect(targetFeedQueueDXN).toBeDefined();
+    const targetFeedURI = Feed.getFeedUri(importedFeed);
+    expect(targetFeedURI).toBeDefined();
 
     const refResolver = targetSpace.internal.db.graph.createRefResolver({
       context: { space: targetSpace.internal.db.spaceId },
@@ -832,7 +832,7 @@ describe('Spaces', () => {
 
     // Verify feed messages restored.
     const restoredMessages = await targetSpace.db
-      .query(Query.select(Filter.everything()).from(Scope.feed(targetFeedQueueDXN!)))
+      .query(Query.select(Filter.everything()).from(Scope.feed(targetFeedURI!)))
       .run();
     expect(restoredMessages.length).toEqual(2);
 

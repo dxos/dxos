@@ -41,8 +41,9 @@ const SAMPLE_XML = `<FlexQueryResponse queryName="Composer" type="AF">
 </FlexQueryResponse>`;
 
 const DefaultStory = () => {
+  const companionTo = useMemo(() => Ibkr.makePortfolio(), []);
   const subject = useMemo(() => Obj.make(Ibkr.Report, { xml: SAMPLE_XML, fetchedAt: '2026-06-13T06:00:00.000Z' }), []);
-  return <PortfolioReportDetail role='article' subject={subject} />;
+  return <PortfolioReportDetail role='article' subject={subject} companionTo={companionTo} />;
 };
 
 const meta = {

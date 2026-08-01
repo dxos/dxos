@@ -6,10 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
-import { CollectionItemAnnotation } from '@dxos/schema';
+import { CardAnnotation, CollectionItemAnnotation } from '@dxos/schema';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
 
@@ -28,7 +27,7 @@ export class Sketch extends Type.makeObject<Sketch>(DXN.make('org.dxos.type.sket
     canvas: Ref.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--compass-tool--regular', hue: 'indigo' }),
-    AppAnnotation.CardAnnotation.set(true),
+    CardAnnotation.set(true),
     CollectionItemAnnotation.set(true),
   ),
 ) {}

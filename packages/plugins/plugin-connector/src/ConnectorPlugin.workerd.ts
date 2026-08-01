@@ -4,23 +4,17 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { AccessToken, Cursor } from '@dxos/types';
+import { Feed } from '@dxos/echo';
+import { AccessToken, Cursor } from '@dxos/link';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection, SyncBinding } from '#types';
+import { Connection } from '#types';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [
-      AccessToken.AccessToken,
-      Connection.Connection,
-      Cursor.Cursor,
-      SyncBinding.SyncBinding,
-      // Registered so a legacy 0.1.0 binding can still be decoded (migration runs in the app/node).
-      SyncBinding.SyncBindingV1,
-    ],
+    schema: [AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed],
   }),
 
   Plugin.make,

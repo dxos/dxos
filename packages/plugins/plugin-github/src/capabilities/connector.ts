@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import { Connector, type OnTokenCreated } from '@dxos/plugin-connector';
+import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants';
@@ -37,6 +37,20 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   }).pipe(Effect.orDie);
 
 /**
+ * GitHub `testConnection`: `GET /user` with the stored token. A rejected token
+ * (401/403 on a revoked grant) or transport failure surfaces as a user-facing
+ * error so the connection UI can offer to reauthenticate.
+ */
+const testConnection: TestConnection = ({ accessToken }) =>
+  GitHubApi.fetchUser().pipe(
+    Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token: accessToken.token })),
+    Effect.asVoid,
+    Effect.mapError(
+      () => new ConnectionTestError({ message: 'GitHub rejected the credential. Reauthenticate to continue syncing.' }),
+    ),
+  );
+
+/**
  * Contributes a single `Connector` entry that wires GitHub's two operations,
  * its target materializer, and the token-created hook to the `'github.com'`
  * source. plugin-connector routes by `connectorId`.
@@ -64,6 +78,7 @@ export default Capability.makeModule(
         sync: GitHubOperation.SyncGitHubRepositories,
         optionsSchema: GitHubOperation.SyncOptions,
         onTokenCreated,
+        testConnection,
       },
     ]);
   }),

@@ -86,7 +86,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           : undefined;
       }
 
-      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueUri(feedObj)) {
+      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getFeedUri(feedObj)) {
         continue;
       }
 
@@ -118,7 +118,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         Effect.map(Option.some),
         Effect.catchTag('EntityNotFoundError', () => Effect.succeed(Option.none())),
       );
-      if (Option.isSome(agentFeedOption) && Feed.getQueueUri(agentFeedOption.value)) {
+      if (Option.isSome(agentFeedOption) && Feed.getFeedUri(agentFeedOption.value)) {
         yield* Database.add(
           Trigger.make({
             [Obj.Parent]: agent,

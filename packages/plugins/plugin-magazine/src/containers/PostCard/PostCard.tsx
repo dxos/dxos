@@ -68,3 +68,5 @@ export const PostCard = ({ subject }: PostCardProps) => {
     </Card.Body>
   );
 };
+
+PostCard.displayName = 'PostCard';

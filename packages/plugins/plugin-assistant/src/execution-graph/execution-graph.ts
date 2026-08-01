@@ -10,10 +10,10 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
+import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Process, Trace } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
-import { AGENT_PROCESS_KEY } from '@dxos/functions-runtime';
 import { EID } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
@@ -93,6 +93,17 @@ export interface BuildExecutionGraphParams {
   activeProcesses?: readonly Process.Info[];
   collapseCompletedSpans?: boolean;
   eventLimit?: number;
+  /**
+   * Duration a span may sit open with no new events before it's force-closed with a synthetic
+   * end event. Only takes effect when `now` is also provided. Defaults to
+   * `DEFAULT_SPAN_TIMEOUT_MS`.
+   */
+  spanTimeoutMs?: number;
+  /**
+   * Reference time used to detect abandoned spans. Force-closing is skipped entirely when this
+   * is omitted.
+   */
+  now?: number;
 }
 
 /**
@@ -121,8 +132,10 @@ export const buildExecutionGraph = ({
   activeProcesses = [],
   collapseCompletedSpans = false,
   eventLimit = 500,
+  spanTimeoutMs,
+  now,
 }: BuildExecutionGraphParams): ExecutionGraph => {
-  const spanTree = buildSpanTree(traceMessages, { eventLimit });
+  const spanTree = buildSpanTree(traceMessages, { eventLimit, spanTimeoutMs, now });
   const toolCallContext = buildToolCallContext(traceMessages);
   const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext, collapseCompletedSpans);
   log('trace execution graph', {

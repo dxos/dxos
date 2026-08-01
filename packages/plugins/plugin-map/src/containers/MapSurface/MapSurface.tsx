@@ -74,3 +74,5 @@ export const MapSurface = ({ subject, attendableId, role }: MapSurfaceProps) => 
     />
   );
 };
+
+MapSurface.displayName = 'MapSurface';

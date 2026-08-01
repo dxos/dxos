@@ -37,3 +37,5 @@ export const Sidebar = () => {
     </Main.NavigationSidebar>
   );
 };
+
+Sidebar.displayName = 'Sidebar';

@@ -40,6 +40,8 @@ describe('Planning', () => {
         'Agent used "update-tasks" tool and did not manipulate the objects directly.',
       ],
     }),
-    { timeout: agentTestTimeout() },
+    {
+      timeout: agentTestTimeout(),
+    },
   );
 });

@@ -27,6 +27,7 @@ import {
   Operation,
   OperationHandlerSet,
   Process,
+  RunAgainError,
   ServiceNotAvailableError,
   ServiceResolver,
   Trace,
@@ -39,6 +40,8 @@ import { Organization } from '@dxos/types';
 
 import { ProcessStore } from './process-store';
 import * as ProcessManager from './ProcessManager';
+import * as ProcessMonitor from './ProcessMonitor';
+import * as RemoteProcessManager from './RemoteProcessManager';
 import { TestDatabaseLayer } from './testing';
 
 //
@@ -57,6 +60,12 @@ const Double = Operation.make({
 
 const Failing = Operation.make({
   meta: { key: DXN.make('org.dxos.test.failing'), name: 'Failing' },
+  input: Schema.Void,
+  output: Schema.Void,
+});
+
+const RunAgain = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.runAgain'), name: 'RunAgain' },
   input: Schema.Void,
   output: Schema.Void,
 });
@@ -117,6 +126,13 @@ const handlers = OperationHandlerSet.make(
     Operation.withHandler(
       Effect.fn(function* () {
         return yield* Effect.die('Test Error');
+      }),
+    ),
+  ),
+  RunAgain.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        yield* Operation.runAgain();
       }),
     ),
   ),
@@ -271,8 +287,9 @@ const ProcessWithRpcs = Process.make(
     }),
 );
 
-const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(RemoteProcessManager.layerNoop),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provide(
     TestDatabaseLayer({
@@ -541,8 +558,35 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(Process.fromOperation(Failing, handlers));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
-      expect(exit).toEqual(Exit.die('Error: Test Error'));
+      expect(exit).toEqual(Exit.die('Test Error'));
       expect(handle.status.state).toEqual(Process.State.FAILED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAndExit propagates the process failure cause without stringifying or nesting',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(Process.fromOperation(RunAgain, handlers));
+      const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(handle.status.state).toEqual(Process.State.FAILED);
+
+      if (!Exit.isFailure(exit)) {
+        return;
+      }
+
+      const cause = exit.cause;
+      expect(cause._tag).toBe('Die');
+
+      const defect = Cause.squash(cause);
+      expect(typeof defect).not.toBe('string');
+      expect(Cause.isCause(defect)).toBe(false);
+      expect(RunAgainError.is(defect)).toBe(true);
+
+      const processCause = handle.status.exit.pipe(Option.flatMap(Exit.causeOption), Option.getOrUndefined);
+      expect(processCause).toEqual(cause);
     }, Effect.provide(TestLayer)),
   );
 
@@ -707,8 +751,9 @@ describe('ProcessOperationInvoker environment inheritance', () => {
     }),
   );
 
-  const InheritanceTestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
+  const InheritanceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+    Layer.provideMerge(RemoteProcessManager.layerNoop),
     Layer.provideMerge(SpaceAwareResolverLayer),
     Layer.provideMerge(
       TestDatabaseLayer({

@@ -44,6 +44,7 @@
     "@dxos/rpc": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
+    "effect": "catalog:",
     "isomorphic-ws": "catalog:",
     "ws": "catalog:"
   },

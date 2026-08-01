@@ -120,3 +120,5 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
     </Menu.Root>
   );
 };
+
+RecordArticle.displayName = 'RecordArticle';

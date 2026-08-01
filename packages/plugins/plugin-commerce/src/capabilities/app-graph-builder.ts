@@ -93,7 +93,7 @@ export default Capability.makeModule(
         match: (node) => (Provider.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (provider) =>
           Effect.succeed([
-            {
+            AppNode.makeToolbarAction({
               id: 'regenerate',
               data: () =>
                 Operation.invoke(
@@ -101,12 +101,9 @@ export default Capability.makeModule(
                   { provider: Ref.make(provider) },
                   { spaceId: Obj.getDatabase(provider)?.spaceId },
                 ),
-              properties: {
-                label: ['regenerate.label', { ns: meta.profile.key }],
-                icon: 'ph--sparkle--regular',
-                disposition: 'toolbar',
-              },
-            },
+              label: ['regenerate.label', { ns: meta.profile.key }],
+              icon: 'ph--sparkle--regular',
+            }),
             {
               id: 'delete',
               data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [provider] }),

@@ -3,16 +3,16 @@
 //
 
 export {
-  type DeleteFromQueueRequest,
+  type DeleteFromFeedRequest,
+  type FeedNamespaceSyncState,
+  type FeedQuery,
+  type FeedService,
   type GetSyncStateRequest,
   type GetSyncStateResponse,
-  type InsertIntoQueueRequest,
-  type QueryQueueRequest,
-  type QueueQueryResult as QueryResult,
-  type QueueNamespaceSyncState,
-  type QueueQuery,
-  type QueueService,
-  type SyncQueueRequest,
+  type InsertIntoFeedRequest,
+  type QueryFeedRequest,
+  type FeedQueryResult as QueryResult,
+  type SyncFeedRequest,
 } from './proto/gen/dxos/client/services.js';
 
 export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';

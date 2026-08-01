@@ -4,10 +4,13 @@
 
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import type { Callback, FileStat, RandomAccessStorage } from 'random-access-storage';
 
 import { RuntimeProvider } from '@dxos/effect';
+import { FeedStorageDirectoryService } from '@dxos/feed-store';
 import { log } from '@dxos/log';
 import { Directory, type File, type Storage, StorageType, wrapFile } from '@dxos/random-access-storage';
 import { SqlTransaction } from '@dxos/sql-sqlite';
@@ -15,9 +18,32 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
 
+/**
+ * True when a rejected SQL op failed because its connection was already closed — the message
+ * `The database connection is not open` (raised by `@effect/sql-sqlite-node`), which arrives
+ * wrapped as an effect `SqlError`, so walk the `cause` chain. Signals teardown, not a real fault.
+ */
+export const isClosedConnectionError = (err: unknown): boolean => {
+  for (let cur: any = err, depth = 0; cur != null && depth < 5; cur = cur.cause, depth++) {
+    const message = typeof cur === 'string' ? cur : cur.message;
+    if (typeof message === 'string' && /connection is not open/i.test(message)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export type SqliteStorageOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
 };
+
+/**
+ * Effect service tag for {@link SqliteStorage}.
+ */
+export class SqliteStorageService extends EffectContext.Tag('@dxos/client-services/SqliteStorage')<
+  SqliteStorageService,
+  SqliteStorage
+>() {}
 
 /** Minimal cross-platform EventEmitter needed by the RandomAccessStorage contract. */
 class BaseEventEmitter {
@@ -161,6 +187,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     }
     if (!this.#loading) {
       this.#loading = this._loadFromDb();
+      // Mark the cached load promise as handled so that if it rejects after every awaiter is gone
+      // (e.g. the SQL runtime is disposed at teardown without close() being called on this file),
+      // the rejection is never surfaced as an unhandled rejection. Legitimate awaiters still observe
+      // the error through their own `.then`/`.catch` on the same promise returned below.
+      this.#loading.catch(() => {});
     }
     return this.#loading;
   }
@@ -176,11 +207,14 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
       );
       this.#buffer = rows.length > 0 ? Buffer.from(rows[0].data) : Buffer.alloc(0);
     } catch (err) {
-      // The SQL connection may close mid-read during teardown (the `#closed` guard in `_ensureLoaded`
-      // only catches reads that have not yet started). A read racing teardown rejects with
-      // "database connection is not open"; swallow it once closed and fall back to the empty buffer,
-      // otherwise surface the genuine error.
-      if (!this.#closed) {
+      // A read racing teardown rejects with "database connection is not open". The `#closed` guard
+      // in `_ensureLoaded` only catches reads not yet started, and `#closed` covers only this file
+      // being closed — during client disposal the shared SQL connection can be torn down while this
+      // file's `#closed` is still false (the container closed the connection without closing every
+      // file first). In either case a closed connection means there is nothing to load, so fall back
+      // to the empty `#buffer`; rethrow only a genuine error against a live connection. Swallowing an
+      // unhandled rejection here otherwise crashes the whole test worker (exit 1, no test failure).
+      if (!this.#closed && !isClosedConnectionError(err)) {
         throw err;
       }
     }
@@ -398,3 +432,39 @@ export class SqliteStorage implements Storage {
     this.#nativeFiles.clear();
   }
 }
+
+export type SqliteStorageLayerOptions = {
+  path?: string;
+};
+
+/**
+ * Effect Layer constructing a {@link SqliteStorage} from the ambient SQL runtime.
+ */
+export const SqliteStorageLayer = (
+  options: SqliteStorageLayerOptions = {},
+): Layer.Layer<SqliteStorageService, never, SqlClient.SqlClient | SqlTransactionTag> =>
+  Layer.effect(
+    SqliteStorageService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransactionTag>();
+      return new SqliteStorage({ runtime }, options.path);
+    }),
+  );
+
+export type FeedStorageDirectoryLayerOptions = {
+  sub?: string;
+};
+
+/**
+ * Effect Layer providing the hypercore feeds root directory from {@link SqliteStorage}.
+ */
+export const FeedStorageDirectoryLayer = (
+  options: FeedStorageDirectoryLayerOptions = {},
+): Layer.Layer<FeedStorageDirectoryService, never, SqliteStorageService> =>
+  Layer.effect(
+    FeedStorageDirectoryService,
+    Effect.gen(function* () {
+      const storage = yield* SqliteStorageService;
+      return storage.createDirectory(options.sub ?? 'feeds');
+    }),
+  );

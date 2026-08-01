@@ -564,22 +564,18 @@ export type CreateExtensionRawOptions = {
 };
 
 /**
- * Validates that a graph extension or surface local ID follows NSID conventions:
- * the final dot-separated segment must be camelCase (letters and digits only,
- * starting with a letter — no hyphens or underscores). This mirrors the rule
- * enforced when the id is appended to a plugin's NSID to form a full DXN path.
+ * Whether a graph extension local ID follows NSID conventions: the final
+ * dot-separated segment must be camelCase (letters and digits only, starting
+ * with a letter — no hyphens or underscores). This mirrors the rule enforced
+ * when the id is appended to a plugin's NSID to form a full DXN path.
+ *
+ * An extension with an invalid id is dropped rather than rejected, so a single
+ * malformed contribution cannot crash plugin activation.
  *
  * @example Valid:   'about', 'devtools', 'integrationsSection'
  * @example Invalid: 'integration-article', 'plugin-spec'
  */
-const validateLocalId = (id: string): void => {
-  const finalSegment = id.split('.').pop()!;
-  if (!/^[a-zA-Z][a-zA-Z0-9]*$/.test(finalSegment)) {
-    throw new Error(
-      `Invalid extension id: "${id}". The final segment "${finalSegment}" must be camelCase (letters and digits only, starting with a letter — no hyphens or underscores).`,
-    );
-  }
-};
+const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.test(id.split('.').pop() ?? '');
 
 /**
  * Create a graph builder extension (low-level API that works directly with Atoms).
@@ -594,7 +590,15 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
     actions: _actions,
     actionGroups: _actionGroups,
   } = extension;
-  validateLocalId(id);
+  if (!isValidLocalId(id)) {
+    log.warn(
+      'dropping graph extension with invalid id; the final segment must be camelCase (no hyphens or underscores)',
+      {
+        id,
+      },
+    );
+    return [];
+  }
   const normalizedRelation = normalizeRelation(relation);
   const getId = (key: string) => `${id}/${key}`;
 
@@ -692,6 +696,12 @@ export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
     matched: TMatched,
     get: Atom.Context,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
+  /** Contribute dropdown action groups (each with nested `actions`) to the matched node; the group's
+   * `type`/`data` are set automatically, so returning `Node.makeActionGroup(...)` output is fine. */
+  actionGroups?: (
+    matched: TMatched,
+    get: Atom.Context,
+  ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
   connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
   resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
   relation?: Node.RelationInput;
@@ -728,7 +738,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
   options: CreateExtensionOptions<TMatched, R>,
 ): Effect.Effect<BuilderExtension[], never, R> =>
   Effect.map(Effect.context<R>(), (context) => {
-    const { id, match, actions, connector, resolver, relation, position } = options;
+    const { id, match, actions, actionGroups, connector, resolver, relation, position } = options;
 
     const connectorExtension = connector ? createConnectorWithRuntime(id, match, connector, context) : undefined;
 
@@ -750,6 +760,25 @@ export const createExtension = <TMatched = Node.Node, R = never>(
           )
       : undefined;
 
+    const actionGroupsExtension = actionGroups
+      ? (node: Atom.Atom<Option.Option<Node.Node>>) =>
+          Atom.make((get) =>
+            Function.pipe(
+              get(node),
+              Option.flatMap((matchedNode) => match(matchedNode, get)),
+              Option.map((matched) =>
+                runEffectSyncWithFallback(actionGroups(matched, get), context, id, []).map((group) => ({
+                  ...group,
+                  // Attach captured context to the group's child actions so they execute with the
+                  // extension's services (e.g. Capability.Service) even without an explicit runner.
+                  actions: group.actions?.map((action) => ({ ...action, _actionContext: context })),
+                })),
+              ),
+              Option.getOrElse(() => []),
+            ),
+          )
+      : undefined;
+
     const resolverExtension = resolver
       ? (nodeId: string) =>
           Atom.make((get) => runEffectSyncWithFallback(resolver(nodeId, get), context, id, null) ?? null)
@@ -761,6 +790,7 @@ export const createExtension = <TMatched = Node.Node, R = never>(
       position,
       connector: connectorExtension,
       actions: actionsExtension,
+      actionGroups: actionGroupsExtension,
       resolver: resolverExtension,
     });
   });
@@ -818,6 +848,10 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
     object: Type.InstanceType<T>,
     get: Atom.Context,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
+  actionGroups?: (
+    object: Type.InstanceType<T>,
+    get: Atom.Context,
+  ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
   connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
@@ -831,11 +865,12 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
 export const createTypeExtension = <T extends Type.AnyEntity, R = never>(
   options: CreateTypeExtensionOptions<T, R>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
-  const { id, type, actions, connector, relation, position } = options;
+  const { id, type, actions, actionGroups, connector, relation, position } = options;
   return createExtension<Type.InstanceType<T>, R>({
     id,
     match: NodeMatcher.whenEchoType(type),
     actions,
+    actionGroups,
     connector,
     relation,
     position,

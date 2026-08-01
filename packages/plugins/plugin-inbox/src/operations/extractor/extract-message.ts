@@ -100,7 +100,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       // by (number, depart-date) and Trip by Booking confirmation code (PNR) — observe the objects
       // this run persisted. Without it, repeated extraction spawns duplicate Trips instead of
       // appending segments to the existing one.
-      yield* Effect.promise(() => db.flush({ indexes: true }));
+      yield* Database.flush({ indexes: true });
 
       return {
         extractorId: outcome.extractorId,

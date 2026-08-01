@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { CollectionModel } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { Database, Obj } from '@dxos/echo';
+import { Blob, Database, Obj, Ref } from '@dxos/echo';
 import { File } from '@dxos/types';
 
 import { createSandboxClient } from '../../services/sandbox-url';
@@ -31,22 +31,18 @@ export default DownloadFile.pipe(
 
       if (dest) {
         const loadedDest = yield* Database.load(dest);
+        const blob = yield* Blob.fromBytes(bytes, { type: 'text/plain' });
+        Obj.setParent(blob, loadedDest);
+        yield* Database.add(blob);
         Obj.update(loadedDest, (loadedDest) => {
           loadedDest.name = fileName;
-          loadedDest.size = bytes.byteLength;
-          loadedDest.data = File.inlineData(bytes);
+          loadedDest.data = Ref.make(blob);
           loadedDest.timestamp = new Date().toISOString();
         });
         return { objectId: Obj.getURI(loadedDest) };
       }
 
-      const fileObj = File.make({
-        name: fileName,
-        type: 'text/plain',
-        size: bytes.byteLength,
-        data: File.inlineData(bytes),
-        timestamp: new Date().toISOString(),
-      });
+      const fileObj = yield* File.fromBytes(bytes, { name: fileName, type: 'text/plain' });
       yield* CollectionModel.add({ object: fileObj });
 
       return { objectId: Obj.getURI(fileObj) };

@@ -340,3 +340,5 @@ const useCompanionMenuActions = ({ t, templates, draft, handleCreateFromTemplate
         .build(),
     [t, templates, draft, handleCreateFromTemplate],
   );
+
+RoutineCompanion.displayName = 'RoutineCompanion';

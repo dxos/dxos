@@ -1,4 +1,9 @@
 {
+  "[jsonc]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.sortJSON": "never"
+    }
+  },
   "[proto3]": {
     "editor.defaultFormatter": "zxh404.vscode-proto3"
   },
@@ -45,6 +50,7 @@
   ],
   "files.associations": {
     "*.pcss": "css",
+    "package.json": "jsonc",
     "workspace.json": "jsonc",
     "schema.json": "jsonc",
     "eslintConfig.json": "jsonc",

@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -28,19 +31,49 @@
       "path": "../../common/storybook-utils"
     },
     {
+      "path": "../../common/util"
+    },
+    {
       "path": "../../core/compute/ai"
     },
     {
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/compute-runtime"
+    },
+    {
       "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline-email"
+    },
+    {
+      "path": "../../core/compute/pipeline-rdf"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../plugins/plugin-brain"
+    },
+    {
       "path": "../../plugins/plugin-client"
+    },
+    {
+      "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-debug"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -50,6 +83,15 @@
     },
     {
       "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-progress"
+    },
+    {
+      "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../plugins/plugin-testing"
@@ -64,6 +106,12 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -74,6 +122,15 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../story-modules"
     }
   ]
 }

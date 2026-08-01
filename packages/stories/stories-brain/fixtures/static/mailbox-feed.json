@@ -1,0 +1,28 @@
+[
+  {
+    "id": "01HZSAMPLE00000000000000A1",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
+    "created": "2026-07-01T09:00:00.000Z",
+    "sender": { "email": "jane@sequoia.com", "name": "Jane Partner" },
+    "blocks": [
+      {
+        "_tag": "text",
+        "text": "Acme Corp raised a $20M Series B led by Sequoia Capital. Jane Doe joins as CFO, reporting to CEO Mark Lee."
+      }
+    ],
+    "properties": { "subject": "Acme Series B closed" }
+  },
+  {
+    "id": "01HZSAMPLE00000000000000A2",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
+    "created": "2026-07-02T14:30:00.000Z",
+    "sender": { "email": "bob@globex.com", "name": "Bob Smith" },
+    "blocks": [
+      {
+        "_tag": "text",
+        "text": "Bob Smith from Globex Corporation will present the new logistics platform at the Berlin conference next Tuesday."
+      }
+    ],
+    "properties": { "subject": "Berlin conference talk" }
+  }
+]

@@ -1336,7 +1336,7 @@ import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { TripPlugin } from '../../testing';
@@ -1346,13 +1346,12 @@ import { Trip } from '#types';
 import { TripArticle } from './TripArticle';
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const db = useDatabase(spaces[0].id);
-  const trips = useQuery(db, Filter.type(Trip.Trip));
+  const [space] = useSpaces();
+  const trips = useQuery(space?.db, Filter.type(Trip.Trip));
   const trip = trips[0];
 
-  if (!db || !trip) {
-    return <Loading data={{ db: !!db, trip: !!trip }} />;
+  if (!space?.db || !trip) {
+    return <Loading data={{ db: !!space?.db, trip: !!trip }} />;
   }
 
   return <TripArticle role='article' subject={trip} attendableId='story' />;

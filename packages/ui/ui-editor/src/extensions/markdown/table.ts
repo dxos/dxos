@@ -83,6 +83,7 @@ const update = (state: EditorState, _options: TableOptions) => {
   tables.forEach((table) => {
     const replace = state.readOnly || cursor < table.from || cursor > table.to;
     if (replace) {
+      // TODO(burdon): Compute left/right alignment based on column syntax.
       builder.add(
         table.from,
         table.to,
@@ -92,13 +93,11 @@ const update = (state: EditorState, _options: TableOptions) => {
         }),
       );
     } else {
-      // Add class for styling.
-      // TODO(burdon): Apply to each line?
       builder.add(
         table.from,
         table.to,
         Decoration.mark({
-          class: 'cm-table',
+          class: 'cm-table-editor',
         }),
       );
     }
@@ -148,6 +147,7 @@ class TableWidget extends WidgetType {
   override toDOM(_view: EditorView) {
     const div = document.createElement('div');
     const table = div.appendChild(document.createElement('table'));
+    table.setAttribute('class', 'cm-table');
 
     const header = table.appendChild(document.createElement('thead'));
     const tr = header.appendChild(document.createElement('tr'));

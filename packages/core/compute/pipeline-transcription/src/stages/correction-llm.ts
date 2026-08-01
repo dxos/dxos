@@ -11,7 +11,7 @@ import { AiService } from '@dxos/ai';
 import { DXN } from '@dxos/echo';
 import { type ContentBlock } from '@dxos/types';
 
-import { DEFAULT_STAGE_MODEL } from '../PipelineConfig';
+import { DEFAULT_STAGE_MODEL } from '../types/pipeline-config';
 
 const CorrectionPayload = Schema.Struct({
   blocks: Schema.Array(Schema.Struct({ index: Schema.Number, corrected: Schema.String })),

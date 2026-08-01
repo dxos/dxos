@@ -37,3 +37,5 @@ export const ObservabilitySettings = ({ settings, onSettingsChange }: Observabil
     </Form.Root>
   );
 };
+
+ObservabilitySettings.displayName = 'ObservabilitySettings';

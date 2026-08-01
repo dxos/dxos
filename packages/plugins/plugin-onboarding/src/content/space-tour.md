@@ -8,12 +8,11 @@ We made it so you can see what Composer is for without having to build a workspa
 
 ### Contacts
 
-Open **Contacts → Organizations**. You'll find the same set of organizations rendered four different ways:
+Open **Contacts → Organizations**. You'll find the same set of organizations rendered three different ways:
 
 - A **Table** view — rows and columns.
 - A **Kanban** view — grouped by relationship (supplier / wholesale / partner).
 - A **Map** view — plotted by location (Oakland, Portland, Brooklyn, Austin, plus the partner farms in Colombia and Ethiopia).
-- A **Masonry** view — visual cards.
 
 Open **Contacts → People** to see the team and partner contacts. Each Person links back to their Organization — clicking the org name navigates to it.
 

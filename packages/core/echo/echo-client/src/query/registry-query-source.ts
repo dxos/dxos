@@ -49,6 +49,11 @@ export class RegistryQuerySource implements QuerySource {
     return this.#match(simple.filter);
   }
 
+  /** The in-process registry is matched synchronously. */
+  isSynchronous(): boolean {
+    return this.#query !== undefined && this.#isValidSourceForQuery(this.#query);
+  }
+
   async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
     if (!this.#isValidSourceForQuery(query)) {
       return [];

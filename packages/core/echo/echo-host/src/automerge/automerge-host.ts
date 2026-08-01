@@ -37,10 +37,10 @@ import * as Effect from 'effect/Effect';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, Resource, cancelWithContext } from '@dxos/context';
-import { type CollectionId, DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
+import { type CollectionId, DatabaseDirectory, createIdFromSpaceKey, isEdgePeerId } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos/echo/service';
@@ -61,6 +61,7 @@ import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
 import { getHandleState } from './handle-state';
+import { tryGetSpaceIdFromCollectionId } from './space-collection';
 import { SqliteHeadsStore } from './sqlite-heads-store';
 import { SqliteStorageAdapter } from './sqlite-storage-adapter';
 
@@ -154,7 +155,6 @@ const CLOSE_TIMEOUT = 2_000;
  * level and never reach the Subduction sedimentree layer. Bundle sync remains available
  * for replicators that opt in.
  */
-@trace.resource({ lifecycle: true })
 export class AutomergeHost extends Resource {
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
   private readonly _echoNetworkAdapter: EchoNetworkAdapter;
@@ -177,7 +177,6 @@ export class AutomergeHost extends Resource {
     ({ collectionId, peerId }) => `${collectionId}|${peerId}`,
   );
 
-  @trace.info()
   private _peerId!: PeerId;
 
   private readonly _peerIdProvider?: PeerIdProvider;
@@ -240,6 +239,7 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter = new EchoNetworkAdapter({
       getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+      getContainingSpaceIdForDocument: this.getContainingSpaceIdForDocument.bind(this),
       isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
@@ -278,7 +278,7 @@ export class AutomergeHost extends Resource {
     await initSubduction();
 
     if (this._useSubduction) {
-      const { MemorySigner } = await import('@automerge/automerge-subduction');
+      const { MemorySigner, setSubductionLogLevel } = await import('@automerge/automerge-subduction');
       this._signer ??= MemorySigner.generate();
 
       this._repo = new Repo({
@@ -307,6 +307,21 @@ export class AutomergeHost extends Resource {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
         }
       });
+
+      // Quiet subduction_core's console WARNs: every per-sedimentree sync round fans out to all
+      // space-scoped edge peers, and each correct cross-space `authorizeFetch` denial is logged by
+      // the WASM at WARN ("not authorized to access sedimentree"), flooding the console. Must run
+      // after `new Repo(...)` — the SubductionSource constructor resets the level to 'warn' on
+      // every startup. Skipped when subduction debugging is requested, mirroring the constructor's
+      // own escape hatch (`localStorage.debug` / `__SUBDUCTION_DEBUG`).
+      const subductionDebugRequested =
+        (typeof localStorage !== 'undefined' &&
+          typeof localStorage.getItem === 'function' &&
+          /subduction/i.test(localStorage.getItem('debug') ?? '')) ||
+        Boolean(Reflect.get(globalThis, '__SUBDUCTION_DEBUG'));
+      if (!subductionDebugRequested) {
+        setSubductionLogLevel('error');
+      }
     } else {
       // Classical automerge-repo wiring: the EchoNetworkAdapter is registered as a
       // network adapter and document bytes flow through the standard sync protocol.
@@ -756,7 +771,7 @@ export class AutomergeHost extends Resource {
     }
 
     const documentId = path[0] as DocumentId;
-    const handle = this._repo.handles[documentId];
+    const handle = this._repo.getHandle(documentId);
     if (!handle) {
       return;
     }
@@ -798,7 +813,7 @@ export class AutomergeHost extends Resource {
     // Read the spaceKey iff the document is already loaded; otherwise let the share policy
     // fall through to the `_getSpaceKeyByRootDocumentId` lookup or the
     // `isDocumentInRemoteCollection` check on the caller.
-    const handle = this._repo.handles[documentId as any];
+    const handle = this._repo.getHandle(documentId as any);
     if (handle && getHandleState(this._repo, documentId as DocumentId) === 'ready') {
       const doc = handle.doc();
       if (doc) {
@@ -817,6 +832,40 @@ export class AutomergeHost extends Resource {
     }
 
     return null;
+  }
+
+  /**
+   * Resolve the space id owning a document for the share policy.
+   *
+   * Membership is answered first from the local collection state — the space root's document
+   * list (root + linked docs), maintained by `updateLocalCollectionState`. That mapping survives
+   * handle eviction and never blocks on the document loading, so a doc the node owns but whose
+   * handle is evicted or still `'loading'` resolves to its space instead of reading as "not in any
+   * space" and producing a spurious `authorizeFetch`/share-policy denial (logged by the peer as
+   * `not authorized to access sedimentree`). This must stay synchronous for the same reason
+   * `_getContainingSpaceForDocument` refuses to await the load: the network source's availability
+   * is itself gated on the share policy returning, so awaiting the document here would deadlock.
+   *
+   * Falls back to the document's own embedded space key (loaded handle) / the root-doc lookup for
+   * a doc not yet linked into any local collection (e.g. inbound during initial sync).
+   */
+  async getContainingSpaceIdForDocument(documentId: string): Promise<SpaceId | null> {
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+      if (!state || !(documentId in state.documents)) {
+        continue;
+      }
+      // Only space collections (`space:<spaceId>[:<root>]`) carry a resolvable owner; a non-space
+      // collection id yields null (rather than throwing on the share-policy path) and the scan
+      // continues to the next registered collection.
+      const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
+      if (spaceId) {
+        return spaceId;
+      }
+    }
+
+    const spaceKey = await this._getContainingSpaceForDocument(documentId);
+    return spaceKey ? createIdFromSpaceKey(spaceKey) : null;
   }
 
   /**
@@ -850,7 +899,7 @@ export class AutomergeHost extends Resource {
     const storeRequestIds: DocumentId[] = [];
     const storeResultIndices: number[] = [];
     for (const documentId of documentIds) {
-      const handle = this._repo.handles[documentId];
+      const handle = this._repo.getHandle(documentId);
       if (handle && getHandleState(this._repo, documentId) === 'ready' && handle.doc()) {
         result.push(getHeads(handle.doc()!));
       } else {
@@ -1045,11 +1094,16 @@ export class AutomergeHost extends Resource {
       return;
     }
 
+    // Per-handle state included: a document stuck in `unavailable`/`loading` here on every diff
+    // pass is the signature of a subduction DocumentQuery parked without retry —
+    // `findWithProgress` will not re-issue the query, so the doc never arrives.
     log('replicating documents after collection sync', {
       collectionId,
       peerId,
-      toReplicateWithoutBatching,
       count: toReplicateWithoutBatching.length,
+      handleStates: Object.fromEntries(
+        toReplicateWithoutBatching.map((documentId) => [documentId, getHandleState(this._repo, documentId)]),
+      ),
     });
 
     // Trigger replication of the missing documents. `findWithProgress` is the
@@ -1102,8 +1156,8 @@ export class AutomergeHost extends Resource {
         log.warn('document not ready, skipping', { documentId });
         return;
       }
-      const handle = this._repo.handles[documentId];
-      const doc = handle.doc();
+      const handle = this._repo.getHandle(documentId);
+      const doc = handle?.doc();
       if (!doc) {
         log.warn('document not available, skipping', { documentId });
         return;

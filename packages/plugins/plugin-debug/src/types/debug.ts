@@ -16,6 +16,8 @@ import * as Settings from './Settings';
 export type DebugPluginOptions = {
   /** Shared persistent log store for capturing and downloading logs. */
   logStore?: IdbLogStore;
+  /** Persist the stats-panel store to localStorage so it survives a reload. Defaults to `true`. */
+  persistStats?: boolean;
 };
 
 export type DebugContextType = {

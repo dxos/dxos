@@ -102,3 +102,5 @@ export const SearchProperties = ({ search }: SearchPropertiesProps) => {
     </div>
   );
 };
+
+SearchProperties.displayName = 'SearchProperties';

@@ -46,6 +46,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {

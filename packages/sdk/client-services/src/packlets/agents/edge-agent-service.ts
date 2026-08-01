@@ -2,32 +2,34 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type RequestOptions } from '@dxos/codec-protobuf';
-import { Stream } from '@dxos/codec-protobuf/stream';
+import * as Effect from 'effect/Effect';
+import * as EffectStream from 'effect/Stream';
+
 import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
-  type EdgeAgentService,
   EdgeStatus,
   QueryAgentStatusResponse,
   type QueryEdgeStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type EdgeAgentService } from '@dxos/protocols/rpc';
 
 import { type EdgeAgentManager } from './edge-agent-manager';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
-export class EdgeAgentServiceImpl implements EdgeAgentService {
-  constructor(
+export class EdgeAgentServiceImpl implements EdgeAgentService.Handlers {
+  'constructor'(
     private readonly _agentManagerProvider: () => Promise<EdgeAgentManager>,
     private readonly _edgeConnection?: EdgeConnection,
   ) {}
 
   // TODO(mykola): Reconcile with NetworkService.queryStatus.
-  queryEdgeStatus(): Stream<QueryEdgeStatusResponse> {
-    return new Stream(({ ctx, next }) => {
+  ['EdgeAgentService.queryEdgeStatus'](): EffectStream.Stream<QueryEdgeStatusResponse, Error> {
+    return EffectStream.async<QueryEdgeStatusResponse, Error>((emit) => {
+      const ctx = Context.default();
       const update = () => {
-        next({
+        void emit.single({
           status: this._edgeConnection?.status ?? {
             state: EdgeStatus.ConnectionState.NOT_CONNECTED,
             rtt: 0,
@@ -42,22 +44,30 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
 
       this._edgeConnection?.statusChanged.on(ctx, update);
       update();
+
+      return Effect.promise(() => ctx.dispose());
     });
   }
 
-  async createAgent(_request: void, options?: RequestOptions): Promise<void> {
-    return (await this._agentManagerProvider()).createAgent(options?.ctx ?? Context.default());
+  ['EdgeAgentService.createAgent'](): Effect.Effect<void, Error> {
+    return Effect.tryPromise({
+      try: async () => (await this._agentManagerProvider()).createAgent(Context.default()),
+      catch: (error) => error as Error,
+    });
   }
 
-  queryAgentStatus(): Stream<QueryAgentStatusResponse> {
-    return new Stream(({ ctx, next }) => {
-      next({ status: QueryAgentStatusResponse.AgentStatus.UNKNOWN });
+  ['EdgeAgentService.queryAgentStatus'](): EffectStream.Stream<QueryAgentStatusResponse, Error> {
+    return EffectStream.async<QueryAgentStatusResponse, Error>((emit) => {
+      const ctx = Context.default();
+      void emit.single({ status: QueryAgentStatusResponse.AgentStatus.UNKNOWN });
       void this._agentManagerProvider().then((agentManager) => {
-        next({ status: mapStatus(agentManager.agentStatus) });
+        void emit.single({ status: mapStatus(agentManager.agentStatus) });
         agentManager.agentStatusChanged.on(ctx, (newStatus) => {
-          next({ status: mapStatus(newStatus) });
+          void emit.single({ status: mapStatus(newStatus) });
         });
       });
+
+      return Effect.promise(() => ctx.dispose());
     });
   }
 }

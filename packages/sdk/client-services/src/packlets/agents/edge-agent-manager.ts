@@ -2,10 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as EffectContext from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Resource } from '@dxos/context';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,14 +19,21 @@ import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import { type Identity } from '../identity';
-import { type DataSpaceManager } from '../spaces';
-
+import { type Identity, type IdentityProvider, IdentityProviderService } from '../identity';
+import { type DataSpaceManager, DataSpaceManagerService } from '../spaces';
 const AGENT_STATUS_QUERY_RETRY_INTERVAL = 5000;
 const AGENT_STATUS_QUERY_RETRY_JITTER = 1000;
 const AGENT_FEED_ADDED_CHECK_INTERVAL_MS = 3000;
 
 export type EdgeAgentManagerConfig = {};
+
+/**
+ * Effect service tag for {@link EdgeAgentManager}.
+ */
+export class EdgeAgentManagerService extends EffectContext.Tag('@dxos/client-services/EdgeAgentManager')<
+  EdgeAgentManagerService,
+  EdgeAgentManager
+>() {}
 
 export class EdgeAgentManager extends Resource {
   public agentStatusChanged = new Event<EdgeAgentStatus>();
@@ -37,9 +49,13 @@ export class EdgeAgentManager extends Resource {
     private readonly _edgeFeatures: Runtime.Client.EdgeFeatures | undefined,
     private readonly _edgeHttpClient: EdgeHttpClient | undefined,
     private readonly _dataSpaceManager: DataSpaceManager,
-    private readonly _identity: Identity,
+    private readonly _identityProvider: IdentityProvider,
   ) {
     super();
+  }
+
+  private get identity(): Identity {
+    return this._identityProvider();
   }
 
   public get agentStatus(): EdgeAgentStatus | undefined {
@@ -57,20 +73,20 @@ export class EdgeAgentManager extends Resource {
     invariant(this._edgeFeatures?.agents);
 
     const response = await this._edgeHttpClient.createAgent(ctx, {
-      identityDid: this._identity.did,
-      haloSpaceId: this._identity.haloSpaceId,
-      haloSpaceKey: this._identity.haloSpaceKey.toHex(),
+      identityDid: this.identity.did,
+      haloSpaceId: this.identity.haloSpaceId,
+      haloSpaceKey: this.identity.haloSpaceKey.toHex(),
     });
 
     const deviceKey = PublicKey.fromHex(response.deviceKey);
 
-    if (await this._identity.authorizedDeviceKeys.has(deviceKey)) {
+    if (await this.identity.authorizedDeviceKeys.has(deviceKey)) {
       log.info('agent was already added to HALO, ignoring response', { response });
       this._updateStatus(EdgeAgentStatus.ACTIVE, deviceKey);
       return;
     }
 
-    await this._identity.admitDevice({
+    await this.identity.admitDevice({
       deviceKey,
       controlFeedKey: PublicKey.fromHex(response.feedKey),
       // TODO: agents don't have data feed, should be removed
@@ -91,7 +107,7 @@ export class EdgeAgentManager extends Resource {
       return;
     }
 
-    this._lastKnownDeviceCount = this._identity.authorizedDeviceKeys.size;
+    this._lastKnownDeviceCount = this.identity.authorizedDeviceKeys.size;
     this._fetchAgentStatusTask = new DeferredTask(this._ctx, async () => {
       await this._fetchAgentStatus(this._ctx);
     });
@@ -103,12 +119,12 @@ export class EdgeAgentManager extends Resource {
       }
     });
 
-    this._identity.stateUpdate.on(this._ctx, () => {
-      const maybeAgentWasCreated = this._identity.authorizedDeviceKeys.size > this._lastKnownDeviceCount;
+    this.identity.stateUpdate.on(this._ctx, () => {
+      const maybeAgentWasCreated = this.identity.authorizedDeviceKeys.size > this._lastKnownDeviceCount;
       if (this.agentExists || !maybeAgentWasCreated) {
         return;
       }
-      this._lastKnownDeviceCount = this._identity.authorizedDeviceKeys.size;
+      this._lastKnownDeviceCount = this.identity.authorizedDeviceKeys.size;
       this._fetchAgentStatusTask?.schedule();
     });
   }
@@ -123,7 +139,7 @@ export class EdgeAgentManager extends Resource {
     try {
       log('fetching agent status');
       const { agent } = await this._edgeHttpClient.getAgentStatus(ctx, {
-        ownerIdentityDid: this._identity.did,
+        ownerIdentityDid: this.identity.did,
       });
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {
@@ -184,3 +200,28 @@ export class EdgeAgentManager extends Resource {
     log.verbose('agent status update', { status });
   }
 }
+
+export type EdgeAgentManagerLayerOptions = {
+  edgeFeatures?: Runtime.Client.EdgeFeatures;
+};
+
+/**
+ * Effect Layer constructing a dormant {@link EdgeAgentManager}.
+ */
+export const EdgeAgentManagerLayer = (
+  options: EdgeAgentManagerLayerOptions = {},
+): Layer.Layer<EdgeAgentManagerService, never, DataSpaceManagerService | IdentityProviderService> =>
+  Layer.effect(
+    EdgeAgentManagerService,
+    Effect.gen(function* () {
+      const dataSpaceManager = yield* DataSpaceManagerService;
+      const identityProvider = yield* IdentityProviderService;
+      const edgeHttpClient = yield* Effect.serviceOption(EdgeHttpClientService);
+      return new EdgeAgentManager(
+        options.edgeFeatures,
+        Option.getOrUndefined(edgeHttpClient),
+        dataSpaceManager,
+        identityProvider,
+      );
+    }),
+  );

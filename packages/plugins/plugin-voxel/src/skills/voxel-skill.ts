@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 
 import { VoxelOperation } from '#types';
 
-const SKILL_KEY = 'dxos.org/skill/voxel';
+const SKILL_KEY = 'org.dxos.skill.voxel';
 
 const operations = [
   VoxelOperation.AddVoxels,

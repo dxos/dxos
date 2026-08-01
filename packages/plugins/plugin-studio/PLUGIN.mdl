@@ -1,0 +1,298 @@
+---
+id: org.dxos.plugin.studio
+name: StudioPlugin
+version: 0.1.0
+---
+
+A studio for **creative artifacts** in `DXOS` Composer. An `Artifact` is a
+media-agnostic unit of creative work — a prompt plus the outputs generated (or
+uploaded) from it — spanning images, video, and future media. The plugin owns
+the cross-cutting ontology and the generic authoring UI; concrete media
+(rendering) and providers (generation) plug in via capabilities and surfaces.
+
+## Design tenets
+
+- **One extensible `Artifact` type**, discriminated by an open-string `kind`
+  (`'image' | 'video' | …`). No per-medium ECHO types; new media add *behavior*
+  (a renderer + optionally a provider), never columns.
+- **Two output relationships**: `variants` (interchangeable alternatives of the
+  primary output — the user picks a `cover`) vs. `derived` (downstream products
+  such as a video transcript/summary or an image caption).
+- **Rendering is a Surface, keyed by `contentType`.** Studio ships defaults
+  (`image/*` → `<img>`, `video/*` → embeddable player); any plugin overrides via
+  a higher-priority (`Position.first`) surface.
+- **Generation is kind-specific.** A provider contributes a `GenerationService`
+  for a `kind` with its own **`requestSchema`** (Effect Schema) describing that
+  medium's request config; studio renders the request form from the schema (a
+  generic `Form`) or a provider-supplied custom UI (a Surface).
+- **Layout reuses/extends view types**: a masonry gallery is a
+  `Collection<Artifact>`; a spatial lightbox is a `Lightbox` (a board layout over
+  referenced Artifacts). Layout is a *view*, not a medium.
+- **Credentialed access via Connectors**: providers store an `AccessToken`; the
+  generate op resolves it via `CredentialsService`, keyed by the provider's
+  `source`.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `op`        | `org.dxos.mdl.op@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+
+## Types
+
+```mdl
+type Artifact
+  desc: >
+    A creative artifact (typename org.dxos.type.artifact): a prompt plus the
+    outputs produced from it. Media-agnostic; `kind` selects rendering + provider.
+  fields:
+    name?: string
+    kind: string                      # open discriminator: 'image' | 'video' | … (no enum)
+    instructions: Ref<Instructions>   # the prompt (rich text; @dxos/compute Instructions)
+    config?: Record<string, unknown>  # current generation request config (validated vs provider.requestSchema)
+    generator?: string                # chosen GenerationService id for this kind (op:generate `provider`)
+    variants: Ref<Variant>[]          # owned alternatives of the primary output
+    cover?: Ref<Variant>              # chosen/primary variant (used for thumbnails)
+    derived?: Ref<Obj.Unknown>[]      # downstream products (transcript, summary, caption, upscale…)
+    meta?: Record<string, unknown>    # extensibility escape hatch (media-specific extras)
+  factory:
+    # make({ kind }) creates a child Instructions (owns a Text body) parented to the artifact.
+    # makeVideo({ url }) creates a kind:'video' artifact with the source as its cover Variant.
+```
+
+```mdl
+type Variant
+  desc: >
+    One produced output (typename org.dxos.type.variant; hidden from the navtree,
+    owned by its Artifact). Generated variants carry `generation`; uploaded or
+    external ones do not.
+  fields:
+    contentType?: string              # mime — selects the VariantRenderer surface (image/png, video/mp4, …)
+    content?: Ref<Obj.Unknown>        # the materialized asset object: File (bytes) / Text / … (generic ⇒ extensible)
+    url?: string                      # ephemeral provider / external source URL until materialized into `content`
+    generation?: Generation           # provenance (absent ⇒ uploaded/external)
+```
+
+```mdl
+struct Generation                     # inline (not an ECHO object) — recorded per generated Variant
+  fields:
+    provider: string
+    model?: string
+    prompt?: string                   # resolved/magic prompt actually used
+    parameters?: Record<string, unknown>   # provider-specific knobs (resolution, style, safety…) — no schema change
+    seed?: number
+    createdAt?: string
+    requestId?: string
+```
+
+```mdl
+type Lightbox
+  desc: >
+    A spatial view (typename org.dxos.type.lightbox) over a set of Artifacts laid
+    out on a board grid. Layout is a view concern (reuses react-ui-board's
+    BoardLayout); the artifacts are referenced, not owned.
+  fields:
+    name?: string
+    items: Ref<Artifact>[]
+    layout: BoardLayout               # { size: { width, height }, cells: Record<id, { x, y, width?, height? }> }
+```
+
+Reused, unchanged: `File` (`@dxos/types`) for uploaded/materialized bytes;
+`Collection` (`@dxos/echo`, `{name?, objects: Ref[]}`) for a masonry gallery of
+Artifacts; `Instructions` (`@dxos/compute`) for the prompt; `Text`
+(`@dxos/schema`) for `derived` products.
+
+## Capability contracts
+
+```mdl
+type GenerationService                # StudioCapabilities.GenerationService (array capability; one per kind/provider)
+  desc: >
+    A provider of generation for one `kind`. Resolved by the generate op (by
+    kind + optional provider id). Its `requestSchema` drives the request form.
+    `generate` receives the prompt merged with the artifact's config and returns
+    variant descriptors; the provider validates the request against its own schema.
+  fields:
+    kind: string                      # 'image' | 'video' | …
+    id: string                        # provider id, e.g. 'ideogram'
+    label: string
+    contentType: string               # default output mime (renderer selection)
+    source?: string                   # AccessToken.source for the credential
+    connectorId?: string              # Connection.connectorId (for the ConnectorAuth surface)
+    requestSchema: Schema             # Effect Schema of the kind-specific request config
+    defaultRequest?: Record<string, unknown>
+    generate: (request: { prompt, count?, …config }, options: { apiKey?: Redacted<string> })
+      => Promise<{ variants: VariantData[] }>
+  capability:
+    # Capability.make<GenerationService>(`${meta.profile.key}.capability.generation-service`)
+```
+
+```mdl
+surface VariantRenderer               # role org.dxos.plugin.studio.role.variantRenderer, filtered by contentType
+  desc: >
+    Renders a variant's content. Studio ships defaults (image/* → <img>,
+    video/* → embeddable player / <video>); a plugin overrides for a contentType
+    via Position.first.
+  data: { variant: { contentType?, url?, content?, generation? }, contentType }
+
+surface GenerateForm                  # role org.dxos.plugin.studio.role.generateForm, filtered by kind
+  desc: >
+    Studio default renders a schema-driven Form (@dxos/react-ui-form) from
+    provider.requestSchema; a provider can override with a kind-specific UI via
+    Position.first.
+  data: { kind, schema, value, onChange }
+```
+
+## Operations
+
+```mdl
+op generate
+  desc: >
+    Generate variants for an Artifact. Resolves the GenerationService (by
+    artifact.kind + optional provider), resolves the API key from the
+    Connector-managed AccessToken via CredentialsService when `source` is set,
+    builds the request from the prompt (instructions.text) + artifact.config,
+    calls generate(), and appends a Variant per result (recording Generation,
+    seeding `cover` with the first).
+  input:  { artifact: Ref<Artifact>, provider?: string, count?: number }
+  output: { count: number }
+  errors: [NoGenerationService, MissingCredential, GenerationError]
+  services: [Database.Service, Capability.Service, CredentialsService]
+  effects: [echo:write]
+```
+
+## Components / surfaces
+
+```mdl
+component ArtifactArticle
+  desc: >
+    Media-agnostic article for an Artifact. Toolbar: variant chooser (tabs) +
+    a Generator selector (the GenerationServices for the artifact's kind) +
+    Upload + Connect/Generate. Below: the prompt editor, the kind-specific
+    GenerateForm (schema-driven or overridden), and either the selected variant
+    (rendered via the VariantRenderer surface for its contentType) or the variant
+    gallery. The chosen generator is stored in `Artifact.generator` and passed to
+    op:generate as `provider`.
+  props: { role, subject: Artifact, attendableId? }
+
+component ArtifactsArticle           # bound to the virtual "Artifacts" navtree node (not an ECHO object)
+  desc: >
+    Browse/create hub for all Artifacts in a space. Toolbar: a kind selector
+    (image | video) that sets the kind of the next created Artifact, and a Create
+    action. Body: a masonry of ArtifactCards (useQuery all Artifacts). Creating or
+    clicking a card navigates to that Artifact's ArtifactArticle.
+  props: { role, space, attendableId? }
+
+component GalleryArticle
+  desc: >
+    A masonry of Artifacts in a Collection (guarded: matches Collections whose
+    members are Artifacts). Toolbar creates a new Artifact and multi-select deletes.
+  props: { role, subject: Collection }
+
+component LightboxArticle
+  desc: A spatial board of Artifacts (react-ui-board); each artifact renders as its cover card. Dragging persists layout.
+  props: { role, subject: Lightbox, attendableId? }
+
+component ArtifactCard              # CardContent surface for an Artifact
+  desc: Cover-variant thumbnail; lets Artifacts compose into collections/boards laid out by the host.
+
+component ImageVariant / VideoVariant   # default VariantRenderer surfaces (image/*, video/*), overridable
+```
+
+## Media kinds
+
+```mdl
+feat kind:image
+  provider: plugin-ideogram (GenerationService id 'ideogram', source 'ideogram.ai')
+  requestSchema: { model?, aspectRatio?, negativePrompt?, styleType?, seed? }
+  renderer: ImageVariant (<img>)
+  content: generated (ephemeral url) or uploaded (Ref<File>)
+
+feat kind:video
+  provider: plugin-heygen (GenerationService id 'heygen', source 'heygen.com') —
+    asynchronous: enqueue → poll (awaitResult). The generate op persists the job
+    id on the Artifact and resumes the poll across remount.
+  requestSchema: { avatarId?, voiceId? } — provider-specific config held in
+    Artifact.config; the prompt (script) is Artifact.instructions.
+  renderer: VideoVariant (<video>) plays the produced video URL / uploaded bytes.
+  variants: each completed generation is a Variant (most-recent-first ⇒ carousel).
+```
+
+> Not to be confused with `plugin-video` (unrelated): that plugin *displays*
+> videos (embeds) and fetches YouTube transcriptions. Studio's `kind:'video'` is
+> about *generating* video artifacts.
+
+## Features
+
+```mdl
+feat F-1: Author + generate
+  req F-1.1: An Artifact opens in ArtifactArticle showing its prompt + kind-specific request form.
+  req F-1.2: Generate runs op:generate against the resolved kind provider and appends Variant(s).
+  req F-1.3: The request form is rendered from provider.requestSchema unless a kind GenerateForm surface overrides it.
+  req F-1.4: When the provider needs a credential and none is connected, the toolbar shows the ConnectorAuth surface.
+
+feat F-2: Variants + rendering
+  req F-2.1: Variants render via the VariantRenderer surface matching their contentType; studio provides image/* and video/* defaults.
+  req F-2.2: A plugin may override a contentType renderer via a Position.first surface.
+  req F-2.3: Uploaded files are appended as Variants with content=Ref<File> and no generation.
+
+feat F-3: Galleries + lightboxes
+  req F-3.1: A Collection of Artifacts renders as a masonry gallery; Create adds a new Artifact; multi-select + Delete removes.
+  req F-3.2: A Lightbox renders its Artifacts spatially on a board; dragging persists positions.
+  req F-3.3: An Artifact renders as a cover card (CardContent) so it composes into host-laid-out collections/boards.
+
+feat F-4: Navigation hub
+  req F-4.1: A "Studio" section node appears under the navtree `content` group (AppNode.makeSection), always available.
+  req F-4.2: A virtual "Artifacts" child node under Studio opens ArtifactsArticle (bound by node data sentinel, not an ECHO object).
+  req F-4.3: ArtifactsArticle shows a masonry of all Artifacts in the space; a toolbar kind selector sets the create-kind; Create makes an Artifact of that kind and opens it. Clicking a card opens its ArtifactArticle.
+  req F-4.4: ArtifactArticle exposes a Generator selector (GenerationServices for the kind); the choice persists to Artifact.generator and drives op:generate's provider.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Generate appends variants (mock provider)
+  given: an Artifact{kind:'image'}; a mock GenerationService for 'image' with a requestSchema
+  when: op:generate runs
+  then: artifact.variants gains a Variant per result (each with a Generation); cover seeded; output.count matches
+
+test T-2: Renderer resolution by contentType
+  given: variants with contentType image/png and video/mp4
+  then: each renders via the matching VariantRenderer default; a Position.first override wins
+
+test T-3: Kind-specific request form
+  given: a provider requestSchema
+  then: the default GenerateForm renders a schema-driven Form; a kind GenerateForm surface overrides it
+
+test T-4: Gallery create/delete + multi-select
+
+test T-5: Video playback
+  given: an Artifact{kind:'video'} whose cover Variant url is a YouTube/Vimeo/direct URL
+  then: VideoVariant renders an embeddable player; uploaded video bytes play in <video>
+```
+
+## Providers
+
+- `plugin-ideogram` (`org.dxos.plugin.ideogram`) — headless; contributes the
+  `kind:'image'` `GenerationService` (Ideogram API) + a Connector for
+  `ideogram.ai`.
+- `plugin-heygen` (`org.dxos.plugin.heygen`) — headless; contributes the
+  asynchronous `kind:'video'` `GenerationService` (HeyGen API; enqueue → poll)
+  + a Connector for `heygen.com`. Request config is `{ avatarId, voiceId }`.
+
+Both depend on `@dxos/plugin-studio/types` and resolve their credential via
+`CredentialsService`. (This subsumes the former `plugin-generator`; `plugin-video`
+— video display + YouTube transcription — is unrelated and separate.)
+
+## Roadmap (out of scope this milestone)
+
+- **`kind:'audio'`**: an `audio/*` default `VariantRenderer` + an audio provider.
+- **Graduate** `Artifact`/`Variant`/`Generation` to `@dxos/types` (namespace
+  re-export; no call-site changes).
+- **Materialize** ephemeral generated URLs into `File`s for permanence.
+- Multi-account credential selection; a `DerivedFrom` relation for heavy
+  downstream chains.
+```

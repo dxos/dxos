@@ -77,7 +77,7 @@ const sliceFamily = Atom.family((key: SliceKey) =>
     });
     get.addFinalizer(() => unsubscribe());
     return previous;
-  }),
+  }).pipe(Atom.keepAlive),
 );
 
 /**

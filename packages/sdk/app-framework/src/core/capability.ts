@@ -6,6 +6,8 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import type * as Scope from 'effect/Scope';
 
 import type { DXN } from '@dxos/keys';
 
@@ -48,6 +50,16 @@ export const get = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T, Error, S
  */
 export const getAll = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<T[], never, Service> =>
   Effect.map(Service, (manager) => manager.getAll(interfaceDef));
+
+/**
+ * Get a single capability from the capability manager, if one is contributed.
+ * Never fails — use this over {@link get} when the capability's absence (e.g. an optional plugin
+ * isn't loaded) is a legitimate case to handle rather than an error.
+ * @param interfaceDef The interface definition of the capability.
+ * @returns The first capability implementation, or `Option.none()` if none is contributed.
+ */
+export const getOption = <T>(interfaceDef: InterfaceDef<T>): Effect.Effect<Option.Option<T>, never, Service> =>
+  Effect.map(getAll(interfaceDef), (all) => Option.fromNullable(all[0]));
 
 /**
  * Wait for a capability to be available.
@@ -159,10 +171,10 @@ export const contributes = <I extends InterfaceDef<any>>(
 };
 
 type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
+  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | Scope.Scope | never>;
 }>;
 type LoadCapabilities<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
+  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | Scope.Scope | never>;
 }>;
 
 type NormalizeReturn<R> = R extends readonly (infer A)[]
@@ -175,7 +187,7 @@ type NormalizeReturn<R> = R extends readonly (infer A)[]
 
 export type LazyCapability<Props = void, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
   props: Props,
-) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | never>;
+) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | Scope.Scope | never>;
 
 /**
  * Helper to define a lazily loaded implementation of a capability.
@@ -254,6 +266,15 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *     return contributes(Capabilities.OperationHandler, ...);
  *   })
  * );
+ *
+ * // Module with scoped resources (closed automatically on deactivation)
+ * export default Capability.makeModule(
+ *   Effect.fnUntraced(function* () {
+ *     const scope = yield* Scope.Scope;
+ *     yield* Scope.addFinalizer(scope, Effect.sync(() => cleanup()));
+ *     return contributes(Capabilities.MyCapability, implementation);
+ *   })
+ * );
  * ```
  */
 export const makeModule = <
@@ -262,5 +283,5 @@ export const makeModule = <
   E extends Error = Error,
   R extends Service | Plugin.Service | never = Service,
 >(
-  fn: (props: TProps) => Effect.Effect<TReturn, E, R>,
-): ((props: TProps) => Effect.Effect<TReturn, E, R>) => fn;
+  fn: (props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>,
+): ((props: TProps) => Effect.Effect<TReturn, E, R | Scope.Scope>) => fn;

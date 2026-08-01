@@ -248,3 +248,5 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
     </div>
   );
 };
+
+BookingSearch.displayName = 'BookingSearch';

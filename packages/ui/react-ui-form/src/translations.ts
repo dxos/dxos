@@ -63,6 +63,7 @@ export const translations = [
         'format.json.label': 'JSON',
         'format.lnglat.label': 'Geopoint',
         'format.markdown.label': 'Markdown',
+        'format.password.label': 'Password',
         'format.percent.label': 'Percent',
         'format.ref.label': 'Reference',
         'format.regex.label': 'RegExp',

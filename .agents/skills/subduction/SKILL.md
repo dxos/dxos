@@ -5,6 +5,12 @@ description: Reference for `SubductionPolicy` (the four hooks `authorizeConnect`
 
 # `SubductionPolicy`: authoritative reference
 
+> This skill covers the **policy** (authorization) surface. For subduction **sync reliability** — the
+> 60 s round-timeout amplifier, the O(N²) bulk-sync cliff, why connection replacement must close/evict
+> immediately (drain is harmful, 200× slower), the in-flight gate + heal re-drive, the edge-replicator
+> Effect layer-ordering bug (silent `serviceOption`→`none`), and the workerd dead-context alarm pump —
+> see [`references/sync-reliability.md`](references/sync-reliability.md).
+
 `SubductionPolicy` is the JS-imported policy object the Subduction Wasm bridge consults for every authorization decision. The TypeScript shape (verbatim from `subduction_wasm/src/policy.rs`'s `TS_POLICY` block):
 
 ```ts

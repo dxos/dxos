@@ -185,13 +185,7 @@ export const ArrayField = ({
     // TODO(burdon): Hacky.
     // An owned inline object form must establish its own column context: otherwise it inherits the parent
     // form's `--dx-col` (center) placement and collapses into the array row's narrow second track.
-    return createInline ? (
-      <div role='none' className='w-full min-w-0 [--dx-col:auto]'>
-        {field}
-      </div>
-    ) : (
-      field
-    );
+    return createInline ? <div className='w-full min-w-0 [--dx-col:auto]'>{field}</div> : field;
   };
 
   const header = (layout !== 'static' || (values && values.length > 0)) && (
@@ -260,7 +254,7 @@ export const ArrayField = ({
   return (
     <>
       {header}
-      <div className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-2 pb-2'>
         {values?.map((_, index) => {
           const isLast = index === values.length - 1;
           return (

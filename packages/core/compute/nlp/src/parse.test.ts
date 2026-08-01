@@ -5,7 +5,8 @@
 import { describe, test } from 'vitest';
 
 import { assembleDocument } from './align';
-import { type Parser, stubParse } from './parse';
+import { type Parser } from './parse';
+import { stubParse } from './testing';
 
 describe('parser seam', () => {
   test('stubParse satisfies the Parser contract', async ({ expect }) => {

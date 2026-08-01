@@ -118,7 +118,7 @@
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:"
   }

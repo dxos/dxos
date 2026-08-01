@@ -24,7 +24,7 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry';
 
-import { admin, chat, debug, dx, fn, hub, reflect, repl, reset } from './commands';
+import { admin, chat, debug, dx, fn, hub, mailbox, reflect, repl, reset } from './commands';
 import { getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
 import { installStderrFilter } from './util';
@@ -87,6 +87,7 @@ const program = Effect.gen(function* () {
       // Note: ClientPlugin already contributes ClientService via its layer, so we don't need to provide it again.
       chat,
       fn,
+      mailbox,
 
       // TODO(burdon): Admin-only. Where should these commands live?
       admin,

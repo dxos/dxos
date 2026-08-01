@@ -45,7 +45,7 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSetting
               <Listbox.Root>
                 <Listbox.Content aria-label={t('settings.space-list.label')} classNames='w-full gap-trim-sm'>
                   {spaces?.map((space) => (
-                    <Listbox.Item key={space.id} id={space.id} classNames='w-full items-center'>
+                    <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>
                       {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
                       <Listbox.ItemLabel classNames='min-h-0!'>
                         {toLocalizedString(
@@ -73,3 +73,5 @@ export const SpaceSettings = ({ spaces, onOpenSpaceSettings, settings, onSetting
     </Form.Root>
   );
 };
+
+SpaceSettings.displayName = 'SpaceSettings';

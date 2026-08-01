@@ -2,10 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
-
-import { type EdgeHttpClient } from './edge-http-client';
 
 /** Request body for EDGE `/ai/browser-rendering/markdown` (ai-service Browser Run markdown quick action). */
 export const MarkdownRequest = Schema.Struct({
@@ -31,9 +28,3 @@ export const MarkdownResponse = Schema.Struct({
 });
 
 export type MarkdownResponse = Schema.Schema.Type<typeof MarkdownResponse>;
-
-/** Authenticated EDGE HTTP client for operation handlers (e.g. browser markdown fetch). */
-export class EdgeHttpClientService extends Context.Tag('@dxos/edge-client/EdgeHttpClientService')<
-  EdgeHttpClientService,
-  EdgeHttpClient
->() {}

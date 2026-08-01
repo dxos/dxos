@@ -50,3 +50,5 @@ export const Dialog = () => {
     </Root>
   );
 };
+
+Dialog.displayName = 'Dialog';

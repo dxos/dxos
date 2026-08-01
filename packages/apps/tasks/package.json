@@ -1,6 +1,5 @@
 {
   "name": "tasks",
-  "version": "0.1.0",
   "private": true,
   "description": "tasks - a DXOS application",
   "type": "module",

@@ -75,6 +75,9 @@ export class JmapApiError extends BaseError.extend('JmapApiError', 'JMAP API req
   }
 }
 
+/** A mail-sync run failed. The provider-agnostic harness wraps each provider's error into this one type (as `cause`). */
+export class MailSyncError extends BaseError.extend('MailSyncError', 'Mail sync failed.') {}
+
 /** JMAP send payload missing required fields (`to` or body text). */
 export class JmapSendMessageInvalidError extends BaseError.extend(
   'JmapSendMessageInvalidError',

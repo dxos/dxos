@@ -9,7 +9,7 @@
 **Tech Stack:** TypeScript, Effect Schema, React, TailwindCSS, DXOS app-framework / app-toolkit / echo / blueprints / operation.
 
 **Spec:** `packages/plugins/plugin-sidekick/PLUGIN.mdl`
-**Supplementary context:** `docs/superpowers/specs/2026-04-15-plugin-sidekick-design.md`
+**Supplementary context:** `agents/superpowers/specs/2026-04-15-plugin-sidekick-design.md`
 
 ---
 
@@ -388,7 +388,7 @@ Reference files for patterns:
 
 - `packages/plugins/plugin-chess/src/blueprints/chess-blueprint.ts`
 - `packages/core/assistant-toolkit/src/blueprints/database/blueprint.ts`
-- `docs/superpowers/specs/2026-04-15-plugin-sidekick-design.md` (instruction template)
+- `agents/superpowers/specs/2026-04-15-plugin-sidekick-design.md` (instruction template)
 
 - [ ] **Step 1: Create sidekick-blueprint.ts**
 

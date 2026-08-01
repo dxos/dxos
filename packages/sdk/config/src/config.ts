@@ -8,7 +8,6 @@ import isMatch from 'lodash.ismatch';
 import { InvalidConfigError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Config as ConfigProto } from '@dxos/protocols/proto/dxos/config';
-import { trace } from '@dxos/tracing';
 import { getDeep, setDeep } from '@dxos/util';
 
 import { type ConfigKey, type DeepIndex, type ParseKey } from './types';
@@ -113,13 +112,10 @@ export const validateConfig = (config: ConfigProto): ConfigProto => {
   return config;
 };
 
-export const ConfigResource = Symbol.for('dxos.resource.Config');
-
 /**
  * Global configuration object.
  * NOTE: Config objects are immutable.
  */
-@trace.resource({ annotation: ConfigResource })
 export class Config {
   private readonly _config: any;
 

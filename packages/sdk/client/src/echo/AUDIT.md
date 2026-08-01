@@ -29,7 +29,7 @@ The barrel currently re-exports symbols from five upstream packages:
 | `./util`                                      | `getSpace`, `getSyncSummary`, `Progress`, `PeerSyncState`, `SpaceSyncStateMap`                      |
 
 Plus the React-only additions in `@dxos/react-client/echo`:
-`useDatabase`, `useObject`, `useObjects`, `useQuery`, `useQueue`,
+`useObject`, `useObjects`, `useQuery`, `useQueue`,
 `useMembers`, `useSchema`, `useSpace`, `useSpaces`,
 `useSpaceInvitations`, `useSpaceProperties`, `useSpaceSyncState`,
 `useSubscription`, `useSyncState`.
@@ -58,14 +58,12 @@ The dominant theme. Code that has (or wants) a `Space` proxy instance.
 ### 2 — Object & database access (180+ call sites)
 
 Reactive React hooks that read ECHO objects, including `useQuery` /
-`useObject` / `useDatabase`. These don't need a `Space` instance —
-they take an `EchoDatabase` (often via `space.db`).
+`useObject`. These don't need a `Space` instance — they take an `EchoDatabase` (often via `space.db`).
 
 | Symbol         | Files |
 | -------------- | ----- |
 | `useQuery`     | 126   |
 | `useObject`    | 39    |
-| `useDatabase`  | 13    |
 | `useSchema`    | 10    |
 | `useObjects`   | 1     |
 | `createObject` | 2     |
@@ -170,7 +168,7 @@ unbundled into its own entry point or moved to a different package.
 4. **Confront the Space-proxy theme directly** — that's where the bulk of remaining churn lives. Options:
    - Hyperspace namespace: bundle `Space`, `isSpace`, `SpaceSchema`, `SpaceProperties`, `SpaceState`, `getSpace`, `useSpaces`/`useSpace` under a single `Hyperspace` import surface (matches the `// TODO(burdon): Reconcile under Hyperspace` note in `index.ts`).
    - Split into `@dxos/client/space` (proxy + hooks) + `@dxos/client/echo` (DB-only).
-5. **Reclassify the React hooks bundle** — `useQuery`, `useObject`, `useDatabase`, `useSchema` are not Space-coupled. They could live in a thinner `@dxos/echo-react/db` entry point. This is the lowest-risk place to reduce the barrel.
+5. **Reclassify the React hooks bundle** — `useQuery`, `useObject`, `useSchema` are not Space-coupled. They could live in a thinner `@dxos/echo-react/db` entry point. This is the lowest-risk place to reduce the barrel.
 
 ## Prior work (already merged)
 

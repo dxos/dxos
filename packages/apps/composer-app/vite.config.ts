@@ -119,7 +119,6 @@ export default defineConfig((env) => ({
       clientFiles: [
         './src/main.tsx',
         './src/workers/dedicated-worker.ts',
-        './src/workers/shared-worker.ts',
         './src/workers/coordinator-worker.ts',
         './src/plugin-defs.tsx',
       ],
@@ -492,10 +491,6 @@ export default defineConfig((env) => ({
         ],
       },
     }),
-
-    // https://github.com/antfu-collective/vite-plugin-inspect#readme
-    // Open: http://localhost:5173/__inspect
-    isTrue(process.env.DX_INSPECT) && inspect(),
 
     isTrue(process.env.DX_STATS) && [
       visualizer({

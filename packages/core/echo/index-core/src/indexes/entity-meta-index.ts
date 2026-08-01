@@ -519,7 +519,7 @@ export class EntityMetaIndex implements Index {
    * Matches both:
    * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
    * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
-   *   DXN uses the feed's object id as its queue id — see `Feed.getQueueUri`).
+   *   DXN uses the feed's object id as its queue id — see `Feed.getFeedUri`).
    */
   queryChildren = Effect.fn('EntityMetaIndex.queryChildren')(
     (query: {

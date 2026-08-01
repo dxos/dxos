@@ -5,6 +5,5 @@
 export { styles as mosaicStyles } from './styles';
 
 export * from './extension';
-export * from './types';
 
 export * from './Mosaic';

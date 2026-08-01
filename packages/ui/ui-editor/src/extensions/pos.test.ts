@@ -8,7 +8,16 @@ import { describe, test } from 'vitest';
 
 import { type Document, sourceHash } from '@dxos/nlp';
 
-import { clearAnalysis, pos, posAnalysisField, posDecorations, posSpans, setAnalysis, spanDiverged } from './pos';
+import {
+  clearAnalysis,
+  pos,
+  posAnalysisField,
+  posDecorations,
+  posSpans,
+  posTokenAt,
+  setAnalysis,
+  spanDiverged,
+} from './pos';
 
 describe('posAnalysisField', () => {
   const make = (doc = 'hello world') => EditorState.create({ doc, extensions: [posAnalysisField] });
@@ -69,6 +78,53 @@ describe('pos reactive initial parse', () => {
       expect(posSpans(view.state)[0]).toMatchObject({ from: 0, to: text.length });
     } finally {
       view.destroy();
+    }
+  });
+});
+
+describe('posTokenAt', () => {
+  const analyzed = () => {
+    const text = 'XX hello world';
+    // Span starts at 3 so absolute token offsets exercise the span-relative mapping.
+    const document: Document = {
+      sourceHash: sourceHash('hello world'),
+      sentences: [
+        {
+          index: 0,
+          start: 0,
+          end: 11,
+          tokens: [
+            { index: 0, text: 'hello', upos: 'INTJ', start: 0, end: 5 },
+            { index: 1, text: 'world', upos: 'NOUN', start: 6, end: 11 },
+          ],
+        },
+      ],
+    };
+    return EditorState.create({ doc: text, extensions: [posAnalysisField] }).update({
+      effects: setAnalysis.of({ from: 3, to: 14, document }),
+    }).state;
+  };
+
+  test('resolves the token covering an absolute position', ({ expect }) => {
+    const state = analyzed();
+    expect(posTokenAt(state, 4)).toMatchObject({ from: 3, to: 8, upos: 'INTJ', stale: false });
+    expect(posTokenAt(state, 9)).toMatchObject({ from: 9, to: 14, upos: 'NOUN' });
+  });
+
+  test('returns undefined outside analyzed tokens', ({ expect }) => {
+    const state = analyzed();
+    expect(posTokenAt(state, 0)).toBeUndefined(); // Before the span.
+    expect(posTokenAt(state, 8)).toBeUndefined(); // Inter-token whitespace.
+  });
+});
+
+describe('pos options', () => {
+  test('popover option mounts alongside the underline default', ({ expect }) => {
+    // Both presentations are independent extensions; constructing a state with each combination
+    // must not throw and must retain the analysis field.
+    for (const options of [{ popover: true }, { underline: false, popover: true }, { underline: false }]) {
+      const state = EditorState.create({ doc: 'hello', extensions: [pos(options)] });
+      expect(posSpans(state)).toEqual([]);
     }
   });
 });

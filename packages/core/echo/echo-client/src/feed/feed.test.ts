@@ -3,16 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import * as Scope from 'effect/Scope';
+import { afterEach, beforeEach, describe, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { EID, PublicKey } from '@dxos/keys';
-import { FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol, makeInProcessClient } from '@dxos/protocols';
+import { FeedService } from '@dxos/protocols/rpc';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -213,6 +216,7 @@ describe('Feed', () => {
       const calledOnce = called.waitForCount(1);
       const unsubscribe = queryResult.subscribe(() => called.emit(), { fire: true });
 
+      // The initial event is deferred until the async index results arrive (no empty snapshot).
       yield* Effect.promise(() => calledOnce);
       expect(queryResult.results).toHaveLength(2);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
@@ -431,23 +435,41 @@ describe('Feed', () => {
         yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'trace-item' })]);
       }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
 
-      const traceResult = await peer.host.queuesService.queryQueue({
-        query: {
-          spaceId: db.spaceId,
-          queueIds: [traceFeed.id],
-          queuesNamespace: FeedProtocol.WellKnownNamespaces.trace,
-        },
-      });
+      const feedService = await makeFeedClient(peer.host.feedService);
+
+      const traceResult = await EffectEx.runPromise(
+        feedService.FeedService.queryFeed({
+          query: {
+            spaceId: db.spaceId,
+            feedIds: [traceFeed.id],
+            feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          },
+        }),
+      );
       expect(traceResult.objects?.length).toBe(1);
 
-      const dataResult = await peer.host.queuesService.queryQueue({
-        query: {
-          spaceId: db.spaceId,
-          queueIds: [traceFeed.id],
-          queuesNamespace: FeedProtocol.WellKnownNamespaces.data,
-        },
-      });
+      const dataResult = await EffectEx.runPromise(
+        feedService.FeedService.queryFeed({
+          query: {
+            spaceId: db.spaceId,
+            feedIds: [traceFeed.id],
+            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          },
+        }),
+      );
       expect(dataResult.objects?.length).toBe(0);
     });
   });
 });
+
+/**
+ * Bridges the host's {@link FeedService.Handlers} to an in-process effect-rpc client (no wire hop),
+ * exposing the same client surface consumers use. The bridge scope is closed on test teardown.
+ */
+const makeFeedClient = async (handlers: FeedService.Handlers): Promise<FeedService.Client> => {
+  const scope = Effect.runSync(Scope.make());
+  onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
+  return EffectEx.runPromise(
+    makeInProcessClient(FeedService.Rpcs, handlers).pipe(Effect.provideService(Scope.Scope, scope)),
+  );
+};

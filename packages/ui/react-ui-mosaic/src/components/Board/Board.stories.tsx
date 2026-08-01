@@ -11,6 +11,7 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Dnd, type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { mx } from '@dxos/ui-theme';
@@ -20,7 +21,6 @@ import { translations } from '#translations';
 import { useEventHandlerAdapter } from '../../hooks';
 import { TestColumn, TestItem } from '../../testing';
 import { Focus } from '../Focus';
-import { Mosaic, type MosaicEventHandler } from '../Mosaic';
 import { Board, type BoardModel } from './Board';
 import { DefaultBoardColumn } from './Column';
 
@@ -57,7 +57,7 @@ type StoryArgs = {
 
 type TestBoardModelResult = {
   model: BoardModel<TestColumn, TestItem>;
-  eventHandler: MosaicEventHandler<TestColumn>;
+  eventHandler: DndContainerHandler<TestColumn>;
 };
 
 const useTestBoardModel = (): TestBoardModelResult => {
@@ -172,7 +172,7 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: StoryArgs) =>
   }
 
   return (
-    <Mosaic.Root>
+    <Dnd.Root>
       <div className={mx('grid md:p-2 overflow-hidden', debug && 'grid-cols-[1fr_20rem] gap-2')}>
         <Board.Root model={model}>
           <Board.Content debug={debug} eventHandler={eventHandler} Tile={DefaultBoardColumn} />
@@ -183,7 +183,7 @@ const DefaultStory = ({ debug = false, columns: columnsProp = 0 }: StoryArgs) =>
           </Focus.Group>
         )}
       </div>
-    </Mosaic.Root>
+    </Dnd.Root>
   );
 };
 

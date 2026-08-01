@@ -8,7 +8,14 @@ import React, { useContext, useMemo } from 'react';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute-hyperformula';
 import { composable, composableProps } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  Menu,
+  createGapSeparator,
+  graphActions,
+  isToolbarAction,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetRoot';
@@ -64,14 +71,7 @@ export const SheetToolbar = composable<HTMLDivElement, SheetToolbarProps>((props
 
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
-    return Atom.make((get) => {
-      const actions = get(graph.actions(attendableId));
-      const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
-      return {
-        nodes,
-        edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
-      };
-    });
+    return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
   }, [graph, attendableId]);
 
   const actionsCreator = useMemo(

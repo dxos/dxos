@@ -1,0 +1,487 @@
+---
+id: org.dxos.plugin.blogger
+name: BloggerPlugin
+version: 0.1.0
+---
+
+A Composer plugin for authoring blog posts with agent assistance. An author
+organises work into **Publications** (a named collection with shared base
+agent instructions) that contain **Posts**. Each Post has a planning
+**outline** and a single commentable markdown **body** document, plus a
+`status` (draft | published) tracking whether it has been synced to a
+publisher.
+
+The plugin also defines a provider-agnostic **publisher** capability contract
+(`PublisherService`) and a bidirectional sync operation that consumes it.
+`plugin-typefully` is the first implementation, authenticating via a
+`plugin-connector` `Connection`. A publisher connection is associated with a
+Publication via a `ConnectorAuthAnnotation` (mirroring plugin-studio's
+Artifact) — the connector plugin offers "Connect <publisher>" until a matching
+`Connection` exists in the space.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+| `service`   | `org.dxos.mdl.service@1.0`    |
+
+### Existing types used by this plugin
+
+| Type                 | Source                      | Notes                                                                 |
+| -------------------- | --------------------------- | ---------------------------------------------------------------------- |
+| `Text.Text`          | `@dxos/schema`              | Backs `Publication.instructions` and `Post.outline`.                  |
+| `Markdown.Document`  | `@dxos/plugin-markdown`     | Backs `Post.content` (the commentable body).                          |
+| `Connection`         | `@dxos/plugin-connector`    | Provider-neutral credential handle passed to every `PublisherService` call. |
+
+## Types
+
+```mdl
+type Post
+  desc: >
+    A blog post: a planning outline plus a single commentable markdown body
+    document. `status` tracks whether the post has been synced to a publisher;
+    the remote id (once synced) is stored as a foreign key on the post's meta,
+    keyed by the publisher's `source`. `description` is shown on PostCard.
+  typename: org.dxos.type.blogger.post
+  fields:
+    name?: string
+    description?: string            # shown on PostCard
+    status: draft | published       # lifecycle; defaults to draft
+    outline: Ref<Text.Text>         # planning outline (markdown-formatted)
+    content: Ref<Markdown.Document> # the commentable body
+  annotations:
+    icon: ph--article--regular
+    hue: amber
+    label: [name]
+```
+
+```mdl
+type Publication
+  desc: >
+    A named collection of Posts carrying shared base instructions for the
+    assistant agent. Carries a ConnectorAuthAnnotation resolving the registered
+    PublisherService's connectorId(s), so plugin-connector offers "Connect"
+    until a matching Connection exists.
+  typename: org.dxos.type.blogger.publication
+  fields:
+    name?: string
+    instructions: Ref<Text.Text>    # base agent instructions (markdown-formatted)
+    posts?: Ref<Post>[]
+  annotations:
+    icon: ph--books--regular
+    hue: amber
+    label: [name]
+    connectorAuth: resolvePublicationConnectorIds   # from registered PublisherService.connectorId
+```
+
+```mdl
+type PublisherDraft
+  desc: >
+    Provider-neutral post DTO exchanged across the PublisherService boundary
+    (the provider's own vocabulary — Typefully calls posts "drafts"). A plain
+    Effect Schema.Struct — NOT an ECHO object.
+  fields:
+    id: string
+    text: string
+    title?: string
+    status?: string
+    scheduledAt?: string
+    url?: string
+```
+
+```mdl
+type PublisherDraftInput
+  desc: Input shape for PublisherService.createDraft / updateDraft.
+  fields:
+    text: string
+    title?: string
+    scheduledAt?: string
+```
+
+## Components
+
+```mdl
+component PublicationArticle
+  desc: >
+    Article surface for a Publication (AppSurface.object(Article,
+    Publication)). A toolbar toggle swaps between two view modes: `gallery`
+    (default) — a Masonry grid of PostCard tiles, one per `subject.posts` —
+    and `instructions` — the Publication's shared instructions document,
+    embedded via the markdown article Surface. The toolbar also carries a
+    `+ Post` action, a `Sync` action (invokes op:SyncPosts; enabled once a
+    matching Connection exists), the plugin-connector "Connect" action (merged
+    from the app graph via the Publication's ConnectorAuthAnnotation), and an
+    overflow (⋮) menu whose Delete opens a confirmation AlertDialog.
+  props:
+    role: string
+    attendableId: string
+    subject: Publication
+  state:
+    mode: gallery | instructions
+    confirmDeleteOpen: boolean
+  actions:
+    toggleView()
+    addPost()
+    sync()
+    openPost(post: Post)
+    delete()                        # via confirmation dialog
+  layout: |
+    ┌──────────────────────────────────────────────┐
+    │ [toggle-view][+ Post][Sync][Connect]      [⋮] │
+    ├──────────────────────────────────────────────┤
+    │ gallery: Masonry of PostCards                  │
+    │   -or-                                         │
+    │ instructions: markdown Surface                 │
+    └──────────────────────────────────────────────┘
+```
+
+```mdl
+component PostArticle
+  desc: >
+    Article surface for a Post (AppSurface.object(Article, Post)). The outline
+    form (name + inline outline) renders on top and the single body
+    Markdown.Document renders below via the markdown article Surface, wrapped in
+    an AttendableContainer (the body editor is rendered outside the Deck plank
+    wrapper, so it supplies its own attendable id — a graph-node path,
+    qualifyId(<post node id>, doc.id) — so graph.actions resolves the in-editor
+    comment action). `status` and the publisher link are managed by the
+    publication-level op:SyncPosts, not here.
+  props:
+    role: string
+    attendableId: string
+    subject: Post
+  layout: |
+    ┌─────────────────────────────────────────┐
+    │ post form (name + outline)                │
+    ├─────────────────────────────────────────┤
+    │ body (markdown Surface)                   │
+    └─────────────────────────────────────────┘
+```
+
+```mdl
+component PostCard
+  desc: >
+    Summary tile for a Post, rendered as a Masonry Tile in
+    PublicationArticle's gallery view. Reactive to the passed Post via
+    useObject. Shows the post's status (draft | published).
+  props:
+    post: Post
+    onClick?: () => void
+  layout: |
+    ┌────────────────────────┐
+    │ [icon]  title           │
+    │ description excerpt     │
+    │ [status-icon]  status   │
+    └────────────────────────┘
+```
+
+## Services
+
+```mdl
+service PublisherService
+  desc: >
+    Provider-agnostic publishing backend contract. Implemented by a provider
+    plugin (e.g. plugin-typefully) and contributed under
+    BloggerCapabilities.PublisherService; op:SyncPosts resolves one contribution
+    via Capability.getAll. Identity fields: `id` (capability id), `label`
+    (display name), `source` (matches AccessToken.source, e.g.
+    "typefully.com"), `connectorId` (matches Connection.connectorId / the
+    Connector registry entry id). Every method takes a Ref<Connection> — the
+    provider-neutral credential handle; token resolution stays entirely in the
+    implementing plugin. The provider's vocabulary ("draft") is kept at this
+    boundary; the blogger domain uses "Post".
+  loading: lazy
+  ops:
+    listDrafts(connection: Ref<Connection>) → PublisherDraft[]
+    getDraft(connection: Ref<Connection>, id: string) → PublisherDraft
+    createDraft(connection: Ref<Connection>, input: PublisherDraftInput) → PublisherDraft
+    updateDraft(connection: Ref<Connection>, id: string, input: PublisherDraftInput) → PublisherDraft
+    deleteDraft(connection: Ref<Connection>, id: string) → void
+  errors:
+    PublisherError: sync failed against the remote backend
+    MissingCredentialError: the service's credentials (e.g. Connection's access token) are missing
+```
+
+## Operations
+
+```mdl
+op AddPublication
+  desc: >
+    Creates a new Publication (with an empty instructions document and no
+    posts) and files it under `target`.
+  input:
+    name?: string
+    target: Database | Collection
+  output: Ref<Publication>
+  effects: [echo:write]
+```
+
+```mdl
+op AddPost
+  desc: >
+    Creates a new Post (an outline plus a single empty body document, status =
+    draft) and appends it to `publication.posts`, also filing it under
+    `target`.
+  input:
+    publication: Ref<Publication>
+    name?: string
+    target: Database | Collection
+  output: Ref<Post>
+  effects: [echo:write]
+```
+
+```mdl
+op SyncPosts
+  desc: >
+    Bidirectionally reconciles a Publication's posts with an external publisher,
+    keyed by the remote id stored as a foreign key on each post's meta (source =
+    the publisher's `source`). Local body content is the source of truth for
+    posts already linked to a still-present remote draft.
+      - post linked to a still-present remote draft → push the local body (updateDraft);
+      - post linked to a remote draft that was deleted → clear the key, status = draft;
+      - post with no link → create the remote draft, stamp the returned id, status = published;
+      - remote draft not linked to any post → create a new local Post (stamped, status = published).
+  input:
+    publication: Ref<Publication>
+    connection: Ref<Connection>
+    publisherId?: string            # selects a contributed service by id; defaults to the first available
+  output: Ref<Publication>
+  errors:
+    PublisherError: no publisher configured, or a remote call failed
+  effects: [echo:write]
+  requires: [PublisherService]
+  note: >
+    Resolves via Capability.getAll(BloggerCapabilities.PublisherService),
+    preferring publisherId when given.
+```
+
+## Features
+
+```mdl
+feat F-1: Publications Section
+
+  req F-1.1: A "Publications" section is contributed under each space's content group (mirroring plugin-studio's Studio section), listing that space's Publication objects as branch nodes.
+  req F-1.2: "+ Publication" on the Publications section invokes op:AddPublication targeting that space's database.
+  req F-1.3: Each Publication node expands to its Post children, with a "+ Post" action invoking op:AddPost.
+```
+
+```mdl
+feat F-2: Publication Authoring
+
+  req F-2.1: component:PublicationArticle defaults to the gallery view: a Masonry grid of component:PostCard, one per Post.
+  req F-2.2: Toggling the toolbar view swaps to the instructions view — the Publication's shared instructions document, rendered via the markdown article Surface.
+  req F-2.3: "+ Post" in the toolbar invokes op:AddPost against the open Publication.
+  req F-2.4: Delete lives in an overflow (⋮) menu and opens a confirmation AlertDialog before invoking SpaceOperation.RemoveObjects.
+```
+
+```mdl
+feat F-3: Post Authoring
+
+  req F-3.1: op:AddPost creates a Post with an outline document, a single empty body document, and status = draft.
+  req F-3.2: component:PostArticle shows the outline form on top and the single body document below (markdown Surface).
+  req F-3.3: component:PostCard shows the post's status (draft | published).
+```
+
+```mdl
+feat F-4: Comments on the Post body
+
+  req F-4.1: Post.content is a Markdown.Document, so comments anchor to it automatically via the AnchoredTo relation (plugin-comments). The postComments graph extension contributes the comments companion (anchored to the body doc) and a hidden, addressable node for the body doc so the in-editor comment toolbar action resolves.
+```
+
+```mdl
+feat F-5: Agent Instructions per Publication
+
+  req F-5.1: `Publication.instructions` is a Text.Text the author edits directly, carrying the base instructions the assistant agent reads for that Publication. Agent consumption of these instructions is Phase 2 and is NOT built here.
+```
+
+```mdl
+feat F-6: Publisher Connection and Bidirectional Sync
+
+  req F-6.1: type:Publication carries a ConnectorAuthAnnotation resolving the registered service:PublisherService connectorId(s); plugin-connector contributes a "Connect <publisher>" action (surfaced in component:PublicationArticle's toolbar) until a Connection for that connectorId exists in the space.
+  req F-6.2: op:SyncPosts pushes each unlinked local Post to the publisher (createDraft), stamping the returned id as a foreign key and setting status = published.
+  req F-6.3: op:SyncPosts updates the remote copy of each linked Post whose remote draft still exists (local body wins), and reverts a linked Post whose remote draft was deleted to status = draft (clearing the foreign key).
+  req F-6.4: op:SyncPosts pulls each remote draft not linked to any local Post into a new published Post (body via getDraft when listDrafts omits it), stamped with the remote id.
+  req F-6.5: The Sync action in component:PublicationArticle is disabled until a service:PublisherService is contributed AND a Connection whose access-token source matches it exists in the same space.
+```
+
+## Acceptance
+
+```mdl
+test T-1: AddPublication persists an empty Publication
+  given: a database db
+  when: op:AddPublication invoked with { name: "My Blog", target: db }
+  then:
+    - Publication.name === "My Blog"; Publication.posts === []
+    - Publication.instructions resolves to an empty Text.Text
+    - Publication is queryable from db via Filter.type(Publication)
+```
+
+```mdl
+test T-2: AddPost creates outline + body and defaults to draft
+  given: a persisted Publication and a target Collection
+  when: op:AddPost invoked with { publication, name: "Hello World", target }
+  then:
+    - publication.posts gains a ref resolving to the new Post
+    - Post.status === "draft"
+    - Post.outline resolves to an empty Text.Text
+    - Post.content resolves to a Markdown.Document
+    - Post is filed under `target` (Collection.objects)
+```
+
+```mdl
+test T-3: SyncPosts pushes an unlinked local post
+  given: a Publication with one unlinked Post, a stub PublisherService
+  when: op:SyncPosts invoked (service.listDrafts returns [])
+  then:
+    - service.createDraft called
+    - the Post's foreign key for service.source === the returned remote id
+    - Post.status === "published"
+```
+
+```mdl
+test T-4: SyncPosts updates a linked local post (local wins)
+  given: a Post linked to remote id "x1"; service.listDrafts returns ["x1"]
+  when: op:SyncPosts invoked
+  then:
+    - service.updateDraft called with id "x1" (service.createDraft NOT called)
+    - the Post's foreign key unchanged ("x1")
+```
+
+```mdl
+test T-5: SyncPosts reverts a linked post whose remote was deleted
+  given: a published Post linked to remote id "gone"; service.listDrafts returns []
+  when: op:SyncPosts invoked
+  then:
+    - no create/update/delete calls
+    - the Post's foreign keys for service.source === []
+    - Post.status === "draft"
+```
+
+```mdl
+test T-6: SyncPosts pulls an unlinked remote draft into a new published post
+  given: a Publication with no posts; service.listDrafts returns ["x2"]
+  when: op:SyncPosts invoked
+  then:
+    - a new Post is appended to publication.posts with content === the remote body
+    - the new Post's foreign key for service.source === "x2"; status === "published"
+```
+
+```mdl
+test T-7: SyncPosts falls back to getDraft when listDrafts omits body text
+  given: a Publication with no posts; service.listDrafts returns ["x2"] with empty text
+  when: op:SyncPosts invoked
+  then:
+    - service.getDraft called once for "x2"
+    - the pulled Post's body === getDraft("x2").text
+```
+
+## Design Notes
+
+- **Navtree hub (per space).** The Publications section is contributed per
+  space under the `content` group (`AppNodeMatcher.whenNavTreeGroup`), mirroring
+  plugin-studio's Studio section — so each space shows its own Publications, and
+  the section is always present as the create hub. A custom Publication node
+  type scopes the "+ Post" action so it never attaches to Publication objects
+  listed under the space's Database section.
+- **Publisher connection.** A publisher connection is associated with a
+  Publication via the `ConnectorAuthAnnotation` (mirroring plugin-studio's
+  Artifact): plugin-connector offers "Connect <publisher>" until a Connection
+  for the publisher's connectorId exists. component:PublicationArticle resolves
+  the first contributed service:PublisherService and the first Connection in the
+  space whose linked AccessToken's `source` matches it — there is no
+  publisher/connection picker UI yet. `op:SyncPosts` takes an explicit
+  `connection` ref, so a picker is additive.
+- **Naming.** The blogger domain uses "Post"; the provider adapter
+  (service:PublisherService) keeps the provider's "draft" vocabulary at its
+  boundary (Typefully has no "posts").
+- Phase 2 (agent skills/operations for ideate/draft/publish) is out of scope
+  for this spec.
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```

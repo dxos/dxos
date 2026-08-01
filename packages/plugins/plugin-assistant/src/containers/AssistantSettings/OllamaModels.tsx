@@ -253,3 +253,5 @@ const formatBytes = (bytes: number): string => {
   }
   return `${value.toFixed(unit === 0 ? 0 : 1)} ${UNITS[unit]}`;
 };
+
+OllamaModels.displayName = 'OllamaModels';

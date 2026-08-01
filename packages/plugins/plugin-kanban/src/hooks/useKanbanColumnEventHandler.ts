@@ -4,7 +4,8 @@
 
 import { useMemo } from 'react';
 
-import type { BoardModel, MosaicEventHandler, MosaicTileData } from '@dxos/react-ui-mosaic';
+import type { DndContainerHandler, DndTileData } from '@dxos/react-ui-dnd';
+import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
@@ -19,7 +20,7 @@ import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, U
  * @param projection - ProjectionModel for pivot field options (column order).
  * @param pivotFieldId - Pivot field id; undefined disables drop.
  * @param change - Callback to persist kanban.arrangement.order.
- * @returns MosaicEventHandler for column tiles.
+ * @returns DndContainerHandler for column tiles.
  */
 export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
   id,
@@ -33,8 +34,8 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
   projection: ProjectionModel | undefined;
   pivotFieldId: string | undefined;
   change: KanbanChangeCallback<T>;
-}): MosaicEventHandler<ColumnStructure> {
-  return useMemo<MosaicEventHandler<ColumnStructure>>(
+}): DndContainerHandler<ColumnStructure> {
+  return useMemo<DndContainerHandler<ColumnStructure>>(
     () => ({
       id,
       canDrop: ({ source }) => {
@@ -46,7 +47,7 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
         return (
           model.isColumn(source.data) &&
           columnValue !== UNCATEGORIZED_VALUE &&
-          (source as MosaicTileData<ColumnStructure>).id !== UNCATEGORIZED_VALUE
+          (source as DndTileData<ColumnStructure>).id !== UNCATEGORIZED_VALUE
         );
       },
       onDrop: ({ source, target }) => {

@@ -27,3 +27,5 @@ export const VideoSection = ({ attendableId, subject }: VideoSectionProps) => {
   const startTime = selected && /^\d+$/.test(selected) ? Number(selected) : undefined;
   return <VideoPlayer url={video.url} startTime={startTime} />;
 };
+
+VideoSection.displayName = 'VideoSection';

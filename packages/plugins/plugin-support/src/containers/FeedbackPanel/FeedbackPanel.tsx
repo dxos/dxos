@@ -78,3 +78,5 @@ export const FeedbackPanel = () => {
     </Panel.Root>
   );
 };
+
+FeedbackPanel.displayName = 'FeedbackPanel';

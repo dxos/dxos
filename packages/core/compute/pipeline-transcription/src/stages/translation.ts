@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { type ContentBlock } from '@dxos/types';
 
-import { DEFAULT_STAGE_MODEL } from '../PipelineConfig';
-import { type Stage, StageWrite } from '../Stage';
+import { DEFAULT_STAGE_MODEL } from '../types/pipeline-config';
+import { type Stage, StageWrite } from '../types/stage';
 
 export type TranslationInput = { window: ContentBlock.Transcript[] };
 

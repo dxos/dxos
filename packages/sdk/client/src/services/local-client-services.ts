@@ -5,29 +5,33 @@
 import * as Reactivity from '@effect/experimental/Reactivity';
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as EffectRuntime from 'effect/Runtime';
+import * as Scope from 'effect/Scope';
 
 import { Event, synchronized } from '@dxos/async';
 import {
   type ClientServices,
   type ClientServicesProvider,
-  ClientServicesProviderResource,
-  clientServiceBundle,
+  type ClientServicesRpc,
+  makeInProcessClientServicesRpc,
+  makeServicesFromRpc,
 } from '@dxos/client-protocol';
 import { type ClientServicesHost, type ClientServicesHostProps } from '@dxos/client-services';
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
+import { EffectEx } from '@dxos/effect';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
-import { type ServiceBundle } from '@dxos/rpc';
 import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { trace } from '@dxos/tracing';
 import { isBun } from '@dxos/util';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
@@ -132,7 +136,6 @@ const setupNetworking = async (
 /**
  * Starts a local instance of the service host.
  */
-@trace.resource({ annotation: ClientServicesProviderResource })
 export class LocalClientServices implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
   private readonly _ctx = new Context();
@@ -149,8 +152,10 @@ export class LocalClientServices implements ClientServicesProvider {
     runtime: 'local-client-services',
   };
 
-  @trace.info()
   private _isOpen = false;
+  private _serviceScope?: Scope.CloseableScope;
+  private _rpc?: ClientServicesRpc;
+  private _services?: Partial<ClientServices>;
 
   constructor(params: LocalClientServicesParams) {
     this._params = params;
@@ -172,12 +177,14 @@ export class LocalClientServices implements ClientServicesProvider {
     }
   }
 
-  get descriptors(): ServiceBundle<ClientServices> {
-    return clientServiceBundle;
+  get rpc() {
+    invariant(this._rpc, 'Client services not open');
+    return this._rpc;
   }
 
   get services(): Partial<ClientServices> {
-    return this._host?.services ?? {};
+    invariant(this._services, 'Client services not open');
+    return this._services;
   }
 
   get host(): ClientServicesHost | undefined {
@@ -265,9 +272,18 @@ export class LocalClientServices implements ClientServicesProvider {
 
     await this._host.open(this._ctx);
     this._isOpen = true;
+
+    // Bridge the in-process host Handlers to the effect-rpc client surface (no wire hop), then derive
+    // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
+    this._serviceScope = Effect.runSync(Scope.make());
+    this._rpc = await EffectEx.runPromise(
+      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.extend(this._serviceScope)),
+    );
+    this._services = makeServicesFromRpc(this._rpc, EffectRuntime.defaultRuntime);
+
     setIdentityTags({
-      identityService: this._host.services.IdentityService!,
-      devicesService: this._host.services.DevicesService!,
+      identityService: this._rpc,
+      devicesService: this._rpc,
       setTag: (k: string, v: string) => {
         this.signalMetadataTags[k] = v;
       },
@@ -281,6 +297,13 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     await this._host?.close(this._ctx);
+
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+      this._serviceScope = undefined;
+    }
+    this._rpc = undefined;
+    this._services = undefined;
 
     log('local-client-services: terminated effect runtime', { runtimePresent: !!this._runtime });
     await this._runtime?.dispose();

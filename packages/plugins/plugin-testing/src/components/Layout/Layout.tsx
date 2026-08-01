@@ -20,7 +20,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
-import { Mosaic } from '@dxos/react-ui-mosaic';
+import { Dnd } from '@dxos/react-ui-dnd';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -127,7 +127,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   return (
     <Toast.Provider>
       <div className='fixed inset-0 flex overflow-hidden'>
-        <Mosaic.Root>
+        <Dnd.Root>
           <Popover.Root open={open}>
             <Main.Root
               navigationSidebarState={layout.sidebarState}
@@ -201,7 +201,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
               </Popover.Content>
             </Popover.Portal>
           </Popover.Root>
-        </Mosaic.Root>
+        </Dnd.Root>
         {layout.toasts.map((toast) => (
           <StoryToast key={toast.id} toast={toast} onDismiss={handleDismissToast} />
         ))}

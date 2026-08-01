@@ -4,12 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import {
-  type SemanticIndexError,
-  type SemanticQuery,
-  SemanticStore,
-  type Type as SemanticType,
-} from '@dxos/semantic-index';
+import { FactStore, type SemanticIndexError, type SemanticQuery, type RDF as SemanticType } from '@dxos/pipeline-rdf';
 
 /** A topic discussed across the corpus, ranked by reach (distinct agents) then volume. */
 export type Topic = {
@@ -44,11 +39,11 @@ const entityId = (term: SemanticType.Term): string | undefined => ('entity' in t
 /**
  * Aggregate the fact graph into a ranked list of topics. Entities that are themselves agents
  * (senders) are excluded so the result is "what was discussed", not "who discussed it". The output
- * drives querying — each topic's `entity` feeds `SemanticStore.query({ entity })`.
+ * drives querying — each topic's `entity` feeds `FactStore.query({ entity })`.
  */
-export const extractTopics = (options?: TopicOptions): Effect.Effect<TopicReport, SemanticIndexError, SemanticStore> =>
+export const extractTopics = (options?: TopicOptions): Effect.Effect<TopicReport, SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
-    const store = yield* SemanticStore;
+    const store = yield* FactStore;
     const facts = yield* store.query({});
 
     // Senders are attributed agents; exclude them from the topic ranking.
@@ -105,9 +100,9 @@ export type FactLine = {
 const termValue = (term: SemanticType.Term): string => ('entity' in term ? term.entity : term.literal);
 
 /** List the stored facts (optionally filtered) as flat display lines — for inspection / demos. */
-export const listFacts = (query: SemanticQuery = {}): Effect.Effect<FactLine[], SemanticIndexError, SemanticStore> =>
+export const listFacts = (query: SemanticQuery = {}): Effect.Effect<FactLine[], SemanticIndexError, FactStore> =>
   Effect.gen(function* () {
-    const store = yield* SemanticStore;
+    const store = yield* FactStore;
     const facts = yield* store.query(query);
     return facts.map((fact) => ({
       subject: termValue(fact.assertion.subject),

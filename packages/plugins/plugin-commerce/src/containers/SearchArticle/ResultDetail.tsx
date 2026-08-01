@@ -85,3 +85,5 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
     </div>
   );
 };
+
+ResultDetail.displayName = 'ResultDetail';

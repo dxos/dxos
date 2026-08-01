@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { type Database } from '@dxos/echo';
+import { type Database, Ref } from '@dxos/echo';
 import { createObject } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Card } from '@dxos/react-ui';
@@ -23,6 +23,11 @@ const DefaultStory = () => {
   const { space } = useClientStory();
   const db: Database.Database | undefined = space?.db;
   const object = useMemo(() => (db ? createObject(Person.make({ fullName: 'Casey Contact' })) : undefined), [db]);
+  // A second stand-in object so the two attachment refs below have distinct URIs (and React keys).
+  const secondObject = useMemo(
+    () => (db ? createObject(Person.make({ fullName: 'Dana Reference' })) : undefined),
+    [db],
+  );
 
   return (
     <Card.Root border={false} fullWidth classNames='p-1'>
@@ -32,6 +37,14 @@ const DefaultStory = () => {
         <Row.Person actor={SENDER} role='from' db={db} onContactCreate={() => {}} />
         <Row.Date start={new Date('2025-11-19T12:00:00')} end={new Date('2025-11-19T13:30:00')} />
         {object && <Row.Ref object={object} />}
+        {object && secondObject && (
+          <Row.Attachments
+            attachments={[
+              { name: 'invoice.pdf', ref: Ref.make(object) },
+              { name: 'photo.png', ref: Ref.make(secondObject) },
+            ]}
+          />
+        )}
         <Row.Tags
           tags={[
             { id: 'a', label: 'travel', hue: 'cyan' },

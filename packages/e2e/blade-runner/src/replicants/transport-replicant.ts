@@ -36,7 +36,6 @@ export type ReplicantRunProps = {
   streamsDelay: number;
 };
 
-@trace.resource()
 export class TransportReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 

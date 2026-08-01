@@ -5,10 +5,8 @@
 import { trace } from './api';
 
 export * from './api';
-export * from './symbols';
 export * from './trace-processor';
 export * from './tracing-types';
-export * from './metrics';
 export * from './diagnostic';
 export * from './diagnostics-channel';
 export * from './remote/metrics';

@@ -7,7 +7,8 @@ import React, { useCallback, useId, useMemo, useState } from 'react';
 import { Obj } from '@dxos/echo';
 import { DropdownMenu, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Mosaic, type MosaicEventHandler, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { type DndContainerHandler } from '@dxos/react-ui-dnd';
+import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -55,7 +56,7 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
 
     // Reorder cells in place; placeholder/tile locations are 1-based with half-step placeholders between
     // tiles, so the floor of the drop location is the destination array index (see Mosaic.Stack).
-    const eventHandler = useMemo<MosaicEventHandler<Notebook.Cell>>(
+    const eventHandler = useMemo<DndContainerHandler<Notebook.Cell>>(
       () => ({
         id: `notebook:${notebook?.id ?? 'anon'}:${instanceId}`,
         // Only the notebook's own cells are droppable; onDrop only reorders within this notebook.

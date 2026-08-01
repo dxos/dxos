@@ -11,10 +11,16 @@
       "path": "../../../common/log"
     },
     {
+      "path": "../../../common/markdown"
+    },
+    {
       "path": "../../../common/node-std"
     },
     {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../../sdk/schema"
     },
     {
       "path": "../../../sdk/types"
@@ -32,10 +38,13 @@
       "path": "../extractor-lib"
     },
     {
+      "path": "../link"
+    },
+    {
       "path": "../pipeline"
     },
     {
-      "path": "../semantic-index"
+      "path": "../pipeline-rdf"
     }
   ]
 }

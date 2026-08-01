@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useControllableState } from '@radix-ui/react-use-controllable-state';
+import * as Equal from 'effect/Equal';
 import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
+import * as Utils from 'effect/Utils';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Ref } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -26,12 +28,16 @@ export interface FormHandlerProps<T extends AnyProperties> {
   schema?: Schema.Schema<T, any>;
 
   /**
-   * Values for the form if controlled.
+   * Source values. Fields the user is not editing reflect this value; in-progress edits (including intermediate
+   * invalid values) are held locally and never snap back until they are committed and the source catches up. Persist
+   * committed values from `onValuesChanged`/`onSave`. The form re-renders when a new value is passed, so to reflect
+   * external/remote mutations pass a reactive source (e.g. a `useObject` snapshot that changes on mutation) rather
+   * than a raw live object — a render-time read of an ECHO object does not itself subscribe to it.
    */
   values?: Partial<T>;
 
   /**
-   * Default values for the form which will be used if values is not provided.
+   * Seeds an uncontrolled form once at mount when `values` is not provided; not reconciled thereafter.
    */
   defaultValues?: Partial<T>;
 
@@ -127,23 +133,21 @@ export const useFormHandler = <T extends AnyProperties>({
   const [errors, setErrors] = useState<Record<SchemaEx.JsonPath, string>>({});
   const [saving, setSaving] = useState(false);
   const defaultValues = useDefaultValue<Partial<T>>(defaultValuesProp, () => ({}));
-  const [values$, setValues] = useControllableState<Partial<T>>({
-    prop: valuesProp,
-    defaultProp: defaultValues,
-    onChange: () => {
-      // Only reset when controlled: parent passed new values.
-      // Uncontrolled updates come from setValues in onValueChange.
-      if (valuesProp !== undefined) {
-        setValues(valuesProp ?? defaultValues);
-        setChanged({});
-        setTouched({});
-        setErrors({});
-        setSaving(false);
-      }
-    },
-  });
-  // TODO(wittjosiah): Upgrade @radix-ui/react-use-controllable-state.
-  const values = values$ as Partial<T>;
+
+  // The source the form reads from for every field the user is not actively editing. The form is a pure function of
+  // this value and re-renders when the parent passes a new one; to reflect external/remote mutations the parent must
+  // supply a reactive source (e.g. a `useObject` snapshot that changes on mutation). `defaultValues` seeds an
+  // uncontrolled form once when no `values` are provided.
+  const source = valuesProp ?? defaultValues;
+
+  // Sparse local edits keyed by json-path. A path stays here — holding even an intermediate invalid value, so it
+  // never snaps back — until the source catches up to it (typically once a valid edit has been persisted and echoed
+  // back through `values`). Un-edited paths are never buffered, so they always reflect the current source.
+  const [overrides, setOverrides] = useState<Record<SchemaEx.JsonPath, unknown>>({});
+
+  // Merged view (source overlaid with local edits) for whole-form consumers: validation, save, and context/debug.
+  // Computed each render (not memoized) so it stays fresh when the source value changes.
+  const values = applyOverrides(source, overrides);
 
   // Validate.
   const validate = useCallback(
@@ -175,6 +179,22 @@ export const useFormHandler = <T extends AnyProperties>({
       setSchemaChanged(false);
     }
   }, [validate, values, schemaChanged]);
+
+  // Drop an override once the source has caught up to it (the committed value has been echoed back), so the field
+  // returns to reflecting the source. Edits the source has not yet reflected — including intermediate invalid values,
+  // and in-progress edits to a field that changed remotely — are kept, so the form never snaps back. Runs on every
+  // render (a new source value re-renders the form), reconciling against whatever the source currently holds.
+  useEffect(() => {
+    const reconciled = (Object.keys(overrides) as SchemaEx.JsonPath[]).filter((path) =>
+      valuesEqual(SchemaEx.getValue(source, path), overrides[path]),
+    );
+    if (reconciled.length === 0) {
+      return;
+    }
+    setOverrides((prev) => omitPaths(prev, reconciled));
+    setChanged((prev) => omitPaths(prev, reconciled));
+    setTouched((prev) => omitPaths(prev, reconciled));
+  });
 
   const isValid = useMemo(() => {
     return Object.keys(errors).length === 0;
@@ -245,9 +265,14 @@ export const useFormHandler = <T extends AnyProperties>({
 
   const getValue = useCallback<FormHandler<T>['getValue']>(
     (path) => {
-      return SchemaEx.getValue(values, SchemaEx.createJsonPath(path));
+      const jsonPath = SchemaEx.createJsonPath(path);
+      if (Object.prototype.hasOwnProperty.call(overrides, jsonPath)) {
+        return overrides[jsonPath] as any;
+      }
+      // Un-edited fields reflect the current source value.
+      return SchemaEx.getValue(source, jsonPath);
     },
-    [values],
+    [source, overrides],
   );
 
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
@@ -266,25 +291,25 @@ export const useFormHandler = <T extends AnyProperties>({
         parsedValue = undefined;
       }
 
-      // Create merged values for validation and callback. Form never mutates; parent applies via onValuesChanged.
-      const newValues = mergeAtPath(values, pathArray as (string | number)[], parsedValue) as Partial<T>;
+      // Hold the edit locally as an override (including invalid values, so it never snaps back); un-edited paths keep
+      // tracking the live source. The prune effect drops the override once the source catches up.
+      const newOverrides = { ...overrides, [jsonPath]: parsedValue };
+      setOverrides(newOverrides);
 
       // TODO(burdon): Check value has changed from original.
       const newChanged = { [jsonPath]: true };
       setChanged((prev) => ({ ...prev, ...newChanged }));
 
+      // Merged values for validation and the callback. Form never mutates the source; the parent persists.
+      const newValues = applyOverrides(source, newOverrides);
+
       // Validate.
       const isValid = validate(newValues);
 
-      // Notify parent; parent is responsible for applying the change.
+      // Notify parent; parent is responsible for persisting the change (typically once valid).
       onValuesChanged?.(newValues, { isValid, changed: newChanged });
-
-      // For uncontrolled mode, update internal state. Controlled mode relies on parent to pass new values.
-      if (valuesProp === undefined) {
-        setValues(newValues);
-      }
     },
-    [values, validate, onValuesChanged, valuesProp],
+    [source, overrides, validate, onValuesChanged],
   );
 
   const onBlur = useCallback(
@@ -365,6 +390,68 @@ const mergeAtPath = (obj: any, path: readonly (string | number)[], value: any): 
   }
 
   return { ...obj, [head]: child };
+};
+
+/** Overlays sparse json-path edits onto a base value without mutating it; un-edited paths keep the base reference. */
+const applyOverrides = <T>(base: Partial<T>, overrides: Record<SchemaEx.JsonPath, unknown>): Partial<T> => {
+  let result: Partial<T> = base;
+  for (const path of Object.keys(overrides) as SchemaEx.JsonPath[]) {
+    result = mergeAtPath(result, SchemaEx.splitJsonPath(path), overrides[path]) as Partial<T>;
+  }
+  return result;
+};
+
+// Copied from `@dxos/echo` (internal `Obj.valuesEqual`): references compare by target URI, arrays and plain
+// object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`
+// inside a structural region. Effect's `Schema.equivalence` is not a safe substitute — it returns false-positive
+// equality for dynamic/union/ref-array schemas, which would silently prune edits.
+// TODO(wittjosiah): Factor out into a shared util rather than duplicating echo's internal implementation.
+const valuesEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (left === null || right === null) {
+    return left === right;
+  }
+  if (typeof left !== 'object' || typeof right !== 'object') {
+    return Utils.structuralRegion(() => Equal.equals(left, right));
+  }
+  if (Ref.isRef(left) && Ref.isRef(right)) {
+    return left.uri === right.uri;
+  }
+  if (Ref.isRef(left) || Ref.isRef(right)) {
+    return false;
+  }
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length !== right.length) {
+      return false;
+    }
+    return left.every((value, index) => valuesEqual(value, right[index]));
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return false;
+  }
+  const leftRecord = left as Record<string, unknown>;
+  const rightRecord = right as Record<string, unknown>;
+  const keys = new Set([
+    ...Object.keys(leftRecord).filter((key) => key !== 'id'),
+    ...Object.keys(rightRecord).filter((key) => key !== 'id'),
+  ]);
+  for (const key of keys) {
+    if (!valuesEqual(leftRecord[key], rightRecord[key])) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/** Returns a copy of `record` without the given json-path keys. */
+const omitPaths = <V>(
+  record: Record<SchemaEx.JsonPath, V>,
+  paths: SchemaEx.JsonPath[],
+): Record<SchemaEx.JsonPath, V> => {
+  const omit = new Set<string>(paths);
+  return Object.fromEntries(Object.entries(record).filter(([key]) => !omit.has(key))) as Record<SchemaEx.JsonPath, V>;
 };
 
 const flatMap = (errors: ValidationError[]) => {

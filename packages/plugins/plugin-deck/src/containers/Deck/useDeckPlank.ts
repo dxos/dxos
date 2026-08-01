@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, type Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
+import { Graph, Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
 import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
@@ -148,7 +148,7 @@ export const useDeckPlank = ({
       return [];
     }
 
-    return [actions.filter((action) => PLANK_ACTION_DISPOSITIONS.includes(action.properties.disposition))].filter(
+    return [actions.filter((action) => Node.hasDisposition(action, PLANK_ACTION_DISPOSITIONS))].filter(
       (group) => group.length > 0,
     );
   }, [actions, node, variant]);

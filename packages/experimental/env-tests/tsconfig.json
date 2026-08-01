@@ -30,10 +30,10 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/conductor"
+      "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/compute/functions"
+      "path": "../../core/compute/conductor"
     },
     {
       "path": "../../core/echo/echo"

@@ -188,3 +188,5 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
     </Panel.Root>
   );
 };
+
+ComplementarySidebar.displayName = 'ComplementarySidebar';

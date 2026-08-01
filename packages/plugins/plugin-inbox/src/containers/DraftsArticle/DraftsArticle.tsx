@@ -12,11 +12,11 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelection } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
-import { Message } from '@dxos/types';
+import { DraftMessage, Message } from '@dxos/types';
 
 import { MessageStack, type MessageStackActionHandler } from '#components';
 import { meta } from '#meta';
-import { DraftMessage, Mailbox } from '#types';
+import { Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
@@ -109,9 +109,11 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
         {drafts.length === 0 ? (
           <Empty label={t('drafts.empty.message')} />
         ) : (
-          <MessageStack id={id} messages={drafts} currentId={currentId} tags={{}} onAction={handleAction} />
+          <MessageStack id={id} items={drafts} currentId={currentId} onAction={handleAction} />
         )}
       </Panel.Content>
     </Panel.Root>
   );
 };
+
+DraftsArticle.displayName = 'DraftsArticle';

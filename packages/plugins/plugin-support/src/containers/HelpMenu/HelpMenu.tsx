@@ -111,3 +111,5 @@ export const HelpMenu = () => {
     </DropdownMenu.Root>
   );
 };
+
+HelpMenu.displayName = 'HelpMenu';

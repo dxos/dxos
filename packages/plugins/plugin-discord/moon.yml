@@ -27,6 +27,21 @@ tasks:
       runInCI: false
       cache: false
 
+  # Crawl seed channels into a persistent SQLite file via DiscordPipeline. Requires DISCORD_TOKEN;
+  # tunable via DISCORD_CRAWL_CHANNELS / DISCORD_CRAWL_DB / DISCORD_MAX_DAYS. Re-running resumes.
+  crawl-demo:
+    command: 'pnpm exec vitest run src/testing/crawl-demo.test.ts'
+    options:
+      runInCI: false
+      cache: false
+
+  # Replay the stored SQLite messages (no token) through question extraction and print the tuples.
+  questions-demo:
+    command: 'pnpm exec vitest run src/testing/questions-demo.test.ts'
+    options:
+      runInCI: false
+      cache: false
+
   compile:
     args:
       - '--entryPoint=src/index.ts'

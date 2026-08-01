@@ -33,7 +33,7 @@ export const SelectField = ({ type, readonly, placeholder, options, onValueChang
       {...props}
     >
       {({ value }) => (
-        <Select.Root value={value} onValueChange={handleValueChange}>
+        <Select.Root value={value} onValueChange={handleValueChange} disabled={!!readonly}>
           <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
           {options?.length !== 0 && (
             <Select.Portal>

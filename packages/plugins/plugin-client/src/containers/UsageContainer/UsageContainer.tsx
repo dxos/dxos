@@ -53,3 +53,5 @@ export const UsageContainer = () => {
 
   return <UsageView {...fetchState} lastUpdated={lastUpdated} onRefresh={handleRefresh} />;
 };
+
+UsageContainer.displayName = 'UsageContainer';

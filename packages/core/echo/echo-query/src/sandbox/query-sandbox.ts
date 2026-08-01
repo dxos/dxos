@@ -3,7 +3,7 @@
 //
 
 import { Resource } from '@dxos/context';
-import { Query, type QueryAST } from '@dxos/echo';
+import { Filter, Query, type QueryAST } from '@dxos/echo';
 import { trim } from '@dxos/util';
 import { type QuickJSRuntime, type QuickJSWASMModule, createQuickJS } from '@dxos/vendor-quickjs';
 
@@ -63,7 +63,7 @@ export class QuerySandbox extends Resource {
     unwrapResult(context, context.evalCode(globals)).dispose();
     using query = unwrapResult(context, context.evalCode(queryCode));
     const result = context.dump(query);
-    if ('~Filter' in result) {
+    if (Filter.FilterTypeId in result) {
       return Query.select(result).ast;
     } else {
       return result.ast;

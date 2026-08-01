@@ -69,3 +69,5 @@ export const SummarySection = ({ subject }: SummarySectionProps) => {
 
   return <Summary id={`${uri}/summary`} source={subject.summary} />;
 };
+
+SummarySection.displayName = 'SummarySection';

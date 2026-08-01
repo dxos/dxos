@@ -15,6 +15,7 @@ import { type MaybeProvider, getProviderValue } from '@dxos/util';
 import { ActivationEvents, Capabilities } from '../common';
 import { type ActivationEvent, Capability, type CapabilityManager, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../ui';
+import { StorybookErrorFallback } from './StorybookErrorFallback';
 
 /**
  * @internal
@@ -50,6 +51,7 @@ export const setupPluginManager = ({
 };
 
 type ManagedPluginManagerState = {
+  fallback?: UseAppOptions['fallback'];
   fireEvents?: (ActivationEvent.ActivationEvent | string)[];
   pluginManager: PluginManager.PluginManager;
   setupEvents?: ActivationEvent.ActivationEvent[];
@@ -94,6 +96,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
         pluginManager,
         setupEvents: options.setupEvents,
         fireEvents: options.fireEvents,
+        fallback: options.fallback,
         storyId,
       });
 
@@ -112,13 +115,21 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
   };
 };
 
-const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId }: ManagedPluginManagerState) => {
+const WithPluginManagerApp = ({
+  fallback,
+  fireEvents,
+  pluginManager,
+  setupEvents,
+  storyId,
+}: ManagedPluginManagerState) => {
   // Fire deprecated events only after the effect-owned manager for this story exists.
   useAsyncEffect(async () => {
     await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
   }, [fireEvents, pluginManager, storyId]);
 
-  const App = useApp({ pluginManager, setupEvents });
+  // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;
+  // callers can override via `withPluginManager({ fallback })`.
+  const App = useApp({ pluginManager, setupEvents, fallback: fallback ?? StorybookErrorFallback });
   return <App />;
 };
 

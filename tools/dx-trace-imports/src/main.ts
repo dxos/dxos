@@ -2,25 +2,28 @@
 // Copyright 2026 DXOS.org
 //
 
-import madge from 'madge';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 
-import { resolvePackageExport } from './export-resolver.ts';
+import { buildImportGraph } from './build-graph.ts';
 import {
+  EXTERNAL_PREFIX,
   type Matcher,
-  type MatcherInput,
+  type WorkspacePackageResolver,
   createMatcher,
   createWorkspacePackageResolver,
+  externalSpecifierOf,
+  isExternalKey,
+  matchesKey,
   normalizeFsPath,
   packageNameFromPath,
 } from './matcher.ts';
-import { augmentGraphWithParsedImports } from './parse-imports.ts';
+import { resolvePackageExport } from './package-resolution.ts';
 
 export interface TraceImportsOptions {
-  /** Absolute or relative entry file passed to madge. */
+  /** Absolute or relative entry file to start the crawl from. */
   readonly from?: string;
   /** Package export subpath (e.g. `./plugin`) resolved via `package.json` exports. */
   readonly exportSubpath?: string;
@@ -62,10 +65,10 @@ const wrapBold = (color: boolean, value: string) => (color ? `\x1b[1m${value}\x1
  * `node_modules/.pnpm/<spec>/node_modules/<pkg>/dist/...` -> `<pkg>/dist/...`.
  */
 const prettifyStep = (step: string, absWorkingDir: string, color: boolean): string => {
-  if (step.startsWith('[external] ')) {
-    const specifier = step.slice('[external] '.length);
+  if (isExternalKey(step)) {
+    const specifier = externalSpecifierOf(step);
     const pkg = packageNameFromPath(`node_modules/${specifier}`);
-    return pkg ? `[external] ${wrapBold(color, pkg)}${specifier.slice(pkg.length)}` : step;
+    return pkg ? `${EXTERNAL_PREFIX}${wrapBold(color, pkg)}${specifier.slice(pkg.length)}` : step;
   }
   let relative = path.relative(absWorkingDir, path.resolve(absWorkingDir, step)) || '.';
   relative = relative.replace(/\\/g, '/');
@@ -86,12 +89,12 @@ const prettifyStep = (step: string, absWorkingDir: string, color: boolean): stri
 const packageLabel = (
   step: string,
   absWorkingDir: string,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
 ): string => {
-  if (step.startsWith('[external] ')) {
-    const specifier = step.slice('[external] '.length);
+  if (isExternalKey(step)) {
+    const specifier = externalSpecifierOf(step);
     const pkg = packageNameFromPath(`node_modules/${specifier}`);
-    return `[external] ${pkg ?? specifier}`;
+    return `${EXTERNAL_PREFIX}${pkg ?? specifier}`;
   }
   const absolute = path.resolve(absWorkingDir, step);
   const relative = path.relative(absWorkingDir, absolute).replace(/\\/g, '/') || '.';
@@ -109,7 +112,7 @@ const packageLabel = (
 const chainToPackages = (
   chain: readonly string[],
   absWorkingDir: string,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
 ): string[] => {
   const labels: string[] = [];
   for (const step of chain) {
@@ -161,107 +164,19 @@ const renderTree = (chainsOfLabels: readonly (readonly string[])[]): string => {
   return lines.join('\n');
 };
 
-/** Build a `MatcherInput` for an internal (file-resolved) node. */
-const internalMatcherInput = (
-  absoluteFile: string,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
-): MatcherInput => {
-  const resolvedAbsolute = normalizeFsPath(absoluteFile);
-  const fromNodeModules = packageNameFromPath(resolvedAbsolute);
-  const packageName = fromNodeModules ?? resolveWorkspacePackage(resolvedAbsolute);
-  return {
-    resolvedAbsolute,
-    packageName: packageName ?? null,
-    externalSpecifier: null,
-  };
-};
-
-/** Build a `MatcherInput` for an external import edge. */
-const externalMatcherInput = (specifier: string): MatcherInput => ({
-  resolvedAbsolute: null,
-  packageName: null,
-  externalSpecifier: specifier,
-});
-
-const isExternalDependency = (dependency: string): boolean =>
-  !dependency.startsWith('.') && !dependency.startsWith('/') && !path.isAbsolute(dependency);
-
-const resolveGraphKey = (dependency: string, absWorkingDir: string, knownKeys: Set<string>): string | null => {
-  if (isExternalDependency(dependency)) {
-    return `[external] ${dependency}`;
-  }
-  const absolute = normalizeFsPath(path.resolve(absWorkingDir, dependency));
-  if (knownKeys.has(absolute)) {
-    return absolute;
-  }
-  for (const key of knownKeys) {
-    if (normalizeFsPath(key) === absolute) {
-      return key;
-    }
-  }
-  if (fs.existsSync(absolute)) {
-    return absolute;
-  }
-  return `[external] ${dependency}`;
-};
-
-/** Normalize madge's dependency object into absolute-path adjacency lists. */
-const normalizeGraph = (rawGraph: Record<string, string[]>, absWorkingDir: string): Map<string, string[]> => {
-  const keyByNormalized = new Map<string, string>();
-  for (const rawKey of Object.keys(rawGraph)) {
-    const normalizedKey = isExternalDependency(rawKey)
-      ? `[external] ${rawKey}`
-      : normalizeFsPath(path.resolve(absWorkingDir, rawKey));
-    keyByNormalized.set(normalizedKey, normalizedKey);
-  }
-  const knownKeys = new Set(keyByNormalized.keys());
-
-  const graph = new Map<string, string[]>();
-  for (const [rawKey, rawDeps] of Object.entries(rawGraph)) {
-    const currentKey = isExternalDependency(rawKey)
-      ? `[external] ${rawKey}`
-      : normalizeFsPath(path.resolve(absWorkingDir, rawKey));
-    const deps = rawDeps
-      .map((dep) => resolveGraphKey(dep, absWorkingDir, knownKeys))
-      .filter((dep): dep is string => dep !== null);
-    graph.set(currentKey, deps);
-    for (const dep of deps) {
-      if (!graph.has(dep)) {
-        graph.set(dep, []);
-      }
-    }
-  }
-  return graph;
-};
-
-/** Input keys whose file is itself a terminal under the matcher. */
+/** Graph keys whose node is itself a terminal under the matcher. */
 const terminalKeys = (
   graph: Map<string, string[]>,
   matcher: Matcher,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
-): string[] => {
-  const keys: string[] = [];
-  for (const key of graph.keys()) {
-    if (key.startsWith('[external] ')) {
-      const specifier = key.slice('[external] '.length);
-      if (matcher.matches(externalMatcherInput(specifier))) {
-        keys.push(key);
-      }
-      continue;
-    }
-    if (matcher.matches(internalMatcherInput(key, resolveWorkspacePackage))) {
-      keys.push(key);
-    }
-  }
-  return keys;
-};
+  resolveWorkspacePackage: WorkspacePackageResolver,
+): string[] => [...graph.keys()].filter((key) => matchesKey(key, matcher, resolveWorkspacePackage));
 
 /** Compute the set of graph keys that lie on some path from `entryKey` to a terminal node. */
 const buildKeysReachingTerminal = (
   graph: Map<string, string[]>,
   entryKey: string,
   matcher: Matcher,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
 ): Set<string> => {
   const reverse = new Map<string, Set<string>>();
   for (const [currentKey, deps] of graph.entries()) {
@@ -306,7 +221,7 @@ const collectChains = (
   graph: Map<string, string[]>,
   entryKey: string,
   matcher: Matcher,
-  resolveWorkspacePackage: (absoluteFile: string) => string | null,
+  resolveWorkspacePackage: WorkspacePackageResolver,
   onChain: (chain: string[]) => boolean,
 ): void => {
   const onPathToTarget = buildKeysReachingTerminal(graph, entryKey, matcher, resolveWorkspacePackage);
@@ -327,15 +242,12 @@ const collectChains = (
     }
 
     const extendedChain = [...chain, currentKey];
-    if (currentKey.startsWith('[external] ')) {
-      const specifier = currentKey.slice('[external] '.length);
-      if (matcher.matches(externalMatcherInput(specifier))) {
-        emit(extendedChain);
-      }
+    if (matchesKey(currentKey, matcher, resolveWorkspacePackage)) {
+      emit(extendedChain);
       return;
     }
-    if (matcher.matches(internalMatcherInput(currentKey, resolveWorkspacePackage))) {
-      emit(extendedChain);
+    // External nodes are always leaves; nothing further to walk.
+    if (isExternalKey(currentKey)) {
       return;
     }
 
@@ -375,9 +287,9 @@ const resolveEntryPath = (
 };
 
 /**
- * Build a static import graph with madge and return structured trace results.
+ * Build a static import graph with the SWC parser and return structured trace results.
  */
-export const traceImports = async (options: TraceImportsOptions): Promise<TraceImportsResult> => {
+export const traceImports = (options: TraceImportsOptions): TraceImportsResult => {
   const absWorkingDir = options.absWorkingDir ?? process.cwd();
   const conditions = options.conditions ?? DEFAULT_CONDITIONS;
   const maxChains = options.maxChains ?? 10;
@@ -388,38 +300,8 @@ export const traceImports = async (options: TraceImportsOptions): Promise<TraceI
   const matcher = createMatcher(options.to, absWorkingDir);
   const resolveWorkspacePackage = createWorkspacePackageResolver(absWorkingDir);
 
-  const tsConfigPath = path.join(absWorkingDir, 'tsconfig.json');
-  const madgeConfig: {
-    baseDir: string;
-    fileExtensions: string[];
-    includeNpm: boolean;
-    detectiveOptions: { ts: { skipTypeImports: boolean }; tsx: { skipTypeImports: boolean } };
-    tsConfig?: string;
-  } = {
-    baseDir: absWorkingDir,
-    fileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-    includeNpm: true,
-    detectiveOptions: {
-      ts: { skipTypeImports: true },
-      tsx: { skipTypeImports: true },
-    },
-  };
-  if (fs.existsSync(tsConfigPath)) {
-    madgeConfig.tsConfig = tsConfigPath;
-  }
-
-  const result = await madge(entryAbsolute, madgeConfig);
-  const rawGraph = result.obj();
-  const graph = normalizeGraph(rawGraph, absWorkingDir);
-
   const entryKey = normalizeFsPath(entryAbsolute);
-  if (!graph.has(entryKey)) {
-    graph.set(entryKey, []);
-  }
-
-  augmentGraphWithParsedImports(graph, (dependency, knownKeys) =>
-    resolveGraphKey(dependency, absWorkingDir, knownKeys),
-  );
+  const graph = buildImportGraph(entryKey, conditions, matcher, resolveWorkspacePackage);
 
   const metafilePath = path.join(os.tmpdir(), `trace-imports-graph-${process.pid}-${Date.now()}.json`);
   fs.writeFileSync(metafilePath, JSON.stringify(Object.fromEntries(graph.entries()), null, 2), 'utf8');

@@ -114,11 +114,8 @@ export const translations: Resource[] = [
         'routine-verbose.label': 'Manage routines',
         'routine.description': 'Manage where routines in this space run.',
 
-        'runtime.label': 'Runtime location',
-        'runtime.description': 'Determines where routines in this space run.',
-        'runtime.disabled.label': 'Disabled',
-        'runtime.local.label': 'Local',
-        'runtime.edge.label': 'EDGE (experimental)',
+        'runtime.label': 'Enable triggers',
+        'runtime.description': "Run this space's triggers. Individual triggers can be routed to the edge.",
       },
     },
   },

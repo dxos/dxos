@@ -137,9 +137,9 @@
     "vite-plugin-wasm": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-client": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
-    "@dxos/ui-theme": "workspace:*",
+    "@dxos/react-client": "workspace:^",
+    "@dxos/react-ui": "workspace:^",
+    "@dxos/ui-theme": "workspace:^",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:",

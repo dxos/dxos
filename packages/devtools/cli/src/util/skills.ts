@@ -105,7 +105,7 @@ export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by skills above need to be added here.
   DataTypes,
   [Chat.Chat],
-  [Game, Chess.State],
+  [Game.Game, Chess.State],
   [Markdown.Document],
   [Mailbox.Mailbox, Calendar.Calendar, Feed.Feed],
   [Skill.Skill],

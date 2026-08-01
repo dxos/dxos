@@ -21,7 +21,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
 import { Config } from '@dxos/react-client';
-import { getSpace, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { getSpace, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
@@ -33,13 +33,12 @@ import { Meeting } from '../types';
 type StoryArgs = {};
 
 const DefaultStory = (_: StoryArgs) => {
-  const spaces = useSpaces();
-  const db = useDatabase(spaces[0]?.id);
-  const [meeting] = useQuery(db, Filter.type(Meeting.Meeting));
+  const [space] = useSpaces();
+  const [meeting] = useQuery(space?.db, Filter.type(Meeting.Meeting));
   const transcript = meeting?.transcript?.target;
 
-  if (!db || !meeting || !transcript) {
-    return <Loading data={{ db: !!db, meeting: !!meeting, transcript: !!transcript }} />;
+  if (!space?.db || !meeting || !transcript) {
+    return <Loading data={{ db: !!space?.db, meeting: !!meeting, transcript: !!transcript }} />;
   }
 
   return <CallTranscriptionView meeting={meeting} transcript={transcript} />;

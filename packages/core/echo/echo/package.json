@@ -33,6 +33,11 @@
       "types": "./dist/types/src/Annotation.d.ts",
       "default": "./dist/lib/neutral/Annotation.mjs"
     },
+    "./Blob": {
+      "source": "./src/Blob.ts",
+      "types": "./dist/types/src/Blob.d.ts",
+      "default": "./dist/lib/neutral/Blob.mjs"
+    },
     "./Database": {
       "source": "./src/Database.ts",
       "types": "./dist/types/src/Database.d.ts",

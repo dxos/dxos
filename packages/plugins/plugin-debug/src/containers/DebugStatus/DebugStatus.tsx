@@ -210,3 +210,5 @@ export const DebugStatus = () => {
     </>
   );
 };
+
+DebugStatus.displayName = 'DebugStatus';

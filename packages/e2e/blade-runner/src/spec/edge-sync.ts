@@ -66,7 +66,7 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
         runtime: {
           client: {
             edgeFeatures: {
-              echoReplicator: true,
+              subductionReplicator: true,
               signaling: true,
               feedReplicator: true,
               agents: true,
@@ -93,10 +93,10 @@ export class EdgeSync implements TestPlan<EdgeTestSpec, EdgeSyncResult> {
     // Config.
     //
     const configEnabledEdgeSync = structuredClone(params.spec.config);
-    configEnabledEdgeSync.runtime!.client!.edgeFeatures!.echoReplicator = true;
+    configEnabledEdgeSync.runtime!.client!.edgeFeatures!.subductionReplicator = true;
 
     const configDisabledEdgeSync = structuredClone(params.spec.config);
-    configDisabledEdgeSync.runtime!.client!.edgeFeatures!.echoReplicator = false;
+    configDisabledEdgeSync.runtime!.client!.edgeFeatures!.subductionReplicator = false;
 
     //
     // Spawn replicant and setup.

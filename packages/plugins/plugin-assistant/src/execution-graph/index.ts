@@ -22,6 +22,7 @@ export {
 export {
   BEGIN_EVENT_TYPES,
   type BuildSpanTreeOptions,
+  DEFAULT_SPAN_TIMEOUT_MS,
   END_EVENT_TYPES,
   ROOT_SPAN_ID,
   type Span,

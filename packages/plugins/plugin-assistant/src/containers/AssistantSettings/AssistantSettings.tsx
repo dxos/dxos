@@ -88,3 +88,5 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
     </Form.Root>
   );
 };
+
+AssistantSettings.displayName = 'AssistantSettings';

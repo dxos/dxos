@@ -530,3 +530,5 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
 };
 
 export default ScoreArticle;
+
+ScoreArticle.displayName = 'ScoreArticle';

@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { Obj, Relation } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -13,7 +14,7 @@ import { Empty } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
-import { SyncBinding } from '../../types';
+import { type TestConnectionStatus } from '../../hooks';
 
 // The action section uses Form's `settings` variant purely for its labeled-row chrome
 // (action-mode `Form.Row`s); there are no fields to bind, so the schema is empty.
@@ -29,8 +30,8 @@ export type ConnectionViewProps = {
   source?: string;
   /** True when no service plugin is registered for this connection's connector. */
   hasConnector: boolean;
-  /** Sync bindings sourced by this connection. */
-  bindings: ReadonlyArray<SyncBinding.SyncBinding>;
+  /** External-sync cursors authenticated by this connection. */
+  bindings: ReadonlyArray<Cursor.ExternalCursor>;
   /** Schema describing per-binding `.options`; absent for connectors without per-binding options. */
   optionsSchema?: Schema.Schema<any, any>;
   /** True when the connector exposes a `sync` operation (drives Sync-now visibility). */
@@ -43,10 +44,20 @@ export type ConnectionViewProps = {
   loadingTargets: boolean;
   /** True when sync-target discovery is ready to open the dialog. */
   syncTargetsAvailable: boolean;
+  /** Result of probing the stored credential when the connection was opened. */
+  testStatus: TestConnectionStatus;
+  /** User-facing reason when `testStatus` is `'invalid'`. */
+  testError?: string;
+  /** True when the connector supports in-place reauthentication (OAuth connectors). */
+  canReauthenticate: boolean;
+  /** True while a reauthentication popup/redirect is being initiated. */
+  reauthenticating: boolean;
   onSync: () => void;
   onChangeTargets: () => void;
+  onReauthenticate: () => void;
+  onTestConnection: () => void;
   onDelete: () => void;
-  onRemoveBinding: (binding: SyncBinding.SyncBinding) => void;
+  onRemoveBinding: (binding: Cursor.ExternalCursor) => void;
 };
 
 /**
@@ -69,8 +80,14 @@ export const ConnectionView = ({
   syncing,
   loadingTargets,
   syncTargetsAvailable,
+  testStatus,
+  testError,
+  canReauthenticate,
+  reauthenticating,
   onSync,
   onChangeTargets,
+  onReauthenticate,
+  onTestConnection,
   onDelete,
   onRemoveBinding,
 }: ConnectionViewProps) => {
@@ -92,6 +109,38 @@ export const ConnectionView = ({
                       <Form.Row label={t('sync-now.label')} description={t('sync-now.description')}>
                         <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
                           {syncing ? t('syncing.label') : t('sync-now.label')}
+                        </Button>
+                      </Form.Row>
+                    )}
+
+                    {/* Credential status is hidden for connectors that can't be tested (`unsupported`). */}
+                    {testStatus !== 'unsupported' && (
+                      <Form.Row
+                        label={t('connection-status.label')}
+                        description={
+                          testStatus === 'valid'
+                            ? t('connection-valid.message')
+                            : testStatus === 'invalid'
+                              ? t('connection-invalid.message')
+                              : t('connection-checking.message')
+                        }
+                        validation={
+                          testStatus === 'invalid' && testError ? (
+                            <span className='text-sm text-error-text'>{testError}</span>
+                          ) : undefined
+                        }
+                      >
+                        <Button onClick={onTestConnection} disabled={testStatus === 'testing'}>
+                          {t('test-connection.label')}
+                        </Button>
+                      </Form.Row>
+                    )}
+
+                    {/* Reauthenticate is available for OAuth connectors; the credential is replaced in place. */}
+                    {canReauthenticate && (
+                      <Form.Row label={t('reauthenticate.label')} description={t('reauthenticate.description')}>
+                        <Button onClick={onReauthenticate} disabled={reauthenticating}>
+                          {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
                         </Button>
                       </Form.Row>
                     )}
@@ -145,39 +194,28 @@ export const ConnectionView = ({
  * the default (flat) variant so its fields render inline rather than each in its own settings-card border.
  *
  * When the binding's target object has been deleted, the item surfaces that state and offers to
- * remove the now-orphaned binding (relations don't cascade-delete, so a target deleted elsewhere
- * leaves a dangling binding).
+ * remove the now-orphaned binding (a ref to a deleted target doesn't clean itself up, so a target
+ * deleted elsewhere leaves a dangling binding).
  */
 const BindingRow = ({
   binding,
   optionsSchema,
   onRemove,
 }: {
-  binding: SyncBinding.SyncBinding;
+  binding: Cursor.ExternalCursor;
   optionsSchema?: Schema.Schema<any, any>;
-  onRemove: (binding: SyncBinding.SyncBinding) => void;
+  onRemove: (binding: Cursor.ExternalCursor) => void;
 }) => {
   const { t } = useTranslation(meta.profile.key);
-  // Resolving the relation endpoint can throw if the target reference is entirely
-  // unresolvable; treat that the same as a deleted target.
-  const target = useMemo(() => {
-    try {
-      return Relation.getTarget(binding);
-    } catch {
-      return undefined;
-    }
-  }, [binding]);
-  const [resolvedTarget] = useObject(target);
-  // Sync status lives on the binding's cursor object (0.2.0); resolve it to render last-run state.
-  const [cursor] = useObject(binding.cursor);
+  const [resolvedTarget] = useObject(binding.spec.target);
   const missing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
-  // Label precedence: explicit binding name → remote id → the target's own label → its type's
-  // translated label (single-target connectors leave a binding without a name/remoteId, e.g.
+  // Label precedence: explicit binding label → remote id → the target's own label → its type's
+  // translated label (single-target connectors leave a binding without a label/externalId, e.g.
   // Gmail's Mailbox). Sync status lives in the description, so the label never describes sync progress.
   const targetTypename = resolvedTarget ? Obj.getTypename(resolvedTarget) : undefined;
   const label: string =
-    binding.name ??
-    binding.remoteId ??
+    binding.spec.label ??
+    binding.spec.externalId ??
     (resolvedTarget ? Obj.getLabel(resolvedTarget) : undefined) ??
     // `typename.label` is owned by the target type's plugin (a foreign namespace we can't
     // guarantee), so fall back to the raw typename when that plugin defines no label.
@@ -186,17 +224,18 @@ const BindingRow = ({
 
   const status = missing
     ? t('binding-target-missing.message')
-    : cursor?.lastRunAt
-      ? `${t('last-sync.label')}: ${new Date(cursor.lastRunAt).toLocaleString()}`
+    : binding.lastTick
+      ? `${t('last-sync.label')}: ${new Date(binding.lastTick).toLocaleString()}`
       : t('never-synced.label');
 
-  // Seed the options form from the binding's current options; SyncBinding is an ECHO relation,
-  // so edits persist via `Relation.update`.
-  const defaultValues = useMemo(() => ({ ...(binding.options ?? {}) }), [binding.options]);
+  // Seed the options form from the cursor's current options.
+  const defaultValues = useMemo(() => ({ ...(binding.spec.options ?? {}) }), [binding.spec.options]);
   const handleOptionsChanged = useCallback(
     (values: Record<string, any>) => {
-      Relation.update(binding, (binding) => {
-        binding.options = { ...values };
+      Obj.update(binding, (binding) => {
+        if (binding.spec.kind === 'external') {
+          binding.spec.options = { ...values };
+        }
       });
     },
     [binding],
@@ -207,7 +246,7 @@ const BindingRow = ({
       label={label}
       description={status}
       validation={
-        !missing && cursor?.lastError ? <span className='text-sm text-error-text'>{cursor.lastError}</span> : undefined
+        !missing && binding.lastError ? <span className='text-sm text-error-text'>{binding.lastError}</span> : undefined
       }
     >
       {missing ? <Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button> : undefined}

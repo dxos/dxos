@@ -113,6 +113,14 @@ export const ENTITY_ID_PATTERN = /(?<![0-9A-HJKMNP-TV-Z])[0-9A-HJKMNP-TV-Z]{26}(
  */
 export const ISO_TIMESTAMP_PATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/;
 
+/**
+ * Matches a canonical UUID (8-4-4-4-12 hex). Use this when a prompt embeds an id minted by an
+ * external service on every real invocation (e.g. an image-hosting upload id in a tool result) —
+ * such tools aren't otherwise memoizable since the value differs on every live execution.
+ * @example 5baed323-7879-4fde-0441-c2cf954f2900
+ */
+export const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
 const dynamicPlaceholder = (index: number): string => `<memoized-dynamic-${index}>`;
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

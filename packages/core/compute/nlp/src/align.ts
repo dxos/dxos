@@ -22,14 +22,20 @@ export const assembleDocument = (sourceText: string, rawSentences: readonly RawS
       if (start < 0) {
         continue;
       }
+
       const end = start + text.length;
       tokens.push({ index: tokens.length, text, upos, start, end });
       cursor = end;
     }
+
     if (tokens.length > 0) {
       sentences.push({ index: sentenceIndex, start: tokens[0].start, end: tokens[tokens.length - 1].end, tokens });
     }
   });
 
-  return { sourceHash: sourceHash(sourceText), sentences, timestamp: undefined };
+  return {
+    sourceHash: sourceHash(sourceText),
+    sentences,
+    timestamp: undefined,
+  };
 };

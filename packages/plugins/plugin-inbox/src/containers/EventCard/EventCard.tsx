@@ -19,3 +19,5 @@ export const EventCard = ({ subject: event }: EventCardProps) => {
     </Card.Body>
   );
 };
+
+EventCard.displayName = 'EventCard';

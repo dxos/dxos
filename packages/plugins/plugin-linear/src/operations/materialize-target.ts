@@ -14,8 +14,8 @@ import { LinearOperation } from '../types';
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 
 /**
- * Find-or-create the empty local root Project for a Linear team so a
- * {@link SyncBinding} relation can be created eagerly. The team's root is a
+ * Find-or-create the empty local root Project for a Linear team so an
+ * external-sync `Cursor` can be created eagerly. The team's root is a
  * {@link Project} carrying the team's `LINEAR_SOURCE` foreign key; the team's
  * Linear projects and issues are pulled under it on sync. Idempotent: queried
  * by foreign key, so repeated calls return the existing root.

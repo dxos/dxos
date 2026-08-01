@@ -10,23 +10,41 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Key, Obj, Order, Query, Ref, Scope, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
+import { Topic } from '@dxos/pipeline-email';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connection, ConnectorOperation, SyncBinding } from '@dxos/plugin-connector';
+import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getLinkedVariant, isLinkedSegment, linkedSegment, selectionAspect } from '@dxos/react-ui-attention';
-import { Event, Message } from '@dxos/types';
+import { DraftMessage, Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#types';
-import { Calendar, DraftMessage, Mailbox } from '#types';
+import { Calendar, InboxOperation, Mailbox } from '#types';
 
-import { MAILBOX_DRAFTS_NODE_DATA, MAILBOX_DRAFTS_TYPE, MAILBOXES_SECTION_TYPE } from '../constants';
-import { getCalendarsPath, getDraftsId, getMailboxesPath, getMailboxesSectionId } from '../paths';
+import {
+  MAILBOX_DRAFTS_NODE_DATA,
+  MAILBOX_DRAFTS_TYPE,
+  MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+  MAILBOX_SUBSCRIPTIONS_TYPE,
+  MAILBOX_TOPICS_NODE_DATA,
+  MAILBOX_TOPICS_TYPE,
+  MAILBOXES_SECTION_TYPE,
+} from '../constants';
+import { createSyncProgressKey } from '../operations/mail/mail-sync';
+import {
+  getCalendarsPath,
+  getDraftsId,
+  getMailboxesPath,
+  getMailboxesSectionId,
+  getSubscriptionsId,
+  getTopicsId,
+} from '../paths';
+import { syncTarget } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 
@@ -170,11 +188,6 @@ export default Capability.makeModule(
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxSnapshot = get(Obj.atom(mailbox));
-              const feed = mailboxSnapshot.feed ? get(mailboxSnapshot.feed.atom) : undefined;
-              const messages = feed
-                ? get(space.db.query(Query.select(Filter.type(Message.Message)).from(feed)).atom)
-                : [];
-              const modifiedCount = Mailbox.getNewMessageCount(mailboxSnapshot, messages);
 
               return Node.make({
                 id: mailboxSnapshot.id,
@@ -185,7 +198,7 @@ export default Capability.makeModule(
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
-                  modifiedCount,
+                  // New-message badge stubbed pending a real read/unread signal (see Mailbox.ts).
                 },
                 nodes: [
                   Node.make({
@@ -195,6 +208,28 @@ export default Capability.makeModule(
                     properties: {
                       label: ['drafts.label', { ns: meta.profile.key }],
                       icon: 'ph--pencil-simple--regular',
+                      iconHue: 'rose',
+                      mailbox,
+                    },
+                  }),
+                  Node.make({
+                    id: getTopicsId(),
+                    type: MAILBOX_TOPICS_TYPE,
+                    data: MAILBOX_TOPICS_NODE_DATA,
+                    properties: {
+                      label: ['topics.label', { ns: meta.profile.key }],
+                      icon: 'ph--stack--regular',
+                      iconHue: 'rose',
+                      mailbox,
+                    },
+                  }),
+                  Node.make({
+                    id: getSubscriptionsId(),
+                    type: MAILBOX_SUBSCRIPTIONS_TYPE,
+                    data: MAILBOX_SUBSCRIPTIONS_NODE_DATA,
+                    properties: {
+                      label: ['subscriptions.label', { ns: meta.profile.key }],
+                      icon: 'ph--envelope-simple--regular',
                       iconHue: 'rose',
                       mailbox,
                     },
@@ -300,24 +335,81 @@ export default Capability.makeModule(
         id: 'mailboxMessage',
         match: (node) =>
           Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
-        connector: (matched, get) => {
-          const mailbox = matched.mailbox;
+        connector: ({ mailbox, nodeId }, get) => {
           const db = Obj.getDatabase(mailbox);
-          const feed = mailbox.feed ? (get(mailbox.feed.atom) as Feed.Feed | undefined) : undefined;
+          const feed = get(mailbox.feed.atom);
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const messageId = get(selectedId(matched.nodeId));
+          const messageId = get(selectedId(nodeId));
           const message = get(
             db.query(Query.select(messageId ? Filter.id(messageId) : Filter.nothing()).from(feed)).atom,
           )[0];
+          // The selected message's whole conversation, assigned to the companion so the article renders
+          // it directly. One combined-scope query (db-root drafts + this mailbox's feed) assembles it
+          // via a single reactive subscription, oldest-first, correlated by `threadId`. Two same-shape
+          // subscriptions here deadlock the connector's recompute, so keep it to one query.
+          const conversation = !message
+            ? []
+            : get(
+                db.query(
+                  Query.select(Filter.type(Message.Message, { threadId: message.threadId }))
+                    .from([Scope.space(), Scope.feed(Obj.getURI(feed, { prefer: 'absolute' }))])
+                    .orderBy(Order.property('created', 'asc')),
+                ).atom,
+              );
+
+          // Synced messages (no `properties.mailbox`) always pass; drafts pass only when scoped to this
+          // mailbox and not yet superseded by their sent copy in the feed (matched on the provider id
+          // set at send time). Deleting the superseded draft is deferred to sync (`reconcileDrafts`).
+          const mailboxUri = Obj.getURI(mailbox);
+          const syncedIds = new Set(
+            conversation
+              .filter((item) => !DraftMessage.instanceOf(item))
+              .flatMap((item) => Obj.getMeta(item).keys.map((key) => key.id)),
+          );
+          const thread = conversation.filter((item) => {
+            if (!DraftMessage.instanceOf(item)) {
+              return true;
+            }
+            if (!DraftMessage.belongsTo(item, mailboxUri)) {
+              return false;
+            }
+            return !(item.properties?.sentMessageId && syncedIds.has(item.properties.sentMessageId));
+          });
+
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
               label: ['message.label', { ns: meta.profile.key }],
               icon: 'ph--envelope-open--regular',
-              data: message ?? 'message',
+              data: thread.length > 0 ? thread : 'message',
+            }),
+          ]);
+        },
+      }),
+
+      GraphBuilder.createExtension({
+        id: 'mailboxTopics',
+        match: NodeMatcher.whenNodeType(MAILBOX_TOPICS_TYPE),
+        connector: (node, get) => {
+          const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
+          const db = mailbox ? Obj.getDatabase(mailbox) : undefined;
+          if (!mailbox || !db) {
+            return Effect.succeed([]);
+          }
+
+          // The selected topic (Topics list → detail) becomes the companion's subject so `TopicArticle`
+          // renders it. Topics live in the space db (not a feed), so a plain id lookup resolves them.
+          const topicId = get(selectedId(node.id));
+          const topic = topicId ? get(db.query(Query.select(Filter.id(topicId))).atom)[0] : undefined;
+          return Effect.succeed([
+            AppNode.makeCompanion({
+              id: linkedSegment('topic'),
+              label: ['topic.label', { ns: meta.profile.key }],
+              icon: 'ph--stack--regular',
+              data: Obj.instanceOf(Topic, topic) ? topic : 'topic',
             }),
           ]);
         },
@@ -506,35 +598,84 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when a SyncBinding's source Connection targets this mailbox.
-          // Delegate to the connector framework's `SyncConnection`, which resolves the connection's
-          // connector and runs its `sync` op — no provider-specific branching here. Resolved via the
-          // reverse-ref `.source()` query (reactive; loading it synchronously isn't reliable here).
-          const connections = get(
-            db.query(Query.select(Filter.id(mailbox.id)).targetOf(SyncBinding.SyncBinding).source()).atom,
+          // The sync action appears only when an external-sync cursor targets this mailbox. The cursor
+          // no longer relates to Connection directly, so the Connection is found by matching access
+          // tokens (reactive queries; loading synchronously isn't reliable here).
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
+          const cursor = cursors.find(
+            (candidate): candidate is Cursor.ExternalCursor =>
+              Cursor.isExternal(candidate) && isCursorForTarget(candidate, mailbox),
           );
-          const connection = connections.find(Connection.instanceOf);
+          if (!cursor) {
+            return Effect.succeed([]);
+          }
+          const [connection] = get(
+            db.query(Filter.type(Connection.Connection, { accessToken: cursor.spec.source })).atom,
+          );
           if (!connection) {
             return Effect.succeed([]);
           }
+          return Effect.gen(function* () {
+            // Progress registry is optional (absent when plugin-progress isn't loaded); the same
+            // monitor `MailboxArticle`'s statusbar meter reads, so the action's spinner/disabled
+            // state agrees with a sync kicked off from either surface or the background routine.
+            const progressRegistry = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+            const isSyncing = Option.match(progressRegistry, {
+              onNone: () => false,
+              onSome: (registry) => get(registry.monitorAtom(createSyncProgressKey(mailbox)))?.status === 'running',
+            });
+            return [
+              {
+                id: 'sync',
+                data: () => syncTarget(mailbox),
+                properties: {
+                  label: ['sync-mailbox.label', { ns: meta.profile.key }],
+                  icon: isSyncing ? 'ph--spinner-gap--regular' : 'ph--arrows-clockwise--regular',
+                  spin: isSyncing,
+                  disabled: isSyncing,
+                  // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
+                  disposition: ['toolbar', 'list-item'],
+                  presentation: { toolbar: { variant: 'primary', iconOnly: false } },
+                },
+              },
+            ];
+          });
+        },
+      }),
+
+      GraphBuilder.createExtension({
+        id: 'analyzeTopicsMailbox',
+        // Filter nodes store the parent mailbox as node.data; exclude them so the action only appears
+        // on the mailbox itself (peer of the `sync` action).
+        match: (node) =>
+          node.type === Type.getTypename(Mailbox.Mailbox) && Mailbox.instanceOf(node.data)
+            ? Option.some(node.data)
+            : Option.none(),
+        actions: (mailbox) => {
+          const db = Obj.getDatabase(mailbox);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+          // Tags the mailbox's messages and clusters its threads into Topic objects. Available whenever
+          // the mailbox has a db (no connection required — it runs over already-synced messages).
           return Effect.succeed([
             {
-              id: 'sync',
+              id: 'analyze-topics',
               data: () =>
                 Operation.invoke(
-                  ConnectorOperation.SyncConnection,
-                  { connection: Ref.make(connection) },
+                  InboxOperation.AnalyzeTopics,
+                  { mailbox: Ref.make(mailbox) },
                   {
                     spaceId: db.spaceId,
                     notify: {
-                      success: ['sync-mailbox-success.title', { ns: meta.profile.key }],
-                      error: ['sync-mailbox-error.title', { ns: meta.profile.key }],
+                      success: ['analyze-topics-success.title', { ns: meta.profile.key }],
+                      error: ['analyze-topics-error.title', { ns: meta.profile.key }],
                     },
                   },
                 ),
               properties: {
-                label: ['sync-mailbox.label', { ns: meta.profile.key }],
-                icon: 'ph--arrows-clockwise--regular',
+                label: ['analyze-topics.label', { ns: meta.profile.key }],
+                icon: 'ph--stack--regular',
                 disposition: 'list-item',
               },
             },
@@ -550,34 +691,27 @@ export default Capability.makeModule(
           if (!db) {
             return Effect.succeed([]);
           }
-          // The sync action appears only when a SyncBinding targets this calendar; the binding's
-          // source Connection authenticates the sync.
-          const bindings = get(db.query(Query.select(Filter.id(calendar.id)).targetOf(SyncBinding.SyncBinding)).atom);
-          const binding = bindings.find(SyncBinding.instanceOf);
+          // The sync action appears only when an external-sync cursor targets this calendar; the
+          // cursor's `spec.source` access token authenticates the sync.
+          const cursors = get(db.query(Filter.type(Cursor.Cursor)).atom);
+          const binding = cursors.find(
+            (candidate): candidate is Cursor.ExternalCursor =>
+              Cursor.isExternal(candidate) && isCursorForTarget(candidate, calendar),
+          );
           if (!binding) {
             return Effect.succeed([]);
           }
           return Effect.succeed([
             {
               id: 'sync',
-              data: () =>
-                Operation.invoke(
-                  InboxOperation.GoogleCalendarSync,
-                  {
-                    binding: Ref.make(binding),
-                  },
-                  {
-                    spaceId: db.spaceId,
-                    notify: {
-                      success: ['sync-calendar-success.title', { ns: meta.profile.key }],
-                      error: ['sync-calendar-error.title', { ns: meta.profile.key }],
-                    },
-                  },
-                ),
+              data: () => syncTarget(calendar),
               properties: {
                 label: ['sync-calendar.label', { ns: meta.profile.key }],
                 icon: 'ph--arrows-clockwise--regular',
-                disposition: 'list-item',
+                // Appears both as a primary object-toolbar button and a nav-tree context-menu row.
+                // No progress monitor yet for calendar sync, so (unlike mailbox) there's no spinner.
+                disposition: ['toolbar', 'list-item'],
+                presentation: { toolbar: { variant: 'primary', iconOnly: false } },
               },
             },
           ]);

@@ -9,7 +9,7 @@ This package provides a runtime adapter for executing DXOS functions on Cloudfla
 ### Key Responsibilities
 
 - **Function Wrapping**: The `wrapHandlerForCloudflare` function wraps user code into a Cloudflare-compatible fetch handler, managing request parsing, error handling, and response formatting.
-- **Service Bridging**: Provides protobuf-based service implementations (`DataService`, `QueryService`, `QueueService`) that bridge the edge environment services to the function context.
+- **Service Bridging**: Provides protobuf-based service implementations (`DataService`, `QueryService`, `FeedService`) that bridge the edge environment services to the function context.
 - **Context Creation**: Constructs a `FunctionProtocol.Context` with access to space metadata, document operations, and queue management.
 
 ### Architecture

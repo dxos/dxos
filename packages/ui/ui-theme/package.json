@@ -41,6 +41,7 @@
     "@dxos/util": "workspace:*",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/jetbrains-mono": "catalog:",
+    "@fontsource-variable/nunito": "catalog:",
     "@fontsource/poiret-one": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@tailwindcss/forms": "catalog:",

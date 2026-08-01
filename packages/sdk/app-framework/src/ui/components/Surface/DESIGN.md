@@ -35,7 +35,10 @@ This decouples the shell/layout from the plugins that fill it.
   `Position.compare`. Per-render work is therefore just the data-dependent guard
   filter over one role's bucket — no full scan or re-sort on every render. The
   data guard is intentionally _not_ memoized so a Surface re-dispatches when
-  reactive `data` changes.
+  reactive `data` changes. `indexByRole` itself is a pure group-and-sort; the
+  `SurfaceManager` instance filters out definitions with an invalid local id
+  before indexing (warning once per id via instance state, not a module global —
+  so distinct manager instances, e.g. across tests, don't share warning state).
 - **Per-role subscription.** Each Surface subscribes to a derived atom for _its
   role only_ (`getCandidatesAtom`). The atom wraps the role's bucket with
   `Data.array`, so the atom registry compares results structurally (`Equal.equals`)
@@ -52,8 +55,11 @@ This decouples the shell/layout from the plugins that fill it.
 
 - **`limit`.** Caps how many resolved candidates render (e.g. `limit={1}` for
   single-component regions).
-- **`isSurfaceAvailable`.** Same matching logic against a `CapabilityManager`,
-  used to probe whether a region would render without mounting it.
+- **`useIsSurfaceAvailable`.** Same matching logic, exposed as `Surface.useIsAvailable`.
+  The hook captures the surface manager via context and returns a plain, stable
+  function — safe to store and call later (e.g. inside another callback such as
+  a render-prop or event handler) since the returned function calls no hooks
+  itself — used to probe whether a region would render without mounting it.
 
 ## Boundaries
 

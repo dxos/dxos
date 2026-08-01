@@ -2,69 +2,115 @@
 // Copyright 2026 DXOS.org
 //
 
-import fs from 'node:fs';
+import { type EsParserConfig, type TsParserConfig, parseSync } from '@swc/core';
+import path from 'node:path';
+
+const TS_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts']);
+
+const parseOptionsFor = (filePath: string): TsParserConfig | EsParserConfig => {
+  const extension = path.extname(filePath).toLowerCase();
+  if (TS_EXTENSIONS.has(extension)) {
+    return { syntax: 'typescript', tsx: extension === '.tsx', decorators: true };
+  }
+  return { syntax: 'ecmascript', jsx: extension === '.jsx' };
+};
+
+// The SWC AST is walked structurally; narrow untyped nodes at this boundary.
+const asRecord = (value: unknown): Record<string, unknown> | null =>
+  typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
+
+const stringLiteralValue = (value: unknown): string | null => {
+  const record = asRecord(value);
+  if (record && record.type === 'StringLiteral' && typeof record.value === 'string') {
+    return record.value;
+  }
+  return null;
+};
+
+const isRequireCallee = (callee: Record<string, unknown> | null): boolean =>
+  callee?.type === 'Identifier' && callee.value === 'require';
+
+const isTypeOnlySpecifier = (specifier: unknown): boolean => asRecord(specifier)?.isTypeOnly === true;
 
 /**
- * Extract static module specifiers from TypeScript/JavaScript source.
- * Madge can omit unresolved package imports; parsing source keeps those edges.
+ * A declaration carries no runtime edge when it is an `import type` / `export type`, or when
+ * every named specifier is individually `type`-marked (`import { type A } from 'x'`) and thus
+ * fully elided at compile time. Side-effect imports (`import 'x'`, empty specifiers) are kept.
  */
-export const parseModuleSpecifiers = (source: string): string[] => {
-  // Strip comments so commented-out imports are not treated as live edges.
-  const noComments = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
-
-  // Remove top-level `import type ...` statements — they have no runtime dependency edge.
-  const noTypeImports = noComments.replace(/\bimport\s+type\s+[^;]+;/g, '');
-
-  const specifiers = new Set<string>();
-  const patterns = [
-    /\bfrom\s+['"]([^'"]+)['"]/g,
-    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    /\bimport\s+['"]([^'"]+)['"]/g,
-  ];
-  for (const pattern of patterns) {
-    for (const match of noTypeImports.matchAll(pattern)) {
-      specifiers.add(match[1]);
-    }
+const isEntirelyTypeOnly = (node: Record<string, unknown>): boolean => {
+  if (node.typeOnly === true) {
+    return true;
   }
-  return [...specifiers];
+  const specifiers = node.specifiers;
+  return Array.isArray(specifiers) && specifiers.length > 0 && specifiers.every(isTypeOnlySpecifier);
+};
+
+const collectSpecifiers = (value: unknown, out: Set<string>): void => {
+  if (Array.isArray(value)) {
+    for (const child of value) {
+      collectSpecifiers(child, out);
+    }
+    return;
+  }
+
+  const node = asRecord(value);
+  if (!node) {
+    return;
+  }
+
+  switch (node.type) {
+    // Static import / re-export edges. Type-only declarations carry no runtime edge, and none
+    // of these nodes' children hold executable code, so stop descending here.
+    case 'ImportDeclaration':
+    case 'ExportAllDeclaration':
+    case 'ExportNamedDeclaration': {
+      if (isEntirelyTypeOnly(node)) {
+        return;
+      }
+      const source = stringLiteralValue(node.source);
+      if (source) {
+        out.add(source);
+      }
+      return;
+    }
+    // Dynamic `import(...)` and CommonJS `require(...)`. Keep descending into arguments
+    // so nested calls are not missed.
+    case 'CallExpression': {
+      const callee = asRecord(node.callee);
+      if (callee?.type === 'Import' || isRequireCallee(callee)) {
+        const args = node.arguments;
+        const firstArg = Array.isArray(args) ? asRecord(args[0]) : null;
+        const source = stringLiteralValue(firstArg?.expression);
+        if (source) {
+          out.add(source);
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  for (const key in node) {
+    if (key === 'type' || key === 'span') {
+      continue;
+    }
+    collectSpecifiers(node[key], out);
+  }
 };
 
 /**
- * Merge parsed import specifiers into the adjacency graph for files madge analyzed.
+ * Extract runtime module specifiers from a TypeScript/JavaScript source file using
+ * the SWC parser. Type-only imports/exports are skipped since they carry no runtime edge.
  */
-export const augmentGraphWithParsedImports = (
-  graph: Map<string, string[]>,
-  resolveGraphKey: (dependency: string, knownKeys: Set<string>) => string | null,
-): void => {
-  for (const [fileKey, deps] of [...graph.entries()]) {
-    if (fileKey.startsWith('[external] ')) {
-      continue;
-    }
-    if (!fileKey.endsWith('.ts') && !fileKey.endsWith('.tsx')) {
-      continue;
-    }
-    let source: string;
-    try {
-      source = fs.readFileSync(fileKey, 'utf8');
-    } catch {
-      continue;
-    }
-    const knownKeys = new Set(graph.keys());
-    const merged = new Set(deps);
-    for (const specifier of parseModuleSpecifiers(source)) {
-      // Madge resolves relative imports; only supplement bare package specifiers it omits.
-      if (specifier.startsWith('.') || specifier.startsWith('/')) {
-        continue;
-      }
-      const resolved = resolveGraphKey(specifier, knownKeys);
-      if (resolved) {
-        merged.add(resolved);
-        if (!graph.has(resolved)) {
-          graph.set(resolved, []);
-          knownKeys.add(resolved);
-        }
-      }
-    }
-    graph.set(fileKey, [...merged]);
+export const parseImportSpecifiers = (source: string, filePath: string): string[] => {
+  let ast: ReturnType<typeof parseSync>;
+  try {
+    ast = parseSync(source, parseOptionsFor(filePath));
+  } catch {
+    return [];
   }
+  const specifiers = new Set<string>();
+  collectSpecifiers(ast.body, specifiers);
+  return [...specifiers];
 };

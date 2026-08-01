@@ -40,7 +40,7 @@ describe('OllamaResolver', () => {
 
         log.info('response', { text: response.text, usage: response.usage });
       }, Effect.provide(ModelLayer)),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
 
     it.effect(
@@ -54,7 +54,7 @@ describe('OllamaResolver', () => {
         const fullText = textDeltas.map((p) => (p as { delta: string }).delta).join('');
         log.info('streamText', { partCount: parts.length, deltaCount: textDeltas.length, fullText });
       }, Effect.provide(ModelLayer)),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
 
     it.effect(
@@ -77,7 +77,7 @@ describe('OllamaResolver', () => {
         Effect.provide(CalculatorLayer),
         Effect.provide(ModelLayer),
       ),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
 
     it.effect(
@@ -100,7 +100,7 @@ describe('OllamaResolver', () => {
         Effect.provide(CalculatorLayer),
         Effect.provide(ModelLayer),
       ),
-      { timeout: 120_000, tags: ['llm'] },
+      { timeout: 120_000, tags: ['manual'] },
     );
   });
 });

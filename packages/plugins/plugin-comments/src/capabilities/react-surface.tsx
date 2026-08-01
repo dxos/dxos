@@ -11,9 +11,6 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { CommentsArticle } from '#containers';
 
-// NOTE: Settings are rendered by the generic plugin-settings surface from the
-// `AppCapabilities.Settings` contribution (see capabilities/settings.ts);
-// no plugin-specific settings surface is required.
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
@@ -23,7 +20,6 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'comments'),
           AppSurface.companion(AppSurface.Article),
         ),
-        // TODO(wittjosiah): This isn't scrolling properly in a plank.
         component: ({ data }) => <CommentsArticle attendableId={data.attendableId} subject={data.companionTo} />,
       }),
     ]),

@@ -5,10 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { Operation, RunAgainError } from '@dxos/compute';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 
-import { Connector, ConnectorOperation, SyncBinding } from '../types';
+import { connectionDeckSubject } from '../constants';
+import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
+import { Connector, ConnectorOperation } from '../types';
+import { isCursorForConnection } from '../util';
 
 const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> = ConnectorOperation.SyncConnection.pipe(
   Operation.withHandler(
@@ -26,22 +31,46 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
         return { synced: 0 };
       }
 
-      const bindings = yield* Database.query(
-        Query.select(Filter.id(connection.id)).sourceOf(SyncBinding.SyncBinding),
-      ).run.pipe(
+      const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run.pipe(
         Effect.provide(Database.layer(db)),
-        Effect.map((results) => [...results]),
-        Effect.orElseSucceed(() => [] as SyncBinding.SyncBinding[]),
+        Effect.map((results) => results.filter((cursor) => isCursorForConnection(cursor, connection))),
+        Effect.orElseSucceed(() => [] as Cursor.Cursor[]),
       );
 
       const sync = connector.sync;
       const spaceId = db.spaceId;
+      // Serialized invocation the reauth toast runs on click — data (operation key + input), not a live
+      // callback, since it rides on the error across the process boundary.
+      const openConnection = Operation.prepare(LayoutOperation.Open, {
+        subject: [connectionDeckSubject(Paths.getSpacePath(spaceId), connection.id)],
+        navigation: 'immediate',
+      });
       yield* Effect.all(
-        bindings.map((binding) => Operation.invoke(sync, { binding: Ref.make(binding) }, { spaceId })),
+        cursors.map((cursor) =>
+          Operation.invoke(sync, { binding: Ref.make(cursor) }, { spaceId }).pipe(
+            // `Process.fromOperation` promotes any handler failure to a defect (`Effect.orDie`), so
+            // retagging 401s must intercept the defect channel — `Effect.mapError` never sees it.
+            // TODO(wittjosiah): Invokes the sync once; does not drive `Operation.runAgain()` continuation,
+            //   so a capped run's remaining batches are not synced here (no durable execution).
+            Effect.catchAllDefect((defect) =>
+              RunAgainError.is(defect)
+                ? Effect.void
+                : isUnauthorizedError(defect)
+                  ? Effect.fail(
+                      new ConnectionAuthExpiredError({
+                        connectionId: connection.id,
+                        action: openConnection,
+                        cause: defect,
+                      }),
+                    )
+                  : Effect.die(defect),
+            ),
+          ),
+        ),
         { concurrency: 'unbounded' },
       );
 
-      return { synced: bindings.length };
+      return { synced: cursors.length };
     }),
   ),
 );

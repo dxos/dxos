@@ -13,6 +13,7 @@ tasks:
       - '--entryPoint=src/Entity.ts'
       - '--entryPoint=src/Obj.ts'
       - '--entryPoint=src/Annotation.ts'
+      - '--entryPoint=src/Blob.ts'
       - '--entryPoint=src/Database.ts'
       - '--entryPoint=src/Err.ts'
       - '--entryPoint=src/Feed.ts'

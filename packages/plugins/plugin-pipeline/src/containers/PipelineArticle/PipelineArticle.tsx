@@ -82,3 +82,5 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
     />
   );
 };
+
+PipelineArticle.displayName = 'PipelineArticle';

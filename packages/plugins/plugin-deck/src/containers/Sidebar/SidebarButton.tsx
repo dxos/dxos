@@ -98,3 +98,9 @@ export const ToggleComplementarySidebarButton = ({
     />
   );
 };
+
+ToggleSidebarButton.displayName = 'ToggleSidebarButton';
+
+CloseSidebarButton.displayName = 'CloseSidebarButton';
+
+ToggleComplementarySidebarButton.displayName = 'ToggleComplementarySidebarButton';

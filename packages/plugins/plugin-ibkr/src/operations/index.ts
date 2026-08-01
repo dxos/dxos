@@ -12,4 +12,5 @@ export const IbkrOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./get-trades'),
   () => import('./materialize-instrument'),
   () => import('./get-instrument-fundamentals'),
+  () => import('./sync-lots'),
 );

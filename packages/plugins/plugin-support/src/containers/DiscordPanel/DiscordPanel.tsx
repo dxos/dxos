@@ -16,3 +16,5 @@ export const DiscordPanel = () => (
     </div>
   </DiscordComponent.Root>
 );
+
+DiscordPanel.displayName = 'DiscordPanel';

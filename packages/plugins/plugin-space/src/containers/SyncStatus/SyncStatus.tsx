@@ -153,3 +153,5 @@ const UnitValue = ({ value: input, format, suffix }: { value: number; format: Un
     </span>
   );
 };
+
+SyncStatus.displayName = 'SyncStatus';

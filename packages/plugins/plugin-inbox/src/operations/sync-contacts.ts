@@ -7,16 +7,16 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { type Database, Obj, type Ref } from '@dxos/echo';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
 
 import { meta } from '#meta';
 
 import { InboxOperation } from '../types';
 
-const dispatch = (bindingRef: Ref.Ref<SyncBinding.SyncBinding>, db: Database.Database) =>
+const dispatch = (bindingRef: Ref.Ref<Cursor.Cursor>, db: Database.Database) =>
   Effect.gen(function* () {
-    const { ContactsFunctions } = yield* Effect.promise(() => import('./google/contacts'));
+    const { ContactsFunctions } = yield* Effect.promise(() => import('./contacts/google'));
     yield* Operation.invoke(
       ContactsFunctions.Sync,
       {

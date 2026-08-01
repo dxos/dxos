@@ -27,6 +27,11 @@
       "source": "./src/preview.tsx",
       "types": "./dist/types/src/preview.d.ts",
       "default": "./dist/lib/browser/preview.mjs"
+    },
+    "./download": {
+      "source": "./src/download.ts",
+      "types": "./dist/types/src/download.d.ts",
+      "default": "./dist/lib/browser/download.mjs"
     }
   },
   "files": [

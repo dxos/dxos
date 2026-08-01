@@ -14,9 +14,9 @@ import { GitHubOperation } from '../types';
 const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
 
 /**
- * Find-or-create the empty local root Project for a GitHub repo so a
- * {@link SyncBinding} relation can be created eagerly. Idempotent: keyed by the
- * repo's GitHub foreign id (`remoteTarget.id`), it returns the existing Project
+ * Find-or-create the empty local root Project for a GitHub repo so a `Cursor`
+ * can reference it as its `spec.target`. Idempotent: keyed by the repo's
+ * GitHub foreign id (`remoteTarget.id`), it returns the existing Project
  * when one already carries that key. The repo's data is filled in lazily by the
  * sync operation; here we only stamp the foreign key + a display name.
  */

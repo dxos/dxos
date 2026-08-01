@@ -123,3 +123,5 @@ const toJsonData = (run: RoutineRun) => ({
 });
 
 const getRunId = (run: RoutineRun) => run.pid;
+
+RoutineTraceCompanion.displayName = 'RoutineTraceCompanion';

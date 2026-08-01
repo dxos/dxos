@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { FunctionExecutor, ServiceContainer } from '@dxos/compute-runtime';
 import { Obj } from '@dxos/echo';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Actor, Message } from '@dxos/types';
 

@@ -79,3 +79,5 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
     </>
   );
 };
+
+RangeList.displayName = 'RangeList';

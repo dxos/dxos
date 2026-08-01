@@ -4,11 +4,11 @@
 
 import * as Command from '@effect/cli/Command';
 
-import { queue } from './queue';
+import { feed } from './feed';
 import { subscription } from './subscription';
 import { timer } from './timer';
 
 export const create = Command.make('create').pipe(
   Command.withDescription('Create a trigger.'),
-  Command.withSubcommands([subscription, timer, queue]),
+  Command.withSubcommands([subscription, timer, feed]),
 );

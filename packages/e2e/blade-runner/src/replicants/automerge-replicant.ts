@@ -37,7 +37,6 @@ type DocStruct = {
   text: string;
 };
 
-@trace.resource()
 export class AutomergeReplicant {
   private _repoCtx = new Context();
   private _repo: Repo | undefined = undefined;

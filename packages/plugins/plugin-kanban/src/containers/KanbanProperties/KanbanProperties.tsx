@@ -99,3 +99,5 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
     </Form.Section>
   );
 };
+
+KanbanProperties.displayName = 'KanbanProperties';

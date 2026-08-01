@@ -31,13 +31,19 @@ export const BodyValue = Schema.Struct({
 });
 export type BodyValue = Schema.Schema.Type<typeof BodyValue>;
 
-/** A body part reference (the `partId` keys into `Email.bodyValues`). */
+/** A body part reference (the `partId` keys into `Email.bodyValues`; `blobId` fetches raw bytes). */
 export const EmailBodyPart = Schema.Struct({
   partId: Schema.optional(Schema.NullOr(Schema.String)),
   blobId: Schema.optional(Schema.NullOr(Schema.String)),
   size: Schema.optional(Schema.Number),
   type: Schema.optional(Schema.String),
   charset: Schema.optional(Schema.NullOr(Schema.String)),
+  /** Attachment filename, present on parts listed in `Email.attachments`. */
+  name: Schema.optional(Schema.NullOr(Schema.String)),
+  /** MIME `Content-Disposition` (`attachment` or `inline`), present on parts listed in `Email.attachments`. */
+  disposition: Schema.optional(Schema.NullOr(Schema.String)),
+  /** The part's `Content-ID` header (RFC 8621 §4.1.4), if any — matches a `cid:` reference in an HTML body. */
+  cid: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export type EmailBodyPart = Schema.Schema.Type<typeof EmailBodyPart>;
 
@@ -62,6 +68,8 @@ export const Email = Schema.Struct({
   bodyValues: Schema.optional(Schema.Record({ key: Schema.String, value: BodyValue })),
   textBody: Schema.optional(Schema.Array(EmailBodyPart)),
   htmlBody: Schema.optional(Schema.Array(EmailBodyPart)),
+  /** Non-body parts (RFC 8621 §4.1.4) — the attachments proper, distinct from `textBody`/`htmlBody`. */
+  attachments: Schema.optional(Schema.Array(EmailBodyPart)),
 });
 export type Email = Schema.Schema.Type<typeof Email>;
 

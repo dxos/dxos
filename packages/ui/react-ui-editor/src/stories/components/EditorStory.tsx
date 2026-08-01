@@ -9,7 +9,6 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { log } from '@dxos/log';
 import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -135,7 +134,6 @@ const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
 
     // External controller.
     useImperativeHandle(forwardedRef, () => {
-      log.info('view updated', { id });
       return createEditorController(view);
     }, [id, view]);
 

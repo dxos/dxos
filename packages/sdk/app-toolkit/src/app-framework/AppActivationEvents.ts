@@ -54,6 +54,13 @@ export const SetupArtifactDefinition = ActivationEvent$.make('org.dxos.app-frame
 export const AppGraphReady = ActivationEvent$.make('org.dxos.app-framework.event.graphReady');
 
 /**
+ * Fired once the {@link AppCapabilities.ProgressRegistry} has been contributed,
+ * so consumers can gate activation on the registry being available without
+ * depending on the plugin that provides it.
+ */
+export const ProgressRegistryReady = ActivationEvent$.make('org.dxos.app-framework.event.progressRegistryReady');
+
+/**
  * Fired when plugin state is ready.
  */
 export const createStateEvent = (specifier: string) =>

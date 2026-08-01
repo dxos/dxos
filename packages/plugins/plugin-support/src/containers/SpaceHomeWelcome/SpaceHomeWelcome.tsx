@@ -120,3 +120,5 @@ const WelcomePanel = memo(() => {
 });
 
 WelcomePanel.displayName = 'WelcomePanel';
+
+SpaceHomeWelcome.displayName = 'SpaceHomeWelcome';

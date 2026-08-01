@@ -18,7 +18,7 @@ const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
  * Card tile without Surface; for stories and tests when plugin manager is not available.
  */
 export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
-  ({ data, location, debug }, forwardedRef) => {
+  ({ data, location, debug, draggable }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const { model } = useBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
     const { onCardRemove } = useKanbanBoard(KANBAN_CARD_TILE_SIMPLE_NAME);
@@ -46,6 +46,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
           data={data}
           location={location}
           debug={debug}
+          draggable={draggable}
           dragHandle={dragHandle}
         >
           <Focus.Item asChild>

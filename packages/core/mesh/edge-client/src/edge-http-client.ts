@@ -5,6 +5,7 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
@@ -82,6 +83,11 @@ export type GetCronTriggersResponse = {
 };
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
+
+export class EdgeHttpClientService extends EffectContext.Tag('@dxos/edge-client/EdgeHttpClient')<
+  EdgeHttpClientService,
+  EdgeHttpClient
+>() {}
 
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).
@@ -208,10 +214,10 @@ export class EdgeHttpClient extends BaseHttpClient {
     ctx: Context,
     subspaceTag: string,
     spaceId: SpaceId,
-    query: FeedProtocol.QueueQuery,
+    query: FeedProtocol.FeedQuery,
     args?: EdgeHttpCallArgs,
   ): Promise<EdgeQueryQueueResponse> {
-    const queueId = query.queueIds?.[0];
+    const queueId = query.feedIds?.[0];
     invariant(queueId, 'queueId required');
     return this._call(
       ctx,
@@ -256,6 +262,72 @@ export class EdgeHttpClient extends BaseHttpClient {
       }),
       { ...args, method: 'DELETE' },
     );
+  }
+
+  //
+  // Blobs
+  //
+
+  /**
+   * Builds the URL for the blob stored under `key`. `key` is URL-encoded for defense in depth —
+   * callers pass a lowercase hex SHA-256 digest (extracted from an `ni:` URI by the edge backend).
+   */
+  public getBlobUrl(key: string): URL {
+    return new URL(`/api/file/${encodeURIComponent(key)}`, this.baseUrl);
+  }
+
+  /**
+   * Uploads bytes to the edge blob service, keyed by content hash. Pre-fetches `/auth` (`auth:
+   * true`) so large bodies aren't sent twice on an auth challenge.
+   */
+  public async putBlob(
+    ctx: Context,
+    key: string,
+    data: Uint8Array,
+    args?: EdgeHttpCallArgs & { contentType?: string },
+  ): Promise<void> {
+    const headers: Record<string, string> = {};
+    if (args?.contentType) {
+      headers['Content-Type'] = args.contentType;
+    }
+    await this._callRaw(ctx, this.getBlobUrl(key), {
+      retry: args?.retry,
+      auth: args?.auth ?? true,
+      method: 'POST',
+      // `Uint8Array` is generic over `ArrayBufferLike` (incl. `SharedArrayBuffer`) while DOM's
+      // `BodyInit` only covers `ArrayBuffer`-backed views — a gap between the DOM lib types and
+      // the TS standard lib, not fixable by typing `data` differently.
+      body: data as BodyInit,
+      headers,
+    });
+  }
+
+  /**
+   * Downloads bytes previously stored with {@link putBlob}. Returns `undefined` if `key` is not
+   * found.
+   */
+  public async getBlob(ctx: Context, key: string, args?: EdgeHttpCallArgs): Promise<Uint8Array | undefined> {
+    const response = await this._callRaw(ctx, this.getBlobUrl(key), { ...args, method: 'GET' });
+    if (response.status === 404) {
+      return undefined;
+    }
+    return new Uint8Array(await response.arrayBuffer());
+  }
+
+  /**
+   * Checks whether bytes are stored under `key`, without downloading them.
+   */
+  public async hasBlob(ctx: Context, key: string, args?: EdgeHttpCallArgs): Promise<boolean> {
+    const response = await this._callRaw(ctx, this.getBlobUrl(key), { ...args, method: 'HEAD' });
+    return response.status !== 404;
+  }
+
+  /**
+   * Deletes bytes stored under `key`. Not called by any core `Blob.remove` path in v1 (deletion is
+   * deferred), provided for completeness.
+   */
+  public async deleteBlob(ctx: Context, key: string, args?: EdgeHttpCallArgs): Promise<void> {
+    await this._callRaw(ctx, this.getBlobUrl(key), { ...args, method: 'DELETE' });
   }
 
   //

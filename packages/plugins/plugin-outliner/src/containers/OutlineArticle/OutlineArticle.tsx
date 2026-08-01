@@ -27,3 +27,5 @@ export const OutlineArticle = ({ role, attendableId: _attendableId, subject: out
     </Outline.Root>
   );
 };
+
+OutlineArticle.displayName = 'OutlineArticle';

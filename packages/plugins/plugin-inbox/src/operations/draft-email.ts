@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
+import { DraftMessage } from '@dxos/types';
 
-import { DraftMessage, InboxOperation } from '../types';
+import { InboxOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOperation.DraftEmail.pipe(
   Operation.withHandler(

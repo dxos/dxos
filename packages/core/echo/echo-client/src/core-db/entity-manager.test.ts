@@ -332,6 +332,7 @@ describe('DatabaseImpl', () => {
         await openAndClose(testBuilder);
         const { db } = await testBuilder.createDatabase();
         const rootDoc = db.getSpaceRootDocHandle().doc();
+        expect(rootDoc?.access?.spaceId).to.eq(db.spaceId);
         expect(rootDoc?.access?.spaceKey).to.be.a('string');
       });
 

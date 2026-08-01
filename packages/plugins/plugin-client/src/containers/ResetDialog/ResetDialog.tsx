@@ -60,3 +60,5 @@ export const ResetDialog = ({ mode, onReset, onBeforeReset, capabilityManager }:
     </Dialog.Content>
   );
 };
+
+ResetDialog.displayName = 'ResetDialog';

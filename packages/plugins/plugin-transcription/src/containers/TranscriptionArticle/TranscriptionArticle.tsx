@@ -59,3 +59,5 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
     </Panel.Root>
   );
 };
+
+TranscriptionArticle.displayName = 'TranscriptionArticle';

@@ -181,3 +181,5 @@ export const AccountContainer = () => {
     </Form.Root>
   );
 };
+
+AccountContainer.displayName = 'AccountContainer';

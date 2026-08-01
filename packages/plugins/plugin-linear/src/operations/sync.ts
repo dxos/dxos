@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 
 import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 
-const { mergeField, readSnapshot, snapshotField, writeSnapshot } = ConnectorSync;
+const { mergeField, snapshotField } = ConnectorSync;
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
+import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { SyncBinding } from '@dxos/plugin-connector';
-import { Cursor, Project, Task } from '@dxos/types';
+import { Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -28,9 +28,9 @@ import { LinearOperation } from '../types';
 // On each sync pass we first pull every project + issue Linear can see into
 // ECHO, then walk the local objects we've synced and push any field that
 // diverged from the snapshot taken at the end of the previous pull. The
-// snapshot lives on `SyncBinding.snapshots[<linear id>]` and is refreshed at
-// every pull and successful push so subsequent passes know exactly which
-// fields the user touched locally.
+// snapshot lives on `binding.spec.snapshots[<linear id>]` (the external-sync
+// cursor's spec) and is refreshed at every pull and successful push so
+// subsequent passes know exactly which fields the user touched locally.
 //
 // Mapped fields per object:
 //   Project: name, description
@@ -47,9 +47,9 @@ import { LinearOperation } from '../types';
 // user edits a synced item locally.
 //
 // Sync target shape: the user picks Linear TEAMS. Each team is bound via one
-// `SyncBinding` whose target is the team's local root Project; the team's
-// projects and issues are pulled under it. The user does not pick projects
-// directly.
+// external-sync `Cursor` whose `spec.target` is the team's local root Project;
+// the team's projects and issues are pulled under it. The user does not pick
+// projects directly.
 //
 
 //
@@ -63,13 +63,13 @@ import { LinearOperation } from '../types';
 //
 
 //
-// Snapshot field shapes (stored on `SyncBinding.snapshots`)
+// Snapshot field shapes (stored on `binding.spec.snapshots`)
 //
 
 /**
  * Snapshot shapes. Fields are typed `required` (not `?`) because every
- * snapshot is written in one shot via {@link writeSnapshot} after a pull;
- * the absence-of-snapshot case is modeled by `readSnapshot` returning
+ * snapshot is written in one shot via {@link Cursor.writeSnapshot} after a pull;
+ * the absence-of-snapshot case is modeled by `Cursor.readSnapshot` returning
  * `undefined`, not by partially-populated objects. `priority` and `estimate`
  * carry `undefined` as a valid recorded value ("no priority", "no estimate").
  */
@@ -85,6 +85,10 @@ type TaskSnapshot = {
   priority: 'low' | 'medium' | 'high' | 'urgent' | undefined;
   estimate: number | undefined;
 };
+
+// Per-field three-way merge primitives are shared with other integration plugins (Trello, GitHub)
+// and live in `@dxos/app-toolkit`. The snapshot storage accessors (`Cursor.readSnapshot`/
+// `Cursor.writeSnapshot`) live in `@dxos/link` instead, alongside `Cursor`'s other field helpers.
 
 //
 // Foreign-key + lookup helpers
@@ -116,13 +120,13 @@ const sinceFromOptions = (options: LinearOperation.SyncOptions | undefined): str
 
 /**
  * Pull a Linear project into ECHO. Mapped fields (`name`, `description`) go
- * through three-way merge against the snapshot at `binding.snapshots[id]`,
+ * through three-way merge against the snapshot at `binding.spec.snapshots[id]`,
  * then the snapshot is refreshed to remote-current so the next push knows
  * exactly which fields the user has edited locally. Non-mapped fields
  * (`Project.image`, etc.) are preserved.
  */
 export const upsertProject = Effect.fn('upsertProject')(function* (
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   remote: LinearApi.Project,
 ) {
   const remoteFields: Required<ProjectSnapshot> = {
@@ -132,7 +136,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
   const existing = yield* findByForeignId<Project.Project>(Project.Project, remote.id);
 
   if (existing) {
-    const snapshot = readSnapshot<ProjectSnapshot>(binding, remote.id);
+    const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, remote.id);
     const nameResult = mergeField<string | undefined>(
       existing.name,
       remoteFields.name,
@@ -155,7 +159,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
         }
       });
     }
-    writeSnapshot(binding, remote.id, remoteFields);
+    Cursor.writeSnapshot(binding, remote.id, remoteFields);
     return { project: existing, created: false };
   }
 
@@ -165,7 +169,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
     description: remote.description ?? undefined,
   });
   const persisted = yield* Database.add(created);
-  writeSnapshot(binding, remote.id, remoteFields);
+  Cursor.writeSnapshot(binding, remote.id, remoteFields);
   return { project: persisted, created: true };
 });
 
@@ -177,7 +181,7 @@ export const upsertProject = Effect.fn('upsertProject')(function* (
  * synced.
  */
 export const upsertTask = Effect.fn('upsertTask')(function* (
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   issue: LinearApi.Issue,
   project: Project.Project | undefined,
 ) {
@@ -198,7 +202,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
   const existing = yield* findByForeignId<Task.Task>(Task.Task, issue.id);
 
   if (existing) {
-    const snapshot = readSnapshot<TaskSnapshot>(binding, issue.id);
+    const snapshot = Cursor.readSnapshot<TaskSnapshot>(binding, issue.id);
     // Task.title is required (non-optional), so widen the merge to plain string.
     const titleResult = mergeField<string>(existing.title, remoteFields.title, snapshotField(snapshot, 'title'));
     const descriptionResult = mergeField<string | undefined>(
@@ -256,7 +260,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
         }
       }
     });
-    writeSnapshot(binding, issue.id, remoteFields);
+    Cursor.writeSnapshot(binding, issue.id, remoteFields);
     return { task: existing, created: false };
   }
 
@@ -270,7 +274,7 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     project: project ? Ref.make(project) : undefined,
   });
   const persisted = yield* Database.add(created);
-  writeSnapshot(binding, issue.id, remoteFields);
+  Cursor.writeSnapshot(binding, issue.id, remoteFields);
   return { task: persisted, created: true };
 });
 
@@ -287,7 +291,7 @@ export type LinearPushResult = {
 /**
  * Push reconciler. For every Project/Task carrying a `LINEAR_SOURCE` foreign
  * key, diff its mapped fields against the snapshot in
- * `binding.snapshots[<id>]` and PATCH only the diverged fields back to
+ * `binding.spec.snapshots[<id>]` and PATCH only the diverged fields back to
  * Linear via `LinearApi.updateProject` / `updateIssue`.
  *
  * Tombstones (`Obj.isDeleted`) are skipped — Linear's `archived` lifecycle is
@@ -308,7 +312,7 @@ export type LinearPushResult = {
  * this module decoupled from the GraphQL error hierarchy of `LinearApi`.
  */
 export const pushTeamUpdates: <E, R>(
-  binding: SyncBinding.SyncBinding,
+  binding: Cursor.ExternalCursor,
   remoteIssuesById: ReadonlyMap<string, LinearApi.Issue>,
   remoteProjectsById: ReadonlyMap<string, LinearApi.Project>,
   push: {
@@ -333,7 +337,7 @@ export const pushTeamUpdates: <E, R>(
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
-      const snapshot = readSnapshot<ProjectSnapshot>(binding, id);
+      const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, id);
       if (!snapshot) {
         continue;
       }
@@ -353,7 +357,7 @@ export const pushTeamUpdates: <E, R>(
         continue;
       }
       yield* push.updateProject(id, input);
-      writeSnapshot(binding, id, {
+      Cursor.writeSnapshot(binding, id, {
         ...snapshot,
         name: localName,
         description: localDescription,
@@ -366,7 +370,7 @@ export const pushTeamUpdates: <E, R>(
       if (!local || Obj.isDeleted(local)) {
         continue;
       }
-      const snapshot = readSnapshot<TaskSnapshot>(binding, id);
+      const snapshot = Cursor.readSnapshot<TaskSnapshot>(binding, id);
       if (!snapshot) {
         continue;
       }
@@ -421,7 +425,7 @@ export const pushTeamUpdates: <E, R>(
         continue;
       }
       yield* push.updateIssue(id, input);
-      writeSnapshot(binding, id, {
+      Cursor.writeSnapshot(binding, id, {
         ...snapshot,
         title: localTitle,
         description: localDescription,
@@ -448,42 +452,49 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
       //   the caller to preload `binding.target` so we can derive the db.
       const bindingTarget = bindingRef.target;
       if (!bindingTarget) {
-        return yield* Effect.dieMessage('Binding ref must be preloaded by caller (relation not resolved).');
+        return yield* Effect.dieMessage('Binding ref must be preloaded by caller (cursor not resolved).');
       }
       const db = Obj.getDatabase(bindingTarget);
       if (!db) {
         return yield* Effect.dieMessage('Binding ref must be preloaded by caller (no database derivable).');
       }
 
-      // The binding's source is the Connection that authenticates the sync.
-      const connection = Relation.getSource(bindingTarget);
-
       const bindingId = EID.getEntityId(EID.tryParse(bindingRef.uri)!) ?? 'unknown';
       const toastIdSuffix = bindingId;
 
+      // Resolve the binding up-front so credentials can be provided from its access
+      // token directly. `Database.load` is requirement-free (the ref carries its own
+      // db), so this runs outside the layered body.
+      const binding = yield* Database.load(bindingRef);
+      if (!Cursor.isExternal(binding)) {
+        // The integration mechanism only ever creates external-sync cursors for Linear.
+        return {
+          pulled: { teams: 0, projects: 0, tasks: 0 },
+          pushed: { projects: 0, tasks: 0 },
+        };
+      }
+
       const outcome = yield* Effect.either(
         Effect.gen(function* () {
-          const binding = yield* Database.load(bindingRef);
-          const cursor = yield* Database.load(binding.cursor);
-          const remoteId = binding.remoteId;
-          if (!remoteId) {
-            return yield* Effect.dieMessage('SyncBinding has no remoteId; cannot resolve a Linear team.');
+          const externalId = binding.spec.externalId;
+          if (!externalId) {
+            return yield* Effect.dieMessage('Cursor has no externalId; cannot resolve a Linear team.');
           }
-          // `SyncBinding.options` is an opaque provider-defined record in the
+          // `binding.spec.options` is an opaque provider-defined record in the
           // shared contract; this connector owns and validates its shape.
-          const options = binding.options as LinearOperation.SyncOptions | undefined;
+          const options = binding.spec.options as LinearOperation.SyncOptions | undefined;
 
           const syncResult = yield* Effect.either(
             Effect.gen(function* () {
-              // Resolve the remote `Team` for this binding's `remoteId`.
+              // Resolve the remote `Team` for this binding's `externalId`.
               const allTeams = yield* LinearApi.fetchTeams();
-              const remoteTeam = allTeams.find((team) => team.id === remoteId);
+              const remoteTeam = allTeams.find((team) => team.id === externalId);
               if (!remoteTeam) {
                 return yield* Effect.fail(new Error('Team not accessible to connection token'));
               }
 
               // Pull: projects → DXOS Projects, issues → DXOS Tasks. Each
-              // upsert refreshes `binding.snapshots[<id>]` to remote-current so
+              // upsert refreshes `binding.spec.snapshots[<id>]` to remote-current so
               // the push pass below sees only fields the user has edited
               // locally since the last pull.
               const projects = yield* LinearApi.fetchTeamProjects(remoteTeam.id);
@@ -556,11 +567,11 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
             }),
           );
 
-          // Record per-binding sync status on the cursor object.
+          // Record per-binding sync status on the binding (the binding IS the cursor).
           if (syncResult._tag === 'Right') {
-            Cursor.advance(cursor);
+            Cursor.advance(binding);
           } else {
-            Cursor.recordError(cursor, formatLinearSyncFailure(syncResult.left));
+            Cursor.recordError(binding, formatLinearSyncFailure(syncResult.left));
           }
 
           if (syncResult._tag === 'Left') {
@@ -581,7 +592,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
           };
         }).pipe(
           Effect.provide(Database.layer(db)),
-          Effect.provide(LinearApi.LinearCredentials.fromConnection(Ref.make(connection))),
+          Effect.provide(LinearApi.LinearCredentials.fromAccessToken(binding.spec.source)),
         ),
       );
 

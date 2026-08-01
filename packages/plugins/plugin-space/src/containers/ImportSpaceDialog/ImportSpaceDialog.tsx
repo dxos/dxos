@@ -60,3 +60,5 @@ export const ImportSpaceDialog = () => {
     </Dialog.Content>
   );
 };
+
+ImportSpaceDialog.displayName = 'ImportSpaceDialog';

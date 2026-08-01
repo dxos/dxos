@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
 import { runAndForwardErrors, unwrapExit } from './internal/errors';
@@ -11,6 +12,13 @@ import { runAndForwardErrors, unwrapExit } from './internal/errors';
  * Provides effect runtime with services to run effects.
  */
 export type RuntimeProvider<R> = Effect.Effect<Runtime.Runtime<R>>;
+
+/**
+ * Bridges a runtime provider into a {@link Layer} exposing its services, so a stack that resolves
+ * dependencies via `RuntimeProvider.currentRuntime` can be provided from an existing runtime.
+ */
+export const toLayer = <R>(provider: RuntimeProvider<R>): Layer.Layer<R> =>
+  Layer.effectContext(Effect.map(provider, (runtime) => runtime.context));
 
 /**
  * @returns Runtime provider from the current context.

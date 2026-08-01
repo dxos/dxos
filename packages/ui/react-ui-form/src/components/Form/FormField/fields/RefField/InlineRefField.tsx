@@ -15,7 +15,7 @@ import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { translationKey } from '#translations';
 
 import { omitId } from '../../../../../util';
-import { FormContent, FormFieldSetController, FormRoot } from '../../../FormControls';
+import { FormContent, FormFieldSetContainer, FormRoot } from '../../../FormControls';
 import { FormFieldLabel } from '../../FormRow';
 import { presentationFor } from '../../presentation';
 import { type RefFieldProps } from './RefField';
@@ -138,7 +138,7 @@ const InlineForm = ({ reference, db, readonly, useType = defaultUseType }: Inlin
   return (
     <FormRoot db={db} schema={formSchema} defaultValues={defaultValues as any} onValuesChanged={handleChange}>
       <FormContent>
-        <FormFieldSetController collapsible readonly={readonly} />
+        <FormFieldSetContainer collapsible readonly={readonly} />
       </FormContent>
     </FormRoot>
   );

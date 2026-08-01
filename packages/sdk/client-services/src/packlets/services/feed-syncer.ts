@@ -2,14 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlClient from '@effect/sql/SqlClient';
 import { Encoder, decode as cborXdecode } from 'cbor-x';
+import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AsyncTask, Mutex, scheduleTask } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
-import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
+import { EchoHostService } from '@dxos/echo-host';
+import { type EdgeConnection, EdgeConnectionService, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
 import { invariant } from '@dxos/invariant';
@@ -82,6 +85,16 @@ export type FeedSyncerOptions = {
    */
   syncRpcTimeoutMs?: number;
 };
+
+/**
+ * Effect service tag for {@link FeedSyncer}.
+ *
+ * undefined if not initialized.
+ */
+export class FeedSyncerService extends EffectContext.Tag('@dxos/client-services/FeedSyncer')<
+  FeedSyncerService,
+  FeedSyncer | undefined
+>() {}
 
 export class FeedSyncer extends Resource {
   readonly #syncNamespaces: string[];
@@ -534,3 +547,44 @@ export class FeedSyncer extends Resource {
     }).pipe((effect) => this.#runSerialized(() => RuntimeProvider.runPromise(this.#runtime)(effect))),
   );
 }
+
+export type FeedSyncerLayerOptions = Pick<
+  FeedSyncerOptions,
+  | 'peerId'
+  | 'syncNamespaces'
+  | 'messageBlocksLimit'
+  | 'syncConcurrency'
+  | 'pollingInterval'
+  | 'pollRequestThrottleMs'
+  | 'backgroundSync'
+  | 'syncRpcTimeoutMs'
+>;
+
+/**
+ * Effect Layer constructing a {@link FeedSyncer} from ambient SQL, echo host, and edge services.
+ *
+ * The feed store is sourced from the {@link EchoHostService} (breaking the EchoHost <-> FeedSyncer
+ * cycle). Only included when an edge connection is configured, so it resolves the edge tag directly.
+ */
+export const FeedSyncerLayer = (
+  options: FeedSyncerLayerOptions,
+): Layer.Layer<
+  FeedSyncerService,
+  never,
+  SqlClient.SqlClient | SqlTransaction.SqlTransaction | EchoHostService | EdgeConnectionService
+> =>
+  Layer.effect(
+    FeedSyncerService,
+    Effect.gen(function* () {
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const echoHost = yield* EchoHostService;
+      const edgeClient = yield* EdgeConnectionService;
+      return new FeedSyncer({
+        runtime,
+        feedStore: echoHost.feedStore,
+        edgeClient,
+        getSpaceIds: () => echoHost.spaceIds,
+        ...options,
+      });
+    }),
+  );

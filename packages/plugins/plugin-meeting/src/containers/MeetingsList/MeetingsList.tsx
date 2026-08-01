@@ -92,3 +92,5 @@ export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
     </div>
   );
 };
+
+MeetingsList.displayName = 'MeetingsList';

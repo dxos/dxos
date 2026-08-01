@@ -62,10 +62,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute/functions"
+      "path": "../../core/compute/compute-runtime"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/edge-compute"
     },
     {
       "path": "../../core/echo/echo"

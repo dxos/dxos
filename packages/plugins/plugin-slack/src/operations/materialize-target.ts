@@ -14,10 +14,10 @@ import { findOrCreateChannelForTarget } from './sync';
 
 /**
  * Find-or-create the empty local Channel root for a Slack conversation so a
- * {@link SyncBinding} relation can be created eagerly (relations require both
- * endpoints to exist). Idempotent: keyed by the conversation's `remoteId`
- * foreign key, it returns the existing Channel when one already carries that
- * key. Slack is a multi-target connector, so `remoteTarget` is always supplied.
+ * `Cursor` can be created eagerly against it. Idempotent: keyed by the
+ * conversation's `externalId` foreign key, it returns the existing Channel when
+ * one already carries that key. Slack is a multi-target connector, so
+ * `remoteTarget` is always supplied.
  */
 const handler: Operation.WithHandler<typeof SlackOperation.MaterializeSlackTarget> =
   SlackOperation.MaterializeSlackTarget.pipe(
@@ -34,7 +34,10 @@ const handler: Operation.WithHandler<typeof SlackOperation.MaterializeSlackTarge
         }
 
         return yield* Effect.gen(function* () {
-          const channel = yield* findOrCreateChannelForTarget({ remoteId: remoteTarget.id, name: remoteTarget.name });
+          const channel = yield* findOrCreateChannelForTarget({
+            externalId: remoteTarget.id,
+            name: remoteTarget.name,
+          });
           return { target: Ref.make(channel) };
         }).pipe(Effect.provide(Database.layer(db)));
       }),

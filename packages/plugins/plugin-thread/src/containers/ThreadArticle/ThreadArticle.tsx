@@ -78,3 +78,5 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
     );
   },
 );
+
+ThreadArticle.displayName = 'ThreadArticle';

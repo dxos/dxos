@@ -5,15 +5,19 @@
 import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 /**
- * How the selected block is sourced and rendered.
- *   - `enriched`: the enriched (second) text block, decorated via the markdown extensions.
- *   - `markdown`: the plain (first) text block, decorated via the markdown extensions.
- *   - `plain`:    the plain (first) text block, shown verbatim with no markdown parsing.
+ * Body view modes, in menu order. The {@link ViewMode} type and the toolbar group's default both
+ * derive from this so they stay aligned.
+ *   - `html`:     the raw email HTML, rendered in a sandboxed iframe (the default for messages).
+ *   - `markdown`: an authored markdown block if the message has one, else the body converted to
+ *                 markdown in-memory; decorated via the markdown extensions (the "enriched" view).
+ *   - `plain`:    the body as text, shown verbatim with no markdown parsing.
  */
-export type ViewMode = 'enriched' | 'markdown' | 'plain';
+export const VIEW_MODES = ['html', 'markdown', 'plain'] as const;
+
+export type ViewMode = (typeof VIEW_MODES)[number];
 
 export const VIEW_MODE_ICONS: Record<ViewMode, string> = {
-  enriched: 'ph--article--regular',
+  html: 'ph--browser--regular',
   markdown: 'ph--markdown-logo--regular',
   plain: 'ph--text-t--regular',
 };
@@ -23,24 +27,18 @@ export type ViewModeGroupOptions = {
   ns: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  /** Modes offered, in order. Defaults to all three. */
+  /** Modes offered, in order. Defaults to all view modes ({@link VIEW_MODES}). */
   modes?: ViewMode[];
   /** Disable the group (e.g. while editing, when the rendered view is irrelevant). */
   disabled?: boolean;
 };
 
 /**
- * Toolbar dropdown that switches how a body is rendered (enriched/markdown/plain).
+ * Toolbar dropdown that switches how a body is rendered (markdown/plain, or html for messages).
  * Shared by the Message and Event toolbars; compose via `MenuBuilder.subgraph(viewModeGroup(...))`.
  */
 export const viewModeGroup =
-  ({
-    ns,
-    viewMode,
-    setViewMode,
-    modes = ['enriched', 'markdown', 'plain'],
-    disabled,
-  }: ViewModeGroupOptions): ActionGroupBuilderFn =>
+  ({ ns, viewMode, setViewMode, modes = [...VIEW_MODES], disabled }: ViewModeGroupOptions): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'viewMode',

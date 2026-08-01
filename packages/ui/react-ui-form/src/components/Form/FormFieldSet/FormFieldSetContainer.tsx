@@ -10,8 +10,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { formTheme } from '../Form.theme';
-import { FormFieldHeader } from '../FormField/FormFieldHeader';
-import { type FormFieldPresentation } from '../FormField/presentation';
+import { FormFieldHeader, type FormFieldPresentation } from '../FormField';
 
 const styles = formTheme.styles();
 

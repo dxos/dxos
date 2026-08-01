@@ -332,8 +332,8 @@ feat F-9: CRM Navigation Section
     a card (masonry) layout and a schema-derived table.
   req F-9.1: A CRM group node (Paths.GroupTypes.crm) is contributed per space and hidden when it has no children.
   req F-9.2: Organizations and People nodes appear under the group only when the space contains objects of that type, mirroring the Database section's natural type folders.
-  req F-9.3: Selecting a node opens CollectionArticle for the type; a react-surface scoped to Organization/Person takes precedence over the generic type-collection article.
-  req F-9.4: CollectionArticle offers a Cards (masonry) and Table (DynamicTable) layout switch; selecting an item opens it as a sibling plank.
+  req F-9.3: Selecting a node opens plugin-space's generic TypeArticle for the type; CRM contributes no article surface of its own.
+  req F-9.4: TypeArticle offers a Cards (masonry) and Table (DynamicTable) layout switch; selecting an item opens it as a sibling plank.
 ```
 
 ## Acceptance

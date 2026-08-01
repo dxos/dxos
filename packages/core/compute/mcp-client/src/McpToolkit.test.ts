@@ -81,7 +81,7 @@ describe('Browser Automation', () => {
     ),
     {
       timeout: 120_000,
-      tags: ['llm'],
+      tags: ['manual'],
     },
   );
 
@@ -142,7 +142,7 @@ describe('Browser Automation', () => {
     ),
     {
       timeout: 120_000,
-      tags: ['llm'],
+      tags: ['manual'],
     },
   );
 });

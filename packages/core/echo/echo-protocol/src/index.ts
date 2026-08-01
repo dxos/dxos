@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+export * from './blob';
 export type * from './collection-sync';
 export * from './document-structure';
 export * from './edge-peer';

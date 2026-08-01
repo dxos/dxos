@@ -7,14 +7,14 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-import { Chess } from '#types';
+import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 
 /**
  * Headless variant of ChessPlugin (no React surfaces / GameVariant).
  * Used in node contexts (CLI, agents) where rendering is unavailable.
  */
 export const ChessPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Chess.State] }),
+  AppPlugin.addSchemaModule({ schema: [Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review] }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.make,

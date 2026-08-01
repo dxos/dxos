@@ -138,3 +138,5 @@ const RedeemedInvitationItem = ({ row }: { row: AccountCacheInvitation }) => {
     </Listbox.Item>
   );
 };
+
+InvitationsContainer.displayName = 'InvitationsContainer';

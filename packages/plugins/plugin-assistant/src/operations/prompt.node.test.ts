@@ -27,7 +27,7 @@ describe('Agent prompt (composer plugin harness)', () => {
   // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
   test(
     'chat mode appends assistant messages to the chat queue',
-    { tags: ['llm'], timeout: 60_000 },
+    { tags: ['manual'], timeout: 60_000 },
     async ({ expect }) => {
       await using harness = await createComposerTestApp({
         plugins: [ClientPlugin({}), AssistantPlugin(), RoutinePlugin()],

@@ -70,3 +70,5 @@ export const CallArticle = ({ roomId }: CallArticleProps) => {
     </Call.Root>
   );
 };
+
+CallArticle.displayName = 'CallArticle';

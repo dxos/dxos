@@ -21,6 +21,7 @@ const activate = Effect.fnUntraced(function* () {
     getAnchorLabel: (doc: Markdown.Document, anchor: string): string | undefined => {
       const target = doc.content?.target;
       if (target) {
+        // TODO(burdon): Wrap this.
         const [start, end] = anchor.split(':');
         return getTextInRange(Doc.createAccessor(target, ['content']), start, end);
       }

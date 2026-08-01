@@ -5,11 +5,12 @@
 import { type Event, Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type CredentialSigner, verifyCredential } from '@dxos/credentials';
-import { type AuthProvider, type AuthVerifier } from '@dxos/echo-host';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { type ComplexSet } from '@dxos/util';
+
+import { type AuthProvider, type AuthVerifier } from '../space';
 
 const Credential = schema.getCodecForType('dxos.halo.credentials.Credential');
 

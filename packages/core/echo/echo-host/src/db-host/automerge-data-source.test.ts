@@ -6,10 +6,10 @@ import { getHeads } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
-import { DXN, SpaceId } from '@dxos/keys';
+import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 
 import { AutomergeHost } from '../automerge';
 import { createTestSqliteRuntime } from '../testing';
@@ -38,12 +38,12 @@ const setupAutomergeHost = async (): Promise<AutomergeHost> => {
  */
 const createDatabaseDirectory = async (
   host: AutomergeHost,
-  spaceKey: string,
+  spaceId: SpaceId,
   objects: Record<string, EntityStructure>,
 ): Promise<Awaited<ReturnType<typeof host.createDoc<DatabaseDirectory>>>> => {
   const handle = await host.createDoc<DatabaseDirectory>({
     version: SpaceDocVersion.CURRENT,
-    access: { spaceKey },
+    access: { spaceId },
     objects: {},
     links: {},
   });
@@ -83,9 +83,9 @@ describe('AutomergeDataSource', () => {
 
   test('returns new documents that have no cursor', async () => {
     const host = await setupAutomergeHost();
-    const spaceKey = SpaceId.random();
+    const spaceId = SpaceId.random();
 
-    const handle = await createDatabaseDirectory(host, spaceKey, {
+    const handle = await createDatabaseDirectory(host, spaceId, {
       'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Test Document' } }),
     });
     await host.flush(Context.default());
@@ -104,12 +104,12 @@ describe('AutomergeDataSource', () => {
 
   test('returns documents with changed heads', async () => {
     const host = await setupAutomergeHost();
-    const spaceKey = SpaceId.random();
+    const spaceId = SpaceId.random();
 
-    const handle1 = await createDatabaseDirectory(host, spaceKey, {
+    const handle1 = await createDatabaseDirectory(host, spaceId, {
       'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Doc 1' } }),
     });
-    const handle2 = await createDatabaseDirectory(host, spaceKey, {
+    const handle2 = await createDatabaseDirectory(host, spaceId, {
       'obj-2': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Doc 2' } }),
     });
     await host.flush(Context.default());
@@ -145,9 +145,9 @@ describe('AutomergeDataSource', () => {
 
   test('skips documents with unchanged heads', async () => {
     const host = await setupAutomergeHost();
-    const spaceKey = SpaceId.random();
+    const spaceId = SpaceId.random();
 
-    const handle = await createDatabaseDirectory(host, spaceKey, {
+    const handle = await createDatabaseDirectory(host, spaceId, {
       'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Doc 1' } }),
     });
     await host.flush(Context.default());
@@ -173,11 +173,11 @@ describe('AutomergeDataSource', () => {
 
   test('respects limit option', async () => {
     const host = await setupAutomergeHost();
-    const spaceKey = SpaceId.random();
+    const spaceId = SpaceId.random();
 
     // Create 3 documents.
     for (let i = 1; i <= 3; i++) {
-      await createDatabaseDirectory(host, spaceKey, {
+      await createDatabaseDirectory(host, spaceId, {
         [`obj-${i}`]: EntityStructure.makeObject({ type: TEST_TYPE, data: { title: `Doc ${i}` } }),
       });
     }
@@ -194,9 +194,9 @@ describe('AutomergeDataSource', () => {
 
   test('extracts multiple objects from a document', async () => {
     const host = await setupAutomergeHost();
-    const spaceKey = SpaceId.random();
+    const spaceId = SpaceId.random();
 
-    await createDatabaseDirectory(host, spaceKey, {
+    await createDatabaseDirectory(host, spaceId, {
       'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Object 1' } }),
       'obj-2': EntityStructure.makeObject({ type: OTHER_TYPE, data: { title: 'Object 2' } }),
     });
@@ -212,12 +212,12 @@ describe('AutomergeDataSource', () => {
 
   test('skips outdated documents', async () => {
     const host = await setupAutomergeHost();
-    const spaceKey = SpaceId.random();
+    const spaceId = SpaceId.random();
 
     // Create a document with outdated version.
     const handle = await host.createDoc<DatabaseDirectory>({
       version: 0 as SpaceDocVersion, // Outdated version.
-      access: { spaceKey },
+      access: { spaceId },
       objects: {},
       links: {},
     });
@@ -236,9 +236,9 @@ describe('AutomergeDataSource', () => {
 
   test('extracts object attributes correctly', async () => {
     const host = await setupAutomergeHost();
-    const spaceKey = SpaceId.random();
+    const spaceId = SpaceId.random();
 
-    await createDatabaseDirectory(host, spaceKey, {
+    await createDatabaseDirectory(host, spaceId, {
       'person-1': EntityStructure.makeObject({
         type: PERSON_TYPE,
         data: { name: 'Alice', age: 30 },
@@ -257,10 +257,10 @@ describe('AutomergeDataSource', () => {
     expect(obj.data.age).toBe(30);
   });
 
-  test('skips documents without spaceKey', async () => {
+  test('skips documents without space identifiers', async () => {
     const host = await setupAutomergeHost();
 
-    // Create a document without access.spaceKey.
+    // Create a document without access.spaceId/spaceKey.
     const handle = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       objects: {},
@@ -277,5 +277,54 @@ describe('AutomergeDataSource', () => {
     const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
+  });
+
+  test('derives spaceId from documents that only carry the legacy spaceKey field', async () => {
+    const host = await setupAutomergeHost();
+    const spaceKey = PublicKey.random();
+
+    const handle = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: spaceKey.toHex() },
+      objects: {},
+      links: {},
+    });
+    handle.change((doc) => {
+      doc.objects = {
+        'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Legacy Doc' } }),
+      };
+    });
+    await host.flush(Context.default());
+
+    const dataSource = new AutomergeDataSource(host);
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+
+    expect(result.objects).toHaveLength(1);
+    expect(result.objects[0].spaceId).toBe(await createIdFromSpaceKey(spaceKey));
+  });
+
+  test('prefers access.spaceId over the legacy spaceKey field', async () => {
+    const host = await setupAutomergeHost();
+    const spaceId = SpaceId.random();
+    const spaceKey = PublicKey.random();
+
+    const handle = await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId, spaceKey: spaceKey.toHex() },
+      objects: {},
+      links: {},
+    });
+    handle.change((doc) => {
+      doc.objects = {
+        'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'New Doc' } }),
+      };
+    });
+    await host.flush(Context.default());
+
+    const dataSource = new AutomergeDataSource(host);
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+
+    expect(result.objects).toHaveLength(1);
+    expect(result.objects[0].spaceId).toBe(spaceId);
   });
 });

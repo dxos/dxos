@@ -56,3 +56,5 @@ export const ExemplarSettings = () => {
     </Form.Root>
   );
 };
+
+ExemplarSettings.displayName = 'ExemplarSettings';

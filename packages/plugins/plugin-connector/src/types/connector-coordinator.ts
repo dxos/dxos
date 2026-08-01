@@ -72,16 +72,31 @@ export type ConnectorCoordinator = {
    */
   finalizeRedirectFlow: (input: { accessTokenId: string; accessToken: string }) => Effect.Effect<void, Error>;
   /**
-   * Reconcile a connection's {@link SyncBinding} relations against the chosen
-   * remote targets: materialize + bind newly-selected targets (binding the
-   * first to `existingTarget` when supplied), remove deselected bindings. Owns
-   * the connector-registry lookup + `materializeTarget` call, so it lives on the
-   * coordinator rather than as a standalone operation.
+   * Re-run OAuth for an existing connection and replace its {@link AccessToken}
+   * value in place. The Connection and its {@link Cursor} objects (and their
+   * sync progress) are preserved — only the credential is refreshed. Reuses the
+   * same popup / redirect machinery as {@link createConnection}, keyed by the
+   * existing access-token id so Edge routes the callback back to it.
+   *
+   * OAuth-only: fails with `ConnectionNotReauthenticatableError` when the
+   * connection's connector declares no `oauth` flow (non-OAuth connections must
+   * be recreated instead).
    */
-  setSyncBindings: (input: {
+  reauthenticate: (input: {
     db: Database.Database;
     connection: Ref.Ref<Connection.Connection>;
-    selected: ReadonlyArray<{ remoteId: string; name?: string }>;
+  }) => Effect.Effect<void, Error>;
+  /**
+   * Reconcile a connection's sync cursors against the chosen remote targets:
+   * materialize + bind newly-selected targets (binding the first to
+   * `existingTarget` when supplied), remove deselected cursors. Owns the
+   * connector-registry lookup + `materializeTarget` call, so it lives on the
+   * coordinator rather than as a standalone operation.
+   */
+  setCursors: (input: {
+    db: Database.Database;
+    connection: Ref.Ref<Connection.Connection>;
+    selected: ReadonlyArray<{ externalId: string; name?: string }>;
     existingTarget?: Ref.Ref<Obj.Unknown>;
   }) => Effect.Effect<{ added: number; removed: number }, Error>;
 };

@@ -153,7 +153,9 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: options,
-    extract: (option) => option.label,
+    // Match the type label as well as the contributing plugin name / description so a plugin
+    // name (e.g. "Blogger") surfaces the types it contributes.
+    extract: (option) => [option.label, option.plugin, option.description].filter(Boolean).join(' '),
   });
 
   return (

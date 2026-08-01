@@ -108,3 +108,5 @@ const useArticleMenuActions = ({ canRun, runningAtom, handleRun }: ArticleMenuAc
         .build(),
     [canRun, handleRun, runningAtom],
   );
+
+RoutineArticle.displayName = 'RoutineArticle';

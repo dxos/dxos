@@ -5,7 +5,7 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 
@@ -45,6 +45,36 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using client2 = await new Client({ services: services2 }).initialize();
 
     expect(client2.halo.identity.get()).toEqual(identity);
+  });
+
+  test('late-joining follower reads a space created by the leader', { timeout: 5_000 }, async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    // First client wins leader election, spawns the worker, and writes an object.
+    await using services1 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client1 = await new Client({ services: services1 }).initialize();
+    await client1.halo.createIdentity();
+    await client1.addTypes([TestSchema.Expando]);
+    const space = await client1.spaces.create();
+    space.db.add(Obj.make(TestSchema.Expando, { name: 'from-leader' }));
+    await space.db.flush();
+
+    // Second client joins the already-running worker as a follower (the "second tab" case) and must
+    // reach the shared host services: see the space and read the leader's object over its own appPort.
+    await using services2 = await testBuilder.createDedicatedWorkerClientServices().open();
+    await using client2 = await new Client({ services: services2 }).initialize();
+    await client2.addTypes([TestSchema.Expando]);
+
+    await expect.poll(() => client2.spaces.get(space.id), { timeout: 3_000 }).toBeTruthy();
+    const space2 = client2.spaces.get(space.id)!;
+    await asyncTimeout(space2.waitUntilReady(), 3_000);
+
+    await expect
+      .poll(async () => (await space2.db.query(Filter.type(TestSchema.Expando)).run()).map((obj) => obj.name), {
+        timeout: 3_000,
+      })
+      .toContain('from-leader');
   });
 
   test('steals the leader lock from a stale (zombie) holder', { timeout: 5_000 }, async () => {

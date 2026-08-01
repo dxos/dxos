@@ -77,16 +77,36 @@ const listStyles = tv({
     //
     // ItemContent
     //
-    // Two-column grid: fixed rail-item icon track + flexible content track.
-    itemContentRoot: 'grid grid-cols-[var(--dx-rail-item)_minmax(0,1fr)] items-center gap-x-2 is-full min-is-0',
+    // Grid whose columns/placement come from the `hasIcon` variant: a leading rail-item icon track
+    // only when an icon is present, so an icon-less row doesn't reserve (and indent past) empty space.
+    itemContentRoot: 'grid items-center gap-x-2 is-full min-is-0',
     itemContentIcon: 'col-start-1 row-start-1 place-self-center',
-    itemContentTitle: 'col-start-2 row-start-1 min-is-0 truncate',
-    itemContentDescription: 'col-start-2 row-start-2 min-is-0 truncate text-sm text-description',
+    itemContentTitle: 'row-start-1 min-is-0 truncate',
+    itemContentDescription: 'row-start-2 min-is-0 truncate text-sm text-description',
 
     //
     // Empty
     //
     empty: 'flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description',
+  },
+  variants: {
+    // Reserve the leading icon track only when an icon is rendered; otherwise the content occupies a
+    // single full-width column instead of being indented past an empty icon slot.
+    hasIcon: {
+      true: {
+        itemContentRoot: 'grid-cols-[var(--dx-rail-item)_minmax(0,1fr)]',
+        itemContentTitle: 'col-start-2',
+        itemContentDescription: 'col-start-2',
+      },
+      false: {
+        itemContentRoot: 'grid-cols-[minmax(0,1fr)]',
+        itemContentTitle: 'col-start-1',
+        itemContentDescription: 'col-start-1',
+      },
+    },
+  },
+  defaultVariants: {
+    hasIcon: true,
   },
 });
 

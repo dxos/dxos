@@ -13,7 +13,7 @@ import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Booking, type BookingSearch as BookingSearchType, Segment, Trip, TripCapabilities } from '#types';
@@ -55,14 +55,12 @@ const StubBookingPlugin = Plugin.define(
 );
 
 const DefaultStory = () => {
-  const spaces = useSpaces();
-  const spaceId = spaces[0]?.id;
-  const db = useDatabase(spaceId ?? '');
-  const segments = useQuery(db, Filter.type(Segment.Segment));
+  const [space] = useSpaces();
+  const segments = useQuery(space?.db, Filter.type(Segment.Segment));
   const segment = segments[0];
 
-  if (!spaceId || !db || !segment) {
-    return <Loading data={{ space: !!spaceId, db: !!db, segment: !!segment }} />;
+  if (!space?.db || !segment) {
+    return <Loading data={{ space: !!space, db: !!space?.db, segment: !!segment }} />;
   }
 
   return <BookingSearch segment={segment} />;

@@ -58,3 +58,5 @@ export const PortfolioProperties = ({ subject }: PortfolioPropertiesProps) => {
     </Form.Section>
   );
 };
+
+PortfolioProperties.displayName = 'PortfolioProperties';

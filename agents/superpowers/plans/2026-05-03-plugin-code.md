@@ -261,7 +261,7 @@ import React, { forwardRef, useMemo, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { use Identity } from '@dxos/react-client/halo';
 import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,

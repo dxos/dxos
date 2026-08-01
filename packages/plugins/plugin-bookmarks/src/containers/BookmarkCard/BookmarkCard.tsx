@@ -44,3 +44,5 @@ export const BookmarkCard = ({ subject }: BookmarkCardProps) => {
 };
 
 export default BookmarkCard;
+
+BookmarkCard.displayName = 'BookmarkCard';

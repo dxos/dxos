@@ -265,3 +265,5 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
     </Form.Root>
   );
 };
+
+UsageView.displayName = 'UsageView';

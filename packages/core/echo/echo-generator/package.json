@@ -39,7 +39,7 @@
     "@dxos/random": "workspace:*"
   },
   "peerDependencies": {
-    "@dxos/random": "workspace:*",
+    "@dxos/random": "workspace:^",
     "effect": "catalog:"
   },
   "publishConfig": {

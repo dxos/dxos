@@ -45,3 +45,5 @@ export const ScriptSettings = ({ settings, onSettingsChange, onAuthenticate }: S
     </Form.Root>
   );
 };
+
+ScriptSettings.displayName = 'ScriptSettings';

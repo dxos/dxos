@@ -105,3 +105,5 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
     />
   );
 };
+
+SpaceHomePrompt.displayName = 'SpaceHomePrompt';

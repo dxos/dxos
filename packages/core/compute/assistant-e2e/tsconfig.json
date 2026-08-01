@@ -55,6 +55,9 @@
       "path": "../../echo/echo"
     },
     {
+      "path": "../agent-runtime"
+    },
+    {
       "path": "../ai"
     },
     {
@@ -65,9 +68,6 @@
     },
     {
       "path": "../compute"
-    },
-    {
-      "path": "../functions-runtime"
     }
   ]
 }

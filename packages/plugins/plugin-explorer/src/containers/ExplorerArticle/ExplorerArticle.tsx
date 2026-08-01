@@ -117,3 +117,5 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     </Panel.Root>
   );
 };
+
+ExplorerArticle.displayName = 'ExplorerArticle';

@@ -7,6 +7,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const EdgeBackend = Capability.lazy('EdgeBackend', () => import('./edge-backend'));
 export const FileUploader = Capability.lazy('FileUploader', () => import('./file-uploader'));
 export const InlineBackend = Capability.lazy('InlineBackend', () => import('./inline-backend'));
 export const Markdown = Capability.lazy('MarkdownExtension', () => import('./markdown-extension'));

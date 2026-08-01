@@ -68,3 +68,5 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
     </Chat.Root>
   );
 };
+
+ChatDialog.displayName = 'ChatDialog';

@@ -7,7 +7,7 @@ import React, { useRef } from 'react';
 import { IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Empty, Listbox } from '@dxos/react-ui-list';
 
-import { type EntityItem } from '../util';
+import { type EntityItem } from '../types';
 
 export type EntityListProps = ThemedClassName<{
   entities: EntityItem[];

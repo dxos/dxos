@@ -3,6 +3,7 @@
 //
 
 export * from './annotations';
+export * from './assistant';
 export * from './autocomplete';
 export * from './automerge';
 export * from './awareness';

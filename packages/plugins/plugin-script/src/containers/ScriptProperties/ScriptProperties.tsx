@@ -29,3 +29,5 @@ export const ScriptProperties = ({ subject: object }: ScriptPropertiesProps) => 
     </>
   );
 };
+
+ScriptProperties.displayName = 'ScriptProperties';

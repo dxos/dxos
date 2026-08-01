@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { make as makeGame } from '@dxos/plugin-game';
+import { Game } from '@dxos/plugin-game';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -18,7 +18,7 @@ type StoryArgs = { size?: number; winCondition?: number; level?: TicTacToe.Level
 const DefaultStory = ({ size = 3, winCondition, level }: StoryArgs) => {
   const { game, state } = useMemo(() => {
     const state = TicTacToeTypes.make({ size, winCondition, level });
-    const game = makeGame({ name: 'Test Game', variant: state });
+    const game = Game.make({ name: 'Test Game', variant: state });
     return { game, state };
   }, [size, winCondition, level]);
   return <TicTacToeArticle role='article' attendableId='story' game={game} variant={state} />;

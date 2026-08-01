@@ -2,11 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
+import * as Scope from 'effect/Scope';
+
 import { Resource } from '@dxos/context';
 import { EchoClient } from '@dxos/echo-client';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
+import { type EdgeFunctionEnv, makeInProcessClient } from '@dxos/protocols';
+import { DataService, QueryService } from '@dxos/protocols/rpc';
 
 import { ServiceContainer } from './internal';
 import { SpaceProxy } from './space-proxy';
@@ -25,6 +31,7 @@ export class FunctionsClient extends Resource {
   private readonly _serviceContainer;
   private readonly _echoClient;
   private readonly _executionContext: EdgeFunctionEnv.TraceContext = {};
+  private _serviceScope?: Scope.CloseableScope;
 
   private readonly _spaces = new Map<SpaceId, SpaceProxy>();
 
@@ -46,7 +53,15 @@ export class FunctionsClient extends Resource {
   }
 
   protected override async _open() {
-    const { dataService, queryService } = await this._serviceContainer.createServices();
+    const services = await this._serviceContainer.createServices();
+    // Bridge the host Handlers to the effect-rpc client surface in-process (no wire).
+    this._serviceScope = Effect.runSync(Scope.make());
+    const [dataService, queryService] = await EffectEx.runPromise(
+      Effect.all([
+        makeInProcessClient(DataService.Rpcs, services.dataService),
+        makeInProcessClient(QueryService.Rpcs, services.queryService),
+      ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
+    );
     this._echoClient.connectToService({ dataService, queryService });
     await this._echoClient.open();
   }
@@ -58,6 +73,10 @@ export class FunctionsClient extends Resource {
     this._spaces.clear();
 
     await this._echoClient.close();
+    if (this._serviceScope) {
+      await EffectEx.runPromise(Scope.close(this._serviceScope, Exit.void));
+      this._serviceScope = undefined;
+    }
   }
 
   async getSpace(spaceId: SpaceId): Promise<SpaceProxy> {

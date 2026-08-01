@@ -124,6 +124,7 @@ export const translations: Resource[] = [
         'summary.label': 'Summary',
         'thinking.label': 'Thinking',
 
+        'connect.label': 'Connect',
         'integration-prompt.title': 'Connect {{service}}',
         'integration-prompt.description': 'This action needs access to {{service}}. Connect it to continue.',
         'integration-prompt.unavailable': 'No connector is available for {{service}}.',
@@ -201,7 +202,6 @@ export const translations: Resource[] = [
         // Trigger status
         'trigger-status-disabled.label': 'Triggers disabled',
         'trigger-status-idle.label': 'Triggers idle',
-        'trigger-status-edge.label': 'Triggers will run on EDGE',
         'trigger-status-running.label': 'Trigger running',
         'trigger-status-error.label': 'Trigger error',
         'trigger-runtime.label': 'Auto trigger execution',

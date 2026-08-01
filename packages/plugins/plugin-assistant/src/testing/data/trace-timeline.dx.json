@@ -14,8 +14,7 @@
       "org.dxos.type.collection": {
         "/": "echo:/01KQJ35Z4RW6QCBSB9731XJ464"
       },
-      "icon": "house-line",
-      "computeEnvironment": "local"
+      "icon": "house-line"
     },
     {
       "id": "01KQJ35Z2XWAGB6WS4SGGEATJR",

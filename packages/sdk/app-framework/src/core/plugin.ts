@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
+import type * as Scope from 'effect/Scope';
 
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -79,6 +80,18 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
 /**
  * A unit of containment of modular functionality that can be provided to an application.
  * Activation of a module is async allowing for code to split and loaded lazily.
+ *
+ * Ordering between modules is expressed through shared activation events, not registration
+ * order: a module `activatesOn` an event, fires events *after* it activates via
+ * {@link PluginModule.firesAfterActivation} (publishing "I'm ready"), and forces prerequisites
+ * to complete *before* it activates via {@link PluginModule.firesBeforeActivation}. To run
+ * module B after module A, A declares `firesAfterActivation: [E]` and B declares
+ * `activatesOn: E`. See `plugin-client/src/ClientPlugin.ts` for a worked example.
+ *
+ * @idiom org.dxos.app-framework.moduleActivationOrdering
+ *   applies: sequencing one plugin module's activation before or after another
+ *   instead-of: assuming module registration order controls activation order
+ *   uses: {@link PluginModule.firesAfterActivation}, {@link PluginModule.firesBeforeActivation}
  */
 export interface PluginModule {
   readonly [PluginModuleTypeId]: PluginModuleTypeId;
@@ -128,7 +141,9 @@ export interface PluginModule {
    * @param props Optional props passed to the module.
    * @returns The capabilities of the module.
    */
-  activate: (props?: any) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | never>;
+  activate: (
+    props?: any,
+  ) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | Scope.Scope | never>;
 }
 
 export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };

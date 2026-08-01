@@ -199,7 +199,12 @@ export const SchemaAdd = Operation.make({
     typename: Schema.String.annotations({
       description: 'The typename of the schema in the format of "com.example.type.type".',
     }),
-    jsonSchema: Schema.Any,
+    // Typed as a record so the tool parameter advertises `type: object` to the LLM, forcing it to
+    // emit the JSON Schema as an object rather than a JSON-encoded string (which an unconstrained
+    // `Schema.Any` parameter would allow, breaking `makeObjectFromJsonSchema`).
+    jsonSchema: Schema.Record({ key: Schema.String, value: Schema.Any }).annotations({
+      description: 'The JSON Schema (draft-07) object describing the fields of the new type.',
+    }),
   }),
   output: Schema.Void,
   services: [Database.Service],

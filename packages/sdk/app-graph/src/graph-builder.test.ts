@@ -1652,4 +1652,24 @@ describe('GraphBuilder', () => {
       expect(visited[2].id).to.equal('root/second');
     });
   });
+
+  describe('invalid local id', () => {
+    test('drops an extension with an invalid id rather than throwing', ({ expect }) => {
+      expect(
+        GraphBuilder.createExtensionRaw({
+          id: 'gallery-article',
+          connector: () => Atom.make([{ id: 'foo', type: EXAMPLE_TYPE, data: null }]),
+        }),
+      ).toEqual([]);
+    });
+
+    test('keeps an extension with a valid id', ({ expect }) => {
+      expect(
+        GraphBuilder.createExtensionRaw({
+          id: 'galleryArticle',
+          connector: () => Atom.make([{ id: 'foo', type: EXAMPLE_TYPE, data: null }]),
+        }).length,
+      ).toBeGreaterThan(0);
+    });
+  });
 });

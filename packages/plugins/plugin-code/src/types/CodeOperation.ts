@@ -34,7 +34,7 @@ export const RunBuildAgent = Operation.make({
     key: DXN.make('org.dxos.function.code.runBuildAgent'),
     name: 'Run Build Agent',
     description: 'Dispatches a build of a CodeProject via the EDGE build service.',
-    icon: 'ph--hammer--regular',
+    icon: 'ph--lightning--regular',
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotations({
@@ -223,7 +223,7 @@ export const BuildProject = Operation.make({
     description:
       "Compile the project's TypeScript sources in-browser. Returns language-service diagnostics plus the " +
       'emitted JavaScript for the entry file (src/hello.ts if present, else src/plugin.ts).',
-    icon: 'ph--hammer--regular',
+    icon: 'ph--lightning--regular',
   },
   input: Schema.Struct({
     project: Ref.Ref(CodeProject.CodeProject).annotations({

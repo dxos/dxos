@@ -61,7 +61,7 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions-runtime"
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/compute/pipeline-transcription"

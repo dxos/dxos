@@ -9,8 +9,6 @@ export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('
 
 export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
 
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-
 export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

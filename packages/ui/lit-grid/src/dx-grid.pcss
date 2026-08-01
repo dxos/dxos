@@ -128,6 +128,16 @@
           --dx-grid-cell-content-padding-inline: 1px;
           --dx-grid-cell-content-padding-block: 1px;
         }
+
+        & > .dx-grid__cell__block {
+          position: absolute;
+          top: 0;
+          bottom: 1px;
+          right: 0;
+          width: 32px; /** TODO(burdon): Use variable. */
+          display: grid;
+          place-items: center;
+        }
       }
 
       &.dx-grid__cell--commented {

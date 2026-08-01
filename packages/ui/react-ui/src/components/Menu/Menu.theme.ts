@@ -13,7 +13,7 @@ export type MenuStyleProps = Partial<{
 
 const content: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'dx-popover-surface w-48 rounded-sm md:w-56 border border-separator',
+    'dx-popover-surface w-48 md:w-56 border border-separator rounded-md',
     surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,

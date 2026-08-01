@@ -59,3 +59,5 @@ export const SampleCompanionPanel = ({ companionTo }: SampleCompanionPanelProps)
 };
 
 export default SampleCompanionPanel;
+
+SampleCompanionPanel.displayName = 'SampleCompanionPanel';

@@ -143,3 +143,5 @@ export const useToolbar = ({ magazine }: UseToolbarProps) => {
 
   return { menu, viewAtom };
 };
+
+useToolbar.displayName = 'useToolbar';

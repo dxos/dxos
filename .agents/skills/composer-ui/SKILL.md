@@ -279,6 +279,23 @@ or wrap it in one element occupying slot 2:
 </Card.Header>
 ```
 
+**Content parts must live inside a subgrid part, never directly under `Card.Root`.** `Card.Title`,
+`Card.Text`, and `Card.Block` carry no column placement of their own — the center-track placement comes
+from `Card.Header` / `Card.Row` / `Card.Section`. A `Card.Text` (or `Card.Title`) dropped straight into
+`Card.Root` — or into `Card.Body`, which is `display:contents` and so doesn't place either — CSS-grid
+auto-places into a **gutter** track and renders squeezed/clamped. Wrap free body text in a `Card.Row`:
+
+```tsx
+<Card.Root>
+  <Card.Header>
+    <Card.Title>…</Card.Title>
+  </Card.Header>
+  <Card.Row>
+    <Card.Text variant='description'>…</Card.Text> {/* NOT a direct Card.Root/Card.Body child */}
+  </Card.Row>
+</Card.Root>
+```
+
 A card used as the child of `Focus.Item asChild` (or any Radix `Slot`/`asChild`) must be composable — a
 single element that forwards `ref` and spreads injected props, or the Slot's `ref`/handlers silently drop
 and current/keyboard/click wiring never attaches. Make presentational cards `forwardRef` and spread:

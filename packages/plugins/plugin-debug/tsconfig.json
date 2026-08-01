@@ -67,9 +67,6 @@
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/echo/echo-host"
-    },
-    {
       "path": "../../core/protocols"
     },
     {
@@ -80,9 +77,6 @@
     },
     {
       "path": "../../sdk/app-toolkit"
-    },
-    {
-      "path": "../../sdk/client-services"
     },
     {
       "path": "../../sdk/config"
@@ -112,19 +106,10 @@
       "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/react-ui-introspect"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
-      "path": "../../ui/react-ui-table"
-    },
-    {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-client"
     },
     {
       "path": "../plugin-graph"
@@ -134,9 +119,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-script"
     },
     {
       "path": "../plugin-sheet"

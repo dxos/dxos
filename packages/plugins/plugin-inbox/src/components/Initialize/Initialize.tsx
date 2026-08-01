@@ -21,10 +21,10 @@ export type InitializeProps<T extends Obj.Any> = {
 };
 
 /**
- * Shared empty-state body for "initialize / connect this thing" panels.
- * Renders a warning message that depends on whether a `Connection` is bound to
- * `target`. The connect / sync action lives in `InitializeAction` so it can
- * be slotted into the surrounding panel's toolbar.
+ * Shared empty-state body for "initialize / connect this thing" panels. Renders a warning message
+ * that depends on whether a `Connection` is bound to `target`. The connect action is contributed to
+ * the article toolbar by the connector plugin (via the type's `ConnectorAuthAnnotation`); the sync
+ * action is inlined in the article toolbar.
  *
  * Used by `InitializeMailbox` and `InitializeCalendar`.
  */

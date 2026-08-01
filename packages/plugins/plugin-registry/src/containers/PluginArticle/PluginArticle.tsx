@@ -117,3 +117,5 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     />
   );
 };
+
+PluginArticle.displayName = 'PluginArticle';

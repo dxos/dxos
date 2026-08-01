@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Type } from '@dxos/semantic-index';
+import { type RDF } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
 const extractor = {
@@ -26,7 +26,7 @@ export const SAMPLE_FACTS_TEXT = trim`
  * same subject + predicate, different objects/sources) plus a coherent pair (f3/f4).
  * Each `quote` corresponds to a sentence in {@link SAMPLE_FACTS_TEXT} (kept in sync manually).
  */
-export const SAMPLE_FACTS: Type.Fact[] = [
+export const SAMPLE_FACTS: RDF.Fact[] = [
   {
     id: 'f1',
     assertion: {
@@ -36,7 +36,7 @@ export const SAMPLE_FACTS: Type.Fact[] = [
       validFrom: '2026-06-12',
       quote: "I think I'm probably going to Paris next week",
     },
-    valence: { factuality: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
+    factuality: { value: 'PR+', polarity: '+', confidence: 0.6, nature: 'epistemic' },
     attribution: { agent: 'alice', source: 'dxn:gmail:msg-1', generatedAtTime: '2026-06-06T09:00:00.000Z' },
     recordedAt: '2026-06-06T09:00:00.000Z',
     extractor,
@@ -50,7 +50,7 @@ export const SAMPLE_FACTS: Type.Fact[] = [
       object: { entity: 'rome' },
       quote: "Alice told me she's definitely going to Rome, not Paris.",
     },
-    valence: { factuality: 'CT+', polarity: '+', confidence: 0.95 },
+    factuality: { value: 'CT+', polarity: '+', confidence: 0.95 },
     attribution: { agent: 'bob', source: 'dxn:gmail:msg-2', generatedAtTime: '2026-06-07T10:00:00.000Z' },
     recordedAt: '2026-06-07T10:00:00.000Z',
     extractor,
@@ -64,7 +64,7 @@ export const SAMPLE_FACTS: Type.Fact[] = [
       object: { literal: '2026-07-15' },
       quote: 'The Q3 board meeting is confirmed for July 15 in London.',
     },
-    valence: { factuality: 'CT+', polarity: '+' },
+    factuality: { value: 'CT+', polarity: '+' },
     attribution: { agent: 'carol', source: 'dxn:gmail:msg-3', generatedAtTime: '2026-06-08T11:00:00.000Z' },
     recordedAt: '2026-06-08T11:00:00.000Z',
     extractor,
@@ -77,10 +77,10 @@ export const SAMPLE_FACTS: Type.Fact[] = [
       predicate: 'locatedIn',
       object: { entity: 'london' },
     },
-    valence: { factuality: 'CT+', polarity: '+' },
+    factuality: { value: 'CT+', polarity: '+' },
     attribution: { agent: 'carol', source: 'dxn:gmail:msg-3', generatedAtTime: '2026-06-08T11:00:00.000Z' },
     recordedAt: '2026-06-08T11:00:00.000Z',
     extractor,
     sourceHash: 'demo',
   },
-] satisfies Type.Fact[];
+] satisfies RDF.Fact[];

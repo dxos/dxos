@@ -88,6 +88,14 @@ const LOCAL_MODELS = [
     ollama: 'qwen2.5:32b',
     lmStudio: 'qwen2.5-32b-instruct',
   },
+  // Qwen 3 (reasoning): emits chain-of-thought — higher latency, may need lenient JSON parsing.
+  { id: 'com.alibaba.model.qwen-3-8b.default', label: 'Qwen 3 8B', ollama: 'qwen3:8b', lmStudio: 'qwen3-8b' },
+  {
+    id: 'com.alibaba.model.qwen-3-30b.default',
+    label: 'Qwen 3 30B A3B',
+    ollama: 'qwen3:30b',
+    lmStudio: 'qwen3-30b-a3b',
+  },
   {
     id: 'com.openai.model.gpt-oss-20b.default',
     label: 'GPT-OSS 20B',

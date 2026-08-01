@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { ServiceResolver } from '@dxos/compute';
+import { TriggerDispatcher } from '@dxos/compute-runtime';
 import { Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { TriggerDispatcher } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -30,7 +30,7 @@ const getDispatcher = (harness: Awaited<ReturnType<typeof createComposerTestApp>
   );
 
 describe('TriggerRuntimeController', () => {
-  test('toggles the per-space TriggerDispatcher as computeEnvironment changes', async ({ expect }) => {
+  test('toggles the per-space TriggerDispatcher as triggersDisabled changes', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
     });
@@ -51,36 +51,30 @@ describe('TriggerRuntimeController', () => {
       immediate: true,
     });
     try {
-      // Default `computeEnvironment` is `local`, so the controller should
+      // `triggersDisabled` is unset by default, so the controller should
       // start the dispatcher shortly after the space becomes ready.
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
-      // `disabled` → dispatcher should stop.
+      // `triggersDisabled = true` → dispatcher should stop.
       Obj.update(personalSpace.properties, (properties) => {
-        properties.computeEnvironment = 'disabled';
+        properties.triggersDisabled = true;
       });
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(false);
 
-      // Back to `local` → dispatcher should start again.
+      // Back to enabled → dispatcher should start again.
       Obj.update(personalSpace.properties, (properties) => {
-        properties.computeEnvironment = 'local';
+        properties.triggersDisabled = false;
       });
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
-      // `edge` → dispatcher should stop (triggers run on the edge instead).
-      Obj.update(personalSpace.properties, (properties) => {
-        properties.computeEnvironment = 'edge';
-      });
-      await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(false);
-
       // The atom subscription should have witnessed every transition.
-      expect(observedStates).toEqual(expect.arrayContaining([true, false, true, false]));
+      expect(observedStates).toEqual(expect.arrayContaining([true, false, true]));
     } finally {
       unsubscribe();
     }
   });
 
-  test('does not re-issue start when computeEnvironment is reasserted to the same value', async ({ expect }) => {
+  test('does not re-issue start when triggersDisabled is reasserted to the same value', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
     });
@@ -94,11 +88,11 @@ describe('TriggerRuntimeController', () => {
 
     await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
-    // Writing the same `local` value should be a no-op: the controller
-    // dedupes via its `lastEnvironment` tracker so the dispatcher stays
+    // Writing the same enabled state should be a no-op: the controller
+    // dedupes via its `lastDisabled` tracker so the dispatcher stays
     // running without an intervening stop/start flicker.
     Obj.update(personalSpace.properties, (properties) => {
-      properties.computeEnvironment = 'local';
+      properties.triggersDisabled = false;
     });
     // Give any spurious transition a chance to land before we check.
     await new Promise((resolve) => setTimeout(resolve, 100));

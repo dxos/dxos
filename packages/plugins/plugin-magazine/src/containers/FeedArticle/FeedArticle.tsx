@@ -66,3 +66,5 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
     </Panel.Root>
   );
 };
+
+FeedArticle.displayName = 'FeedArticle';

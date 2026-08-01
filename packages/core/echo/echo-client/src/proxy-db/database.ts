@@ -2,14 +2,16 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
+  type Blob,
   Database,
   Entity,
   Feed,
@@ -18,12 +20,11 @@ import {
   Obj,
   Query,
   QueryAST,
-  QueryResult,
   Ref,
   type Registry,
   Type,
 } from '@dxos/echo';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
   EntityKind,
@@ -43,9 +44,9 @@ import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
-import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
-import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { runServiceCall } from '@dxos/protocols';
+import { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 import { defaultMap } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge';
@@ -61,7 +62,6 @@ import {
 } from '../echo-handler';
 import { FeedHandle } from '../feed/feed-handle';
 import { type HypergraphImpl } from '../hypergraph';
-import { isSimpleSelectionQuery } from '../query';
 import { type ObjectMigration } from './object-migration';
 
 export interface EchoDatabase extends Database.Database {
@@ -91,14 +91,14 @@ export interface EchoDatabase extends Database.Database {
   runMigrations(migrations: ObjectMigration[]): Promise<void>;
 
   /**
-   * Get the current sync state.
+   * Get the current per-peer automerge document sync state.
    */
-  getSyncState(): Promise<SpaceSyncState>;
+  getAutomergeSyncState(): Promise<SpaceSyncState>;
 
   /**
-   * Get notification about the sync progress with other peers.
+   * Get notification about the per-peer automerge document sync progress.
    */
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn;
 
   /**
    * Returns ids for all objects in the space (both loaded and unloaded).
@@ -154,22 +154,15 @@ export interface EchoDatabase extends Database.Database {
    */
   syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void>;
 
-  /**
-   * Returns the replication backlog for a feed's namespace.
-   */
   getFeedSyncState(feed: Feed.Feed): Promise<Feed.SyncState>;
-
-  /**
-   * Queries items in a feed associated with this database.
-   */
-  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any>;
 }
 
 export type EchoDatabaseProps = {
   graph: HypergraphImpl;
-  dataService: DataService;
-  queryService: QueryService;
-  queueService?: FeedProtocol.QueueService;
+  dataService: DataService.Client;
+  queryService: QueryService.Client;
+  feedService?: FeedService.Client;
+  runtime: Runtime.Runtime<never>;
   spaceId: SpaceId;
 
   /**
@@ -186,6 +179,50 @@ export type EchoDatabaseProps = {
 
   /** @deprecated Use spaceId */
   spaceKey: PublicKey;
+};
+
+/**
+ * Feed block backlog aggregated across all namespaces of a space.
+ */
+type SpaceFeedSyncState = Pick<Database.SyncState, 'blocksToPull' | 'blocksToPush' | 'totalBlocks'>;
+
+const EMPTY_FEED_SYNC_STATE: SpaceFeedSyncState = { blocksToPull: '0', blocksToPush: '0', totalBlocks: '0' };
+
+/**
+ * Poll interval for feed block backlog, which has no change stream.
+ */
+const FEED_SYNC_POLL_INTERVAL = 2_000;
+
+/**
+ * Selects the peer to report the automerge backlog against: the explicit `peerId` when given,
+ * otherwise the EDGE peer.
+ */
+const selectPeer = (
+  peers: readonly SpaceSyncState.PeerState[],
+  spaceId: SpaceId,
+  peerId?: string,
+): SpaceSyncState.PeerState | undefined =>
+  peerId !== undefined
+    ? peers.find((peer) => peer.peerId === peerId)
+    : peers.find((peer) => isEdgePeerId(peer.peerId, spaceId));
+
+/**
+ * Flattens per-peer automerge state (for the selected peer) with aggregated feed state.
+ */
+const combineSyncState = (
+  automerge: SpaceSyncState,
+  feeds: SpaceFeedSyncState,
+  spaceId: SpaceId,
+  peerId?: string,
+): Database.SyncState => {
+  const peer = selectPeer(automerge.peers ?? [], spaceId, peerId);
+  return {
+    localDocumentCount: peer?.localDocumentCount ?? 0,
+    remoteDocumentCount: peer?.remoteDocumentCount ?? 0,
+    totalDocumentCount: peer?.totalDocumentCount ?? 0,
+    unsyncedDocumentCount: peer?.unsyncedDocumentCount ?? 0,
+    ...feeds,
+  };
 };
 
 /**
@@ -211,7 +248,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   /**
    * Backend for feed operations. Set on construction and refreshed on reconnect.
    */
-  #queueService: FeedProtocol.QueueService | undefined;
+  #feedService: FeedService.Client | undefined;
+
+  /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
+  readonly #runtime: Runtime.Runtime<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -225,12 +265,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._reactiveSchemaQuery = params.reactiveSchemaQuery ?? true;
     this._preloadSchemaOnOpen = params.preloadSchemaOnOpen ?? true;
     this._hypergraph = params.graph;
-    this.#queueService = params.queueService;
+    this.#feedService = params.feedService;
+    this.#runtime = params.runtime;
 
     this._entityManager = new EntityManager({
       graph: params.graph,
       dataService: params.dataService,
       queryService: params.queryService,
+      runtime: params.runtime,
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
     });
@@ -408,14 +450,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
 
-    // Feed-scoped queries the client can evaluate against fetched queue items run on the feed
-    // handle (immediately reflecting appends). Index-only queries (e.g. full-text search) fall
-    // through to the host indexer, which is also where unindexed feed items become visible.
-    const feedUri = getFeedScopeUri(query.ast);
-    if (feedUri && isClientEvaluableFeedQuery(query.ast)) {
-      return this._queryFeed(feedUri, query);
-    }
-
     if (!isQueryScoped(query.ast)) {
       query = query.from(this);
     } else {
@@ -466,6 +500,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
+      if (!isProxy(obj) && !Entity.isEntity(obj)) {
+        throw new TypeError(
+          'db.add expects a reactive ECHO object. Plain objects must be created using Obj.make(Type, props).',
+        );
+      }
+
       const typeEntity = Entity.getType(obj);
       if (typeEntity != null) {
         const isPersisted = Type.getDatabase(typeEntity) != null;
@@ -530,21 +570,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this.#getFeedHandle(feed).getSyncState();
   }
 
-  queryFeed(feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any): QueryResult.QueryResult<any> {
-    const feedUri = Feed.getQueueUri(feed);
-    if (!feedUri) {
-      throw new Error('Unable to query feed: make sure feed is stored in the database');
-    }
-    const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    return this._queryFeed(feedUri, query);
-  }
-
   /**
    * @internal
    * Sets or refreshes the feed backend service (e.g. after reconnection).
    */
-  _setQueueService(service: FeedProtocol.QueueService | undefined): void {
-    this.#queueService = service;
+  _setFeedService(service: FeedService.Client | undefined): void {
+    this.#feedService = service;
   }
 
   /**
@@ -553,13 +584,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Returns `undefined` only when no service is connected.
    */
   _getOrCreateFeedHandle(feedUri: EID.EID, namespace?: string): FeedHandle {
-    assertState(this.#queueService, 'Queue service not connected');
+    assertState(this.#feedService, 'Feed service not connected');
     const existing = this.#feeds.get(feedUri);
     if (existing) {
       return existing;
     }
     const handle = new FeedHandle(
-      this.#queueService,
+      this.#feedService,
+      this.#runtime,
       this.graph.createRefResolver({ context: { space: this.spaceId, feed: feedUri } }),
       feedUri,
       this,
@@ -586,21 +618,31 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   #getFeedHandle(feed: Feed.Feed): FeedHandle {
-    const feedUri = Feed.getQueueUri(feed);
+    const feedUri = Feed.getFeedUri(feed);
     invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
     const handle = this._getOrCreateFeedHandle(feedUri, feed.namespace);
     handle.setParentEntity(feed as Obj.Unknown);
     return handle;
   }
 
-  private _queryFeed(feedUri: EID.EID, query: Query.Any) {
-    const feedObjectId = EID.getEntityId(feedUri);
-    const feed = feedObjectId ? this.getObjectById<Feed.Feed>(feedObjectId) : undefined;
-    const handle = this._getOrCreateFeedHandle(feedUri, feed?.namespace);
-    if (feed) {
-      handle.setParentEntity(feed as Obj.Unknown);
-    }
-    return handle.query(query);
+  //
+  // Blobs.
+  //
+
+  async createBlob(bytes: Uint8Array, options?: { type?: string; storage?: string }): Promise<Blob.Blob> {
+    return this.graph.blobManager.createBlob(this.spaceId, bytes, options);
+  }
+
+  async readBlob(blob: Blob.Blob): Promise<Uint8Array> {
+    return this.graph.blobManager.readBlob(this.spaceId, blob);
+  }
+
+  async blobExists(blob: Blob.Blob): Promise<boolean> {
+    return this.graph.blobManager.blobExists(this.spaceId, blob);
+  }
+
+  async getBlobUrl(blob: Blob.Blob): Promise<string | undefined> {
+    return this.graph.blobManager.getBlobUrl(this.spaceId, blob);
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
@@ -642,12 +684,93 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this._entityManager.flush();
   }
 
-  getSyncState(): Promise<SpaceSyncState> {
+  getAutomergeSyncState(): Promise<SpaceSyncState> {
     return this._entityManager.getSyncState();
   }
 
-  subscribeToSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
+  subscribeToAutomergeSyncState(ctx: Context, callback: (state: SpaceSyncState) => void): CleanupFn {
     return this._entityManager.subscribeToSyncState(ctx, callback);
+  }
+
+  async getSyncState(options?: Database.GetSyncStateOptions): Promise<Database.SyncState> {
+    const [automerge, feeds] = await Promise.all([this._entityManager.getSyncState(), this.#getSpaceFeedSyncState()]);
+    return combineSyncState(automerge, feeds, this.spaceId, options?.peerId);
+  }
+
+  subscribeToSyncState(cb: (state: Database.SyncState) => void, options?: Database.GetSyncStateOptions): CleanupFn {
+    const ctx = Context.default();
+    let cancelled = false;
+    let automerge: SpaceSyncState = { peers: [] };
+    let feeds: SpaceFeedSyncState = EMPTY_FEED_SYNC_STATE;
+    const emit = () => cb(combineSyncState(automerge, feeds, this.spaceId, options?.peerId));
+
+    // Automerge documents arrive as a stream.
+    ctx.onDispose(
+      this._entityManager.subscribeToSyncState(ctx, (state) => {
+        automerge = state;
+        emit();
+      }),
+    );
+
+    // Feed blocks have no change stream, so poll the backend.
+    let pollInFlight = false;
+    const pollFeeds = async () => {
+      // Skip overlapping ticks so a slow RPC can't emit stale state after a newer poll.
+      if (pollInFlight) {
+        return;
+      }
+      pollInFlight = true;
+      try {
+        const next = await this.#getSpaceFeedSyncState();
+        if (!cancelled) {
+          feeds = next;
+          emit();
+        }
+      } catch (error) {
+        // Keep the previous feeds state on failure rather than leaving an unhandled rejection.
+        if (!cancelled) {
+          log.warn('failed to poll feed sync state', { error });
+        }
+      } finally {
+        pollInFlight = false;
+      }
+    };
+    void pollFeeds();
+    const timer = setInterval(() => void pollFeeds(), FEED_SYNC_POLL_INTERVAL);
+    ctx.onDispose(() => {
+      cancelled = true;
+      clearInterval(timer);
+    });
+
+    return () => {
+      void ctx.dispose();
+    };
+  }
+
+  /**
+   * Aggregates feed block backlog across all namespaces synced for this space.
+   */
+  async #getSpaceFeedSyncState(): Promise<SpaceFeedSyncState> {
+    if (!this.#feedService) {
+      return EMPTY_FEED_SYNC_STATE;
+    }
+    const response = await runServiceCall(
+      this.#runtime,
+      this.#feedService.FeedService.getSyncState({ spaceId: this.spaceId, namespaces: [] }),
+    );
+    let blocksToPull = 0n;
+    let blocksToPush = 0n;
+    let totalBlocks = 0n;
+    for (const namespace of response.namespaces ?? []) {
+      blocksToPull += BigInt(namespace.blocksToPull);
+      blocksToPush += BigInt(namespace.blocksToPush);
+      totalBlocks += BigInt(namespace.totalBlocks);
+    }
+    return {
+      blocksToPull: String(blocksToPull),
+      blocksToPush: String(blocksToPush),
+      totalBlocks: String(totalBlocks),
+    };
   }
 
   getAllObjectIds(): string[] {
@@ -737,15 +860,15 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   _updateServices({
     dataService,
     queryService,
-    queueService,
+    feedService,
   }: {
-    dataService: DataService;
-    queryService: QueryService;
-    queueService?: FeedProtocol.QueueService;
+    dataService: DataService.Client;
+    queryService: QueryService.Client;
+    feedService?: FeedService.Client;
   }): void {
     this._entityManager._updateServices({ dataService, queryService });
-    if (queueService !== undefined) {
-      this.#queueService = queueService;
+    if (feedService !== undefined) {
+      this.#feedService = feedService;
     }
   }
 
@@ -802,49 +925,6 @@ const isQueryScoped = (query: QueryAST.Query): boolean => {
     }
   });
   return scoped;
-};
-
-/**
- * Whether a feed-scoped query can be evaluated client-side against fetched queue items.
- * Index-only queries (e.g. full-text search) must instead run through the host indexer.
- */
-const isClientEvaluableFeedQuery = (query: QueryAST.Query): boolean => {
-  const simple = isSimpleSelectionQuery(query);
-  return simple != null && !filterContainsTextSearch(simple.filter);
-};
-
-const filterContainsTextSearch = (filter: QueryAST.Filter): boolean => {
-  if (filter.type === 'text-search') {
-    return true;
-  }
-  if (filter.type === 'and' || filter.type === 'or') {
-    return filter.filters.some(filterContainsTextSearch);
-  }
-  if (filter.type === 'not') {
-    return filterContainsTextSearch(filter.filter);
-  }
-  return false;
-};
-
-/**
- * Extracts the feed URI from a query's feed scope (`Scope.feed(...)`), if present.
- * Feed-scoped queries are dispatched to the feed handle rather than the space query sources.
- */
-const getFeedScopeUri = (query: QueryAST.Query): EID.EID | undefined => {
-  let feedUri: EID.EID | undefined;
-  QueryAST.visit(query, (node) => {
-    if (node.type === 'from' && node.from._tag === 'scope') {
-      for (const scope of node.from.scopes) {
-        if (scope._tag === 'feed') {
-          const parsed = EID.tryParse(scope.feedUri);
-          if (parsed) {
-            feedUri = parsed;
-          }
-        }
-      }
-    }
-  });
-  return feedUri;
 };
 
 /**

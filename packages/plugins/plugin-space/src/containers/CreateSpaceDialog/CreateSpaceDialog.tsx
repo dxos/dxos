@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, Paths } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -25,28 +26,33 @@ const initialValues: FormValues = { edgeReplication: true };
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invoke } = useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
+  const [error, setError] = useState<string | undefined>(undefined);
 
   const handleCreateSpace = useCallback(
-    async (data: FormValues) => {
-      const program = Effect.gen(function* () {
-        const { data: result } = yield* Effect.promise(() => invokePromise(SpaceOperation.Create, data));
-        if (result?.space) {
-          yield* Effect.promise(() =>
-            invokePromise(LayoutOperation.Open, {
-              subject: [Paths.getSpaceHomePath(result.space.id)],
-              workspace: Paths.getSpacePath(result.space.id),
-              navigation: 'immediate',
-            }),
-          );
-          yield* Effect.promise(() => invokePromise(LayoutOperation.UpdateDialog, { state: false }));
-        }
-      });
-      await EffectEx.runAndForwardErrors(program);
+    (data: FormValues) => {
+      setError(undefined);
+      return Effect.gen(function* () {
+        const { space } = yield* invoke(SpaceOperation.Create, data);
+        yield* invoke(LayoutOperation.Open, {
+          subject: [Paths.getSpaceHomePath(space.id)],
+          workspace: Paths.getSpacePath(space.id),
+          navigation: 'immediate',
+        });
+        yield* invoke(LayoutOperation.UpdateDialog, { state: false });
+      }).pipe(
+        Effect.catchAll((failure) =>
+          Effect.sync(() => {
+            log.catch(failure);
+            setError(t('create-space-dialog.error.message'));
+          }),
+        ),
+        EffectEx.runAndForwardErrors,
+      );
     },
-    [invokePromise],
+    [invoke, t],
   );
 
   return (
@@ -71,6 +77,7 @@ export const CreateSpaceDialog = () => {
           <Column.Center>
             <Form.Content>
               <Form.FieldSet />
+              <Form.Error>{error}</Form.Error>
               <Form.Submit />
             </Form.Content>
           </Column.Center>
@@ -79,3 +86,5 @@ export const CreateSpaceDialog = () => {
     </Dialog.Content>
   );
 };
+
+CreateSpaceDialog.displayName = 'CreateSpaceDialog';
