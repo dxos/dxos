@@ -68,6 +68,9 @@ const MAX_PLANK_SIZE = 120;
 
 const REM_PX = 16;
 
+/** Duration of the per-plank morph into and out of the exposé (see {@link useExposeFlip}). */
+const EXPOSE_ZOOM_MS = 150;
+
 /** Breathing room between the exposé's tiles and the viewport edges, on every side. */
 const EXPOSE_INSET_PX = 24;
 
@@ -78,9 +81,6 @@ const EXPOSE_INSET_PX = 24;
  * row is fitted at) is untouched.
  */
 const EXPOSE_GUTTER_PX = 32;
-
-/** Duration of the per-plank morph into and out of the exposé (see {@link useExposeFlip}). */
-const EXPOSE_ZOOM_MS = 300;
 
 /** Slack after the zoom before the deck's geometry is re-read, covering the transition's own jitter. */
 const EXPOSE_SETTLE_MARGIN_MS = 60;
@@ -1218,11 +1218,28 @@ const useExposeScroll = ({
     if (!viewport) {
       return;
     }
+
+    // Set inline rather than as a class, which the viewport's own `overflow-x-scroll` would win against.
+    // Everything fits in the exposé, so the bar has nothing left to scroll — and it is held through the
+    // morph in either direction, because a tile transformed back to where it came from still counts
+    // towards scrollable overflow and would otherwise flash a scrollbar spanning the whole deck.
+    viewport.style.overflowX = 'hidden';
     if (expose) {
       viewport.scrollLeft = 0;
-    } else if (wasExposed) {
+      return;
+    }
+
+    if (wasExposed) {
+      // Settable while overflow is hidden; the bar only comes back once the tiles have stopped moving.
       viewport.scrollLeft = scrollLeftRef.current;
     }
+    const timer = setTimeout(
+      () => {
+        viewport.style.overflowX = '';
+      },
+      wasExposed ? EXPOSE_ZOOM_MS + EXPOSE_SETTLE_MARGIN_MS : 0,
+    );
+    return () => clearTimeout(timer);
   }, [expose, viewportRef]);
 };
 
@@ -1268,6 +1285,19 @@ const useFullscreen = (fullscreenId: string | undefined) => {
  * it renders only that plank, headless, replacing the deck entirely until the user exits (Escape or
  * the fullscreen toggle), matching the existing `DeckOperation.Adjust({ type: 'fullscreen' })` wiring.
  */
+/**
+ * Whether focus rests on a plank itself rather than on anything inside it — the deck's own notion of "the
+ * viewport is selected", and the gate for the arrow-key navigation.
+ *
+ * Attention is focus-driven, so the attendable container is exactly the element that holds focus once the
+ * user has stepped out of a plank's contents (Escape from an editor lands here). Anything deeper owns its
+ * own arrow keys: a caret, a list, a tree, a toolbar.
+ */
+const isPlankLevelFocus = (): boolean => {
+  const active = document.activeElement;
+  return active instanceof HTMLElement && active.matches(Attention.ATTENDABLE_SELECTOR);
+};
+
 export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
   const { overscroll } = useDeckSettings();
@@ -1340,6 +1370,8 @@ export const DeckPlanks = () => {
   exposeRef.current = state.expose;
   const captureRef = useRef(captureExposeGeometry);
   captureRef.current = captureExposeGeometry;
+  const navigationRef = useRef({ planks, attendedPlankId });
+  navigationRef.current = { planks, attendedPlankId };
 
   // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
   // note in DESIGN about promoting it once its binding is settled.
@@ -1357,7 +1389,31 @@ export const DeckPlanks = () => {
         event.preventDefault();
         captureRef.current();
         void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        return;
       }
+
+      // Arrows step between planks, but only once focus has left a plank's contents for the plank itself —
+      // otherwise this would swallow every caret movement in an editor. `isPlankLevelFocus` is what makes
+      // "the deck is selected" concrete: the attendable container is focused, not something inside it.
+      const step = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+      if (step === 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
+        return;
+      }
+      if (exposeRef.current || !isPlankLevelFocus()) {
+        return;
+      }
+
+      const { planks: current, attendedPlankId: attended } = navigationRef.current;
+      const index = attended ? current.indexOf(attended) : -1;
+      const next = index === -1 ? current[0] : current[index + step];
+      if (!next) {
+        return;
+      }
+
+      // The same one-shot the spines and navigation use: it scrolls the plank to the front *and* attends
+      // it, because the plank focuses itself off the flag.
+      event.preventDefault();
+      void invokePromise(LayoutOperation.ScrollIntoView, { subject: next });
     };
 
     document.addEventListener('keydown', handleKeyDown);

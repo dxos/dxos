@@ -180,6 +180,17 @@ Shapes being tried behind flags rather than committed to; see `Settings` in plug
       arrived a commit later, so the FLIP measured the deck at full size and the zoom _in_ stopped
       animating. For the same reason the natural width is summed from tile `offsetWidth` and never
       `stack.scrollWidth`, which counts transformed overflow and mid-FLIP reports a far wider stack.
+- [x] **Arrow-key plank navigation** — left/right step to the previous/next plank and attend it, reusing
+      `LayoutOperation.ScrollIntoView` (which scrolls _and_ attends, since the plank focuses itself off the
+      flag). Gated on `isPlankLevelFocus()`: the focused element must be the attendable container itself,
+      so a caret in an editor, a list or a toolbar keeps its own arrows. Reaching that level is tabster's
+      existing groupper ladder — Escape leaves the editor, Escape again lands on the plank.
+- [ ] **Move the plank navigation onto tabster** — the principled version is a Mover
+      (`useArrowNavigationGroup`) on the stack with each tile a groupper, which is what `Focus.Group`
+      (`packages/ui/react-ui/src/components/Focus/Focus.tsx`) already wraps. Blocked on `MosaicStackProps`
+      being a narrow `ThemedClassName<… & Pick<…>>`: it forwards no arbitrary DOM props, so the
+      `data-tabster` attributes cannot be attached without changing `react-ui-mosaic` (the same constraint
+      that stopped `onClick` going onto `Mosaic.Container`). Worth doing with the Mosaic change, not before.
 - [ ] **Drag planks in the exposé to reorder** — the exposé is where the whole deck is visible, so it is
       the natural place to reorder. The plumbing exists (`incrementPlank` in layout.ts, the
       `increment-start`/`increment-end` adjustments) and `PlankControls` still has those buttons
