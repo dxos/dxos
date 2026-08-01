@@ -8,7 +8,7 @@ import React, { type ComponentProps, useEffect } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
-import { Agent, Chat, Plan } from '@dxos/assistant-toolkit';
+import { Agent, Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Instructions } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -27,7 +27,6 @@ import {
   ChatCompanion,
   ChatDialog,
   IntegrationPrompt,
-  PlanArticle,
   SpaceHomePrompt,
   SpaceHomeSuggestions,
   TracePanel,
@@ -125,13 +124,6 @@ export default Capability.makeModule(() =>
             </Panel.Root>
           );
         },
-      }),
-      Surface.create({
-        id: 'plan',
-        filter: AppSurface.object(AppSurface.Article, Plan.Plan),
-        component: ({ data, role }) => (
-          <PlanArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
       }),
       Surface.create({
         id: ASSISTANT_DIALOG,

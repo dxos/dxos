@@ -8,10 +8,9 @@ import * as Effect from 'effect/Effect';
 import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ExternalProject, Organization, Person, Task } from '@dxos/types';
+import { Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -216,7 +215,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
     description: repo.description ?? '',
   };
   const fid = String(repo.id);
-  const existing = yield* findByForeignId<ExternalProject.ExternalProject>(ExternalProject.ExternalProject, repo.id);
+  const existing = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, repo.id);
 
   if (existing) {
     const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
@@ -246,7 +245,7 @@ const upsertProject = Effect.fn('upsertProject')(function* (
     return existing;
   }
 
-  const created = Obj.make(ExternalProject.ExternalProject, {
+  const created = Obj.make(TaskSet.TaskSet, {
     [Obj.Meta]: { keys: [fkFor(repo.id)] },
     name: repo.full_name,
     description: repo.description ?? undefined,
@@ -265,7 +264,7 @@ const upsertTask = Effect.fn('upsertTask')(function* (
   binding: Cursor.ExternalCursor,
   issue: GitHubApi.GitHubIssue,
   assignedPerson: Person.Person | undefined,
-  project: ExternalProject.ExternalProject,
+  taskSet: TaskSet.TaskSet,
 ) {
   const remoteFields: Required<TaskSnapshot> = {
     title: issue.title,
@@ -284,10 +283,10 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       remoteFields.description,
       snapshotField(snapshot, 'description'),
     );
-    // existing.status is the full Task status union ('todo' | 'in-progress' | 'done' | undefined);
-    // the snapshot only ever holds GitHub's collapsed shape ('todo' | 'done'). Widen the merge
-    // type so both sides typecheck and let mergeField compare them as plain values.
-    const statusResult = mergeField<'todo' | 'in-progress' | 'done' | undefined>(
+    // existing.status is the full Task status union; the snapshot only ever holds GitHub's
+    // collapsed shape ('todo' | 'done'). Widen the merge type so both sides typecheck and let
+    // mergeField compare them as plain values.
+    const statusResult = mergeField<Task.Task['status']>(
       existing.status,
       remoteFields.status,
       snapshotField(snapshot, 'status'),
@@ -305,15 +304,14 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       if (writeStatus) {
         existing.status = statusResult.value;
       }
-      if (assignedPerson && !existing.assigned) {
-        existing.assigned = Ref.make(assignedPerson);
-      }
-      const currentProjectId = existing.project ? EID.getEntityId(EID.tryParse(existing.project.uri)!) : undefined;
-      const projectId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
-      if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
-        existing.project = Ref.make(project);
+      if (assignedPerson && !existing.assignee?.contact) {
+        existing.assignee = { contact: Ref.make(assignedPerson) };
       }
     });
+    // Containment is the ECHO parent edge; re-parent when the issue moved repos.
+    if (Obj.getParent(existing)?.id !== taskSet.id) {
+      Obj.setParent(existing, taskSet);
+    }
     Cursor.writeSnapshot(binding, fid, remoteFields);
     return { task: existing, created: false };
   }
@@ -323,10 +321,10 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     title: issue.title,
     description: issue.body ?? '',
     status: issueStateToTaskStatus(issue.state),
-    assigned: assignedPerson ? Ref.make(assignedPerson) : undefined,
-    project: Ref.make(project),
+    assignee: assignedPerson ? { contact: Ref.make(assignedPerson) } : undefined,
   });
   const persisted = yield* Database.add(created);
+  Obj.setParent(persisted, taskSet);
   Cursor.writeSnapshot(binding, fid, remoteFields);
   return { task: persisted, created: true };
 });
@@ -384,7 +382,7 @@ export const pushRepoUpdates: <E, R>(
     // Project (repo) push — description only.
     {
       const fid = String(repo.id);
-      const local = yield* findByForeignId<ExternalProject.ExternalProject>(ExternalProject.ExternalProject, repo.id);
+      const local = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, repo.id);
       if (local && !Obj.isDeleted(local)) {
         const snapshot = Cursor.readSnapshot<ProjectSnapshot>(binding, fid);
         if (snapshot) {
@@ -590,10 +588,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
 
             // Re-resolve the local Project after upsert so issue upserts and
             // pushes operate on the persisted record.
-            const localProject = yield* findByForeignId<ExternalProject.ExternalProject>(
-              ExternalProject.ExternalProject,
-              remoteRepo.id,
-            );
+            const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
             if (!localProject) {
               return yield* Effect.dieMessage('Local Project missing after upsert.');
             }
