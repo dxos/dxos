@@ -89,7 +89,11 @@ DX_SOURCE=1 ./bin/dx -p mcp-local halo share --open --host http://localhost:5173
 
 - Auth-code invitations expire; regenerate rather than debugging stale codes.
 - `whoami` reports `haloSpaceId` for the session — don't confuse it with the data space id.
-- `querySpace` WORKS despite the README's BROKEN label; `listSpaces` untested.
+- `querySpace` WORKS despite the README's BROKEN label; `listSpaces` WORKS (verified 2026-08-01)
+  but returns `[]` for an identity with no UserAgent row — same root cause as the `/authorize`
+  "No HALO space found" error. After a `.wrangler` wipe every prior identity loses its row; reload
+  Composer once to re-register (or pass `--halo-space` to bypass the authorize lookup — `listSpaces`
+  has no bypass and stays empty until the agent exists).
 - Since edge PR #785 the document tools are REPLACED by object CRUD (createObject/getObject/updateObject/deleteObject/queryObjects) + discovery (listPlugins/listTypes/listOperations). `updateObject` takes `properties` (field patch) or `edits` (text edits via markdown.update; non-markdown text types need the dxos pin ≥ dd552dfc74).
 
 ## Morning steps (2026-08-01, tunnel live)
