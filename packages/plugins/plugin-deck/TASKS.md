@@ -45,13 +45,14 @@ Phased so each step is independently landable and verifiable:
       article, otherwise the deck opens its contents. `makeObject` gained a `deck` option for exactly
       this "depends on enabled plugins" case; the schema annotation stays for types with a fixed answer.
       Verified in Composer: clicking a collection with three documents opens three planks.
-- [ ] **The top-level "Collections" row can never navigate** — it is not a collection object but a
-      synthetic section node (`Node.make({ …, data: null })`,
-      `plugin-space/.../extensions/collections.ts`), and the navtree's `handleSelect` returns early on
-      `!node.data`. So clicking it only expands, regardless of any of the above. If selecting it should
-      show the space's root collection as a deck, that node needs to carry the root collection as its
-      `data` — which changes what the node _is_ (drag/drop, URL addressing), so it wants a decision
-      rather than a patch.
+- [ ] **Top-level "Collections" row: open it, keep it inert** — DECIDED. Today it is a synthetic
+      section node (`Node.make({ …, data: null })`, `plugin-space/.../extensions/collections.ts`) and
+      the navtree's `handleSelect` returns early on `!node.data`, so it only expands. Make the click
+      navigate and seed the deck with the space's top-level contents, while keeping the node
+      non-draggable, non-droppable and out of the URL — it gains the behaviour without becoming a real
+      object. That combination is a deliberate special case: leave a comment saying so, since a node
+      that is selectable but not an object is exactly the kind of thing a later reader will try to
+      "fix". Needs the seeding path to accept a root that is not the node's own data.
 - [ ] **Rename the `flatten` setting** — it is the top-level deck mode, gating whether the deck is
       locked to one plank (+ companion) with a breadcrumb trail, or may show several. The name
       describes the old implementation rather than the choice; it also interacts with everything above,
