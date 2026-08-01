@@ -6,7 +6,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AssistantCapabilities } from '@dxos/plugin-assistant';
+import { AssistantCapabilities, AssistantEvents } from '@dxos/plugin-assistant';
 
 import { NativeCapabilities, NativeEvents } from '#types';
 
@@ -19,7 +19,7 @@ export const Ollama = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry],
     provides: [AppCapabilities.AiModelResolver, AssistantCapabilities.OllamaManager],
-    activatesOn: NativeEvents.Start,
+    activatesOn: AssistantEvents.Start,
   },
   () => import('./ollama'),
 );

@@ -7,7 +7,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { MapCapabilities } from '@dxos/plugin-map/types';
+import { MapCapabilities, MapEvents } from '@dxos/plugin-map/types';
 import { SpaceCapability } from '@dxos/plugin-space';
 
 import { TripEvents } from '#types';
@@ -26,7 +26,7 @@ export const SkillDefinition = Capability.inlineModule(
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const MarkerProvider = Capability.lazyModule(
   'MarkerProvider',
-  { provides: [MapCapabilities.MarkerProvider], activatesOn: TripEvents.Start },
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start },
   () => import('./marker-provider'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

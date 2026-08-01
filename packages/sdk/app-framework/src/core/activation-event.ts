@@ -103,15 +103,6 @@ export const getEvents = (events: Events) => ('type' in events ? events.events :
 export const Startup = make('org.dxos.app-framework.event.startup');
 
 /**
- * The after-startup gate: modules declaring `activatesOn: DeferredStartup` stay off the boot
- * critical path and activate when the host fires this event at idle after ready. A plain
- * activation event — the manager gives it no special treatment — and a coarse, temporary
- * assignment while modules migrate to precise demand events.
- * @deprecated Being replaced by per-plugin start events; see {@link pluginStart}.
- */
-export const DeferredStartup = make('org.dxos.app-framework.event.deferredStartup');
-
-/**
  * A plugin's feature-start event, by convention `<pluginKey>.event.start`. A plugin's
  * off-critical-path modules declare `activatesOn` on its own start event (conventionally
  * exported as `<Name>Events.Start` from the plugin's types); cross-plugin contributions (a

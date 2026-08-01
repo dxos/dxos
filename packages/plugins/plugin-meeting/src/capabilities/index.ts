@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import { CallsCapabilities, CallsEvents } from '@dxos/plugin-calls/types';
 
 import { MeetingCapabilities, MeetingEvents } from '#types';
 
@@ -19,7 +20,8 @@ export const CallExtension = Capability.lazyModule(
   {
     requires: [MeetingCapabilities.State],
     provides: [CallsCapabilities.EventHandler],
-    activatesOn: MeetingEvents.Start,
+    // Both features must be live: the handler extends calls but reads meeting state.
+    activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
   },
   () => import('./call-extension'),
 );

@@ -3,12 +3,10 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { TripCapabilities } from '@dxos/plugin-trip/types';
-
-import { OsrmEvents } from '../events';
+import { TripCapabilities, TripEvents } from '@dxos/plugin-trip/types';
 
 export const RoutingService = Capability.lazyModule(
   'RoutingService',
-  { provides: [TripCapabilities.RoutingService], activatesOn: OsrmEvents.Start },
+  { provides: [TripCapabilities.RoutingService], activatesOn: TripEvents.Start },
   () => import('./routing-service'),
 );
