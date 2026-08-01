@@ -137,7 +137,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               const subject = data.subject as StoryItem | undefined;
               const title = subject?.title ?? data.attendableId;
               return (
-                <div className='grid content-start gap-2 p-4'>
+                <div className='grid content-start gap-2 p-4' data-testid='story.article' data-title={title}>
                   <p className='text-sm text-description'>Story article surface</p>
                   <p>
                     Placeholder content for <span className='font-medium'>{title}</span> (
@@ -153,7 +153,11 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             component: ({ data }) => {
               const companionTo = data.companionTo as StoryItem | undefined;
               return (
-                <div className='grid content-start gap-2 p-4'>
+                <div
+                  className='grid content-start gap-2 p-4'
+                  data-testid='story.companion'
+                  data-companion-to={companionTo?.title}
+                >
                   <p className='text-sm text-description'>Story companion surface</p>
                   <p>
                     Companion <span className='font-mono text-xs'>{String(data.variant)}</span> of{' '}
@@ -377,6 +381,50 @@ export const ManyPlanksWithCompanion: Story = {
   args: {
     count: 4,
     companionPlanks: [1, 3],
+  },
+};
+
+/** Attends a plank by focusing it — attention is focus-driven, and a click would have to land on a plank that may be folded. */
+const attendPlank = async (canvasElement: HTMLElement, position: number) => {
+  const id = `root/story-item-${position}`;
+  const plank = canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"]`);
+  await expect(plank, `no plank for ${id}`).not.toBeNull();
+  plank?.focus();
+};
+
+/**
+ * Titles of the planks whose companion is currently rendered (the story companion surface stamps its
+ * own). Deduped: `Companion` keeps every variant's panel mounted, hiding the inactive ones, so a single
+ * showing companion contributes one surface per variant.
+ */
+const showingCompanionsFor = (canvasElement: HTMLElement): string[] => [
+  ...new Set(
+    Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="story.companion"]'))
+      .map((element) => element.dataset.companionTo)
+      .filter((title): title is string => !!title),
+  ),
+];
+
+// The companion belongs to a plank, not to the deck: it follows attention from plank to plank, and each
+// plank remembers whether its own is open. Planks 1 and 3 start open here, plank 2 closed.
+export const CompanionFollowsAttention: Story = {
+  tags: ['test'],
+  args: { count: 3, companionPlanks: [1, 3] },
+  play: async ({ canvasElement }) => {
+    // The plugin manager activates asynchronously, so the deck mounts well after the story's first paint.
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    // Nothing is attended yet, so the companion falls back to the last plank — which has its own open.
+    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Notes']));
+
+    // Plank 2 was left closed, so attending it shows no companion at all.
+    await attendPlank(canvasElement, 2);
+    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual([]));
+
+    // Plank 1 was left open, so returning to it brings its companion back.
+    await attendPlank(canvasElement, 1);
+    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview']));
   },
 };
 

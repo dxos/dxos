@@ -27,6 +27,16 @@ describe('findAttendedPlank', () => {
   test('matches attention nested inside a plank', ({ expect }) => {
     expect(findAttendedPlank(['a', 'b'], ['b/~assistant'])).toBe('b');
   });
+
+  test('a nested plank wins over the plank whose id prefixes it', ({ expect }) => {
+    // A mailbox opens its messages as `<mailbox>/<message>` planks, so both are open and one prefixes
+    // the other; attention on the message must not resolve back to the mailbox.
+    expect(findAttendedPlank(['mailbox', 'mailbox/message-1'], ['mailbox/message-1'])).toBe('mailbox/message-1');
+    expect(findAttendedPlank(['mailbox', 'mailbox/message-1'], ['mailbox/message-1/~assistant'])).toBe(
+      'mailbox/message-1',
+    );
+    expect(findAttendedPlank(['mailbox', 'mailbox/message-1'], ['mailbox'])).toBe('mailbox');
+  });
 });
 
 describe('resolveCompanionAnchor', () => {

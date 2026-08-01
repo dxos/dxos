@@ -21,12 +21,16 @@ export const getRenderedPlanks = (active: readonly string[], flatten: boolean | 
  * The open plank attention currently points into, or undefined when it points nowhere in the deck.
  * Attention can rest on something nested inside a plank (a child attendable, or the companion pane
  * itself, which shares its context plank's `attendableId`), so ids are matched by path prefix.
+ *
+ * The *longest* match wins, because planks nest: a mailbox opens its messages as `<mailbox>/<message>`
+ * planks, so the mailbox's own id prefixes them. Taking the first match in deck order would hand
+ * attention on a message back to the mailbox it came from.
  */
 export const findAttendedPlank = (planks: readonly string[], attended: readonly string[]): string | undefined => {
   for (const attendedId of attended) {
-    const plank = planks.find((id) => attendedId === id || attendedId.startsWith(`${id}/`));
-    if (plank) {
-      return plank;
+    const matches = planks.filter((id) => attendedId === id || attendedId.startsWith(`${id}/`));
+    if (matches.length > 0) {
+      return matches.reduce((longest, id) => (id.length > longest.length ? id : longest));
     }
   }
 
