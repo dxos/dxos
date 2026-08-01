@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { useManagerOptional, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
@@ -24,6 +24,13 @@ export type UseTableModelProps<T extends TableRow = TableRow> = {
   db?: Database.Database;
   rows?: T[];
   rowActions?: TableRowAction[];
+  /**
+   * Rows to select when the model is built. Overrides the selection read from the view state for
+   * the table object — pass this when the surrounding container owns the selection under a
+   * different context id (e.g. a type article keyed by the type's URI), so switching into the
+   * table preserves what was already selected.
+   */
+  selection?: readonly string[];
   onSelectionChanged?: (selection: string[]) => void;
   onRowAction?: (actionId: string, data: T) => void;
 } & Pick<
@@ -38,6 +45,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
   rows,
   rowActions,
   features,
+  selection,
   onSelectionChanged,
   onRowAction,
   ...props
@@ -45,7 +53,11 @@ export const useTableModel = <T extends TableRow = TableRow>({
   const registry = useContext(RegistryContext);
   const viewState = useManagerOptional();
   const selected = useSelection(object && Obj.getURI(object), 'multi');
-  const initialSelection = useMemo(() => selected, [object]);
+  // Read at construction time, not frozen into the effect's deps. The model is rebuilt whenever any
+  // of its inputs change identity, and each rebuild re-seeds from here — a frozen snapshot would
+  // reset the selection to whatever it was when the table mounted, discarding the user's clicks.
+  const initialSelection = useRef<readonly string[]>(selection ?? selected);
+  initialSelection.current = selection ?? selected;
 
   const [model, setModel] = useState<TableModel<T>>();
   useEffect(() => {
@@ -64,7 +76,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
         change: createEchoChangeCallback<T>(object),
         features,
         rowActions,
-        initialSelection,
+        initialSelection: [...initialSelection.current],
         onRowAction,
         ...props,
       });
@@ -77,7 +89,7 @@ export const useTableModel = <T extends TableRow = TableRow>({
       void model?.close();
     };
     // TODO(burdon): Trigger if callbacks change?
-  }, [registry, viewState, object, projection, features, rowActions, initialSelection]);
+  }, [registry, viewState, object, projection, features, rowActions]);
 
   // Update data when rows change.
   useEffect(() => {

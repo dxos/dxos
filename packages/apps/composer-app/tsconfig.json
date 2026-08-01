@@ -463,6 +463,9 @@
       "path": "../../plugins/plugin-table"
     },
     {
+      "path": "../../plugins/plugin-terra"
+    },
+    {
       "path": "../../plugins/plugin-theme"
     },
     {

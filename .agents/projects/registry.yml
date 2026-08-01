@@ -60,7 +60,7 @@ projects:
     tasks: packages/stories/stories-brain/TASKS.md
     design: packages/stories/stories-brain/fixtures/REPORT.md
     prs: [12163, 12167, 12178]
-    resume: 'PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
+    resume: 'NEW (from object-deduplication, 2026-07-31): contact extraction is now an allow-list and nothing sets `outbound`, so only "domain matches a known Organization" fires — a human at an unknown domain gets no contact. Fix is to extract recipients of sent mail; see TASKS.md "Contact extraction — recipients of sent mail". PRs #12178 + #12205 merged (Topics UX v2 + Topics/Subscriptions Mosaic lists). In progress (uncommitted, NOT yet a PR): converted plugin-inbox folder articles to the ObjectArticleProps<Mailbox> pattern (db from subject, folder graph nodes carry data:mailbox, sentinels dropped) + SubscriptionsArticle unsubscribe removes on success. Build/lint/fmt + 167 unit tests green. NOTE: TopicsArticle/CreateTopic storybook play-tests fail on the committed baseline too (pre-existing, headless topic-query returns empty). Next: commit this work / open PR when ready; then Priority 1 manual topics + management. Deferred: Active Topics v2 (LLM labels + personEmails), two-tier latency, re-sync dedup bug, MailboxArticle search wiring.'
 
   - name: task-planning-skill
     status: active
@@ -127,6 +127,7 @@ projects:
     design: .agents/projects/feed-live-objects/DESIGN.md
     prs: [12235, 12368]
     resume: 'PR #12235 MERGED (7b270f2e); roadmap PR #12368 MERGED. Roadmap REVISED 2026-07-29 after the chat/scale exploration (LiveStore event-sourcing comparison, Discord partial-replication analysis, open-chat/Matrix survey) — decisions: first-party channels ship on feeds (Bluesky-DM strategy), external large-scale sources enter as processed signals via connectors, Matrix is a long-term shelf (bridge-feed design + ATProto-OAuth->OIDC broker sketch parked in this thread''s analysis). New phases (DESIGN.md "Roadmap"): 1 insertionId version/order axis; 2 consumer cursors + read state (chat unread = high-water cursor) + EDGE push replacing 1s polling; 3 retention + epoch chaining (breaks 10k/feed ceiling); 4 sparse feeds — evictable cached ranges + remote range queries + watermarked domain-order paging (email-scale; channels inherit); 5 delta blocks (demand-gated, self-containedness rule vs sparse replicas); 6 projections (exploratory). Companion workstreams noted in DESIGN.md: first-party chat plugin (needs ephemeral presence channel, not feed blocks), large-source ingestion (source-cursor pipeline), pluggable FeedBackend interface (read-through against non-EDGE backends; phase 4 only keeps the seam clean), Matrix shelf (strong FeedBackend-consumer candidate and likely long-term production chat backend — first consumer could equally be freeq; ATProto identity broker is a parenthetical adjunct). NEXT: phase 1. Project docs land via PR #12391.'
+
   - name: feed-soft-fork
     status: active
     user: burdon
@@ -137,6 +138,7 @@ projects:
     design: .agents/projects/feed-soft-fork/DESIGN.md
     prs: [12387]
     resume: 'Phase 1 COMPLETE. PR #12387 OPEN, Check GREEN (preview pr-12387-composer-main.dxos.workers.dev); CodeRabbit was rate-limited on the first push, re-requested. `Feed.PARENT_KEY` / `getParent` / `setParent` over `@meta` foreign keys, `Feed.resolveBranch` (linear-with-cuts walk, `head` override, truncation on absent parent, termination on forward reference/cycle), `Feed.append` `{ parent }` option. 17 pure tests in echo/src/Feed.test.ts + a DB round-trip in echo-client/src/feed/feed.test.ts. Lineage deliberately does NOT live on the Block (concurrent writers already fork the block chain, and one item is N blocks) — see DESIGN.md "Rejected". Next: land #12387, then the backlog in TASKS.md (branch enumeration, explicit active-branch head, query-plan push-down, assistant chat wiring — which must not reuse `Message.parentMessage`, that means tool-call nesting).'
+
   - name: object-merging
     status: active
     user: josiah
@@ -148,6 +150,17 @@ projects:
     prs: []
     resume: 'Research COMPLETE and committed (DESIGN.md) on branch claude/echo-object-merging-research-dqtjx1 (no PR by request). Decisions so far: merge only distinct-id duplicates (collision class 2); same-id-two-docs stays an error (no deterministic ids — rejected, §4.5); merge direction = deterministic ordering, winner = min EntityId. Next: design review of the 5 open questions in DESIGN.md §7 (identity field, version matching, merge-policy pluggability, where the merge runs, relation scope), then Phase 0 spike (§6).'
 
+  - name: object-deduplication
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-07-31
+    summary: One identity rule per type (IdentitySpec) shared by extractors and an after-the-fact duplicate scan, plus a Duplicates tab on the Database type article for human-reviewed merges. Distinct from object-merging (external-source duplicates, human-gated) — see DESIGN.md §1.1.
+    tasks: .agents/projects/object-deduplication/TASKS.md
+    design: .agents/projects/object-deduplication/DESIGN.md
+    prs: [12417]
+    resume: "PR #12417 MERGED 2026-08-01 (squash 0a4bbdeda4), all 20 CodeRabbit threads resolved, working tree clean. Phases 1-4 complete and live-verified in storybook (:9013 from this worktree; :9012 is also mine). SHIPPED: engine in @dxos/extractor (IdentitySpec/IdentityIndex/overlayIdentityIndex/findDuplicates/planMerge/applyMerge); specs in extractor-lib; FindDuplicates/MergeDuplicates operations + Duplicates tab in plugin-space; specs contributed by PLUGIN-INBOX (moved there from plugin-crm then plugin-space — whoever creates the objects owns the identity rule, and inbox is default-enabled whereas crm is Labs, which is why the tab was invisible on localhost). F1-F4 fixed; selective-extraction allow-list wired into the email pipeline. FOUR review rounds found nine real bugs, all in the callers rather than the engine: override semantics (a confirmed edit was discarded), dropped unkeyable entries (silent data loss), ECHO refusing to re-parent a nested record on compound merges, a cached rejected index build, uncommitted contacts poisoning the shared index, www.-vs-bare domain mismatch breaking Organization linking, Google sync not re-registering after a merge, the masonry cache keyed on index-defaulted ids, and MergeDuplicates accepting arbitrary ids for a DESTRUCTIVE op. Twice my own tests had locked in the wrong behaviour; twice a claim of mine did not survive checking (planMerge does NOT recompute identity keys). Also landed en route: masonry height cache (remount 113ms -> 1ms, scoped by a required cacheKey), message-age annotations on person card rows (Card.Action `annotation`), sheet completion tooltip anchored to the editing cell (was pinned to the window corner; driven by a DOM observer because CodeMirror positions in its measure phase), grid cell editor filling and centring its cell. NEXT: (1) task 3.5 play test for the Duplicates story — highest value, since that is exactly where the bugs kept appearing; (2) phase 5 compound table cells (DESIGN.md §5); (3) factor the duplicates tab out of TypeArticle as a registered aspect — Panel.Content was normalized to one Tabs.Panel per layout as step 1, the seam should also carry the merge-preview companion still hardcoded in react-surface.tsx, and note the tabpanels have a dangling aria-labelledby since the layout switch is a menu toggle-group not a Tablist; (4) task 4.4 audit plugin-github/sync + assistant-toolkit linear sync-issues. MOVED OUT: the unwired SenderSignals.outbound is now mailbox-research's (packages/stories/stories-brain/TASKS.md) — it needs sent-mail recipient extraction, and the open question is which correspondents matter; consequence today is that a human mailing from a domain with no Organization gets no contact. KNOWN: refs to a merged-away object are not rewritten (feed-stored Message.sender.contact cannot be) — coordinate with josiah/object-merging; plugin-sheet couples to the .dx-grid__cell-editor class name for tooltip anchoring. Commits are UNSIGNED (1Password agent failing to fill)."
+
   - name: chat
     status: active
     user: josiah
@@ -158,6 +171,7 @@ projects:
     design: .agents/projects/chat/DESIGN.md
     prs: []
     resume: 'DESIGN.md is UNIFIED (2026-07-29) — read it first; TASKS.md is a deep per-stage ledger. Model: Channel is the only conversation type (no Thread object); thread = threadId partition of the channel feed (Zulip-style, thread-first UX); comments = per-document comments Channel hidden via companion-relation pattern, threadId = anchor id; single-writer principle (no shared mutable state on feed items — Reaction is its own per-author type folded at read, replies = parentMessage refs). Stages: 1 prototype in plugin-thread (schema fixes: parentMessage bare Obj.ID -> Ref(Message) at Message.ts:41; EVALUATE properties bag -> typed ECHO annotations, beware LabelAnnotation reads properties.subject; Reaction type; thread-first UX; message actions) -> 2 rename to plugin-chat -> 3 review unification + Thread deletion with migration (COORDINATE with document-revisions/burdon) -> 4 post-unification: notifications + presence (moved OUT of stage 1 by jdw). Ship gate: feed phase 1 before real users. PR #12391 carries the project docs. NEXT: stage 1 — schema fixes + thread-first prototype in plugin-thread.'
+
   - name: url-deck-redesign
     status: active
     user: josiah

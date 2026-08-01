@@ -37,6 +37,12 @@ describe('hideImages ranges', () => {
     expect(applyHidden('before ![alt](data:image/png;base64,iVBORw0KGgo=) after')).to.equal('before  after');
   });
 
+  test('omits an image with an empty target', ({ expect }) => {
+    // `![alt]()` resolves to nothing, so it renders broken; hide it like any other unloadable image.
+    expect(applyHidden('before ![alt]() after')).to.equal('before  after');
+    expect(applyHidden('before ![alt](  ) after')).to.equal('before  after');
+  });
+
   test('omits an image whose target carries a title', ({ expect }) => {
     expect(applyHidden('a ![alt](https://e.com/i.png "Title") b')).to.equal('a  b');
   });

@@ -59,9 +59,11 @@ export const importMessages = async (
   serialized: unknown[],
   db: Database.Database,
 ): Promise<number> => {
+  // Throws rather than returning 0: a mailbox whose feed has not resolved is a failed import, and
+  // reporting it as "uploaded 0" would look like an empty archive.
   const feed = await mailbox.feed?.tryLoad();
   if (!feed) {
-    return 0;
+    throw new Error('Mailbox has no resolved feed; cannot import.');
   }
 
   const messages = serialized.map(reconstructMessage);

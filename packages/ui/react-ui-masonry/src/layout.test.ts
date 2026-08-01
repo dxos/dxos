@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { layout } from './layout';
+import { getColumnWidth, layout } from './layout';
 
 describe('layout', () => {
   test('assigns each tile to the shortest column (not by index)', ({ expect }) => {
@@ -88,5 +88,21 @@ describe('layout', () => {
       maxColumnWidthPx: 200,
     }).rects;
     expect(rects[0].x).toBe(400);
+  });
+});
+
+describe('getColumnWidth', () => {
+  test('matches the width the layout resolves, so cache keys and rendering cannot disagree', ({ expect }) => {
+    const cases = [
+      { columnCount: 1, containerWidth: 300, gapPx: 8 },
+      { columnCount: 3, containerWidth: 1000, gapPx: 12 },
+      { columnCount: 4, containerWidth: 1600, gapPx: 12, maxColumnWidthPx: 320 },
+      // Degenerate: no width yet (the frame before the viewport is measured).
+      { columnCount: 2, containerWidth: 0, gapPx: 8 },
+    ];
+
+    for (const options of cases) {
+      expect(getColumnWidth(options), JSON.stringify(options)).toBe(layout({ ...options, heights: [] }).columnWidth);
+    }
   });
 });

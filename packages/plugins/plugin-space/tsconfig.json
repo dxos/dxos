@@ -56,6 +56,12 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -144,6 +150,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-theme"
