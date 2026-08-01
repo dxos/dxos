@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { DXN, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
@@ -20,11 +20,19 @@ import { EntityId, PublicKey } from '@dxos/keys';
 // `migration-research.test.ts` (Track A) for the harness idioms this file reuses verbatim.
 //
 
-/** Declares both a task-shaped and a split-address-shaped test object, all fields optional. */
+/**
+ * Declares a task-shaped, split-address-shaped, and fan-in/fan-out-shaped test object, all fields
+ * optional: `address` is the claim-9 split source; `parentId` is its cheap back-reference;
+ * `assigneeName` is the claim-10 fan-in target; `refProp` is the claim-11 fan-in reference.
+ */
 class TaskDoc extends Type.makeObject<TaskDoc>(DXN.make('org.dxos.test.migration.entities.TaskDoc', '0.1.0'))(
   Schema.Struct({
     title: Schema.optional(Schema.String),
     name: Schema.optional(Schema.String),
+    address: Schema.optional(Schema.String),
+    parentId: Schema.optional(Schema.String),
+    assigneeName: Schema.optional(Schema.String),
+    refProp: Schema.optional(Schema.suspend((): Ref.RefSchema<TaskDoc> => Ref.Ref(TaskDoc))),
   }),
 ) {}
 
@@ -83,6 +91,37 @@ const pollForRelationWithoutThrowing = async (db: EchoDatabase, timeoutMs: numbe
     await sleep(50);
   }
   return undefined;
+};
+
+/** Parses a `"<houseNumber> <street>"` address; a value with no leading house number is rejected. */
+const parseAddress = (raw: string): { houseNumber: string; street: string } | undefined => {
+  const match = /^(\d+)\s+(.+)$/.exec(raw.trim());
+  return match ? { houseNumber: match[1], street: match[2] } : undefined;
+};
+
+type FoldResult = { created: true } | { created: false; reason: string };
+
+/**
+ * Folds `parent.address` into a new extracted object stamped with a derived identity key — a
+ * parse failure leaves `parent.address` untouched and reports rather than half-creating (claim 9's
+ * partial-transform contract).
+ */
+const foldAddressSplit = (db: EchoDatabase, parent: TaskDoc): FoldResult => {
+  const raw = parent.address;
+  invariant(raw, 'expected parent to carry the source address property');
+  const parsed = parseAddress(raw);
+  if (!parsed) {
+    return { created: false, reason: `unparseable address: ${JSON.stringify(raw)}` };
+  }
+  const identityKey = `org.dxos.test.lens.split:${parent.id}:address`;
+  db.add(
+    Obj.make(TaskDoc, {
+      [Obj.Meta]: { key: identityKey, version: '1.0.0' },
+      address: raw,
+      parentId: parent.id,
+    }),
+  );
+  return { created: true };
 };
 
 describe('migration research (M0) — entity lifecycle', () => {
@@ -448,5 +487,251 @@ describe('migration research (M0) — entity lifecycle', () => {
     );
     invariant(resurrectedOnPeer1, 'expected the resurrected object to reach peer 1');
     expect(resurrectedOnPeer1.title).to.eq('late edit');
+  });
+
+  test('claim 9: fan-out under a late write needs no find-or-create atomicity; a partial transform must not half-create', async ({
+    expect,
+  }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer({ types: [TaskDoc] });
+    await using peer2 = await builder.createPeer({ types: [TaskDoc] });
+    const replicator1 = await network.createReplicator();
+    const replicator2 = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1);
+    await peer2.host.addReplicator(Context.default(), replicator2);
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    // Two parents, as if the split migration had already run conceptually: one will receive a
+    // parseable late write, the other an unparseable one.
+    const parentGood = db1.add(Obj.make(TaskDoc, { title: 'parent good' }));
+    const parentBad = db1.add(Obj.make(TaskDoc, { title: 'parent bad' }));
+    await db1.flush();
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    await expect.poll(async () => (await db2.query(Query.select(Filter.type(TaskDoc))).run()).length).toBe(2);
+
+    // Partition: peer 2, an old-schema client, writes the source property directly.
+    await peer1.host.removeReplicator(replicator1);
+    await peer2.host.removeReplicator(replicator2);
+
+    const parentGoodOnPeer2 = (await db2.query(Filter.id(parentGood.id)).run())[0];
+    const parentBadOnPeer2 = (await db2.query(Filter.id(parentBad.id)).run())[0];
+    invariant(parentGoodOnPeer2 && parentBadOnPeer2, 'expected both parents to be present on peer 2');
+    Obj.update(parentGoodOnPeer2, (obj) => {
+      obj.address = '42 Elm St';
+    });
+    Obj.update(parentBadOnPeer2, (obj) => {
+      obj.address = 'garbage';
+    });
+    await db2.flush();
+
+    // Heal round 1: reconnect, sync both ways — now both peers can see the late writes.
+    const healReplicator1 = await network.createReplicator();
+    const healReplicator2 = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), healReplicator1);
+    await peer2.host.addReplicator(Context.default(), healReplicator2);
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+    await expect.poll(async () => (await db1.query(Filter.id(parentGood.id)).run())[0]?.address).toBe('42 Elm St');
+
+    // Partial-transform half: peer 2 folds the unparseable address — no object created, the source
+    // property untouched, and the rejection reported rather than silently discarded.
+    const parentBadOnDb2 = (await db2.query(Filter.id(parentBad.id)).run())[0];
+    invariant(parentBadOnDb2, 'expected parentBad to be present on peer 2');
+    const countBeforeReject = (await db2.query(Query.select(Filter.type(TaskDoc))).run()).length;
+    const rejectResult = foldAddressSplit(db2, parentBadOnDb2);
+    expect(rejectResult).to.deep.eq({ created: false, reason: 'unparseable address: "garbage"' });
+    expect((await db2.query(Query.select(Filter.type(TaskDoc))).run()).length).to.eq(countBeforeReject);
+    expect(parentBadOnDb2.address).to.eq('garbage');
+
+    // Partition again: neither peer's fold is coordinated with the other's — each independently
+    // derives the SAME extracted object from the SAME already-synced late write.
+    await peer1.host.removeReplicator(healReplicator1);
+    await peer2.host.removeReplicator(healReplicator2);
+
+    const parentGoodOnDb1 = (await db1.query(Filter.id(parentGood.id)).run())[0];
+    const parentGoodOnDb2 = (await db2.query(Filter.id(parentGood.id)).run())[0];
+    invariant(parentGoodOnDb1 && parentGoodOnDb2, 'expected parentGood to be present on both peers');
+    expect(foldAddressSplit(db1, parentGoodOnDb1)).to.deep.eq({ created: true });
+    expect(foldAddressSplit(db2, parentGoodOnDb2)).to.deep.eq({ created: true });
+    await db1.flush();
+    await db2.flush();
+
+    // Heal round 2: reconnect, sync both ways.
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+
+    const identityKey = `org.dxos.test.lens.split:${parentGood.id}:address`;
+    // Both duplicates reach both peers — create-with-key needs no find-or-create atomicity;
+    // collapsing them is the (still absent) merge engine's job, per claim 6b.
+    await expect
+      .poll(async () => (await db1.query(Filter.key(identityKey, { version: '1.0.0' })).run()).length, {
+        timeout: 10_000,
+      })
+      .toBe(2);
+    await expect
+      .poll(async () => (await db2.query(Filter.key(identityKey, { version: '1.0.0' })).run()).length, {
+        timeout: 10_000,
+      })
+      .toBe(2);
+
+    const extractedOnPeer1 = await db1.query(Filter.key(identityKey, { version: '1.0.0' })).run();
+    const extractedOnPeer2 = await db2.query(Filter.key(identityKey, { version: '1.0.0' })).run();
+    for (const obj of [...extractedOnPeer1, ...extractedOnPeer2]) {
+      expect(Obj.getMeta(obj).key).to.eq(identityKey);
+      // Deterministic transform ⇒ identical duplicate content, not just an identical key.
+      expect(obj.address).to.eq('42 Elm St');
+      expect(obj.parentId).to.eq(parentGood.id);
+    }
+  });
+
+  test('claim 10: fan-in collides — concurrent folds into one parent property lose one side silently', async ({
+    expect,
+  }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer({ types: [TaskDoc] });
+    await using peer2 = await builder.createPeer({ types: [TaskDoc] });
+    const replicator1 = await network.createReplicator();
+    const replicator2 = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1);
+    await peer2.host.addReplicator(Context.default(), replicator2);
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    const parent = db1.add(Obj.make(TaskDoc, { title: 'parent' }));
+    await db1.flush();
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    const parentOnPeer2 = await queryTaskDoc(db2);
+    expect(parentOnPeer2.id).to.eq(parent.id);
+
+    // Partition: two independent folds concurrently target the SAME parent property, from
+    // different sources — the fan-in case that contends by construction, unlike claim 9's fan-out.
+    await peer1.host.removeReplicator(replicator1);
+    await peer2.host.removeReplicator(replicator2);
+
+    db1.add(Obj.make(TaskDoc, { title: 'source A', assigneeName: 'Alice' }));
+    Obj.update(parent, (obj) => {
+      obj.assigneeName = 'Alice';
+    });
+    await db1.flush();
+
+    db2.add(Obj.make(TaskDoc, { title: 'source B', assigneeName: 'Bob' }));
+    Obj.update(parentOnPeer2, (obj) => {
+      obj.assigneeName = 'Bob';
+    });
+    await db2.flush();
+
+    // Heal: reconnect, sync both ways.
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+
+    // A merged Automerge register is a pure function of the op-set, so both peers must compute the
+    // SAME value — poll for that agreement rather than asserting a specific winner up front.
+    let peer1Value: string | undefined;
+    let peer2Value: string | undefined;
+    await expect
+      .poll(
+        async () => {
+          peer1Value = (await db1.query(Filter.id(parent.id)).run())[0]?.assigneeName;
+          peer2Value = (await db2.query(Filter.id(parent.id)).run())[0]?.assigneeName;
+          return peer1Value !== undefined && peer1Value === peer2Value;
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+
+    // eslint-disable-next-line no-console
+    console.log('claim 10: fan-in winner (deterministic across both peers) ->', peer1Value);
+
+    expect(peer1Value).to.eq(peer2Value);
+    expect(['Alice', 'Bob']).to.include(peer1Value);
+    const losingValue = peer1Value === 'Alice' ? 'Bob' : 'Alice';
+
+    // The finding: the losing value is GONE from the parent property — silent loss, no CRDT
+    // conflict record, at the property level.
+    expect(peer1Value).to.not.eq(losingValue);
+
+    // Recoverability: the losing value still lives on its OWN source object, untouched by the
+    // property collision — a migration-declared resolution could re-derive it from there.
+    const sourcesOnPeer1 = await db1.query(Query.select(Filter.type(TaskDoc))).run();
+    const loserSource = sourcesOnPeer1.find((obj) => obj.assigneeName === losingValue && obj.id !== parent.id);
+    invariant(loserSource, 'expected the losing source object to remain queryable');
+    expect(loserSource.assigneeName).to.eq(losingValue);
+
+    // No defensible default exists at the property level: the migration must declare the
+    // resolution itself — ordering, relation-kind priority, or reject-and-record like claim 5's
+    // conflict records.
+  });
+
+  test('claim 11: referrer cardinality is queryable before a fan-in runs', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer({ types: [TaskDoc] });
+    await using peer2 = await builder.createPeer({ types: [TaskDoc] });
+    const replicator1 = await network.createReplicator();
+    const replicator2 = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1);
+    await peer2.host.addReplicator(Context.default(), replicator2);
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    const child = db1.add(Obj.make(TaskDoc, { title: 'shared child' }));
+    const parentA = db1.add(Obj.make(TaskDoc, { title: 'parent A', refProp: Ref.make(child) }));
+    const parentB = db1.add(Obj.make(TaskDoc, { title: 'parent B', refProp: Ref.make(child) }));
+    const parentC = db1.add(Obj.make(TaskDoc, { title: 'parent C', refProp: Ref.make(child) }));
+    await db1.flush();
+    await db1.updateIndexes();
+
+    // The cardinality check a fan-in needs BEFORE it runs: how many objects reference this child?
+    const referrersOnPeer1 = await db1.query(Query.select(Filter.id(child.id)).referencedBy(TaskDoc, 'refProp')).run();
+    expect(referrersOnPeer1.map((obj) => obj.id).sort()).to.deep.eq([parentA.id, parentB.id, parentC.id].sort());
+
+    // Cross-peer: sync to peer 2 and confirm the same query answers identically there.
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+
+    let referrersOnPeer2: TaskDoc[] = [];
+    await expect
+      .poll(
+        async () => {
+          referrersOnPeer2 = await db2.query(Query.select(Filter.id(child.id)).referencedBy(TaskDoc, 'refProp')).run();
+          return referrersOnPeer2.length;
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(3);
+    expect(referrersOnPeer2.map((obj) => obj.id).sort()).to.deep.eq([parentA.id, parentB.id, parentC.id].sort());
+
+    // eslint-disable-next-line no-console
+    console.log(
+      'claim 11: referencedBy(TaskDoc, "refProp") on the shared child ->',
+      referrersOnPeer2.length,
+      'parents',
+    );
   });
 });

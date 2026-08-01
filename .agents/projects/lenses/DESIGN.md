@@ -657,18 +657,78 @@ this section's; the ledger's claim 12 is claim 6 here.
    detection is a query-based path ("old-shaped and unmarked") that sits _beside_ the heads-based
    property fold — two code paths, not one.
 
-**What Track A does not answer.** The fan-in variant of claim 6 — a late child created against a
-parent whose absorption already ran, and two late children colliding in one parent property — is
-Track B territory (ledger claims 10/11) and remains the likeliest place the bar breaks. Real epoch
-machinery was not exercised (only the foreign-heads behavior of `A.diff`). Track B (identity-key
-fan-out, 1→N stable keys, dangling relations, shared-child cardinality) is scaffolding-gated and
-partially adopted from the object-merging project's spikes.
+**What Track A does not answer:** real epoch machinery (only the foreign-heads behavior of
+`A.diff` was probed), and everything entity-lifecycle — which Track B below took up the same day.
 
-**Net:** the fold-forward hypothesis survived every kill-point it was designed to die on. For
-single-object rewrite migrations — including chains — the §10.1 bar is reachable with: old
-properties kept, two head-marks + an ancestry check stored per migration event, value-comparing
-writes, one-`Obj.update` composed folds, a query path for late entities, and app-level conflict
-records. Remaining risk is concentrated in entity-lifecycle migrations (fan-in above all).
+#### M0 Track B findings (2026-08-01) — entity lifecycle; the substrate holds, the engine is owed
+
+Verified in `echo-client-e2e/src/migration-research-entities.test.ts` and
+`migration-research-list-identity.test.ts`, same harness. Ledger claims 6-11; the object-merging
+merge engine these lean on has **zero implementation in-repo** (design-only), so what is verified
+here is the substrate contract that engine assumes — plus one finding that must flow back to it.
+
+- **Same-id collision (class 1) is worse than recorded — peers diverge permanently, not merely
+  orphan.** Two partitioned peers minting the same `EntityId` never converge on one winner: each
+  peer's `_loadLinkedObjects` caches the _first_ URL it bound for the id (`_objectDocumentHandles`)
+  and only logs-and-drops later `links[id]` changes. The merged map itself is identical everywhere —
+  the divergence is a first-writer-wins _client cache_ on top of it that never re-observes. Each
+  peer sees only its own write, deterministically, across repeated heal rounds, with no error. So no
+  repair can rely on observing `links` settle, and derived object ids are dead as a convergence
+  route for a stronger reason than the object-merging research's §4.5 gave. **Flow back to
+  object-merging.**
+- **Identity-key duplicates (class 2) are the safe path, verified end to end.** Random id + shared
+  `meta.key`/`meta.version` stamped at creation (`[Obj.Meta]`): both duplicates replicate to both
+  peers, both addressable via `Filter.key(key, { version })`, meta replicates, nothing lost —
+  visible, addressable, awaiting collapse. Fan-out under a late write (claim 9) rides this with **no
+  find-or-create atomicity**: both peers folding the same late write create identical-content
+  duplicates under the same derived key (`<lensId>:<sourceId>:<role>`), the engine's best case.
+- **A partial transform must reject whole.** Demonstrated contract: an unparseable source value
+  creates no object, leaves the source property untouched, and returns a report. This needs to be a
+  stated API guarantee of the fan-out runner, not an implicit behavior.
+- **The 1→N element key (claim 7, the phase's sharpest unknown) — automerge identity is convergent
+  but not durable.** `A.getObjectId` on a struct list element (previously unused anywhere in DXOS)
+  is stable under in-place edits, byte-identical across peers through partition/heal, and distinct
+  and convergent for concurrent inserts — everything a cross-peer join key needs. But any
+  remove+insert mints a new `ObjID`, and automerge has no list-move, so every normal reorder
+  (`splice`, `sort`, drag reindexing, slot reassignment) destroys it. Verdict: bare element identity
+  serves within a fold window; a **durable** split key must be an explicit id stamped in the element
+  at creation. The rich-text lens's block identity inherits the same verdict — "stable block
+  identity via Automerge cursors" needs stamped ids too.
+- **Dangling relations degrade gracefully cross-peer (claim 8).** A relation replicating ahead of
+  its endpoints is excluded from queries — never an error, never a blocked subtree — and surfaces
+  by itself once the endpoints load (matching the single-peer strong-deps evidence). Write ordering
+  is a nicety for the runner, not a requirement.
+- **Fan-in collision has no defensible default — and not even an accidental one (claim 10).** Two
+  peers concurrently folding different values into one parent property converge (both peers always
+  agree post-merge) but the winner is **randomized per run** — automerge's actor-id tie-break, not
+  write order or content — and the loser vanishes from the property without a trace. A fan-in
+  migration must declare its resolution (ordering, relation-kind priority, or reject-and-record à
+  la claim 5). The losing value survives on its source object, so a declared resolution can
+  re-derive it — one more independent argument for keeping sources.
+- **Referrer cardinality is queryable today (claim 11).** `referencedBy` returns the exact
+  referencing set for direct `Ref` fields, locally and on a replica after `updateIndexes` — the
+  pre-flight check fan-in needs. The known non-`Ref` gap list (markdown links, feed blocks, side
+  maps, bare-EID relation endpoints) remains unexercised; block-vs-duplicate for a shared child
+  stays a declared policy choice.
+- **A tombstoned child keeps late writes (fan-in residue of claims 1/12).** A partitioned peer's
+  write to a since-removed object survives beneath the tombstone (`deleted: 'include'` shows it;
+  default queries stay clean — the write does not resurrect the object), and the public re-add
+  idiom un-deletes it with the late edit intact, on both peers. So absorb-then-tombstone does not
+  forfeit the bar: late edits to an absorbed child remain recoverable for folding into the parent.
+
+**What M0 leaves open.** The collapse itself (object-merging Phase 0+ — nothing to adopt yet); real
+epoch/compaction behavior against stored heads; the non-`Ref` back-reference gaps; the fold-forward
+trigger and its cost (§10.7 q6); and the two-late-children-into-one-tombstoned-parent composition,
+which combines verified pieces (tombstone late writes + declared fan-in resolution) but was not run
+as a single scenario.
+
+**Net, phase verdict:** every M0 claim in both tracks was answered and none broke the §10.1 bar.
+Single-object rewrite migrations (including chains) are reachable now with the Track A constraint
+set; entity-lifecycle migrations are reachable **conditional on** the object-merging engine landing
+(collapse), stamped element ids (1→N), and migration-declared fan-in resolutions — all of which are
+design obligations, not open feasibility questions. The one place feasibility genuinely moved:
+same-id creation is now known to diverge permanently per peer, hardening the "identity keys, never
+derived ids" rule from a preference into a necessity.
 
 ### 10.4 A migration is a lens
 

@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: M0 TRACK A COMPLETE (2026-08-01, branch `claude/m0-migrations-research-zw15ml`, no PR by request): all six kill-points survive — harness + 8 tests in `echo-client-e2e/src/migration-research.test.ts`, findings written up as the "M0 Track A findings" block in DESIGN.md §10.3. Headline constraints discovered: folds must value-compare before writing (equal-value string writes still emit put+splice, so a heads-driven loop never settles); two head-marks per migration event (pre for source detection, post for target-conflict detection) plus an ancestry check (`A.diff` with foreign heads silently returns a full diff — epoch re-roots would make everything look late); late-created entities need a query-based detection path beside the heads fold; `Annotation.set` on `EntityMeta.annotations` is a working replicating per-object migration marker. Also fixed a real `test-replicator.ts` bug (connections never registered; disconnect was a silent no-op — transport partition in tests was impossible before). NEXT: M0 Track B (claims 6-11 — needs identity-key/fan-out scaffolding, largely adopts object-merging spikes; fan-in late-child is the remaining bar risk), or Phase 5 (promote Lens into @dxos/echo), which M1 gates on. Previously: PR #12420 MERGED (squash `f8637f1d`), PHASES 1-4 DONE for BOTH lenses._ `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` and `Collaboration` render only; `Spec` carries the assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Both story specs assert **bidirectional** sync at the exact line each edit produced (see the `userEvent.click`/CodeMirror caret note), and are mutation-checked. The UI is `@dxos/react-ui` primitives throughout — both task panels are the same `Form` given a different schema — except the ProseMirror editor. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
+_Resume: **M0 COMPLETE, BOTH TRACKS** (2026-08-01, branch `claude/m0-migrations-research-zw15ml`, no PR by request): all 12 claims answered, none broke the §10.1 bar — 15 tests across `echo-client-e2e/src/migration-research{,-entities,-list-identity}.test.ts`, findings in DESIGN.md §10.3 ("M0 Track A findings" + "M0 Track B findings" incl. phase verdict). Track A constraints: value-compare before fold writes; two head-marks per migration + heads ancestry check (`A.diff` with foreign heads silently returns a full diff); query-based path for late-created entities; `Annotation.set` on `EntityMeta.annotations` as the per-object marker. Track B: same-id creation DIVERGES PERMANENTLY per peer (client-side first-URL cache, stronger than object-merging's orphaning framing — **flow back to them**); identity-key duplicates fully addressable awaiting collapse (engine still zero code); 1→N element keys must be stamped ids (automerge ObjID convergent but destroyed by any reorder — rich-text block identity inherits this); fan-in winner is RANDOMIZED (actor-id tie-break) so resolution must be declared; `referencedBy` answers cardinality; tombstoned children keep late writes and re-add resurrects. Also fixed a real `test-replicator.ts` bug (disconnect was a silent no-op). NEXT options: (1) M1 prep — Phase 5 promote Lens into @dxos/echo, which M1 gates on; (2) flow the claim-6a divergence finding back to object-merging (josiah); (3) M2 residue listed under "What M0 leaves open" in §10.3. Previously: PR #12420 MERGED (squash `f8637f1d`), PHASES 1-4 DONE for BOTH lenses._ `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` and `Collaboration` render only; `Spec` carries the assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Both story specs assert **bidirectional** sync at the exact line each edit produced (see the `userEvent.click`/CodeMirror caret note), and are mutation-checked. The UI is `@dxos/react-ui` primitives throughout — both task panels are the same `Form` given a different schema — except the ProseMirror editor. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -440,24 +440,29 @@ the mechanism.
       wrapped to catch), and pre-heal the relation is simply absent from results. Matches the
       existing single-peer evidence (`strong-deps-stall.test.ts`: excluded, not errored,
       self-heals). Write ordering is NOT a hard requirement on the runner.
-- [ ] **Claim 9 · fan-out under a late write.** The §10.1 scenario applied to a split: an offline peer
-      writes the _source_ property after the object was split. With identity keys, fold-forward needs
-      **no find-or-create atomicity**: each folding peer creates with the derived key and the merge
-      engine collapses duplicates ("create with key; the merge repairs races" — object-merging's
-      `db.ensure` pattern reused). Verify the collapse, and settle what happens when the split's
-      transform is partial (an unparseable value should leave the source in place and report, not
-      create a half-populated object).
-- [ ] **Claim 10 · fan-in collides; what resolves it?** Many sources converging on one target
-      property contend by construction, where fan-out never does — two relations both supplying
-      `assigneeName`. Confirm there is no defensible default and that the migration must declare the
-      resolution.
-- [ ] **Claim 11 · can a shared child be absorbed at all?** One `Address` referenced by three
-      `Person`s fans in to three copies that then diverge and never reconverge. Fan-in needs referrer
-      cardinality _before_ it runs. **The index question is answered**: the object-merging research
-      documents the existing backlink index (SQLite `reverseRef`, surfaced as `Query.referencedBy()`)
-      plus its gaps (markdown links, feed blocks, side maps, relation endpoints as bare EIDs). What
-      remains to decide: whether a shared child blocks or duplicates, and whether the gap list is
-      acceptable for the cardinality check.
+- [x] **Claim 9 · fan-out under a late write. — VERIFIED, both halves.** Both peers independently
+      folding the same late `address` write each create an extracted object with the same derived
+      identity key (`<lensId>:<parentId>:address` via `[Obj.Meta]`); both duplicates replicate to
+      both peers with identical content (deterministic transform — the engine's best case),
+      addressable via `Filter.key`. No find-or-create atomicity needed; collapse stays the absent
+      engine's job. Partial transform: an unparseable value creates NO object, leaves the source
+      untouched, and returns a report — demonstrated as the contract "leave source in place, report,
+      never half-create", which must become a stated API guarantee.
+- [x] **Claim 10 · fan-in collides; what resolves it? — CONFIRMED: no defensible default exists.**
+      Two peers concurrently folding different values into `parent.assigneeName` converge (both
+      peers always agree post-merge) but the WINNER IS RANDOMIZED per run — automerge's actor-id
+      tie-break, not write order or content — and the losing value vanishes from the property with
+      no CRDT trace. So there is not even an implicit "first/last writer wins" rule to lean on: the
+      migration MUST declare its resolution (ordering, relation-kind priority, or claim-5-style
+      reject-and-record). Recoverability: the losing value survives on its source object, so a
+      declared resolution can re-derive — one more reason sources must be retained.
+- [x] **Claim 11 · can a shared child be absorbed at all? — cardinality is queryable today.**
+      `Query.select(Filter.id(child)).referencedBy(Parent, 'refProp')` returns exactly the 3
+      referencing parents, on the origin peer and (after `updateIndexes`) on a replica — the
+      pre-flight check fan-in needs is answerable for direct `Ref` fields. The known gap list
+      (markdown links, feed blocks, side maps, relation endpoints as bare EIDs) remains unexercised;
+      whether a shared child blocks or duplicates stays a migration-declared choice (policy, not
+      research).
 - [x] **Claim 12 · late entity _creation_, not just late writes. — SURVIVES (single-object form).**
       (a) A partition-created old-shape object replicates and becomes queryable after heal (the heal
       idiom walks the root doc's `links`, so new object docs are picked up for free). (b) It is
@@ -471,9 +476,10 @@ the mechanism.
       path beside the heads-based property fold. The fan-in variant (late child absorbed into a
       tombstoned parent property, two late children colliding) is NOT yet exercised — that residue
       belongs to claims 10/11 and the §10.3 writeup must say so.
-- [x] **Write up what survives** _(Track A written — "M0 Track A findings" block in DESIGN.md §10.3;
-      extend it when Track B runs)_ in DESIGN.md §10.3 — including, if it comes to it, the honest
-      finding that the bar is unreachable and why.
+- [x] **Write up what survives** — DONE for both tracks: "M0 Track A findings" + "M0 Track B
+      findings" blocks in DESIGN.md §10.3, including the phase verdict (no claim broke the §10.1
+      bar; entity-lifecycle reachable conditional on the merge engine, stamped element ids, and
+      declared fan-in resolutions) and what M0 leaves open.
 
 ### Phase M1 — integrate with the existing API: single-object, lens-backed
 
