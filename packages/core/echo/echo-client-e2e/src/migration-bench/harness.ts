@@ -127,6 +127,15 @@ export const propertyNameOf = (patch: Patch): string | undefined => {
   return typeof name === 'string' ? name : undefined;
 };
 
+/**
+ * Mutation patches only: an `action: 'conflict'` patch is metadata automerge attaches when
+ * concurrent ops (even equal-valued ones) meet on a key, and it can surface in a diff whenever a
+ * peer's concurrent op arrives late — so zero-WRITE assertions must ignore it or they race
+ * replication traffic.
+ */
+export const writesSince = <T extends Record<string, unknown>>(obj: T, heads: Heads): Patch[] =>
+  diffSince(obj, heads).filter((patch) => patch.action !== 'conflict');
+
 /** The subset of `propSet` actually touched by `patches` — the fold-detection primitive every suite builds on. */
 export const changedProps = (patches: readonly Patch[], propSet: ReadonlySet<string>): Set<string> => {
   const changed = new Set<string>();

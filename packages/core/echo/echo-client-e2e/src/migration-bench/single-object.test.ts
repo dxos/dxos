@@ -23,6 +23,7 @@ import {
   foldValue,
   headsOf,
   recordConflict,
+  writesSince,
 } from './harness';
 
 //
@@ -169,7 +170,7 @@ describe('E1: single-object migration is solved', () => {
       }
     });
     await db1.flush();
-    expect(diffSince(obj1, postFoldHeads1)).to.deep.eq([]);
+    expect(writesSince(obj1, postFoldHeads1)).to.deep.eq([]);
 
     // Second partition + second late write: diffing from the ADVANCED heads must name only the NEW
     // edit — the first late write, already folded/recorded, must never reappear.
@@ -202,7 +203,7 @@ describe('E1: single-object migration is solved', () => {
       recordConflict(obj1, 'name', obj1.name ?? '', obj1.fullName ?? '');
     });
     await db1.flush();
-    expect(diffSince(obj1, postFoldHeads2)).to.deep.eq([]);
+    expect(writesSince(obj1, postFoldHeads2)).to.deep.eq([]);
   });
 
   test('E1b: a chained migration (fullName -> name -> label) folds a late fullName write to label in ONE composed update, keeps name and label equal at every observable point, and is idempotent on a second round', async ({
@@ -275,7 +276,7 @@ describe('E1: single-object migration is solved', () => {
       foldValue(obj1, 'name', 'label');
     });
     await db1.flush();
-    expect(diffSince(obj1, postFoldHeads)).to.deep.eq([]);
+    expect(writesSince(obj1, postFoldHeads)).to.deep.eq([]);
     expect(obj1.name).to.eq(obj1.label);
   });
 
@@ -347,7 +348,7 @@ describe('E1: single-object migration is solved', () => {
       foldValue(obj1, 'fullName', 'name');
     });
     await db1.flush();
-    expect(diffSince(obj1, preThirdFoldHeads)).to.deep.eq([]);
+    expect(writesSince(obj1, preThirdFoldHeads)).to.deep.eq([]);
   });
 
   test('E1d: A.diff against heads from an unrelated doc returns a large "everything is new" diff rather than throwing', async ({
