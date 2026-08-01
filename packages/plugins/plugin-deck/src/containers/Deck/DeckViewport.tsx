@@ -1379,6 +1379,14 @@ export const DeckPlanks = () => {
         if (!id || !viewport) {
           return;
         }
+        // Only a click on a plank you are *not* already reading asks for anything. Clicking inside the
+        // current plank — its content, or a control in its toolbar such as the companion toggle — is
+        // interaction with what you already have, and moving the deck there yanks it out from under the
+        // pointer.
+        if (id === navigationRef.current.attendedPlankId) {
+          return;
+        }
+
         const tiles = getPlankTiles();
         const index = tiles.findIndex((candidate) => candidate === tile);
         if (index !== -1) {

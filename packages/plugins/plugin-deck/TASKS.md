@@ -94,6 +94,18 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
 ## Defects
 
+- [ ] **A companion can open partly off-screen** — the trade-off taken when the scroll-on-companion-open
+      was removed. `operations/adjust.ts` used to schedule a `ScrollIntoView` on the plank when its
+      companion opened, which is what made the plank jump; removing it fixes the jump but the pair is
+      wider than the plank alone, so a plank sitting near the trailing edge now opens its companion past
+      it. Measured in the two-plank story: tile right edge 2164 against a viewport ending at 1551.
+      Wanted: a _minimal reveal_ — scroll by exactly the overflow so a pair that already fits does not
+      move at all. Attempted as a `useRevealCompanion` layout effect keyed on `companionAnchorId` /
+      `companionId`, measuring the anchor tile and scrolling by the overflow; it never fired and I did
+      not find out why before removing it, so start by instrumenting whether the effect runs and what
+      those two values are at that moment. The width also lands over more than one frame, so whatever
+      measures has to watch rather than sample once.
+
 - [x] **The deck scrolled on inference; now it scrolls on intent** — the real fix behind the companion
       bugs. `useCollapseAfterAttended` watched attention and guessed the user had chosen a plank; six
       guards accumulated to un-guess the false positives (focus handoff, in-flight navigation, exposé
