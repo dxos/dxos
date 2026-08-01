@@ -138,7 +138,7 @@ export const classifyTopics = (
 export const renderTasksMarkdown = (items: readonly string[]): string =>
   items.map((item) => `- [ ] ${item.trim()}`).join('\n');
 
-/** Builds a plugin-outliner `Outline` whose Text content is the checkbox task list. */
+/** Builds an `Outline` whose Text content is the checkbox task list. */
 export const makeTasksOutline = (name: string, items: readonly string[]): Outline.Outline =>
   Outline.make({ name, content: renderTasksMarkdown(items) });
 

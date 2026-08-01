@@ -502,9 +502,6 @@
       "path": "packages/plugins/plugin-osrm/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-outliner/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-payments/tsconfig.json"
     },
     {
@@ -587,6 +584,9 @@
     },
     {
       "path": "packages/plugins/plugin-table/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-tasks/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-template/tsconfig.json"
