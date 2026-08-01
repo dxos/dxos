@@ -421,3 +421,18 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 - Next lever: prune plugins from the idle trickle once precise demand sites (object-open
   typename map, data-presence scan, settings-open) cover them; then per-feature loading is
   fully data-driven.
+
+## Checkpoint 2026-08-01 (suspenseful client verified, honest re-measurement)
+
+- Bundle-verification discipline: `composer-app:build` does NOT produce the served app —
+  `composer-app:bundle` does; every e2e/benchmark run now marker-checks the bundle
+  (`waitUntilInitialized` present, `deferredStartup` absent). All afternoon rows before this
+  were stale-bundle runs and are annotated as such.
+- Boot verified functional on the current code: create-identity e2e green here; full basic
+  suite green on the user's machine (space mutations here are env-limited — no edge server).
+- Honest warm-cold rows (N=3, verified bundle, commit 493543f351): profilerTotal 6.1–6.3s
+  (trustworthy streaming-era baseline 8.3s → −25%), modules at ready 262–270 (was 310),
+  navToReady 11.5–13.7s (was 14.1; still includes identity load, which waits for init).
+- **top1 is no longer the Client module** — it's idle-trickle skill/graph chunks
+  (SkillDefinition ~2.3–2.8s under load). Client init is off the measured critical path;
+  the goal directive (module work ≤ client activation) is now inverted.

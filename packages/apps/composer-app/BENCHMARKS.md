@@ -231,3 +231,6 @@ Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harn
 | 2026-08-01T18:40:49Z | e1c4fe15c5 |  | dev-cold | chromium | 7934 | 12719 | 292 | 0 | 27.3 | 261 | `org.dxos.plugin.client.module.Client` (3980) | ⚠ stale-bundle run — served a pre-suspenseful-client archive; disregard
 | 2026-08-01T18:46:42Z | e1c4fe15c5 | ⚠ | cold | chromium | 7438 | 12185 | 292 | 1516 | 27.3 | 258 | `org.dxos.plugin.client.module.Client` (3493) | ⚠ stale-bundle run — served a pre-suspenseful-client archive; disregard
 | 2026-08-01T18:47:06Z | e1c4fe15c5 | ⚠ | warm-cold | chromium | 6049 | 10534 | 368 | 1498 | 28.7 | 319 | `org.dxos.plugin.client.module.Client` (3667) | ⚠ stale-bundle run — served a pre-suspenseful-client archive; disregard
+| 2026-08-01T21:15:29Z | 493543f351 |  | warm-cold | chromium | 6158 | 13177 | 440 | 3251 | 27.1 | 270 | `org.dxos.plugin.inbox.module.SkillDefinition` (2827) |
+| 2026-08-01T21:16:11Z | 493543f351 | ⚠ | warm-cold | chromium | 6095 | 13728 | 452 | 3090 | 27.1 | 267 | `org.dxos.plugin.review.module.SkillDefinition` (2338) |
+| 2026-08-01T21:16:50Z | 493543f351 | ⚠ | warm-cold | chromium | 6264 | 11524 | 432 | 3051 | 26.9 | 262 | `org.dxos.plugin.support.module.AppGraphBuilder` (1646) |
