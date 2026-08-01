@@ -12,9 +12,10 @@ export const CommentConfig = AppCapability.commentConfig(() => import('./comment
   activatesOn: ActivationEvents.DeferredStartup,
 });
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+// Migration providers stay eager: a migration missing when a space opens is a data hazard.
 export const Migrations = Capability.lazyModule(
   'IllustratorMigrations',
-  { provides: [ClientCapabilities.Migration], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [ClientCapabilities.Migration] },
   () => import('./migrations'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
