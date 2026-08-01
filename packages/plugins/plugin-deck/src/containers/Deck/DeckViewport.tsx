@@ -223,7 +223,7 @@ const useRenderedPlanks = (): RenderedPlanks => {
   const companions = useCompanions(anchorId ?? '');
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions, selectedVariant);
-  const companion = deck.companionOpen && anchorId ? companionId : undefined;
+  const companion = anchorId && deck.companionPlanks.includes(anchorId) ? companionId : undefined;
 
   // Stable identity: this shape is the `PlankContext` value, so a new object per render would re-render
   // every tile on every deck render.

@@ -33,8 +33,12 @@ export const DeckState = Schema.Struct({
    * viewport resize and swapping which plank occupies a slot. Absent means an even split.
    */
   tilingSizing: Schema.optional(Schema.Number),
-  /** Whether the companion pane is visible alongside the active plank(s). */
-  companionOpen: Schema.Boolean,
+  /**
+   * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
+   * restores what each was left in — a plank you closed the companion on stays closed when you come
+   * back to it, while the one you left it open on reopens it.
+   */
+  companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -49,7 +53,7 @@ export const defaultDeck: DeckState = {
   active: [],
   inactive: [],
   plankSizing: {},
-  companionOpen: false,
+  companionPlanks: [],
 };
 
 //

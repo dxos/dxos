@@ -173,8 +173,8 @@ export default Capability.makeModule(
         resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
       }
 
-      // Planks resolve in chain order; a `companion/<variant>` pair is the deck's trailing companion,
-      // not a stored plank, so it drives companionOpen + variant rather than being added to `plankIds`.
+      // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
+      // than being a plank of its own, so it drives that plank's companion state and the selected variant.
       const plankIds: string[] = [];
       let companionNodeId: string | null = null;
       let companionAnchorId: string | undefined;
@@ -305,11 +305,13 @@ export default Capability.makeModule(
       // `companion/<variant>` after that plank's own pair. Attention itself is still never serialized —
       // it is read here only to place the companion, and a bare attention change does not resync the URL.
       let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
-      if (deck.companionOpen && deck.active.length > 0) {
+      if (deck.companionPlanks.length > 0 && deck.active.length > 0) {
         // Resolved against the rendered planks, not `deck.active`: under `flatten` only the current plank
         // is laid out, so anchoring to an earlier one would serialize a companion the deck cannot render.
         const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
-        const plankId = resolveCompanionAnchor(rendered, attention.getCurrent());
+        const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
+        // Only the attended plank's companion is on screen, so only it belongs in the URL.
+        const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
         const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;

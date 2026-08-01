@@ -18,7 +18,8 @@ const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   plankSizing: Schema.mutable(PlankSizing),
-  companionOpen: Schema.Boolean,
+  companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  companionOpen: Schema.optional(Schema.Boolean),
   companionFrameSizing: Schema.optional(Schema.mutable(PlankSizing)),
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
@@ -48,21 +49,28 @@ const hasLegacyFields = (state: LegacyStoredDeckState): boolean =>
       deck.solo !== undefined ||
       deck.initialized !== undefined ||
       deck.fullscreen !== undefined ||
-      deck.companionOrientation !== undefined,
+      deck.companionOrientation !== undefined ||
+      deck.companionOpen !== undefined,
   );
 
 /** Strips fields absent from the current deck schema from a legacy deck, promoting a solo plank to the front of `active`. */
 const migrateDeck = ({
   solo,
+  companionOpen,
   initialized: _initialized,
   fullscreen: _fullscreen,
   companionOrientation: _companionOrientation,
   companionFrameSizing: _companionFrameSizing,
   ...deck
-}: LegacyDeckState) => ({
-  ...deck,
-  active: solo ? [solo, ...deck.active.filter((id) => id !== solo)] : deck.active,
-});
+}: LegacyDeckState) => {
+  const active = solo ? [solo, ...deck.active.filter((id) => id !== solo)] : deck.active;
+  return {
+    ...deck,
+    active,
+    // The deck-wide flag meant "showing beside the last plank", which is the plank it now belongs to.
+    companionPlanks: deck.companionPlanks ?? (companionOpen && active.length > 0 ? [active[active.length - 1]] : []),
+  };
+};
 
 /** The subset of the `Storage` interface the migration needs, so tests can inject a fake. */
 export type PersistedStateStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;

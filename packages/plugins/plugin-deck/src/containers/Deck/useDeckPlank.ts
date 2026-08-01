@@ -80,9 +80,9 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       incrementEnd: canIncrementEnd,
       // The deck companion is a whole-deck toggle that renders beside whichever plank is attended, so
       // offer it on any plank that has one while the companion is off.
-      companion: companions.length > 0 && !deck.companionOpen,
+      companion: companions.length > 0 && !deck.companionPlanks.includes(id),
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionOpen],
+    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id],
   );
 
   // Load the node's child actions so the sigil menu is populated.

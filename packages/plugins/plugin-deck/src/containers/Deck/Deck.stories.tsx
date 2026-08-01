@@ -240,15 +240,18 @@ type DefaultStoryProps = {
   foldAnimation?: FoldAnimation;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
   sidebarState?: StoredDeckState['sidebarState'];
-  /** Open the deck companion, which shares a container with whichever plank is attended. */
-  companionOpen?: boolean;
+  /**
+   * Which planks open with their companion showing, as 1-based positions. The companion is per plank,
+   * so `[1]` leaves every other plank closed until you open it there.
+   */
+  companionPlanks?: number[];
 };
 
 const DefaultStory = ({
   count = 0,
   foldAnimation = 'slide',
   sidebarState = 'closed',
-  companionOpen = false,
+  companionPlanks = [],
 }: DefaultStoryProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
@@ -272,15 +275,16 @@ const DefaultStory = ({
     }
     seeded.current = true;
     const active = items.slice(0, count).map((item) => item.id);
+    const open = companionPlanks.map((position) => active[position - 1]).filter((id): id is string => !!id);
     updateState((current) => ({
       ...current,
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionOpen },
+        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
       },
     }));
-  }, [items, count, sidebarState, companionOpen, updateState]);
+  }, [items, count, sidebarState, companionPlanks, updateState]);
 
   // `display: contents` so the wrapper carries `data-fold-anim` for the scoped CSS without affecting the
   // fullscreen layout of the deck beneath it.
@@ -348,26 +352,28 @@ export const ManyPlanks: Story = {
   },
 };
 
-// One plank plus its companion is two panes, so the pair tiles across the whole viewport.
+// A lone plank stays fullbleed with its companion open; the pair fills the viewport across the seam.
 export const OnePlankWithCompanion: Story = {
   args: {
     count: 1,
-    companionOpen: true,
+    companionPlanks: [1],
   },
 };
 
-// The companion shares a container with the attended plank, splitting that plank's tile rather than
-// trailing the deck.
+// The companion shares a container with the attended plank, and each plank remembers whether its own
+// companion is open — here planks 1 and 3 start open, planks 2 and 4 closed.
 //
 // Test:
-// 1. Confirm the companion sits immediately to the right of the first plank, inside its container.
-// 2. Click the third plank; confirm the companion moves to sit beside it and leaves the first plank.
-// 3. Drag the seam between the plank and its companion; confirm only those two panes resize.
-// 4. Switch the companion tab (Alpha/Beta); confirm the pane keeps its width and stays on the same plank.
+// 1. Confirm the companion sits inside the first plank's container, immediately to its right.
+// 2. Click the second plank; confirm it shows NO companion, and the planks after it fold to spines.
+// 3. Click the third plank; confirm its companion is showing again.
+// 4. Close the companion on the third plank, then return to the first; confirm the first is still open.
+// 5. Drag the seam between a plank and its companion; confirm only those two panes resize, and that
+//    closing the companion afterwards leaves the plank at the width you dragged it to.
 export const ManyPlanksWithCompanion: Story = {
   args: {
     count: 4,
-    companionOpen: true,
+    companionPlanks: [1, 3],
   },
 };
 

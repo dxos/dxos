@@ -17,7 +17,7 @@ import { Position } from '@dxos/util';
 import { incrementPlank } from '../layout';
 import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, computeActiveUpdates } from '../util';
-import { updateActiveDeck } from './helpers';
+import { addCompanionPlank, updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperation.Adjust.pipe(
   Operation.withHandler(
@@ -45,7 +45,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         // selected variant (global view state); if none is selected yet (or the stored one is not a
         // companion of this plank), seed it with this plank's first companion so the URL and render
         // agree. `UpdateCompanion` (tab switch) overrides it thereafter.
-        if (!deck.companionOpen) {
+        if (!deck.companionPlanks.includes(input.id)) {
           const companions = Function.pipe(
             Graph.getNode(graph, input.id),
             Option.map((node) =>
@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
               }));
             }
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-              updateActiveDeck(state, { companionOpen: true }),
+              updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, input.id) }),
             );
             // The companion renders inside this plank's container, and follows attention thereafter, so
             // scroll (and thereby attend) the plank itself — the pair is wider than the plank alone and
