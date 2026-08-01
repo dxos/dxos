@@ -363,17 +363,27 @@ useCapability/useAtomCapability. Documented at both sites.
 
 N=3 medians (in-container): warm-cold navToReady 12.3 s / fi 8.7 s / TBT 2.15 s /
 client-init 2.36 s; cold navToReady 12.6 s / fi 9.1 s. vs pre-deferral (14.6–15.4 s nav,
-~4.0 s TBT): still a large win. vs the PoC (10.7 s nav, 1.16 s TBT): ~1.5–2 s regression,
-attributable to (a) the user-constrained eager set (+~85 modules: ~40 ReactContexts,
-LayerSpecs, inline modules) and (b) the single idle wave saturating the machine ~5–6 s
-post-paint, which the avatar render (waitForReady's element) partially eats.
+~4.0 s TBT): still a large win. vs the PoC (10.7 s nav, 1.16 s TBT): ~1.5–2 s regression.
+
+Eager-set anatomy (corrected 2026-08-01 — the earlier "~40 ReactContexts" figure was
+wrong): reactContext modules total FOUR (attention, client, devtools, transcription) and
+ReactRoot modules SIX (calls, deck, simple-layout, space, spotlight, support); only three
+sit outside the keep set (devtools, transcription, calls), pinning ~5 sibling modules.
+LayerSpec providers outside keep: assistant ×3 (AgentRuntime/AiContext/AiService — real
+chunks) + brain ×1. The +85 startup-window delta vs the PoC is mostly INLINE value modules
+(translations/schema/pluginAsset — no chunk, near-zero cost). Of 238 startup-window
+modules only 86 carry real chunk imports, dominated by keep plugins (client 12, space 10,
+markdown 7, routine 6, deck 6). ⇒ the PoC gap is NOT the eager set; it is (a) the idle
+wave saturating the machine ~5 s post-paint (avatar render eats it) and (b) heavy keep-set
+members — routine (excluded from the sweep as core, 6 heavy eager modules) and assistant's
+LayerSpecs — plus the wave-eval anomaly below.
 
 Review agenda (how to close the gap and go further):
 1. Granular events replacing the one big wave — most deferred modules should activate on
    first use (per-domain demand events), eliminating the idle burst entirely.
 2. Trickle the wave: slice DeferredStartup into batches or drop background-wave concurrency.
-3. Re-audit the ~40 eager feature ReactContexts — contexts whose UI cannot appear
-   pre-idle may defer safely with their whole plugin (PoC evidence: no remount issues).
+3. Sweep routine's non-LayerSpec modules (deliberately skipped as core; 6 heavy eager
+   modules) and revisit assistant's LayerSpec trio via the reactive-snapshot fix below.
 4. Soften the LayerSpec rule by making ProcessManager's layer collection reactive
    (re-snapshot on DeferredStartup) — then LayerSpecs defer too.
 5. Wave-eval anomaly: per-module eval in the event wave runs ~2× slower than the PoC's
