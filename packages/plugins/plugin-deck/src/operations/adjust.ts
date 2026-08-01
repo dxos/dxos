@@ -32,6 +32,22 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
+      if (input.type === 'expand') {
+        // Transient like fullscreen, and deliberately not a `plankSizing` write: collapsing has to give
+        // the plank back the width it had rather than the width the deck happened to expand it to.
+        const expanding = deck.active.includes(input.id);
+        yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
+          ...state,
+          expanded: state.expanded === input.id ? undefined : input.id,
+        }));
+        if (expanding) {
+          // An expanded plank is sized to the space *between* the two spine piles, which is only where
+          // it sits once it is at the front. Left where it was, its trailing edge — and with it the
+          // whole toolbar button group — ends up underneath the following planks' spines.
+          yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: input.id });
+        }
+      }
+
       if (input.type === 'fullscreen') {
         // Fullscreen is a transient overlay, independent of `active`: toggle it on/off for this plank.
         yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({

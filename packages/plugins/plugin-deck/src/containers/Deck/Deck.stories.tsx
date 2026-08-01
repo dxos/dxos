@@ -26,8 +26,9 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
 } from '@dxos/ui-editor';
-import { Position, trim } from '@dxos/util';
+import { Position } from '@dxos/util';
 
 import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
@@ -87,7 +88,7 @@ const TestArticle = ({ title, content }: { title: string; content: string }) => 
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
-      createThemeExtensions({ themeMode }),
+      createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
       decorateMarkdown(),
     ],
@@ -96,8 +97,7 @@ const TestArticle = ({ title, content }: { title: string; content: string }) => 
 
   return (
     <Editor.Root>
-      {/* `Pane.Content` constrains height but does not scroll, so the article owns its own scrolling. */}
-      <div role='none' className='h-full overflow-y-auto' data-testid='story.article' data-title={title}>
+      <div className='contents' data-testid='story.article' data-title={title}>
         <Editor.View value={content} extensions={extensions} classNames='dx-container' />
       </div>
     </Editor.Root>
@@ -268,48 +268,19 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
-// Fold-transition variants to compare, selected via the `foldAnimation` control and scoped by a
-// `data-fold-anim` ancestor. `dx-fold-content` / `dx-fold-spine` are the hooks on the plank content and
-// its book-spine sigil, and `data-fold-side` (start|end) is the pile the plank pinned to (see
-// DeckViewport). `crossfade` is the deck's base (opacity swap on the elements themselves, matching the
-// notes site); `slide` also slides the spine in along the plank's own travel — from the trailing side in
-// the left pile, from the leading side in the right pile — so the motion tracks the scroll direction.
-const FOLD_ANIMATIONS = ['slide', 'crossfade'] as const;
-type FoldAnimation = (typeof FOLD_ANIMATIONS)[number];
-
-// TODO(burdon): Why in story?
-const FOLD_ANIMATION_CSS = trim`
-  [data-fold-anim='slide'] .dx-fold-spine {
-    transition: opacity 200ms ease-out, transform 220ms ease-out;
-  }
-  [data-fold-anim='slide'] [data-fold-side='start'] .dx-fold-spine { transform: translateX(10px); }
-  [data-fold-anim='slide'] [data-fold-side='end'] .dx-fold-spine { transform: translateX(-10px); }
-  [data-fold-anim='slide'] [data-folded] .dx-fold-spine { transform: translateX(0); }
-`;
-
 type DefaultStoryProps = {
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
-  /** Fold-transition variant to apply (see {@link FOLD_ANIMATIONS}). */
-  foldAnimation?: FoldAnimation;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
   sidebarState?: StoredDeckState['sidebarState'];
-  /**
-   * Which planks open with their companion showing, as 1-based positions. The companion is per plank,
-   * so `[1]` leaves every other plank closed until you open it there.
-   */
+  /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
 };
 
 // Stable identity, so the default does not re-fire the seeding effect it is a dependency of on every render.
 const NO_COMPANIONS: number[] = [];
 
-const DefaultStory = ({
-  count = 0,
-  foldAnimation = 'slide',
-  sidebarState = 'closed',
-  companionPlanks = NO_COMPANIONS,
-}: DefaultStoryProps) => {
+const DefaultStory = ({ count = 0, sidebarState = 'closed', companionPlanks = NO_COMPANIONS }: DefaultStoryProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
   const { graph } = useAppGraph();
@@ -343,17 +314,12 @@ const DefaultStory = ({
     }));
   }, [items, count, sidebarState, companionPlanks, updateState]);
 
-  // `display: contents` so the wrapper carries `data-fold-anim` for the scoped CSS without affecting the
-  // fullscreen layout of the deck beneath it.
   return (
-    <div className='contents' data-fold-anim={foldAnimation}>
-      <style>{FOLD_ANIMATION_CSS}</style>
-      <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
-        <Deck.Content>
-          <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
-        </Deck.Content>
-      </Deck.Root>
-    </div>
+    <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
+      <Deck.Content>
+        <Deck.Viewport>{deck.active.length === 0 ? <Deck.ContentEmpty /> : <Deck.Planks />}</Deck.Viewport>
+      </Deck.Content>
+    </Deck.Root>
   );
 };
 
@@ -370,9 +336,6 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
     translations,
-  },
-  argTypes: {
-    foldAnimation: { control: 'inline-radio', options: FOLD_ANIMATIONS },
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -401,7 +364,6 @@ export const TwoPlanks: Story = {
 export const ManyPlanks: Story = {
   args: {
     count: 6,
-    foldAnimation: 'slide',
   },
 };
 

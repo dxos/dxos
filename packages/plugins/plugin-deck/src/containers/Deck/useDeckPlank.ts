@@ -22,6 +22,8 @@ const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-li
 export type PlankCapabilities = {
   /** Eligible for the fullscreen toggle (a main, non-mobile plank). */
   fullscreenToggle?: boolean;
+  /** Eligible for the expand toggle (a main, non-mobile plank in a deck with something to expand into). */
+  expandToggle?: boolean;
   incrementStart?: boolean;
   incrementEnd?: boolean;
   /** Eligible to open the deck companion (offered on any plank that has one, when the companion is off). */
@@ -43,6 +45,8 @@ export type DeckPlank = {
   sigilActions: AttentionSigilAction[][] | undefined;
   popoverAnchorId?: string;
   scrollIntoView?: string;
+  /** Whether this plank is the one currently expanded to fill the deck. */
+  expanded: boolean;
   onAction: (action: AttentionSigilAction) => void;
   onAdjust: (type: DeckOperation.PartAdjustment) => void;
   onResize: (size: number) => void;
@@ -76,13 +80,15 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const capabilities = useMemo<PlankCapabilities>(
     () => ({
       fullscreenToggle: breakpoint !== 'mobile' && part === 'main',
+      // Only worth offering while the deck slides: a lone plank already fills the viewport.
+      expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
       // The deck companion is a whole-deck toggle that renders beside whichever plank is attended, so
       // offer it on any plank that has one while the companion is off.
       companion: companions.length > 0 && !deck.companionPlanks.includes(id),
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id],
+    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id, active?.length],
   );
 
   // Load the node's child actions so the sigil menu is populated.
@@ -148,6 +154,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,
     scrollIntoView: state.scrollIntoView,
+    expanded: state.expanded === id,
     onAction,
     onAdjust,
     onResize,

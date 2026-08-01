@@ -18,6 +18,9 @@ const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
   Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
   Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
+  Schema.Literal('expand').annotations({
+    description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
+  }),
   Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
   Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
 );

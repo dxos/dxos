@@ -87,6 +87,11 @@ export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 export const EphemeralDeckState = Schema.Struct({
   /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */
   fullscreen: Schema.optional(Schema.String),
+  /**
+   * Item ID of the plank currently expanded to fill the deck, leaving only the other planks' spines
+   * beside it. Transient, and separate from `plankSizing` so collapsing restores the plank's own width.
+   */
+  expanded: Schema.optional(Schema.String),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
@@ -124,6 +129,9 @@ export namespace DeckAction {
     Schema.Literal('close').annotations({ description: 'Close the plank.' }),
     Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
     Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
+    Schema.Literal('expand').annotations({
+      description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
+    }),
     Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
     Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
   );

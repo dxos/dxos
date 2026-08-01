@@ -3,6 +3,7 @@
 //
 
 import React, {
+  type CSSProperties,
   type PropsWithChildren,
   type RefObject,
   createContext,
@@ -289,6 +290,13 @@ const useSplitSize = (size: number | undefined, persist: (size: number) => void)
 };
 
 /**
+ * The viewport-derived cap on a tile, in rem: never below the tile's own minimum, never above the
+ * absolute plank maximum.
+ */
+const resolveMaxTileSize = (maxPlankWidthPx: number, hasCompanion: boolean): number =>
+  Math.max(hasCompanion ? MIN_PAIR_SIZE : MIN_PLANK_SIZE, Math.min(MAX_PLANK_SIZE, maxPlankWidthPx / REM_PX));
+
+/**
  * Widths (rem) of a sliding tile. A tile is always its plank's own width; a companion is *added* beside
  * it, never taken out of it, so opening or closing the companion leaves the plank exactly where it was.
  * The viewport-derived cap applies to the tile as a whole and the companion absorbs it first — the plank
@@ -389,7 +397,7 @@ const FOLD_CONTENT_CLASSNAMES =
  */
 const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const id = props.data;
-  const { deck } = useDeckContext('DeckPlankTile');
+  const { deck, state } = useDeckContext('DeckPlankTile');
   const { invokePromise } = useOperationInvoker();
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
@@ -410,11 +418,11 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
-  const maxSize = Math.max(
-    companion ? MIN_PAIR_SIZE : MIN_PLANK_SIZE,
-    Math.min(MAX_PLANK_SIZE, maxPlankWidthPx / REM_PX),
-  );
-  const { companionSize, tileSize } = resolveTileSizes(deck.plankSizing, id, !!companion, maxSize);
+  const maxSize = resolveMaxTileSize(maxPlankWidthPx, !!companion);
+  const { companionSize, tileSize: storedSize } = resolveTileSizes(deck.plankSizing, id, !!companion, maxSize);
+  // Expanded takes the whole cap, which is by construction the viewport less a spine for every other
+  // plank — exactly the space between the two piles.
+  const tileSize = state.expanded === id ? maxSize : storedSize;
   const tileWidthPx = tileSize * REM_PX;
 
   // The outer handle resizes the tile; with a companion attached only the plank absorbs the delta, so the
@@ -423,9 +431,14 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
     (size) => {
       if (typeof size === 'number') {
         void invokePromise(DeckOperation.UpdatePlankSize, { id, size: size - companionSize });
+        // Dragging is the user choosing a width, which is the opposite of expanded — otherwise the tile
+        // would snap straight back to the cap.
+        if (state.expanded === id) {
+          void invokePromise(DeckOperation.Adjust, { type: 'expand' as const, id });
+        }
       }
     },
-    [invokePromise, id, companionSize],
+    [invokePromise, id, companionSize, state.expanded],
   );
 
   if (presentation === 'fullbleed') {
@@ -534,25 +547,31 @@ const useMaxPlankWidth = ({
   stackRef: RefObject<HTMLDivElement | null>;
   isSliding: boolean;
   plankCount: number;
-}): number => {
-  const [maxPlankWidthPx, setMaxPlankWidthPx] = useState(Number.POSITIVE_INFINITY);
+}): { maxPlankWidthPx: number; viewportWidthPx: number } => {
+  const [measured, setMeasured] = useState({
+    maxPlankWidthPx: Number.POSITIVE_INFINITY,
+    viewportWidthPx: 0,
+  });
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport || !isSliding) {
-      setMaxPlankWidthPx(Number.POSITIVE_INFINITY);
+      setMeasured({ maxPlankWidthPx: Number.POSITIVE_INFINITY, viewportWidthPx: 0 });
       return;
     }
     const measure = () => {
       const stack = stackRef.current;
       const styles = stack && getComputedStyle(stack);
       const gap = styles ? parseFloat(styles.columnGap) || 0 : 0;
-      const padding = styles
-        ? (parseFloat(styles.paddingInlineStart) || 0) + (parseFloat(styles.paddingInlineEnd) || 0)
-        : 0;
+      // Only the leading padding: any trailing padding is the overscroll runway, which is deliberately
+      // outside the plank's budget rather than space it has to fit within.
+      const padding = styles ? parseFloat(styles.paddingInlineStart) || 0 : 0;
       const others = Math.max(0, plankCount - 1);
       const max = viewport.clientWidth - padding - others * SPINE_PX - (others > 0 ? gap : 0);
-      setMaxPlankWidthPx(max > 0 ? max : Number.POSITIVE_INFINITY);
+      setMeasured({
+        maxPlankWidthPx: max > 0 ? max : Number.POSITIVE_INFINITY,
+        viewportWidthPx: viewport.clientWidth,
+      });
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -560,7 +579,7 @@ const useMaxPlankWidth = ({
     return () => observer.disconnect();
   }, [isSliding, plankCount, viewportRef, stackRef]);
 
-  return maxPlankWidthPx;
+  return measured;
 };
 
 /**
@@ -885,6 +904,7 @@ const useFullscreen = (fullscreenId: string | undefined) => {
  */
 export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
+  const { overscroll } = useDeckSettings();
   const rendered = useRenderedPlanks();
   const { planks, companionId, companionAnchorId, attendedPlankId } = rendered;
   const breakpoint = useBreakpoints();
@@ -906,7 +926,12 @@ export const DeckPlanks = () => {
   const handoffRef = useRef<string | undefined>(undefined);
 
   const getPlankTiles = usePlankTiles(stackRef);
-  const maxPlankWidthPx = useMaxPlankWidth({ viewportRef, stackRef, isSliding, plankCount: planks.length });
+  const { maxPlankWidthPx, viewportWidthPx } = useMaxPlankWidth({
+    viewportRef,
+    stackRef,
+    isSliding,
+    plankCount: planks.length,
+  });
   usePreservedScroll({ viewportRef, isSliding });
   useFoldedPlanks({
     viewportRef,
@@ -935,6 +960,33 @@ export const DeckPlanks = () => {
     [rendered, maxPlankWidthPx],
   );
 
+  // Overscroll runway (experiment): trailing space so the last plank can scroll clear of the right edge
+  // and sit at the front like any other, with only the preceding spines beside it. Sized to exactly that
+  // resting position, so the deck never scrolls further than the last plank being fully forward.
+  const overscrollPx = useMemo(() => {
+    const lastId = planks[planks.length - 1];
+    if (!overscroll || !isSliding || !lastId || !viewportWidthPx) {
+      return 0;
+    }
+    const paired = companionAnchorId === lastId && !!companionId;
+    const { tileSize } = resolveTileSizes(
+      deck.plankSizing,
+      lastId,
+      paired,
+      resolveMaxTileSize(maxPlankWidthPx, paired),
+    );
+    return Math.max(0, viewportWidthPx - (planks.length - 1) * SPINE_PX - tileSize * REM_PX);
+  }, [
+    overscroll,
+    isSliding,
+    planks,
+    companionAnchorId,
+    companionId,
+    deck.plankSizing,
+    maxPlankWidthPx,
+    viewportWidthPx,
+  ]);
+
   // A fullbleed pair flexes to the viewport rather than taking a stored total, so only the lower bound
   // applies here — the Splitter's own clamp keeps the plank pane on screen.
   const soloCompanionSize = Math.max(
@@ -944,7 +996,13 @@ export const DeckPlanks = () => {
 
   return (
     <PlankContext.Provider value={plankContext}>
-      <div className='relative bg-deck-surface overflow-hidden'>
+      {/* The overscroll runway rides a CSS var because `Mosaic.Stack` takes classNames but no style. */}
+      <div
+        className='relative bg-deck-surface overflow-hidden'
+        style={
+          overscrollPx > 0 ? ({ '--deck-overscroll': `${Math.round(overscrollPx)}px` } as CSSProperties) : undefined
+        }
+      >
         <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
         {fullscreen && fullscreenId ? (
           <>
