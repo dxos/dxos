@@ -13,10 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
  * Contributes the always-on {@link AppCapabilities.ProgressRegistry}. Built from the shared atom
  * registry so any plugin can register/subscribe to progress providers.
  */
-export default Capability.inlineModule(
-  'ProgressRegistry',
-  { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.ProgressRegistry] },
-  Effect.fnUntraced(function* () {
+export default Capability.makeModule(Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     return [Capability.contribute(AppCapabilities.ProgressRegistry, createProgressRegistry(registry))];
   }),

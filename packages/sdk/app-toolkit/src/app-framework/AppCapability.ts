@@ -165,11 +165,30 @@ export const translations = (
   );
 };
 
-/** Module contributing schemas. */
-export const schema = (types: ReadonlyArray<Type.AnyEntity>, options?: { name?: string }) =>
-  Capability$.inlineModule(options?.name ?? 'schema', { provides: [AppCapabilities.Schema] }, () =>
+/**
+ * Module contributing schemas. Prefer the loader form — schema objects ride whatever barrels
+ * declare them, so an inline list drags those barrels into the plugin definition's static
+ * closure (the boot evaluation floor); a loader keeps them in the module body chunk.
+ */
+export const schema = (
+  types: ReadonlyArray<Type.AnyEntity> | (() => Promise<{ default: ReadonlyArray<Type.AnyEntity> }>),
+  options?: { name?: string },
+) => {
+  if (typeof types === 'function') {
+    const loader = types;
+    return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(
+      options?.name ?? 'schema',
+      { provides: [AppCapabilities.Schema] },
+      () =>
+        loader().then(({ default: values }) => ({
+          default: () => Effect.succeed([Capability$.contribute(AppCapabilities.Schema, values)]),
+        })),
+    );
+  }
+  return Capability$.inlineModule(options?.name ?? 'schema', { provides: [AppCapabilities.Schema] }, () =>
     Effect.succeed([Capability$.contribute(AppCapabilities.Schema, types)]),
   );
+};
 
 /** Module contributing static plugin assets (typically the bundled `PLUGIN.mdl` spec). */
 export const pluginAsset = (

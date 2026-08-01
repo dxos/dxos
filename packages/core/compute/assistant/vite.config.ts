@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     extraction: 'src/extraction/index.ts',
+    ExecutionGraph: 'src/util/execution-graph.ts',
   },
   test: { node: true },
 });
