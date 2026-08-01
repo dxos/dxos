@@ -2876,7 +2876,7 @@ describe('PluginManager', () => {
       }),
     );
 
-    it.effect('deferStartup parks dependency-mode modules until the DeferredStartup wave', () =>
+    it.effect('modules gated on DeferredStartup stay off startup and join the after-startup wave', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
@@ -2887,10 +2887,11 @@ describe('PluginManager', () => {
             }),
             Plugin.addModule({
               id: 'deferred',
+              activatesOn: ActivationEvent.DeferredStartup,
               provides: [Number],
               activate: () => Effect.succeed([Capability.contribute(Number, { number: 1 })]),
             }),
-            // Kept consumer of a deferred provider: waits at startup, self-heals on the wave.
+            // Startup consumer of a deferred provider: waits at startup, self-heals on the wave.
             Plugin.addModule({
               id: 'consumer',
               requires: [Number],
@@ -2904,7 +2905,6 @@ describe('PluginManager', () => {
           pluginLoader,
           plugins,
           enabled: [testMeta.profile.key],
-          deferStartup: (module) => module.id.endsWith('deferred'),
         });
 
         yield* manager.activate(ActivationEvents.Startup);

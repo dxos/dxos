@@ -11,8 +11,8 @@ import { ActivationEvent as ActivationEvent$ } from '../core';
 export const Startup = ActivationEvent$.Startup;
 
 /**
- * Fired at host idle after startup completes; the off-critical-path gate for modules
- * deferred via the manager's `deferStartup` predicate.
+ * The after-startup gate: fired by the host at idle once startup completes; modules declaring
+ * `activatesOn: DeferredStartup` activate here instead of the boot critical path.
  * Defined in core; see {@link ActivationEvent$.DeferredStartup}.
  */
 export const DeferredStartup = ActivationEvent$.DeferredStartup;

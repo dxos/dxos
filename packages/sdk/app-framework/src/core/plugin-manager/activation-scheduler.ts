@@ -49,32 +49,11 @@ export class ActivationScheduler {
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
   readonly #loader: ModuleLoader;
-  readonly #deferStartup?: (module: Plugin.PluginModule) => boolean;
 
-  constructor(
-    state: ManagerState,
-    capabilities: CapabilityManager.CapabilityManager,
-    loader: ModuleLoader,
-    options?: { deferStartup?: (module: Plugin.PluginModule) => boolean },
-  ) {
+  constructor(state: ManagerState, capabilities: CapabilityManager.CapabilityManager, loader: ModuleLoader) {
     this.#state = state;
     this.#capabilities = capabilities;
     this.#loader = loader;
-    this.#deferStartup = options?.deferStartup;
-  }
-
-  /**
-   * Whether the module sits out the startup pass, parked for the {@link ActivationEvent.DeferredStartup}
-   * wave. Only dependency-mode modules defer (event-mode modules already have their own gate),
-   * and the gate lifts permanently once the deferred wave has fired.
-   */
-  #isDeferredPending(module: Plugin.PluginModule): boolean {
-    return (
-      this.#deferStartup !== undefined &&
-      module.activation.mode === 'dependency' &&
-      !this.#state.eventFired(ActivationEvent.eventKey(ActivationEvent.DeferredStartup)) &&
-      this.#deferStartup(module)
-    );
   }
 
   /**
@@ -130,33 +109,7 @@ export class ActivationScheduler {
       this.#state.markEventFired(key);
       yield* PubSub.publish(this.#state.activation, { event: key, state: 'activated' });
 
-      // Deferred modules activate at host idle so their loading never competes with the
-      // ready-path render. Daemon-forked: the deferred wave outlives the start() call.
-      if (
-        this.#deferStartup !== undefined &&
-        !this.#state.eventFired(ActivationEvent.eventKey(ActivationEvent.DeferredStartup))
-      ) {
-        yield* Effect.promise(ActivationScheduler.idle).pipe(
-          Effect.andThen(this.activate(ActivationEvent.DeferredStartup)),
-          Effect.catchAll((error) =>
-            Effect.sync(() => log.error('deferred startup activation failed', { error: String(error) })),
-          ),
-          Effect.forkDaemon,
-        );
-      }
-
       return results.some(Boolean);
-    });
-  }
-
-  /** Resolves at host idle (`requestIdleCallback` when available, macrotask fallback). */
-  static idle(): Promise<void> {
-    return new Promise((resolve) => {
-      if (typeof requestIdleCallback === 'function') {
-        requestIdleCallback(() => resolve(), { timeout: 2_000 });
-      } else {
-        setTimeout(resolve, 0);
-      }
     });
   }
 
@@ -287,25 +240,7 @@ export class ActivationScheduler {
 
       const activatingEvents = yield* this.#activatingEvents;
       const activatingModules = yield* this.#activatingModules;
-      let modules = this.#getModulesForActivation(key, activatingEvents, activatingModules);
-      // The deferred wave carries the dependency-mode modules parked by `deferStartup` —
-      // they declare no `activatesOn`, so event matching alone would never find them.
-      const deferStartup = this.#deferStartup;
-      if (key === ActivationEvent.eventKey(ActivationEvent.DeferredStartup) && deferStartup !== undefined) {
-        const active = this.#state.getActiveIds();
-        const matched = new Set(modules.map((module) => module.id));
-        const deferred = this.#state
-          .getModules()
-          .filter(
-            (module) =>
-              module.activation.mode === 'dependency' &&
-              !active.includes(module.id) &&
-              !this.#loader.isLoading(module.id) &&
-              !matched.has(module.id) &&
-              deferStartup(module),
-          );
-        modules = [...modules, ...deferred];
-      }
+      const modules = this.#getModulesForActivation(key, activatingEvents, activatingModules);
       if (modules.length === 0) {
         log('no modules to activate', { key });
         this.#state.markEventFired(key);
@@ -590,11 +525,6 @@ export class ActivationScheduler {
           return false;
         }
         if (!explicit.has(module.id) && module.activation.mode === 'event' && !eventSatisfied(module)) {
-          return false;
-        }
-        // Deferred modules sit out pooled rounds until their wave fires; explicit candidates
-        // (the deferred wave itself, or a demand pull that needs one early) bypass the gate.
-        if (!explicit.has(module.id) && this.#isDeferredPending(module)) {
           return false;
         }
         seen.add(module.id);

@@ -508,36 +508,9 @@ const main = async () => {
     );
   };
 
-  // TEMPORARY (startup-latency PoC): coarse off-critical-path gate — dependency-mode modules
-  // of plugins outside this set activate in the DeferredStartup wave at host idle instead of
-  // the startup pass. Whole plugins defer atomically: an eager ReactContext rendering a
-  // consumer of a deferred sibling capability trips the useCapability invariant.
-  // Precise demand events replace this once the impact is measured.
-  const STARTUP_PLUGINS = new Set([
-    'org.dxos.plugin.attention',
-    'org.dxos.plugin.client',
-    'org.dxos.plugin.deck',
-    'org.dxos.plugin.graph',
-    'org.dxos.plugin.markdown',
-    'org.dxos.plugin.navtree',
-    'org.dxos.plugin.observability',
-    'org.dxos.plugin.onboarding',
-    'org.dxos.plugin.processManager',
-    'org.dxos.plugin.registry',
-    'org.dxos.plugin.settings',
-    'org.dxos.plugin.space',
-    'org.dxos.plugin.support',
-    'org.dxos.plugin.theme',
-  ]);
-  const deferStartup = (module: Plugin.PluginModule) => {
-    const [pluginId] = module.id.split('.module.');
-    return !STARTUP_PLUGINS.has(pluginId);
-  };
-
   const Main = () => {
     const App = useApp({
       fallback: Fallback,
-      deferStartup,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
       // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`
       // relays startup progress into it and dismisses it — no placeholder here.

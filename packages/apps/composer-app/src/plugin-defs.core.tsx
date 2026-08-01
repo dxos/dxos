@@ -27,6 +27,7 @@ import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
 import { ThemePlugin } from '@dxos/plugin-theme/plugin';
 
+import { AfterStartupPlugin } from './plugins/after-startup';
 import { downloadLogs } from './util';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
@@ -69,6 +70,7 @@ export const getCorePlugins = ({
   const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
+    AfterStartupPlugin(),
     AttentionPlugin(),
     ClientPlugin({
       config,

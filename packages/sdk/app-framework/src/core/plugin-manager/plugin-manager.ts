@@ -127,14 +127,6 @@ export type ManagerOptions = {
    * pass `Duration.infinity` to disable.
    */
   activationTimeout?: Duration.DurationInput;
-  /**
-   * Dependency-mode modules matched here sit out the startup pass and activate in the
-   * {@link ActivationEvent.DeferredStartup} wave at host idle instead — a coarse
-   * off-critical-path gate while modules migrate to precise demand events. Consumers of a
-   * deferred provider wait and self-heal when the wave fires; demand pulls may activate a
-   * deferred provider early.
-   */
-  deferStartup?: (module: Plugin.PluginModule) => boolean;
 };
 
 /**
@@ -309,7 +301,6 @@ class ManagerImpl implements PluginManager {
     onRemove,
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
-    deferStartup,
   }: ManagerOptions) {
     // Core plugins are derived from `meta.tags.includes('system')`; the set is
     // a snapshot of the initial `plugins` array (later `add()` calls do not
@@ -325,7 +316,7 @@ class ManagerImpl implements PluginManager {
 
     this._state = new ManagerState(this.registry, { plugins, core, enabled });
     this._loader = new ModuleLoader(this._state, this.capabilities, activationTimeout);
-    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader, { deferStartup });
+    this._scheduler = new ActivationScheduler(this._state, this.capabilities, this._loader);
     this._catalog = new PluginCatalog(this._state, this._scheduler, this.pluginRegistry, {
       pluginLoader,
       loadTimeout,
