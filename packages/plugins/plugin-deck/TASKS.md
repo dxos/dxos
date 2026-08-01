@@ -53,11 +53,15 @@ Phased so each step is independently landable and verifiable:
       object. That combination is a deliberate special case: leave a comment saying so, since a node
       that is selectable but not an object is exactly the kind of thing a later reader will try to
       "fix". Needs the seeding path to accept a root that is not the node's own data.
-- [ ] **Rename the `flatten` setting** — it is the top-level deck mode, gating whether the deck is
-      locked to one plank (+ companion) with a breadcrumb trail, or may show several. The name
-      describes the old implementation rather than the choice; it also interacts with everything above,
-      since a seeded collection under `flatten` shows one plank plus breadcrumbs rather than a row of
-      planks. Both behaviours are correct — the setting just needs a name that says which it is.
+- [ ] **Replace `flatten` with a deck mode enum** — DECIDED: `mode: 'solo' | 'deck'` in `Settings`,
+      replacing the boolean. `solo` shows one plank (plus its companion) with the rest as breadcrumbs;
+      `deck` shows several side by side. An enum so a third mode has somewhere to go. Two things to
+      handle rather than discover later: (1) `LayoutMode` already has `'solo'`/`'multi'`/
+      `'solo--fullscreen'` and `LayoutOperation.Open` already has a `'solo'` disposition — three
+      overlapping uses of the word, which need reconciling or at least a note saying why they differ;
+      (2) the settings blob is a `Schema.Struct`, so dropping a boolean for an enum is a decode failure
+      and falls back to defaults — acceptable under the drop-don't-migrate policy, but it silently
+      resets the user's choice, so land it deliberately.
 - [ ] **P3 — levels + pruning.** Opening at level `i` reuses that level's plank (existing `name`
       mechanism) and closes levels `> i`. Pure function beside `addSubjectsToActiveDeck`, so it gets
       unit tests. Mailbox declares `mailbox / message / attachment` and drops its hand-built name.
