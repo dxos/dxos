@@ -30,6 +30,8 @@ class TaskDoc extends Type.makeObject<TaskDoc>(DXN.make('org.dxos.test.migration
     status: Schema.optional(Schema.String),
     name: Schema.optional(Schema.String),
     done: Schema.optional(Schema.Boolean),
+    // V3's rename of `name`, added to test a two-step migration chain (claim 4).
+    label: Schema.optional(Schema.String),
     // Stands in for the annotation a real fold would use to record a semantic conflict (claim 5) —
     // Automerge itself never sees the conflict, so it must be data the application writes.
     conflicts: Schema.optional(Schema.Array(Schema.Struct({ property: Schema.String, theirs: Schema.String }))),
@@ -574,5 +576,279 @@ describe('migration research (M0)', () => {
     await expect.poll(() => obj2.conflicts?.length).toBe(1);
     expect(obj2.conflicts).to.deep.eq([{ property: 'name', theirs: 'late edit' }]);
     expect(obj2.done).to.eq(true);
+  });
+
+  test('claim 3: folding forward CONVERGES when both peers fold the same late write independently', async ({
+    expect,
+  }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer({ types: [TaskDoc] });
+    await using peer2 = await builder.createPeer({ types: [TaskDoc] });
+    const replicator1 = await network.createReplicator();
+    const replicator2 = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1);
+    await peer2.host.addReplicator(Context.default(), replicator2);
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    const obj1 = db1.add(Obj.make(TaskDoc, { title: 'original', status: 'in-progress' }));
+    await db1.flush();
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    const obj2 = await queryTaskDoc(db2);
+
+    // Partition: peer 1's migration and peer 2's late write become concurrent.
+    await peer1.host.removeReplicator(replicator1);
+    await peer2.host.removeReplicator(replicator2);
+
+    const core1 = getObjectCore(obj1);
+    Obj.update(obj1, (obj1) => {
+      obj1.name = obj1.title;
+      obj1.done = obj1.status === 'done';
+    });
+    await db1.flush();
+
+    // Peer 2, schema-unaware (old client), keeps writing the old shape while partitioned.
+    Obj.update(obj2, (obj2) => {
+      obj2.title = 'late edit';
+    });
+    await db2.flush();
+
+    // Heal: reconnect with fresh replicator instances, sync both ways.
+    const replicator1b = await network.createReplicator();
+    const replicator2b = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1b);
+    await peer2.host.addReplicator(Context.default(), replicator2b);
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+
+    // Poll until BOTH peers see the fully merged state before either one folds.
+    await expect.poll(() => obj1.title).toBe('late edit');
+    await expect.poll(() => obj1.name).toBe('original');
+    await expect.poll(() => obj2.title).toBe('late edit');
+    await expect.poll(() => obj2.name).toBe('original');
+
+    // Partition again: both peers now independently run the IDENTICAL fold, deterministically
+    // derived from the same merged input, so both write the exact same value to `name`.
+    await peer1.host.removeReplicator(replicator1b);
+    await peer2.host.removeReplicator(replicator2b);
+    Obj.update(obj1, (obj1) => {
+      obj1.name = obj1.title;
+    });
+    await db1.flush();
+    Obj.update(obj2, (obj2) => {
+      obj2.name = obj2.title;
+    });
+    await db2.flush();
+
+    // Heal again, sync both ways.
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+
+    await expect.poll(() => obj1.name).toBe('late edit');
+    await expect.poll(() => obj2.name).toBe('late edit');
+
+    // One more full sync round-trip: values must not oscillate.
+    await db1.flush();
+    await db2.flush();
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+    expect(obj1.name).to.eq('late edit');
+    expect(obj2.name).to.eq('late edit');
+    expect(obj1.title).to.eq('late edit');
+    expect(obj2.title).to.eq('late edit');
+
+    // Idempotence at the diff level: run the fold a THIRD time on peer 1 with the value already
+    // converged, and see whether an equal-value write is a real Automerge change or a no-op.
+    const preThirdFoldHeads = A.getHeads(core1.getDoc());
+    Obj.update(obj1, (obj1) => {
+      obj1.name = obj1.title;
+    });
+    await db1.flush();
+    const thirdFoldPatches = A.diff(core1.getDoc(), preThirdFoldHeads, A.getHeads(core1.getDoc()));
+    // eslint-disable-next-line no-console
+    console.log('claim 3: patches from an equal-value re-fold ->', JSON.stringify(thirdFoldPatches, null, 2));
+
+    // Observed: Automerge's Text field is recreated on every assignment regardless of whether the
+    // new value equals the old one, so an equal-value `put` still emits `put ''` + `splice` patches.
+    // A naive fold loop that re-writes on every observed head-change would therefore ping-pong heads
+    // forever even though the VALUES have converged -- a real fold must compare values before writing.
+    expect(thirdFoldPatches.length).to.be.greaterThan(0);
+    expect(thirdFoldPatches.map((patch) => patch.action)).to.deep.eq(['put', 'splice']);
+  });
+
+  test('claim 4: a chained migration (A -> B -> C) folds a late A-shaped write all the way to C, and stays idempotent', async ({
+    expect,
+  }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using network = await new TestReplicationNetwork().open();
+
+    await using peer1 = await builder.createPeer({ types: [TaskDoc] });
+    await using peer2 = await builder.createPeer({ types: [TaskDoc] });
+    const replicator1 = await network.createReplicator();
+    const replicator2 = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1);
+    await peer2.host.addReplicator(Context.default(), replicator2);
+
+    await using db1 = await peer1.createDatabase(spaceKey);
+    const obj1 = db1.add(Obj.make(TaskDoc, { title: 'original' }));
+    await db1.flush();
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl, 'root url');
+    await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    const obj2 = await queryTaskDoc(db2);
+
+    // Partition: peer 1 runs both chain migrations while peer 2 stays on the original V1 shape.
+    await peer1.host.removeReplicator(replicator1);
+    await peer2.host.removeReplicator(replicator2);
+
+    const core1 = getObjectCore(obj1);
+
+    // Migration 1 (V1 -> V2): `name = title`.
+    const m1PreHeads: Heads = A.getHeads(core1.getDoc());
+    Obj.update(obj1, (obj1) => {
+      obj1.name = obj1.title;
+    });
+    await db1.flush();
+
+    // Migration 2 (V2 -> V3): `label = name`. The object now carries all three generations, since
+    // fold-forward keeps old properties around (claim 1) rather than deleting them.
+    const m2PreHeads: Heads = A.getHeads(core1.getDoc());
+    Obj.update(obj1, (obj1) => {
+      obj1.label = obj1.name;
+    });
+    await db1.flush();
+
+    // Peer 2, a pure V1-shaped client, writes only the oldest property while partitioned.
+    Obj.update(obj2, (obj2) => {
+      obj2.title = 'late edit';
+    });
+    await db2.flush();
+
+    // Heal: reconnect with fresh replicator instances, sync both ways.
+    const replicator1b = await network.createReplicator();
+    const replicator2b = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1b);
+    await peer2.host.addReplicator(Context.default(), replicator2b);
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+
+    // Poll for the merged state on peer 1: the late V1 write merges alongside both migrations.
+    await expect.poll(() => obj1.title).toBe('late edit');
+    await expect.poll(() => obj1.label).toBe('original');
+
+    const propertyNameOf = (patch: Patch): string | undefined => {
+      const name = patch.path[3];
+      return typeof name === 'string' ? name : undefined;
+    };
+    const v1SourceProps = new Set(['title', 'status']);
+    const isV1SourceProp = (patch: Patch): boolean => {
+      const name = propertyNameOf(patch);
+      return name !== undefined && v1SourceProps.has(name);
+    };
+
+    // Diff from `m1PreHeads` filtered to V1 source props: names exactly the late write, since the
+    // chain's own migrations never write `title`/`status`.
+    const docAfterHeal = core1.getDoc();
+    const lateV1Patches = A.diff(docAfterHeal, m1PreHeads, A.getHeads(docAfterHeal)).filter(isV1SourceProp);
+    expect(lateV1Patches.every((patch) => propertyNameOf(patch) === 'title')).to.eq(true);
+    expect(lateV1Patches.length).to.be.greaterThan(0);
+
+    // Diffing from `m2PreHeads` instead names the same late write: migration 2 (`label = name`) never
+    // touches `title`/`status` either, so which pre-migration mark is used doesn't change the answer.
+    const lateV1PatchesFromM2 = A.diff(docAfterHeal, m2PreHeads, A.getHeads(docAfterHeal)).filter(isV1SourceProp);
+    expect(lateV1PatchesFromM2.every((patch) => propertyNameOf(patch) === 'title')).to.eq(true);
+    expect(lateV1PatchesFromM2.length).to.be.greaterThan(0);
+
+    // Fold on peer 1: apply the COMPOSED derivation (V1 -> V3) in ONE `Obj.update`, so the object
+    // never sits half-folded (only `name` updated, `label` stale) between the two steps.
+    Obj.update(obj1, (obj1) => {
+      const value = obj1.title;
+      obj1.name = value;
+      obj1.label = value;
+    });
+    await db1.flush();
+
+    expect(obj1.name).to.eq('late edit');
+    expect(obj1.label).to.eq('late edit');
+
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    await expect.poll(() => obj2.label).toBe('late edit');
+    expect(obj2.name).to.eq('late edit');
+
+    // Intermediate-generation invariant: after a composed fold, `name` never disagrees with `label`.
+    expect(obj1.name).to.eq(obj1.label);
+    expect(obj2.name).to.eq(obj2.label);
+
+    // Idempotence of the composition: record heads right after the first fold, partition again, peer
+    // 2 makes a SECOND late V1 edit, heal, and confirm the diff names only the new edit.
+    const postFoldHeads = A.getHeads(core1.getDoc());
+    await peer1.host.removeReplicator(replicator1b);
+    await peer2.host.removeReplicator(replicator2b);
+    Obj.update(obj2, (obj2) => {
+      obj2.title = 'later edit';
+    });
+    await db2.flush();
+
+    const replicator1c = await network.createReplicator();
+    const replicator2c = await network.createReplicator();
+    await peer1.host.addReplicator(Context.default(), replicator1c);
+    await peer2.host.addReplicator(Context.default(), replicator2c);
+    await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db1.updateIndexes();
+    await db2.updateIndexes();
+    await expect.poll(() => obj1.title).toBe('later edit');
+
+    // The diff from `postFoldHeads` must name ONLY the second edit -- the first fold's own writes,
+    // and the first late edit it already consumed, are all behind `postFoldHeads` and cannot reappear.
+    const secondLateV1Patches = A.diff(core1.getDoc(), postFoldHeads, A.getHeads(core1.getDoc())).filter(
+      isV1SourceProp,
+    );
+    const secondSplice = secondLateV1Patches.find((patch): patch is SpliceTextPatch => patch.action === 'splice');
+    expect(secondLateV1Patches.every((patch) => propertyNameOf(patch) === 'title')).to.eq(true);
+    expect(secondSplice?.value).to.eq('later edit');
+
+    // Fold again through the SAME composed derivation.
+    Obj.update(obj1, (obj1) => {
+      const value = obj1.title;
+      obj1.name = value;
+      obj1.label = value;
+    });
+    await db1.flush();
+
+    // The first folded value must never reappear: both target properties now hold the second edit.
+    expect(obj1.label).to.eq('later edit');
+    expect(obj1.name).to.eq('later edit');
+    expect(obj1.label).not.to.eq('late edit');
+    expect(obj1.name).not.to.eq('late edit');
+
+    // Intermediate-generation invariant holds again after the second composed fold.
+    expect(obj1.name).to.eq(obj1.label);
+
+    await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
+    await db2.updateIndexes();
+    await expect.poll(() => obj2.label).toBe('later edit');
+    expect(obj2.name).to.eq('later edit');
+    expect(obj2.name).to.eq(obj2.label);
   });
 });

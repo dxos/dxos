@@ -1,6 +1,6 @@
 # ECHO Lenses — Tasks
 
-_Resume: PR #12420 MERGED 2026-08-01 (squash `f8637f1d`). IN PROGRESS: Phase M0 migrations research on branch `claude/m0-migrations-research-zw15ml` (no PR by request) — Track A kill order (harness, claims 1, 2, 12, 5, then 3-4), deliverable = answers + DESIGN.md §10.3 writeup. Previously: PHASES 1-4 DONE for BOTH lenses. `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` and `Collaboration` render only; `Spec` carries the assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Both story specs assert **bidirectional** sync at the exact line each edit produced (see the `userEvent.click`/CodeMirror caret note), and are mutation-checked. The UI is `@dxos/react-ui` primitives throughout — both task panels are the same `Form` given a different schema — except the ProseMirror editor. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
+_Resume: M0 TRACK A COMPLETE (2026-08-01, branch `claude/m0-migrations-research-zw15ml`, no PR by request): all six kill-points survive — harness + 8 tests in `echo-client-e2e/src/migration-research.test.ts`, findings written up as the "M0 Track A findings" block in DESIGN.md §10.3. Headline constraints discovered: folds must value-compare before writing (equal-value string writes still emit put+splice, so a heads-driven loop never settles); two head-marks per migration event (pre for source detection, post for target-conflict detection) plus an ancestry check (`A.diff` with foreign heads silently returns a full diff — epoch re-roots would make everything look late); late-created entities need a query-based detection path beside the heads fold; `Annotation.set` on `EntityMeta.annotations` is a working replicating per-object migration marker. Also fixed a real `test-replicator.ts` bug (connections never registered; disconnect was a silent no-op — transport partition in tests was impossible before). NEXT: M0 Track B (claims 6-11 — needs identity-key/fan-out scaffolding, largely adopts object-merging spikes; fan-in late-child is the remaining bar risk), or Phase 5 (promote Lens into @dxos/echo), which M1 gates on. Previously: PR #12420 MERGED (squash `f8637f1d`), PHASES 1-4 DONE for BOTH lenses._ `useLens` ships on `@dxos/echo-panproto/react`; `@dxos/stories-lens` has 6 passing stories across two demos (`Default` and `Collaboration` render only; `Spec` carries the assertions): Task→GtdTask, and Text→rich text with the core markdown editor on one side and a basic ProseMirror editor on the other. The rich-text lens is a coded lens using `@lezer/markdown` source offsets **and inline marks**, with 11 unit tests; the ProseMirror editor renders real `<strong>`/`<em>`/`<code>` and toggles them with Mod-b/i/e. Both story specs assert **bidirectional** sync at the exact line each edit produced (see the `userEvent.click`/CodeMirror caret note), and are mutation-checked. The UI is `@dxos/react-ui` primitives throughout — both task panels are the same `Form` given a different schema — except the ProseMirror editor. Remaining: nothing from the original plan — see Phase 5/6 backlog. NOTE for a fresh session: this container's Playwright is revision 1194 but the repo pins 1200, so `stories-lens:test-storybook` needs a local shim (symlink `/opt/pw-browsers/chromium_headless_shell-1200/chrome-headless-shell-linux64/chrome-headless-shell` → the 1194 `headless_shell`) and `plugin-sketch:build` for the shared storybook static dir. Neither is a repo change. Uncommitted: none. Previously: Phase 1 CORE + DATABASE VERIFICATION DONE. `@dxos/echo-panproto` ships the `Lens` namespace (30 unit tests) and `@dxos/echo-client-e2e/src/lens.test.ts` proves it against a real automerge-backed `Task` including **two peers editing one object concurrently — one through the canonical type, one through the lens — with both edits surviving** (4 tests; the package's full 294 stay green). Uncommitted: none._
 
 Design and rationale live in [DESIGN.md](./DESIGN.md); proposed signatures in [API.md](../../../packages/core/echo/echo-panproto/API.md).
 This file is the ledger only.
@@ -386,11 +386,19 @@ the mechanism.
       `A.diff` against heads a doc has never seen does NOT throw — it silently returns a full diff,
       so an epoch re-root would make everything look late; a fold must ancestry-check its stored
       heads before trusting the diff. Full epoch machinery not exercised (not in this harness).
-- [ ] **Claim 3 · does folding forward converge?** Two peers both notice the same late write and both
-      fold it. Deterministic minimal writes should produce identical changes; prove it rather than
-      assume it.
-- [ ] **Claim 4 · chains.** Object migrated `A → B → C`, late write arrives in shape `A`. Does lens
-      composition fold it all the way, and is the composition still idempotent?
+- [x] **Claim 3 · does folding forward converge? — YES, values converge; writes do NOT settle by
+      themselves.** Both peers folding the same late write independently converge with no value
+      oscillation. But automerge emits `put ''` + `splice` for a string assignment even when the
+      value is UNCHANGED — an equal-value write is a real change, so a fold loop driven only by
+      "heads moved since my marker" re-writes forever (write ping-pong, values stable). A real fold
+      must compare current vs derived value and skip the write when equal.
+- [x] **Claim 4 · chains. — SURVIVES.** A V1-shaped late write folds through a composed `A→B→C`
+      derivation to the final shape on both peers; a second late write round is detected from
+      post-fold heads without the first reappearing. The composed fold must be ONE `Obj.update` —
+      that is what keeps the intermediate generation consistent (`name === label` at every
+      observable point). Detection only strictly needs the EARLIEST step's pre-heads (intermediate
+      steps never touch the original source props), but per-step heads are cheap and cover late
+      writes at intermediate generations (untested).
 - [x] **Claim 5 · genuine conflicts surface — but NOT as CRDT conflicts. — CONFIRMED, both halves.**
       Automerge merged `title='late edit'` + `name='direct edit'` silently (different keys, no CRDT
       conflict). The fold detects the semantic conflict itself with TWO head-marks: source-prop diff
@@ -451,7 +459,8 @@ the mechanism.
       path beside the heads-based property fold. The fan-in variant (late child absorbed into a
       tombstoned parent property, two late children colliding) is NOT yet exercised — that residue
       belongs to claims 10/11 and the §10.3 writeup must say so.
-- [ ] **Write up what survives** in DESIGN.md §10.3 — including, if it comes to it, the honest
+- [x] **Write up what survives** _(Track A written — "M0 Track A findings" block in DESIGN.md §10.3;
+      extend it when Track B runs)_ in DESIGN.md §10.3 — including, if it comes to it, the honest
       finding that the bar is unreachable and why.
 
 ### Phase M1 — integrate with the existing API: single-object, lens-backed

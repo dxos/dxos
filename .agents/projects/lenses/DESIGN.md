@@ -596,6 +596,80 @@ knows only the old type and writes it directly. Fold-forward is for that case.
    list requires the mechanism to notice a new entity rather than a changed property, and it is the
    most likely reason the bar in §10.1 turns out to be unreachable.
 
+#### M0 Track A findings (2026-08-01) — every claim survives; the hypothesis stands
+
+Verified against real automerge-backed objects with genuine transport-level partition:
+`echo-client-e2e/src/migration-research.test.ts` (eight tests; two peers via `EchoTestBuilder` +
+`TestReplicationNetwork`, partition = remove both replicators, heal = attach fresh ones — which
+required fixing a latent `test-replicator.ts` bug where connections were never registered on the
+replicator, so disconnection had silently never worked in this harness). Claim numbers below are
+this section's; the ledger's claim 12 is claim 6 here.
+
+1. **Late writes survive, even against deletes.** A partitioned peer's write to a key the migration
+   deleted wins the merge on both peers — a delete supersedes only ops it causally saw. A synced
+   old-code client's later write trivially re-adds the key. So deletes do not destroy the data the
+   fold needs — but migrations still must not delete: the fold reads the _source_ property, and
+   "keep old properties until compaction" remains the rule (also reconfirmed by every later test,
+   which depends on the source being present).
+2. **Heads-diff isolates late writes exactly.** `A.diff(doc, preMigrationHeads, current)` filtered
+   to source-property paths names precisely the late writes — never the pre-migration values the
+   migration consumed, never the migration's own target writes. The fold marks its own progress by
+   advancing its stored heads: after a second partition and a second late edit, the next diff names
+   only the new edit; the folded one never reappears. Mechanics: object data sits at
+   `objects.<id>.data.<prop>`, so the property name is at a fixed path index, and one string write
+   is _two_ patches (`put ''` + `splice` — strings are Automerge Text).
+   **The epoch caveat is real but different from expected:** `A.diff` against heads the doc has
+   never seen does not throw — it silently returns a full diff, as if from empty. An epoch re-root
+   would therefore make _everything_ look late and the fold would re-apply the world. A fold must
+   verify its stored heads are in the doc's history before trusting the diff (or store an epoch
+   marker beside them, per M1). Constrains §10.6 D and open question 2.
+3. **Folding converges on values — but a heads-driven loop never settles on writes.** Two peers
+   independently applying the same deterministic fold converge with no value oscillation. However,
+   automerge emits the full `put ''` + `splice` pair for a string assignment even when the assigned
+   value equals the current one — an equal-value write is a real change. A fold loop triggered by
+   "heads moved past my marker" therefore re-writes forever: values stable, writes ping-ponging.
+   **A real fold must compare the derived value against the current value and skip equal writes.**
+   This is the sharpest implementation constraint the research produced, and it applies to any
+   "standing rule" trigger design (open question 6).
+4. **Chains fold through composition.** A V1-shaped late write folds through a composed `A→B→C`
+   derivation to the final shape, on both peers, idempotently across rounds. Two consequences: the
+   composed fold must be applied as **one `Obj.update`**, which is what keeps intermediate
+   generations consistent at every observable point (split into two flushed updates there is a
+   window where the object is half-folded and replicating); and detection strictly needs only the
+   _earliest_ step's pre-heads, since intermediate steps never touch the original source properties
+   — though per-step heads are cheap and would cover a late write arriving at an intermediate
+   generation (not exercised).
+5. **Semantic conflicts are detectable, and Automerge indeed cannot see them.** The premise
+   correction held exactly: a late `title` write and a direct `name` edit merge silently — different
+   keys, no CRDT conflict. The fold detects the conflict itself with **two head-marks per migration
+   event**: source-prop diff from _pre_-migration heads (names late writes), target-prop diff from
+   _post_-migration heads (names direct edits, excluding the migration's own writes). On conflict it
+   records `{property, theirs}` as data and does not overwrite — winner intact, loser preserved,
+   record replicated. Non-conflicting late writes fold through cleanly in the same pass. The
+   two-marks requirement flows to object-merging's residual (`mergedAtHeads` is loser-side only).
+6. **A late-created entity folds — by a different mechanism.** A partition-created old-shape object
+   replicates and becomes queryable after heal (the sync walk covers root-doc `links`, so new object
+   docs arrive for free). It is distinguishable from migrated objects by shape, and — better — a
+   per-object marker stamped via `Annotation.set` on `EntityMeta.annotations` works and replicates
+   (`EntityMeta.version` itself is fixed at creation from the type DXN; the annotations dictionary
+   is the mutable per-object store). Both peers folding the new entity independently converge. The
+   structural finding: a new entity has **no heads to diff by construction**, so new-entity
+   detection is a query-based path ("old-shaped and unmarked") that sits _beside_ the heads-based
+   property fold — two code paths, not one.
+
+**What Track A does not answer.** The fan-in variant of claim 6 — a late child created against a
+parent whose absorption already ran, and two late children colliding in one parent property — is
+Track B territory (ledger claims 10/11) and remains the likeliest place the bar breaks. Real epoch
+machinery was not exercised (only the foreign-heads behavior of `A.diff`). Track B (identity-key
+fan-out, 1→N stable keys, dangling relations, shared-child cardinality) is scaffolding-gated and
+partially adopted from the object-merging project's spikes.
+
+**Net:** the fold-forward hypothesis survived every kill-point it was designed to die on. For
+single-object rewrite migrations — including chains — the §10.1 bar is reachable with: old
+properties kept, two head-marks + an ancestry check stored per migration event, value-comparing
+writes, one-`Obj.update` composed folds, a query path for late entities, and app-level conflict
+records. Remaining risk is concentrated in entity-lifecycle migrations (fan-in above all).
+
 ### 10.4 A migration is a lens
 
 `Migration.fromLens(L)` — the migration's `transform` is `Lens.get`. Small change, and every
