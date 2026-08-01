@@ -89,7 +89,9 @@ user; if more than one is active, ask which (list them numbered) — never a gue
 > runs in a fresh harness-assigned worktree, and a project's original branch is
 > typically already merged to `main`, so there is nothing stable to match. On
 > resume, **never warn about a worktree/branch "mismatch"** — a fresh worktree is
-> the expected state — and **never leave the assigned worktree to chase the
+> the expected state. This waives only the project-vs-session comparison; the
+> AGENTS.md branch-safety gate (verify toplevel + branch, never edit on `main`)
+> still applies in full. And **never leave the assigned worktree to chase the
 > project's old one**: do not `cd` into, edit in, or adopt another worktree or
 > branch as a working directory. If unmerged prior work lives elsewhere, report
 > where it is and ask the user; continuing the work-stream always happens in
@@ -176,9 +178,12 @@ original doc). The two verbs are the explicit checkpoint/reload actions.
 
 ### `$project resume` — reload at the start of a session
 
-1. **Stay put** — resume continues the work-stream in **this session's assigned
-   worktree**; never `cd` into or adopt the project's previous worktree/branch.
-   If unmerged prior work lives elsewhere, report it and ask the user.
+1. **Stay put, on a safe branch** — first confirm the branch-safety gate
+   (`SESSION CONTEXT` verdict, or the AGENTS.md start-of-session check: non-`main`
+   branch → proceed, `main` → stop). Resume continues the work-stream in **this
+   session's assigned worktree**; never `cd` into or adopt the project's previous
+   worktree/branch. If unmerged prior work lives elsewhere, report it and ask
+   the user.
 2. **Read** the active `TASKS.md` (and any doc it links); memory is already
    loaded.
 3. **Check the tree** — `git status` + recent `git log`; surface uncommitted work
