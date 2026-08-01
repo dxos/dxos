@@ -4,7 +4,18 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { resolveCompanionAnchor } from './companion-anchor';
+import { findAttendedPlank, resolveCompanionAnchor } from './companion-anchor';
+
+describe('findAttendedPlank', () => {
+  test('has no result when attention points outside the deck', () => {
+    expect(findAttendedPlank(['a', 'b'], [])).toBeUndefined();
+    expect(findAttendedPlank(['a', 'b'], ['z'])).toBeUndefined();
+  });
+
+  test('matches attention nested inside a plank', () => {
+    expect(findAttendedPlank(['a', 'b'], ['b/~assistant'])).toBe('b');
+  });
+});
 
 describe('resolveCompanionAnchor', () => {
   test('anchors to the attended plank rather than the last one', () => {

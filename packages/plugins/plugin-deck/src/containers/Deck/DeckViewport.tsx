@@ -49,7 +49,7 @@ import {
 import { meta } from '#meta';
 import { DeckOperation, Keyshortcuts } from '#types';
 
-import { layoutAppliesTopbar, resolveCompanionAnchor } from '../../util';
+import { findAttendedPlank, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
@@ -109,6 +109,7 @@ const PlankContext = createContext<PlankContextValue>({
   companionId: undefined,
   companionAnchorId: undefined,
   paneCount: 0,
+  attendedPlankId: undefined,
   maxPlankWidthPx: Number.POSITIVE_INFINITY,
 });
 
@@ -195,6 +196,8 @@ type RenderedPlanks = {
   companionAnchorId: string | undefined;
   /** Panes competing for the viewport's width — the planks plus the companion — driving the presentation. */
   paneCount: number;
+  /** The plank attention points into, or undefined when it points outside the deck. */
+  attendedPlankId: string | undefined;
 };
 
 /**
@@ -215,7 +218,11 @@ const useRenderedPlanks = (): RenderedPlanks => {
     () => (flatten ? (lastPlank ? [lastPlank] : []) : [...deck.active]),
     [flatten, lastPlank, deck.active],
   );
-  const anchorId = resolveCompanionAnchor(planks, attended);
+  // The attended plank is both what the companion attaches to and what the deck collapses around, so it
+  // is resolved once here. Only the companion takes the last-plank fallback: collapsing the deck around a
+  // plank nobody attended would scroll it out from under the user.
+  const attendedPlankId = findAttendedPlank(planks, attended);
+  const anchorId = attendedPlankId ?? planks[planks.length - 1];
   const companions = useCompanions(anchorId ?? '');
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions, selectedVariant);
@@ -229,8 +236,9 @@ const useRenderedPlanks = (): RenderedPlanks => {
       companionId: companion,
       companionAnchorId: companion ? anchorId : undefined,
       paneCount: planks.length + (companion ? 1 : 0),
+      attendedPlankId,
     }),
-    [planks, companion, anchorId],
+    [planks, companion, anchorId, attendedPlankId],
   );
 };
 
@@ -300,30 +308,35 @@ const resolveTileSizes = (
 };
 
 /**
- * The attended plank and its companion sharing a single container, split by the same {@link Splitter}
- * seam the tiling deck uses. The seam is anchored to the companion so it keeps the width the user gave
- * it as the plank grows; committing writes both panes, holding the tile's overall width — which the
- * deck's sticky stacking geometry is measured against — steady while the seam moves.
+ * A plank and its companion sharing a single container. The one splitter geometry every such pair uses,
+ * in every presentation: anchored to the companion, sized by the deck-wide {@link COMPANION_SIZE_KEY}
+ * width, so the seam sits in the same place whichever plank the companion is attached to and whether the
+ * pair fills the viewport (tiling) or a tile within the sliding deck.
+ *
+ * `total` is the pair's fixed overall width, present only when the pair is a sliding tile: committing
+ * then also rewrites the plank so the tile's width — which the deck's sticky stacking geometry is
+ * measured against — holds steady while the seam moves. Tiling pairs flex to the viewport and have none.
  */
 const CompanionSplit = ({
   id,
   companionId,
   active,
-  plankSize,
   companionSize,
+  total,
   classNames,
 }: ThemedClassName<{
   id: string;
   companionId: string;
   active: string[];
-  plankSize: number;
   companionSize: number;
+  total?: number;
 }>) => {
   const { invokePromise } = useOperationInvoker();
-  const tileSize = plankSize + companionSize;
   const [liveSize, onSizeChange] = useSplitSize(companionSize, (next) => {
     void invokePromise(DeckOperation.UpdatePlankSize, { id: COMPANION_SIZE_KEY, size: Math.round(next) });
-    void invokePromise(DeckOperation.UpdatePlankSize, { id, size: Math.round(tileSize - next) });
+    if (total !== undefined) {
+      void invokePromise(DeckOperation.UpdatePlankSize, { id, size: Math.round(total - next) });
+    }
   });
 
   return (
@@ -390,7 +403,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
   const maxSize = Math.max(MIN_PLANK_SIZE, Math.min(MAX_PLANK_SIZE, maxPlankWidthPx / REM_PX));
-  const { plankSize, companionSize, tileSize } = resolveTileSizes(deck.plankSizing, id, !!companion, maxSize);
+  const { companionSize, tileSize } = resolveTileSizes(deck.plankSizing, id, !!companion, maxSize);
   const tileWidthPx = tileSize * REM_PX;
 
   // The outer handle resizes the tile; with a companion attached only the plank pane absorbs the delta,
@@ -450,7 +463,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           companionId={companion}
           active={deck.active}
           companionSize={companionSize}
-          plankSize={plankSize}
+          total={tileSize}
           classNames={FOLD_CONTENT_CLASSNAMES}
         />
       ) : (
@@ -474,20 +487,21 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
 //
 
 /**
- * Tiling presentation: two panes split the viewport flush (no horizontal overflow) across a draggable
- * seam — either two planks, or a plank and its companion. The start pane's width persists per deck via
- * {@link DeckOperation.UpdateTilingSize} and the end pane fills the remainder, so the split holds through
- * a viewport resize and through swapping which plank sits where.
+ * Tiling presentation: two planks split the viewport flush (no horizontal overflow) across a draggable
+ * seam. The start plank's width persists per deck via {@link DeckOperation.UpdateTilingSize} and the end
+ * plank fills the remainder, so the split holds through a viewport resize and through swapping which
+ * plank sits where. A plank paired with its companion is {@link CompanionSplit} instead — that pairing
+ * has its own deck-wide geometry, shared with the sliding deck.
  */
-// TODO(wittjosiah): Two panes only (TILING_MAX), since Splitter is a two-panel primitive; raising
+// TODO(wittjosiah): Two planks only (TILING_MAX), since Splitter is a two-panel primitive; raising
 //   TILING_MAX needs nested Splitters or a weights-based container.
-const TilingDeck = ({ panes, active, size }: { panes: string[]; active: string[]; size: number | undefined }) => {
+const TilingDeck = ({ planks, active, size }: { planks: string[]; active: string[]; size: number | undefined }) => {
   const { invokePromise } = useOperationInvoker();
   const [liveSize, handleSizeChange] = useSplitSize(size, (next) => {
     void invokePromise(DeckOperation.UpdateTilingSize, { size: next });
   });
 
-  const [startId, endId] = panes;
+  const [startId, endId] = planks;
 
   // Tiling is a flush split view — no `--main-spacing` gap or padding (that spacing is the sliding
   // deck's encapsulated look); the planks sit edge-to-edge, separated only by the handle's hairline.
@@ -721,14 +735,35 @@ const useFoldedPlanks = ({
 };
 
 /**
- * Scrolls a plank into view and clears the one-shot flag — both for navigation and for a folded spine
- * returning its plank to view, so there is one implementation of "where does this plank sit".
+ * Scrolls a plank flush against the left pile — the deck's one notion of "bring this plank to the front",
+ * shared by navigation, a folded spine returning its plank to view, and attention moving between planks.
  *
  * The offset can't come from the tile's rect or `offsetLeft`: while sliding the tiles are
  * `position: sticky`, so both report the pinned position (clustered for planks in a pile). Summing the
  * preceding plank widths and gaps gives the natural offset instead, and backing off one spine per
  * preceding plank leaves the target just past the left pile.
  */
+const scrollPlankToPile = ({
+  viewport,
+  stack,
+  tiles,
+  index,
+}: {
+  viewport: HTMLDivElement;
+  stack: HTMLDivElement;
+  tiles: HTMLElement[];
+  index: number;
+}) => {
+  const styles = getComputedStyle(stack);
+  const gap = parseFloat(styles.columnGap) || 0;
+  let naturalLeft = parseFloat(styles.paddingLeft) || 0;
+  for (let plank = 0; plank < index; plank++) {
+    naturalLeft += tiles[plank].offsetWidth + gap;
+  }
+  viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
+};
+
+/** Scrolls a plank into view for the one-shot navigation flag, then clears it. */
 const useScrollIntoView = ({
   viewportRef,
   stackRef,
@@ -757,16 +792,54 @@ const useScrollIntoView = ({
       // The plank focuses itself off the same one-shot flag; record it so the fold hysteresis holds that
       // focus until the scroll below has actually brought the plank out of the pile.
       scrollIntentRef.current = scrollIntoViewId;
-      const styles = getComputedStyle(stack);
-      const gap = parseFloat(styles.columnGap) || 0;
-      let naturalLeft = parseFloat(styles.paddingLeft) || 0;
-      for (let plank = 0; plank < index; plank++) {
-        naturalLeft += tiles[plank].offsetWidth + gap;
-      }
-      viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
+      scrollPlankToPile({ viewport, stack, tiles, index });
     }
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
   }, [scrollIntoViewId, invokePromise, viewportRef, stackRef, getPlankTiles, scrollIntentRef]);
+};
+
+/**
+ * Brings the attended plank to the front of the deck: scrolling it against the left pile pushes every
+ * plank after it off the trailing edge, where the two-edge sticky pins them as the right pile — so
+ * attending a plank collapses everything to its right to spines. Runs on a real change of attended plank
+ * (not on every attention event) so it never fights a scroll the user is in the middle of.
+ */
+const useCollapseAfterAttended = ({
+  viewportRef,
+  stackRef,
+  getPlankTiles,
+  isSliding,
+  attendedPlankId,
+  scrollIntentRef,
+}: {
+  viewportRef: RefObject<HTMLDivElement | null>;
+  stackRef: RefObject<HTMLDivElement | null>;
+  getPlankTiles: () => HTMLElement[];
+  isSliding: boolean;
+  attendedPlankId: string | undefined;
+  scrollIntentRef: RefObject<string | undefined>;
+}) => {
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    const stack = stackRef.current;
+    if (!isSliding || !attendedPlankId || !viewport || !stack) {
+      return;
+    }
+
+    const tiles = getPlankTiles();
+    const index = tiles.findIndex((tile) => tile.getAttribute('data-object-id') === attendedPlankId);
+    if (index === -1) {
+      return;
+    }
+
+    // A navigation scroll is already travelling to its own target; letting this one interleave would
+    // fight it mid-flight (and the fold hysteresis keys off the same intent).
+    if (scrollIntentRef.current && scrollIntentRef.current !== attendedPlankId) {
+      return;
+    }
+
+    scrollPlankToPile({ viewport, stack, tiles, index });
+  }, [isSliding, attendedPlankId, getPlankTiles, viewportRef, stackRef, scrollIntentRef]);
 };
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
@@ -814,7 +887,7 @@ const useFullscreen = (fullscreenId: string | undefined) => {
 export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
   const rendered = useRenderedPlanks();
-  const { planks, companionId, companionAnchorId, paneCount } = rendered;
+  const { planks, companionId, companionAnchorId, paneCount, attendedPlankId } = rendered;
   const breakpoint = useBreakpoints();
   const presentation = useDeckPresentation(paneCount);
   const fullscreenId = state.fullscreen;
@@ -841,6 +914,7 @@ export const DeckPlanks = () => {
     scrollIntentRef,
   });
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
+  useCollapseAfterAttended({ viewportRef, stackRef, getPlankTiles, isSliding, attendedPlankId, scrollIntentRef });
   const toggleFullscreen = useFullscreen(fullscreenId);
 
   const plankContext = useMemo<PlankContextValue>(
@@ -848,11 +922,11 @@ export const DeckPlanks = () => {
     [rendered, maxPlankWidthPx],
   );
 
-  // Tiling splits the viewport between exactly two panes: either the two planks, or — when the companion
-  // is what makes the deck two panes wide — the anchor plank and its companion.
-  const tilingPanes = useMemo(
-    () => (companionAnchorId && companionId ? [companionAnchorId, companionId] : planks),
-    [companionAnchorId, companionId, planks],
+  // The companion's own persisted width, clamped to leave the plank its minimum; a tiling pair flexes to
+  // the viewport, so unlike a sliding tile there is no cap to spend first.
+  const tilingCompanionSize = Math.max(
+    MIN_COMPANION_SIZE,
+    deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
   );
 
   return (
@@ -881,8 +955,18 @@ export const DeckPlanks = () => {
             active={deck.active}
             classNames={mx('absolute inset-0', mainIntrinsicSize)}
           />
+        ) : presentation === 'tiling' && companionAnchorId && companionId ? (
+          // The deck is two panes wide because the companion is open: the pair fills the viewport using
+          // the same seam geometry it has as a sliding tile, so opening a second plank never moves it.
+          <CompanionSplit
+            id={companionAnchorId}
+            companionId={companionId}
+            active={deck.active}
+            companionSize={tilingCompanionSize}
+            classNames={mx('absolute inset-0', mainPaddingTransitions)}
+          />
         ) : presentation === 'tiling' ? (
-          <TilingDeck panes={tilingPanes} active={deck.active} size={deck.tilingSizing} />
+          <TilingDeck planks={planks} active={deck.active} size={deck.tilingSizing} />
         ) : (
           <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
