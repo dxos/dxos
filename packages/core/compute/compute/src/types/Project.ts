@@ -11,7 +11,6 @@ import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
-import * as Plan from './Plan';
 import * as Routine from './Routine';
 import type * as Skill from './Skill';
 
@@ -46,14 +45,11 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** What done means for this project. */
     goals: Schema.optional(Schema.Array(Goal)),
 
-    /** Ad hoc notes/checklist. */
+    /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline)),
 
-    /** Owned (or adopted synced) task containers; membership is the `Task.taskSet` backref. */
+    /** Owned (or adopted synced) task containers; membership is the ECHO parent edge. */
     taskSets: Schema.Array(Ref.Ref(TaskSet.TaskSet)),
-
-    /** Standing, cross-conversation plan (distinct from per-chat `Chat.plan`). */
-    plan: Schema.optional(Ref.Ref(Plan.Plan)),
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),

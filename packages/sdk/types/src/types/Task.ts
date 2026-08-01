@@ -6,13 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 import * as Actor from './Actor';
-import * as TaskSet from './TaskSet';
 
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.2.0'))(
   Schema.Struct({
@@ -79,7 +78,8 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         }),
       ),
     ),
-    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet).annotations({ title: 'Task Set' })),
+    // Containment is the ECHO parent edge, not a field: a TaskSet parents its root tasks and a
+    // task parents its sub-tasks (one tree; a sub-task's set membership is transitive).
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),

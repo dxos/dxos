@@ -3,7 +3,6 @@
 //
 
 export * as Instructions from './Instructions';
-export * as Plan from './Plan';
 export * as Project from './Project';
 export * as Routine from './Routine';
 export * as Script from './Script';

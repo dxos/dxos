@@ -6,20 +6,20 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions, Plan } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { Message, Outline } from '@dxos/types';
 
 import { Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Chat.Chat, Chat.CompanionTo, Plan.Plan, Feed.Feed, Text.Text, Instructions.Instructions, Message.Message],
+  types: [Chat.Chat, Chat.CompanionTo, Outline.Outline, Feed.Feed, Text.Text, Instructions.Instructions, Message.Message],
   disableLlmMemoization: true,
 });
 
@@ -44,7 +44,7 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through CompanionTo, never a field —
         // that field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'plan', 'viewType']);
+        expect(Object.keys(Chat.Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'outline', 'viewType']);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -52,19 +52,18 @@ describe('Chat', () => {
   );
 
   it.effect(
-    'ensurePlan attaches a plan lazily and returns the same one thereafter',
+    'ensureOutline attaches an outline lazily and returns the same one thereafter',
     Effect.fnUntraced(
       function* (_) {
         const chat = yield* makeChat;
-        expect(chat.plan).toBeUndefined();
+        expect(chat.outline).toBeUndefined();
 
-        const plan = yield* Chat.ensurePlan(chat);
-        expect(chat.plan?.uri).toBe(Ref.make(plan).uri);
-        expect(plan.tasks).toEqual([]);
+        const outline = yield* Chat.ensureOutline(chat);
+        expect(chat.outline?.uri).toBe(Ref.make(outline).uri);
 
-        // Second call reuses the attached plan rather than replacing it.
-        const again = yield* Chat.ensurePlan(chat);
-        expect(again.id).toBe(plan.id);
+        // Second call reuses the attached outline rather than replacing it.
+        const again = yield* Chat.ensureOutline(chat);
+        expect(again.id).toBe(outline.id);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

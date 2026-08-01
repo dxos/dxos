@@ -276,12 +276,26 @@ Phasing note: each phase lands independently (one PR each, own tests); the MCP d
   them (with the identity prerequisite from §7.2); TESTING.md runbook extension. _Acceptance_:
   `dx mcp` / mcp-smoke drives `projectCreate → taskCreate → taskComplete` and Composer shows
   each step live.
-- **Phase 5 — MCP-first dogfood (runs alongside 2–4)**: recreate THIS milestone as a Project in
-  the shared space (per mcp TASKS "shared composer space to track projects and tasks"): goals =
-  §1, tasks = this plan in the project's TaskSet, assignees = burdon + agent Actors;
-  task-planning skill points its registry entry at it (`tasksDxn` when the sync spec lands).
-  Every phase demo'd over the tunnel from Claude Desktop. _Acceptance_: this file's checklist
-  state is readable from both Composer and MCP without divergence.
+- **Phase 5 — MCP-first dogfood (runs alongside 2–4)**: our own build process IS the primary
+  use case (user, 2026-08-01) — the repo-side planning artifacts map one-to-one onto product
+  objects and migrate into Composer as soon as the loop is live:
+
+  | Repo-side (today)                        | Product object (target)                          |
+  | ---------------------------------------- | ------------------------------------------------ |
+  | `.agents/projects/registry.yml` entry    | `Project` "plugin-projects" in the shared space  |
+  | `TASKS.md` (the ledger being edited now) | `Project.outline` — THE Outline document         |
+  | checked/unchecked ledger items           | promoted `Task` objects (parent: the TaskSet)    |
+  | `DESIGN.md`, `MILESTONE-5.md`            | `Project.artifacts` documents                    |
+  | `$track` sentinel                        | `taskCreate` / outline append (MCP verb)         |
+  | `$hydrate` / `$resume` handoff           | `outlineGet`/`taskList` reads — no handoff file  |
+  | this Claude session                      | an MCP client of mcp-space-service (peer agent's |
+  |                                          | server work supports exactly this interaction)   |
+
+  Goals = §1, assignees = burdon + agent Actors; the task-planning skill points its registry
+  entry at the Project (`tasksDxn` when the sync spec lands). Every phase demo'd over the
+  tunnel from Claude Desktop. _Acceptance_: this file's checklist state is readable from both
+  Composer and MCP without divergence — at which point TASKS.md is promoted into Composer and
+  the repo copy becomes the mirror, not the source.
 
 ## 9. Open questions
 

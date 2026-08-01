@@ -8,14 +8,13 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import { Plan } from '@dxos/compute';
 import { getSession } from '@dxos/compute/AgentService';
-import { Database } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
 import { DelegationHandlers, DelegationSkill } from '../skills';
@@ -56,7 +55,17 @@ const TestLayer = AssistantTestLayer({
   ]),
   operationHandlers: [DelegationHandlers, AgentHandlers],
   skills: [DelegationSkill.make()],
-  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, AiContext.Binding, Text.Text, Message.Message],
+  types: [
+    Agent.Agent,
+    Outline.Outline,
+    Task.Task,
+    TaskSet.TaskSet,
+    Chat.Chat,
+    Chat.CompanionTo,
+    AiContext.Binding,
+    Text.Text,
+    Message.Message,
+  ],
 });
 
 describe('makeDelegationStrategy', () => {
@@ -91,11 +100,15 @@ describe('makeDelegationStrategy', () => {
           .join('');
         expect(streamedText).toContain('On it');
 
-        // DelegateTask recorded the work on the session plan.
-        const planAfterTurn = chat.plan ? yield* Database.load(chat.plan) : undefined;
-        invariant(planAfterTurn, 'Plan not created.');
-        expect(planAfterTurn.tasks).toHaveLength(1);
-        expect(planAfterTurn.tasks[0]).toMatchObject({ title: TASK_TITLE, delegated: true });
+        // DelegateTask promoted the work to a durable agent task under the outline's task set.
+        const outlineAfterTurn = chat.outline ? yield* Database.load(chat.outline) : undefined;
+        invariant(outlineAfterTurn, 'Outline not created.');
+        const taskSet = outlineAfterTurn.taskSet ? yield* Database.load(outlineAfterTurn.taskSet) : undefined;
+        invariant(taskSet, 'Task set not created.');
+        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run;
+        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+        expect(tasks).toHaveLength(1);
+        expect(tasks[0]).toMatchObject({ title: TASK_TITLE, assignee: { role: 'assistant' } });
 
         // The post-turn reconcile spawned the sub-agent; its exit drives onComplete, which posts
         // the fold-back message to the conversation feed out of band.
@@ -103,8 +116,10 @@ describe('makeDelegationStrategy', () => {
         expect(Message.extractText(notification)).toContain(TASK_TITLE);
         expect(Message.extractText(notification)).toContain('3628800');
 
-        // ...and marked the plan task done.
-        expect(planAfterTurn.tasks[0].status).toEqual('done');
+        // ...marked the durable task done and checked off the checklist line.
+        expect(tasks[0].status).toEqual('done');
+        const outlineText = yield* Database.load(outlineAfterTurn.content);
+        expect(Outline.parseChecklist(outlineText.content)).toEqual([{ title: TASK_TITLE, done: true }]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

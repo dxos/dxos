@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Operation, Plan } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { getSession } from '@dxos/compute/AgentService';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -79,12 +79,7 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('')),
         )
       : '';
-    const planText = chat.plan
-      ? yield* Database.load(chat.plan).pipe(
-          Effect.map(Plan.formatPlan),
-          Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
-        )
-      : 'No plan found.';
+    const checklistText = yield* Chat.formatChecklist(chat);
 
     const { value } = yield* Effect.scoped(
       LanguageModel.generateObject({
@@ -102,9 +97,9 @@ const qualifyEvent = (chat: Chat.Chat, event: unknown) =>
                 <instructions>
                 ${instructionsText}
                 </instructions>
-                <plan>
-                  ${planText}
-                </plan>
+                <checklist>
+                  ${checklistText}
+                </checklist>
               </agent>
             `,
           }),
