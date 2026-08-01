@@ -9,6 +9,7 @@ import { type SimObject, toUnit } from '../../sim';
 import { type TerraObject } from '../../types';
 import { MAP_HEIGHT, MAP_WIDTH, project, projectPath } from './projection';
 import { renderTerrain } from './terrain';
+import { useEasedHeadings } from './useEasedHeadings';
 
 /**
  * Brightened relatives of the hues `scene/object-forms.ts` gives each kind in 3D — those materials
@@ -48,6 +49,7 @@ export type TerraMapProps = {
 export const TerraMap = ({ objects, config, selectedId, onSelect, terrain = true }: TerraMapProps) => {
   const backdrop = useMemo(() => (terrain ? renderTerrain(config) : undefined), [terrain, config]);
   const { meridians, parallels } = useMemo(() => graticule(), []);
+  const headings = useEasedHeadings(objects);
 
   return (
     <svg
@@ -94,6 +96,7 @@ export const TerraMap = ({ objects, config, selectedId, onSelect, terrain = true
         <ObjectTrack
           key={object.definition.id}
           object={object}
+          heading={headings.get(object.definition.id) ?? object.state.bearing}
           selected={object.definition.id === selectedId}
           onSelect={onSelect}
         />
@@ -119,12 +122,14 @@ TerraMap.displayName = 'TerraMap';
 
 type ObjectTrackProps = {
   object: SimObject;
+  /** Rendered facing, eased toward `state.bearing` — see `useEasedHeadings`. */
+  heading: number;
   selected: boolean;
   onSelect?: (id: string | undefined) => void;
 };
 
 /** One object: its route, the current leg's origin and destination, and the object itself. */
-const ObjectTrack = ({ object: { definition, state }, selected, onSelect }: ObjectTrackProps) => {
+const ObjectTrack = ({ object: { definition, state }, heading, selected, onSelect }: ObjectTrackProps) => {
   const color = OBJECT_COLOR[definition.kind];
   const route = useMemo(() => projectPath(state.route), [state.route]);
   const position = project(state.unit);
@@ -154,7 +159,7 @@ const ObjectTrack = ({ object: { definition, state }, selected, onSelect }: Obje
         </g>
       )}
 
-      <g transform={`translate(${position.x} ${position.y}) rotate(${state.bearing})`}>
+      <g transform={`translate(${position.x} ${position.y}) rotate(${heading})`}>
         {selected && <circle cx={0} cy={0} r={4} fill='none' strokeWidth={0.4} />}
         <polygon points='0,-2.6 1.8,2.2 0,1.2 -1.8,2.2' strokeWidth={0.3} />
       </g>

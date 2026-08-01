@@ -204,6 +204,19 @@ export class SimEngine {
     }));
   }
 
+  /**
+   * Re-spawns the single object matching `id` from its definition as it now stands, for callers
+   * that have just changed one (a new destination, say). Rebuilding the whole engine would instead
+   * re-derive every object from leg 0, which is not free of consequence: an object more than
+   * `MAX_CATCHUP_LEGS` legs into its sequence snaps to a fresh leg rather than resuming the one it
+   * was on. Objects other than `id` keep their state untouched.
+   */
+  respawn(id: string): void {
+    this.#objects = this.#objects.map((object) =>
+      object.definition.id === id ? spawn(object.definition, this.#config, this.#grid) : object,
+    );
+  }
+
   /** Restores every object to its spawn-time state. */
   reset(): void {
     this.#objects = this.#definitions.map((definition) => spawn(definition, this.#config, this.#grid));

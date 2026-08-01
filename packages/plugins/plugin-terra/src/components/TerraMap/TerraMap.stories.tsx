@@ -15,6 +15,7 @@ import { Terra, TerraObject } from '#types';
 
 import { seaRadius } from '../../engine';
 import { SimEngine, type SimObject, buildNavGrid, pickReachableTarget, toGeo } from '../../sim';
+import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
 import { TelemetryPanel, type TelemetryRow } from '../TelemetryPanel';
 import { TerraMap } from './TerraMap';
 
@@ -55,11 +56,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
     [terra],
   );
 
-  // Rebuilt (never mutated) whenever a definition is re-targeted, so the engine re-plans from the
-  // object's new source; the render loop reads it fresh each frame.
-  const [engine, setEngine] = useState(() => new SimEngine({ config: values, definitions, grid }));
-  const engineRef = useRef(engine);
-  engineRef.current = engine;
+  const engine = useMemo(() => new SimEngine({ config: values, definitions, grid }), [values, definitions, grid]);
 
   // Mirrors `TerraArticle`: while paused, `pausedAtMs` freezes the clock and the elapsed pause is
   // folded into `pausedTotalMs` on resume, so the engine stays closed-form in absolute time.
@@ -86,15 +83,14 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
         return;
       }
       sampledAt = now;
-      const current = engineRef.current;
-      current.evaluateAt(simNow());
+      engine.evaluateAt(simNow());
       // A new array each sample so React sees the change; the states themselves are fresh objects.
-      setObjects([...current.objects]);
+      setObjects([...engine.objects]);
     };
 
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [simNow]);
+  }, [engine, simNow]);
 
   const handleTogglePlaying = useCallback(() => {
     const clock = clockRef.current;
@@ -109,7 +105,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
   }, []);
 
   const handleRetarget = useCallback(() => {
-    const routed = engineRef.current.objects.filter(({ definition }) => isRouted(definition.kind));
+    const routed = engine.objects.filter(({ definition }) => isRouted(definition.kind));
     // Falling back to a random routed object keeps the button useful before anything is picked.
     const object =
       routed.find(({ definition }) => definition.id === selectedId) ??
@@ -131,9 +127,11 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
       definition.target = { ...toGeo(target), height: 0 };
       definition.spawnedAt = simNow();
     });
+    // Only this object is re-derived; rebuilding the engine would restart everything else's leg
+    // sequence from spawn.
+    engine.respawn(object.definition.id);
     setSelectedId(object.definition.id);
-    setEngine(new SimEngine({ config: values, definitions, grid }));
-  }, [definitions, grid, selectedId, simNow, values]);
+  }, [engine, grid, selectedId, simNow]);
 
   const menuActions = useMenuBuilder(
     () =>
@@ -165,7 +163,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
   const telemetry = useMemo(() => buildTelemetry(objects, seaRadius(values)), [objects, values]);
 
   return (
-    <Menu.Root {...menuActions} attendableId='story'>
+    <Menu.Root {...menuActions} attendableId={STORY_ATTENDABLE_ID}>
       <Panel.Root role='article'>
         <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar />
@@ -192,7 +190,7 @@ const DefaultStory = ({ seed, terrain }: StoryArgs) => {
 const meta = {
   title: 'plugins/plugin-terra/components/TerraMap',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withAttention(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen', translations },
   args: { seed: 'terra-4', terrain: true },
 } satisfies Meta<typeof DefaultStory>;

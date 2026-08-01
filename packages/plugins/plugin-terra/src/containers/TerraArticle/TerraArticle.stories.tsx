@@ -14,6 +14,7 @@ import { TerraPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Terra, TerraCapabilities } from '#types';
 
+import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
 import { TerraArticle } from './TerraArticle';
 
 type StoryArgs = Partial<Terra.TerraConfig>;
@@ -27,13 +28,13 @@ const DefaultStory = (props: StoryArgs) => {
     [props],
   );
 
-  return <TerraArticle subject={terra} attendableId='story' role='article' />;
+  return <TerraArticle subject={terra} attendableId={STORY_ATTENDABLE_ID} role='article' />;
 };
 
 const meta = {
   title: 'plugins/plugin-terra/containers/TerraArticle',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withAttention(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -55,7 +56,7 @@ export const Hires: Story = {
 
 const ObjectsStory = () => {
   const terra = useMemo(() => Terra.makeDemoWorld({ config: { seed: 'terra-4', resolution: 128 } }), []);
-  return <TerraArticle subject={terra} attendableId='story' role='article' />;
+  return <TerraArticle subject={terra} attendableId={STORY_ATTENDABLE_ID} role='article' />;
 };
 
 export const Objects: Story = {
@@ -75,7 +76,7 @@ const CachedStory = () => {
         </Button>
         <span data-testid='terra.story.stats'>{`hits=${cache?.hits ?? 0} misses=${cache?.misses ?? 0}`}</span>
       </div>
-      {mounted && <TerraArticle subject={terra} attendableId='story' role='article' />}
+      {mounted && <TerraArticle subject={terra} attendableId={STORY_ATTENDABLE_ID} role='article' />}
     </div>
   );
 };

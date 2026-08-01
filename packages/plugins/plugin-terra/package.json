@@ -87,12 +87,14 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "seedrandom": "catalog:",
     "simplex-noise": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

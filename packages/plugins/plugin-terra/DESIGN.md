@@ -126,6 +126,26 @@ permutation tables and is now memoized in `engine/noise.ts`. Keep per-call
 allocation out of `evaluate` and its callees; measure with a frame-loop probe
 rather than by reasoning about it, since the trail multiplier is easy to forget.
 
+### Views
+
+`TerraArticle` shows one of three views, chosen by tabs: the orbiting 3D planet,
+the 2D map from above, and a chase camera riding a selected object. The 3D canvas
+is never unmounted — the Babylon render loop is what advances the simulation, and
+the map renders from React state sampled inside that loop — so the map hides it
+with `invisible` rather than `display: none`, which would also collapse the
+canvas to 0x0. One `selectedId` serves the map's highlight, the telemetry row,
+and the camera's target.
+
+A course change (a new destination, a waypoint) is steered into, never snapped
+to: both renderers ease their drawn heading toward `state.bearing` at the kind's
+own turn rate (`scene/heading.ts`). This is rendering-only — it never feeds back
+into `sim/`, so peers rendering at different cadences still agree on position.
+
+Changing one object's destination re-derives only that object
+(`SimEngine.respawn`). Rebuilding the engine would re-spawn every object from
+leg 0, which is not neutral: anything more than `MAX_CATCHUP_LEGS` into its
+sequence snaps to a fresh leg.
+
 ### Planet cache
 
 Generation is deterministic in `TerraConfigValues` and costs 1.3s at the default

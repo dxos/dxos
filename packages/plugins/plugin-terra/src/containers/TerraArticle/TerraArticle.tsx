@@ -10,10 +10,11 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
+import { Panel, Select, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Tabs } from '@dxos/react-ui-tabs';
 
-import { TelemetryPanel, type TelemetryRow, TerraForm } from '#components';
+import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
 import { Terra, TerraCapabilities, TerraObject } from '#types';
 
@@ -24,8 +25,14 @@ import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
 type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };
 
-/** `'orbit'` is the free-flying camera around the planet; `'object'` rides one simulated object. */
-type CameraMode = 'orbit' | 'object';
+/**
+ * Which view the article shows: the orbiting 3D planet, the 2D map from above, or the chase camera
+ * riding a chosen object. `'camera'` shares the 3D canvas with `'scene'` — only the active camera
+ * differs.
+ */
+type ViewMode = 'scene' | 'map' | 'camera';
+
+const isViewMode = (value: string): value is ViewMode => value === 'scene' || value === 'map' || value === 'camera';
 
 export type TerraArticleProps = AppSurface.ObjectArticleProps<Terra.Terra>;
 
@@ -67,6 +74,7 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
   });
 
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
+  const { t } = useTranslation(meta.profile.key);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
@@ -98,11 +106,23 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   const planetCache = useOptionalCapability(TerraCapabilities.PlanetCache) ?? fallbackCache;
   const [isPlaying, setIsPlaying] = useState(true);
   const [gizmosVisible, setGizmosVisible] = useState(false);
-  const [cameraMode, setCameraMode] = useState<CameraMode>('orbit');
+  const [view, setView] = useState<ViewMode>('scene');
   const [telemetry, setTelemetry] = useState<TelemetryRow[]>([]);
+  // Sampled only while the map is showing; the 3D view reads the engine directly each frame.
+  const [objects, setObjects] = useState<readonly SimObject[]>([]);
+  // The object the chase camera rides and the map highlights — one selection, shared by both views.
+  const [selectedId, setSelectedId] = useState<string | undefined>();
+  // Read fresh by the mount-once render-loop observer, which must not close over this render's `view`.
+  const viewRef = useRef<ViewMode>(view);
+  viewRef.current = view;
 
   const values = useMemo(() => Terra.toConfigValues(terra), [config, terra]);
   const definitions = useMemo(() => resolveDefinitions(terra), [terra, objectRefs]);
+  // Falls back to the first object so entering the camera view always has something to ride.
+  const cameraTarget = useMemo(
+    () => definitions.find((definition) => definition.id === selectedId) ?? definitions[0],
+    [definitions, selectedId],
+  );
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -158,6 +178,11 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       if (wallClockNow - telemetrySampleRef.current >= TELEMETRY_SAMPLE_INTERVAL_MS) {
         telemetrySampleRef.current = wallClockNow;
         setTelemetry(buildTelemetry(engine.objects, engineConfig));
+        // The map renders from React state, so it samples on the same throttle rather than every
+        // frame; skipped entirely while it is hidden, when nothing would consume it.
+        if (viewRef.current === 'map') {
+          setObjects([...engine.objects]);
+        }
       }
     });
 
@@ -224,19 +249,11 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
   useEffect(() => {
     const manager = managerRef.current;
-    if (!manager || cameraMode !== 'object') {
+    if (!manager || view !== 'camera' || !cameraTarget) {
       return;
     }
 
-    // Picked here rather than in the toolbar handler so re-entering object mode always lands on a
-    // fresh object, and so the pick sees `definitions` as of this render. Purely a local view
-    // choice — `Math.random()` here cannot affect simulated state, so it does not breach the
-    // determinism contract the way it would inside `sim/`.
-    const target = definitions.length > 0 ? definitions[Math.floor(Math.random() * definitions.length)] : null;
-    if (!target) {
-      return;
-    }
-
+    const target = cameraTarget;
     const chase = new ChaseCamera({ scene: manager.scene });
     chaseCameraRef.current = chase;
     chaseTargetRef.current = target;
@@ -247,7 +264,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       chaseCameraRef.current = null;
       chase.dispose();
     };
-  }, [cameraMode, definitions]);
+  }, [view, cameraTarget]);
 
   const handleChange = useCallback(
     (patch: Partial<Terra.TerraConfig>) => updateConfig((draft) => Object.assign(draft, patch)),
@@ -278,10 +295,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
   const handleToggleGizmos = useCallback(() => setGizmosVisible((current) => !current), []);
 
-  const handleToggleCamera = useCallback(
-    () => setCameraMode((current) => (current === 'orbit' ? 'object' : 'orbit')),
-    [],
-  );
+  const handleViewChange = useCallback((value: string) => isViewMode(value) && setView(value), []);
 
   const menuActions = useMenuBuilder(
     () =>
@@ -319,49 +333,56 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
           },
           () => handleToggleGizmos(),
         )
-        .action(
-          'toggle-camera',
-          {
-            label:
-              cameraMode === 'orbit'
-                ? ['object-camera.label', { ns: meta.profile.key }]
-                : ['orbit-camera.label', { ns: meta.profile.key }],
-            icon: cameraMode === 'orbit' ? 'ph--video-camera--regular' : 'ph--globe-hemisphere-west--regular',
-            disposition: 'toolbar',
-            testId: 'terra.toolbar.toggle-camera',
-          },
-          () => handleToggleCamera(),
-        )
         .build(),
-    [
-      isPlaying,
-      handleTogglePlaying,
-      handleAddRandomObject,
-      gizmosVisible,
-      handleToggleGizmos,
-      cameraMode,
-      handleToggleCamera,
-    ],
+    [isPlaying, handleTogglePlaying, handleAddRandomObject, gizmosVisible, handleToggleGizmos],
   );
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild classNames='dx-container'>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <div className='grow' />
+            {view === 'camera' && (
+              <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />
+            )}
+            <Tabs.Root
+              orientation='horizontal'
+              value={view}
+              onValueChange={handleViewChange}
+              attendableId={attendableId}
+            >
+              <Tabs.Tablist classNames='w-auto p-0'>
+                <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>
+                  {t('scene-view.label')}
+                </Tabs.Button>
+                <Tabs.Button value='map' data-testid='terra.toolbar.view-map'>
+                  {t('map-view.label')}
+                </Tabs.Button>
+                <Tabs.Button value='camera' data-testid='terra.toolbar.view-camera'>
+                  {t('camera-view.label')}
+                </Tabs.Button>
+              </Tabs.Tablist>
+            </Tabs.Root>
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <div className='relative grow'>
+            {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
+                the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
             <canvas
               ref={canvasRef}
-              className='dx-container absolute inset-0 outline-none'
+              className={`dx-container absolute inset-0 outline-none ${view === 'map' ? 'invisible' : ''}`}
               style={{ touchAction: 'none' }}
             />
+            {view === 'map' && (
+              <TerraMap objects={objects} config={values} selectedId={selectedId} onSelect={setSelectedId} />
+            )}
             <div className='absolute top-2 right-2 z-10'>
               <TerraForm config={config} onChange={handleChange} onWaterSheen={handleWaterSheen} />
             </div>
             <div className='absolute bottom-2 right-2 z-10'>
-              <TelemetryPanel rows={telemetry} />
+              <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
             </div>
           </div>
         </Panel.Content>
@@ -371,3 +392,34 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 };
 
 TerraArticle.displayName = 'TerraArticle';
+
+type CameraTargetSelectProps = {
+  definitions: readonly TerraObject.TerraObject[];
+  value?: string;
+  onChange: (id: string) => void;
+};
+
+/** Picks which object the chase camera rides. */
+const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  return (
+    <Select.Root value={value} onValueChange={onChange}>
+      <Select.TriggerButton
+        placeholder={t('camera-target.placeholder')}
+        data-testid='terra.toolbar.camera-target'
+        classNames='min-is-32'
+      />
+      <Select.Portal>
+        <Select.Content>
+          <Select.Viewport>
+            {definitions.map((definition) => (
+              <Select.Option key={definition.id} value={definition.id}>
+                {definition.name ?? definition.kind}
+              </Select.Option>
+            ))}
+          </Select.Viewport>
+        </Select.Content>
+      </Select.Portal>
+    </Select.Root>
+  );
+};
