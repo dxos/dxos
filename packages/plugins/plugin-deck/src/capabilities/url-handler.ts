@@ -30,8 +30,13 @@ import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } 
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
-/** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
-const RESOLVE_RETRY_ATTEMPTS = 15;
+/**
+ * Bounded retry for URL resolution while a cold restore's container chain finishes loading.
+ * The window must outlast spaces loading on a large profile — ready (module quiescence) lands
+ * well before the workspace's graph subtree materializes, and an undersized window turns that
+ * gap into a spurious not-found.
+ */
+const RESOLVE_RETRY_ATTEMPTS = 40;
 const RESOLVE_RETRY_INTERVAL = '150 millis';
 
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
@@ -154,7 +159,11 @@ export default Capability.makeModule(
       // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
       // below so a genuine 404 fails fast instead of waiting out the timeout.
       const loaders = navigationTargetLoaders.get();
-      const confirmed = new Array<boolean>(pairs.length).fill(false);
+      // Keyless pairs (singleton keys like the space home) carry no object id for a loader to
+      // confirm or disconfirm; their nodes materialize with the workspace's graph subtree, which
+      // races spaces loading on reload — so they always ride the retry window below. Fail-fast
+      // stays reserved for object pairs a loader positively disconfirmed.
+      const confirmed = pairs.map((pair) => pair.id === undefined);
       if (loaders.length > 0) {
         yield* Effect.forEach(
           pairs,
@@ -177,8 +186,7 @@ export default Capability.makeModule(
       // `resolveUrl`'s expansion triggers but cannot synchronously await. Retry the confirmed-existing
       // planks (bounded) until their ancestors materialize, so a cold reload lands on the object.
       let resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
-      const hasPendingConfirmed = () =>
-        pairs.some((pair, index) => pair.id !== undefined && confirmed[index] && !resolved[index]);
+      const hasPendingConfirmed = () => pairs.some((pair, index) => confirmed[index] && !resolved[index]);
       for (let attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && hasPendingConfirmed(); attempt++) {
         yield* Effect.sleep(RESOLVE_RETRY_INTERVAL);
         resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
