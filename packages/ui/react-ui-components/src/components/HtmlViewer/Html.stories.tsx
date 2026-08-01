@@ -60,6 +60,14 @@ export const RemoteImagesBlocked: Story = { args: { sample: 'remoteImage', loadR
 export const RemoteImagesLoaded: Story = { args: { sample: 'remoteImage', loadRemoteImages: true } };
 
 /**
+ * The document ships its own dark rules. Sanitization strips `<style>`, so those rules never reach the
+ * shadow root and both panes currently render unstyled — the story exists to make that gap visible
+ * (DESIGN.md §2, Gap A). Once the authored CSS survives, the panes must differ and must follow the app
+ * mode rather than the OS setting.
+ */
+export const AuthoredDarkRules: Story = { args: { sample: 'authoredDark', compare: true } };
+
+/**
  * Nothing here can be shown, so nothing is drawn — no broken-image placeholder, and no stray alt text
  * left underlined inside its link. The protocol-relative image counts as a remote fetch, so it is
  * blocked like any other.
@@ -78,14 +86,6 @@ export const UnloadableImages: Story = {
     });
   },
 };
-
-/**
- * The document ships its own dark rules. Sanitization strips `<style>`, so those rules never reach the
- * shadow root and both panes currently render unstyled — the story exists to make that gap visible
- * (DESIGN.md §2, Gap A). Once the authored CSS survives, the panes must differ and must follow the app
- * mode rather than the OS setting.
- */
-export const AuthoredDarkRules: Story = { args: { sample: 'authoredDark', compare: true } };
 
 //
 // Unresolved src
