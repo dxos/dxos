@@ -4,7 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { MAX_SEEDED_PLANKS, addSubjectsToActiveDeck, resolveSeededPlanks, updatePlankNames } from './layout';
+import {
+  MAX_SEEDED_PLANKS,
+  addSubjectsToActiveDeck,
+  resolveLevelOpen,
+  resolveSeededPlanks,
+  updatePlankNames,
+} from './layout';
 
 describe('addSubjectsToActiveDeck', () => {
   test('appends to the end without a pivot', ({ expect }) => {
@@ -109,5 +115,55 @@ describe('resolveSeededPlanks', () => {
     const seeded = resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children: many });
     expect(seeded).toHaveLength(MAX_SEEDED_PLANKS);
     expect(seeded?.[0]).toBe('doc-0');
+  });
+});
+
+describe('resolveLevelOpen', () => {
+  const root = 'inbox';
+  const spec = {
+    levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
+  };
+  const open = (args: Partial<Parameters<typeof resolveLevelOpen>[0]> = {}) =>
+    resolveLevelOpen({ active: [root], plankNames: {}, spec, root, level: 'message', subjectId: 'msg-1', ...args });
+
+  test('opens the level beside the level above it', ({ expect }) => {
+    expect(open()).toEqual({ next: [root, 'msg-1'], name: 'inbox/message' });
+  });
+
+  test('reuses the level plank rather than growing the deck', ({ expect }) => {
+    const result = open({ active: [root, 'msg-1'], plankNames: { 'inbox/message': 'msg-1' }, subjectId: 'msg-2' });
+    expect(result).toEqual({ next: [root, 'msg-2'], name: 'inbox/message' });
+  });
+
+  // The point of levels over a bare name: a second message must not leave the first one's attachment
+  // stranded beside it.
+  test('closes the levels below the one opened', ({ expect }) => {
+    const result = open({
+      active: [root, 'msg-1', 'att-1'],
+      plankNames: { 'inbox/message': 'msg-1', 'inbox/attachment': 'att-1' },
+      subjectId: 'msg-2',
+    });
+    expect(result?.next).toEqual([root, 'msg-2']);
+  });
+
+  test('opening a deeper level leaves the shallower ones alone', ({ expect }) => {
+    const result = open({
+      active: [root, 'msg-1'],
+      plankNames: { 'inbox/message': 'msg-1' },
+      level: 'attachment',
+      subjectId: 'att-1',
+    });
+    expect(result).toEqual({ next: [root, 'msg-1', 'att-1'], name: 'inbox/attachment' });
+  });
+
+  test('anchors to the level above, not the end of the deck', ({ expect }) => {
+    const result = open({ active: [root, 'unrelated'], subjectId: 'msg-1' });
+    expect(result?.next).toEqual([root, 'msg-1', 'unrelated']);
+  });
+
+  test('returns undefined for a level the chain does not declare', ({ expect }) => {
+    expect(open({ level: 'draft' })).toBeUndefined();
+    expect(open({ spec: undefined })).toBeUndefined();
+    expect(open({ spec: { levels: [] } })).toBeUndefined();
   });
 });

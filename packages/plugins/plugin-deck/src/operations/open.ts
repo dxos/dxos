@@ -14,7 +14,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { addSubjectsToActiveDeck, resolveSeededPlanks, updatePlankNames } from '../layout';
+import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates, openableChildren } from '../util';
 import { updateActiveDeck } from './helpers';
@@ -147,8 +147,25 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
         });
 
+        // An open at a declared level: the level supplies the plank name and closes the levels below
+        // it, so a chain like `mailbox / message / attachment` stays consistent without the caller
+        // tracking any of it.
+        const levelOpen =
+          input.root && input.level && input.subject[0]
+            ? resolveLevelOpen({
+                active: deck.active,
+                plankNames: deck.plankNames,
+                spec: DeckSpec.fromNode(Option.getOrUndefined(Graph.getNode(graph, input.root))),
+                root: input.root,
+                level: input.level,
+                subjectId: input.subject[0],
+              })
+            : undefined;
+
         let next: string[];
-        if (seeded) {
+        if (levelOpen) {
+          next = levelOpen.next;
+        } else if (seeded) {
           next = seeded;
         } else if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
@@ -163,10 +180,12 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
         // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
         // so names whose plank this open closed are dropped rather than left dangling.
+        // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
+        const boundName = levelOpen?.name ?? input.name;
         const plankNames = updatePlankNames(
           deck.plankNames,
           next,
-          input.name && input.subject[0] ? { name: input.name, plankId: input.subject[0] } : undefined,
+          boundName && input.subject[0] ? { name: boundName, plankId: input.subject[0] } : undefined,
         );
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { ...deckUpdates, plankNames }),

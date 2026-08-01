@@ -4,6 +4,8 @@
 
 import { produce } from 'immer';
 
+import { DeckSpec } from '@dxos/app-toolkit';
+
 import { type DeckAction } from '#types';
 
 export type AddSubjectsToActiveDeckOptions = {
@@ -129,4 +131,56 @@ export const resolveSeededPlanks = ({
     return undefined;
   }
   return children.slice(0, MAX_SEEDED_PLANKS);
+};
+
+/**
+ * The next `active` list for an open at `level` of `root`'s declared chain, plus the plank name that
+ * level occupies. `undefined` when the level is not declared, so the caller falls back to an ordinary
+ * open rather than inventing a chain.
+ *
+ * Two things a plain named open cannot do. The level supplies the name, so callers stop hand-building
+ * it; and opening at a level closes every level below it, so reading a second message drops the first
+ * one's attachment instead of leaving it stranded beside an unrelated message.
+ */
+export const resolveLevelOpen = ({
+  active,
+  plankNames,
+  spec,
+  root,
+  level,
+  subjectId,
+}: {
+  active: readonly string[];
+  plankNames: Record<string, string>;
+  spec: DeckSpec.DeckSpec | undefined;
+  root: string;
+  level: string;
+  subjectId: string;
+}): { next: string[]; name: string } | undefined => {
+  const levels = spec?.levels;
+  const index = levels?.findIndex((entry) => entry.key === level) ?? -1;
+  if (!levels || index === -1) {
+    return undefined;
+  }
+
+  const name = DeckSpec.plankName(root, level);
+  const stale = new Set(
+    DeckSpec.levelsBelow(spec, level)
+      .map((entry) => plankNames[DeckSpec.plankName(root, entry.key)])
+      .filter((id): id is string => !!id),
+  );
+  const pruned = active.filter((id) => !stale.has(id));
+
+  // Anchored to the level above so the chain reads left to right whatever else is open. The topmost
+  // level falls back to the root itself, whose plank is opened normally and so carries no level name.
+  const parentName = index > 0 ? DeckSpec.plankName(root, levels[index - 1].key) : undefined;
+  const parent = (parentName && plankNames[parentName]) || root;
+
+  return {
+    next: addSubjectsToActiveDeck(pruned, [subjectId], {
+      pivotId: pruned.includes(parent) ? parent : undefined,
+      replaceId: plankNames[name],
+    }),
+    name,
+  };
 };

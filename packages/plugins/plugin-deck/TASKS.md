@@ -62,9 +62,13 @@ Phased so each step is independently landable and verifiable:
       (2) the settings blob is a `Schema.Struct`, so dropping a boolean for an enum is a decode failure
       and falls back to defaults — acceptable under the drop-don't-migrate policy, but it silently
       resets the user's choice, so land it deliberately.
-- [ ] **P3 — levels + pruning.** Opening at level `i` reuses that level's plank (existing `name`
-      mechanism) and closes levels `> i`. Pure function beside `addSubjectsToActiveDeck`, so it gets
-      unit tests. Mailbox declares `mailbox / message / attachment` and drops its hand-built name.
+- [x] **P3 — levels + pruning.** `LayoutOperation.Open` takes `root` + `level`; `resolveLevelOpen`
+      (beside `addSubjectsToActiveDeck`, 6 unit tests) reuses that level's plank, closes every level
+      below it, and anchors to the level above rather than the end of the deck. The level supplies the
+      plank name, so callers stop hand-building it. Mailbox declares
+      `mailbox / message / attachment` via `AppAnnotation.DeckAnnotation` and `MailboxArticle` passes
+      `root` + `level` instead of `name` + `pivotId`. NOT verified in a browser — needs a mailbox with
+      messages; the attachment rung has no producer yet, so pruning is only covered by unit tests.
 - [ ] **P4 — sizing intent.** `size?: number | 'fill'` consumed only when `plankSizing[id]` is absent,
       so the first user drag pins the width and the intent never fights them afterwards. `'fill'`
       divides the span `useMaxPlankWidth` already computes among the open `'fill'` levels.

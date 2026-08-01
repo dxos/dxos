@@ -320,6 +320,22 @@ export const Open = Operation.make({
           'deck does not grow an entry per item.',
       }),
     ),
+    root: Schema.optional(
+      Schema.String.annotations({
+        description:
+          'The deck root this open is relative to, whose type declares the chain of levels (see ' +
+          '`level`). Only meaningful together with `level`.',
+      }),
+    ),
+    level: Schema.optional(
+      Schema.String.annotations({
+        description:
+          "Open at this level of the root's declared chain (e.g. `message` in `mailbox / message / " +
+          "attachment`). The level supplies the plank name, so the level's plank is reused rather " +
+          'than added to, and opening at a level closes every level below it — reading a second ' +
+          "message drops the first one's attachment. Prefer this to hand-building `name`.",
+      }),
+    ),
     workspace: Schema.optional(Schema.String.annotations({ description: 'The workspace to open the items in.' })),
     scrollIntoView: Schema.optional(Schema.Boolean.annotations({ description: 'Scroll the items into view.' })),
     navigation: Schema.optional(
