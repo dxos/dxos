@@ -11,6 +11,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
@@ -85,6 +86,11 @@ export const getCorePlugins = ({
           }
         }),
     }),
+    // Core because it owns the connector machinery itself, not any one integration: it fires
+    // `SetupConnectors` (the event every connector-contributing plugin activates on), registers the
+    // Connection/AccessToken/Cursor schema, and runs the coordinator that materializes and binds
+    // targets. Without it a plugin like Inbox contributes connectors nobody ever asks for.
+    ConnectorPlugin(),
     GraphPlugin(),
     layoutPlugin,
     NavTreePlugin(),
