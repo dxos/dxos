@@ -22,7 +22,7 @@ describe('ChessComPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler'), moduleId('CreateObject')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
   });
 });

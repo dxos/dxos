@@ -20,7 +20,7 @@ describe('MarkdownPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
   });
 });

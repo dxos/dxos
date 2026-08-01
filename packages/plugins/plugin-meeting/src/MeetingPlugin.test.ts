@@ -21,9 +21,9 @@ describe('MeetingPlugin', () => {
 
     // AppGraphBuilder requires CallsCapabilities.Manager, which the headless (node) variant of
     // plugin-calls does not provide, so it does not activate in this harness. OperationHandler is a
-    // dependency-mode root, so it activates immediately.
+    // dependency-mode root, so it activates immediately. ReactSurface is gated on roles.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
   });
 });

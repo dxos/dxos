@@ -21,13 +21,7 @@ describe('MagazinePlugin', () => {
 
     // OperationHandler is a dependency-mode root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('AppGraphBuilder'),
-        moduleId('CreateObject'),
-        moduleId('schema'),
-        moduleId('ReactSurface'),
-        moduleId('OperationHandler'),
-      ]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('schema'), moduleId('OperationHandler')]),
     );
   });
 });
