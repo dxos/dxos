@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, DXN, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -249,8 +249,10 @@ export const Update = Operation.make({
     icon: 'ph--pencil-simple--regular',
   },
   input: Schema.Struct({
-    doc: Ref.Ref(Markdown.Document).annotations({
-      description: 'The ID of the markdown document.',
+    // Any text-bearing document (an object holding a `content: Ref(Text)`), not only
+    // `Markdown.Document` — e.g. outlines. Branch edits remain markdown-only.
+    doc: Ref.Ref(Obj.Unknown).annotations({
+      description: 'The ID of the document (any text-bearing object, e.g. a markdown document or an outline).',
     }),
     edits: Schema.Array(Edit).annotations({
       description:

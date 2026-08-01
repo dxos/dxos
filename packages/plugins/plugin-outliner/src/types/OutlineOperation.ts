@@ -8,8 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Type } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -28,6 +29,22 @@ export const CreateOutline = Operation.make({
   }),
   output: Schema.Struct({
     object: Type.getSchema(Outline.Outline),
+  }),
+});
+
+export const ConvertToTask = Operation.make({
+  meta: {
+    key: makeKey('convertToTask'),
+    name: 'Convert to Task',
+    icon: 'ph--check-circle--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    outline: Type.getSchema(Outline.Outline),
+    title: Schema.String,
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
   }),
 });
 
