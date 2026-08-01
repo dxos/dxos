@@ -18,6 +18,8 @@ export const TraceProgressSink = Capability.lazyModule(
   { provides: [Capabilities.TraceSink] },
   () => import('./trace-progress-sink'),
 );
-export const ReactSurface = Capability.lazyModule('ReactSurface', { provides: [Capabilities.ReactSurface] }, () =>
-  import('./react-surface'),
+export const ReactSurface = Capability.lazyModule(
+  'ReactSurface',
+  { provides: [Capabilities.ReactSurface] },
+  () => import('./react-surface'),
 );

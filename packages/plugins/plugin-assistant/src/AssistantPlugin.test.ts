@@ -9,8 +9,8 @@ import { describe, test } from 'vitest';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';

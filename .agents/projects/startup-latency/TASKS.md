@@ -379,6 +379,7 @@ members — routine (excluded from the sweep as core, 6 heavy eager modules) and
 LayerSpecs — plus the wave-eval anomaly below.
 
 Review agenda (how to close the gap and go further):
+
 1. Granular events replacing the one big wave — most deferred modules should activate on
    first use (per-domain demand events), eliminating the idle burst entirely.
 2. Trickle the wave: slice DeferredStartup into batches or drop background-wave concurrency.
