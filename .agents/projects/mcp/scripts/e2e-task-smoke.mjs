@@ -1,0 +1,193 @@
+#!/usr/bin/env node
+//
+// E2E smoke (task verbs): drives the plugin-tasks operations over MCP and asserts the results —
+// MILESTONE-5.md §8 phase-4 acceptance (`taskCreate → taskUpdate → taskComplete` + list).
+//
+// Prereqs (TESTING.md): edge stack up with an @dxos pin that registers plugin-tasks
+// (operation-service TasksPlugin + TaskSet/Task types), Composer served at --app.
+//
+// Usage:
+//   node e2e-task-smoke.mjs --identity <hex> --space <spaceId> [--halo-space <id>]
+//     [--url http://localhost:8791] [--app http://localhost:5173] [--browser-assert]
+//
+// Steps: createObject(TaskSet) → taskCreate ×2 (one sub-task) → taskUpdate → taskComplete →
+//        taskAssign → taskList (assert states). With --browser-assert, additionally attach the
+//        TaskSet to the root collection and assert its name renders in Composer.
+// Exit 0 on success; 1 with a FAIL line on any step.
+//
+
+import { createHash, randomBytes } from 'node:crypto';
+import { parseArgs } from 'node:util';
+
+const { values: args } = parseArgs({
+  options: {
+    'url': { type: 'string', default: 'http://localhost:8791' },
+    'app': { type: 'string', default: 'http://localhost:5173' },
+    'identity': { type: 'string' },
+    'space': { type: 'string' },
+    'halo-space': { type: 'string' },
+    'browser-assert': { type: 'boolean', default: false },
+    'headless': { type: 'boolean', default: true },
+  },
+});
+
+const fail = (step, detail) => {
+  console.error(`FAIL [${step}]`, detail);
+  process.exit(1);
+};
+const step = (name) => console.log(`--- ${name}`);
+if (!args.identity || !args.space) fail('args', 'pass --identity <hex> and --space <spaceId> (see TESTING.md Path A)');
+
+const baseUrl = args.url.replace(/\/$/, '');
+const redirectUri = 'http://localhost:3000/callback';
+
+// --- OAuth stub (TESTING.md Path A). ---
+step('oauth');
+const reg = await (
+  await fetch(`${baseUrl}/register`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      client_name: 'e2e-task-smoke',
+      redirect_uris: [redirectUri],
+      grant_types: ['authorization_code'],
+      response_types: ['code'],
+      token_endpoint_auth_method: 'client_secret_post',
+    }),
+  })
+).json();
+if (!reg.client_id) fail('register', JSON.stringify(reg).slice(0, 300));
+const codeVerifier = randomBytes(32).toString('base64url');
+const codeChallenge = createHash('sha256').update(codeVerifier).digest('base64url');
+const authorizeUrl = new URL(`${baseUrl}/authorize`);
+authorizeUrl.searchParams.set('client_id', reg.client_id);
+authorizeUrl.searchParams.set('redirect_uri', redirectUri);
+authorizeUrl.searchParams.set('response_type', 'code');
+authorizeUrl.searchParams.set('code_challenge', codeChallenge);
+authorizeUrl.searchParams.set('code_challenge_method', 'S256');
+const formHtml = await (await fetch(authorizeUrl)).text();
+const nonce = formHtml.match(/name="nonce"\s+value="([^"]+)"/)?.[1] ?? fail('authorize form', formHtml.slice(0, 300));
+const submitBody = new URLSearchParams({ nonce, identity_key: args.identity, space_ids: args.space });
+if (args['halo-space']) submitBody.set('halo_space_id', args['halo-space']);
+const submit = await fetch(`${baseUrl}/authorize`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: submitBody.toString(),
+  redirect: 'manual',
+});
+const location =
+  submit.headers.get('location') ?? fail('authorize', `${submit.status}: ${(await submit.text()).slice(0, 300)}`);
+const code = new URL(location).searchParams.get('code');
+const token = await (
+  await fetch(`${baseUrl}/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+      client_id: reg.client_id,
+      client_secret: reg.client_secret,
+      code_verifier: codeVerifier,
+    }),
+  })
+).json();
+if (!token.access_token) fail('token', JSON.stringify(token).slice(0, 300));
+
+const mcp = async (method, params, id) => {
+  const resp = await fetch(`${baseUrl}/mcp`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'accept': 'application/json, text/event-stream',
+      'authorization': `Bearer ${token.access_token}`,
+    },
+    body: JSON.stringify({ jsonrpc: '2.0', id, method, params }),
+  });
+  const text = await resp.text();
+  if (!resp.ok) fail(`mcp ${method}`, `${resp.status}: ${text.slice(0, 300)}`);
+  return text.includes('data: ') ? JSON.parse(text.split('data: ')[1].split('\n')[0]) : JSON.parse(text);
+};
+let callId = 1;
+const call = async (name, callArgs) => {
+  const resp = await mcp('tools/call', { name, arguments: { spaceId: args.space, ...callArgs } }, ++callId);
+  if (resp.error || resp.result?.isError)
+    fail(name, JSON.stringify(resp.error ?? resp.result.structuredContent).slice(0, 400));
+  return resp.result.structuredContent;
+};
+const uriOf = (obj) => obj['@uri'] ?? `echo:///${obj.id}`;
+
+await mcp(
+  'initialize',
+  { protocolVersion: '2025-03-26', capabilities: {}, clientInfo: { name: 'e2e-task', version: '0' } },
+  1,
+);
+
+// --- 1. Create the task set (container). ---
+step('create task set');
+const setName = `E2E Tasks ${new Date().toISOString()}`;
+const { object: taskSet } = await call('createObject', {
+  typename: 'org.dxos.type.taskSet',
+  properties: { name: setName },
+});
+const taskSetId = uriOf(taskSet);
+console.log('taskSet:', taskSetId);
+
+// --- 2. taskCreate: root task + sub-task (parent-edge containment). ---
+step('taskCreate');
+const { task: rootTask } = await call('taskCreate', { taskSetId, title: 'Ship the task verbs', priority: 'high' });
+rootTask?.title === 'Ship the task verbs' || fail('taskCreate', JSON.stringify(rootTask).slice(0, 300));
+rootTask.status === 'todo' || fail('taskCreate default status', rootTask.status);
+const rootTaskId = uriOf(rootTask);
+const { task: subTask } = await call('taskCreate', { taskSetId, title: 'Write the e2e', parentId: rootTaskId });
+const subTaskId = uriOf(subTask);
+console.log('tasks:', rootTaskId, subTaskId);
+
+// --- 3. taskUpdate: schema-checked patch. ---
+step('taskUpdate');
+const { task: updated } = await call('taskUpdate', { id: rootTaskId, status: 'in-progress', estimate: 2 });
+updated.status === 'in-progress' || fail('taskUpdate', JSON.stringify(updated).slice(0, 300));
+
+// --- 4. taskAssign + taskComplete. ---
+step('taskAssign + taskComplete');
+await call('taskAssign', { id: subTaskId, assignee: { role: 'assistant', name: 'Scout' } });
+const { task: completed } = await call('taskComplete', { id: subTaskId });
+completed.status === 'done' || fail('taskComplete', JSON.stringify(completed).slice(0, 300));
+
+// --- 5. taskList: both tasks visible with final states. ---
+step('taskList');
+const { results } = await call('taskList', { limit: 100 });
+const byTitle = Object.fromEntries(results.map((task) => [task.title, task]));
+byTitle['Ship the task verbs']?.status === 'in-progress' ||
+  fail('taskList root', JSON.stringify(byTitle).slice(0, 400));
+byTitle['Write the e2e']?.status === 'done' || fail('taskList sub', JSON.stringify(byTitle).slice(0, 400));
+console.log(`listed ${results.length} tasks; states verified.`);
+
+// --- 6. Optional: assert the task set renders in Composer. ---
+if (args['browser-assert']) {
+  step('browser assert');
+  // File the set in the root collection so the navtree shows it (createObject leaves it detached
+  // unless attach is supported by the running stack).
+  const collections = await call('queryObjects', { typename: 'org.dxos.type.collection', includeContent: true });
+  const rootCollection = collections.results?.[0] ?? fail('find collection', 'no root collection');
+  await call('updateObject', {
+    id: `echo:///${rootCollection.id}`,
+    properties: { objects: [...(rootCollection.objects ?? []), { '/': taskSetId }] },
+  });
+  const { chromium } = await import('@playwright/test');
+  const browser = await chromium.launch({ headless: args.headless });
+  process.on('exit', () => browser.process()?.kill());
+  try {
+    const page = await (await browser.newContext()).newPage();
+    await page.goto(args.app);
+    const collectionsNode = page.getByText('Collections', { exact: true }).first();
+    await collectionsNode.waitFor({ timeout: 20000 });
+    await collectionsNode.click();
+    await page.getByText(setName.slice(0, 20), { exact: false }).first().waitFor({ timeout: 30000 });
+    console.log('task set visible in Composer.');
+  } finally {
+    await browser.close();
+  }
+}
+
+console.log('OK: task-verb e2e passed (createSet → create ×2 → update → assign → complete → list).');
