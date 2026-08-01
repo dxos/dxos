@@ -124,80 +124,11 @@ where fixtures get captured. Three defects found while wiring that up.
       rather than swapping the feed, so restoring a curated (starred) export cannot delete the
       unstarred remainder. `replaceFeed` is kept for Reset, the deliberate way to empty a mailbox.
 
-## Phase 6: Deck defects
+## Phases 6-7: Deck — MOVED
 
-- [x] **Opening a message from the mailbox should reuse the message plank** — done in PR #12424:
-      `LayoutOperation.Open` takes an optional `name`, and opening under a name already taken replaces
-      its occupant in place, the way a browser tab is reused. The mailbox passes `<mailbox>/message`, so
-      reading down it no longer grows the deck one plank per message. Backed by `DeckState.plankNames`;
-      replaced the old `key` option, which matched on an id prefix (`id.split('+')[0]`). Its one call
-      site, the navtree, passed `node.properties.key` — which nothing in the repo ever sets, so it was
-      always `undefined` and the branch never ran.
-- [ ] **Fullscreen: the back button is obscured by the plank's toolbar** — `ExitFullscreenButton` is
-      `fixed top-2 right-2 z-[1]` (`DeckViewport.tsx`), which puts it in the same corner as the plank's
-      own trailing toolbar controls and only one stacking level up. Either raise it above the plank
-      chrome or move it out of that corner; note the plank is supposed to render `headless` in
-      fullscreen, so check why its toolbar is showing there at all.
-- [ ] **Decide the fate of the story's fold-animation harness** — `Deck.stories.tsx` injects
-      `FOLD_ANIMATION_CSS` scoped by a `data-fold-anim` ancestor to A/B two fold transitions, selected by
-      the `foldAnimation` arg (it carries a `TODO(burdon): Why in story?`). `crossfade` is the deck's
-      shipped behaviour and adds no CSS at all; `slide` additionally translates the spine 10px along the
-      plank's direction of travel. Either promote `slide` into `FoldSpine` and delete the harness, or move
-      it behind a `Settings` flag beside `overscroll` — but it should not stay as story-only CSS.
-- [ ] **Resizing a plank should leave the trailing spines pinned to the viewport edge** — the right-hand
-      pile only holds position because each tile's sticky `insetInlineEnd` is derived from its own width
-      (`DeckViewport`'s tile style), and dragging a plank's width changes the natural offsets of every
-      tile after it. While the drag is in flight the trailing spines drift instead of staying against the
-      right edge. Note `useMaxPlankWidth` caps a plank to exactly the gap the two piles leave it, so the
-      end state is correct — this is the during-drag behaviour.
-
-## Phase 7: Deck layout experiments
-
-Shapes being tried behind flags rather than committed to; see `Settings` in plugin-deck.
-
-- [x] **`overscroll`** — trailing runway so the last plank can be brought fully forward.
-- [x] **`expand`** — plank toolbar toggle filling the space between the two spine piles.
-- [x] **Exposé (`meta+;`)** — every plank at once, shrunk to fit; click one to return focused on it. Not a
-      second copy of the deck: the mounted `Mosaic.Stack` is scaled in place (`--deck-expose-scale`), so no
-      plank remounts and no editor is instantiated twice. Escape or a background click exits. Four traps,
-      all measured rather than guessed:
-  - Scaling does **not** shrink scrollable overflow, so the scroll has to be zeroed on the way in and
-    restored on the way out (`useExposeScroll`) — otherwise the shrunken row sits off the leading edge.
-  - Sticky is dropped for `relative` while exposed; it resolves against the scrollport in the scaled
-    coordinate space and would re-pile the tiles the exposé means to lay out flat.
-  - The fold is a 200ms crossfade, so refolding the whole deck at once paints the planks over the spines
-    replacing them. `data-fold-instant` suppresses the transition for that one frame.
-  - `useExposeScroll` must run _before_ `useFoldedPlanks` (hooks run in declaration order), and neither the
-    hysteresis nor the collapse may fire across the crossing — every trailing plank reads as off-screen at
-    the zeroed scroll, which walks attention onto whatever sits near the start.
-  - The transition is FLIP (`useExposeFlip`), not a transition on the stack's own transform. The two
-    layouts — sticky/folded/scrolled versus flat/unfolded/scaled — have no CSS interpolation between them,
-    so animating the transform alone left the rearrangement to snap on frame one: the deck jumped and
-    _then_ grew. Two consequences to preserve:
-    - `capture()` runs in the toggle handler, never an effect. By the time an effect runs React has
-      committed the new layout and the previous geometry is gone.
-    - The scale is written onto the host element imperatively rather than held in React state. As state it
-      arrived a commit later, so the FLIP measured the deck at full size and the zoom _in_ stopped
-      animating. For the same reason the natural width is summed from tile `offsetWidth` and never
-      `stack.scrollWidth`, which counts transformed overflow and mid-FLIP reports a far wider stack.
-- [x] **Arrow-key plank navigation** — left/right step to the previous/next plank and attend it, reusing
-      `LayoutOperation.ScrollIntoView` (which scrolls _and_ attends, since the plank focuses itself off the
-      flag). Gated on `isPlankLevelFocus()`: the focused element must be the attendable container itself,
-      so a caret in an editor, a list or a toolbar keeps its own arrows. Reaching that level is tabster's
-      existing groupper ladder — Escape leaves the editor, Escape again lands on the plank.
-- [ ] **Move the plank navigation onto tabster** — the principled version is a Mover
-      (`useArrowNavigationGroup`) on the stack with each tile a groupper, which is what `Focus.Group`
-      (`packages/ui/react-ui/src/components/Focus/Focus.tsx`) already wraps. Blocked on `MosaicStackProps`
-      being a narrow `ThemedClassName<… & Pick<…>>`: it forwards no arbitrary DOM props, so the
-      `data-tabster` attributes cannot be attached without changing `react-ui-mosaic` (the same constraint
-      that stopped `onClick` going onto `Mosaic.Container`). Worth doing with the Mosaic change, not before.
-- [ ] **Drag planks in the exposé to reorder** — the exposé is where the whole deck is visible, so it is
-      the natural place to reorder. The plumbing exists (`incrementPlank` in layout.ts, the
-      `increment-start`/`increment-end` adjustments) and `PlankControls` still has those buttons
-      commented out pending exactly this UX; the exposé tiles would drive it instead.
-- [ ] **Plank snapping** — mobile already snaps (`snap-x snap-mandatory` + `snap-start`); desktop wants
-      the snap points to be the pile positions (`index * SPINE_PX`) so planks land where the fold
-      geometry expects them.
+The deck work outgrew this ledger and is now its own project. Defects, layout experiments and the
+design record live in [`packages/plugins/plugin-deck/TASKS.md`](../../../packages/plugins/plugin-deck/TASKS.md)
+and its [DESIGN.md](../../../packages/plugins/plugin-deck/DESIGN.md).
 
 ## Open questions for the user
 
