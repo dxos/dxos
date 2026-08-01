@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
@@ -19,31 +20,32 @@ const meta = Plugin.makeMeta({
   tags: ['system'],
 });
 
+const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
+
 /**
- * Resolves once the app shell has painted (`app-framework:first-interactive`, bounded wait) and
- * the host reaches idle. Anchoring on the mark matters: the ready *message* precedes the shell
- * render by hundreds of ms, and `requestIdleCallback` can find an idle gap mid-render-pipeline —
- * firing there floods the main thread with the deferred wave ahead of the workspace paint.
+ * Resolves at host idle (`requestIdleCallback` when available, macrotask fallback). The long
+ * timeout is a stall backstop only: an aggressive timeout fires mid-render of the ready UI and
+ * the deferred wave then floods the main thread ahead of first paint of the workspace.
  */
-const idle = (): Promise<void> =>
-  new Promise((resolve) => {
-    const start = Date.now();
-    const awaitIdle = () => {
-      if (typeof requestIdleCallback === 'function') {
-        requestIdleCallback(() => resolve(), { timeout: 15_000 });
-      } else {
-        setTimeout(resolve, 0);
-      }
-    };
-    const awaitPaint = () => {
-      if (performance.getEntriesByName('app-framework:first-interactive').length > 0 || Date.now() - start > 10_000) {
-        awaitIdle();
-      } else {
-        setTimeout(awaitPaint, 100);
-      }
-    };
-    awaitPaint();
-  });
+const idle: Effect.Effect<void> = Effect.async<void>((resume) => {
+  if (typeof requestIdleCallback === 'function') {
+    const handle = requestIdleCallback(() => resume(Effect.void), { timeout: 15_000 });
+    return Effect.sync(() => cancelIdleCallback(handle));
+  }
+  const handle = setTimeout(() => resume(Effect.void), 0);
+  return Effect.sync(() => clearTimeout(handle));
+});
+
+/**
+ * Bounded wait for the app shell's first paint: the ready message precedes the shell render,
+ * and `requestIdleCallback` can find an idle gap mid-render-pipeline — firing there floods the
+ * main thread with the deferred wave ahead of the workspace paint.
+ */
+const awaitPaint: Effect.Effect<void> = Effect.gen(function* () {
+  for (let i = 0; i < 100 && performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0; i++) {
+    yield* Effect.sleep(Duration.millis(100));
+  }
+});
 
 const FireDeferredStartup = Capability.inlineModule('FireDeferredStartup', { provides: [] }, () =>
   Effect.gen(function* () {
@@ -63,8 +65,8 @@ const FireDeferredStartup = Capability.inlineModule('FireDeferredStartup', { pro
           }
         }),
       );
-      // Idle, so the deferred modules' loading never competes with the ready-path render.
-      yield* Effect.promise(idle);
+      yield* awaitPaint;
+      yield* idle;
       yield* manager.activate(ActivationEvents.DeferredStartup);
     }).pipe(
       Effect.catchAll((error) =>

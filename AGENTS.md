@@ -124,6 +124,10 @@ Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).
 Universal rules. Deeper conventions live in skills — see the pointers below.
 
 - TypeScript, single quotes. Prefer functional style and arrow functions.
+- **Prefer Effect over async/Promise.** Raw Promises belong only at platform boundaries —
+  dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
+  `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:
+  tests that need real macrotask turns across runtimes — TestClock virtualizes `Effect.sleep`.)
 - Import order, blank line between groups:
   builtin → external → @dxos → internal → parent → sibling.
 - Prefer named exports; avoid default exports. Use barrel imports.
