@@ -58,7 +58,7 @@ end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01);
 
 | Type              | Package (today)           | Role                                                             | M5 target                                                                                                |
 | ----------------- | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `tasks: Ref<TaskSet>` / `plan`; stays in compute                        |
+| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSets: Ref<TaskSet>[]` / `plan`; stays in compute                   |
 | `Instructions`    | `@dxos/compute`           | Prompt text + skills + objects + commands                        |                                                                                                          |
 | `Routine`         | `@dxos/compute`           | Triggered automation (instructions or runnable operation)        |                                                                                                          |
 | `Skill`           | `@dxos/compute`           | Toolkit definition bound into sessions                           |                                                                                                          |

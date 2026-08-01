@@ -49,8 +49,8 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Ad hoc notes/checklist. */
     outline: Schema.optional(Ref.Ref(Outline.Outline)),
 
-    /** Owned (or adopted synced) task container; membership is the `Task.taskSet` backref. */
-    tasks: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
+    /** Owned (or adopted synced) task containers; membership is the `Task.taskSet` backref. */
+    taskSets: Schema.Array(Ref.Ref(TaskSet.TaskSet)),
 
     /** Standing, cross-conversation plan (distinct from per-chat `Chat.plan`). */
     plan: Schema.optional(Ref.Ref(Plan.Plan)),
@@ -63,10 +63,11 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
 /** Factory wrapper around `Obj.make` for {@link Project}. */
 export const make = (
-  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines'> & {
+  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines' | 'taskSets'> & {
     routines?: ReadonlyArray<Ref.Ref<Routine.Routine>>;
+    taskSets?: ReadonlyArray<Ref.Ref<TaskSet.TaskSet>>;
   } = {},
-): Project => Obj.make(Project, { ...props, routines: props.routines ?? [] });
+): Project => Obj.make(Project, { ...props, routines: props.routines ?? [], taskSets: props.taskSets ?? [] });
 
 /** Bindings a chat session should receive when running in a project's context. */
 export type ContextBindings = {

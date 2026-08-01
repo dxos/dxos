@@ -316,7 +316,7 @@ summaries), and the `stories-projects` storybook strategy.
 Design: [`MILESTONE-5.md`](./MILESTONE-5.md) (2026-08-01, v3 — Phase 0 DECIDED). Project
 optionally composes Goals / Outline / Tasks / Plan (Milestones DEFERRED);
 **ExternalProject → `TaskSet`** (lightweight, possibly externally synced task container;
-`Project.tasks: Ref<TaskSet>` owns one; `Task.taskSet` backref); plugin-outliner is taken over
+`Project.taskSets: Ref<TaskSet>[]` (array, revised 2026-08-01); `Task.taskSet` backref); plugin-outliner is taken over
 as `plugin-tasks`; `Task.assignee` becomes `Actor`; Plan⇄Task promotion path; Linear-shaped
 camelCase MCP verbs layered over the generic object API (the §2.7 "fourth channel"). Type
 inventory table added to DESIGN.md § Types. Stage is dogfooded over MCP
