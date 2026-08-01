@@ -79,7 +79,7 @@ const EXPOSE_INSET_PX = 24;
  */
 const EXPOSE_GUTTER_PX = 32;
 
-/** Duration of the zoom into and out of the exposé; must match the `duration-300` on the stack. */
+/** Duration of the per-plank morph into and out of the exposé (see {@link useExposeFlip}). */
 const EXPOSE_ZOOM_MS = 300;
 
 /** Slack after the zoom before the deck's geometry is re-read, covering the transition's own jitter. */
@@ -115,6 +115,8 @@ type PlankContextValue = RenderedPlanks & {
    * trailing controls never disappear behind the piled spines of the other planks. Infinity until measured.
    */
   maxPlankWidthPx: number;
+  /** Records the tiles' geometry for the exposé transition; call before toggling it. See {@link useExposeFlip}. */
+  captureExposeGeometry: () => void;
 };
 
 /**
@@ -132,6 +134,7 @@ const PlankContext = createContext<PlankContextValue>({
   companionAnchorId: undefined,
   attendedPlankId: undefined,
   maxPlankWidthPx: Number.POSITIVE_INFINITY,
+  captureExposeGeometry: () => {},
 });
 
 const usePlankContext = () => useContext(PlankContext);
@@ -420,7 +423,13 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
-  const { planks: rendered, companionId, companionAnchorId, maxPlankWidthPx } = usePlankContext();
+  const {
+    planks: rendered,
+    companionId,
+    companionAnchorId,
+    maxPlankWidthPx,
+    captureExposeGeometry,
+  } = usePlankContext();
   const companion = id === companionAnchorId ? companionId : undefined;
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
@@ -462,9 +471,10 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
 
   // Picking a plank in the exposé is a navigation: leave the overview and bring the chosen plank forward.
   const handleExposeSelect = useCallback(() => {
+    captureExposeGeometry();
     void invokePromise(DeckOperation.ToggleExpose, { expose: false });
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: id });
-  }, [invokePromise, id]);
+  }, [invokePromise, id, captureExposeGeometry]);
 
   if (presentation === 'fullbleed') {
     return (
@@ -1016,25 +1026,41 @@ const useCollapseAfterAttended = ({
 const useExposeScale = ({
   viewportRef,
   stackRef,
+  hostRef,
+  getPlankTiles,
   expose,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
+  hostRef: RefObject<HTMLDivElement | null>;
+  getPlankTiles: () => HTMLElement[];
   expose: boolean;
-}): number => {
-  const [scale, setScale] = useState(1);
+}) => {
+  // Published straight onto the host rather than through React state, so it lands in the same commit that
+  // opens the exposé. As state it arrived a render later, which left {@link useExposeFlip} measuring the
+  // deck at full size and the scale snapping in afterwards — the zoom in simply did not animate.
+  const setScale = useCallback(
+    (scale: number) => hostRef.current?.style.setProperty('--deck-expose-scale', String(scale)),
+    [hostRef],
+  );
 
   useLayoutEffect(() => {
     const viewport = viewportRef.current;
     const stack = stackRef.current;
     if (!viewport || !stack || !expose) {
-      setScale(1);
+      hostRef.current?.style.removeProperty('--deck-expose-scale');
       return;
     }
-    // Layout widths, never rects: a rect already carries the scale this computes, so measuring one would
-    // feed the transform back into itself and converge on nothing.
+    // Summed from the tiles' own layout boxes rather than the stack's `scrollWidth`, and never from rects.
+    // A rect already carries the scale being computed, and `scrollWidth` counts transformed overflow — so
+    // while the FLIP holds the tiles at their old deck positions it reports a far wider stack and the
+    // exposé would settle at a scale small enough to fit an arrangement that no longer exists.
+    const styles = getComputedStyle(stack);
+    const gap = Number.parseFloat(styles.columnGap) || 0;
     const measure = () => {
-      const naturalWidth = stack.scrollWidth;
+      const tiles = getPlankTiles();
+      const naturalWidth =
+        tiles.reduce((total, tile) => total + tile.offsetWidth, 0) + Math.max(0, tiles.length - 1) * gap;
       if (naturalWidth <= 0) {
         setScale(1);
         return;
@@ -1054,9 +1080,101 @@ const useExposeScale = ({
     observer.observe(viewport);
     observer.observe(stack);
     return () => observer.disconnect();
-  }, [expose, viewportRef, stackRef]);
+  }, [expose, viewportRef, stackRef, hostRef, getPlankTiles, setScale]);
+};
 
-  return expose ? scale : 1;
+/**
+ * Animates the exposé transition by morphing each plank from where it was to where it lands (the FLIP
+ * technique: measure First, apply Last, invert, play).
+ *
+ * The two layouts cannot be interpolated by CSS — the deck is `sticky`, folded and scrolled, the exposé is
+ * flat, unfolded and scaled — so transitioning the stack's own transform animates only the zoom and leaves
+ * the rearrangement to snap on the first frame, which reads as the deck jumping and *then* growing. Here
+ * every layout change lands at once, invisibly, and each tile is transformed back to the position it just
+ * came from; releasing that transform is what the eye follows.
+ *
+ * `capture` has to be called from the toggle handler rather than an effect: React has already committed the
+ * new layout by the time any effect runs, so that is the last moment the previous geometry exists.
+ */
+const useExposeFlip = ({
+  stackRef,
+  getPlankTiles,
+  expose,
+}: {
+  stackRef: RefObject<HTMLDivElement | null>;
+  getPlankTiles: () => HTMLElement[];
+  expose: boolean;
+}): (() => void) => {
+  const firstRef = useRef<Map<string, DOMRect> | undefined>(undefined);
+
+  const capture = useCallback(() => {
+    const first = new Map<string, DOMRect>();
+    getPlankTiles().forEach((tile) => {
+      const id = tile.getAttribute('data-object-id');
+      if (id) {
+        first.set(id, tile.getBoundingClientRect());
+      }
+    });
+    firstRef.current = first;
+  }, [getPlankTiles]);
+
+  useLayoutEffect(() => {
+    const first = firstRef.current;
+    firstRef.current = undefined;
+    const stack = stackRef.current;
+    if (!first || !stack) {
+      return;
+    }
+
+    // The tiles sit inside the scaled stack, so their own transforms are in that scaled space while the
+    // measured deltas are in screen px — hence dividing through by the scale the stack just took.
+    const stackScale = Number.parseFloat(getComputedStyle(stack).scale) || 1;
+    const inverted = getPlankTiles().filter((tile) => {
+      const id = tile.getAttribute('data-object-id');
+      const before = id ? first.get(id) : undefined;
+      if (!before) {
+        return false;
+      }
+      const after = tile.getBoundingClientRect();
+      const dx = (before.left - after.left) / stackScale;
+      const dy = (before.top - after.top) / stackScale;
+      const sx = after.width > 0 ? before.width / after.width : 1;
+      const sy = after.height > 0 ? before.height / after.height : 1;
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < 0.001 && Math.abs(sy - 1) < 0.001) {
+        return false;
+      }
+      tile.style.transformOrigin = 'top left';
+      tile.style.transition = 'none';
+      tile.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+      return true;
+    });
+    if (inverted.length === 0) {
+      return;
+    }
+
+    const clear = (tile: HTMLElement) => {
+      tile.style.transition = '';
+      tile.style.transform = '';
+      tile.style.transformOrigin = '';
+    };
+    // Next frame, so the inverted transform is painted before the transition that releases it — set in the
+    // same frame the browser would collapse both into no animation at all.
+    const frame = requestAnimationFrame(() => {
+      inverted.forEach((tile) => {
+        tile.style.transition = `transform ${EXPOSE_ZOOM_MS}ms ease-out`;
+        tile.style.transform = '';
+      });
+    });
+    // Leaving the inline transition behind would animate any later transform the tiles pick up.
+    const timer = setTimeout(() => inverted.forEach(clear), EXPOSE_ZOOM_MS + EXPOSE_SETTLE_MARGIN_MS);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+      inverted.forEach(clear);
+    };
+  }, [expose, stackRef, getPlankTiles]);
+
+  return capture;
 };
 
 /**
@@ -1165,6 +1283,7 @@ export const DeckPlanks = () => {
   const expose = !!state.expose && isSliding;
   const viewportRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
+  const hostRef = useRef<HTMLDivElement>(null);
 
   // The plank a scroll-into-view is currently travelling to, shared between the scroller and the fold
   // hysteresis so the two do not fight over focus mid-scroll. A ref, not state: it changes per scroll
@@ -1209,13 +1328,18 @@ export const DeckPlanks = () => {
     scrollIntentRef,
     handoffRef,
   });
-  const exposeScale = useExposeScale({ viewportRef, stackRef, expose });
+  useExposeScale({ viewportRef, stackRef, hostRef, getPlankTiles, expose });
+  // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have
+  // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
+  const captureExposeGeometry = useExposeFlip({ stackRef, getPlankTiles, expose });
   const toggleFullscreen = useFullscreen(fullscreenId);
   const { invokePromise } = useOperationInvoker();
 
-  // Read from a ref so the key handler is bound once rather than rebound whenever the exposé toggles.
+  // Read from refs so the key handler is bound once rather than rebound whenever the exposé toggles.
   const exposeRef = useRef(state.expose);
   exposeRef.current = state.expose;
+  const captureRef = useRef(captureExposeGeometry);
+  captureRef.current = captureExposeGeometry;
 
   // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
   // note in DESIGN about promoting it once its binding is settled.
@@ -1223,6 +1347,7 @@ export const DeckPlanks = () => {
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === ';' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
+        captureRef.current();
         void invokePromise(DeckOperation.ToggleExpose, {});
         return;
       }
@@ -1230,6 +1355,7 @@ export const DeckPlanks = () => {
       // Escape is the way out of any overlay; the fullscreen handler already claims it for its own.
       if (event.key === 'Escape' && exposeRef.current) {
         event.preventDefault();
+        captureRef.current();
         void invokePromise(DeckOperation.ToggleExpose, { expose: false });
       }
     };
@@ -1243,15 +1369,16 @@ export const DeckPlanks = () => {
   const handleBackgroundClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       if (expose && event.target instanceof Element && !event.target.closest('[role="listitem"]')) {
+        captureExposeGeometry();
         void invokePromise(DeckOperation.ToggleExpose, { expose: false });
       }
     },
-    [invokePromise, expose],
+    [invokePromise, expose, captureExposeGeometry],
   );
 
   const plankContext = useMemo<PlankContextValue>(
-    () => ({ ...rendered, maxPlankWidthPx }),
-    [rendered, maxPlankWidthPx],
+    () => ({ ...rendered, maxPlankWidthPx, captureExposeGeometry }),
+    [rendered, maxPlankWidthPx, captureExposeGeometry],
   );
 
   // Overscroll runway (experiment): trailing space so the last plank can scroll clear of the right edge
@@ -1296,12 +1423,14 @@ export const DeckPlanks = () => {
       {/* The overscroll runway and the exposé scale ride CSS vars because `Mosaic.Stack` takes classNames
           but no style. */}
       <div
+        ref={hostRef}
         className='relative bg-deck-surface overflow-hidden'
+        // `--deck-expose-scale` is absent here on purpose: `useExposeScale` writes it directly so it is in
+        // place before the FLIP measures. The rest are constants.
         style={
           {
             ...(overscrollPx > 0 && { '--deck-overscroll': `${Math.round(overscrollPx)}px` }),
             ...(expose && {
-              '--deck-expose-scale': exposeScale,
               '--deck-expose-inset': `${EXPOSE_INSET_PX}px`,
               '--deck-expose-gutter': `${EXPOSE_GUTTER_PX}px`,
             }),
@@ -1360,10 +1489,6 @@ export const DeckPlanks = () => {
                       : isSliding
                         ? mx(
                             'h-full gap-(--main-spacing)',
-                            // Unconditional, so the zoom animates *out* of the exposé too — a transition
-                            // added in the same commit that removes the transform has nothing to animate
-                            // from. Keep `duration-300` and `EXPOSE_ZOOM_MS` in step.
-                            'transition-transform duration-300 ease-out',
                             overscrollPx > 0 && 'pe-(--deck-overscroll)',
                             // Anchored left so the row starts where the deck does, and centred vertically
                             // because a uniform scale shrinks the height too. `translate` composes before

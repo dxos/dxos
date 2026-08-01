@@ -167,9 +167,19 @@ Shapes being tried behind flags rather than committed to; see `Settings` in plug
     coordinate space and would re-pile the tiles the exposé means to lay out flat.
   - The fold is a 200ms crossfade, so refolding the whole deck at once paints the planks over the spines
     replacing them. `data-fold-instant` suppresses the transition for that one frame.
-  - `useExposeScroll` must run *before* `useFoldedPlanks` (hooks run in declaration order), and neither the
+  - `useExposeScroll` must run _before_ `useFoldedPlanks` (hooks run in declaration order), and neither the
     hysteresis nor the collapse may fire across the crossing — every trailing plank reads as off-screen at
     the zeroed scroll, which walks attention onto whatever sits near the start.
+  - The transition is FLIP (`useExposeFlip`), not a transition on the stack's own transform. The two
+    layouts — sticky/folded/scrolled versus flat/unfolded/scaled — have no CSS interpolation between them,
+    so animating the transform alone left the rearrangement to snap on frame one: the deck jumped and
+    _then_ grew. Two consequences to preserve:
+    - `capture()` runs in the toggle handler, never an effect. By the time an effect runs React has
+      committed the new layout and the previous geometry is gone.
+    - The scale is written onto the host element imperatively rather than held in React state. As state it
+      arrived a commit later, so the FLIP measured the deck at full size and the zoom _in_ stopped
+      animating. For the same reason the natural width is summed from tile `offsetWidth` and never
+      `stack.scrollWidth`, which counts transformed overflow and mid-FLIP reports a far wider stack.
 - [ ] **Drag planks in the exposé to reorder** — the exposé is where the whole deck is visible, so it is
       the natural place to reorder. The plumbing exists (`incrementPlank` in layout.ts, the
       `increment-start`/`increment-end` adjustments) and `PlankControls` still has those buttons
