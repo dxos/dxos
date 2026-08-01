@@ -14,7 +14,9 @@ import { meta } from './meta';
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('PreviewPlugin', () => {
-  test('modules activate on the expected events', { timeout: 10_000 }, async ({ expect }) => {
+  // Harness boot imports the client chunk on demand; vitest's transform makes that slow on
+  // loaded runners, so the budget matches the other client-backed activation tests.
+  test('modules activate on the expected events', { timeout: 30_000 }, async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), PreviewPlugin()],
     });
