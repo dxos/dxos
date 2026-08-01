@@ -39,7 +39,14 @@ export const LayerSpecs = Capability.lazyModule(
 );
 export const Migrations = Capability.lazyModule(
   'Migrations',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration], provides: [] },
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration],
+    provides: [],
+    // The immediate subscription reads `client.spaces` synchronously, so this needs the forked
+    // client initialization to have completed — the same point it ran at when the startup pass
+    // awaited initialize.
+    activatesOn: ClientEvents.Initialized,
+  },
   () => import('./migrations'),
 );
 export { NavigationHandler } from './navigation-handler';

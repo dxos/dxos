@@ -123,6 +123,9 @@ export default Capability.makeModule(
         Effect.gen(function* () {
           const client = yield* Capability.waitFor(ClientCapabilities.Client);
           const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
+          // The capability is contributed while the forked initialization is still running;
+          // `halo` reads below need it complete.
+          yield* Effect.promise(() => client.waitUntilInitialized());
           yield* finalizeRedirect(client, invoker, params).pipe(
             Effect.catchAll((error) =>
               Effect.gen(function* () {

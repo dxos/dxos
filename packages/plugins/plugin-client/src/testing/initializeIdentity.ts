@@ -29,6 +29,9 @@ export const initializeIdentity = (
   { displayName }: InitializeIdentityOptions = {},
 ): Effect.Effect<InitializeIdentityResult, never, never> =>
   Effect.gen(function* () {
+    // The harness boots with client initialization forked off startup; `halo`/`spaces` are
+    // unreadable until it completes.
+    yield* Effect.promise(() => client.waitUntilInitialized());
     const identity = yield* Effect.promise(() => client.halo.createIdentity(displayName ? { displayName } : {}));
     const personalSpace = yield* Effect.promise(() =>
       client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),

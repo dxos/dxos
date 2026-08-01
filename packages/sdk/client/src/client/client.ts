@@ -104,6 +104,9 @@ export class Client {
 
   private _initialized = false;
 
+  /** Resolves when `initialize()` completes, so consumers can suspend on a forked init. */
+  private readonly _initializedTrigger = new Trigger();
+
   private _resetting = false;
 
   private _runtime?: ClientRuntime;
@@ -192,6 +195,15 @@ export class Client {
    */
   get initialized() {
     return this._initialized;
+  }
+
+  /**
+   * Resolves once `initialize()` has completed. Never rejects — initialization errors surface
+   * from the `initialize()` call itself; consumers of a forked init (e.g. suspending React
+   * hooks) only need the completion signal.
+   */
+  waitUntilInitialized(): Promise<void> {
+    return this._initializedTrigger.wait();
   }
 
   /**
@@ -435,6 +447,7 @@ export class Client {
     }
 
     this._initialized = true;
+    this._initializedTrigger.wake();
     performance.mark('client.initialize:completed');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');

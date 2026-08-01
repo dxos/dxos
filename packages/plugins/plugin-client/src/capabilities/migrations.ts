@@ -21,6 +21,11 @@ export default Capability.makeModule(
     const cancel = registry.subscribe(
       migrationContributions.atom,
       (_migrations: any[]) => {
+        // The activation wave can land while the client is mid-teardown (or not yet through its
+        // forked initialization); spaces are unreadable then and there is nothing to migrate.
+        if (!client.initialized) {
+          return;
+        }
         const migrations = Array.from(new Set(_migrations.flat()));
         const spaces = client.spaces.get();
         // Migrations run fire-and-forget from the subscription callback; an in-flight flush can be

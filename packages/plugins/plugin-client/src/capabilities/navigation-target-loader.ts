@@ -39,6 +39,10 @@ export default Capability.makeModule(
           if (!SpaceId.isValid(spaceId) || !EntityId.isValid(entityId)) {
             return false;
           }
+          // A URL restore can call this while the forked client initialization is still
+          // running; `spaces` is unreadable until it completes, and failing here would
+          // fail-fast the plank to not-found.
+          yield* Effect.promise(() => client.waitUntilInitialized());
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address

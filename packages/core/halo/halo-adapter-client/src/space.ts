@@ -16,7 +16,15 @@ import { SpaceArchive, type SpaceMember } from '@dxos/protocols/proto/dxos/clien
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { SpaceMember as HaloSpaceMember, MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { fromAccess, isOnline, makeFlow, streamFromObservable, toAccess, toShareOptions } from './util';
+import {
+  fromAccess,
+  isOnline,
+  makeFlow,
+  streamFromClientObservable,
+  streamFromObservable,
+  toAccess,
+  toShareOptions,
+} from './util';
 
 const toState = (state: SpaceState): HaloSpace.State => {
   switch (state) {
@@ -88,10 +96,17 @@ const setMemberRole = async (
  * Builds the {@link HaloSpace.Service} implementation over a client's `spaces` proxy.
  */
 export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.Service> => ({
-  spaces: streamFromObservable(client.spaces).pipe(Stream.map((spaces) => (spaces ?? []).map(toSpaceInfo))),
+  spaces: streamFromClientObservable(client, () => client.spaces).pipe(
+    Stream.map((spaces) => (spaces ?? []).map(toSpaceInfo)),
+  ),
 
   get: (id) =>
     Effect.sync(() => {
+      // Pre-initialization none means "unknown", not "no such space" — reactive consumers get
+      // the true reading from the `spaces` stream once initialization completes.
+      if (!client.initialized) {
+        return Option.none();
+      }
       const space = client.spaces.get(id);
       return space ? Option.some(toSpaceInfo(space)) : Option.none();
     }),
@@ -129,10 +144,15 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
-  members: (id) => {
-    const space = client.spaces.get(id);
-    return space ? streamFromObservable(space.members).pipe(Stream.map(toMembers)) : Stream.empty;
-  },
+  members: (id) =>
+    Stream.unwrap(
+      Effect.promise(() => client.waitUntilInitialized()).pipe(
+        Effect.map(() => {
+          const space = client.spaces.get(id);
+          return space ? streamFromObservable(space.members).pipe(Stream.map(toMembers)) : Stream.empty;
+        }),
+      ),
+    ),
 
   updateMemberRole: (id, subject, role) =>
     Effect.tryPromise({
@@ -164,14 +184,19 @@ export const makeSpaceService = (client: Client): Context.Tag.Service<HaloSpace.
       catch: (error) => new SpaceError({ context: { error } }),
     }),
 
-  invitations: (id) => {
-    const space = client.spaces.get(id);
-    return space
-      ? streamFromObservable(space.invitations).pipe(
-          Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'space'))),
-        )
-      : Stream.empty;
-  },
+  invitations: (id) =>
+    Stream.unwrap(
+      Effect.promise(() => client.waitUntilInitialized()).pipe(
+        Effect.map(() => {
+          const space = client.spaces.get(id);
+          return space
+            ? streamFromObservable(space.invitations).pipe(
+                Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'space'))),
+              )
+            : Stream.empty;
+        }),
+      ),
+    ),
 
   export: (id) =>
     Effect.tryPromise({

@@ -34,7 +34,9 @@ export default Capability.makeModule(() =>
           [client],
         );
         return (
-          <ClientProvider client={client}>
+          // `suspend`: initialization is forked by the client capability; consumers suspend at
+          // their own Suspense boundaries instead of blanking the whole tree behind a fallback.
+          <ClientProvider client={client} suspend>
             <HaloProvider services={services}>{children}</HaloProvider>
           </ClientProvider>
         );

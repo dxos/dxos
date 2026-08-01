@@ -30,6 +30,21 @@ export const streamFromObservable = <T>(observable: MulticastObservable<T>): Str
     return Effect.sync(() => subscription.unsubscribe());
   }).pipe(Stream.orDie);
 
+/**
+ * Like {@link streamFromObservable}, but the observable is resolved lazily after the client
+ * has initialized — `client.halo`/`client.spaces` throw before then, and the adapters must be
+ * constructible over a client whose forked `initialize()` is still running. Emissions begin at
+ * initialization (with the observable's then-current value), so consumers see "no value yet"
+ * as silence, never as a false empty reading.
+ */
+export const streamFromClientObservable = <T>(
+  client: { waitUntilInitialized(): Promise<void> },
+  getObservable: () => MulticastObservable<T>,
+): Stream.Stream<T> =>
+  Stream.unwrap(
+    Effect.promise(() => client.waitUntilInitialized()).pipe(Effect.map(() => streamFromObservable(getObservable()))),
+  );
+
 const TERMINAL_STATES: ReadonlySet<ClientInvitation.State> = new Set([
   ClientInvitation.State.SUCCESS,
   ClientInvitation.State.CANCELLED,
