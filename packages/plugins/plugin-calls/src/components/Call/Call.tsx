@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability, useOptionalCapability } from '@dxos/app-framework/ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { useDebugMode } from '#hooks';
@@ -72,9 +72,15 @@ CallViewport.displayName = CALL_VIEWPORT_NAME;
 //
 
 // Resolves the manager directly (not via Call.Root): audio playback is global and is mounted at
-// the app root (react-root) outside any Call.Root.
+// the app root (react-root) outside any Call.Root. The manager rides the client-initialized
+// event and this root mounts eagerly, so read it optionally and render nothing until it exists
+// (an empty audio sink is correct while there is no call).
 const CallAudio = () => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = useOptionalCapability(CallsCapabilities.Manager);
+  return call ? <CallAudioStream call={call} /> : null;
+};
+
+const CallAudioStream = ({ call }: { call: CallManager }) => {
   const audioTracksToPlay = useAtomValue(call.audioTracksToPlayAtom);
   return <AudioStream tracks={audioTracksToPlay} />;
 };
