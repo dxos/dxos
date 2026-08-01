@@ -135,6 +135,10 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
           manager.activate(ActivationEvents.Startup),
         ]),
       );
+      // Mirror the host contract: after startup the host fires the after-startup gate
+      // (composer does so at idle). Tests fire it synchronously so DeferredStartup-gated
+      // modules are present, matching what the app converges to.
+      await EffectEx.runAndForwardErrors(manager.activate(ActivationEvents.DeferredStartup));
     } catch (err) {
       await EffectEx.runAndForwardErrors(manager.shutdown()).catch(() => undefined);
       throw err;
