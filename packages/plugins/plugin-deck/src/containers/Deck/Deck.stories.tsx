@@ -17,7 +17,16 @@ import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
+import { random } from '@dxos/random';
+import { useThemeContext } from '@dxos/react-ui';
+import { Editor } from '@dxos/react-ui-editor';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import {
+  createBasicExtensions,
+  createMarkdownExtensions,
+  createThemeExtensions,
+  decorateMarkdown,
+} from '@dxos/ui-editor';
 import { Position, trim } from '@dxos/util';
 
 import { OperationHandler } from '#capabilities';
@@ -45,6 +54,55 @@ const STORY_ITEMS: StoryItem[] = [
   { id: 'story-item-5', title: 'References', icon: 'ph--bookmarks--regular' },
   { id: 'story-item-6', title: 'Archive', icon: 'ph--archive--regular' },
 ];
+
+// Seeded, so every plank's content is the same on each run — a plank that regenerated its text would
+// change height and make the deck's scroll and fold geometry irreproducible between runs.
+random.seed(1234);
+
+/** Markdown long enough that a plank scrolls, so the deck is exercised against real article content. */
+const generateContent = (title: string): string =>
+  [
+    `# ${title}`,
+    ...Array.from({ length: 8 }, (_, index) =>
+      index % 3 === 2
+        ? `## ${random.lorem.words(3)}\n\n${random.lorem.paragraph()}`
+        : random.lorem.paragraphs(2).replaceAll('\n', '\n\n'),
+    ),
+  ].join('\n\n');
+
+/** Generated once per title up front, so a re-render never redraws from the shared seeded generator. */
+const STORY_CONTENT: Record<string, string> = Object.fromEntries(
+  STORY_ITEMS.map((item) => [item.title, generateContent(item.title)]),
+);
+
+const contentFor = (title: string): string => STORY_CONTENT[title] ?? `# ${title}`;
+
+/**
+ * A plank's article: a real markdown editor rather than placeholder copy, so the deck is exercised
+ * against content that scrolls, holds focus and competes for the plank's height. The testid lives on
+ * the container because `Editor.View` renders its own div and drops unknown props.
+ */
+const TestArticle = ({ title, content }: { title: string; content: string }) => {
+  const { themeMode } = useThemeContext();
+  const extensions = useMemo(
+    () => [
+      createBasicExtensions(),
+      createThemeExtensions({ themeMode }),
+      createMarkdownExtensions(),
+      decorateMarkdown(),
+    ],
+    [themeMode],
+  );
+
+  return (
+    <Editor.Root>
+      {/* `Pane.Content` constrains height but does not scroll, so the article owns its own scrolling. */}
+      <div role='none' className='h-full overflow-y-auto' data-testid='story.article' data-title={title}>
+        <Editor.View value={content} extensions={extensions} classNames='dx-container' />
+      </div>
+    </Editor.Root>
+  );
+};
 
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
 const storyDeckSettings = Capability.makeModule(() =>
@@ -135,16 +193,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
             filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
             component: ({ data }) => {
               const subject = data.subject as StoryItem | undefined;
-              const title = subject?.title ?? data.attendableId;
-              return (
-                <div className='grid content-start gap-2 p-4' data-testid='story.article' data-title={title}>
-                  <p className='text-sm text-description'>Story article surface</p>
-                  <p>
-                    Placeholder content for <span className='font-medium'>{title}</span> (
-                    <span className='font-mono text-xs'>{data.attendableId}</span>).
-                  </p>
-                </div>
-              );
+              const title = subject?.title ?? String(data.attendableId);
+              return <TestArticle title={title} content={contentFor(title)} />;
             },
           }),
           Surface.create({
