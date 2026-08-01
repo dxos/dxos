@@ -90,6 +90,17 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
 ## Defects
 
+- [ ] **Seeding a collection highlights every child in the navtree** — the navtree marks anything in
+      `layout.active` (`NavTreeContainer.tsx:56`), and seeding puts all the children there, so clicking
+      a collection paints its whole subtree. Wanted: the collection reads as selected, not its contents.
+      Needs a decision on what "active" means for planks the user did not open individually — either
+      the deck reports the seed root instead of the seeded planks, or the navtree distinguishes
+      "attended" from "open". Touches the `Layout` capability contract either way.
+- [ ] **Whitespace right of the last plank at wide viewports** — reported from a ~2000px window; not
+      reproducible at 1600px, where the geometry is packed tight (plank 1 `350→1150`, spine pinned
+      flush at `1507→1551` against a viewport ending at 1551). Measure at the reporting width before
+      theorising; likely interacts with `useMaxPlankWidth`'s cap or the trailing-pile inset.
+
 - [ ] **Fullscreen: the back button is obscured by the plank's toolbar** — `ExitFullscreenButton` is
       `fixed top-2 right-2 z-[1]` (`DeckViewport.tsx`), which puts it in the same corner as the plank's
       own trailing toolbar controls and only one stacking level up. Either raise it above the plank
