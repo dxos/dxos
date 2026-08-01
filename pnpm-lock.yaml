@@ -2802,6 +2802,9 @@ importers:
       '@dxos/plugin-table':
         specifier: workspace:*
         version: link:../../plugins/plugin-table
+      '@dxos/plugin-terra':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-terra
       '@dxos/plugin-theme':
         specifier: workspace:*
         version: link:../../plugins/plugin-theme
@@ -5980,6 +5983,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/extractor':
+        specifier: workspace:*
+        version: link:../extractor
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../extractor-lib
@@ -10567,6 +10573,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/extractor-lib':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor-lib
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -10591,6 +10600,9 @@ importers:
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../plugin-routine
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -16667,6 +16679,9 @@ importers:
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../common/errors
+      '@dxos/extractor':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor
       '@dxos/halo':
         specifier: workspace:*
         version: link:../../core/halo/halo
@@ -16748,6 +16763,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
+      '@dxos/react-ui-tabs':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-tabs
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -16788,6 +16806,9 @@ importers:
       '@babel/core':
         specifier: 'catalog:'
         version: 7.28.0
+      '@dxos/extractor-lib':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor-lib
       '@dxos/lit-ui':
         specifier: workspace:*
         version: link:../../ui/lit-ui

@@ -478,6 +478,37 @@ term Topic may be renamed `Project` and generalized beyond email (threads, task 
       created via the space's global create menu — Topic is registered — or the section `+` once ≥1 exists.
       An always-visible bespoke node is an option if wanted.)
 
+## Contact extraction — recipients of sent mail (from object-deduplication 4.5a)
+
+Contact extraction is now an allow-list (`shouldExtractContact`,
+`@dxos/extractor-lib/selection.ts`): a sender earns a `Person` only when
+
+1. `signals.outbound === true` — we sent or replied to the address, or
+2. its domain matches an `Organization` the space already knows,
+
+and never when the address or message is automated. **Nothing sets `outbound`**, so in practice only
+rule 2 fires and a real human who mails you from an unknown domain gets no contact — stricter than
+intended, and stricter than the pre-existing "extract every sender" behaviour.
+
+It was left unwired because it is a new code path, not a missing field: extraction reads
+`message.sender`, but "we replied to this address" is a fact about a _recipient_. On a sent message
+the sender is the mailbox owner, so the people who matter are in `to`/`cc`, and recipients are not
+extracted at all today. This belongs here rather than in the dedup project — it is a question about
+which correspondents matter, which is what this research stream is about.
+
+- [ ] **Extract recipients of sent mail.** When a message carries the `sent` system tag, build
+      contacts from `properties.to` / `properties.cc` (the Gmail mapper already records both).
+      Wrinkles: they are raw header strings needing address parsing, and `pipeline-email` is
+      provider-agnostic so the sent-tag URI has to arrive as a stage option from `plugin-inbox`.
+      Preferred over the alternative below: same coverage, no new index, and it also captures people
+      you have mailed who never replied.
+- [ ] **Alternative — correspondence check on inbound senders.** Keep extracting only senders, but
+      set `outbound` by asking "have we ever sent to this address?". Fits the current shape better,
+      but needs an index of sent-to addresses that does not exist.
+- [ ] **Decide the default for an unknown human sender** once one of the above lands: allow-list only
+      (today), or extract on first reply. Relevant to the sender-type triage in REPORT §5 — the
+      person/org classifier is the other input to this decision.
+
 ## Bugs
 
 - [ ] **MailboxArticle search/filtering isn't working.** The filter/query editor in

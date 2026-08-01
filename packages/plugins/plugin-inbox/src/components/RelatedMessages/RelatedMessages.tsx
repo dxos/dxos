@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
+
+import { formatAge } from '../../util';
 
 export type RelatedMessagesProps = {
   messages: Message.Message[];
@@ -17,6 +18,8 @@ export type RelatedMessagesProps = {
 
 export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // One `now` for the whole list, so rows can't disagree about how old they are.
+  const now = useMemo(() => new Date(), [messages]);
   if (!messages.length) {
     return null;
   }
@@ -27,6 +30,7 @@ export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesPro
         <Card.Action
           key={message.id}
           label={message.properties?.subject}
+          annotation={message.created ? formatAge(new Date(message.created), now) : undefined}
           icon='ph--envelope-simple--regular'
           actionIcon='ph--arrow-right--regular'
           onClick={() => onMessageClick?.(message)}

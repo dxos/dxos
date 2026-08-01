@@ -69,6 +69,7 @@ import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
+import { TerraPlugin } from '@dxos/plugin-terra/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
@@ -208,6 +209,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     StackPlugin(),
     SupportPlugin({ helpSteps: steps }),
     TablePlugin(),
+    TerraPlugin(),
     ThreadPlugin(),
     TranscriptionPlugin(),
 
