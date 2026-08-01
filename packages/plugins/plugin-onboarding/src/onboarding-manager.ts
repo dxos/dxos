@@ -121,12 +121,11 @@ export class OnboardingManager {
     // a "no edge access" warning + request-access form).
     if (this._identity) {
       // A device invitation targets a different identity, so accepting it requires a storage
-      // reset; confirm via the reset dialog rather than dropping the invitation silently.
+      // reset; confirm via the reset dialog rather than dropping the invitation silently. Stop
+      // here — no recovery/agent provisioning for an identity the user may be about to abandon.
       if (this._deviceInvitationCode !== undefined) {
         await this._confirmJoinNewIdentity();
-        if (aborted()) {
-          return;
-        }
+        return;
       }
       // For users who already have a local identity but a fresh `?email=...`
       // URL param: hand it to the redeem endpoint, which is idempotent (the
