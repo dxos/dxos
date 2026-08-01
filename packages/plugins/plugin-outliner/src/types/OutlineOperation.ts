@@ -10,11 +10,9 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { Task } from '@dxos/types';
+import { Outline, Task } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import * as Outline from './Outline';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 

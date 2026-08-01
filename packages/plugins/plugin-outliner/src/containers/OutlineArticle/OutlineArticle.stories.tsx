@@ -16,11 +16,10 @@ import { Panel, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { ExternalProject, Task } from '@dxos/types';
+import { Outline, Task, TaskSet } from '@dxos/types';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { translations } from '#translations';
-import { Outline } from '#types';
 
 import { OutlineArticle } from './OutlineArticle';
 
@@ -93,7 +92,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Text.Text, Outline.Outline, Task.Task, ExternalProject.ExternalProject],
+      types: [Text.Text, Outline.Outline, Task.Task, TaskSet.TaskSet],
     }),
   ],
   parameters: {

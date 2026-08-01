@@ -12,7 +12,6 @@ import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
 import * as Actor from './Actor';
-import * as Person from './Person';
 import * as TaskSet from './TaskSet';
 
 export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.2.0'))(
@@ -88,20 +87,3 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 ) {}
 
 export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);
-
-/**
- * Task v0.1.0 — `assigned` was a bare Person ref and `project` pointed at `ExternalProject`.
- * Kept solely so the migration can read existing data. Never constructed.
- * @deprecated Use {@link Task}.
- */
-export class LegacyTask extends Type.makeObject<LegacyTask>(DXN.make('org.dxos.type.task', '0.1.0'))(
-  Schema.Struct({
-    title: Schema.String,
-    priority: Schema.optional(Schema.Literal('none', 'low', 'medium', 'high', 'urgent')),
-    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done')),
-    assigned: Schema.optional(Ref.Ref(Person.Person)),
-    estimate: Schema.optional(Schema.Number),
-    description: Schema.optional(Schema.String),
-    project: Schema.optional(Ref.Ref(TaskSet.LegacyExternalProject)),
-  }),
-) {}

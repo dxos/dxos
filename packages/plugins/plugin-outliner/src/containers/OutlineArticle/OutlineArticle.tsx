@@ -13,11 +13,11 @@ import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Panel, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Task } from '@dxos/types';
+import { Outline as OutlineType, Task } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
 import { meta } from '#meta';
-import { Outline as OutlineType } from '#types';
+import { OutlineTasks } from '#types';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline>;
 
@@ -42,7 +42,7 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
         return undefined;
       }
 
-      const task = await OutlineType.createTask(outline, space.db, text);
+      const task = await OutlineTasks.createTask(outline, space.db, text);
       return { label: task.title, url: Obj.getURI(task).toString() };
     },
     [outline, space],
@@ -55,12 +55,12 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
   // Task titles are edited independently of the document, so the link text is reconciled from the
-  // live objects rather than trusted as written. Scoped to the outline's own project so unrelated
+  // live objects rather than trusted as written. Scoped to the outline's own task set so unrelated
   // tasks in the space neither load nor retrigger the sync.
-  const project = outline.project?.target;
+  const taskSet = outline.taskSet?.target;
   const tasks = useQuery(
     space?.db,
-    project ? Filter.type(Task.Task, { project: Ref.make(project) }) : Filter.nothing(),
+    taskSet ? Filter.type(Task.Task, { taskSet: Ref.make(taskSet) }) : Filter.nothing(),
   );
   const resolveLinkLabel = useMemo(() => {
     const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));

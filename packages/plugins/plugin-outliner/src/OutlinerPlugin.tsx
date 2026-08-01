@@ -8,7 +8,9 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Journal, Outline } from '#types';
+import { Outline } from '@dxos/types';
+
+import { Journal } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';

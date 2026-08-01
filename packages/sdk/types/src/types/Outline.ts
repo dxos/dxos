@@ -29,16 +29,3 @@ export const make = ({ name, content }: { name?: string; content?: string } = {}
     content: Ref.make(Text.make({ content })),
   });
 };
-
-/**
- * Outline v0.1.0 — `project` pointed at `ExternalProject`. Kept solely so the migration can read
- * existing data. Never constructed.
- * @deprecated Use {@link Outline}.
- */
-export class LegacyOutline extends Type.makeObject<LegacyOutline>(DXN.make('org.dxos.type.outline', '0.1.0'))(
-  Schema.Struct({
-    name: Schema.optional(Schema.String),
-    content: Ref.Ref(Text.Text),
-    project: Schema.optional(Ref.Ref(TaskSet.LegacyExternalProject)),
-  }),
-) {}

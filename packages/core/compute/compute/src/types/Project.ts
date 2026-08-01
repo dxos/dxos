@@ -8,17 +8,28 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
+import * as Plan from './Plan';
 import * as Routine from './Routine';
 import type * as Skill from './Skill';
+
+/** Lightweight inline goal: per-item status and addressability without document ceremony. */
+export const Goal = Schema.Struct({
+  id: Schema.String,
+  text: Schema.String,
+  status: Schema.optional(Schema.Literal('open', 'met', 'dropped')),
+});
+
+export type Goal = Schema.Schema.Type<typeof Goal>;
 
 /**
  * A user-facing container for interactive, long-running work: instructions (skills + commands),
  * routines, artifacts, and AI chat sessions in project context. Successor to `Topic`.
  * Chats and agents attach via relations/queries (assistant-toolkit depends on compute, so no typed refs here).
  */
-export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.2.0'))(
+export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.3.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
@@ -31,6 +42,18 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
     /** Owned collection of artifacts (documents, outliners, tables, ...) managed by the project. */
     artifacts: Ref.Ref(Collection.Collection).pipe(Schema.optional),
+
+    /** What done means for this project. */
+    goals: Schema.optional(Schema.Array(Goal)),
+
+    /** Ad hoc notes/checklist. */
+    outline: Schema.optional(Ref.Ref(Outline.Outline)),
+
+    /** Owned (or adopted synced) task container; membership is the `Task.taskSet` backref. */
+    tasks: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
+
+    /** Standing, cross-conversation plan (distinct from per-chat `Chat.plan`). */
+    plan: Schema.optional(Ref.Ref(Plan.Plan)),
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),
