@@ -407,17 +407,21 @@ the mechanism.
       `{property, theirs}` as data instead of overwriting — winner intact, loser preserved, record
       replicates. Non-conflict path (`status`→`done`, no direct edit) folds cleanly with no record.
       Consequence: a real fold stores two heads per migration event, not one.
-- [ ] **Claim 6 · fan-out converges via identity keys + the merge engine — NOT derived ids.**
-      Premise falsified by the object-merging research (PR #12410,
-      `.agents/projects/object-merging/DESIGN.md` §3.1/§4.5): two peers minting the same object id
-      create two Automerge _documents_ with no shared ancestry; `links[id]` is LWW and the losing
-      document is **silently orphaned** — their "collision class 1", an explicit error condition.
-      Corrected mechanism: random id + derived **identity key** (`meta.key+version`,
-      `<lensId>:<sourceId>:<role>`); duplicate creations collapse through their merge engine
-      (min-`EntityId` winner, `mergedInto` redirect, transitive resolver). The migration case is the
-      engine's best case — deterministic transform ⇒ identical duplicate content ⇒ field-granularity
-      lossiness never bites. Their Phase 0 spike IS this claim's test; verify the class-1 orphaning
-      once here (cheap) and otherwise adopt rather than duplicate their harness.
+- [x] **Claim 6 · fan-out converges via identity keys + the merge engine — NOT derived ids. —
+      VERIFIED, and class 1 is WORSE than the object-merging research recorded.** 6a
+      (`migration-research-entities.test.ts`): two partitioned peers minting the same `EntityId` do
+      not converge on one LWW winner — each peer's `_loadLinkedObjects` caches the FIRST url it
+      bound for the id in `_objectDocumentHandles` and only logs-and-drops later `links[id]`
+      changes, so the peers **permanently disagree** (each sees only its own write, deterministic
+      across repeated heal rounds, no error ever thrown). It is not the map that diverges (a merged
+      register computes identically everywhere) — it is a first-writer-wins client cache on top of
+      it that never re-observes. Consequence: no repair mechanism can rely on observing `links`
+      settle; derived object ids are dead as a convergence route, exactly as their §4.5 decided but
+      for a stronger reason — FLOW THIS BACK to object-merging. 6b: random id + shared
+      `meta.key`/`meta.version` stamped at creation (`[Obj.Meta]`) — both duplicates replicate to
+      both peers, both addressable via `Filter.key(key, { version })`, meta replicates, nothing
+      lost: the substrate contract the (still unbuilt — zero engine code in-repo) merge engine
+      assumes holds. Collapse itself deferred to their Phase 0.
 - [x] **Claim 7 · what is the stable key for 1 → N? — ANSWERED: automerge element identity is
       convergent but not durable; a durable key must be stamped in the element.**
       `A.getObjectId` on a struct-valued list element (never before called anywhere in DXOS;
@@ -430,10 +434,12 @@ the mechanism.
       element at creation. The rich-text lens's block identity inherits the same verdict — cut/paste
       or drag of a block mints a new ObjID, so "stable block identity via Automerge cursors"
       (Phase 6) needs stamped ids too, not bare list identity.
-- [ ] **Claim 8 · does a dangling relation degrade gracefully?** With no cross-object transaction
-      there is a window where a created relation's target does not exist yet. Strong-deps suggests it
-      simply does not surface; confirm. If it instead errors or blocks the subtree, write ordering
-      becomes a hard requirement on the runner rather than a nicety.
+- [x] **Claim 8 · does a dangling relation degrade gracefully? — YES, confirmed cross-peer.**
+      A relation created with two brand-new endpoints under partition surfaces on the other peer
+      with both endpoints resolvable after heal; queries never throw at any point (every poll
+      wrapped to catch), and pre-heal the relation is simply absent from results. Matches the
+      existing single-peer evidence (`strong-deps-stall.test.ts`: excluded, not errored,
+      self-heals). Write ordering is NOT a hard requirement on the runner.
 - [ ] **Claim 9 · fan-out under a late write.** The §10.1 scenario applied to a split: an offline peer
       writes the _source_ property after the object was split. With identity keys, fold-forward needs
       **no find-or-create atomicity**: each folding peer creates with the derived key and the merge
