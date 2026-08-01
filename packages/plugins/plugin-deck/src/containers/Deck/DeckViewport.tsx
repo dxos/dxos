@@ -934,8 +934,10 @@ const ExposeDeck = ({
           real proportions and text reflow. Its height is the planks' own content height, which is why the
           row is centred rather than stretched. */}
       <div
-        className='flex gap-(--main-spacing) h-full'
-        style={{ inlineSize: `${naturalWidthPx}px`, transform: `scale(${scale})`, transformOrigin: 'center' }}
+        // `min-h-0`, or the flex item's automatic minimum lets the planks' content push the row past the
+        // viewport height, and centring an overflowing item pushes it off the bottom.
+        className='flex gap-(--main-spacing) h-full min-h-0 shrink-0'
+        style={{ inlineSize: `${naturalWidthPx}px`, transform: `scale(${scale})`, transformOrigin: 'left center' }}
       >
         {planks.map((id, index) => (
           <button
