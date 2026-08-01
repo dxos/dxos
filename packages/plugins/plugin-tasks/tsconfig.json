@@ -91,6 +91,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-task"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {

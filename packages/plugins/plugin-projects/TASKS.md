@@ -366,6 +366,10 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       chips, role-aware: bare list as Section embed, surface-registered, story);
       ProjectArticle **Goals** (read-only GoalList) + **Tasks** (per-TaskSet Section surface
       embed — composition via surfaces, no cross-imports) sections.
+      `@dxos/react-ui-task` (private): reusable `TaskList` with CRUD callbacks (create row,
+      done toggle, delete, select; status grouping; AssigneeChip) — TaskSetArticle consumes it
+      with CRUD wired to TaskOperation verbs; storybook smoke 2/2 in Chromium. Candidate second
+      consumers: plugin-assistant chat task list (currently checklist-form), kanban adoption.
       REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
       goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
 - [ ] **Phase 4 — MCP verbs** — operation sets per MILESTONE-5.md §7.2 + McpToolAnnotation;

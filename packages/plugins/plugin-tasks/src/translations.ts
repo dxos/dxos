@@ -37,6 +37,7 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Tasks',
         'task-set.tasks.label': 'Tasks',
+        'task-create.placeholder': 'Add task',
         'task-status.todo.label': 'Todo',
         'task-status.in-progress.label': 'In progress',
         'task-status.done.label': 'Done',
