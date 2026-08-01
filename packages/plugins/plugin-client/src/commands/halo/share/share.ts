@@ -42,17 +42,17 @@ export const handler = Effect.fn(function* ({
           // Copy auth code to clipboard
           yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
 
-          if (!json) {
-            yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
-          }
+          const url = new URL(host);
+          url.searchParams.append('deviceInvitationCode', invitationCode);
 
           if (!json) {
+            yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
             yield* Console.log(`\nInvitation: ${invitationCode}\n`);
+            // Print the joinable URL even when not opening so it can be pasted manually.
+            yield* Console.log(`\nURL: ${url.toString()}\n`);
           }
 
           if (open) {
-            const url = new URL(host);
-            url.searchParams.append('deviceInvitationCode', invitationCode);
             yield* openBrowser(url.toString()).pipe(
               Effect.catchAll(() => Console.error(`Failed to open browser: ${url.toString()}`)),
             );
