@@ -366,18 +366,26 @@ largely object-merging's own Phase 0 spike, adopted rather than duplicated) and 
 overlap M1. Claim numbers are referenced from M1/M2 — grouped, not renumbered. DESIGN.md §10.3 has
 the mechanism.
 
-- [ ] **Harness** — two peers, one object, a lens migration `A → B`. Peer 1 migrates while peer 2 is
-      partitioned; peer 2 writes the old shape; reconnect. Extends the existing two-peer setup in
-      `echo-client-e2e/src/lens.test.ts`.
-- [ ] **Claim 1 · does the late write survive the merge at all?** If the migration deletes old
-      properties, does a later write to a deleted key survive, or does the delete win? **If deletes
-      win, migrations must not delete** — old properties stay until a separate compaction. Answer this
-      first; it constrains everything downstream.
-- [ ] **Claim 2 · can late writes be told apart from consumed ones?** Store the migration's automerge
-      heads in `EntityMeta`; `A.diff(doc, migrationHeads, current)` restricted to source-schema
-      properties should name exactly the late writes. `A.getHeads`/`A.diff` are already used in
-      `echo-client/src/echo-handler/edit-history.ts`. **Test it across an epoch/compaction** — history
-      rewriting is the likeliest way this breaks.
+- [x] **Harness** — `echo-client-e2e/src/migration-research.test.ts`: two peers via
+      `EchoTestBuilder` + `TestReplicationNetwork`, real transport-level partition via
+      `removeReplicator` + re-add of _fresh_ replicator instances. Required fixing a genuine
+      `test-replicator.ts` bug (connections opened via bare `onConnectionOpen` were never registered,
+      so disconnect/teardown silently no-opped and reconnects tripped an invariant).
+- [x] **Claim 1 · does the late write survive the merge at all? — SURVIVES.** (a) A partitioned
+      peer's concurrent write to a key the migration deleted wins the merge on both peers (a delete
+      supersedes only ops it causally saw); (b) a synced old client's later write trivially re-adds
+      the key. Deletes don't destroy late writes — but migrations still should not delete, since the
+      fold needs the source property present (claims 2/5 keep old props).
+- [x] **Claim 2 · can late writes be told apart from consumed ones? — YES.** Heads recorded before
+      the migration's writes; `A.diff(doc, migrationHeads, current)` filtered to source paths names
+      exactly the late write — never the consumed pre-migration values, never the migration's own
+      target writes. Iterated fold proven: advance stored heads at fold time; a second partition +
+      second late edit shows the next diff names only the new edit, the folded one never reappears.
+      Doc structure: `objects.<id>.data.<prop>`; property name at fixed path index 3; one string
+      write = `put ''` + `splice` (strings are Automerge Text). **Epoch caveat (real finding):**
+      `A.diff` against heads a doc has never seen does NOT throw — it silently returns a full diff,
+      so an epoch re-root would make everything look late; a fold must ancestry-check its stored
+      heads before trusting the diff. Full epoch machinery not exercised (not in this harness).
 - [ ] **Claim 3 · does folding forward converge?** Two peers both notice the same late write and both
       fold it. Deterministic minimal writes should produce identical changes; prove it rather than
       assume it.

@@ -69,15 +69,19 @@ export class TestReplicationNetwork extends Resource {
         replicator,
         otherReplicator,
       );
-      await replicator.context!.onConnectionOpen(connection1);
-      await otherReplicator.context!.onConnectionOpen(connection2);
+      // `addConnection` (not a bare `onConnectionOpen` call) so the connection is registered on
+      // both replicators — `_disconnectReplicator` and `TestReplicationNetwork._close` walk this
+      // same `connections` set to tear connections down, and silently no-op without it.
+      await replicator.addConnection(connection1);
+      await otherReplicator.addConnection(connection2);
     }
   }
 
   private async _disconnectReplicator(replicator: TestReplicator): Promise<void> {
+    // Set tolerates deleting the current element mid-iteration.
     for (const connection of replicator.connections) {
-      await replicator.context!.onConnectionClosed(connection);
       await connection.otherSide!.owningReplicator!.removeConnection(connection.otherSide!);
+      await replicator.removeConnection(connection);
     }
   }
 
