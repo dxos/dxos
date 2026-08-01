@@ -17,5 +17,6 @@ export const PresenterContext: Context<PresenterContextType> = createContext<Pre
 });
 
 export * as PresenterCapabilities from './PresenterCapabilities';
+export * as PresenterEvents from './PresenterEvents';
 export * as PresenterOperation from './PresenterOperation';
 export * as Settings from './Settings';

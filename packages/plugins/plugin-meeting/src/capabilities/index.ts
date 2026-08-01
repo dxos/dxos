@@ -2,35 +2,34 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 
-import { MeetingCapabilities } from '#types';
+import { MeetingCapabilities, MeetingEvents } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
   requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: MeetingEvents.Start,
 });
 export const CallExtension = Capability.lazyModule(
   'CallExtension',
   {
     requires: [MeetingCapabilities.State],
     provides: [CallsCapabilities.EventHandler],
-    activatesOn: ActivationEvents.DeferredStartup,
+    activatesOn: MeetingEvents.Start,
   },
   () => import('./call-extension'),
 );
 export const MeetingSettings = Capability.lazyModule(
   'MeetingSettings',
-  { provides: [MeetingCapabilities.Settings], activatesOn: ActivationEvents.DeferredStartup },
+  { provides: [MeetingCapabilities.Settings], activatesOn: MeetingEvents.Start },
   () => import('./settings'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ActivationEvents.DeferredStartup,
+  activatesOn: MeetingEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
@@ -40,7 +39,7 @@ export const MeetingState = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry],
     provides: [MeetingCapabilities.State],
-    activatesOn: ActivationEvents.DeferredStartup,
+    activatesOn: MeetingEvents.Start,
   },
   () => import('./state'),
 );
