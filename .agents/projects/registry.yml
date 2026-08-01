@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: mcp
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-07-31
+    summary: Claude ⇔ MCP ⇔ EDGE ⇔ Composer loop — local edge+mcp miniflare stack, composer sync, document round-trip; end goal is the task-planning skill using Composer documents for DESIGN/TASKS.
+    tasks: .agents/projects/mcp/TASKS.md
+    design: agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md
+    prs: []
+    resume: 'Spec approved (milestone 1 = verified local document round-trip; edge branches allowed for fixes; cloudflared tunnel for Claude Desktop; secrets self-served via op). Next: leg 1 — composer dev server syncing with local edge, user watching.'
   - name: email-sync-stability
     status: active
     user: mykola
