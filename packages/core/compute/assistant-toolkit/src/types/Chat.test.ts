@@ -6,7 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions } from '@dxos/compute';
+import { Instructions, Plan } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -14,7 +14,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
-import { Chat, Plan } from '../types';
+import { Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 

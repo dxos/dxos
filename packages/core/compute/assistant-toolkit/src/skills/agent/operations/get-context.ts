@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import { Operation, Plan } from '@dxos/compute';
 import { Database, Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { HarnessContextError } from '../../../errors';
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import { GetContext } from './definitions';
 
 const formatPlan = (chat: Chat.Chat) =>

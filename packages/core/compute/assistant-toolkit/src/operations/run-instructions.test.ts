@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import { Instructions, Operation, OperationHandlerSet } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet, Plan } from '@dxos/compute';
 import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
@@ -17,7 +17,6 @@ import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
 import * as Chat from '../types/Chat';
-import * as Plan from '../types/Plan';
 import { RunInstructions } from './definitions';
 import defaultAgentPrompt from './run-instructions';
 

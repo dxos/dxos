@@ -8,13 +8,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import { Operation, Plan } from '@dxos/compute';
 import { getSession } from '@dxos/compute/AgentService';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import { Relay } from './definitions';
 
 /**

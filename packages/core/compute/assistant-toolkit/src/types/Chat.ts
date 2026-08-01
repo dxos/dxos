@@ -8,13 +8,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { Instructions } from '@dxos/compute';
+import { Instructions, Plan } from '@dxos/compute';
 import { Annotation, Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 
 import { HarnessContextError } from '../errors';
-import * as Plan from './Plan';
+
 
 /**
  * AI chat session.

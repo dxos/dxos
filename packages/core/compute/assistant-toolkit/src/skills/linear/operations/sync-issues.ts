@@ -12,7 +12,7 @@ import { Credential, Operation } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
 import { Database, Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Person, Pipeline, Task } from '@dxos/types';
+import { Person, Task, TaskSet } from '@dxos/types';
 
 import { syncObjects } from '../../../sync';
 import { graphqlRequestBody } from '../../../util';
@@ -156,14 +156,14 @@ const mapLinearIssue = (issue: LinearIssue, { teamId }: { teamId: string }): Tas
     },
     title: issue.title ?? undefined,
     description: issue.description ?? undefined,
-    assigned: !issue.assignee ? undefined : Ref.make(mapLinearPerson(issue.assignee, { teamId })),
+    assignee: !issue.assignee ? undefined : { contact: Ref.make(mapLinearPerson(issue.assignee, { teamId })) },
     // TODO(dmaretskyi): Sync those (+ linear team as org?).
     // state: issue.state.name,
 
-    project: !issue.project
+    taskSet: !issue.project
       ? undefined
       : Ref.make(
-          Pipeline.make({
+          TaskSet.make({
             [Obj.Meta]: {
               keys: [
                 {

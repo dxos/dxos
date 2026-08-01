@@ -8,12 +8,12 @@ import * as Effect from 'effect/Effect';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import { Operation, Plan } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { ContentBlock } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat, Plan } from '../../../types';
+import { Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 
 /**

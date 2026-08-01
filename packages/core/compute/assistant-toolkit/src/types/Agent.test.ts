@@ -6,13 +6,13 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions, Skill } from '@dxos/compute';
+import { Instructions, Plan, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
-import { Agent, Chat, Plan } from '../types';
+import { Agent, Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 

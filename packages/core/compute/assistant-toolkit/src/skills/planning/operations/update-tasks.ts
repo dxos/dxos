@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import { Operation, Plan } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { Chat, Plan } from '../../../types';
+import { Chat } from '../../../types';
 import { UpdateTasks } from './definitions';
 
 /**

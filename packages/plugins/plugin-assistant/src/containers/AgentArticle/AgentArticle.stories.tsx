@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Agent, Plan } from '@dxos/assistant-toolkit';
-import { Instructions } from '@dxos/compute';
+import { Agent } from '@dxos/assistant-toolkit';
+import { Instructions, Plan } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';

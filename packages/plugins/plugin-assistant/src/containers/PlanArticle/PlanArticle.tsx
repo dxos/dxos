@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Plan } from '@dxos/assistant-toolkit';
+import { type Plan } from '@dxos/compute';
 import { getSpace } from '@dxos/client/echo';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';

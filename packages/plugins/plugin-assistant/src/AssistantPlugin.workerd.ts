@@ -5,8 +5,8 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
-import { Instructions, Skill } from '@dxos/compute';
+import { Agent, Chat, McpServer, Memory } from '@dxos/assistant-toolkit';
+import { Instructions, Plan, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';

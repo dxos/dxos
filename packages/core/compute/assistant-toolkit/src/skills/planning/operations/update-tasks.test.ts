@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import { Operation, Skill } from '@dxos/compute';
+import { Operation, Plan, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import PlanningSkill from '../skill';
 import { UpdateTasks } from './definitions';
 import { PlanningHandlers } from './index';

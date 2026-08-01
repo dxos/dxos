@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Plan } from '@dxos/assistant-toolkit';
-import { Process, type Trace } from '@dxos/compute';
+import { Plan, Process, type Trace } from '@dxos/compute';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';

@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessage } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
+import { Plan } from '@dxos/compute';
 import { getSession } from '@dxos/compute/AgentService';
 import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -18,7 +19,7 @@ import { Message } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
 import { DelegationHandlers, DelegationSkill } from '../skills';
-import { Agent, Chat, Plan } from '../types';
+import { Agent, Chat } from '../types';
 import { makeDelegationStrategy } from './delegation-strategy';
 
 const { text, toolCall, promptIncludes, scriptedAiService } = ScriptedLanguageModel;

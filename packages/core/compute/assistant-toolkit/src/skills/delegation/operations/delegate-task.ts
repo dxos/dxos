@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import { Operation, Plan } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { Chat, Plan } from '../../../types';
+import { Chat } from '../../../types';
 
 export const DelegateTask = Operation.make({
   meta: {

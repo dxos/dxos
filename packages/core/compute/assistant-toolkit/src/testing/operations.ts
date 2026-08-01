@@ -5,7 +5,7 @@
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Instructions, OperationHandlerSet, Routine, Skill, Trigger } from '@dxos/compute';
+import { Instructions, OperationHandlerSet, Plan, Routine, Skill, Trigger } from '@dxos/compute';
 import { Collection, Feed, Tag } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Employer, Organization, Person } from '@dxos/types';
@@ -19,7 +19,7 @@ import { DelegationHandlers } from '../skills/delegation/operations';
 import { MemoryHandlers } from '../skills/memory/operations';
 import { PlanningHandlers } from '../skills/planning/operations';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations';
-import { Agent, Chat, Plan } from '../types';
+import { Agent, Chat } from '../types';
 import { Memory } from '../types/Memory';
 
 /**

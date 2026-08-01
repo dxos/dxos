@@ -9,13 +9,13 @@ import * as Exit from 'effect/Exit';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
-import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
+import { Operation, OperationHandlerSet, Plan, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 import { PlanningHandlers } from './index';
 

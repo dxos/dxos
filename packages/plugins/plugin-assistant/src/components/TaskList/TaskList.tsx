@@ -4,8 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Plan } from '@dxos/assistant-toolkit';
-import { type Process, type Trace } from '@dxos/compute';
+import { Plan, type Process, type Trace } from '@dxos/compute';
 import { useObject } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Icon, Tag, type ThemedClassName } from '@dxos/react-ui';

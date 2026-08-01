@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import { Operation } from '@dxos/compute';
+import { Operation, Plan } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Plan } from '../../../types';
+
 import INSTRUCTIONS from './update-tasks.md?raw';
 
 // Omit `delegated` and `agentPid` from the LLM-facing schema: these are set by the
