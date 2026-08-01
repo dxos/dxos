@@ -51,6 +51,10 @@ found"`. Either reload Composer (onboarding `_createAgent` registers it) or pass
 Verified 2026-08-01: round-trips into both the browser-pane identity and the user's identity;
 documents appear live in the Composer sidebar and edits flow both ways.
 
+Cleanup (invalidates every key the stub would accept): stop the stack, then delete the local
+plane and its logs — `rm -rf packages/services/edge/.wrangler packages/services/edge/edge-dev.log`
+(re-apply D1 migrations on next start). Browser-side state clears via Composer's storage reset.
+
 ## Path B — `dx mcp connect` after device pairing (intended UX, blocked)
 
 Intended: the CLI is a second device of the browser identity, so `dx mcp connect` needs no raw
