@@ -124,14 +124,24 @@ where fixtures get captured. Three defects found while wiring that up.
       rather than swapping the feed, so restoring a curated (starred) export cannot delete the
       unstarred remainder. `replaceFeed` is kept for Reset, the deliberate way to empty a mailbox.
 
-## Phase 6: Deck plank reuse
+## Phase 6: Deck defects
 
-- [ ] **Opening a message from the mailbox should reuse the message plank** — treat planks like
-      optionally named tabs: opening a second message replaces the one already showing rather than
-      appending another plank. Today each open appends, so reading down a mailbox grows the deck
-      one plank per message. `LayoutOperation.Open` already has the mechanism — `addSubjectsToActiveDeck`'s
-      `key` option replaces an existing plank whose id shares that key prefix — so this is likely a
-      matter of the inbox passing a key rather than new deck machinery.
+- [x] **Opening a message from the mailbox should reuse the message plank** — done in PR #12424:
+      `LayoutOperation.Open` takes an optional `name`, and opening under a name already taken replaces
+      its occupant in place, the way a browser tab is reused. The mailbox passes `<mailbox>/message`, so
+      reading down it no longer grows the deck one plank per message. Backed by `DeckState.plankNames`;
+      replaced the old `key` option, which matched on an id prefix and had no callers.
+- [ ] **Fullscreen: the back button is obscured by the plank's toolbar** — `ExitFullscreenButton` is
+      `fixed top-2 right-2 z-[1]` (`DeckViewport.tsx`), which puts it in the same corner as the plank's
+      own trailing toolbar controls and only one stacking level up. Either raise it above the plank
+      chrome or move it out of that corner; note the plank is supposed to render `headless` in
+      fullscreen, so check why its toolbar is showing there at all.
+- [ ] **Resizing a plank should leave the trailing spines pinned to the viewport edge** — the right-hand
+      pile only holds position because each tile's sticky `insetInlineEnd` is derived from its own width
+      (`DeckViewport`'s tile style), and dragging a plank's width changes the natural offsets of every
+      tile after it. While the drag is in flight the trailing spines drift instead of staying against the
+      right edge. Note `useMaxPlankWidth` caps a plank to exactly the gap the two piles leave it, so the
+      end state is correct — this is the during-drag behaviour.
 
 ## Open questions for the user
 
