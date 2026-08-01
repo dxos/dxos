@@ -14,7 +14,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { addSubjectsToActiveDeck } from '../layout';
+import { addSubjectsToActiveDeck, updatePlankNames } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
@@ -141,13 +141,24 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
-          next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, key: input.key });
+          // A named open reuses the plank already holding that name, the way a browser tab is reused.
+          const replaceId = input.name ? deck.plankNames[input.name] : undefined;
+          next = addSubjectsToActiveDeck(deck.active, input.subject, { pivotId, replaceId });
         } else {
           next = navigateSolo(deck.active);
         }
 
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+        // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
+        // so names whose plank this open closed are dropped rather than left dangling.
+        const plankNames = updatePlankNames(
+          deck.plankNames,
+          next,
+          input.name && input.subject[0] ? { name: input.name, plankId: input.subject[0] } : undefined,
+        );
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+          updateActiveDeck(state, { ...deckUpdates, plankNames }),
+        );
       }
 
       // Schedule side-effects for the newly opened items: scroll into view, expose in

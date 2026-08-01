@@ -124,6 +124,12 @@ where fixtures get captured. Three defects found while wiring that up.
       rather than swapping the feed, so restoring a curated (starred) export cannot delete the
       unstarred remainder. `replaceFeed` is kept for Reset, the deliberate way to empty a mailbox.
 
+## Phases 6-7: Deck — MOVED
+
+The deck work outgrew this ledger and is now its own project. Defects, layout experiments and the
+design record live in [`packages/plugins/plugin-deck/TASKS.md`](../../../packages/plugins/plugin-deck/TASKS.md)
+and its [DESIGN.md](../../../packages/plugins/plugin-deck/DESIGN.md).
+
 ## Open questions for the user
 
 - [ ] **Should `ModuleContainer` support a runtime attendable id for role cells?** — the

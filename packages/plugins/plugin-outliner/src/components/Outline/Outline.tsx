@@ -262,6 +262,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
       return item.onSelect({ view, head: view.state.selection.main.head });
     }
   }, []);
+
   const getView = useCallback(() => view ?? null, [view]);
 
   // Reconcile stale link labels whenever the resolver reports new values (targets rename independently).
@@ -290,7 +291,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>((props, f
 
   return (
     <EditorMenuProvider getView={getView} groups={commandGroups} onSelect={handleSelect}>
-      <div {...composableProps(props)} ref={composeRefs(parentRef, forwardedRef, setRoot)} />
+      <div {...composableProps(props, focusAttributes)} ref={composeRefs(parentRef, forwardedRef, setRoot)} />
     </EditorMenuProvider>
   );
 });
