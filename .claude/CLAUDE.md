@@ -30,6 +30,7 @@
     opening a PR.
   - `$project resume [name]` — reload state at session start, always in the
     session's assigned worktree.
-- Legacy `$track`/`$hydrate`/`$resume` forms map to the same directives.
+- Legacy `$track`/`$hydrate`/`$checkpoint`/`$resume`/`$rehydrate` forms map to
+  the same directives.
 - See the `task-planning` skill for the file format, workflow, registry, and
   handoff steps.

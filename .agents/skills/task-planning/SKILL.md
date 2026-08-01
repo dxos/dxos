@@ -1,6 +1,6 @@
 ---
 name: task-planning
-description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$project` sentinel (any verb — list, new, end, track, hydrate, resume — or a legacy `$track`/`$hydrate`/`$resume` form). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$project` sentinel (any verb — list, new, end, track, hydrate, resume — or a legacy `$track`/`$hydrate`/`$checkpoint`/`$resume`/`$rehydrate` form). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
 ---
 
 # Task Planning

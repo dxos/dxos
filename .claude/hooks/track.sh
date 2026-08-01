@@ -23,7 +23,7 @@ prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '
 legacy_note=''
 
 emit_list() {
-  printf 'TASK-PLANNING PROJECT DIRECTIVE: `$project list` — args: "%s". Operate on .agents/projects/registry.yml per the task-planning skill. Render the active projects as a markdown table whose FIRST column is a 1-based row number (# | name | status | user | host | one-line summary). BY DEFAULT show only projects whose `user` matches the current user (run `whoami`); if none match, say so and show all. Args `all`: list every user. Then tell the user they can reply with a row number to resume that project — a lone number in their next message means "resume the project at that row" (same as `$project resume <name>`). Confirm in one short line.\n' "$1"
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `$project list` — args: "%s". Operate on .agents/projects/registry.yml per the task-planning skill. Render the active projects as a markdown table whose FIRST column is a 1-based row number (# | name | status | user | host | one-line summary). BY DEFAULT show only projects whose `user` matches the current user (run `whoami`); if none match, say so and mention `$project list all` — do not show other users unasked. Args `all`: list every user. Then tell the user they can reply with a row number to resume that project — a lone number in their next message means "resume the project at that row" (same as `$project resume <name>`). Confirm in one short line.\n' "$1"
 }
 
 emit_new() {
@@ -49,7 +49,9 @@ emit_resume() {
 
 # --- unified `$project` sentinel ---------------------------------------------
 
-raw=$(printf '%s\n' "$prompt" | grep -ioE '\$project([[:space:]]+[^[:cntrl:]]*)?' | head -1 || true)
+# Boundary rule: `$project` must not be followed by an identifier char, so
+# `$projects` is prose, while `$project`, `$project list`, and `($project)` fire.
+raw=$(printf '%s\n' "$prompt" | grep -ioE '\$project($|[^a-zA-Z0-9_][^[:cntrl:]]*)' | head -1 || true)
 
 if [ -n "${raw:-}" ]; then
   args=$(printf '%s' "$raw" | sed -E 's/^\$project[[:space:]]*//I')
@@ -98,11 +100,13 @@ if [ -n "${task:-}" ]; then
   emit_track "$task"
 fi
 
-if printf '%s\n' "$prompt" | grep -iqE '\$(hydrate|checkpoint)([[:space:]]|$)'; then
+# Same boundary rule as `$project`: punctuation after the word is fine
+# (`$hydrate,`), identifier continuations are not (`$hydrated`).
+if printf '%s\n' "$prompt" | grep -iqE '\$(hydrate|checkpoint)($|[^a-zA-Z0-9_])'; then
   emit_hydrate
 fi
 
-if printf '%s\n' "$prompt" | grep -iqE '\$(resume|rehydrate)([[:space:]]|$)'; then
+if printf '%s\n' "$prompt" | grep -iqE '\$(resume|rehydrate)($|[^a-zA-Z0-9_])'; then
   resume_name=$(printf '%s\n' "$prompt" \
     | grep -ioE '\$(resume|rehydrate)[[:space:]]+[a-z0-9][a-z0-9-]*' \
     | head -1 \

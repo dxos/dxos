@@ -21,7 +21,8 @@ resume from by row number.
 ## Unified `$project VERB` sentinel + session-start hardening (2026-08-01)
 
 One sentinel for everything: `$project VERB [ARGS]` (list | new | end | track |
-hydrate | resume); legacy `$track`/`$hydrate`/`$resume` map with a nudge. Resume
+hydrate | resume); legacy `$track`/`$hydrate`/`$checkpoint`/`$resume`/`$rehydrate`
+map with a nudge. Resume
 gained an explicit "stay in the assigned worktree" rule after a real session
 adopted another project's worktree via `$resume`.
 
