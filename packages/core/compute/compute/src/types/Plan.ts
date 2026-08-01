@@ -65,6 +65,7 @@ export class Plan extends Type.makeObject<Plan>(DXN.make('org.dxos.type.plan', '
     tasks: Schema.Array(Task),
   }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
+
 export const generateTaskId = (plan: Plan): TaskId => {
   const existingIds = plan.tasks
     .map((task) => {

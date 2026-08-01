@@ -59,10 +59,11 @@ TaskSet {
 }
 ```
 
-- **Membership stays the backref**: `Task.taskSet: Ref<TaskSet>` (§3.2), the pattern #12423
-  established — sync-friendly (a mirror upserts Tasks without rewriting a membership array) and
-  churn-free. Ordering, if the TaskList UI needs it beyond status/priority grouping, comes later
-  as an explicit order field — not a ref array on TaskSet.
+- **Membership is the ECHO parent edge** (REVISED 2026-08-01 from the `Task.taskSet` backref):
+  a TaskSet parents its root tasks (`Query.children()`), still sync-friendly (a mirror upserts
+  Tasks and sets the parent, no membership array to rewrite) and churn-free, plus structural
+  deletion cascade. Ordering, if the TaskList UI needs it beyond status/priority grouping,
+  comes later as an explicit order field — not a ref array on TaskSet.
 - Typename migration plus call sites: `@dxos/types` (`Task.project`), plugin-outliner
   (`Outline.project`, convert-to-task), plugin-github + plugin-linear (`sync.ts`,
   `materialize-target.ts`), plugin-space, plugin-onboarding exemplar, translations.
@@ -72,10 +73,12 @@ TaskSet {
 ```ts
 Task {
   title, description?, priority?               // unchanged
-  status: 'todo' | 'in-progress' | 'done' | 'failed' | 'cancelled'   // +failed +cancelled (Plan parity)
+  status: 'todo' | 'in-progress' | 'done' | 'failed' | 'cancelled'   // +failed +cancelled (agent parity)
   assignee?: Actor                             // WAS assigned: Ref<Person>
   estimate?: number                            // unchanged
-  taskSet?: Ref<TaskSet>                       // WAS project: Ref<ExternalProject>
+  // NO taskSet field (REVISED 2026-08-01): containment is the ECHO parent edge —
+  // a TaskSet parents its root tasks; a task parents its sub-tasks (hierarchy).
+  // One tree: TaskSet → Task → sub-Task; sub-task set membership is transitive.
   // milestone — DEFERRED, see §5
 }
 ```
@@ -97,9 +100,9 @@ Task {
 Project {
   name?, description?, instructions?, routines, artifacts?   // unchanged
   goals?: Goal[]                 // lightweight inline structs
-  outline?: Ref<Outline>         // ad hoc notes/checklist (surface: plugin-tasks)
+  outline?: Ref<Outline>         // ad hoc markdown checklist — the scratch surface (§6)
   taskSets: Ref<TaskSet>[]       // owned (or adopted synced) task containers
-  plan?: Ref<Plan>               // standing project plan (distinct from per-chat Chat.plan, §6)
+  // NO plan field (REVISED 2026-08-01): Plan is removed — see §6
   // milestones — DEFERRED, see §5
 }
 
@@ -151,33 +154,37 @@ in §3 blocks adding the type and ref later (`Task` bumps again or ships the opt
 minor revision). A natural home would be `Milestone.taskSet: Ref<TaskSet>` (definitions belong
 to the container, as in both external systems).
 
-## 6. Plan ⇄ Task reconciliation (and the planning skill)
+## 6. Two forms of work: Plan is REMOVED (REVISED 2026-08-01)
 
-Model statement: **`Task` is the durable work item — human or agent. `Plan` is a conversation's
-working set over work**, feed-persisted with the chat, cheap to churn. Ad hoc work lives in
-either an Outline (document-first) or a Plan (conversation-first); both have the same
-**promotion path** to Task objects — the outliner's convert-to-task (#12423) is that path for
-documents, and this milestone adds the equivalent for plans.
+Model statement (canonical writeup: DESIGN.md § "Product model"): **markdown checklists are the
+cheap, fluid form of work; ECHO `Task` objects in a `TaskSet` are the durable, assignable form;
+promotion links the two.** The earlier v3 design (`Plan.Task.taskRef` bridge) is superseded —
+`Plan` was a parallel task model that existed only because durable tasks weren't cheap enough to
+churn; with parent-edge containment they are, and the scratch form is markdown, not structs.
 
 Changes:
 
-1. **`Plan.Task` gains `taskRef?: Ref<Task>`** — a plan entry promoted to (or seeded from) a
-   durable Task. When present, status reads/writes go through the ref (the Task is the source of
-   truth); unpromoted entries behave exactly as today. `delegated`/`agentPid` stay plan-side:
-   they are execution state of the supervisor loop, not task semantics. Agent assignment on the
-   durable side is `Task.assignee` (`role: 'assistant'`).
-2. **Status parity**: Task adopts `failed`/`cancelled` (§3.2) so promotion never lossy-maps.
-3. **Planning-skill operations grow the promotion verbs**: `promote-task` (plan entry → Task in
-   the project's TaskSet, sets `taskRef`) and `adopt-tasks` (seed plan entries from a task
-   query, e.g. "my open tasks in this set"). In project scope (chat parented to a Project with
-   `tasks` set), `update-tasks` on a promoted entry writes through.
-4. **`Project.plan`** is the standing, cross-conversation plan (e.g. the milestone plan);
-   `Chat.plan` remains per-conversation scratch. The supervisor/reconcile loop is unchanged — it
-   operates on whatever Plan it is handed.
-5. **task-planning skill (repo-side)**: per the sync spec, `TASKS.md` documents can live as
-   Composer documents (`tasksDxn`). With Tasks as objects, the skill's checklist lines and
+1. **`Plan` is deleted** (`org.dxos.type.plan`, `Chat.plan`, `Project.plan`, the `Plan.Task`
+   struct, TaskList/PlanArticle data source). A conversation's working set is its **outline**
+   (markdown checklist) plus the open Tasks it has promoted.
+2. **Chat scratch surface**: a standalone chat lazily owns an `Outline`
+   (`Chat.outline?: Ref<Outline>`); a project chat resolves and writes the **project's**
+   outline (`Obj.getParent(chat)` → `Project.outline`, created lazily).
+3. **Promotion** is the outliner's convert-to-task (#12423): the markdown line carries the
+   `echo://` link back, label-synced. The same path serves users (editor toolbar) and agents
+   (planning-skill operation).
+4. **Delegation requires a durable Task** — delegating is the moment scratch becomes real. The
+   supervisor reconcile loop operates on Task objects (children of the working TaskSet);
+   `assignee` (`role: 'assistant'` + DID) records who; the process ↔ task mapping lives
+   process-side (a Process annotation carrying the task ref), never as a pid stamped on the
+   task.
+5. **Planning skill retargets**: `update-tasks` edits the chat's outline markdown
+   (checkbox lines); `plan-reminder` reads unchecked outline items + open promoted Tasks;
+   promotion verb added. The project skill stays the filing/context skill (artifacts). The
+   boundary: planning = task work, project = filing; both over shared types.
+6. **task-planning skill (repo-side)**: unchanged conclusion — `TASKS.md` checklist lines and
    Task objects meet through the same promotion path; a `syncChecklist` reconciler stays out of
-   scope until both ends are in daily use (as the reconciliation spec concluded).
+   scope until both ends are in daily use.
 
 ## 7. MCP surface
 
@@ -219,7 +226,7 @@ by domain prefix:
 | `taskCreate`             | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                                |
 | `taskUpdate`             | schema-checked field patch (title/status/priority/assignee/estimate)                                                                   |
 | `taskComplete`           | the 90% action as one verb                                                                                                             |
-| `planGet` / `planUpdate` | read/write a Project's standing plan (promotion verbs ride along)                                                                      |
+| `outlineGet` / `outlineUpdate` | read/write a Project's markdown checklist (promotion verb rides along)                                                           |
 
 Milestone verbs follow §5 when it lands. Deliberately not in v1: comments (no comment model on
 Task yet), cycles (no sprint concept), external side-effects (`send`/sync-push — per §2.7's
@@ -259,10 +266,12 @@ Phasing note: each phase lands independently (one PR each, own tests); the MCP d
   ProjectArticle Goals/Tasks sections in plugin-projects; templates scaffold/adopt a TaskSet.
   _Acceptance_: create project → add tasks → assign (person + agent) → status grouping, all in
   Composer; play tests in `stories-projects`.
-- **Phase 3 — Plan reconciliation**: `Plan.Task.taskRef`, write-through status, planning-skill
-  `promote-task`/`adopt-tasks` operations, `Project.plan`. _Acceptance_: eval — agent plans in a
-  project chat, promotes two entries, human flips one to done in the TaskList, agent's
-  reconcile sees it.
+- **Phase 3 — Plan removal + retarget** (REVISED 2026-08-01, folded into the Phase 1 branch):
+  delete `Plan`/`Chat.plan`/`Project.plan`; `Chat.outline` scratch surface (project chats write
+  the project outline); planning skill retargets to outline markdown + promotion; delegation
+  operates on durable Tasks (process-side task ref, no `agentPid`); TaskList/PlanArticle
+  retarget. _Acceptance_: eval — agent brainstorms in the outline, promotes two items, human
+  flips one to done in the TaskList, agent's reconcile sees it.
 - **Phase 4 — MCP verbs**: operation sets (§7.2) + `McpToolAnnotation`; edge PR projecting
   them (with the identity prerequisite from §7.2); TESTING.md runbook extension. _Acceptance_:
   `dx mcp` / mcp-smoke drives `projectCreate → taskCreate → taskComplete` and Composer shows
