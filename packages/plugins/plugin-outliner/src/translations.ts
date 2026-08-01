@@ -4,10 +4,9 @@
 
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-
-import { meta } from '#meta';
 import { Outline } from '@dxos/types';
 
+import { meta } from '#meta';
 import { Journal } from '#types';
 
 export const translations = [

@@ -183,12 +183,12 @@ Changes:
 
 ### 7.1 Layering — yes, three layers (extending USE-CASES.md §2.7)
 
-§2.7 gives plugin operations three channels *inside* the app (skills / runnable routines /
+§2.7 gives plugin operations three channels _inside_ the app (skills / runnable routines /
 hybrid). MCP is the **fourth channel: the same operations projected to external agents**
 (Claude Desktop, `dx` CLI, task-planning skill). The API layers as:
 
 1. **Generic object layer** (exists, edge #785): `createObject / getObject / updateObject /
-   deleteObject / queryObjects` + discovery (`listPlugins / listTypes / listOperations`),
+deleteObject / queryObjects` + discovery (`listPlugins / listTypes / listOperations`),
    `whoami / listSpaces`. Substrate; can express everything, ergonomic for nothing.
 2. **Domain verb layer** (this milestone): project/task verbs defined **as operation sets in the
    plugins** (`ProjectOperation.*` in plugin-projects, `TaskOperation.*` in plugin-tasks) and
@@ -209,17 +209,17 @@ hybrid). MCP is the **fourth channel: the same operations projected to external 
 Naming follows the deployed `createObject`-style camelCase (review finding 2026-08-01), grouped
 by domain prefix:
 
-| Verb                | Shape (cf. Linear MCP)                                                  |
-| ------------------- | ----------------------------------------------------------------------- |
-| `projectList`       | `list_projects` — id/name/status summary rows                           |
-| `projectGet`        | `get_project` — full: goals, task summary, artifact list                |
-| `projectCreate`     | `save_project` — template-driven (`ProjectOperation.Create` exists)     |
-| `projectUpdate`     | goals/description patch                                                 |
-| `taskList`          | `list_issues` — filters: `taskSetId? / projectId? / status? / assignee?`; paginated (`after`/`limit`, Linear-style — DECIDED, day one) |
-| `taskCreate`        | `save_issue` — defaults status, resolves taskSet ref, optional assignee |
-| `taskUpdate`        | schema-checked field patch (title/status/priority/assignee/estimate)    |
-| `taskComplete`      | the 90% action as one verb                                              |
-| `planGet` / `planUpdate` | read/write a Project's standing plan (promotion verbs ride along)  |
+| Verb                     | Shape (cf. Linear MCP)                                                                                                                 |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectList`            | `list_projects` — id/name/status summary rows                                                                                          |
+| `projectGet`             | `get_project` — full: goals, task summary, artifact list                                                                               |
+| `projectCreate`          | `save_project` — template-driven (`ProjectOperation.Create` exists)                                                                    |
+| `projectUpdate`          | goals/description patch                                                                                                                |
+| `taskList`               | `list_issues` — filters: `taskSetId? / projectId? / status? / assignee?`; paginated (`after`/`limit`, Linear-style — DECIDED, day one) |
+| `taskCreate`             | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                                |
+| `taskUpdate`             | schema-checked field patch (title/status/priority/assignee/estimate)                                                                   |
+| `taskComplete`           | the 90% action as one verb                                                                                                             |
+| `planGet` / `planUpdate` | read/write a Project's standing plan (promotion verbs ride along)                                                                      |
 
 Milestone verbs follow §5 when it lands. Deliberately not in v1: comments (no comment model on
 Task yet), cycles (no sprint concept), external side-effects (`send`/sync-push — per §2.7's
@@ -254,24 +254,24 @@ Phasing note: each phase lands independently (one PR each, own tests); the MCP d
   migration (`assigned` → `{contact}` wrap); Project 0.3.0 (`goals/outline/tasks/plan`);
   Outline → `@dxos/types` (+ `taskSet` rename); call-site sweep (outliner, github/linear sync,
   space, onboarding, translations). Unit + migration tests.
-  *Acceptance*: existing UC stories green; outliner convert-to-task files into a `TaskSet`.
+  _Acceptance_: existing UC stories green; outliner convert-to-task files into a `TaskSet`.
 - **Phase 2 — plugin-outliner → plugin-tasks takeover**: rename + the surface additions of §4;
   ProjectArticle Goals/Tasks sections in plugin-projects; templates scaffold/adopt a TaskSet.
-  *Acceptance*: create project → add tasks → assign (person + agent) → status grouping, all in
+  _Acceptance_: create project → add tasks → assign (person + agent) → status grouping, all in
   Composer; play tests in `stories-projects`.
 - **Phase 3 — Plan reconciliation**: `Plan.Task.taskRef`, write-through status, planning-skill
-  `promote-task`/`adopt-tasks` operations, `Project.plan`. *Acceptance*: eval — agent plans in a
+  `promote-task`/`adopt-tasks` operations, `Project.plan`. _Acceptance_: eval — agent plans in a
   project chat, promotes two entries, human flips one to done in the TaskList, agent's
   reconcile sees it.
 - **Phase 4 — MCP verbs**: operation sets (§7.2) + `McpToolAnnotation`; edge PR projecting
-  them (with the identity prerequisite from §7.2); TESTING.md runbook extension. *Acceptance*:
+  them (with the identity prerequisite from §7.2); TESTING.md runbook extension. _Acceptance_:
   `dx mcp` / mcp-smoke drives `projectCreate → taskCreate → taskComplete` and Composer shows
   each step live.
 - **Phase 5 — MCP-first dogfood (runs alongside 2–4)**: recreate THIS milestone as a Project in
   the shared space (per mcp TASKS "shared composer space to track projects and tasks"): goals =
   §1, tasks = this plan in the project's TaskSet, assignees = burdon + agent Actors;
   task-planning skill points its registry entry at it (`tasksDxn` when the sync spec lands).
-  Every phase demo'd over the tunnel from Claude Desktop. *Acceptance*: this file's checklist
+  Every phase demo'd over the tunnel from Claude Desktop. _Acceptance_: this file's checklist
   state is readable from both Composer and MCP without divergence.
 
 ## 9. Open questions

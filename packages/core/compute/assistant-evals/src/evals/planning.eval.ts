@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { Plan } from '@dxos/assistant-toolkit';
+import { Plan } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
 import { trim } from '@dxos/util';
 

@@ -10,10 +10,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
-
-import { translations } from '#translations';
 import { Outline } from '@dxos/types';
 
+import { translations } from '#translations';
 import { Journal, getDateString } from '#types';
 
 import { Journal as JournalComponent } from './Journal';

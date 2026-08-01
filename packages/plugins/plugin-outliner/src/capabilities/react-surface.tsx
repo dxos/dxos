@@ -8,11 +8,10 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Outline } from '@dxos/types';
 
 import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
-import { Outline } from '@dxos/types';
-
 import { Journal } from '#types';
 
 export default Capability.makeModule(() =>

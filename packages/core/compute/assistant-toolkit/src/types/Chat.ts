@@ -15,7 +15,6 @@ import { type EntityNotFoundError } from '@dxos/echo/Err';
 
 import { HarnessContextError } from '../errors';
 
-
 /**
  * AI chat session.
  */

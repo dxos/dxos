@@ -6,9 +6,9 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
+import { type Outline as OutlineType } from '@dxos/types';
 
 import { Outline } from '#components';
-import { type Outline as OutlineType } from '@dxos/types';
 
 export type OutlineCardProps = AppSurface.ObjectCardProps<OutlineType.Outline>;
 

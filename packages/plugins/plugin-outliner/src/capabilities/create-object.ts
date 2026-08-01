@@ -9,7 +9,6 @@ import { Operation } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
-
 import { Outline } from '@dxos/types';
 
 import { Journal } from '#types';

@@ -9,9 +9,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { Outline } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Outline } from '@dxos/types';
 
 import { Outline as OutlineComponent } from './Outline';
 

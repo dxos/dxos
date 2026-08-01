@@ -51,13 +51,7 @@ describe('plugin-linear sync', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([
-      AccessToken.AccessToken,
-      Connection.Connection,
-      Cursor.Cursor,
-      TaskSet.TaskSet,
-      Task.Task,
-    ]);
+    graph.registry.add([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, TaskSet.TaskSet, Task.Task]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: LINEAR_SOURCE, token: 'tok' }));
     const connection = db.add(
       Obj.make(Connection.Connection, { name: 'Linear', connectorId: 'linear', accessToken: Ref.make(token) }),

@@ -26,13 +26,12 @@ import {
   AgentSkill,
   DelegationHandlers,
   DelegationSkill,
-  Plan,
   PlanningHandlers,
   PlanningSkill,
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet, Plan, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';

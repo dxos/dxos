@@ -38,9 +38,8 @@ const handler: Operation.WithHandler<typeof LinearOperation.MaterializeLinearTar
         const teamId = remoteTarget.id;
 
         return yield* Effect.gen(function* () {
-          const existing = yield* Database.query(
-            Query.select(Filter.foreignKeys(TaskSet.TaskSet, [fkFor(teamId)])),
-          ).run;
+          const existing = yield* Database.query(Query.select(Filter.foreignKeys(TaskSet.TaskSet, [fkFor(teamId)])))
+            .run;
           if (existing.length > 0) {
             return { target: Ref.make(existing[0]) };
           }

@@ -10,7 +10,6 @@ import { Operation, Plan } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-
 import INSTRUCTIONS from './update-tasks.md?raw';
 
 // Omit `delegated` and `agentPid` from the LLM-facing schema: these are set by the

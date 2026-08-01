@@ -3,7 +3,7 @@
 //
 
 import { type Thread, type TopicDraft, buildThreads, clusterThreads, deriveThreadId } from '@dxos/pipeline-email';
-import { Outline } from '@dxos/plugin-outliner';
+import { Outline } from '@dxos/types';
 import { type Message } from '@dxos/types';
 
 // Active Topics experiment (spec 2026-07-13): score clustered topics for how "active" they are, split

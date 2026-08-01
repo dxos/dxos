@@ -7,9 +7,9 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Plan } from '@dxos/compute';
 import { Event } from '@dxos/async';
 import { getSpace } from '@dxos/client/echo';
+import { Plan } from '@dxos/compute';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';

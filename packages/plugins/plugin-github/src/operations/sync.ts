@@ -590,10 +590,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
 
             // Re-resolve the local Project after upsert so issue upserts and
             // pushes operate on the persisted record.
-            const localProject = yield* findByForeignId<TaskSet.TaskSet>(
-              TaskSet.TaskSet,
-              remoteRepo.id,
-            );
+            const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
             if (!localProject) {
               return yield* Effect.dieMessage('Local Project missing after upsert.');
             }

@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 
 import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
-import { Instructions, Plan } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

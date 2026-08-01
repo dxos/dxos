@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-
 import { Outline } from '@dxos/types';
 
 import { OutlineOperation } from '../types';
