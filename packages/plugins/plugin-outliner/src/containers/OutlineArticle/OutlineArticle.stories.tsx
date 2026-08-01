@@ -2,10 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { EditorSelection } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Doc } from '@dxos/echo-doc';
+import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
@@ -20,9 +24,12 @@ import { Outline } from '#types';
 
 import { OutlineArticle } from './OutlineArticle';
 
+const ITEM = 'Review pricing page';
+const RENAMED = 'Revise pricing tiers';
+
 const CONTENT = [
   '- [ ] Draft the launch announcement',
-  '- [ ] Review pricing page',
+  `- [ ] ${ITEM}`,
   '  - [ ] Collect competitor quotes',
   '  - [ ] Update the FAQ',
   '- [ ] Schedule the retro',
@@ -72,7 +79,7 @@ const SourceView = ({ text }: { text: Text.Text }) => {
     <Panel.Root>
       <Panel.Toolbar />
       <Panel.Content asChild>
-        <div ref={parentRef} className='overflow-auto text-sm' />
+        <div ref={parentRef} className='overflow-auto text-sm p-trim-md' />
       </Panel.Content>
     </Panel.Root>
   );
@@ -108,14 +115,54 @@ export const Empty: Story = {
 };
 
 /**
- * Test:
- * 1. Place the caret on "Review pricing page" and open the floating menu (right of the line).
- * 2. Select "Convert to task"; the line becomes a bullet holding a link chip with the same label.
- * 3. Click the chip; the article swaps to the task form (title/status/priority populated).
- * 4. Edit the title and blur; the value is saved to the task.
- * 5. Click the back arrow in the toolbar to return to the outline.
- * 6. Convert a second line; both tasks reference the same lazily created project.
+ * Drives the whole arc: convert an item, open the task it created, rename it, and come back to an
+ * outline whose link text has followed the rename.
  */
-export const Manual: Story = {
+export const ConvertToTask: Story = {
   render: () => <DefaultStory content={CONTENT} name='Launch plan' />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // The client/space initialize well past testing-library's default 1s timeout.
+    await canvas.findByText(ITEM, {}, { timeout: 10_000 });
+    placeCaret(canvasElement, ITEM);
+
+    await userEvent.click(canvas.getByRole('button', { name: 'Convert to task' }));
+
+    // The item is now a bullet carrying a link chip, and the document holds a markdown link.
+    const chip = await canvas.findByRole('button', { name: ITEM }, { timeout: 10_000 });
+    await waitFor(() => expect(sourceText(canvasElement)).toMatch(new RegExp(`- \\[${ITEM}\\]\\(echo://`)));
+
+    // The chip opens the task in place, with a back button in the toolbar.
+    await userEvent.click(chip);
+    const title = await canvas.findByDisplayValue(ITEM, {}, { timeout: 10_000 });
+
+    // Renaming the task reconciles the document's link text, which is not edited directly.
+    await userEvent.clear(title);
+    await userEvent.type(title, RENAMED);
+    await userEvent.click(canvas.getByRole('button', { name: 'Back to outline' }));
+
+    await canvas.findByRole('button', { name: RENAMED }, { timeout: 10_000 });
+    await waitFor(() => expect(sourceText(canvasElement)).toMatch(new RegExp(`- \\[${RENAMED}\\]\\(echo://`)));
+  },
+};
+
+/** Raw markdown from the source pane (the last editor), which mirrors the outline's text object. */
+const sourceText = (canvasElement: HTMLElement): string => {
+  const editors = canvasElement.querySelectorAll('.cm-content');
+  return editors.length > 0 ? (editors[editors.length - 1].textContent ?? '') : '';
+};
+
+/**
+ * Put the caret on the item containing `text` (the outline is the first editor).
+ * Driven through the editor rather than a click: CodeMirror derives the selection from real pointer
+ * coordinates, which `userEvent` does not supply, so a synthetic click leaves the caret where it was.
+ */
+const placeCaret = (canvasElement: HTMLElement, text: string): void => {
+  const content = canvasElement.querySelector<HTMLElement>('.cm-content');
+  const view = content && EditorView.findFromDOM(content);
+  invariant(view, 'Missing editor.');
+  const index = view.state.doc.toString().indexOf(text);
+  invariant(index >= 0, `Missing item: ${text}`);
+  view.dispatch({ selection: EditorSelection.cursor(index) });
 };
