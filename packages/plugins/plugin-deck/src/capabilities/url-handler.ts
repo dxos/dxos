@@ -4,9 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as PubSub from 'effect/PubSub';
+import * as Queue from 'effect/Queue';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { PathResolution } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -38,6 +42,7 @@ const bareWorkspace = (qualifiedWorkspace: string): string => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const manager = yield* Plugin.Service;
     const operationService = yield* Capabilities.OperationInvoker;
     const navigationHandlers = yield* AppCapabilities.NavigationHandler;
     const navigationTargetLoaders = yield* AppCapabilities.NavigationTargetLoader;
@@ -105,8 +110,17 @@ export default Capability.makeModule(
         return;
       }
 
-      const keyTable = PathResolution.buildUrlKeyTable(builder);
-      const parsed = UrlPath.parse(pathname, keyTable);
+      let parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
+      if (Option.isNone(parsed)) {
+        // An unknown key may belong to a DeferredStartup-gated plugin whose graph builder has
+        // not registered its URL keys yet — the URL itself is the demand signal. Fire the wave,
+        // then re-parse (bounded: contributions land reactively after the wave resolves).
+        yield* manager.activate(ActivationEvents.DeferredStartup).pipe(Effect.ignore);
+        for (let attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && Option.isNone(parsed); attempt++) {
+          yield* Effect.sleep(RESOLVE_RETRY_INTERVAL);
+          parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
+        }
+      }
       if (Option.isNone(parsed)) {
         // Unknown/malformed path: same outcome as an unresolvable subject id always had — open the
         // not-found sentinel. `immediate` skips validation, which is redundant for the sentinel anyway.
@@ -225,7 +239,6 @@ export default Capability.makeModule(
       });
     };
 
-    yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
     if ('navigation' in window) {
       window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
@@ -322,8 +335,33 @@ export default Capability.makeModule(
     const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
       syncUrl(),
     );
-    // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
-    syncUrl('replace');
+
+    // The initial restore (inbound, from the launch URL snapshot) and the first outbound
+    // correction wait for the app-ready signal (startup quiescence): under streaming start this
+    // module can activate before eager graph builders contribute their URL keys and nodes, and
+    // restoring against a half-built graph lands on not-found. The URL is snapshotted here so a
+    // pre-ready outbound sync (a reactive deck-state change) cannot clobber a deep link first.
+    // Daemon-forked — awaiting ready inside activation would deadlock the quiescence gate.
+    const launchUrl = new URL(window.location.href);
+    yield* Effect.gen(function* () {
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          const subscription = yield* PubSub.subscribe(manager.activation);
+          for (;;) {
+            const message = yield* Queue.take(subscription);
+            if (message.event === ActivationEvents.Startup.id && message.state === 'activated' && !message.module) {
+              return;
+            }
+          }
+        }),
+      );
+      yield* provideServices(handleNavigation(launchUrl));
+      // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
+      yield* Effect.sync(() => syncUrl('replace'));
+    }).pipe(
+      Effect.catchAll((error) => Effect.sync(() => log.error('initial URL restore failed', { error: String(error) }))),
+      Effect.forkDaemon,
+    );
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {

@@ -11,7 +11,8 @@ import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { MeetingCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  requires: [CallsCapabilities.Manager, MeetingCapabilities.State, Capabilities.OperationInvoker],
+  // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
+  requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
   activatesOn: ActivationEvents.DeferredStartup,
 });
 export const CallExtension = Capability.lazyModule(
