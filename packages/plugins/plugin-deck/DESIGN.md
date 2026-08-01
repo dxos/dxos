@@ -83,7 +83,12 @@ left pile, which pushes everything after it off the trailing edge into the right
 cannot come from a rect or `offsetLeft` — while sticky, both report the _pinned_ position — so
 `scrollPlankToPile` sums the preceding planks' widths and gaps and backs off one spine each.
 
-It also drops a repeat command to the same destination inside a short window. One interaction settles
+Opening a companion is not a navigation, so it does not scroll: the collapse follows up a
+`companionId` change only when attention has just moved, which is the case the dependency exists for
+(the companion resolves a commit later, so the first pass measures the deck before the pair widened).
+Toggling a companion on the plank you are already reading leaves the deck where it is.
+
+`scrollPlankToPile` also drops a repeat command to the same destination inside a short window. One interaction settles
 over several commits — attention lands, the companion resolves a commit later, the width cap
 recomputes — and `scrollTo` _restarts_ a smooth animation rather than continuing it, so the repeats
 read as a stutter rather than a glide. Opening a companion measured six commands to one destination

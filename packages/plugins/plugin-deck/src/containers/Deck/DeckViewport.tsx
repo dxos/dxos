@@ -875,6 +875,9 @@ const lastScrollCommand = new WeakMap<HTMLElement, { left: number; at: number }>
 /** Window in which a repeat command to the same destination is treated as the same scroll. */
 const SCROLL_DEDUPE_MS = 600;
 
+/** How long after attention moves a companion still counts as arriving with it rather than on its own. */
+const COMPANION_FOLLOWUP_MS = 400;
+
 /**
  * Scrolls a plank flush against the left pile — the deck's one notion of "bring this plank to the front",
  * shared by navigation, a folded spine returning its plank to view, and attention moving between planks.
@@ -983,6 +986,7 @@ const useCollapseAfterAttended = ({
   handoffRef: RefObject<string | undefined>;
 }) => {
   const wasExposedRef = useRef(expose);
+  const lastRunRef = useRef<{ attended: string | undefined; at: number }>({ attended: undefined, at: 0 });
 
   // A layout effect, so a correction lands before paint instead of as a visible slide.
   useLayoutEffect(() => {
@@ -991,6 +995,18 @@ const useCollapseAfterAttended = ({
     const wasExposed = wasExposedRef.current;
     wasExposedRef.current = expose;
     if (!isSliding || expose || !attendedPlankId || !viewport || !stack) {
+      return;
+    }
+
+    // Opening a companion on the plank you are already reading is not a navigation — attention never
+    // moved — so the deck stays exactly where it is. The `companionId` dependency still earns its place
+    // when the companion lands *as part of* a navigation: `useCompanions` resolves it a commit later,
+    // so the first pass measures the deck before the pair widened and the scroll falls short by the
+    // companion's width. Following up only within that window keeps the correction and drops the jump.
+    const previous = lastRunRef.current;
+    const attentionMoved = previous.attended !== attendedPlankId;
+    lastRunRef.current = { attended: attendedPlankId, at: attentionMoved ? performance.now() : previous.at };
+    if (!attentionMoved && performance.now() - previous.at > COMPANION_FOLLOWUP_MS) {
       return;
     }
 

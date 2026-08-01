@@ -94,7 +94,15 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
 ## Defects
 
-- [x] **Opening a companion made the plank jump repeatedly** — measured: six `scrollTo` calls to one
+- [x] **Opening a companion moved the plank** — two separate faults. The visible stutter was six
+      `scrollTo` calls to one destination in 30ms (see below). The remaining jump was the collapse
+      running at all: `companionId` is a dependency so that a companion landing _as part of a
+      navigation_ corrects a scroll measured before the pair widened, but it also fired when the
+      companion was toggled on the plank already being read, where attention never moved. The collapse
+      now follows up a companion change only within `COMPANION_FOLLOWUP_MS` of attention actually
+      moving. Measured with the plank pre-attended: scroll and the attended plank's position both
+      unchanged, companion fully on screen.
+- [x] **...and jumped repeatedly while doing it** — measured: six `scrollTo` calls to one
       destination inside 30ms. Three distinct effect runs (attention lands, the companion resolves a
       commit later, the width cap recomputes), each doubled by StrictMode, and every `scrollTo`
       _restarts_ the smooth animation rather than continuing it. `scrollPlankToPile` now drops a repeat
