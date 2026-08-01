@@ -94,6 +94,16 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
 
 ## Defects
 
+- [ ] **Opening a companion slides the plank out and back** — the plank jumps right, off the viewport,
+      then settles once the companion has opened. `useCollapseAfterAttended` re-runs on `companionId`
+      by design (the companion arrives a commit after the attention that summoned it, so the first pass
+      measures the deck before the pair widened) — the correction is landing as a visible round trip
+      instead of before paint. Reported on 5174 with a real mailbox.
+- [ ] **Opening/closing a message resets the mailbox list scroll** — the mailbox's own Mosaic stack
+      appears to re-render wholesale and lose its scroll offset. Suspect the message open changing a
+      prop identity that remounts the list rather than updating it; the deck's own planks are known not
+      to remount (DESIGN.md §1), so this is likely inside `MailboxArticle`.
+
 - [ ] **Seeding a collection highlights every child in the navtree** — the navtree marks anything in
       `layout.active` (`NavTreeContainer.tsx:56`), and seeding puts all the children there, so clicking
       a collection paints its whole subtree. Wanted: the collection reads as selected, not its contents.

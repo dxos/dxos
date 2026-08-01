@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, DeckSpec, GraphPath, LayoutOperation, NotFound } from '@dxos/app-toolkit';
+import { AppCapabilities, GraphPath, LayoutOperation, NotFound } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -16,7 +16,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
 import { DeckCapabilities } from '../types';
-import { computeActiveUpdates, openableChildren } from '../util';
+import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -140,7 +140,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
         // the documents it contains rather than a plank showing the collection itself.
         const seeded = resolveSeededPlanks({
-          initial: DeckSpec.fromNode(
+          initial: resolveDeckSpec(
             input.subject[0] ? Option.getOrUndefined(Graph.getNode(graph, input.subject[0])) : undefined,
           )?.initial,
           addBesideOrigin,
@@ -155,7 +155,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
             ? resolveLevelOpen({
                 active: deck.active,
                 plankNames: deck.plankNames,
-                spec: DeckSpec.fromNode(Option.getOrUndefined(Graph.getNode(graph, input.root))),
+                spec: resolveDeckSpec(Option.getOrUndefined(Graph.getNode(graph, input.root))),
                 root: input.root,
                 level: input.level,
                 subjectId: input.subject[0],
