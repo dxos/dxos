@@ -418,12 +418,18 @@ the mechanism.
       engine's best case — deterministic transform ⇒ identical duplicate content ⇒ field-granularity
       lossiness never bites. Their Phase 0 spike IS this claim's test; verify the class-1 orphaning
       once here (cheap) and otherwise adopt rather than duplicate their harness.
-- [ ] **Claim 7 · what is the stable key for 1 → N?** Splitting a collection into N objects needs a
-      per-element key. Position is not stable (a reorder changes it, and two peers whose lists merged
-      differently disagree); a content hash is stable until the element is edited, at which point it
-      mints a new object and orphans the old. **This is the sharpest unknown in the phase.** Check
-      whether Automerge list-element identity serves — it is the same primitive the rich-text lens
-      wants for stable block identity, so one mechanism may cover both.
+- [x] **Claim 7 · what is the stable key for 1 → N? — ANSWERED: automerge element identity is
+      convergent but not durable; a durable key must be stamped in the element.**
+      `A.getObjectId` on a struct-valued list element (never before called anywhere in DXOS;
+      `migration-research-list-identity.test.ts`) is stable under in-place edits, byte-identical
+      across peers, survives partitioned edits to other elements, and stays distinct+convergent for
+      concurrent inserts — everything a cross-peer join key needs. BUT any remove+insert mints a new
+      ObjID, and automerge has no list-move, so every normal reorder (`splice`, `sort`, drag
+      reindexing, whole-slot reassignment) destroys the identity. Verdict: bare ObjID serves as a
+      within-fold-window key only; a durable 1→N split key is an explicit id field stamped in the
+      element at creation. The rich-text lens's block identity inherits the same verdict — cut/paste
+      or drag of a block mints a new ObjID, so "stable block identity via Automerge cursors"
+      (Phase 6) needs stamped ids too, not bare list identity.
 - [ ] **Claim 8 · does a dangling relation degrade gracefully?** With no cross-object transaction
       there is a window where a created relation's target does not exist yet. Strong-deps suggests it
       simply does not surface; confirm. If it instead errors or blocks the subtree, write ordering
