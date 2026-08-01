@@ -4,7 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { CrxCapabilities } from '@dxos/plugin-crx/types';
+import { CrxCapabilities, CrxEvents } from '@dxos/plugin-crx/types';
 
 import { BookmarksEvents } from '#types';
 
@@ -18,7 +18,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 
 export const PageActionProvider = Capability.lazyModule(
   'PageActionProvider',
-  { provides: [CrxCapabilities.PageAction], activatesOn: BookmarksEvents.Start },
+  { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
   () => import('./page-action'),
 );
 

@@ -6,7 +6,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { InboxCapabilities } from '@dxos/plugin-inbox/types';
-import { ProjectCapabilities } from '@dxos/plugin-projects/types';
+import { ProjectCapabilities, ProjectsEvents } from '@dxos/plugin-projects/types';
 
 import { BrainCapabilities, BrainEvents } from '#types';
 
@@ -39,6 +39,6 @@ export const MailboxAction = Capability.lazyModule(
 );
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
-  { provides: [ProjectCapabilities.Template], activatesOn: BrainEvents.Start },
+  { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
   () => import('./project-templates'),
 );

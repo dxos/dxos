@@ -5,13 +5,13 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
-import { ThreadCapabilities } from '@dxos/plugin-thread';
+import { ThreadCapabilities, ThreadEvents } from '@dxos/plugin-thread';
 
 import { BlueskyEvents } from '../events';
 
 export const ChannelBackend = Capability.lazyModule(
   'BlueskyChannelBackend',
-  { provides: [ThreadCapabilities.ChannelBackend], activatesOn: BlueskyEvents.Start },
+  { provides: [ThreadCapabilities.ChannelBackend], activatesOn: ThreadEvents.Start },
   () => import('./channel-backend'),
 );
 export const Connector = Capability.lazyModule(

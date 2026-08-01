@@ -4,7 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ProjectCapabilities } from '@dxos/plugin-projects/types';
+import { ProjectCapabilities, ProjectsEvents } from '@dxos/plugin-projects/types';
 import { RoutineCapabilities, RoutineEvents } from '@dxos/plugin-routine';
 
 import { CrmEvents } from '#types';
@@ -21,7 +21,7 @@ export const AutomationTemplates = Capability.lazyModule(
 
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
-  { provides: [ProjectCapabilities.Template], activatesOn: CrmEvents.Start },
+  { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
   () => import('./project-templates'),
 );
 

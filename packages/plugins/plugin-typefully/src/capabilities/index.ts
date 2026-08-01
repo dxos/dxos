@@ -3,10 +3,8 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { BloggerCapabilities } from '@dxos/plugin-blogger/types';
+import { BloggerCapabilities, BloggerEvents } from '@dxos/plugin-blogger/types';
 import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
-
-import { TypefullyEvents } from '../events';
 
 export const Connector = Capability.lazyModule(
   'TypefullyConnector',
@@ -15,6 +13,6 @@ export const Connector = Capability.lazyModule(
 );
 export const PublisherService = Capability.lazyModule(
   'TypefullyPublisherService',
-  { provides: [BloggerCapabilities.PublisherService], activatesOn: TypefullyEvents.Start },
+  { provides: [BloggerCapabilities.PublisherService], activatesOn: BloggerEvents.Start },
   () => import('./publisher-service'),
 );
