@@ -55,7 +55,9 @@ export default PlanReminder.pipe(
         }
 
         yield* Harness.enqueueMessage({
-          content: [ContentBlock.Text.make({ text: checklistContinueReminderPrompt(text.content), disposition: 'synthetic' })],
+          content: [
+            ContentBlock.Text.make({ text: checklistContinueReminderPrompt(text.content), disposition: 'synthetic' }),
+          ],
         });
       },
       Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-4-6.default')),

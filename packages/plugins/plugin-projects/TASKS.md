@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: Milestone 5 Phase 1 DONE 2026-08-01 on branch `claude/competent-curie-20057f` (schema + sweep, NO migrations — nothing deployed; Plan moved to @dxos/compute). Next: open the Phase 1 PR, then Phase 2 (plugin-outliner → plugin-tasks takeover). Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
+_Resume: Milestone 5 Phases 1+3 DONE 2026-08-01 on branch `claude/competent-curie-20057f` (schema + sweep + Plan REMOVAL: two-forms model, parent-edge containment, delegation-as-promotion; NO migrations — nothing deployed). Next: open the PR, then Phase 2 (plugin-outliner → plugin-tasks takeover). Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
 
 _Superseded pointer (2026-07-29): Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
@@ -333,23 +333,34 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       taskList paginates Linear-style from day one.
 - [x] **Phase 1 — schema + call-site sweep** — DONE 2026-08-01 (branch
       `claude/competent-curie-20057f`): `TaskSet` (org.dxos.type.taskSet@0.2.0) replaces
-      ExternalProject; Task 0.2.0 (assignee: Actor, taskSet rename, +failed/cancelled);
-      Project 0.3.0 (goals/outline/tasks/plan); Outline → @dxos/types 0.2.0 (+ taskSet rename);
-      **Plan moved assistant-toolkit → @dxos/compute** (enables the typed `Project.plan` ref —
-      Plan only depended on compute's own `Process`); linear push maps failed/cancelled →
-      Linear `canceled`. Sweep: outliner (helpers now `OutlineTasks`), github/linear
-      sync + materialize-target, assistant-toolkit (Plan imports + linear skill), plugin-space,
-      plugin-assistant, onboarding exemplar, stories-brain/assistant, translations.
+      ExternalProject; Task 0.2.0 (assignee: Actor, +failed/cancelled);
+      Project 0.3.0 (goals/outline/taskSets); Outline → @dxos/types 0.2.0; linear push maps
+      failed/cancelled → Linear `canceled`. Sweep: outliner, github/linear sync +
+      materialize-target, assistant-toolkit, plugin-space, plugin-assistant, onboarding
+      exemplar, stories-brain/assistant, translations.
       **NO MIGRATIONS by user direction 2026-08-01 (nothing deployed yet)** — the plan's
-      migration items are dropped, not deferred. Full repo build green; tests: types 11,
-      compute 48, space 42, outliner 15, github 9, linear 13, toolkit 68, assistant 165,
-      projects 16 — all green.
+      migration items are dropped, not deferred.
+- [x] **Phase 3 (pulled forward) — Plan REMOVED; two-forms model** — DONE 2026-08-01, same
+      branch (user redesign session; see DESIGN.md § Product model + MILESTONE-5.md §6):
+      markdown checklists = fluid form, Task/TaskSet = durable form, promotion links them.
+      `Plan` type deleted (`Chat.plan`, `Project.plan`, PlanArticle, plan surface);
+      containment + hierarchy via **ECHO parent edge** (Task.taskSet field dropped;
+      `Query.children()`); `Chat.outline` scratch surface (project chats resolve the project's
+      outline via the parent edge); checklist markdown helpers + promotion helpers on
+      `@dxos/types` Outline; planning skill edits checklist markdown (title-keyed
+      update-tasks); plan-reminder reads unchecked items; **delegation = promotion**
+      (delegate-task creates a durable in-progress Task, assignee role `assistant`; supervisor
+      reconciles over task-set children; onComplete marks the Task and checks off the
+      checklist line; no `agentPid` on tasks — mapping is runtime-side); TaskList renders the
+      checklist; legacy linear skill drops per-issue container mapping. Full repo build green;
+      tests: types 21, compute 46, toolkit 68, space 42, outliner 9, github 9, linear 13,
+      assistant 165, projects 16.
+      FOLLOW-UPS: re-correlate live sub-agent trace activity in TaskList via a Process
+      annotation carrying the task ref; reactive parent-project outline resolution in
+      ChatTaskList; promotion eval (agent promotes, human completes, reconcile observes).
 - [ ] **Phase 2 — plugin-outliner → plugin-tasks takeover** — rename; TaskList container,
       Actor-aware assignee chips, task cards, TaskOperation set, app-graph nodes; ProjectArticle
       Goals + Tasks sections; templates scaffold/adopt a TaskSet; stories-projects play tests.
-- [ ] **Phase 3 — Plan reconciliation** — Plan.Task.taskRef write-through; planning-skill
-      promote-task/adopt-tasks; Project.plan; promotion eval (agent promotes, human completes,
-      reconcile observes).
 - [ ] **Phase 4 — MCP verbs** — operation sets per MILESTONE-5.md §7.2 + McpToolAnnotation;
       edge mcp-space-service projection PR (identity-through-invokeOperation prerequisite from
       the 2026-08-01 service review); TESTING.md runbook extension; dx-mcp smoke

@@ -5,23 +5,22 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Plan, Process, type Trace } from '@dxos/compute';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Outline } from '@dxos/types';
 
-import subAgentFixture from '../../execution-graph/testing/sub-agent-delegation.json';
 import { TaskList } from './TaskList';
 
-const SUB_AGENT_PID = Process.ID.make('cf8f7243-5b1d-4902-b158-70d9107d5f43');
-const traceMessages = (subAgentFixture as unknown as Trace.Message[]).slice();
-
 type StoryArgs = {
-  tasks?: Omit<Plan.Task, 'id'>[];
-  traceMessages?: readonly Trace.Message[];
+  items?: Outline.ChecklistItem[];
+  activeTitle?: string;
 };
 
-const DefaultStory = ({ tasks = [], traceMessages: traceMessagesProp }: StoryArgs) => {
-  const plan = React.useMemo(() => Plan.makePlan({ tasks }), [tasks]);
-  return <TaskList plan={plan} traceMessages={traceMessagesProp} />;
+const DefaultStory = ({ items = [], activeTitle }: StoryArgs) => {
+  const outline = React.useMemo(
+    () => Outline.make({ content: items.map(Outline.renderChecklistItem).join('\n') }),
+    [items],
+  );
+  return <TaskList outline={outline} activeTitle={activeTitle} />;
 };
 
 const meta = {
@@ -36,28 +35,23 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    tasks: [
-      { title: 'Crack the eggs', status: 'done' },
-      { title: 'Whisk with salt and pepper', status: 'done' },
-      { title: 'Heat the pan with butter', status: 'in-progress' },
-      { title: 'Pour and stir continuously', status: 'todo' },
-      { title: 'Plate and serve', status: 'todo' },
+    items: [
+      { title: 'Crack the eggs', done: true },
+      { title: 'Whisk with salt and pepper', done: true },
+      { title: 'Heat the pan with butter', done: false },
+      { title: 'Pour and stir continuously', done: false },
+      { title: 'Plate and serve', done: false },
     ],
   },
 };
 
 export const WithDelegatedAgent: Story = {
   args: {
-    tasks: [
-      {
-        title: 'Research widgets',
-        status: 'in-progress',
-        delegated: true,
-        agentPid: SUB_AGENT_PID,
-      },
-      { title: 'Summarize findings', status: 'in-progress' },
+    items: [
+      { title: 'Research widgets', done: false },
+      { title: 'Summarize findings', done: false },
     ],
-    traceMessages,
+    activeTitle: 'Research widgets',
   },
 };
 

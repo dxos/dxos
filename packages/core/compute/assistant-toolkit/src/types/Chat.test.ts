@@ -19,7 +19,15 @@ import { Chat } from '../types';
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  types: [Chat.Chat, Chat.CompanionTo, Outline.Outline, Feed.Feed, Text.Text, Instructions.Instructions, Message.Message],
+  types: [
+    Chat.Chat,
+    Chat.CompanionTo,
+    Outline.Outline,
+    Feed.Feed,
+    Text.Text,
+    Instructions.Instructions,
+    Message.Message,
+  ],
   disableLlmMemoization: true,
 });
 

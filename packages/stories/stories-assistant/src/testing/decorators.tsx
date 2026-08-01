@@ -31,7 +31,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Instructions, Operation, OperationHandlerSet, Plan, ServiceResolver, Skill, Trigger } from '@dxos/compute';
+import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
@@ -57,6 +57,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ModuleLayout, StoryLayout } from '@dxos/storybook-testing';
+import { Outline } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import { moduleSurfaces } from '../modules';
@@ -156,7 +157,7 @@ const buildPluginManagerOptions = ({
           AccessToken.AccessToken,
           Assistant.Chat,
           Collection.Collection,
-          Plan.Plan,
+          Outline.Outline,
           Skill.Skill,
           Operation.PersistentOperation,
           Markdown.Document,

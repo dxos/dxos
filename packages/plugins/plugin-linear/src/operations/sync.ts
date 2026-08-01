@@ -9,7 +9,7 @@ import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 
 const { mergeField, snapshotField } = ConnectorSync;
 import { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -252,14 +252,11 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
       if (writeEstimate) {
         existing.estimate = estimateResult.value;
       }
-      if (project) {
-        const currentTaskSetId = existing.taskSet ? EID.getEntityId(EID.tryParse(existing.taskSet.uri)!) : undefined;
-        const taskSetId = EID.getEntityId(EID.tryParse(Ref.make(project).uri)!);
-        if (!existing.taskSet || (currentTaskSetId && taskSetId && currentTaskSetId !== taskSetId)) {
-          existing.taskSet = Ref.make(project);
-        }
-      }
     });
+    // Containment is the ECHO parent edge; re-parent when the issue moved projects.
+    if (project && Obj.getParent(existing)?.id !== project.id) {
+      Obj.setParent(existing, project);
+    }
     Cursor.writeSnapshot(binding, issue.id, remoteFields);
     return { task: existing, created: false };
   }
@@ -271,9 +268,11 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
     status,
     priority,
     estimate: issue.estimate ?? undefined,
-    taskSet: project ? Ref.make(project) : undefined,
   });
   const persisted = yield* Database.add(created);
+  if (project) {
+    Obj.setParent(persisted, project);
+  }
   Cursor.writeSnapshot(binding, issue.id, remoteFields);
   return { task: persisted, created: true };
 });

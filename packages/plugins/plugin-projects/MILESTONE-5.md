@@ -216,17 +216,17 @@ deleteObject / queryObjects` + discovery (`listPlugins / listTypes / listOperati
 Naming follows the deployed `createObject`-style camelCase (review finding 2026-08-01), grouped
 by domain prefix:
 
-| Verb                     | Shape (cf. Linear MCP)                                                                                                                 |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectList`            | `list_projects` — id/name/status summary rows                                                                                          |
-| `projectGet`             | `get_project` — full: goals, task summary, artifact list                                                                               |
-| `projectCreate`          | `save_project` — template-driven (`ProjectOperation.Create` exists)                                                                    |
-| `projectUpdate`          | goals/description patch                                                                                                                |
-| `taskList`               | `list_issues` — filters: `taskSetId? / projectId? / status? / assignee?`; paginated (`after`/`limit`, Linear-style — DECIDED, day one) |
-| `taskCreate`             | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                                |
-| `taskUpdate`             | schema-checked field patch (title/status/priority/assignee/estimate)                                                                   |
-| `taskComplete`           | the 90% action as one verb                                                                                                             |
-| `outlineGet` / `outlineUpdate` | read/write a Project's markdown checklist (promotion verb rides along)                                                           |
+| Verb                           | Shape (cf. Linear MCP)                                                                                                                 |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `projectList`                  | `list_projects` — id/name/status summary rows                                                                                          |
+| `projectGet`                   | `get_project` — full: goals, task summary, artifact list                                                                               |
+| `projectCreate`                | `save_project` — template-driven (`ProjectOperation.Create` exists)                                                                    |
+| `projectUpdate`                | goals/description patch                                                                                                                |
+| `taskList`                     | `list_issues` — filters: `taskSetId? / projectId? / status? / assignee?`; paginated (`after`/`limit`, Linear-style — DECIDED, day one) |
+| `taskCreate`                   | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                                |
+| `taskUpdate`                   | schema-checked field patch (title/status/priority/assignee/estimate)                                                                   |
+| `taskComplete`                 | the 90% action as one verb                                                                                                             |
+| `outlineGet` / `outlineUpdate` | read/write a Project's markdown checklist (promotion verb rides along)                                                                 |
 
 Milestone verbs follow §5 when it lands. Deliberately not in v1: comments (no comment model on
 Task yet), cycles (no sprint concept), external side-effects (`send`/sync-push — per §2.7's

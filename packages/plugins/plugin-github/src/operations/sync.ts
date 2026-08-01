@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Organization, Person, Task, TaskSet } from '@dxos/types';
@@ -308,12 +307,11 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       if (assignedPerson && !existing.assignee?.contact) {
         existing.assignee = { contact: Ref.make(assignedPerson) };
       }
-      const currentTaskSetId = existing.taskSet ? EID.getEntityId(EID.tryParse(existing.taskSet.uri)!) : undefined;
-      const taskSetId = EID.getEntityId(EID.tryParse(Ref.make(taskSet).uri)!);
-      if (!existing.taskSet || (currentTaskSetId && taskSetId && currentTaskSetId !== taskSetId)) {
-        existing.taskSet = Ref.make(taskSet);
-      }
     });
+    // Containment is the ECHO parent edge; re-parent when the issue moved repos.
+    if (Obj.getParent(existing)?.id !== taskSet.id) {
+      Obj.setParent(existing, taskSet);
+    }
     Cursor.writeSnapshot(binding, fid, remoteFields);
     return { task: existing, created: false };
   }
@@ -324,9 +322,9 @@ const upsertTask = Effect.fn('upsertTask')(function* (
     description: issue.body ?? '',
     status: issueStateToTaskStatus(issue.state),
     assignee: assignedPerson ? { contact: Ref.make(assignedPerson) } : undefined,
-    taskSet: Ref.make(taskSet),
   });
   const persisted = yield* Database.add(created);
+  Obj.setParent(persisted, taskSet);
   Cursor.writeSnapshot(binding, fid, remoteFields);
   return { task: persisted, created: true };
 });

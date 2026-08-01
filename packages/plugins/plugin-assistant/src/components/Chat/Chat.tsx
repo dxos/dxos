@@ -8,8 +8,6 @@ import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Event } from '@dxos/async';
-import { getSpace } from '@dxos/client/echo';
-import { Plan } from '@dxos/compute';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
@@ -26,9 +24,10 @@ import {
 import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
 import { type DocumentRange, type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
+import { Outline } from '@dxos/types';
 import { Message } from '@dxos/types';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
+import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
@@ -549,46 +548,38 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 type ChatTaskListProps = {
-  plan?: Plan.Plan;
+  outline?: Outline.Outline;
 };
 
-const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: planProp, ...props }, forwardedRef) => {
-  const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+// TODO(burdon): Project chats keep their working checklist on the parent project's outline —
+//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.outline`.
+const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
+  ({ outline: outlineProp, ...props }, forwardedRef) => {
+    const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-  const plan = useAtomValue(
-    useMemo(
-      () =>
-        Atom.make(
-          (get) =>
-            planProp ??
-            Option.fromNullable(chat).pipe(
-              Option.map((_) => get(Obj.atom(_))),
-              Option.flatMapNullable((_) => _?.plan?.atom),
-              Option.map(get),
-              Option.getOrUndefined,
-            ),
-        ),
-      [chat, planProp],
-    ),
-  );
-  const space = chat ? getSpace(chat) : undefined;
-  const traceMessages = useTraceMessages(space);
-  const conversationId = chat?.feed?.target?.id;
-  if (!plan || !(plan.tasks?.length ?? 0)) {
-    return null;
-  }
+    const outline = useAtomValue(
+      useMemo(
+        () =>
+          Atom.make(
+            (get) =>
+              outlineProp ??
+              Option.fromNullable(chat).pipe(
+                Option.map((_) => get(Obj.atom(_))),
+                Option.flatMapNullable((_) => _?.outline?.atom),
+                Option.map(get),
+                Option.getOrUndefined,
+              ),
+          ),
+        [chat, outlineProp],
+      ),
+    );
+    if (!outline) {
+      return null;
+    }
 
-  return (
-    <TaskList
-      {...props}
-      plan={plan}
-      space={space}
-      traceMessages={traceMessages}
-      conversationId={conversationId}
-      ref={forwardedRef}
-    />
-  );
-});
+    return <TaskList {...props} outline={outline} ref={forwardedRef} />;
+  },
+);
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 

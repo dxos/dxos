@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { URI } from '@dxos/keys';
@@ -17,7 +17,6 @@ import { Outline as OutlineType, Task } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
 import { meta } from '#meta';
-import { OutlineTasks } from '#types';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline>;
 
@@ -42,7 +41,7 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
         return undefined;
       }
 
-      const task = await OutlineTasks.createTask(outline, space.db, text);
+      const task = await OutlineType.createTask(outline, space.db, text);
       return { label: task.title, url: Obj.getURI(task).toString() };
     },
     [outline, space],
@@ -55,17 +54,21 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
   // Task titles are edited independently of the document, so the link text is reconciled from the
-  // live objects rather than trusted as written. Scoped to the outline's own task set so unrelated
-  // tasks in the space neither load nor retrigger the sync.
+  // live objects rather than trusted as written. Scoped to the outline's own task set (children of
+  // the parent edge) so unrelated tasks in the space neither load nor retrigger the sync.
   const taskSet = outline.taskSet?.target;
-  const tasks = useQuery(
+  const children = useQuery(
     space?.db,
-    taskSet ? Filter.type(Task.Task, { taskSet: Ref.make(taskSet) }) : Filter.nothing(),
+    taskSet ? Query.select(Filter.id(taskSet.id)).children() : Query.select(Filter.nothing()),
   );
   const resolveLinkLabel = useMemo(() => {
-    const labels = new Map(tasks.map((task) => [Obj.getURI(task).toString(), task.title]));
+    const labels = new Map(
+      children
+        .filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child))
+        .map((task) => [Obj.getURI(task).toString(), task.title]),
+    );
     return (url: string) => labels.get(url);
-  }, [tasks]);
+  }, [children]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>

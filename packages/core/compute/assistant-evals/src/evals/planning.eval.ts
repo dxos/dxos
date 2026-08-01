@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
-import { Plan } from '@dxos/compute';
+import { Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { Outline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { completedBlocks, findObject, toolInvocations } from '../assertions';
@@ -15,7 +16,7 @@ import { judge } from '../judge';
 import { createEvalRunner } from '../runner';
 
 // Ported from the gated `Planning` scenario (../testing/planning.test.ts).
-// Grades the real plan/task DB state and tool-invocation trace directly instead of the agent's
+// Grades the real outline-checklist DB state and tool-invocation trace directly instead of the agent's
 // self-reported completedCriteria. "A 3-line haiku was written for each topic" — a content
 // judgment a deterministic check can't make — is graded by an LLM judge (TESTING.md dimensions
 // A/B/H); every other criterion stays dimension-G (deterministic).
@@ -25,7 +26,7 @@ const OBJECT_WRITE_OPERATION_KEYS = [
   'dxn:org.dxos.function.database.objectCreate',
   'dxn:org.dxos.function.database.objectUpdate',
 ];
-const PLAN_TYPENAME = 'org.dxos.type.plan';
+const OUTLINE_TYPENAME = 'org.dxos.type.outline';
 
 const HAIKU_JUDGE_RUBRIC = trim`
   You are grading an AI assistant's chat transcript against one criterion: does it contain three
@@ -58,7 +59,11 @@ const task = createEvalRunner({
   timeout: 150_000,
   dbQuery: () =>
     Effect.gen(function* () {
-      const plan = yield* findObject(Plan.Plan, () => true);
+      const outline = yield* findObject(Outline.Outline, () => true);
+      const text = outline
+        ? yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined))
+        : undefined;
+      const items = Outline.parseChecklist(text?.content ?? '');
       const invocations = yield* toolInvocations();
       const blocks = yield* completedBlocks();
 
@@ -73,13 +78,13 @@ const task = createEvalRunner({
       const directPlanWrites = invocations.filter(
         (invocation) =>
           OBJECT_WRITE_OPERATION_KEYS.includes(invocation.operationKey ?? '') &&
-          invocation.input.includes(PLAN_TYPENAME),
+          invocation.input.includes(OUTLINE_TYPENAME),
       );
       const haikuVerdict = yield* judge(HAIKU_JUDGE_RUBRIC, assistantText);
 
       return {
-        taskCount: plan?.tasks.length ?? 0,
-        allTasksDone: (plan?.tasks.length ?? 0) === 3 && plan!.tasks.every((planTask) => planTask.status === 'done'),
+        taskCount: items.length,
+        allTasksDone: items.length === 3 && items.every((item) => item.done),
         haikuVerdict,
         usedUpdateTasks: updateTasksCalls.length >= 3,
         noDirectPlanManipulation: directPlanWrites.length === 0,
@@ -93,7 +98,7 @@ evalite('Planning — create three haiku tasks and complete each one', {
   scorers: [
     {
       name: 'exactly-three-tasks',
-      description: 'Exactly 3 tasks exist in the plan for the three haiku topics.',
+      description: 'Exactly 3 checklist items exist for the three haiku topics.',
       scorer: ({ output }) => (output.dbQuery.taskCount === 3 ? 1 : 0),
     },
     {
@@ -116,7 +121,7 @@ evalite('Planning — create three haiku tasks and complete each one', {
     },
     {
       name: 'no-direct-plan-manipulation',
-      description: 'The plan was never written via a raw database object-create/update call.',
+      description: 'The outline was never written via a raw database object-create/update call.',
       scorer: ({ output }) => (output.dbQuery.noDirectPlanManipulation ? 1 : 0),
     },
   ],

@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Agent } from '@dxos/assistant-toolkit';
-import { Instructions, Plan } from '@dxos/compute';
+import { Instructions } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -21,7 +21,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { TypeSpec, createObjectFactory } from '@dxos/schema/testing';
-import { Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Outline, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
 import { translations } from '#translations';
@@ -67,7 +67,7 @@ const meta = {
             Agent.Agent,
             Feed.Feed,
             Message.Message,
-            Plan.Plan,
+            Outline.Outline,
             Text.Text,
             Instructions.Instructions,
             Organization.Organization,

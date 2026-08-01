@@ -226,7 +226,10 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   // so they live directly in the space DB, same as contacts.
   const { taskSet, tasks } = makeTaskSet(people);
   space.db.add(taskSet);
-  tasks.forEach((task) => space.db.add(task));
+  tasks.forEach((task) => {
+    space.db.add(task);
+    Obj.setParent(task, taskSet);
+  });
 
   // Notes, sketches & sheets — notes reference people/orgs/task set via DXN links/embeds.
   const notes = makeNotes(people, organizations, taskSet);
@@ -969,15 +972,12 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
     description: 'New seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.',
   });
 
-  const taskSetRef = Ref.make(taskSet);
-
   const tasks: Task.Task[] = [
     Task.make({
       title: 'Source green coffee — Esperanza + Guatemalan parcel',
       status: 'done',
       priority: 'high',
       assignee: { contact: Ref.make(people.diego) },
-      taskSet: taskSetRef,
       description: 'Lock contracts with Carmen and the importer for the Guatemalan parcel.',
     }),
     Task.make({
@@ -985,7 +985,6 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
       status: 'in-progress',
       priority: 'high',
       assignee: { contact: Ref.make(people.kai) },
-      taskSet: taskSetRef,
       description: 'Currently on v2 with adjusted development time. One more iteration before sign-off.',
     }),
     Task.make({
@@ -993,7 +992,6 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
       status: 'in-progress',
       priority: 'medium',
       assignee: { contact: Ref.make(people.sam) },
-      taskSet: taskSetRef,
       description: 'North Star, Hatch, Olive & Vine. 2 lb each.',
     }),
     Task.make({
@@ -1001,7 +999,6 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
       status: 'in-progress',
       priority: 'medium',
       assignee: { contact: Ref.make(people.riley) },
-      taskSet: taskSetRef,
       description: 'Final draft due to the printer in 10 days.',
     }),
     Task.make({
@@ -1009,14 +1006,12 @@ const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskS
       status: 'todo',
       priority: 'medium',
       assignee: { contact: Ref.make(people.sam) },
-      taskSet: taskSetRef,
     }),
     Task.make({
       title: 'Publish product page + open preorders',
       status: 'todo',
       priority: 'low',
       assignee: { contact: Ref.make(people.riley) },
-      taskSet: taskSetRef,
       description: 'Webshop + email blast to subscribers.',
     }),
   ];
