@@ -105,6 +105,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ChessComAccount": [
+        "dist/types/src/types/ChessComAccount.d.ts"
+      ],
+      "ChessComEvents": [
+        "dist/types/src/types/ChessComEvents.d.ts"
+      ],
+      "ChessComOperation": [
+        "dist/types/src/types/ChessComOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -152,18 +165,5 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "ChessComAccount": [
-        "dist/types/src/types/ChessComAccount.d.ts"
-      ],
-      "ChessComEvents": [
-        "dist/types/src/types/ChessComEvents.d.ts"
-      ],
-      "ChessComOperation": [
-        "dist/types/src/types/ChessComOperation.d.ts"
-      ]
-    }
   }
 }

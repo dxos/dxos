@@ -168,6 +168,37 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Calendar": [
+        "dist/types/src/types/Calendar.d.ts"
+      ],
+      "ExtractedFrom": [
+        "dist/types/src/types/ExtractedFrom.d.ts"
+      ],
+      "InboxCapabilities": [
+        "dist/types/src/types/InboxCapabilities.d.ts"
+      ],
+      "InboxEvents": [
+        "dist/types/src/types/InboxEvents.d.ts"
+      ],
+      "InboxOperation": [
+        "dist/types/src/types/InboxOperation.d.ts"
+      ],
+      "Mailbox": [
+        "dist/types/src/types/Mailbox.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "DraftEvent": [
+        "dist/types/src/types/DraftEvent.d.ts"
+      ],
+      "SystemTags": [
+        "dist/types/src/types/SystemTags.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -287,36 +318,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Calendar": [
-        "dist/types/src/types/Calendar.d.ts"
-      ],
-      "ExtractedFrom": [
-        "dist/types/src/types/ExtractedFrom.d.ts"
-      ],
-      "InboxCapabilities": [
-        "dist/types/src/types/InboxCapabilities.d.ts"
-      ],
-      "InboxEvents": [
-        "dist/types/src/types/InboxEvents.d.ts"
-      ],
-      "InboxOperation": [
-        "dist/types/src/types/InboxOperation.d.ts"
-      ],
-      "Mailbox": [
-        "dist/types/src/types/Mailbox.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "DraftEvent": [
-        "dist/types/src/types/DraftEvent.d.ts"
-      ],
-      "SystemTags": [
-        "dist/types/src/types/SystemTags.d.ts"
-      ]
-    }
   }
 }

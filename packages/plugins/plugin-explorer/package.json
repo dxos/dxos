@@ -104,6 +104,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ExplorerAction": [
+        "dist/types/src/types/ExplorerAction.d.ts"
+      ],
+      "ExplorerEvents": [
+        "dist/types/src/types/ExplorerEvents.d.ts"
+      ],
+      "Graph": [
+        "dist/types/src/types/Graph.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -173,18 +186,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "ExplorerAction": [
-        "dist/types/src/types/ExplorerAction.d.ts"
-      ],
-      "ExplorerEvents": [
-        "dist/types/src/types/ExplorerEvents.d.ts"
-      ],
-      "Graph": [
-        "dist/types/src/types/Graph.d.ts"
-      ]
-    }
   }
 }

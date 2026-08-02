@@ -80,6 +80,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Terra": [
+        "dist/types/src/types/Terra.d.ts"
+      ],
+      "TerraObject": [
+        "dist/types/src/types/TerraObject.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -118,15 +128,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "Terra": [
-        "dist/types/src/types/Terra.d.ts"
-      ],
-      "TerraObject": [
-        "dist/types/src/types/TerraObject.d.ts"
-      ]
-    }
   }
 }

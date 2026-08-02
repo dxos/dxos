@@ -94,6 +94,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Journal": [
+        "dist/types/src/types/Journal.d.ts"
+      ],
+      "Outline": [
+        "dist/types/src/types/Outline.d.ts"
+      ],
+      "OutlineOperation": [
+        "dist/types/src/types/OutlineOperation.d.ts"
+      ],
+      "OutlinerEvents": [
+        "dist/types/src/types/OutlinerEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -154,21 +170,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Journal": [
-        "dist/types/src/types/Journal.d.ts"
-      ],
-      "Outline": [
-        "dist/types/src/types/Outline.d.ts"
-      ],
-      "OutlineOperation": [
-        "dist/types/src/types/OutlineOperation.d.ts"
-      ],
-      "OutlinerEvents": [
-        "dist/types/src/types/OutlinerEvents.d.ts"
-      ]
-    }
   }
 }

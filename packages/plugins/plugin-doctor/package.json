@@ -100,6 +100,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DoctorCapabilities": [
+        "dist/types/src/types/DoctorCapabilities.d.ts"
+      ],
+      "DoctorEvents": [
+        "dist/types/src/types/DoctorEvents.d.ts"
+      ],
+      "DoctorOperation": [
+        "dist/types/src/types/DoctorOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -133,18 +146,5 @@
   "peerDependencies": {
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "DoctorCapabilities": [
-        "dist/types/src/types/DoctorCapabilities.d.ts"
-      ],
-      "DoctorEvents": [
-        "dist/types/src/types/DoctorEvents.d.ts"
-      ],
-      "DoctorOperation": [
-        "dist/types/src/types/DoctorOperation.d.ts"
-      ]
-    }
   }
 }

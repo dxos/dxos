@@ -94,6 +94,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ObservabilityCapabilities": [
+        "dist/types/src/types/ObservabilityCapabilities.d.ts"
+      ],
+      "ObservabilityEvents": [
+        "dist/types/src/types/ObservabilityEvents.d.ts"
+      ],
+      "ObservabilityOperation": [
+        "dist/types/src/types/ObservabilityOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -137,21 +153,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "ObservabilityCapabilities": [
-        "dist/types/src/types/ObservabilityCapabilities.d.ts"
-      ],
-      "ObservabilityEvents": [
-        "dist/types/src/types/ObservabilityEvents.d.ts"
-      ],
-      "ObservabilityOperation": [
-        "dist/types/src/types/ObservabilityOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

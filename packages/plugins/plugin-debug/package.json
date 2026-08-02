@@ -95,6 +95,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DebugEvents": [
+        "dist/types/src/types/DebugEvents.d.ts"
+      ],
+      "DebugNodes": [
+        "dist/types/src/types/DebugNodes.d.ts"
+      ],
+      "DebugSurface": [
+        "dist/types/src/types/DebugSurface.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -173,21 +189,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "DebugEvents": [
-        "dist/types/src/types/DebugEvents.d.ts"
-      ],
-      "DebugNodes": [
-        "dist/types/src/types/DebugNodes.d.ts"
-      ],
-      "DebugSurface": [
-        "dist/types/src/types/DebugSurface.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

@@ -89,6 +89,13 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "NavTreeCapabilities": [
+        "dist/types/src/types/NavTreeCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -150,12 +157,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "NavTreeCapabilities": [
-        "dist/types/src/types/NavTreeCapabilities.d.ts"
-      ]
-    }
   }
 }

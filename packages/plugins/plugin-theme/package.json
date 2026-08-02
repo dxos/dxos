@@ -63,6 +63,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "ThemeCapabilities": [
+        "dist/types/src/types/ThemeCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -100,15 +110,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "ThemeCapabilities": [
-        "dist/types/src/types/ThemeCapabilities.d.ts"
-      ]
-    }
   }
 }

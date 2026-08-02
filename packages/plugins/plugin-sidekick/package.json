@@ -85,6 +85,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Profile": [
+        "dist/types/src/types/Profile.d.ts"
+      ],
+      "Sidekick": [
+        "dist/types/src/types/Sidekick.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -121,15 +131,5 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "Profile": [
-        "dist/types/src/types/Profile.d.ts"
-      ],
-      "Sidekick": [
-        "dist/types/src/types/Sidekick.d.ts"
-      ]
-    }
   }
 }

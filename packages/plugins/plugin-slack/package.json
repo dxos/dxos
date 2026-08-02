@@ -75,6 +75,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SlackEvents": [
+        "dist/types/src/types/SlackEvents.d.ts"
+      ],
+      "SlackOperation": [
+        "dist/types/src/types/SlackOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -110,15 +120,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "SlackEvents": [
-        "dist/types/src/types/SlackEvents.d.ts"
-      ],
-      "SlackOperation": [
-        "dist/types/src/types/SlackOperation.d.ts"
-      ]
-    }
   }
 }

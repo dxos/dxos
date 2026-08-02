@@ -94,6 +94,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DeckCapabilities": [
+        "dist/types/src/types/DeckCapabilities.d.ts"
+      ],
+      "DeckOperation": [
+        "dist/types/src/types/DeckOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -165,18 +178,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "DeckCapabilities": [
-        "dist/types/src/types/DeckCapabilities.d.ts"
-      ],
-      "DeckOperation": [
-        "dist/types/src/types/DeckOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

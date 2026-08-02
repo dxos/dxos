@@ -80,6 +80,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Devtools": [
+        "dist/types/src/types/Devtools.d.ts"
+      ],
+      "DevtoolsEvents": [
+        "dist/types/src/types/DevtoolsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -159,15 +169,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Devtools": [
-        "dist/types/src/types/Devtools.d.ts"
-      ],
-      "DevtoolsEvents": [
-        "dist/types/src/types/DevtoolsEvents.d.ts"
-      ]
-    }
   }
 }

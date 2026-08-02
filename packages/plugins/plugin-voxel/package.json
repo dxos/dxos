@@ -94,6 +94,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Voxel": [
+        "dist/types/src/types/Voxel.d.ts"
+      ],
+      "VoxelEvents": [
+        "dist/types/src/types/VoxelEvents.d.ts"
+      ],
+      "VoxelOperation": [
+        "dist/types/src/types/VoxelOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -138,18 +151,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Voxel": [
-        "dist/types/src/types/Voxel.d.ts"
-      ],
-      "VoxelEvents": [
-        "dist/types/src/types/VoxelEvents.d.ts"
-      ],
-      "VoxelOperation": [
-        "dist/types/src/types/VoxelOperation.d.ts"
-      ]
-    }
   }
 }

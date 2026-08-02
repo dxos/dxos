@@ -114,6 +114,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "TableEvents": [
+        "dist/types/src/types/TableEvents.d.ts"
+      ],
+      "TableOperation": [
+        "dist/types/src/types/TableOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -171,15 +181,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "TableEvents": [
-        "dist/types/src/types/TableEvents.d.ts"
-      ],
-      "TableOperation": [
-        "dist/types/src/types/TableOperation.d.ts"
-      ]
-    }
   }
 }

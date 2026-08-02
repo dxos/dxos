@@ -134,6 +134,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Chess": [
+        "dist/types/src/types/Chess.d.ts"
+      ],
+      "ChessEvents": [
+        "dist/types/src/types/ChessEvents.d.ts"
+      ],
+      "ChessOperation": [
+        "dist/types/src/types/ChessOperation.d.ts"
+      ],
+      "ChessPositionIndex": [
+        "dist/types/src/types/ChessPositionIndex.d.ts"
+      ],
+      "PlayerReview": [
+        "dist/types/src/types/PlayerReview.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -184,24 +203,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Chess": [
-        "dist/types/src/types/Chess.d.ts"
-      ],
-      "ChessEvents": [
-        "dist/types/src/types/ChessEvents.d.ts"
-      ],
-      "ChessOperation": [
-        "dist/types/src/types/ChessOperation.d.ts"
-      ],
-      "ChessPositionIndex": [
-        "dist/types/src/types/ChessPositionIndex.d.ts"
-      ],
-      "PlayerReview": [
-        "dist/types/src/types/PlayerReview.d.ts"
-      ]
-    }
   }
 }

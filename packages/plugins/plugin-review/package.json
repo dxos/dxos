@@ -129,6 +129,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "CommentCapabilities": [
+        "dist/types/src/types/CommentCapabilities.d.ts"
+      ],
+      "CommentOperation": [
+        "dist/types/src/types/CommentOperation.d.ts"
+      ],
+      "ReviewEvents": [
+        "dist/types/src/types/ReviewEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -208,21 +224,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "CommentCapabilities": [
-        "dist/types/src/types/CommentCapabilities.d.ts"
-      ],
-      "CommentOperation": [
-        "dist/types/src/types/CommentOperation.d.ts"
-      ],
-      "ReviewEvents": [
-        "dist/types/src/types/ReviewEvents.d.ts"
-      ]
-    }
   }
 }

@@ -126,6 +126,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Drawing": [
+        "dist/types/src/types/Drawing.d.ts"
+      ],
+      "LegacySketch": [
+        "dist/types/src/types/LegacySketch.d.ts"
+      ],
+      "DrawingOperation": [
+        "dist/types/src/types/DrawingOperation.d.ts"
+      ],
+      "IllustratorCapabilities": [
+        "dist/types/src/types/IllustratorCapabilities.d.ts"
+      ],
+      "IllustratorEvents": [
+        "dist/types/src/types/IllustratorEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -168,24 +187,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Drawing": [
-        "dist/types/src/types/Drawing.d.ts"
-      ],
-      "LegacySketch": [
-        "dist/types/src/types/LegacySketch.d.ts"
-      ],
-      "DrawingOperation": [
-        "dist/types/src/types/DrawingOperation.d.ts"
-      ],
-      "IllustratorCapabilities": [
-        "dist/types/src/types/IllustratorCapabilities.d.ts"
-      ],
-      "IllustratorEvents": [
-        "dist/types/src/types/IllustratorEvents.d.ts"
-      ]
-    }
   }
 }

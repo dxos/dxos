@@ -65,6 +65,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CommerceEvents": [
+        "dist/types/src/types/CommerceEvents.d.ts"
+      ],
+      "Provider": [
+        "dist/types/src/types/Provider.d.ts"
+      ],
+      "Result": [
+        "dist/types/src/types/Result.d.ts"
+      ],
+      "Search": [
+        "dist/types/src/types/Search.d.ts"
+      ],
+      "SearchOperation": [
+        "dist/types/src/types/SearchOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -118,24 +137,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "CommerceEvents": [
-        "dist/types/src/types/CommerceEvents.d.ts"
-      ],
-      "Provider": [
-        "dist/types/src/types/Provider.d.ts"
-      ],
-      "Result": [
-        "dist/types/src/types/Result.d.ts"
-      ],
-      "Search": [
-        "dist/types/src/types/Search.d.ts"
-      ],
-      "SearchOperation": [
-        "dist/types/src/types/SearchOperation.d.ts"
-      ]
-    }
   }
 }

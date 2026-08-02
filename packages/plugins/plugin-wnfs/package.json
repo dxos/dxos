@@ -80,6 +80,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "WnfsCapabilities": [
+        "dist/types/src/types/WnfsCapabilities.d.ts"
+      ],
+      "WnfsEvents": [
+        "dist/types/src/types/WnfsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -134,15 +144,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "WnfsCapabilities": [
-        "dist/types/src/types/WnfsCapabilities.d.ts"
-      ],
-      "WnfsEvents": [
-        "dist/types/src/types/WnfsEvents.d.ts"
-      ]
-    }
   }
 }

@@ -94,6 +94,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SearchEvents": [
+        "dist/types/src/types/SearchEvents.d.ts"
+      ],
+      "SearchOperation": [
+        "dist/types/src/types/SearchOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -154,15 +164,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "SearchEvents": [
-        "dist/types/src/types/SearchEvents.d.ts"
-      ],
-      "SearchOperation": [
-        "dist/types/src/types/SearchOperation.d.ts"
-      ]
-    }
   }
 }

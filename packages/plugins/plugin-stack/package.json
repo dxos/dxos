@@ -79,6 +79,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Stack": [
+        "dist/types/src/types/Stack.d.ts"
+      ],
+      "StackEvents": [
+        "dist/types/src/types/StackEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -134,15 +144,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Stack": [
-        "dist/types/src/types/Stack.d.ts"
-      ],
-      "StackEvents": [
-        "dist/types/src/types/StackEvents.d.ts"
-      ]
-    }
   }
 }

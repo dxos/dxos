@@ -115,6 +115,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "BrainCapabilities": [
+        "dist/types/src/types/BrainCapabilities.d.ts"
+      ],
+      "BrainEvents": [
+        "dist/types/src/types/BrainEvents.d.ts"
+      ],
+      "BrainOperation": [
+        "dist/types/src/types/BrainOperation.d.ts"
+      ],
+      "BrainSettings": [
+        "dist/types/src/types/BrainSettings.d.ts"
+      ],
+      "BrainSurface": [
+        "dist/types/src/types/BrainSurface.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -156,24 +175,5 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "react": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "BrainCapabilities": [
-        "dist/types/src/types/BrainCapabilities.d.ts"
-      ],
-      "BrainEvents": [
-        "dist/types/src/types/BrainEvents.d.ts"
-      ],
-      "BrainOperation": [
-        "dist/types/src/types/BrainOperation.d.ts"
-      ],
-      "BrainSettings": [
-        "dist/types/src/types/BrainSettings.d.ts"
-      ],
-      "BrainSurface": [
-        "dist/types/src/types/BrainSurface.d.ts"
-      ]
-    }
   }
 }

@@ -134,6 +134,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "TranscriptionCapabilities": [
+        "dist/types/src/types/TranscriptionCapabilities.d.ts"
+      ],
+      "TranscriptionEvents": [
+        "dist/types/src/types/TranscriptionEvents.d.ts"
+      ],
+      "TranscriptOperation": [
+        "dist/types/src/types/TranscriptOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -218,21 +234,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "TranscriptionCapabilities": [
-        "dist/types/src/types/TranscriptionCapabilities.d.ts"
-      ],
-      "TranscriptionEvents": [
-        "dist/types/src/types/TranscriptionEvents.d.ts"
-      ],
-      "TranscriptOperation": [
-        "dist/types/src/types/TranscriptOperation.d.ts"
-      ]
-    }
   }
 }

@@ -124,6 +124,13 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SpaceCapability": [
+        "dist/types/src/types/SpaceCapability.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -216,12 +223,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "SpaceCapability": [
-        "dist/types/src/types/SpaceCapability.d.ts"
-      ]
-    }
   }
 }

@@ -125,6 +125,31 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "HelpCapabilities": [
+        "dist/types/src/types/HelpCapabilities.d.ts"
+      ],
+      "HelpOperation": [
+        "dist/types/src/types/HelpOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Support": [
+        "dist/types/src/types/Support.d.ts"
+      ],
+      "SupportCapabilities": [
+        "dist/types/src/types/SupportCapabilities.d.ts"
+      ],
+      "SupportOperation": [
+        "dist/types/src/types/SupportOperation.d.ts"
+      ],
+      "Tour": [
+        "dist/types/src/types/Tour.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -193,30 +218,5 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "HelpCapabilities": [
-        "dist/types/src/types/HelpCapabilities.d.ts"
-      ],
-      "HelpOperation": [
-        "dist/types/src/types/HelpOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "Support": [
-        "dist/types/src/types/Support.d.ts"
-      ],
-      "SupportCapabilities": [
-        "dist/types/src/types/SupportCapabilities.d.ts"
-      ],
-      "SupportOperation": [
-        "dist/types/src/types/SupportOperation.d.ts"
-      ],
-      "Tour": [
-        "dist/types/src/types/Tour.d.ts"
-      ]
-    }
   }
 }

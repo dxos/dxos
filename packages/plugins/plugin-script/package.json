@@ -140,6 +140,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Notebook": [
+        "dist/types/src/types/Notebook.d.ts"
+      ],
+      "ScriptCapabilities": [
+        "dist/types/src/types/ScriptCapabilities.d.ts"
+      ],
+      "ScriptEvents": [
+        "dist/types/src/types/ScriptEvents.d.ts"
+      ],
+      "ScriptOperation": [
+        "dist/types/src/types/ScriptOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -252,21 +268,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Notebook": [
-        "dist/types/src/types/Notebook.d.ts"
-      ],
-      "ScriptCapabilities": [
-        "dist/types/src/types/ScriptCapabilities.d.ts"
-      ],
-      "ScriptEvents": [
-        "dist/types/src/types/ScriptEvents.d.ts"
-      ],
-      "ScriptOperation": [
-        "dist/types/src/types/ScriptOperation.d.ts"
-      ]
-    }
   }
 }

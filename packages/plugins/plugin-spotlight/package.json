@@ -75,6 +75,13 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SpotlightCapabilities": [
+        "dist/types/src/types/SpotlightCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -108,12 +115,5 @@
     "@dxos/ui-theme": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "SpotlightCapabilities": [
-        "dist/types/src/types/SpotlightCapabilities.d.ts"
-      ]
-    }
   }
 }

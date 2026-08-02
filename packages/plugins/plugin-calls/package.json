@@ -95,6 +95,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CallsCapabilities": [
+        "dist/types/src/types/CallsCapabilities.d.ts"
+      ],
+      "CallsEvents": [
+        "dist/types/src/types/CallsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -164,15 +174,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "CallsCapabilities": [
-        "dist/types/src/types/CallsCapabilities.d.ts"
-      ],
-      "CallsEvents": [
-        "dist/types/src/types/CallsEvents.d.ts"
-      ]
-    }
   }
 }

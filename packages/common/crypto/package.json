@@ -24,9 +24,22 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    }
+    },
+    "./random": {
+      "source": "./src/random.ts",
+      "types": "./dist/types/src/random.d.ts",
+      "import": "./dist/lib/random.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "random": [
+        "dist/types/src/random.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src",

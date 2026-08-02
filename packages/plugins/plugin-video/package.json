@@ -100,6 +100,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Video": [
+        "dist/types/src/types/Video.d.ts"
+      ],
+      "VideoEvents": [
+        "dist/types/src/types/VideoEvents.d.ts"
+      ],
+      "VideoOperation": [
+        "dist/types/src/types/VideoOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -157,18 +170,5 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "Video": [
-        "dist/types/src/types/Video.d.ts"
-      ],
-      "VideoEvents": [
-        "dist/types/src/types/VideoEvents.d.ts"
-      ],
-      "VideoOperation": [
-        "dist/types/src/types/VideoOperation.d.ts"
-      ]
-    }
   }
 }

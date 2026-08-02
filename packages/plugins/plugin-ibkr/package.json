@@ -85,6 +85,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Ibkr": [
+        "dist/types/src/types/Ibkr.d.ts"
+      ],
+      "IbkrEvents": [
+        "dist/types/src/types/IbkrEvents.d.ts"
+      ],
+      "IbkrOperation": [
+        "dist/types/src/types/IbkrOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -141,18 +154,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Ibkr": [
-        "dist/types/src/types/Ibkr.d.ts"
-      ],
-      "IbkrEvents": [
-        "dist/types/src/types/IbkrEvents.d.ts"
-      ],
-      "IbkrOperation": [
-        "dist/types/src/types/IbkrOperation.d.ts"
-      ]
-    }
   }
 }

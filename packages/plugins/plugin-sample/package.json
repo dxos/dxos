@@ -110,6 +110,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SampleCapabilities": [
+        "dist/types/src/types/SampleCapabilities.d.ts"
+      ],
+      "SampleEvents": [
+        "dist/types/src/types/SampleEvents.d.ts"
+      ],
+      "SampleItem": [
+        "dist/types/src/types/SampleItem.d.ts"
+      ],
+      "SampleOperation": [
+        "dist/types/src/types/SampleOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -155,24 +174,5 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "SampleCapabilities": [
-        "dist/types/src/types/SampleCapabilities.d.ts"
-      ],
-      "SampleEvents": [
-        "dist/types/src/types/SampleEvents.d.ts"
-      ],
-      "SampleItem": [
-        "dist/types/src/types/SampleItem.d.ts"
-      ],
-      "SampleOperation": [
-        "dist/types/src/types/SampleOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

@@ -101,6 +101,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CrmEvents": [
+        "dist/types/src/types/CrmEvents.d.ts"
+      ],
+      "CrmOperation": [
+        "dist/types/src/types/CrmOperation.d.ts"
+      ],
+      "ProfileOf": [
+        "dist/types/src/types/ProfileOf.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -145,18 +158,5 @@
     "@effect/vitest": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "CrmEvents": [
-        "dist/types/src/types/CrmEvents.d.ts"
-      ],
-      "CrmOperation": [
-        "dist/types/src/types/CrmOperation.d.ts"
-      ],
-      "ProfileOf": [
-        "dist/types/src/types/ProfileOf.d.ts"
-      ]
-    }
   }
 }

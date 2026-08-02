@@ -74,6 +74,13 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ConductorEvents": [
+        "dist/types/src/types/ConductorEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -120,12 +127,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "ConductorEvents": [
-        "dist/types/src/types/ConductorEvents.d.ts"
-      ]
-    }
   }
 }

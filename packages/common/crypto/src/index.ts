@@ -4,6 +4,7 @@
 
 export * from '#subtle';
 export * from './keys';
+export * from './random';
 export type * from './signer';
 export * from './uuid';
 export * from './validator';

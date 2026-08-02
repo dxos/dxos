@@ -116,6 +116,31 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Score": [
+        "dist/types/src/types/Score.d.ts"
+      ],
+      "ScoreOperation": [
+        "dist/types/src/types/ScoreOperation.d.ts"
+      ],
+      "Sequence": [
+        "dist/types/src/types/Sequence.d.ts"
+      ],
+      "SequencerEvents": [
+        "dist/types/src/types/SequencerEvents.d.ts"
+      ],
+      "Track": [
+        "dist/types/src/types/Track.d.ts"
+      ],
+      "Note": [
+        "dist/types/src/types/Note.d.ts"
+      ],
+      "Patch": [
+        "dist/types/src/types/Patch.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -160,30 +185,5 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "Score": [
-        "dist/types/src/types/Score.d.ts"
-      ],
-      "ScoreOperation": [
-        "dist/types/src/types/ScoreOperation.d.ts"
-      ],
-      "Sequence": [
-        "dist/types/src/types/Sequence.d.ts"
-      ],
-      "SequencerEvents": [
-        "dist/types/src/types/SequencerEvents.d.ts"
-      ],
-      "Track": [
-        "dist/types/src/types/Track.d.ts"
-      ],
-      "Note": [
-        "dist/types/src/types/Note.d.ts"
-      ],
-      "Patch": [
-        "dist/types/src/types/Patch.d.ts"
-      ]
-    }
   }
 }

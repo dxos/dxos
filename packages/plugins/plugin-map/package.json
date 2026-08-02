@@ -139,6 +139,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Map": [
+        "dist/types/src/types/Map.d.ts"
+      ],
+      "MapAction": [
+        "dist/types/src/types/MapAction.d.ts"
+      ],
+      "MapCapabilities": [
+        "dist/types/src/types/MapCapabilities.d.ts"
+      ],
+      "MapEvents": [
+        "dist/types/src/types/MapEvents.d.ts"
+      ],
+      "MapOperation": [
+        "dist/types/src/types/MapOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -191,24 +210,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Map": [
-        "dist/types/src/types/Map.d.ts"
-      ],
-      "MapAction": [
-        "dist/types/src/types/MapAction.d.ts"
-      ],
-      "MapCapabilities": [
-        "dist/types/src/types/MapCapabilities.d.ts"
-      ],
-      "MapEvents": [
-        "dist/types/src/types/MapEvents.d.ts"
-      ],
-      "MapOperation": [
-        "dist/types/src/types/MapOperation.d.ts"
-      ]
-    }
   }
 }

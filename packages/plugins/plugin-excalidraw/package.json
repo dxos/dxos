@@ -94,6 +94,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Excalidraw": [
+        "dist/types/src/types/Excalidraw.d.ts"
+      ],
+      "ExcalidrawCapabilities": [
+        "dist/types/src/types/ExcalidrawCapabilities.d.ts"
+      ],
+      "ExcalidrawEvents": [
+        "dist/types/src/types/ExcalidrawEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -143,21 +159,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Excalidraw": [
-        "dist/types/src/types/Excalidraw.d.ts"
-      ],
-      "ExcalidrawCapabilities": [
-        "dist/types/src/types/ExcalidrawCapabilities.d.ts"
-      ],
-      "ExcalidrawEvents": [
-        "dist/types/src/types/ExcalidrawEvents.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

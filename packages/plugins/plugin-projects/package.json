@@ -2,7 +2,7 @@
   "name": "@dxos/plugin-projects",
   "version": "0.1.0",
   "private": true,
-  "description": "Projects \u2014 interactive, long-running processes with instructions, routines, and artifacts",
+  "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -99,6 +99,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ProjectCapabilities": [
+        "dist/types/src/types/ProjectCapabilities.d.ts"
+      ],
+      "ProjectOperation": [
+        "dist/types/src/types/ProjectOperation.d.ts"
+      ],
+      "ProjectsEvents": [
+        "dist/types/src/types/ProjectsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -143,18 +156,5 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "ProjectCapabilities": [
-        "dist/types/src/types/ProjectCapabilities.d.ts"
-      ],
-      "ProjectOperation": [
-        "dist/types/src/types/ProjectOperation.d.ts"
-      ],
-      "ProjectsEvents": [
-        "dist/types/src/types/ProjectsEvents.d.ts"
-      ]
-    }
   }
 }

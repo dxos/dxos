@@ -146,6 +146,43 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Booking": [
+        "dist/types/src/types/Booking.d.ts"
+      ],
+      "BookingOperation": [
+        "dist/types/src/types/BookingOperation.d.ts"
+      ],
+      "BookingSearch": [
+        "dist/types/src/types/BookingSearch.d.ts"
+      ],
+      "Place": [
+        "dist/types/src/types/Place.d.ts"
+      ],
+      "Routing": [
+        "dist/types/src/types/Routing.d.ts"
+      ],
+      "RoutingOperation": [
+        "dist/types/src/types/RoutingOperation.d.ts"
+      ],
+      "Segment": [
+        "dist/types/src/types/Segment.d.ts"
+      ],
+      "Trip": [
+        "dist/types/src/types/Trip.d.ts"
+      ],
+      "TripCapabilities": [
+        "dist/types/src/types/TripCapabilities.d.ts"
+      ],
+      "TripEvents": [
+        "dist/types/src/types/TripEvents.d.ts"
+      ],
+      "TripOperation": [
+        "dist/types/src/types/TripOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -214,42 +251,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Booking": [
-        "dist/types/src/types/Booking.d.ts"
-      ],
-      "BookingOperation": [
-        "dist/types/src/types/BookingOperation.d.ts"
-      ],
-      "BookingSearch": [
-        "dist/types/src/types/BookingSearch.d.ts"
-      ],
-      "Place": [
-        "dist/types/src/types/Place.d.ts"
-      ],
-      "Routing": [
-        "dist/types/src/types/Routing.d.ts"
-      ],
-      "RoutingOperation": [
-        "dist/types/src/types/RoutingOperation.d.ts"
-      ],
-      "Segment": [
-        "dist/types/src/types/Segment.d.ts"
-      ],
-      "Trip": [
-        "dist/types/src/types/Trip.d.ts"
-      ],
-      "TripCapabilities": [
-        "dist/types/src/types/TripCapabilities.d.ts"
-      ],
-      "TripEvents": [
-        "dist/types/src/types/TripEvents.d.ts"
-      ],
-      "TripOperation": [
-        "dist/types/src/types/TripOperation.d.ts"
-      ]
-    }
   }
 }

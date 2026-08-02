@@ -75,6 +75,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "LinearEvents": [
+        "dist/types/src/types/LinearEvents.d.ts"
+      ],
+      "LinearOperation": [
+        "dist/types/src/types/LinearOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -108,15 +118,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "LinearEvents": [
-        "dist/types/src/types/LinearEvents.d.ts"
-      ],
-      "LinearOperation": [
-        "dist/types/src/types/LinearOperation.d.ts"
-      ]
-    }
   }
 }

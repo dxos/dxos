@@ -79,6 +79,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "PaymentsCapabilities": [
+        "dist/types/src/types/PaymentsCapabilities.d.ts"
+      ],
+      "PaymentsEvents": [
+        "dist/types/src/types/PaymentsEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -119,18 +132,5 @@
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "PaymentsCapabilities": [
-        "dist/types/src/types/PaymentsCapabilities.d.ts"
-      ],
-      "PaymentsEvents": [
-        "dist/types/src/types/PaymentsEvents.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

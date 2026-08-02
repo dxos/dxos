@@ -95,6 +95,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Bookmark": [
+        "dist/types/src/types/Bookmark.d.ts"
+      ],
+      "BookmarkOperation": [
+        "dist/types/src/types/BookmarkOperation.d.ts"
+      ],
+      "BookmarksEvents": [
+        "dist/types/src/types/BookmarksEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -143,18 +156,5 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "Bookmark": [
-        "dist/types/src/types/Bookmark.d.ts"
-      ],
-      "BookmarkOperation": [
-        "dist/types/src/types/BookmarkOperation.d.ts"
-      ],
-      "BookmarksEvents": [
-        "dist/types/src/types/BookmarksEvents.d.ts"
-      ]
-    }
   }
 }

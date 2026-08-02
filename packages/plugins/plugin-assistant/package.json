@@ -150,6 +150,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Assistant": [
+        "dist/types/src/types/Assistant.d.ts"
+      ],
+      "AssistantOperation": [
+        "dist/types/src/types/AssistantOperation.d.ts"
+      ],
+      "AssistantCapabilities": [
+        "dist/types/src/types/AssistantCapabilities.d.ts"
+      ],
+      "Ollama": [
+        "dist/types/src/types/Ollama.d.ts"
+      ]
+    }
+  },
   "files": [
     "assets",
     "dist",
@@ -270,21 +286,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Assistant": [
-        "dist/types/src/types/Assistant.d.ts"
-      ],
-      "AssistantOperation": [
-        "dist/types/src/types/AssistantOperation.d.ts"
-      ],
-      "AssistantCapabilities": [
-        "dist/types/src/types/AssistantCapabilities.d.ts"
-      ],
-      "Ollama": [
-        "dist/types/src/types/Ollama.d.ts"
-      ]
-    }
   }
 }

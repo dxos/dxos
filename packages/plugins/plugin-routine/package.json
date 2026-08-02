@@ -125,6 +125,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "RoutineCapabilities": [
+        "dist/types/src/types/RoutineCapabilities.d.ts"
+      ],
+      "RoutineEvents": [
+        "dist/types/src/types/RoutineEvents.d.ts"
+      ],
+      "RoutineOperation": [
+        "dist/types/src/types/RoutineOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "assets",
     "dist",
@@ -210,18 +223,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "RoutineCapabilities": [
-        "dist/types/src/types/RoutineCapabilities.d.ts"
-      ],
-      "RoutineEvents": [
-        "dist/types/src/types/RoutineEvents.d.ts"
-      ],
-      "RoutineOperation": [
-        "dist/types/src/types/RoutineOperation.d.ts"
-      ]
-    }
   }
 }

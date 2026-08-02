@@ -125,6 +125,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Kanban": [
+        "dist/types/src/types/Kanban.d.ts"
+      ],
+      "KanbanEvents": [
+        "dist/types/src/types/KanbanEvents.d.ts"
+      ],
+      "KanbanOperation": [
+        "dist/types/src/types/KanbanOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -184,18 +197,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Kanban": [
-        "dist/types/src/types/Kanban.d.ts"
-      ],
-      "KanbanEvents": [
-        "dist/types/src/types/KanbanEvents.d.ts"
-      ],
-      "KanbanOperation": [
-        "dist/types/src/types/KanbanOperation.d.ts"
-      ]
-    }
   }
 }

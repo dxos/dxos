@@ -115,6 +115,31 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CodeCapabilities": [
+        "dist/types/src/types/CodeCapabilities.d.ts"
+      ],
+      "CodeEvents": [
+        "dist/types/src/types/CodeEvents.d.ts"
+      ],
+      "CodeOperation": [
+        "dist/types/src/types/CodeOperation.d.ts"
+      ],
+      "CodeProject": [
+        "dist/types/src/types/CodeProject.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "SourceFile": [
+        "dist/types/src/types/SourceFile.d.ts"
+      ],
+      "Spec": [
+        "dist/types/src/types/Spec.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -172,30 +197,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "CodeCapabilities": [
-        "dist/types/src/types/CodeCapabilities.d.ts"
-      ],
-      "CodeEvents": [
-        "dist/types/src/types/CodeEvents.d.ts"
-      ],
-      "CodeOperation": [
-        "dist/types/src/types/CodeOperation.d.ts"
-      ],
-      "CodeProject": [
-        "dist/types/src/types/CodeProject.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "SourceFile": [
-        "dist/types/src/types/SourceFile.d.ts"
-      ],
-      "Spec": [
-        "dist/types/src/types/Spec.d.ts"
-      ]
-    }
   }
 }

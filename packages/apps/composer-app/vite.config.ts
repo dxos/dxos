@@ -188,17 +188,27 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
-        // Only React is pinned to a stable chunk; everything else keeps rolldown's default
-        // splitting. Consolidation experiments (2026-08): per-package groups bloated the
-        // static boot graph 4.03->10.07MB (packages pair thin eager entries with heavy lazy
-        // islands, and merging welds the halves together); a `$initial`-tagged boot group
-        // bloated it to 19MB (the tag spans all five HTML entries and, with
-        // includeDependenciesRecursively defaulting to true, their recursive deps — every
-        // entry then pulls the merged blob). Safe consolidation needs a per-entry static
-        // module manifest; until then the ~4,800-chunk shape stands and HTTP/1.1 request
-        // serialization is addressed by serving preview over HTTP/2 instead.
+        // Chunk grouping. Rolldown's default share-set splitting yields ~4,800 chunks
+        // (median 1.5KB) — ~520 of them on main's boot path, whose per-request overhead
+        // dominates boot. Inference-based grouping is unsafe here (measured 2026-08:
+        // per-package groups welded each package's eager/lazy halves, boot 4.03->10.07MB;
+        // `$initial` tags span all five HTML entries plus recursive deps, boot ->19MB), so
+        // the `boot` group instead tests membership in a generated manifest of main's
+        // statically reachable modules (boot-manifest.json, rewritten on every bundle by
+        // bootManifestPlugin — the module set is invariant under re-chunking, so it is a
+        // stable fixpoint). Modules outside the manifest keep default splitting; a new
+        // eager module simply gets its own chunk until the next build regenerates the file.
         codeSplitting: {
-          groups: [{ name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/ }],
+          groups: [
+            { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+            {
+              name: 'boot',
+              test: isBootModule,
+              includeDependenciesRecursively: false,
+              maxSize: 512 * 1024,
+              priority: 5,
+            },
+          ],
         },
       },
     },
@@ -477,6 +487,7 @@ export default defineConfig((env) => ({
     // on the plugin definition (it raced with Vite's optimize-deps and produced
     // a chunk-content drift + partial-batch crash cascade).
     importMapPlugin(),
+    bootManifestPlugin(),
 
     // Hand the boot loader the Composer brand mark so the visual identity
     // is established before any JS bundle parses. The SVG carries its own
@@ -667,6 +678,85 @@ export default defineConfig((env) => ({
 
   ...createTestConfig({ dirname, node: true, storybook: true }),
 }));
+
+const BOOT_MANIFEST_PATH = path.join(dirname, 'boot-manifest.json');
+
+/**
+ * Normalize a rolldown module id to its manifest form: repo-relative, query stripped.
+ * Returns `null` for ids that must never be grouped (virtual modules, and app-own source —
+ * capturing an entry module dissolves its facade chunk and degrades the HTML output).
+ */
+function toManifestId(moduleId: string): string | null {
+  if (moduleId.includes('\0') || moduleId.includes('/packages/apps/')) {
+    return null;
+  }
+  const cleaned = moduleId.split('?')[0];
+  return cleaned.startsWith(rootDir) ? cleaned.slice(rootDir.length + 1) : cleaned;
+}
+
+const bootModules: Set<string> = (() => {
+  try {
+    return new Set(JSON.parse(readFileSync(BOOT_MANIFEST_PATH, 'utf-8')) as string[]);
+  } catch {
+    return new Set();
+  }
+})();
+
+function isBootModule(moduleId: string): boolean {
+  const id = toManifestId(moduleId);
+  return id !== null && bootModules.has(id);
+}
+
+/**
+ * Rewrites boot-manifest.json after every bundle: the module ids statically reachable from
+ * the `main` entry (chunk-level BFS over static imports). The set is invariant under
+ * re-chunking, so consuming the previous build's manifest converges in one build.
+ */
+function bootManifestPlugin(): PluginOption {
+  return {
+    name: 'dxos-boot-manifest',
+    apply: 'build',
+    generateBundle: (_options: unknown, bundle: Record<string, any>) => {
+      const byFileName = new Map(Object.values(bundle).map((output: any) => [output.fileName, output]));
+      const entry = Object.values(bundle).find(
+        (output: any) => output.type === 'chunk' && output.isEntry && output.name === 'main',
+      );
+      // Worker sub-builds and non-page outputs have no `main` entry — leave the manifest alone.
+      if (!entry) {
+        return;
+      }
+      const seen = new Set<string>([entry.fileName]);
+      const queue = [entry.fileName];
+      while (queue.length > 0) {
+        const chunk = byFileName.get(queue.shift()!);
+        if (!chunk || chunk.type !== 'chunk') {
+          continue;
+        }
+        for (const dep of chunk.imports ?? []) {
+          if (!seen.has(dep)) {
+            seen.add(dep);
+            queue.push(dep);
+          }
+        }
+      }
+      const moduleIds = new Set<string>();
+      for (const fileName of seen) {
+        const chunk = byFileName.get(fileName);
+        if (chunk?.type !== 'chunk') {
+          continue;
+        }
+        for (const moduleId of Object.keys(chunk.modules ?? {})) {
+          const id = toManifestId(moduleId);
+          if (id !== null) {
+            moduleIds.add(id);
+          }
+        }
+      }
+      writeFileSync(BOOT_MANIFEST_PATH, JSON.stringify([...moduleIds].sort(), null, 2) + '\n');
+      console.log(`bootManifestPlugin: wrote ${moduleIds.size} boot modules to ${BOOT_MANIFEST_PATH}`);
+    },
+  };
+}
 
 /**
  * Generate nicer chunk names.

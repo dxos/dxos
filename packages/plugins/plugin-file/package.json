@@ -112,6 +112,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "FileCapabilities": [
+        "dist/types/src/types/FileCapabilities.d.ts"
+      ],
+      "FileEvents": [
+        "dist/types/src/types/FileEvents.d.ts"
+      ],
+      "FileOperation": [
+        "dist/types/src/types/FileOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -161,21 +177,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "FileCapabilities": [
-        "dist/types/src/types/FileCapabilities.d.ts"
-      ],
-      "FileEvents": [
-        "dist/types/src/types/FileEvents.d.ts"
-      ],
-      "FileOperation": [
-        "dist/types/src/types/FileOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

@@ -70,6 +70,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Sandbox": [
+        "dist/types/src/types/Sandbox.d.ts"
+      ],
+      "SandboxEvents": [
+        "dist/types/src/types/SandboxEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -99,15 +109,5 @@
     "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "Sandbox": [
-        "dist/types/src/types/Sandbox.d.ts"
-      ],
-      "SandboxEvents": [
-        "dist/types/src/types/SandboxEvents.d.ts"
-      ]
-    }
   }
 }

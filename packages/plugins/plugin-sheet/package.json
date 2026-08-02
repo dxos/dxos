@@ -114,6 +114,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Sheet": [
+        "dist/types/src/types/Sheet.d.ts"
+      ],
+      "SheetCapabilities": [
+        "dist/types/src/types/SheetCapabilities.d.ts"
+      ],
+      "SheetEvents": [
+        "dist/types/src/types/SheetEvents.d.ts"
+      ],
+      "SheetOperation": [
+        "dist/types/src/types/SheetOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -197,21 +213,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Sheet": [
-        "dist/types/src/types/Sheet.d.ts"
-      ],
-      "SheetCapabilities": [
-        "dist/types/src/types/SheetCapabilities.d.ts"
-      ],
-      "SheetEvents": [
-        "dist/types/src/types/SheetEvents.d.ts"
-      ],
-      "SheetOperation": [
-        "dist/types/src/types/SheetOperation.d.ts"
-      ]
-    }
   }
 }

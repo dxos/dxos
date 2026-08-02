@@ -85,6 +85,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Dream": [
+        "dist/types/src/types/Dream.d.ts"
+      ],
+      "Sequence": [
+        "dist/types/src/types/Sequence.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -126,15 +136,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Dream": [
-        "dist/types/src/types/Dream.d.ts"
-      ],
-      "Sequence": [
-        "dist/types/src/types/Sequence.d.ts"
-      ]
-    }
   }
 }

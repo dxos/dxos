@@ -100,6 +100,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CrxCapabilities": [
+        "dist/types/src/types/CrxCapabilities.d.ts"
+      ],
+      "CrxEvents": [
+        "dist/types/src/types/CrxEvents.d.ts"
+      ],
+      "CrxOperation": [
+        "dist/types/src/types/CrxOperation.d.ts"
+      ],
+      "PageAction": [
+        "dist/types/src/types/PageAction.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -136,24 +155,5 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "CrxCapabilities": [
-        "dist/types/src/types/CrxCapabilities.d.ts"
-      ],
-      "CrxEvents": [
-        "dist/types/src/types/CrxEvents.d.ts"
-      ],
-      "CrxOperation": [
-        "dist/types/src/types/CrxOperation.d.ts"
-      ],
-      "PageAction": [
-        "dist/types/src/types/PageAction.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

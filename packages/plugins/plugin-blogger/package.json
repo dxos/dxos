@@ -99,6 +99,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Blog": [
+        "dist/types/src/types/Blog.d.ts"
+      ],
+      "BloggerCapabilities": [
+        "dist/types/src/types/BloggerCapabilities.d.ts"
+      ],
+      "BloggerEvents": [
+        "dist/types/src/types/BloggerEvents.d.ts"
+      ],
+      "Publisher": [
+        "dist/types/src/types/Publisher.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -153,21 +169,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Blog": [
-        "dist/types/src/types/Blog.d.ts"
-      ],
-      "BloggerCapabilities": [
-        "dist/types/src/types/BloggerCapabilities.d.ts"
-      ],
-      "BloggerEvents": [
-        "dist/types/src/types/BloggerEvents.d.ts"
-      ],
-      "Publisher": [
-        "dist/types/src/types/Publisher.d.ts"
-      ]
-    }
   }
 }

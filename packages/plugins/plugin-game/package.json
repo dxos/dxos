@@ -96,6 +96,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Game": [
+        "dist/types/src/types/Game.d.ts"
+      ],
+      "GameCapabilities": [
+        "dist/types/src/types/GameCapabilities.d.ts"
+      ],
+      "GameEvents": [
+        "dist/types/src/types/GameEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -137,18 +150,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Game": [
-        "dist/types/src/types/Game.d.ts"
-      ],
-      "GameCapabilities": [
-        "dist/types/src/types/GameCapabilities.d.ts"
-      ],
-      "GameEvents": [
-        "dist/types/src/types/GameEvents.d.ts"
-      ]
-    }
   }
 }

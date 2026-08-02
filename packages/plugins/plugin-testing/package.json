@@ -68,6 +68,13 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "StorybookCapabilities": [
+        "dist/types/src/types/StorybookCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -108,12 +115,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "StorybookCapabilities": [
-        "dist/types/src/types/StorybookCapabilities.d.ts"
-      ]
-    }
   }
 }

@@ -74,6 +74,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DuffelCapabilities": [
+        "dist/types/src/types/DuffelCapabilities.d.ts"
+      ],
+      "DuffelEvents": [
+        "dist/types/src/types/DuffelEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -110,18 +123,5 @@
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "DuffelCapabilities": [
-        "dist/types/src/types/DuffelCapabilities.d.ts"
-      ],
-      "DuffelEvents": [
-        "dist/types/src/types/DuffelEvents.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

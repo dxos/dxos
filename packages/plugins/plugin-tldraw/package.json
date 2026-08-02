@@ -100,6 +100,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Tldraw": [
+        "dist/types/src/types/Tldraw.d.ts"
+      ],
+      "TldrawCapabilities": [
+        "dist/types/src/types/TldrawCapabilities.d.ts"
+      ],
+      "TldrawEvents": [
+        "dist/types/src/types/TldrawEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -170,18 +183,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Tldraw": [
-        "dist/types/src/types/Tldraw.d.ts"
-      ],
-      "TldrawCapabilities": [
-        "dist/types/src/types/TldrawCapabilities.d.ts"
-      ],
-      "TldrawEvents": [
-        "dist/types/src/types/TldrawEvents.d.ts"
-      ]
-    }
   }
 }

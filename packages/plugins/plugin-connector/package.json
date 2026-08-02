@@ -114,6 +114,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Connection": [
+        "dist/types/src/types/Connection.d.ts"
+      ],
+      "ConnectorEvents": [
+        "dist/types/src/types/ConnectorEvents.d.ts"
+      ],
+      "ConnectorOperation": [
+        "dist/types/src/types/ConnectorOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -190,18 +203,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Connection": [
-        "dist/types/src/types/Connection.d.ts"
-      ],
-      "ConnectorEvents": [
-        "dist/types/src/types/ConnectorEvents.d.ts"
-      ],
-      "ConnectorOperation": [
-        "dist/types/src/types/ConnectorOperation.d.ts"
-      ]
-    }
   }
 }

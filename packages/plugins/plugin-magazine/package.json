@@ -118,6 +118,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CreateSubscription": [
+        "dist/types/src/types/CreateSubscription.d.ts"
+      ],
+      "FeedOperation": [
+        "dist/types/src/types/FeedOperation.d.ts"
+      ],
+      "Magazine": [
+        "dist/types/src/types/Magazine.d.ts"
+      ],
+      "MagazineEvents": [
+        "dist/types/src/types/MagazineEvents.d.ts"
+      ],
+      "Subscription": [
+        "dist/types/src/types/Subscription.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -187,24 +206,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "CreateSubscription": [
-        "dist/types/src/types/CreateSubscription.d.ts"
-      ],
-      "FeedOperation": [
-        "dist/types/src/types/FeedOperation.d.ts"
-      ],
-      "Magazine": [
-        "dist/types/src/types/Magazine.d.ts"
-      ],
-      "MagazineEvents": [
-        "dist/types/src/types/MagazineEvents.d.ts"
-      ],
-      "Subscription": [
-        "dist/types/src/types/Subscription.d.ts"
-      ]
-    }
   }
 }

@@ -79,6 +79,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Board": [
+        "dist/types/src/types/Board.d.ts"
+      ],
+      "BoardEvents": [
+        "dist/types/src/types/BoardEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -131,15 +141,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Board": [
-        "dist/types/src/types/Board.d.ts"
-      ],
-      "BoardEvents": [
-        "dist/types/src/types/BoardEvents.d.ts"
-      ]
-    }
   }
 }

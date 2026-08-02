@@ -109,6 +109,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ThreadCapabilities": [
+        "dist/types/src/types/ThreadCapabilities.d.ts"
+      ],
+      "ThreadEvents": [
+        "dist/types/src/types/ThreadEvents.d.ts"
+      ],
+      "ThreadOperation": [
+        "dist/types/src/types/ThreadOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -166,18 +179,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "ThreadCapabilities": [
-        "dist/types/src/types/ThreadCapabilities.d.ts"
-      ],
-      "ThreadEvents": [
-        "dist/types/src/types/ThreadEvents.d.ts"
-      ],
-      "ThreadOperation": [
-        "dist/types/src/types/ThreadOperation.d.ts"
-      ]
-    }
   }
 }

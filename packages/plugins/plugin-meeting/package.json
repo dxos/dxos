@@ -104,6 +104,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Meeting": [
+        "dist/types/src/types/Meeting.d.ts"
+      ],
+      "MeetingCapabilities": [
+        "dist/types/src/types/MeetingCapabilities.d.ts"
+      ],
+      "MeetingEvents": [
+        "dist/types/src/types/MeetingEvents.d.ts"
+      ],
+      "MeetingOperation": [
+        "dist/types/src/types/MeetingOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -169,24 +188,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Meeting": [
-        "dist/types/src/types/Meeting.d.ts"
-      ],
-      "MeetingCapabilities": [
-        "dist/types/src/types/MeetingCapabilities.d.ts"
-      ],
-      "MeetingEvents": [
-        "dist/types/src/types/MeetingEvents.d.ts"
-      ],
-      "MeetingOperation": [
-        "dist/types/src/types/MeetingOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

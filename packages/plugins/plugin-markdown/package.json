@@ -143,6 +143,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Markdown": [
+        "dist/types/src/types/Markdown.d.ts"
+      ],
+      "MarkdownCapabilities": [
+        "dist/types/src/types/MarkdownCapabilities.d.ts"
+      ],
+      "MarkdownEvents": [
+        "dist/types/src/types/MarkdownEvents.d.ts"
+      ],
+      "MarkdownOperation": [
+        "dist/types/src/types/MarkdownOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -229,24 +248,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Markdown": [
-        "dist/types/src/types/Markdown.d.ts"
-      ],
-      "MarkdownCapabilities": [
-        "dist/types/src/types/MarkdownCapabilities.d.ts"
-      ],
-      "MarkdownEvents": [
-        "dist/types/src/types/MarkdownEvents.d.ts"
-      ],
-      "MarkdownOperation": [
-        "dist/types/src/types/MarkdownOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

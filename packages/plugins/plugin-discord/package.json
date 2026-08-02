@@ -75,6 +75,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DiscordEvents": [
+        "dist/types/src/types/DiscordEvents.d.ts"
+      ],
+      "DiscordOperation": [
+        "dist/types/src/types/DiscordOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -119,15 +129,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "DiscordEvents": [
-        "dist/types/src/types/DiscordEvents.d.ts"
-      ],
-      "DiscordOperation": [
-        "dist/types/src/types/DiscordOperation.d.ts"
-      ]
-    }
   }
 }

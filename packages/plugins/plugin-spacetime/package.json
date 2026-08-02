@@ -95,6 +95,25 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Model": [
+        "dist/types/src/types/Model.d.ts"
+      ],
+      "Scene": [
+        "dist/types/src/types/Scene.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "SpacetimeCapabilities": [
+        "dist/types/src/types/SpacetimeCapabilities.d.ts"
+      ],
+      "SpacetimeEvents": [
+        "dist/types/src/types/SpacetimeEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -144,24 +163,5 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "Model": [
-        "dist/types/src/types/Model.d.ts"
-      ],
-      "Scene": [
-        "dist/types/src/types/Scene.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "SpacetimeCapabilities": [
-        "dist/types/src/types/SpacetimeCapabilities.d.ts"
-      ],
-      "SpacetimeEvents": [
-        "dist/types/src/types/SpacetimeEvents.d.ts"
-      ]
-    }
   }
 }

@@ -101,6 +101,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "PresenterCapabilities": [
+        "dist/types/src/types/PresenterCapabilities.d.ts"
+      ],
+      "PresenterEvents": [
+        "dist/types/src/types/PresenterEvents.d.ts"
+      ],
+      "PresenterOperation": [
+        "dist/types/src/types/PresenterOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -163,21 +179,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "PresenterCapabilities": [
-        "dist/types/src/types/PresenterCapabilities.d.ts"
-      ],
-      "PresenterEvents": [
-        "dist/types/src/types/PresenterEvents.d.ts"
-      ],
-      "PresenterOperation": [
-        "dist/types/src/types/PresenterOperation.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ]
-    }
   }
 }

@@ -84,6 +84,22 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "NativeCapabilities": [
+        "dist/types/src/types/NativeCapabilities.d.ts"
+      ],
+      "NativeEvents": [
+        "dist/types/src/types/NativeEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Update": [
+        "dist/types/src/types/Update.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -128,21 +144,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "NativeCapabilities": [
-        "dist/types/src/types/NativeCapabilities.d.ts"
-      ],
-      "NativeEvents": [
-        "dist/types/src/types/NativeEvents.d.ts"
-      ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
-      ],
-      "Update": [
-        "dist/types/src/types/Update.d.ts"
-      ]
-    }
   }
 }

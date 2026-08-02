@@ -75,6 +75,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "GitHubEvents": [
+        "dist/types/src/types/GitHubEvents.d.ts"
+      ],
+      "GitHubOperation": [
+        "dist/types/src/types/GitHubOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -109,15 +119,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "GitHubEvents": [
-        "dist/types/src/types/GitHubEvents.d.ts"
-      ],
-      "GitHubOperation": [
-        "dist/types/src/types/GitHubOperation.d.ts"
-      ]
-    }
   }
 }

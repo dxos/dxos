@@ -90,6 +90,19 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "NativeFilesystemCapabilities": [
+        "dist/types/src/types/NativeFilesystemCapabilities.d.ts"
+      ],
+      "NativeFilesystemEvents": [
+        "dist/types/src/types/NativeFilesystemEvents.d.ts"
+      ],
+      "NativeFilesystemOperation": [
+        "dist/types/src/types/NativeFilesystemOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -137,18 +150,5 @@
     "@dxos/react-ui": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:"
-  },
-  "typesVersions": {
-    "*": {
-      "NativeFilesystemCapabilities": [
-        "dist/types/src/types/NativeFilesystemCapabilities.d.ts"
-      ],
-      "NativeFilesystemEvents": [
-        "dist/types/src/types/NativeFilesystemEvents.d.ts"
-      ],
-      "NativeFilesystemOperation": [
-        "dist/types/src/types/NativeFilesystemOperation.d.ts"
-      ]
-    }
   }
 }

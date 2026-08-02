@@ -75,6 +75,16 @@
     "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "TrelloEvents": [
+        "dist/types/src/types/TrelloEvents.d.ts"
+      ],
+      "TrelloOperation": [
+        "dist/types/src/types/TrelloOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -115,15 +125,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "TrelloEvents": [
-        "dist/types/src/types/TrelloEvents.d.ts"
-      ],
-      "TrelloOperation": [
-        "dist/types/src/types/TrelloOperation.d.ts"
-      ]
-    }
   }
 }
