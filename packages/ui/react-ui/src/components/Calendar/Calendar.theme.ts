@@ -24,7 +24,7 @@ const caption_label: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
 
 const button_previous: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx(
-    'h-7 w-7 inline-flex items-center justify-center rounded-sm shrink-0',
+    'size-(--dx-control-sm) inline-flex items-center justify-center rounded-sm shrink-0',
     'text-description hover:bg-hover-surface',
     'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed',
     ...etc,
@@ -32,7 +32,7 @@ const button_previous: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
 
 const button_next: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx(
-    'h-7 w-7 inline-flex items-center justify-center rounded-sm shrink-0',
+    'size-(--dx-control-sm) inline-flex items-center justify-center rounded-sm shrink-0',
     'text-description hover:bg-hover-surface',
     'data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed',
     ...etc,
@@ -43,11 +43,11 @@ const month_grid: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('w-
 const weekdays: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('', ...etc);
 
 const weekday: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('w-9 h-7 text-xs font-thin text-description', ...etc);
+  mx('w-(--dx-control-md) h-(--dx-control-sm) text-xs font-thin text-description', ...etc);
 
 const day: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx(
-    'relative w-9 h-9 p-0 text-center text-sm rounded-sm inline-flex items-center justify-center cursor-pointer',
+    'relative size-(--dx-control-md) p-0 text-center text-sm rounded-sm inline-flex items-center justify-center cursor-pointer',
     'outline-none',
     'data-[hovered]:bg-hover-surface',
     'data-[focus-visible]:outline-2 data-[focus-visible]:outline-primary-500',

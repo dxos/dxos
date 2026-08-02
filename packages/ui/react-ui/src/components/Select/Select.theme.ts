@@ -26,7 +26,7 @@ const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...
 
 const item: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
-    'flex items-center min-h-[2rem] px-2.5 py-1 gap-2',
+    'flex items-center min-h-(--dx-control) px-(--dx-control-pad) py-1 gap-2',
     'text-base-fg leading-none select-none outline-hidden',
     '[&>svg]:invisible [&[data-state=checked]>svg]:visible',
     'dx-highlighted',
@@ -41,7 +41,7 @@ const separator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('self-stretch border-b my-1 border-separator', ...etc);
 
 const scrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
-  mx('dx-modal-surface flex items-center justify-center cursor-default h-6 w-full', ...etc);
+  mx('dx-modal-surface flex items-center justify-center cursor-default h-(--dx-control-sm) w-full', ...etc);
 
 export const selectTheme: Theme<SelectStyleProps> = {
   content,

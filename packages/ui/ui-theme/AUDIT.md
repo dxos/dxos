@@ -642,10 +642,17 @@ Phases 2–4 are independent of each other after Phase 1.
 > Verified in-browser: sm 24px/pad 4, md 32px/pad 8, lg 40px/pad 12, `xs`≡`sm`, and a toolbar button
 > that never reads the React context resizes from an ancestor density class.
 >
-> Outstanding: the long tail — `react-ui-form`/`react-ui-list` theme literals (`h-8`, `px-3`,
-> `py-2`), the escape hatches (`min-h-1!`, `min-h-0 h-7 w-7 p-0`, grid accessory `w-6`), the
-> remaining fixed-height controls (`Select.Item` 32, `Menu.Item` 36, `Calendar` 28/36,
-> `input.triggerIcon` 28), and extending `--spacing-trim-*` with a 16 step.
+> Sweep done: the spacing ramp gained its 16px step (4/8/12/16/24 — the old `trim-lg` 24px is now
+> `trim-xl`, and the single consumer was pinned so the rename carries no visual delta). The
+> previously fixed-height controls now read the scale: `Select.Item` and `Menu.Item` take
+> `--dx-control`, `Select`'s scroll button and `input.triggerIcon` take `--dx-control-sm`, and
+> `Calendar`'s nav/head/day cells move off `h-7`/`w-9` onto sm/md. `react-ui-form` and
+> `react-ui-list` theme literals are tokenized; **`Listbox`, `Picker` and `Combobox` rows now share
+> one height** (`--dx-control`) instead of the 40/28/24 spread.
+>
+> Outstanding: the escape hatches (`min-h-1!` on `Card.Link`, `min-h-0 h-7 w-7 p-0` in
+> `FormField`, grid accessory `w-6`), `lit-grid`'s `defaultRowSize = 32` hard-coded in JS, and the
+> remaining `@apply bg-*-surface` sites noted under Phase 2.
 
 1. Land `--dx-control-*` tokens + rewritten `.dx-density-*` classes (D3, §7.2b); make
    `DensityProvider` emit the class; keep `data-density` as local override.

@@ -21,16 +21,17 @@ const listStyles = tv({
     //
     accordionItem: 'overflow-hidden',
     // Row trigger: spans the full width and pins the trailing caret to the inline-end edge.
-    accordionTrigger: 'group flex items-start justify-between gap-2 p-2 dx-focus-ring-inset w-full text-start',
+    accordionTrigger:
+      'group flex items-start justify-between gap-trim-sm p-trim-sm dx-focus-ring-inset w-full text-start',
     // Leading / trailing icon wrappers: fixed height so they sit on the centerline of the first
     // content line even when the header spans multiple lines.
-    accordionTriggerIcon: 'flex items-center h-6 shrink-0',
+    accordionTriggerIcon: 'flex items-center h-(--dx-control-sm) shrink-0',
     accordionTriggerContent: 'min-w-0 flex-1',
     // Interactive controls that sit beside the trigger; matches its vertical padding.
-    accordionTrailing: 'flex items-center h-6 shrink-0 my-2 me-2',
+    accordionTrailing: 'flex items-center h-(--dx-control-sm) shrink-0 my-trim-sm me-trim-sm',
     // Slide animations are driven by Radix Accordion's data-state attribute.
     accordionBody: 'overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down',
-    accordionBodyContent: 'p-2',
+    accordionBodyContent: 'p-trim-sm',
 
     //
     // Listbox
@@ -40,7 +41,8 @@ const listStyles = tv({
     // `dx-selected` pairs with `aria-selected="true"` set per-option (see
     // `ui-theme/src/css/components/state.md`). `outline-none` removes the native focus
     // ring; Tabster / `dx-focus-ring` handles keyboard focus at the container level.
-    listboxItem: 'flex items-center dx-hover dx-selected px-3 py-2 cursor-pointer outline-none',
+    listboxItem:
+      'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) py-trim-xs cursor-pointer outline-none',
     listboxItemLabel: 'grow truncate',
 
     //
@@ -54,15 +56,16 @@ const listStyles = tv({
     orderedListDetailColumn: 'flex flex-col ring-1 ring-subdued-separator rounded-sm overflow-hidden',
     // `min-h` matches the shared rail-item track so handles, title, and caret share a baseline.
     orderedListDetailTitleRow: 'flex items-center min-h-[var(--dx-rail-item)]',
-    orderedListDetailPanel: 'px-2 pb-2',
+    orderedListDetailPanel: 'px-trim-sm pb-trim-sm',
     orderedListTitle: 'flex grow items-center truncate cursor-pointer',
 
     //
     // Picker
     //
     // `px-[var(--gutter,…)]` aligns padding with sibling `Column.Center` content, falling back to
-    // 0.75rem when not nested under `Column.Root`.
-    pickerItem: 'dx-hover dx-selected px-[var(--gutter,0.75rem)] py-1 cursor-pointer select-none',
+    // the density control pad when not nested under `Column.Root`.
+    pickerItem:
+      'dx-hover dx-selected flex items-center min-h-(--dx-control) px-[var(--gutter,var(--dx-control-pad))] py-trim-xs cursor-pointer select-none',
 
     //
     // Combobox
@@ -71,9 +74,9 @@ const listStyles = tv({
     comboboxInput: 'm-form-chrome mb-0 w-[calc(100%-2*var(--spacing-form-chrome))]',
     comboboxList: 'py-form-chrome',
     // Trigger value / placeholder text — grows and truncates; subdued when placeholder.
-    comboboxTriggerText: 'font-normal text-start flex-1 min-w-0 truncate me-2',
+    comboboxTriggerText: 'font-normal text-start flex-1 min-w-0 truncate me-trim-sm',
     // Item row adds flex layout; `dx-hover`/`dx-selected` and padding come from `Picker.Item`.
-    comboboxItem: 'flex w-full gap-2 items-center',
+    comboboxItem: 'flex w-full gap-trim-sm items-center',
     comboboxItemDescription: 'text-sm text-description truncate',
 
     //
@@ -81,7 +84,7 @@ const listStyles = tv({
     //
     // Grid whose columns/placement come from the `hasIcon` variant: a leading rail-item icon track
     // only when an icon is present, so an icon-less row doesn't reserve (and indent past) empty space.
-    itemContentRoot: 'grid items-center gap-x-2 w-full min-w-0',
+    itemContentRoot: 'grid items-center gap-x-trim-sm w-full min-w-0',
     itemContentIcon: 'col-start-1 row-start-1 place-self-center',
     itemContentTitle: 'row-start-1 min-w-0 truncate',
     itemContentDescription: 'row-start-2 min-w-0 truncate text-sm text-description',
@@ -89,7 +92,7 @@ const listStyles = tv({
     //
     // Empty
     //
-    empty: 'flex flex-col items-center justify-center gap-2 p-4 text-sm text-center text-description',
+    empty: 'flex flex-col items-center justify-center gap-trim-sm p-trim-lg text-sm text-center text-description',
   },
   variants: {
     // Reserve the leading icon track only when an icon is rendered; otherwise the content occupies a

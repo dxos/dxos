@@ -158,7 +158,7 @@ const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
 
 const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
   mx(
-    'shrink-0 inline-flex items-center justify-center size-7 rounded-xs',
+    'shrink-0 inline-flex items-center justify-center size-(--dx-control-sm) rounded-xs',
     'bg-input-surface text-subdued hover:text-base-fg hover:bg-hover-surface',
     'dx-focus-ring',
     ...etc,

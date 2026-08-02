@@ -23,10 +23,12 @@
 
   --spacing-tag-padding-block: 0.125rem;
 
+  /** The one spacing ramp: 4 / 8 / 12 / 16 / 24. Every other spacing family aliases onto it. */
   --spacing-trim-xs: 0.25rem;
   --spacing-trim-sm: 0.5rem;
   --spacing-trim-md: 0.75rem;
-  --spacing-trim-lg: 1.5rem;
+  --spacing-trim-lg: 1rem;
+  --spacing-trim-xl: 1.5rem;
 
   /** Minimal trim to allow for ring/outline. */
   --spacing-form-chrome: var(--spacing-trim-xs);

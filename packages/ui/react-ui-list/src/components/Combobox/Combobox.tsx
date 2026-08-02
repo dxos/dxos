@@ -309,7 +309,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
         onSelect={handleSelect}
         ref={forwardedRef}
         classNames={styles.comboboxItem({
-          // `px-3 py-1`, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected`
+          // Row height/inset, `cursor-pointer`, `select-none` and the `dx-hover` / `dx-selected`
           // pairing come from `Picker.Item`'s defaults; the slot only adds row-shape (flex /
           // icons + label). Disabled overrides are layered on per-instance.
           class: mx(disabled && 'hover:bg-transparent data-[selected=true]:bg-transparent', classNames),
