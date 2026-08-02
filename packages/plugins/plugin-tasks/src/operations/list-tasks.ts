@@ -8,6 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
+import { InvalidOperationInput } from '../errors';
 import { TaskOperation } from '../types';
 
 const DEFAULT_LIMIT = 50;
@@ -24,7 +25,12 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
   Operation.withHandler(
     Effect.fnUntraced(function* ({ taskSet, project, status, assignee, includeSubtasks, after, limit }) {
       if (!taskSet && !project) {
-        return yield* Effect.fail(new Error('Provide either `taskSet` or `project`.'));
+        return yield* Effect.fail(new InvalidOperationInput({ message: 'Provide either `taskSet` or `project`.' }));
+      }
+      if (taskSet && project) {
+        return yield* Effect.fail(
+          new InvalidOperationInput({ message: 'Provide exactly one of `taskSet` or `project`.' }),
+        );
       }
 
       const containers: string[] = [];

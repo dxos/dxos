@@ -13,6 +13,12 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.UpdateProject> =
   Operation.withHandler(
     Effect.fnUntraced(function* ({ project: projectRef, name, description, goals }) {
       const project = yield* Database.load(projectRef);
+      // An empty patch must not mutate: `Obj.update` bumps meta and notifies reactive consumers
+      // even when every assignment is skipped.
+      if (name === undefined && description === undefined && goals === undefined) {
+        return { project: Entity.toJSON(project) };
+      }
+
       Obj.update(project, (project) => {
         if (name !== undefined) {
           project.name = name;

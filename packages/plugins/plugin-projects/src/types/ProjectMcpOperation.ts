@@ -23,7 +23,8 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
  * `@dxos/assistant-toolkit`). Those creation verbs are NOT projectable anyway — they resolve
  * `Capability.Service` (the template/plugin registry), which exists only inside the app.
  *
- * Re-exported from `ProjectOperation` so app callers keep one namespace.
+ * Exported as its own namespace (not re-exported through `ProjectOperation`): the namespace-export
+ * lint rule forbids re-exporting an `@import-as-namespace` module's members individually.
  */
 
 export const ListProjects = Operation.make({

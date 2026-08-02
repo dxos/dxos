@@ -15,13 +15,6 @@ import updateOutline from './update-outline';
 
 const testLayer = () => TestDatabaseLayer({ types: [Outline.Outline, Text.Text] });
 
-const seed = (content: string) =>
-  Effect.gen(function* () {
-    const outline = yield* Database.add(Outline.make({ name: 'Launch plan', content }));
-    yield* Database.flush();
-    return outline;
-  });
-
 describe('outline operations', () => {
   it.effect('get-outline returns the markdown and its parsed items', () =>
     Effect.gen(function* () {
@@ -71,3 +64,11 @@ describe('outline operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 });
+
+/** Seeds an outline with the given checklist markdown. */
+const seed = (content: string) =>
+  Effect.gen(function* () {
+    const outline = yield* Database.add(Outline.make({ name: 'Launch plan', content }));
+    yield* Database.flush();
+    return outline;
+  });
