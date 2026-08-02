@@ -482,3 +482,35 @@ Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot
   remnant); yaml 90KB via config; chunk-count consolidation via rolldown `advancedChunks`
   minSize (2,324 chunks <1KB remain); skeleton-first entry (dynamic plugin-defs) is the
   end-state lever.
+
+## Checkpoint 2026-08-02 (chunk consolidation post-mortem; preview over HTTP/2)
+
+- User's local re-run after the eviction: main:start 4299 -> 3326ms (−23%); ready roughly
+  flat (~7.1s) because activation now overlaps the still-serializing preload tail.
+  (Also observed: client.initialize 7.0s vs 3.3s across their two runs — worker-side,
+  untouched by this work; needs a variance check before treating as a regression.)
+- Config migrated to the vite 8 surface: build.rolldownOptions + output.codeSplitting
+  (rollupOptions/manualChunks are deprecated; manualChunks is ignored when both present).
+- Consolidation experiments, both measured dead-ends (numbers = main's statically
+  reachable set via bootgraph.py):
+  | variant | total chunks | main boot graph |
+  | default splitting | 4,795–4,829 | 521 / 4.03MB |
+  | per-package groups | 3,006 | 12 scripts / 10.07MB |
+  | $initial boot group    | 2,993        | 87 preloads / 19.09MB|
+  Per-package welds each package's eager and lazy halves (the architecture pairs thin
+  eager entries with heavy lazy islands inside every package). $initial spans all five
+  HTML entries and, with includeDependenciesRecursively defaulting true, their recursive
+  deps — every entry then pulls the merged blob. Capturing an entry module also dissolves
+  its facade (vite degrades HTML to ordered script tags, no preload list).
+- Safe consolidation requires a per-entry static module manifest (generate from
+  bootgraph.py output and feed group test fns) or upstream per-entry tags. Parked.
+- Instead: preview server now opts into https (HTTPS=true, repo-root key/cert) → vite
+  serves HTTP/2, multiplexing the ~520-request preload wave that serializes over 6
+  connections on HTTP/1.1 — the actual local bottleneck.
+- Final bundle verified: 521 chunks / 4.03MB statically reachable, forbidden list clean,
+  warm-cold e2e green (container: profilerTotal 4305, navToReady 7663 — best harness
+  sample to date, N=1).
+- Direction ratified in discussion: extend the dxos-subpath-imports lint with a closure
+  rule (definition-closure files import only designated light subpaths, never barrels) so
+  each boot-graph leak class becomes a lint error; light /types-style subpaths roll out
+  package-by-package driven by lint findings.
