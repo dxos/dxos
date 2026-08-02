@@ -444,22 +444,37 @@ Resolutions and directions from design review, each turning an "open" item into 
      (cleared only by a later superseding write), and conflict-branch reconciliation can trail
      head replication — so "identical keys converge" holds for read VALUES, and settle/zero-write
      checks must wait for stable heads across sync rounds.
-4. **Baseline agreement under a marker race — GAP FOUND IN REVIEW; derivability sweep designed,
-   NOT verified.** The spikes pinned both peers to identical baseline heads; genuinely independent
-   starts stamp DIFFERENT heads (each peer's own), the marker register converges to one winner by
-   LWW, and same-key entries reconcile via the guarded re-run against the winning baseline — but
-   entries whose keys only the LOSING baseline derives (e.g. its source array was longer) are
-   ORPHANS: no key collision, no duplicate pair for the merge engine, and no cleanup was
-   specified. The closing design rests on the derivability invariant (source retained + outputs a
-   pure function of (source, baseline)): after the marker settles, the legitimate key set is
-   exactly "derivable from the winning baseline + the late-insert rule over post-baseline source
-   history"; any entry outside that set is redundant by construction — a **derivability sweep**
-   folds its accumulated post-creation edits into the correctly-keyed twin (E4 three-way merge,
-   paired by source-element correspondence instead of key equality) and tombstones it.
-   Deterministic, idempotent, lossless — same shape as the standing fold rule, extended from
-   values to membership. Alternative that avoids the race instead of repairing it: run the
-   one-time conversion under Strategy C coordination. SPIKE OWED: marker race with different heads
-   → orphaned keys → sweep → orphan-edit folding, as one scenario.
+4. **Array fan-out — RATIFIED DESIGN (2026-08-02, final pass): a stated precondition + two-step
+   composition. Supersedes baseline-derived identity and the derivability sweep.** Review of the
+   baseline-race gap (independent conversions from different heads mint orphan keys that no
+   passive mechanism collapses) led through an active-cleanup design (a derivability sweep) that
+   was rejected on principle: if array fan-out cannot be reduced to object-merging keys, it
+   degrades into active tracking and loose-end chasing. The ratified reduction:
+   - **Precondition, enforced at define time:** fanning an array out into objects requires each
+     element to carry a PRE-EXISTING stable identifier, used in the meta key
+     (`<lensId>:<parentId>:<elementId>`). Declaring an array fan-out over an element schema with
+     no stable-id field is a definition error ("compose a stamping migration first") — the same
+     define-time-visibility spirit as `coverage`.
+   - **Id-less arrays compose in two steps, each an ordinary proven migration:** step 1 stamps a
+     stable id into each element (per-element presence-guarded write — idempotent, re-runnable,
+     fold-forward covers late-created elements; seed the id from the element's ObjID so concurrent
+     stampers derive the SAME id and no conflict even arises); step 2, shipped after step 1 has
+     settled, splits by element id — peers split independently from their own state and the merge
+     engine collapses same-key duplicates PASSIVELY. No baseline agreement, no sweep, no active
+     tracking in the main path.
+   - **Residual, owned:** a peer partitioned across the entire step-1 rollout that also
+     reorder-recreated an element can stamp a competing id; if it wins the register race after
+     step 2 derived keys from the loser, the result is a duplicate + orphan pair — rare (requires
+     partition-across-rollout AND reorder of the same element AND losing the tie-break), and it
+     degrades to REVIEWABLE duplicates in the existing human-gated dedup machinery, not silent
+     loss and not a standing sweep.
+   - Baseline-view derivation is demoted to its legitimate role (fold change-detection, verified
+     in S2a-S2c); write-path origin maintenance in EchoArray remains optional future hardening
+     (auto-stamp on insert, clone re-mint), no longer load-bearing. Strategy-C coordination of a
+     one-time conversion remains available but unnecessary under the two-step design.
+     SPIKE (optional, composes proven pieces): two-step stamping+split under partition/reorder with
+     no shared baseline, asserting passive key collapse and the rollout-race duplicate surfacing as
+     reviewable rather than lost.
 
 ## Out of scope / open
 

@@ -443,7 +443,7 @@ the mechanism.
       migration heads — position is perfectly stable inside a frozen snapshot, deterministic
       across peers, zero coordination, never reads the live array; map-target convergence needs no
       merge engine). Residual: late reorder+edit correspondence surfaces as history-native
-      conflicts, not silent loss. SPIKES RUN AND PROVEN (migration-research-collections.test.ts,
+      conflicts, not silent loss. RATIFIED FINAL (2026-08-02): array fan-out requires a PRE-EXISTING stable element id used in the meta key — enforced at define time; id-less arrays compose two ordinary migrations (1: stamp ids, ObjID-seeded + presence-guarded; 2: split by id after step 1 settles) so duplicates collapse PASSIVELY via merge keys — no baseline agreement, no sweep; rollout-race residual degrades to reviewable duplicates. Baseline view demoted to fold change-detection. SPIKES RUN AND PROVEN (migration-research-collections.test.ts,
       5 tests, 25/25 stable): reorder-immune convergent keys, clean folds, decidable pure moves,
       move+edit correctly parked with nothing lost. Correction: Record targets need pre-seeded
       container + per-key bracket writes (whole-record assignment = container-level LWW, one
