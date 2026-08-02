@@ -954,3 +954,89 @@ inner-loop developer experience.
 - Shared `cacheDir` across worktrees — useful given how many `claude/<*>`
   worktrees exist on this machine, but cache-invalidation correctness
   needs review before flipping.
+
+## 12. 2026-08-02 — regression audit and structural fixes (PR #12438)
+
+Working docs for this round: [`.agents/projects/composer-startup-perf/{DESIGN,TASKS}.md`](../../../.agents/projects/composer-startup-perf/DESIGN.md).
+Numbers were taken on a heavily loaded machine (load average ~32) — treat them as
+relative deltas, not absolutes. Some file paths in §§1–11 have drifted since they
+were written (`src/profiler.ts` → `src/util/profiler.ts`, `src/config.ts` →
+`src/util/config.ts`; the React `Placeholder` was replaced by the Solid boot
+loader injected by `bootLoaderPlugin`).
+
+### 12.1 The regression
+
+Fresh harness rows (the ledger had been stale since 2026-06-16) showed cold
+`profilerTotal` 6.7 s → 18.0 s and `navToReady` 11.4 s → 30.7 s — roughly 3×.
+Root cause: **the eager static import graph had regrown to 879 chunks / 10.8 MB**
+(phase 2's 393 KB win fully reversed), through several independent leaks, each
+invisible to per-module timings.
+
+### 12.2 New diagnosis tooling (committed under `scripts/`)
+
+- `profile-startup.mjs` — CDP CPU profile of a real startup; self-time
+  attribution by package, request waterfall, profiler snapshot. This exposed
+  that the `module:*` measures are an overlapping-window artifact under
+  `concurrency: 'unbounded'` (8 modules "at 1.1 s each" ≈ one contended window
+  counted 8×) — main-thread self-time is the ground truth.
+- `analyze-cpuprofile.mjs` — per-function self-time within a URL-filtered bucket
+  (found `plugin-calls`' `new AudioContext()` at ~430 ms, single function).
+- `trace-eager-graph.mjs` — BFS over the `DX_STATS=1` bundle-buddy `graph.json`;
+  prints the static import chain from `main.tsx` to any module and per-package
+  eager counts. This is the tool that pinned every leak below.
+
+### 12.3 Leaks found and fixed (eager graph 879 chunks / 10.8 MB → 519 / 3.72 MB)
+
+| Leak                                                                                                                                                                 | Chain                                                                                   | Fix                                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| plugin-progress stub fully eager (5,202 modules: react-aria 919, date-fns 824, motion 377, react-ui)                                                                 | `plugin.ts` was `export * from './ProgressPlugin'`                                      | standard `Plugin.lazy` stub + `/testing` entry                                                                                                    |
+| plugin-theme stub fully eager                                                                                                                                        | `export * from '#plugin'`                                                               | lazy stub                                                                                                                                         |
+| Stub operation re-exports dragged implementations: inbox +2,133 (pipeline-rdf SPARQL stack, @dxos/ai anthropic), blogger +1,028, space/spotlight/registry ~+530 each | `plugin.ts` → `operations/index.ts` → definitions/extractors                            | stubs import a light `operations/handler-set.ts` leaf; spotlight's inline handlers behind `OperationHandlerSet.async`                             |
+| plugin-registry meta → sdk/client                                                                                                                                    | `meta.ts` imported `GraphPath` from the app-toolkit barrel                              | helpers moved to `#paths`                                                                                                                         |
+| ResetDialog (fatal-error path) pulled react-ui-form → emoji-mart 483 KB, ui-editor/codemirror+mermaid ~430 KB, MCP SDK, syntax-highlighter                           | `main.tsx` static import                                                                | `React.lazy` + Suspense                                                                                                                           |
+| bip39 (185 KB wordlists) ×2 chains                                                                                                                                   | app-toolkit barrel → sdk/client → credentials; `util/config.ts` → `@dxos/client` barrel | `@dxos/app-toolkit/events` subpath; seedphrase out of the credentials barrel → `@dxos/credentials/seedphrase`; new `@dxos/client/version` subpath |
+
+Result: pre-`main:start` on prod cold ~10.4 s → ~4.9 s; `navToReady` ~30.7 s → ~22.3 s
+(loaded-machine numbers; the delta is the signal). The rule distilled from this:
+**a plugin's `/plugin` stub (and everything it imports — `meta.ts`, `dx.config`,
+`operations/handler-set.ts`) must stay implementation-free**; the follow-ups
+section below tracks enforcement.
+
+### 12.4 Two-wave startup (`?defer=1`, off by default)
+
+`ManagerOptions.deferred` + `PluginManager.enableDeferred()`: non-core enabled
+plugins are excluded from the constructor bootstrap and enabled on an idle
+callback after `Startup` activates, through the normal `enable()` path whose
+`pendingReset` machinery replays already-fired events — the runtime-install path
+the registry already exercises, deliberately **not** phase 4's yield-in-cascade.
+Measured: dev warm ready 9.7 s → 4.5 s (−53 %), long tasks −60 %; prod cold
+`profilerTotal` 16.5 s → ~10 s; **10/10 warm reloads pass**. `useApp`'s `defer`
+predicate must be referentially stable — an inline closure re-creates the
+PluginManager per render (the constructor enable pass restarts forever; this
+cost one debugging round).
+
+### 12.5 Also fixed
+
+- **The dev profiler had been off since phase 7a**: `isTrue(param, default)` —
+  the second argument is a _strictness_ flag, not a default, so the dev fallback
+  never fired. Dev BENCHMARKS rows since then recorded no profiler data.
+- `boot:html-parsed` is now actually emitted (by the boot-loader config script);
+  it had been read by telemetry + harness but written by nothing since the boot
+  loader moved out of `index.html`.
+- Snapshot additions: `startup:pre-main` measure, `services` rows
+  (`client.initialize`, worker spawn→session-ready), per-plugin `lazy:<id>`
+  resolve measures, long-task totals.
+- plugin-calls placeholder media tracks (canvas capture + `AudioContext`,
+  ~430 ms) created at call join instead of plugin activation.
+
+### 12.6 Follow-ups (tracked in the project TASKS.md)
+
+- **Floor**: every stub still reaches ~1,311 raw modules via the
+  `@dxos/app-framework` root barrel (effect 260, fast-check 223 via effect
+  `Schema→FastCheck`, otel, @effect/platform) — needs a light `Plugin`-only
+  entry or barrel slimming.
+- **Guardrail**: fail CI when `index.html`'s modulepreload count/bytes regress —
+  this regression grew silently for six weeks because nothing watched the graph.
+- **Stub sweep**: enforce the handler-set leaf rule across the other 44 plugins.
+- **Deferral default-on**: product call on wave-2 UX (late surface pop-in,
+  deep-link promote-on-demand).

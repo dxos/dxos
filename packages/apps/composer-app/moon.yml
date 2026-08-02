@@ -10,7 +10,9 @@ tags:
 tasks:
   bundle:
     # Emit `_worker.js` after `vite build` so it survives Vite's `emptyOutDir`.
-    script: pnpm exec vite build && pnpm run --silent build:functions
+    # The preload-budget check fails the bundle when the eager startup graph
+    # regresses (see AUDIT.md §12 — it once grew 393KB → 10.8MB unnoticed).
+    script: pnpm exec vite build && pnpm run --silent build:functions && node scripts/check-preload-budget.mjs
     deps:
       - prebuild
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the

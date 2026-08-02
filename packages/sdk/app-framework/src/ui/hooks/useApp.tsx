@@ -18,10 +18,19 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { PluginManagerContext } from '../../context';
-import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
+import { ActivationEvent, type Plugin, PluginManager } from '../../core';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
+
+// When a plugin is enabled late (deferred wave 2, registry install), modules that
+// mount UI must activate after the sibling modules whose capabilities they read:
+// startup-event modules (ReactRoot etc.) consume capabilities contributed by
+// downstream events like client-ready, and surface modules render last.
+const REPLAY_LAST = [
+  ActivationEvent.eventKey(ActivationEvents.Startup),
+  ActivationEvent.eventKey(ActivationEvents.SetupReactSurface),
+];
 
 export type StartupProgress = {
   /** Number of modules that have been activated. */
@@ -164,6 +173,7 @@ export const useApp = ({
         plugins,
         enabled,
         deferred,
+        replayLast: REPLAY_LAST,
         onRemove: onPluginRemove,
         pluginRegistryProvider,
       });

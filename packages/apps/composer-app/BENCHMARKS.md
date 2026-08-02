@@ -76,3 +76,5 @@ Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harn
 | 2026-06-16T21:47:19Z | 391b48086b |   ⚠   | warm-cold | chromium |          8900 |      13362 |  116 |       34.2 |     396 | `org.dxos.plugin.client.module.Client` (2659)                                         |
 | 2026-08-02T05:29:34Z | fa89b1b654 |   ⚠   | cold      | chromium |         17998 |      30724 |  496 |       36.4 |     453 | `org.dxos.plugin.typefully.module.org.dxos.plugin.typefully/publisher-service` (3080) |
 | 2026-08-02T05:30:43Z | fa89b1b654 |   ⚠   | warm-cold | chromium |         18085 |      32259 |  300 |       37.2 |     451 | `org.dxos.plugin.duffel.module.org.dxos.plugin.duffel/duffel` (4527)                  |
+| 2026-08-02T10:06:43Z | d022fd650d |   ⚠   | cold      | chromium |         17159 |      23343 |  212 |       36.4 |     453 | `org.dxos.plugin.observability.module.ClientReady` (2633)                             |
+| 2026-08-02T10:07:31Z | d022fd650d |   ⚠   | warm-cold | chromium |         16359 |      22261 |  156 |       36.5 |     451 | `org.dxos.plugin.osrm.module.org.dxos.plugin.osrm/osrm` (3326)                        |

@@ -68,8 +68,9 @@ Ground truth from `trace-eager-graph.mjs` + sourcemap byte attribution. Eager gr
 - [ ] **Floor follow-up:** every stub still reaches ~1,311 raw modules via the `@dxos/app-framework`
       root barrel (920 modules: effect 260 + fast-check 223 via effect/Schema→FastCheck + otel +
       @effect/platform) and `dx.config` chain. Needs a light `Plugin`-only entry or barrel slimming.
-- [ ] **Guardrail:** CI check that fails when the eager preload count/bytes regress
-      (`index.html` modulepreload count is a cheap proxy; add to bundle task).
+- [x] **Guardrail:** `scripts/check-preload-budget.mjs` runs in the `bundle` task (which the
+      preview deploy runs on every PR) — fails at >600 chunks / >4.5MB eager preloads with
+      diagnosis instructions (current: 519 / 3.73MB).
 - [ ] **Sweep remaining stubs** for the handler-set rule (44 plugins currently at floor — enforce
       leaf-import pattern so they stay there).
 
@@ -90,7 +91,20 @@ plugin-manager.ts:699). NOT yields inside the cascade (phase-4 revert lesson).
       prod cold: profilerTotal 16.5s → ~10s (−40%), navToReady 22.3s → ~16.8s. navToReady's
       floor is identity creation + client init, not plugins.
 - [x] **B2. Repeated warm reloads** — 10/10 passed with defer on (prod preview).
-- [ ] **B2. Deep-link into a wave-2 plugin** — verify promote-on-demand or document the gap.
+- [x] **B2. Deep-link into a wave-2 plugin** — cold-tab deep link into a markdown document with
+      `?defer=1`: ready at ~14s, editor renders ~3s later when wave 2 lands (pending surface
+      resolves itself; no promote-on-demand needed), no fatals. Document creation under defer
+      also works (picker lists all wave-2 types).
+- [x] **B2 follow-on: wave-2 capability races found and fixed.** Cold defer boots hit
+      `invariant violation: No capability found` (irohBeacon.state, calls.call-manager) →
+      System Error dialog. Two causes: (1) pendingReset replayed with unbounded concurrency and
+      no ordering — fixed with sequential replay ranked by host-provided `replayLast`
+      (`[Startup, SetupReactSurface]` — the umbrella startup event is marked fired before the
+      events it causes, so its UI modules must replay after e.g. clientReady); (2) two deferred
+      plugins replaying concurrently can activate each other's just-registered UI modules —
+      fixed by making `enableDeferred` strictly sequential. 4/4 cold defer boots clean after.
+- [ ] **Known wave-2 degradation (non-fatal):** `assistant.operation.generateHomeSuggestions`
+      fires during wave 2 → `ServiceNotAvailable` (logged, retried); home suggestions arrive late.
 - [ ] **Decide default-on** (user call): flag default, critical allowlist (e.g. keep the
       attended item's plugin in wave 1), wave-2 UX (surfaces pop in late).
 

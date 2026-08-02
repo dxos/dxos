@@ -111,6 +111,14 @@ export type ManagerOptions = {
    * events for its modules (see `_enableOne`).
    */
   deferred?: string[];
+  /**
+   * Activation-event keys replayed LAST (and sequentially) when a plugin is
+   * enabled after those events already fired. Late enables happen against a
+   * live app, so a plugin's UI-surface modules must not activate before the
+   * sibling modules that contribute the capabilities those surfaces read —
+   * hosts pass their surface-setup event here (e.g. `SetupReactSurface`).
+   */
+  replayLast?: string[];
   registry?: Registry.Registry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
@@ -316,6 +324,7 @@ class ManagerImpl implements PluginManager {
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _onRemove: ManagerOptions['onRemove'];
   private _deferredIds: string[];
+  private readonly _replayLast: string[];
   private readonly _loadTimeout: Duration.DurationInput;
   private readonly _activationTimeout: Duration.DurationInput;
   private readonly _capabilities = new Map<string, Capability.Any[]>();
@@ -355,6 +364,7 @@ class ManagerImpl implements PluginManager {
     plugins = [],
     enabled = [],
     deferred = [],
+    replayLast = [],
     registry,
     pluginRegistryProvider,
     onRemove,
@@ -394,6 +404,7 @@ class ManagerImpl implements PluginManager {
     // order which matches the natural core-before-enabled precedence.
     // Core plugins are never deferred — the app shell depends on them before first paint.
     this._deferredIds = deferred.filter((id) => !core.includes(id));
+    this._replayLast = replayLast;
     const initialIds = [...new Set([...core, ...enabled])].filter((id) => !this._deferredIds.includes(id));
     void Effect.all(initialIds.map((id) => this.enable(id)))
       .pipe(
@@ -698,8 +709,11 @@ class ManagerImpl implements PluginManager {
       this._deferredIds = [];
       log('enabling deferred plugins', { count: ids.length });
       performance.mark('deferred:start');
-      // Bounded concurrency: unbounded fan-out here would recreate the boot
-      // thundering-herd on the main thread right after first paint.
+      // Strictly sequential: event replay activates modules by event key across ALL
+      // registered plugins, so two plugins replaying concurrently can activate each
+      // other's UI modules before their capability producers — plugin B's `startup`
+      // replay must not grab plugin A's just-registered ReactRoot while A is still
+      // replaying `clientReady`. Sequential also keeps the post-paint main thread calm.
       yield* Effect.all(
         ids.map((id) =>
           this.enable(id).pipe(
@@ -707,7 +721,7 @@ class ManagerImpl implements PluginManager {
             Effect.ignore,
           ),
         ),
-        { concurrency: 4 },
+        { concurrency: 1 },
       );
       performance.mark('deferred:end');
       performance.measure('startup:deferred', 'deferred:start', 'deferred:end');
@@ -748,9 +762,18 @@ class ManagerImpl implements PluginManager {
       });
 
       log('pending reset', { events: [...this.getPendingReset()] });
+      // Late enables run against a live app: replay sequentially, with the host's
+      // `replayLast` events at the end (in the given order), so a plugin's
+      // UI-mounting modules can't render before the sibling modules that
+      // contribute the capabilities they read. The fired-order alone is not
+      // enough — the umbrella startup event is marked fired before the events
+      // it causes (e.g. client-ready), yet its modules often consume their
+      // capabilities. (The stable sort preserves fired order within each group.)
+      const replayRank = (key: string) => this._replayLast.indexOf(key) + 1 || 0;
+      const pendingReset = [...this.getPendingReset()].sort((first, second) => replayRank(first) - replayRank(second));
       yield* Effect.all(
-        this.getPendingReset().map((event) => this.activate(event)),
-        { concurrency: 'unbounded' },
+        pendingReset.map((event) => this.activate(event)),
+        { concurrency: 1 },
       );
 
       return true;
