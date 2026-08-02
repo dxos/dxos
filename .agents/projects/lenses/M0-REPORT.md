@@ -328,14 +328,20 @@ checks must compare full op-id sets, and an attribution UI should collapse equal
 
 **What it costs / still needs:**
 
-1. **The retention decision (the one structural tension).** A history-native conflict lives _only_
-   in the op DAG. Epochs today (`compactDocumentsEpochMigration`, `PRUNE_AUTOMERGE_ROOT_HISTORY`,
-   `REPLACE_AUTOMERGE_ROOT`) materialize docs to plain objects and erase all history — they would
-   destroy every live conflict and every reviewable frontier. Ordinary storage compaction is safe
-   (`A.save` preserves full ancestry; the fragments format bundles per-change members). So
-   adopting this strategy **forces the §10.6-D posture**: epochs demoted to an operation that must
-   either preserve history or drain live conflicts first — a policy decision that has to be made
-   deliberately, not inherited.
+1. **Retention — RATIFIED (2026-08-02): epochs deliberately erase history, and that is fine.**
+   Migration never depends on epochs (every E1-E5 and fold-forward test ran with zero epoch
+   machinery); epochs stay compaction you run when convenient. Accepted consequences at an epoch
+   boundary, owned knowingly: (a) live conflict sets embedded in the erased history are dropped;
+   (b) the heads-based fold-forward window **closes** — stored migration heads become foreign, so
+   a peer offline since before the epoch loses automatic fold/conflict detection (its late writes
+   still merge as raw data; nothing corrupts). The ancestry check (E1 constraint 3) is what makes
+   the boundary safe: the fold detects heads-not-in-history and stops, rather than trusting
+   `A.diff`'s silent everything-is-new answer. Corollary: **epoch timing IS the fold-forward
+   window policy — §10.7 q2 is answered by construction** ("the window is until the next epoch"),
+   with no separate retention mechanism needed. Ordinary storage compaction is unaffected
+   (`A.save` preserves full ancestry; the fragments format bundles per-change members). Optional
+   affordance, not gating: the epoch tool could scan for conflict-flagged patches first and report
+   what it is about to drop.
 2. **A first-class fold-write API.** The user-wins path (view-fork + sentinel actor + merge-back)
    works through public surface today but is a four-step dance; the runner should own it as one
    primitive (e.g. `Write.foldAt(heads, prop, value)` with a winner-policy option).

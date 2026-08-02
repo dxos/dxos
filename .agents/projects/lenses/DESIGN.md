@@ -737,9 +737,12 @@ not a coin flip: plain live-handle `changeAt` gives the fold a higher Lamport co
 forking from a view at the migration heads with a sentinel all-zeros actor ties the counters and
 deterministically loses (user wins — the recommended default), merged back via
 `docHandle.update((doc) => A.merge(doc, clone))`. Same-key fan-in conflicts are history-native for
-free. Cost: epochs' materialize-to-POJO history erasure would destroy live conflicts — this
-strategy forces §10.6-D (epochs preserve history or drain conflicts first) from preference into
-requirement. Full findings: M0-REPORT.md "History-native conflicts".
+free. Retention RATIFIED in review: epochs deliberately erase history and that is accepted —
+migration never depends on them; at an epoch boundary, live conflict sets are dropped and the
+heads-based fold-forward window closes (the ancestry check makes the boundary safe — the fold
+stops on foreign heads instead of re-applying the world). Corollary: epoch timing IS the
+fold-forward window policy, answering §10.7 q2 by construction. Full findings: M0-REPORT.md
+"History-native conflicts".
 
 **Net, phase verdict:** every M0 claim in both tracks was answered and none broke the §10.1 bar.
 Single-object rewrite migrations (including chains) are reachable now with the Track A constraint
@@ -1062,8 +1065,11 @@ partition either blocks it or risks two leaders, so it must be the exception a m
 
 **D. Epochs become compaction only, never the migration mechanism.** An epoch is a storage
 optimization, run when convenient; correctness never depends on one. This retires the current failure
-mode directly. Note the interaction with §10.3 claim 2 — compaction rewrites history, so it must not
-destroy the heads fold-forward relies on.
+mode directly. Revised in review (2026-08-02, ratified): an epoch deliberately erases history and
+need NOT preserve the heads fold-forward relies on — running one closes the fold-forward window and
+drops live history-native conflicts, as an owned consequence (§10.7 q2 is thereby answered: the
+window is "until the next epoch"). The heads ancestry check is what keeps the boundary safe: a fold
+seeing foreign heads stops instead of re-applying the world.
 
 **And version state moves onto the object.** A space-level scalar cannot say which objects migrated
 and races between peers. `EntityMeta.version` already exists per object and `transform` can already
@@ -1077,7 +1083,10 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
    propagates. Is a half-promoted space acceptable, and for how long?
 2. **How long is the fold-forward window?** Keeping migration heads and un-deleted old properties
    forever is a storage cost. When is it safe to compact, given a peer could always have been offline
-   longer?
+   longer? — **ANSWERED (2026-08-02, ratified): the window is "until the next epoch".** Epochs
+   deliberately erase history; running one closes the fold window and drops live history-native
+   conflicts, as an owned consequence. Epoch timing is the policy knob; the heads ancestry check
+   makes the boundary safe (§10.3 addendum).
 3. **Reverse compatibility window.** How long do we keep old lenses, and what happens when a chain
    grows to several hops?
 4. **Lens versioning** (§8.7) — a lens pins `source` to `typename@version`, and migration is exactly
