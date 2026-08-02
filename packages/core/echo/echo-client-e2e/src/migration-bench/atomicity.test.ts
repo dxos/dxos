@@ -16,11 +16,11 @@ import { PublicKey } from '@dxos/keys';
 import {
   CompanyDoc,
   PersonDoc,
+  type TestDatabase,
   createPartitionedPair,
   foldInto,
   headsOf,
   writesSince,
-  type TestDatabase,
 } from './harness';
 
 //

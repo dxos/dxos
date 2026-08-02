@@ -15,6 +15,7 @@ import { PublicKey } from '@dxos/keys';
 
 import {
   PersonDoc,
+  type TestDatabase,
   changedProps,
   createPartitionedPair,
   diffSince,
@@ -23,7 +24,6 @@ import {
   headsOf,
   recordConflict,
   writesSince,
-  type TestDatabase,
 } from './harness';
 
 //

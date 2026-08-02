@@ -22,10 +22,10 @@ import { setDeep } from '@dxos/util';
 import {
   type PartitionedPair,
   PersonDoc,
+  type TestDatabase,
   createPartitionedPair,
   foldValue,
   headsOf,
-  type TestDatabase,
 } from './harness';
 
 //

@@ -15,12 +15,12 @@ import {
   type ConflictEntry,
   type PartitionedPair,
   PersonDoc,
+  type TestDatabase,
   createPartitionedPair,
   foldInto,
   headsOf,
   recordConflict,
   writesSince,
-  type TestDatabase,
 } from './harness';
 
 //
