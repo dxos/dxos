@@ -19,14 +19,14 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { setDeep } from '@dxos/util';
 
-import { type PartitionedPair, PersonDoc, createPartitionedPair, foldValue, headsOf } from './migration-bench/harness';
+import { type PartitionedPair, PersonDoc, createPartitionedPair, foldValue, headsOf } from './harness';
 
 //
 // M0 migration research follow-up: verifies the directive in `.agents/projects/lenses/DESIGN.md`
 // §10.3/§10.6 to make a fold's semantic conflict browsable via AUTOMERGE HISTORY itself instead of an
 // app-level shadow record. The move: write the fold via `changeAt` at the recorded migration heads, so
 // the rekeyed late write lands concurrent with any direct edit since -- a real CRDT conflict, durable
-// in the op DAG. Reuses the migration-bench harness (partition/heal/syncAll, `PersonDoc`) but is
+// in the op DAG. Reuses the shared harness (partition/heal/syncAll, `PersonDoc`) but is
 // otherwise self-contained; `checkoutVersion` is only used to log a value, never asserted against, so
 // its import is load-bearing for the history-walk narration, not the claims.
 //

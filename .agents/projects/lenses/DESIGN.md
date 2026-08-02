@@ -596,161 +596,33 @@ knows only the old type and writes it directly. Fold-forward is for that case.
    list requires the mechanism to notice a new entity rather than a changed property, and it is the
    most likely reason the bar in §10.1 turns out to be unreachable.
 
-#### M0 Track A findings (2026-08-01) — every claim survives; the hypothesis stands
+#### Outcomes (M0 complete, 2026-08-02)
 
-Verified against real automerge-backed objects with genuine transport-level partition:
-`echo-client-e2e/src/migration-research.test.ts` (eight tests; two peers via `EchoTestBuilder` +
-`TestReplicationNetwork`, partition = remove both replicators, heal = attach fresh ones — which
-required fixing a latent `test-replicator.ts` bug where connections were never registered on the
-replicator, so disconnection had silently never worked in this harness). Claim numbers below are
-this section's; the ledger's claim 12 is claim 6 here.
+Every falsifiable claim above was answered empirically and none broke the §10.1 bar — the
+fold-forward hypothesis stands. The proving suite is
+`echo-client-e2e/src/migration-bench/` (6 files, 22 tests); the full record — the final design,
+the evidence map, and everything ruled out along the way with reasons — is
+[M0-REPORT.md](./M0-REPORT.md). The outcomes, in brief:
 
-1. **Late writes survive, even against deletes.** A partitioned peer's write to a key the migration
-   deleted wins the merge on both peers — a delete supersedes only ops it causally saw. A synced
-   old-code client's later write trivially re-adds the key. So deletes do not destroy the data the
-   fold needs — but migrations still must not delete: the fold reads the _source_ property, and
-   "keep old properties until compaction" remains the rule (also reconfirmed by every later test,
-   which depends on the source being present).
-2. **Heads-diff isolates late writes exactly.** `A.diff(doc, preMigrationHeads, current)` filtered
-   to source-property paths names precisely the late writes — never the pre-migration values the
-   migration consumed, never the migration's own target writes. The fold marks its own progress by
-   advancing its stored heads: after a second partition and a second late edit, the next diff names
-   only the new edit; the folded one never reappears. Mechanics: object data sits at
-   `objects.<id>.data.<prop>`, so the property name is at a fixed path index, and one string write
-   is _two_ patches (`put ''` + `splice` — strings are Automerge Text).
-   **The epoch caveat is real but different from expected:** `A.diff` against heads the doc has
-   never seen does not throw — it silently returns a full diff, as if from empty. An epoch re-root
-   would therefore make _everything_ look late and the fold would re-apply the world. A fold must
-   verify its stored heads are in the doc's history before trusting the diff (or store an epoch
-   marker beside them, per M1). Constrains §10.6 D and open question 2.
-3. **Folding converges on values — but a heads-driven loop never settles on writes.** Two peers
-   independently applying the same deterministic fold converge with no value oscillation. However,
-   automerge emits the full `put ''` + `splice` pair for a string assignment even when the assigned
-   value equals the current one — an equal-value write is a real change. A fold loop triggered by
-   "heads moved past my marker" therefore re-writes forever: values stable, writes ping-ponging.
-   **A real fold must compare the derived value against the current value and skip equal writes.**
-   This is the sharpest implementation constraint the research produced, and it applies to any
-   "standing rule" trigger design (open question 6).
-4. **Chains fold through composition.** A V1-shaped late write folds through a composed `A→B→C`
-   derivation to the final shape, on both peers, idempotently across rounds. Two consequences: the
-   composed fold must be applied as **one `Obj.update`**, which is what keeps intermediate
-   generations consistent at every observable point (split into two flushed updates there is a
-   window where the object is half-folded and replicating); and detection strictly needs only the
-   _earliest_ step's pre-heads, since intermediate steps never touch the original source properties
-   — though per-step heads are cheap and would cover a late write arriving at an intermediate
-   generation (not exercised).
-5. **Semantic conflicts are detectable, and Automerge indeed cannot see them.** The premise
-   correction held exactly: a late `title` write and a direct `name` edit merge silently — different
-   keys, no CRDT conflict. The fold detects the conflict itself with **two head-marks per migration
-   event**: source-prop diff from _pre_-migration heads (names late writes), target-prop diff from
-   _post_-migration heads (names direct edits, excluding the migration's own writes). On conflict it
-   records `{property, theirs}` as data and does not overwrite — winner intact, loser preserved,
-   record replicated. Non-conflicting late writes fold through cleanly in the same pass. The
-   two-marks requirement flows to object-merging's residual (`mergedAtHeads` is loser-side only).
-6. **A late-created entity folds — by a different mechanism.** A partition-created old-shape object
-   replicates and becomes queryable after heal (the sync walk covers root-doc `links`, so new object
-   docs arrive for free). It is distinguishable from migrated objects by shape, and — better — a
-   per-object marker stamped via `Annotation.set` on `EntityMeta.annotations` works and replicates
-   (`EntityMeta.version` itself is fixed at creation from the type DXN; the annotations dictionary
-   is the mutable per-object store). Both peers folding the new entity independently converge. The
-   structural finding: a new entity has **no heads to diff by construction**, so new-entity
-   detection is a query-based path ("old-shaped and unmarked") that sits _beside_ the heads-based
-   property fold — two code paths, not one.
-
-**What Track A does not answer:** real epoch machinery (only the foreign-heads behavior of
-`A.diff` was probed), and everything entity-lifecycle — which Track B below took up the same day.
-
-#### M0 Track B findings (2026-08-01) — entity lifecycle; the substrate holds, the engine is owed
-
-Verified in `echo-client-e2e/src/migration-research-entities.test.ts` and
-`migration-research-list-identity.test.ts`, same harness. Ledger claims 6-11; the object-merging
-merge engine these lean on has **zero implementation in-repo** (design-only), so what is verified
-here is the substrate contract that engine assumes — plus one finding that must flow back to it.
-
-- **Same-id collision (class 1) is worse than recorded — peers diverge permanently, not merely
-  orphan.** Two partitioned peers minting the same `EntityId` never converge on one winner: each
-  peer's `_loadLinkedObjects` caches the _first_ URL it bound for the id (`_objectDocumentHandles`)
-  and only logs-and-drops later `links[id]` changes. The merged map itself is identical everywhere —
-  the divergence is a first-writer-wins _client cache_ on top of it that never re-observes. Each
-  peer sees only its own write, deterministically, across repeated heal rounds, with no error. So no
-  repair can rely on observing `links` settle, and derived object ids are dead as a convergence
-  route for a stronger reason than the object-merging research's §4.5 gave. **Flow back to
-  object-merging.**
-- **Identity-key duplicates (class 2) are the safe path, verified end to end.** Random id + shared
-  `meta.key`/`meta.version` stamped at creation (`[Obj.Meta]`): both duplicates replicate to both
-  peers, both addressable via `Filter.key(key, { version })`, meta replicates, nothing lost —
-  visible, addressable, awaiting collapse. Fan-out under a late write (claim 9) rides this with **no
-  find-or-create atomicity**: both peers folding the same late write create identical-content
-  duplicates under the same derived key (`<lensId>:<sourceId>:<role>`), the engine's best case.
-- **A partial transform must reject whole.** Demonstrated contract: an unparseable source value
-  creates no object, leaves the source property untouched, and returns a report. This needs to be a
-  stated API guarantee of the fan-out runner, not an implicit behavior.
-- **The 1→N element key (claim 7, the phase's sharpest unknown) — automerge identity is convergent
-  but not durable.** `A.getObjectId` on a struct list element (previously unused anywhere in DXOS)
-  is stable under in-place edits, byte-identical across peers through partition/heal, and distinct
-  and convergent for concurrent inserts — everything a cross-peer join key needs. But any
-  remove+insert mints a new `ObjID`, and automerge has no list-move, so every normal reorder
-  (`splice`, `sort`, drag reindexing, slot reassignment) destroys it. Verdict: bare element identity
-  serves within a fold window; a **durable** split key must be an explicit id stamped in the element
-  at creation. The rich-text lens's block identity inherits the same verdict — "stable block
-  identity via Automerge cursors" needs stamped ids too.
-- **Dangling relations degrade gracefully cross-peer (claim 8).** A relation replicating ahead of
-  its endpoints is excluded from queries — never an error, never a blocked subtree — and surfaces
-  by itself once the endpoints load (matching the single-peer strong-deps evidence). Write ordering
-  is a nicety for the runner, not a requirement.
-- **Fan-in collision has no defensible default — and not even an accidental one (claim 10).** Two
-  peers concurrently folding different values into one parent property converge (both peers always
-  agree post-merge) but the winner is **randomized per run** — automerge's actor-id tie-break, not
-  write order or content — and the loser vanishes from the property without a trace. A fan-in
-  migration must declare its resolution (ordering, relation-kind priority, or reject-and-record à
-  la claim 5). The losing value survives on its source object, so a declared resolution can
-  re-derive it — one more independent argument for keeping sources.
-- **Referrer cardinality is queryable today (claim 11).** `referencedBy` returns the exact
-  referencing set for direct `Ref` fields, locally and on a replica after `updateIndexes` — the
-  pre-flight check fan-in needs. The known non-`Ref` gap list (markdown links, feed blocks, side
-  maps, bare-EID relation endpoints) remains unexercised; block-vs-duplicate for a shared child
-  stays a declared policy choice.
-- **A tombstoned child keeps late writes (fan-in residue of claims 1/12).** A partitioned peer's
-  write to a since-removed object survives beneath the tombstone (`deleted: 'include'` shows it;
-  default queries stay clean — the write does not resurrect the object), and the public re-add
-  idiom un-deletes it with the late edit intact, on both peers. So absorb-then-tombstone does not
-  forfeit the bar: late edits to an absorbed child remain recoverable for folding into the parent.
-
-**What M0 leaves open.** The collapse itself (object-merging Phase 0+ — nothing to adopt yet); real
-epoch/compaction behavior against stored heads; the non-`Ref` back-reference gaps; the fold-forward
-trigger and its cost (§10.7 q6); and the two-late-children-into-one-tombstoned-parent composition,
-which combines verified pieces (tombstone late writes + declared fan-in resolution) but was not run
-as a single scenario.
-
-#### Addendum (2026-08-02) — conflicts are history-native, not app-level records
-
-Direction change after review: no shadow conflict records — all history, including migration
-conflicts, must be browsable via automerge history (which history browsing already builds on).
-Verified strategy (`echo-client-e2e/src/migration-research-history.test.ts`, first-ever use of
-`A.getConflicts` in DXOS): **write the fold via `changeAt` at the recorded migration heads**, so a
-rename's re-keyed late value lands _concurrent_ with any direct edit — a real CRDT conflict on the
-target key, replicating identically, permanently reviewable at the conflict frontier from ops
-alone (via `A.clone` first — a live-doc view's `getConflicts` is emptied by later writes), and
-discoverable by an unmodified history walker (`conflict: true` put patches). Attribution rides on
-change `message`/`time` (plumbed, previously unused). The winner is a deterministic policy choice,
-not a coin flip: plain live-handle `changeAt` gives the fold a higher Lamport counter (fold wins);
-forking from a view at the migration heads with a sentinel all-zeros actor ties the counters and
-deterministically loses (user wins — the recommended default), merged back via
-`docHandle.update((doc) => A.merge(doc, clone))`. Same-key fan-in conflicts are history-native for
-free. Retention RATIFIED in review: epochs deliberately erase history and that is accepted —
-migration never depends on them; at an epoch boundary, live conflict sets are dropped and the
-heads-based fold-forward window closes (the ancestry check makes the boundary safe — the fold
-stops on foreign heads instead of re-applying the world). Corollary: epoch timing IS the
-fold-forward window policy, answering §10.7 q2 by construction. Full findings: M0-REPORT.md
-"History-native conflicts".
-
-**Net, phase verdict:** every M0 claim in both tracks was answered and none broke the §10.1 bar.
-Single-object rewrite migrations (including chains) are reachable now with the Track A constraint
-set; entity-lifecycle migrations are reachable **conditional on** the object-merging engine landing
-(collapse), stamped element ids (1→N), and migration-declared fan-in resolutions — all of which are
-design obligations, not open feasibility questions. The one place feasibility genuinely moved:
-same-id creation is now known to diverge permanently per peer, hardening the "identity keys, never
-derived ids" rule from a preference into a necessity.
+- **Single object and chains: solved**, under a mechanically-enforceable constraint set (keep
+  sources; two head-marks + ancestry check; value-compare every write; equal values never
+  conflict; one `Obj.update` per composed fold; per-object markers).
+- **N→N multi-object: same machinery per object**, including guarded cross-object moves.
+- **Fan-in: solved with three declared ingredients** — removal choice, property-collision
+  resolution, and a query-based late-child path — each independently load-bearing.
+- **Fan-out: reduced to object-merging keys** (random object id + derived meta key; passive
+  collapse via the merge engine), with the baseline-aware three-way merge as the loss-only-on-
+  conflict collapse semantics (proposal flowed to PR #12412).
+- **Array fan-out: a define-time precondition + two-step composition** — elements must carry a
+  pre-existing stable id used in the meta key; id-less arrays first run an ordinary stamping
+  migration (random ids; the temporal gate to step 2 carries the correctness).
+- **Conflicts are history-native** — `changeAt` fold-at-heads materializes real CRDT conflicts,
+  reviewable forever from ops alone, with the winner a deterministic policy (user-wins
+  recommended). No app-level shadow records.
+- **Multi-object non-atomicity is a repairable window, not corruption** — effects-as-data write
+  sets + per-step guards make any peer able to complete an interrupted migration.
+- **Epochs: last resort, platform-owned, deliberately history-erasing** — the fold window closes
+  at the boundary as an owned consequence; epoch timing is the window policy (§10.7 q2).
 
 ### 10.4 A migration is a lens
 
@@ -1004,38 +876,13 @@ Shared plumbing, so it is built once: their Phase 1 exposes relation-endpoint mu
 (`ObjectCore.setSource`/`setTarget`) for ref rewriting — the same internal API fan-out-to-relation
 writes need here.
 
-**Baseline-aware three-way merge — verified proposal for PR #12412 (2026-08-01).** Their PR ships
-per-field merge ("smallest-id-defining-candidate wins per field"), which is already better than
-whole-object replace — but for migration-minted duplicates it still loses unconflicted edits,
-because the deterministic transform wrote _every_ field on _both_ copies, so "the winner defines
-it" is vacuously true and the winner's untouched baseline value beats the loser's real edit.
-Demonstrated, then fixed, in `echo-client-e2e/src/migration-research-merge.test.ts` (4 tests):
-
-- **The defect, quantified**: field-wise winner-preference on two migration duplicates (each edited
-  disjointly, plus one genuinely contested field) drops the loser's disjoint edit with no conflict
-  existing — and drops the contested field silently, with no record.
-- **The fix**: classify each field against the shared **baseline** — for migration duplicates a
-  free, pure recomputation of the transform (`deriveBaseline(parent)`). Winner==baseline &&
-  loser!=baseline → take the loser's (unconflicted edit preserved); loser==baseline or equal values
-  → keep, writing nothing (the claim-3 value-compare rule); both diverged and disagree → **genuine
-  conflict**: keep the winner's value, record `conflicts[field] = { mine, theirs, loserId }`.
-  Result: loss only where two peers actually contradict each other — goal (a).
-- **Inspectable and reversible**: the conflict record is a Record keyed by field (not an array, so
-  independent identical merges converge instead of duplicating entries), and the loser is
-  tombstoned, never erased — every field readable under `deleted: 'include'`, agreeing with the
-  record. A UI flip ("choose theirs") applied from either source converges on both peers — goal
-  (b).
-- **Convergent and idempotent**: two peers merging independently while partitioned converge to the
-  identical winner state _including_ the conflicts record; re-running the merge on the converged
-  state performs zero writes (asserted by empty `A.diff`). Requires the value-compare guard and an
-  idempotent tombstone (skip `db.remove` when already deleted).
-
-What #12412 needs to adopt this: a baseline per duplicate. Migration duplicates get it free
-(recompute the deterministic transform). General duplicates have no pure function to re-run — the
-extension path is storing creation heads (or a fork-time snapshot) alongside the natural key so the
-baseline can be diffed out later, the same `A.diff` machinery claims 2/5 use; unbuilt, flagged
-only. This also bears on their open collaborative-text policy: min-id-wins discards a loser's
-entire text, and a text baseline would allow the same only-on-conflict discipline there.
+**Baseline-aware three-way merge — proposal for PR #12412 (verified).** Their per-field
+winner-preference loses a loser-side unconflicted edit on any field the deterministic transform
+also wrote on the winner (all of them, for migration-minted duplicates). The fix: classify each
+field against the recomputable baseline — take unconflicted loser edits, keep the winner's value
+on genuine conflicts, tombstone (never erase) losers. Loss only where peers actually contradict;
+inspectable and revertible; convergent and idempotent. Evidence and detail: M0-REPORT.md (design
+4 and "Ruled out").
 
 ### 10.6 Convergence between peers
 
