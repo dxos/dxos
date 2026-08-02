@@ -372,10 +372,24 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       consumers: plugin-assistant chat task list (currently checklist-form), kanban adoption.
       REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
       goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
-- [ ] **Phase 4 — MCP verbs** — operation sets per MILESTONE-5.md §7.2 + McpToolAnnotation;
-      edge mcp-space-service projection PR (identity-through-invokeOperation prerequisite from
-      the 2026-08-01 service review); TESTING.md runbook extension; dx-mcp smoke
-      projectCreate → taskCreate → taskComplete live in Composer.
+- [ ] **Phase 4 — MCP verbs** — IN PROGRESS 2026-08-02. Ownership RATIFIED (MILESTONE-5 §7.3):
+      **dxos defines, edge projects**; a tool that exists only edge-side is a contract defect.
+      Contract written up in §7.4 (`McpToolAnnotation` + the three hard rules learned from the
+      2026-08-02 edge smoke: refs-in/`Entity.toJSON`-out; schemas must survive
+      `Operation.serialize` (one bad annotation breaks EVERY space-scoped invocation on that
+      registry — `serialize.test.ts` mandatory); handlers must be workerd-safe, no React/
+      app-toolkit, `*.workerd.ts` entry when a plugin is registered whole).
+      DXOS SIDE (mine): McpToolAnnotation in @dxos/compute/Operation (pattern:
+      Visible/Idempotent — `Annotation.make` + pipeable combinator + reader off
+      `PersistentOperation`; `serialize` already carries `meta.annotations`, so edge reads the
+      marker from the registry — no curated table); missing read verbs `taskList` (filters +
+      after/limit — closes the §7.3 exception where edge hand-rolled it),
+      `projectList`/`projectGet`/`projectUpdate`, `outlineGet`/`outlineUpdate`; annotate the
+      shipped write verbs (task ×4 + projectCreate); workerd audit of plugin-projects handlers.
+      EDGE SIDE (peer agent): annotation-driven projection, delete local taskList, identity
+      through invokeOperation. ALREADY GREEN: task write verbs verified end-to-end over OAuth
+      2026-08-02 (`e2e-task-smoke.mjs`, 52/52 workerd tests, edge branch `mcp-task-tools`).
+
 - [ ] **Phase 5 — MCP-first dogfood** (alongside 2–4) — this milestone as a Project in the
       shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync
       spec lands; Claude Desktop demo over the tunnel.

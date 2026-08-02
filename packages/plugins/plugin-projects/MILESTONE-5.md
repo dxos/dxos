@@ -204,29 +204,30 @@ deleteObject / queryObjects` + discovery (`listPlugins / listTypes / listOperati
    `createObject`: defaults (`status: 'todo'`), the ref envelope, schema-checked patches,
    filtered projections.
 3. **Aspect grouping**: tools are namespaced by domain and the projection is **opt-in per
-   operation** via an `McpToolAnnotation` on the operation definition (name, tool description,
-   safety class) so `listOperations` discovery and the projected tool list stay one source of
-   truth. Start with a hand-curated projection table in mcp-space-service (the existing
-   pattern); move to annotation-driven once the operation registry carries schemas end-to-end.
-   If tool-count bloat bites clients, aspects become server-side toolset filters
-   (`/mcp?toolsets=tasks,projects`) — defer until needed.
+   operation** via an `McpToolAnnotation` on the operation definition (§7.4) so `listOperations`
+   discovery and the projected tool list stay one source of truth. If tool-count bloat bites
+   clients, aspects become server-side toolset filters (`/mcp?toolsets=tasks,projects`) — defer
+   until needed.
 
 ### 7.2 Verb set (Linear-shaped; camelCase per the existing tool surface)
 
 Naming follows the deployed `createObject`-style camelCase (review finding 2026-08-01), grouped
 by domain prefix:
 
-| Verb                           | Shape (cf. Linear MCP)                                                                                                                 |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `projectList`                  | `list_projects` — id/name/status summary rows                                                                                          |
-| `projectGet`                   | `get_project` — full: goals, task summary, artifact list                                                                               |
-| `projectCreate`                | `save_project` — template-driven (`ProjectOperation.Create` exists)                                                                    |
-| `projectUpdate`                | goals/description patch                                                                                                                |
-| `taskList`                     | `list_issues` — filters: `taskSetId? / projectId? / status? / assignee?`; paginated (`after`/`limit`, Linear-style — DECIDED, day one) |
-| `taskCreate`                   | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                                |
-| `taskUpdate`                   | schema-checked field patch (title/status/priority/assignee/estimate)                                                                   |
-| `taskComplete`                 | the 90% action as one verb                                                                                                             |
-| `outlineGet` / `outlineUpdate` | read/write a Project's markdown checklist (promotion verb rides along)                                                                 |
+Status as of 2026-08-02 — "app" = defined in a plugin here, "edge" = projected as an MCP tool:
+
+| Verb                           | Shape (cf. Linear MCP)                                                                                                                 | app | edge               |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------ |
+| `projectList`                  | `list_projects` — id/name/status summary rows                                                                                          | ✗   | ✗                  |
+| `projectGet`                   | `get_project` — full: goals, task summary, artifact list                                                                               | ✗   | ✗                  |
+| `projectCreate`                | `save_project` — template-driven (`ProjectOperation.Create` exists)                                                                    | ✓   | ✗                  |
+| `projectUpdate`                | goals/description patch                                                                                                                | ✗   | ✗                  |
+| `taskList`                     | `list_issues` — filters: `taskSetId? / projectId? / status? / assignee?`; paginated (`after`/`limit`, Linear-style — DECIDED, day one) | ✗   | ✓ (§7.3 exception) |
+| `taskCreate`                   | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                                | ✓   | ✓                  |
+| `taskUpdate`                   | schema-checked field patch (title/status/priority/assignee/estimate)                                                                   | ✓   | ✓                  |
+| `taskComplete`                 | the 90% action as one verb                                                                                                             | ✓   | ✓                  |
+| `taskAssign`                   | set the `Actor` (person ref/email/name, or agent by DID)                                                                               | ✓   | ✓                  |
+| `outlineGet` / `outlineUpdate` | read/write a Project's markdown checklist (promotion verb rides along)                                                                 | ✗   | ✗                  |
 
 Milestone verbs follow §5 when it lands. Deliberately not in v1: comments (no comment model on
 Task yet), cycles (no sprint concept), external side-effects (`send`/sync-push — per §2.7's
@@ -240,12 +241,81 @@ for anonymous object CRUD in dev, but `taskUpdate`/`taskComplete` with an `assig
 only meaningful when the caller identity is trustworthy. Identity-through-the-call lands with
 (or before) the verb layer on the edge side.
 
-### 7.3 Placement
+### 7.3 Placement — who owns what (RATIFIED 2026-08-02)
 
-- dxos: operation sets + handlers in plugin-projects (project/plan verbs) and plugin-tasks
-  (task verbs); registered like `markdown.update`.
-- edge: mcp-space-service projection (new tool defs calling operation-service `invoke`), PR to
-  dxos/edge; activates on the next `@dxos/*` pin bump — same rhythm as #12423/#785.
+**dxos defines, edge projects.** Every MCP tool in §7.2 is an operation defined in a plugin
+(plugin-projects, plugin-tasks) and annotated for projection; mcp-space-service turns annotated
+operations into tools and never hand-rolls a verb of its own. A tool that exists only edge-side
+is a defect in this contract, not a shortcut — it drifts the moment the app-side model changes.
+
+- **dxos** (this repo): operation definitions + handlers + `McpToolAnnotation`; registered like
+  `markdown.update`.
+- **edge**: reads the annotation off the operation registry and projects; owns transport, auth,
+  identity, and the tunnel. Activates on the next `@dxos/*` pin bump — same rhythm as
+  #12423/#785.
+- **Known exception to close**: `taskList` shipped edge-side first (2026-08-02 smoke) with no
+  app-side definition. Phase 4 adds it here with the §7.2 filters and pagination; edge then
+  deletes its local implementation.
+
+### 7.4 `McpToolAnnotation` — the projection contract
+
+Follows the existing operation-annotation pattern (`VisibleAnnotation` / `IdempotentAnnotation`
+in `@dxos/compute/Operation`): an `Annotation.make` id + schema, a pipeable combinator applied at
+the definition site, and a reader. Critically, `Operation.serialize` already carries
+`meta.annotations` into the `PersistentOperation` record, so the edge reads the marker off the
+operation registry — no shared build, no curated table.
+
+```ts
+// @dxos/compute/Operation
+export const McpToolAnnotation = Annotation.make({
+  id: 'org.dxos.operation.mcp-tool',
+  schema: Schema.Struct({
+    /** Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`). */
+    name: Schema.String,
+    /** Model-facing description; when absent the operation's own description is used. */
+    description: Schema.optional(Schema.String),
+    /**
+     * Safety class, mapped by the server to MCP tool hints:
+     * `read` → readOnlyHint; `write` → mutates space data; `destructive` → deletes/irreversible.
+     */
+    safety: Schema.Literal('read', 'write', 'destructive'),
+    /** Aspect/toolset for future server-side filtering (`/mcp?toolsets=tasks`). */
+    aspect: Schema.optional(Schema.String),
+  }),
+});
+
+export const mcpTool = (props: McpTool) => annotate(McpToolAnnotation, props);
+export const getMcpTool = (op: PersistentOperation): McpTool | undefined => …;
+```
+
+Applied at the definition site:
+
+```ts
+export const CompleteTask = Operation.make({ … }).pipe(
+  Operation.mcpTool({ name: 'taskComplete', safety: 'write', aspect: 'tasks' }),
+);
+```
+
+**Rules a projected operation must satisfy** (all three learned the hard way in the 2026-08-02
+edge smoke — see the mcp project ledger):
+
+1. **Refs in, JSON out.** Inputs take `Ref.Ref(T)`, never a live ECHO object (a ref envelope
+   cannot decode into one); outputs return `Entity.toJSON` snapshots, never live proxies (the RPC
+   layer returns handler output raw, so a proxy arrives as `{}`). Same contract as
+   `database.objectCreate`.
+2. **Serializable schemas.** Input/output schemas must survive `Operation.serialize`'s
+   json-schema contract — a `serialize.test.ts` regression test per operation set is mandatory,
+   because a single unserializable annotation breaks _every_ space-scoped invocation on a
+   registry that contains the operation, not just its own listing.
+3. **Worker-safe handlers.** Anything the edge registers runs in workerd: handler modules must
+   import only effect/compute/echo/types — no React, no `.pcss`, no app-toolkit UI. Plugins that
+   are registered whole need a `*.workerd.ts` entry (see `TasksPlugin.workerd.ts`); handlers that
+   cannot be made worker-safe are registered as an explicit handler set, schema-only.
+
+**Identity prerequisite (unchanged)**: `invokeOperation` carries no caller identity and legacy
+grants bypass the space-context check. `taskAssign`/`taskUpdate` are only _meaningful_ once the
+caller is trustworthy; identity-through-the-call lands with (or before) the write verbs on the
+edge side.
 
 ## 8. Implementation plan
 
@@ -272,10 +342,18 @@ Phasing note: each phase lands independently (one PR each, own tests); the MCP d
   operates on durable Tasks (process-side task ref, no `agentPid`); TaskList/PlanArticle
   retarget. _Acceptance_: eval — agent brainstorms in the outline, promotes two items, human
   flips one to done in the TaskList, agent's reconcile sees it.
-- **Phase 4 — MCP verbs**: operation sets (§7.2) + `McpToolAnnotation`; edge PR projecting
-  them (with the identity prerequisite from §7.2); TESTING.md runbook extension. _Acceptance_:
-  `dx mcp` / mcp-smoke drives `projectCreate → taskCreate → taskComplete` and Composer shows
-  each step live.
+- **Phase 4 — MCP verbs** (IN PROGRESS 2026-08-02; ownership split ratified in §7.3 — dxos
+  defines, edge projects):
+  - _dxos (this repo)_: `McpToolAnnotation` per §7.4; the missing read-side verbs —
+    `taskList` (closing the §7.3 exception), `projectList`/`projectGet`/`projectUpdate`,
+    `outlineGet`/`outlineUpdate`; annotate the already-shipped write verbs; per-operation-set
+    `serialize.test.ts`; workerd-safety audit of every projected handler (plugin-projects needs
+    the `*.workerd.ts` check that plugin-tasks already has).
+  - _edge_: switch projection from the hand-curated table to the annotation, delete its local
+    `taskList`, land identity-through-`invokeOperation`; TESTING.md runbook extension.
+  - _Acceptance_: `dx mcp` / mcp-smoke drives `projectCreate → taskCreate → taskComplete` and
+    Composer shows each step live (task half already verified 2026-08-02 over OAuth); every
+    §7.2 row reads ✓/✓.
 - **Phase 5 — MCP-first dogfood (runs alongside 2–4)**: our own build process IS the primary
   use case (user, 2026-08-01) — the repo-side planning artifacts map one-to-one onto product
   objects and migrate into Composer as soon as the loop is live:
