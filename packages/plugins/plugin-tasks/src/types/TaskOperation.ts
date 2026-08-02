@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets
 // the compiler name the operation types portably (TS2883).
@@ -21,6 +21,9 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 /**
  * Linear-shaped task verbs (MILESTONE-5.md §7.2). Verbs enforce what models get wrong with raw
  * object CRUD: defaults (`status: 'todo'`), parent-edge containment, schema-checked patches.
+ *
+ * Subjects are refs, not live objects, so the verbs are invocable from a remote host (the edge
+ * operation-service projects them as MCP tools) where only the reference crosses the wire.
  */
 
 export const CreateTask = Operation.make({
@@ -32,7 +35,7 @@ export const CreateTask = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    taskSet: Type.getSchema(TaskSet.TaskSet).annotations({
+    taskSet: Ref.Ref(TaskSet.TaskSet).annotations({
       description: 'The task set (container) the task files into.',
     }),
     title: Schema.String,
@@ -42,8 +45,11 @@ export const CreateTask = Operation.make({
     /** Parent task for a sub-task; when set, the task is parented to it instead of the task set. */
     parent: Schema.optional(Ref.Ref(Task.Task)),
   }),
+  // JSON snapshot, not a live object: the handler may run on a remote host (edge
+  // operation-service) where only serializable values cross the wire — same contract as
+  // `database.objectCreate`.
   output: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Schema.Unknown,
   }),
 });
 
@@ -56,7 +62,7 @@ export const UpdateTask = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
     status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled')),
@@ -64,8 +70,11 @@ export const UpdateTask = Operation.make({
     estimate: Schema.optional(Schema.Number),
     assignee: Schema.optional(Actor.Actor),
   }),
+  // JSON snapshot, not a live object: the handler may run on a remote host (edge
+  // operation-service) where only serializable values cross the wire — same contract as
+  // `database.objectCreate`.
   output: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Schema.Unknown,
   }),
 });
 
@@ -78,10 +87,13 @@ export const CompleteTask = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Ref.Ref(Task.Task),
   }),
+  // JSON snapshot, not a live object: the handler may run on a remote host (edge
+  // operation-service) where only serializable values cross the wire — same contract as
+  // `database.objectCreate`.
   output: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Schema.Unknown,
   }),
 });
 
@@ -94,10 +106,13 @@ export const AssignTask = Operation.make({
   },
   services: [Database.Service],
   input: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Ref.Ref(Task.Task),
     assignee: Actor.Actor,
   }),
+  // JSON snapshot, not a live object: the handler may run on a remote host (edge
+  // operation-service) where only serializable values cross the wire — same contract as
+  // `database.objectCreate`.
   output: Schema.Struct({
-    task: Type.getSchema(Task.Task),
+    task: Schema.Unknown,
   }),
 });

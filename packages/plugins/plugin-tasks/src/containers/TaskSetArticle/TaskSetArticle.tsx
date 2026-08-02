@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -37,12 +37,12 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
 
   const statusLabel = useCallback((status: TaskStatus) => t(`task-status.${status}.label`), [t]);
   const handleCreate = useCallback(
-    (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet, title }, { spaceId }),
+    (title: string) => void invokePromise(TaskOperation.CreateTask, { taskSet: Ref.make(taskSet), title }, { spaceId }),
     [invokePromise, taskSet, spaceId],
   );
   const handleUpdate = useCallback(
     (task: Task.Task, patch: TaskPatch) =>
-      void invokePromise(TaskOperation.UpdateTask, { task, ...patch }, { spaceId }),
+      void invokePromise(TaskOperation.UpdateTask, { task: Ref.make(task), ...patch }, { spaceId }),
     [invokePromise, spaceId],
   );
   const handleDelete = useCallback(

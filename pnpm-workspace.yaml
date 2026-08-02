@@ -538,7 +538,7 @@ catalog:
   n3: 2.1.0
   nan: 2.23.0
   next-tick: ^1.0.0
-  node-datachannel: ^0.30.0
+  node-datachannel: ^0.32.3
   node-fetch: ^2.6.0
   node-html-parser: ^7.0.1
   node-notifier: ^10.0.1
