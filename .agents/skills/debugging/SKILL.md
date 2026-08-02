@@ -15,7 +15,7 @@ signals out of running code cleanly.
 This repo already ships the full pipeline; do not reinvent it.
 
 - `@dxos/vite-plugin-log` is wired into `composer-app/vite.config.ts` and intercepts every browser-side `@dxos/log` call via a `LogProcessor`.
-- Entries are serialized as **NDJSON** and streamed over the Vite HMR WebSocket to the dev server, which appends them to **`packages/apps/composer-app/app.log`**. The file is truncated when the dev server starts.
+- Entries are serialized as **NDJSON** and POSTed to the plugin's dev-server sink (`/@dxos-plugin-log/sink`, not the HMR WebSocket), which appends them to **`packages/apps/composer-app/app.log`**. The file is truncated when the dev server starts.
 - Third-party plugin code hosted inside Composer imports `@dxos/log` from the host, so its logs land in the same `app.log`.
 - Query the log with `node scripts/query-logs.mjs packages/apps/composer-app/app.log -q <filter> -g <regex>`. See the `logging` skill for the full filter syntax (levels, `path:level`, `!exclude`, `-q` OR / `-g` AND).
 - Node-side code (tests, CLI, server): `@dxos/log` works identically; set `LOG_FILTER=debug` for stdout capture in vitest runs. Node vitest also writes an NDJSON file sink at **`<package>/test.log`** (path is printed at run start).
@@ -43,7 +43,7 @@ log('[DEBUG H1] frobbed check', { frobbed, ts: Date.now() });
 
 ALL instrumentation MUST be wrapped in region blocks for clean removal:
 
-```
+```text
 // #region DEBUG       (JS/TS/Java/C#/Go/Rust/C/C++)
 # #region DEBUG        (Python/Ruby/Shell/YAML)
 <!-- #region DEBUG --> (HTML/Vue/Svelte)
@@ -62,13 +62,13 @@ existing framework logs.
 
 ## Capture cycle
 
-1. **Truncate the sink before each reproduction** — `app.log` only self-truncates on dev-server restart:
+1. **Rotate the sink before each reproduction** — `app.log` only self-truncates on dev-server restart, so clear it between iterations, but move the previous capture aside rather than destroying it (the run you are about to overwrite may hold the only evidence of an intermittent failure):
 
    ```bash
-   : > packages/apps/composer-app/app.log
+   mv packages/apps/composer-app/app.log packages/apps/composer-app/app.log.prev && : > packages/apps/composer-app/app.log
    ```
 
-   For tests, truncate `<package>/test.log` (node) or `<package>/test-browser.log` (browser) instead, and re-run the test yourself between iterations.
+   The dev server keeps appending to the same path, so the new file starts empty and `app.log.prev` stays queryable with the same tooling. For tests, rotate `<package>/test.log` (node) or `<package>/test-browser.log` (browser) the same way, and re-run the test yourself between iterations. The log is shared with whoever else is attached to that dev server — never delete a sink you did not create, and if a capture predates your session, keep it.
 
 2. Reproduce (yourself via browser tools whenever possible — see `debugging-ui`).
 

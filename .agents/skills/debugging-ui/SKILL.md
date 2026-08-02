@@ -38,16 +38,15 @@ intervention, stop and answer three questions, in the report:
 **Your first message on any bug report MUST contain a `Repro contract` block with
 these three slots filled in:**
 
-```
+```text
 Repro contract
 1. Do you have a repro? (steps / story / recording — whatever you have)
 2. My candidate repro: <numbered steps + the measurement that detects the failure>
 3. Acceptance criteria: <what observation, in which environment, counts as fixed>
 ```
 
-This is the one mandatory ask in this skill and it **overrides the default to work
-autonomously without asking** — including any harness instruction to avoid
-questions. It is not a verification ask: it costs the user seconds, and it is the
+This is the one mandatory ask in this skill and it **overrides this workflow's own
+default to work autonomously without asking**. It is not a verification ask: it costs the user seconds, and it is the
 single highest-value thing they own. It does not count against the diagnostic-ask
 budget. Their repro encodes environment state (experiments enabled, profile data,
 scroll position, plank count) you will otherwise burn hours rediscovering — and a
@@ -103,7 +102,7 @@ verification protocol up front — do not discover this mid-loop.
 Start at the level where the bug manifests — usually the app. **After 2–3 failed
 attempts at one level, step DOWN a level** and reproduce the bug in a smaller demo:
 
-```
+```text
 app  →  storybook story (fixture-first)  →  unit test
 ```
 
@@ -186,7 +185,8 @@ Every status message to the user is, in order:
 - You started diagnosing without asking whether the user has a repro and agreeing
   acceptance criteria → back to the opening contract.
 - About to edit code before a confirmed, measurable repro exists → contract first.
-- About to write "fixed"/"resolved" → has the agreed repro passed, run by YOU, in the app?
+- About to write "fixed"/"resolved" → has the agreed repro passed, run by YOU, in the
+  reporting environment?
 - A change just landed and you haven't written the outcome/quality/complexity
   assessment → golden rule before the next intervention.
 - Third attempt at the same level → step down; build the smaller demo.
