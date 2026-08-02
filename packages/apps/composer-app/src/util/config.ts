@@ -19,6 +19,8 @@ import { LOG_STORE_MAX_BYTES } from './constants';
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
 export const PARAM_LOG_LEVEL = 'log';
+/** Two-wave startup experiment: defer non-core plugin activation until after first paint. */
+export const PARAM_DEFER = 'defer';
 
 export const setSafeModeUrl = (on: boolean) => {
   const url = new URL(window.location.href);

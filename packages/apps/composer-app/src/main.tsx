@@ -31,14 +31,12 @@ import { defaultTx } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-// Lazy: the fatal-error dialog pulls `@dxos/react-ui-form` (and its pickers/editor graph) — it must
-// not be part of the eager startup bundle for an error path that almost never renders.
-const ResetDialog = lazy(() => import('./components/ResetDialog').then((module) => ({ default: module.ResetDialog })));
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
   PARAM_LOG_LEVEL,
+  PARAM_DEFER,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
   defaultStorageIsEmpty,
@@ -54,6 +52,10 @@ import {
   startupProfiler,
   translations,
 } from './util';
+
+// Lazy: the fatal-error dialog pulls `@dxos/react-ui-form` (and its pickers/editor graph) — it must
+// not be part of the eager startup bundle for an error path that almost never renders.
+const ResetDialog = lazy(() => import('./components/ResetDialog').then((module) => ({ default: module.ResetDialog })));
 
 // Injected by the `define` block in vite.config.ts; '' in production builds.
 declare const __DX_DEV_SERVER_BOOT_ID__: string;
@@ -158,6 +160,17 @@ const main = async () => {
   const profilerParam = url.searchParams.get(PARAM_PROFILER);
   const profilerEnabled = profilerParam == null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
   const profiler = profilerEnabled ? startupProfiler() : undefined;
+
+  // Two-wave startup experiment (`?defer=1`): only core/system plugins activate
+  // before ready; the rest enable after first paint. See DESIGN in
+  // .agents/projects/composer-startup-perf/.
+  const deferPlugins = isTrue(url.searchParams.get(PARAM_DEFER), false);
+  if (deferPlugins) {
+    log.info('DEFERRED PLUGIN STARTUP');
+  }
+  // Referentially stable across renders — `useApp` keys its manager memo on this;
+  // an inline closure would re-create the PluginManager on every render.
+  const deferPredicate = deferPlugins ? () => true : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
@@ -536,6 +549,7 @@ const main = async () => {
       setupEvents,
       cacheEnabled: true,
       safeMode,
+      defer: deferPredicate,
       // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.
       // The boot loader covers the pre-React phase, so we don't need a longer fade to hide a flash.

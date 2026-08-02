@@ -76,6 +76,14 @@ export type UseAppOptions = {
   debounce?: number;
   timeout?: number;
   fallback?: FC<FallbackProps>;
+  /**
+   * When set, enabled (non-core) plugins matching the predicate are deferred:
+   * excluded from the pre-`Startup` bootstrap and enabled after the app is
+   * interactive (idle callback after ready). See {@link PluginManager.ManagerOptions.deferred}.
+   * MUST be referentially stable — the manager memo keys on it, so a new
+   * closure per render re-creates the PluginManager in a loop.
+   */
+  defer?: (id: string) => boolean;
 };
 
 /**
@@ -113,6 +121,7 @@ export const useApp = ({
   safeMode = false,
   debounce = 0,
   timeout = 30_000,
+  defer,
 }: UseAppOptions) => {
   const plugins = useDefaultValue(pluginsProp, () => []);
   const defaults = useDefaultValue(defaultsProp, () => []);
@@ -145,6 +154,7 @@ export const useApp = ({
     () => (safeMode ? [] : cacheEnabled && cached.length > 0 ? cached : defaults),
     [safeMode, cacheEnabled, cached, defaults],
   );
+  const deferred = useMemo(() => (defer ? enabled.filter(defer) : []), [defer, enabled]);
   const isExternalManager = !!pluginManager;
   const manager = useMemo(() => {
     const mgr =
@@ -153,12 +163,13 @@ export const useApp = ({
         pluginLoader,
         plugins,
         enabled,
+        deferred,
         onRemove: onPluginRemove,
         pluginRegistryProvider,
       });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, enabled, onPluginRemove, pluginRegistryProvider]);
+  }, [pluginManager, pluginLoader, plugins, enabled, deferred, onPluginRemove, pluginRegistryProvider]);
 
   useEffect(() => {
     if (!cacheEnabled) {
@@ -208,6 +219,14 @@ export const useApp = ({
                 clearTimeout(timeoutId);
                 setReady(true);
                 readyRef.current = true;
+                // Wave 2: enable the deferred plugins once the browser is idle
+                // (i.e. after the first real paint of the shell). `setTimeout`
+                // fallback for browsers without requestIdleCallback (webkit).
+                const scheduleIdle =
+                  (globalThis as any).requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 250));
+                scheduleIdle(() => {
+                  void EffectEx.runAndForwardErrors(manager.enableDeferred().pipe(Effect.ignore));
+                });
                 // Trigger startup profiler dump if available.
                 (globalThis as any).composer?.profiler?.dump();
                 // Notify any host observability layer that startup completed.

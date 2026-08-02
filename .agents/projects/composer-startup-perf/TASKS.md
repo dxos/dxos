@@ -1,6 +1,6 @@
 # Composer Startup Performance — Tasks
 
-_Resume: re-measure prod cold + dev after eager-graph fixes; then B1 deferral prototype. Uncommitted: none expected (commit per batch). Last: eager graph 10.8→3.7MB (−66%)._
+_Resume: deep-link B2 check + harness rows + plugin-calls fix. Uncommitted: none expected (commit per batch). Last: deferral shipped behind ?defer=1 — dev ready −53%, prod −40%, 10/10 warm reloads._
 
 ## Phase 0: verify tooling (no code changes)
 
@@ -50,8 +50,7 @@ Ground truth from `trace-eager-graph.mjs` + sourcemap byte attribution. Eager gr
 - [x] **plugin-theme stub was fully eager** (`export * from '#plugin'`) → lazy stub.
 - [x] **Handler-set splits** — stub `export { XOperationHandlerSet } from './operations'` dragged
       definitions/extractors: inbox (+2,133 modules: pipeline-rdf/traqula/comunica + @dxos/ai
-      anthropic), blogger (+1,028), space (+535), spotlight (+530, was fully inline → handlers.ts
-      + `OperationHandlerSet.async`), registry. Pattern: stub imports leaf
+      anthropic), blogger (+1,028), space (+535), spotlight (+530, was fully inline → handlers.ts + `OperationHandlerSet.async`), registry. Pattern: stub imports leaf
       `operations/handler-set.ts` which must stay import-light (NOTE comments in each).
 - [x] **plugin-registry meta.ts** imported `GraphPath` from the app-toolkit barrel (→ sdk/client)
       → helpers moved to `src/paths.ts` (`#paths`), meta stays light.
@@ -82,10 +81,18 @@ plugin-manager.ts:699). NOT yields inside the cascade (phase-4 revert lesson).
 
 ### Tasks
 
-- [ ] **B1. Prototype behind flag** (query param / env) — wave-2 enable after ready.
-- [ ] **B1. Measure** cold / warm-cold / dev-cold, full set, flag on vs off.
-- [ ] **B2. Repeated warm reloads** (≥10) to check the System Error race.
+- [x] **B1. Prototype behind flag** — `?defer=1`; `ManagerOptions.deferred` +
+      `PluginManager.enableDeferred()` (idle callback after Startup activates in useApp).
+      GOTCHA hit and fixed: the `defer` predicate must be referentially stable or the manager
+      memo re-creates the PluginManager in a render loop (constructor enable pass restarts
+      forever — 9,789 lazy-resolve measures before diagnosis).
+- [x] **B1. Measure** — dev warm: profilerTotal 9.7s → 4.5s (−53%), long tasks −60%;
+      prod cold: profilerTotal 16.5s → ~10s (−40%), navToReady 22.3s → ~16.8s. navToReady's
+      floor is identity creation + client init, not plugins.
+- [x] **B2. Repeated warm reloads** — 10/10 passed with defer on (prod preview).
 - [ ] **B2. Deep-link into a wave-2 plugin** — verify promote-on-demand or document the gap.
+- [ ] **Decide default-on** (user call): flag default, critical allowlist (e.g. keep the
+      attended item's plugin in wave 1), wave-2 UX (surfaces pop in late).
 
 ## Phase D: targeted fixes from attribution
 

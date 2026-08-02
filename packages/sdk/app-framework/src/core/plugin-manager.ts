@@ -101,6 +101,16 @@ export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   enabled?: string[];
+  /**
+   * Subset of `enabled` whose bootstrap is deferred: they stay logically enabled
+   * (persistence and UI see the full `enabled` set) but are excluded from the
+   * constructor's enable pass, so `Startup` completes without resolving their
+   * chunks or activating their modules. The host calls
+   * {@link PluginManager.enableDeferred} after first paint; each plugin then goes
+   * through the normal `enable()` path, which replays already-fired activation
+   * events for its modules (see `_enableOne`).
+   */
+  deferred?: string[];
   registry?: Registry.Registry;
   /**
    * Backend for the plugin registry catalog. When omitted the manager exposes a
@@ -259,6 +269,14 @@ export interface PluginManager {
     event: ActivationEvent.ActivationEvent | string,
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error>;
+  /**
+   * Enables the plugins deferred at construction ({@link ManagerOptions.deferred}).
+   * Intended to be called by the host once the app is interactive; runs each
+   * plugin through the normal `enable()` path (chunk resolve + module
+   * registration + replay of already-fired activation events). Idempotent —
+   * subsequent calls are no-ops.
+   */
+  enableDeferred(): Effect.Effect<void, Error>;
   deactivate(id: string): Effect.Effect<boolean, Error>;
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error>;
 
@@ -297,6 +315,7 @@ class ManagerImpl implements PluginManager {
   private readonly _failedAtom: Atom.Writable<PluginFailure[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _onRemove: ManagerOptions['onRemove'];
+  private _deferredIds: string[];
   private readonly _loadTimeout: Duration.DurationInput;
   private readonly _activationTimeout: Duration.DurationInput;
   private readonly _capabilities = new Map<string, Capability.Any[]>();
@@ -335,6 +354,7 @@ class ManagerImpl implements PluginManager {
     pluginLoader,
     plugins = [],
     enabled = [],
+    deferred = [],
     registry,
     pluginRegistryProvider,
     onRemove,
@@ -372,7 +392,9 @@ class ManagerImpl implements PluginManager {
     // for the same id are not idempotent (each would re-run the lazy resolve
     // and double-register modules). `new Set([...])` preserves first-seen
     // order which matches the natural core-before-enabled precedence.
-    const initialIds = [...new Set([...core, ...enabled])];
+    // Core plugins are never deferred — the app shell depends on them before first paint.
+    this._deferredIds = deferred.filter((id) => !core.includes(id));
+    const initialIds = [...new Set([...core, ...enabled])].filter((id) => !this._deferredIds.includes(id));
     void Effect.all(initialIds.map((id) => this.enable(id)))
       .pipe(
         Effect.mapError((cause) => new PluginInitializationError({ cause })),
@@ -664,6 +686,32 @@ class ManagerImpl implements PluginManager {
         }
       }
       return succeeded;
+    });
+  }
+
+  enableDeferred(): Effect.Effect<void, Error> {
+    return Effect.gen(this, function* () {
+      const ids = this._deferredIds;
+      if (ids.length === 0) {
+        return;
+      }
+      this._deferredIds = [];
+      log('enabling deferred plugins', { count: ids.length });
+      performance.mark('deferred:start');
+      // Bounded concurrency: unbounded fan-out here would recreate the boot
+      // thundering-herd on the main thread right after first paint.
+      yield* Effect.all(
+        ids.map((id) =>
+          this.enable(id).pipe(
+            Effect.tapError((error) => Effect.sync(() => log.warn('deferred enable failed', { id, error }))),
+            Effect.ignore,
+          ),
+        ),
+        { concurrency: 4 },
+      );
+      performance.mark('deferred:end');
+      performance.measure('startup:deferred', 'deferred:start', 'deferred:end');
+      log('deferred plugins enabled', { count: ids.length });
     });
   }
 
