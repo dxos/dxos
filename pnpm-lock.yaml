@@ -1138,8 +1138,8 @@ catalogs:
       specifier: ^1.6.3
       version: 1.6.3
     esbuild-wasm:
-      specifier: ^0.28.0
-      version: 0.28.0
+      specifier: ^0.28.1
+      version: 0.28.1
     eventemitter3:
       specifier: ^5.0.1
       version: 5.0.1
@@ -5613,7 +5613,7 @@ importers:
         version: 0.28.1
       esbuild-wasm:
         specifier: 'catalog:'
-        version: 0.28.0
+        version: 0.28.1
       iso-did:
         specifier: 'catalog:'
         version: 1.8.0
@@ -10187,7 +10187,7 @@ importers:
         version: 3.22.1
       esbuild-wasm:
         specifier: 'catalog:'
-        version: 0.28.0
+        version: 0.28.1
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -15808,7 +15808,7 @@ importers:
         version: 3.6.0
       esbuild-wasm:
         specifier: 'catalog:'
-        version: 0.28.0
+        version: 0.28.1
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
@@ -16825,7 +16825,7 @@ importers:
         version: 3.22.1
       manifold-3d:
         specifier: 'catalog:'
-        version: 3.4.1(esbuild-wasm@0.28.0)
+        version: 3.4.1(esbuild-wasm@0.28.1)
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -38164,8 +38164,8 @@ packages:
   esbuild-style-plugin@1.6.3:
     resolution: {integrity: sha512-XPEKf4FjLjEVLv/dJH4UxDzXCrFHYpD93DBO8B+izdZARW5b7nNKQbnKv3J+7VDWJbgCU+hzfgIh2AuIZzlmXQ==}
 
-  esbuild-wasm@0.28.0:
-    resolution: {integrity: sha512-5TRVKExcEmeMkccIZMzUq+Az6X2RoMAJyfl6SMMO1dMVhmvt0I2mx7gAb6zYi42n4d1ETcatFXazGKzA+aW7fg==}
+  esbuild-wasm@0.28.1:
+    resolution: {integrity: sha512-p/GD4E8oYRjg3kjdKrnMb0s4PzXgJF42e0MF4H0+ACyK/kIlFRp3e0fzOleIG+wBBm6MM3XQrbpe7soEA+vJIA==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -61777,7 +61777,7 @@ snapshots:
       postcss: 8.5.12
       postcss-modules: 6.0.1(postcss@8.5.12)
 
-  esbuild-wasm@0.28.0: {}
+  esbuild-wasm@0.28.1: {}
 
   esbuild@0.28.0:
     optionalDependencies:
@@ -65173,7 +65173,7 @@ snapshots:
     dependencies:
       semver: 7.8.1
 
-  manifold-3d@3.4.1(esbuild-wasm@0.28.0):
+  manifold-3d@3.4.1(esbuild-wasm@0.28.1):
     dependencies:
       '@gltf-transform/core': 4.3.0
       '@gltf-transform/extensions': 4.3.0
@@ -65183,7 +65183,7 @@ snapshots:
       '@jscadui/3mf-export': 0.5.0
       commander: 13.1.0
       convert-source-map: 2.0.0
-      esbuild-wasm: 0.28.0
+      esbuild-wasm: 0.28.1
       fast-xml-parser: 5.7.1
       fflate: 0.8.2
       magic-string: 0.30.21

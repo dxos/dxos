@@ -428,7 +428,7 @@ catalog:
   esbuild-plugin-wasm: ^1.1.0
   esbuild-plugin-yaml: ^0.0.1
   esbuild-style-plugin: ^1.6.3
-  esbuild-wasm: ^0.28.0
+  esbuild-wasm: ^0.28.1
   eventemitter3: ^5.0.1
   events: ^3.3.0
   exa-js: ^1.5.12
