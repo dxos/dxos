@@ -10,6 +10,7 @@ export const TasksOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./convert-to-task'),
   () => import('./create-outline'),
   () => import('./create-task'),
+  () => import('./list-tasks'),
   () => import('./quick-entry'),
   () => import('./update-task'),
 );

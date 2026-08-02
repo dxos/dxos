@@ -12,6 +12,7 @@ import { Task, TaskSet } from '@dxos/types';
 import assignTask from './assign-task';
 import completeTask from './complete-task';
 import createTask from './create-task';
+import listTasks from './list-tasks';
 import updateTask from './update-task';
 
 const testLayer = () =>
@@ -89,7 +90,65 @@ describe('task operations', () => {
       expect(task.status).toBe('done');
     }).pipe(Effect.provide(testLayer())),
   );
+
+  it.effect('list-tasks filters by status and assignee, and excludes sub-tasks by default', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+
+      const { task: doneSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Done thing' });
+      const done = yield* loadTask(doneSnapshot);
+      yield* completeTask.handler({ task: Ref.make(done) });
+      const { task: openSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Open thing' });
+      const open = yield* loadTask(openSnapshot);
+      yield* assignTask.handler({ task: Ref.make(open), assignee: { email: 'kai@example.com' } });
+      yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Sub thing', parent: Ref.make(open) });
+
+      // Root tasks only.
+      const all = yield* listTasks.handler({ taskSet: Ref.make(taskSet) });
+      expect(titles(all.tasks)).toEqual(['Done thing', 'Open thing']);
+
+      const withSubtasks = yield* listTasks.handler({ taskSet: Ref.make(taskSet), includeSubtasks: true });
+      expect(titles(withSubtasks.tasks).sort()).toEqual(['Done thing', 'Open thing', 'Sub thing']);
+
+      const byStatus = yield* listTasks.handler({ taskSet: Ref.make(taskSet), status: 'done' });
+      expect(titles(byStatus.tasks)).toEqual(['Done thing']);
+
+      const byAssignee = yield* listTasks.handler({ taskSet: Ref.make(taskSet), assignee: 'KAI@example.com' });
+      expect(titles(byAssignee.tasks)).toEqual(['Open thing']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('list-tasks pages with after/limit and stops issuing a cursor at the end', () =>
+    Effect.gen(function* () {
+      const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
+      yield* Database.flush();
+      for (const title of ['a', 'b', 'c']) {
+        yield* createTask.handler({ taskSet: Ref.make(taskSet), title });
+      }
+
+      const first = yield* listTasks.handler({ taskSet: Ref.make(taskSet), limit: 2 });
+      expect(first.tasks).toHaveLength(2);
+      expect(first.nextCursor).toBeDefined();
+
+      const second = yield* listTasks.handler({ taskSet: Ref.make(taskSet), limit: 2, after: first.nextCursor });
+      expect(second.tasks).toHaveLength(1);
+      expect(second.nextCursor).toBeUndefined();
+
+      expect([...titles(first.tasks), ...titles(second.tasks)].sort()).toEqual(['a', 'b', 'c']);
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('list-tasks requires a container', () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(listTasks.handler({}));
+      expect(exit._tag).toBe('Failure');
+    }).pipe(Effect.provide(testLayer())),
+  );
 });
+
+/** Titles off the JSON snapshots the handler returns. */
+const titles = (tasks: readonly unknown[]): string[] => tasks.map((task) => (task as { title: string }).title);
 
 /** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
 const loadTask = (snapshot: unknown) =>
