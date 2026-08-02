@@ -493,7 +493,7 @@ the mechanism.
       Two new mechanism findings en route: equal values never conflict (identical fold writes are
       indistinguishable from direct edits by heads alone — classification must value-compare), and
       concurrent equal-value folds still mint an automerge conflict-marker patch (`action:
-    'conflict'`), so zero-write checks must filter to mutation patches (`writesSince`). Report:
+  'conflict'`), so zero-write checks must filter to mutation patches (`writesSince`). Report:
       [M0-REPORT.md](./M0-REPORT.md) — the implementation-planning feed-forward.
 - [x] **Post-M0 follow-up (Josiah, 2026-08-01) · baseline-aware three-way merge for PR #12412. —
       VERIFIED.** #12412's per-field winner-preference loses a loser-side edit on any field the

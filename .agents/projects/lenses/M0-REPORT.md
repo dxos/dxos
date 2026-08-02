@@ -157,6 +157,111 @@ Note also that a step whose write primitive isn't naturally idempotent (e.g. `An
 `db.remove`) needs its own guard (`isDeleted()` check, marker check) — idempotence is a property
 the runner must enforce per step, not assume.
 
+## Proposed API shape: `Migration.declare` + a guarded `Write` vocabulary
+
+The proposed surface that satisfies every verdict above by construction. Nothing here is
+implemented — it is the shape the bench evidence points at, sketched so implementation planning
+starts from it rather than re-deriving it. The example is the compound case:
+`Person v1 { fullName, address: string }` → `Person v2 { name }` + an extracted `Address` object +
+a `LivesAt` relation.
+
+```ts
+// The value transform is an ordinary lens — pure, per-property, checkable, bidirectional. A coded
+// lens carries the parse; `checkLaws` verifies it against generated Persons before real data is
+// touched, and its `put` is the rollback/fan-in for free (DESIGN.md §10.4, §10.5 fan-in-derived).
+const AddressLens = Lens.coded('org.example.lens.postal-address', ..., {
+  get: (raw: string) => parseAddress(raw),          // '10 Main St, Springfield' → { street, city }
+  put: (addr) => formatAddress(addr),
+});
+
+const SplitAddress = Migration.declare('org.example.migration.split-address', 2, {
+  match: Query.type(Person, { version: '1.x' }),
+
+  // PURE and synchronous: given the matched objects' current state, return the COMPLETE intended
+  // write set as data. No db access, no awaits, no effects — this determinism is what every
+  // idempotence property downstream falls out of.
+  migrate: ({ person }) => {
+    const parsed = AddressLens.get(person.address);
+    return [
+      // 1→1 rewrite on the person itself.
+      Write.assign(person, 'name', person.fullName),
+
+      // Fan-out: never a raw create. `ensure` addresses the new entity by a derived meta key;
+      // the object id stays random (E4: derived object ids diverge peers permanently).
+      Write.ensure(addressRef, {
+        key: `${SplitAddress.id}:${person.id}:address`,
+        type: Address,
+        props: parsed,
+      }),
+
+      // Cross-object wiring, addressed by reference — including to an entity that may not exist
+      // yet in this run (E5c: strong-deps gate the incomplete window).
+      Write.relate(livesAtRef, { type: LivesAt, source: person, target: addressRef }),
+
+      // Per-object completion marker + the two head-marks, so "what's left" is a query and
+      // fold-forward has its detection baseline (E1 constraints 2 and 7).
+      Write.stamp(person, SplitAddress),
+    ];
+  },
+});
+```
+
+Two authoring rules the API enforces rather than documents (the same trick the lens plays with
+write-minimality — the unsafe thing is inexpressible, not discouraged):
+
+- **The vocabulary cannot express an unguarded or destructive write.** No `Write.replace`, no
+  create with a caller-chosen id, no source-property delete — sources stay, tombstoning is its own
+  declared step, every verb carries its guard implicitly.
+- **Partial transforms reject whole.** An unparseable `address` yields `Write.report(person,
+reason)` instead of the ensure/relate — never a half-populated Address (E4/claim 9 contract:
+  leave the source in place, report, don't half-create).
+
+**The runner — where idempotence actually lives:**
+
+```ts
+const run = async (db, migration) => {
+  for (const match of await db.query(migration.match.unstamped()).run()) {
+    const writes = migration.migrate(match); // recomputed fresh, every run
+    for (const [target, group] of groupByTarget(writes)) {
+      await applyGuarded(db, target, group); // ONE Obj.update per target object
+    }
+    await db.flush();
+  }
+};
+```
+
+Per-verb guards, each traceable to a bench result:
+
+| Verb        | Guard on re-run                                                                                                                  | Proven by                                                                |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `assign`    | skip when current value equals the derived value                                                                                 | E1 (equal-value writes still emit patches; unguarded loops never settle) |
+| `ensure`    | resolve by meta key first — present → no-op; a raced duplicate collapses via the merge engine (identical content, its best case) | E4 / claims 6b, 9                                                        |
+| `relate`    | same derived-key rule; a relation landing before its target simply does not surface — no error                                   | E5c / claim 8                                                            |
+| `stamp`     | skip when the marker is already set (`Annotation.set` is not naturally idempotent — guarded explicitly)                          | E5b                                                                      |
+| (tombstone) | skip when `isDeleted()`                                                                                                          | E3a                                                                      |
+
+Structural rules: writes are grouped per target object into **one `Obj.update`** (atomic per
+object — tearing is only possible between objects), and creations are ordered before the relations
+pointing at them (a window-shrinking nicety; correctness does not depend on it).
+
+**Why crash-and-reapply works, step by step.** Runner dies between the ensure and the stamp:
+(1) the half-state — `name` written, Address created, no stamp — is observable and replicates
+(E5a; only the relation is hidden, by strong-deps). (2) _Any_ peer re-runs: the `unstamped()`
+query still matches (per-object stamp, not a space scalar); `migrate` recomputes the identical
+write set from current state (purity); `assign` compares-equal → skip, `ensure` finds the key →
+skip, `stamp` missing → applied. Complete. (3) A third run: the query no longer matches, and even
+forced, every guard skips — zero patches (the bench's empty-`writesSince` assertion). There is no
+stored resume point anywhere — **recovery is re-execution**, made safe by recomputation plus
+guards.
+
+The same declaration is M2's fold-forward standing rule: "re-apply whenever old-shaped data
+appears" is `run()` again, with one addition — an `assign` whose target changed since the stamped
+heads _and_ whose values disagree downgrades to a `conflicts[field] = { mine, theirs }` record
+instead of overwriting (the E1/E4 classification, including equal-values-never-conflict so racing
+peers' identical folds don't mint self-conflicts). And the forward-compatibility effects-as-data
+buys: when Automerge ships cross-object transactions, `applyGuarded` hands the same grouped write
+set to one transaction and the E5 window disappears — no declaration or call-site changes.
+
 ## Consolidated obligations for the implementation plan
 
 1. Migrations keep source properties; retirement is a separate compaction concern (with the
@@ -171,9 +276,10 @@ the runner must enforce per step, not assume.
 7. Duplicate collapse: baseline-aware three-way merge with per-property conflict records and
    tombstoned (never erased) losers; transforms must be deterministic/re-derivable.
 8. Fan-in: declared removal choice AND declared property-collision resolution (no defensible or
-   even accidental default exists) — plus the E3 items pending below.
+   even accidental default exists) AND the query-based late-child path (E3's three qualifiers).
 9. Cross-object migrations: effects-as-data write sets, per-step idempotence guards, resumable
-   from any peer; document the inconsistency window until cross-object transactions land.
+   from any peer; document the inconsistency window until cross-object transactions land. The
+   `Migration.declare` + guarded `Write` sketch above is the proposed embodiment.
 10. 1→N splits: durable per-element key must be stamped into elements (automerge list identity is
     convergent but destroyed by any reorder).
 
