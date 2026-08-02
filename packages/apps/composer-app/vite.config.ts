@@ -201,11 +201,13 @@ export default defineConfig((env) => ({
         codeSplitting: {
           groups: [
             { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+            // Naive maxSize splitting cuts through module cycles and breaks evaluation
+            // order (rolldown#8803); the fix rolldown offers (strictExecutionOrder) costs
+            // ~+1.8MB of inhibited treeshaking. Instead the manifest carries a cycle-safe
+            // partition (see bootPartition) and each bucket becomes its own chunk.
             {
-              name: 'boot',
-              test: isBootModule,
+              name: bootGroupName,
               includeDependenciesRecursively: false,
-              maxSize: 512 * 1024,
               priority: 5,
             },
           ],
@@ -694,29 +696,58 @@ function toManifestId(moduleId: string): string | null {
   return cleaned.startsWith(rootDir) ? cleaned.slice(rootDir.length + 1) : cleaned;
 }
 
-const bootModules: Set<string> = (() => {
+// Regeneration is an explicit mode: it disables the boot group (so the build's chunk graph
+// is the pure ungrouped one) and rewrites the manifest from it. Normal builds only consume.
+// This split exists because a manifest written from a *grouped* build ratchets: grouping a
+// module into a boot chunk makes it chunk-reachable, so any contamination self-perpetuates.
+const isManifestRegen = isTrue(process.env.DX_BOOT_MANIFEST_REGEN);
+
+// Manifest v2: modules pre-partitioned into chunks along cycle-safe boundaries. Buckets are
+// contiguous ranges of a dependency-first topological order of the module graph's SCC
+// condensation, so every cross-chunk import points to an earlier chunk — the chunk DAG is
+// acyclic by construction and native ESM evaluation order stays correct without
+// strictExecutionOrder (whose module wrapping costs ~+1.8MB of inhibited treeshaking here).
+const bootPartition: Map<string, number> = (() => {
+  if (isManifestRegen) {
+    return new Map();
+  }
   try {
-    return new Set(JSON.parse(readFileSync(BOOT_MANIFEST_PATH, 'utf-8')) as string[]);
+    const manifest = JSON.parse(readFileSync(BOOT_MANIFEST_PATH, 'utf-8'));
+    return new Map(Object.entries(manifest.partition as Record<string, number>));
   } catch {
-    return new Set();
+    return new Map();
   }
 })();
 
-function isBootModule(moduleId: string): boolean {
+function bootGroupName(moduleId: string): string | null {
   const id = toManifestId(moduleId);
-  return id !== null && bootModules.has(id);
+  if (id === null) {
+    return null;
+  }
+  const group = bootPartition.get(id);
+  return group === undefined ? null : `boot-${group}`;
 }
 
+/** Target rendered (pre-minify) bytes per boot chunk; ~1.5MB rendered ≈ 400-500KB minified. */
+const BOOT_CHUNK_TARGET_BYTES = 1.5 * 1024 * 1024;
+
 /**
- * Rewrites boot-manifest.json after every bundle: the module ids statically reachable from
- * the `main` entry (chunk-level BFS over static imports). The set is invariant under
- * re-chunking, so consuming the previous build's manifest converges in one build.
+ * In regen mode (DX_BOOT_MANIFEST_REGEN=1), rewrites boot-manifest.json: the modules of the
+ * chunks statically reachable from the `main` entry, partitioned into cycle-safe buckets.
+ * Chunk-level inclusion is the post-treeshake truth (the parse-level module graph
+ * over-approximates — it reaches every barrel sibling treeshaking prunes); regen mode
+ * guarantees the walked graph is ungrouped, which is what makes the chunk walk sound.
+ * Ordering edges come from the parse-level graph — a superset of the true edges, which only
+ * over-constrains the order (safe).
  */
 function bootManifestPlugin(): PluginOption {
   return {
     name: 'dxos-boot-manifest',
     apply: 'build',
-    generateBundle: (_options: unknown, bundle: Record<string, any>) => {
+    generateBundle(this: any, _options: unknown, bundle: Record<string, any>) {
+      if (!isManifestRegen) {
+        return;
+      }
       const byFileName = new Map(Object.values(bundle).map((output: any) => [output.fileName, output]));
       const entry = Object.values(bundle).find(
         (output: any) => output.type === 'chunk' && output.isEntry && output.name === 'main',
@@ -725,35 +756,154 @@ function bootManifestPlugin(): PluginOption {
       if (!entry) {
         return;
       }
-      const seen = new Set<string>([entry.fileName]);
-      const queue = [entry.fileName];
-      while (queue.length > 0) {
-        const chunk = byFileName.get(queue.shift()!);
+      const seenChunks = new Set<string>([entry.fileName]);
+      const chunkQueue = [entry.fileName];
+      while (chunkQueue.length > 0) {
+        const chunk = byFileName.get(chunkQueue.shift()!);
         if (!chunk || chunk.type !== 'chunk') {
           continue;
         }
         for (const dep of chunk.imports ?? []) {
-          if (!seen.has(dep)) {
-            seen.add(dep);
-            queue.push(dep);
+          if (!seenChunks.has(dep)) {
+            seenChunks.add(dep);
+            chunkQueue.push(dep);
           }
         }
       }
-      const moduleIds = new Set<string>();
-      for (const fileName of seen) {
+
+      // Boot module set with rendered sizes, keyed by raw id (edges need raw ids).
+      const rendered = new Map<string, number>();
+      for (const fileName of seenChunks) {
         const chunk = byFileName.get(fileName);
         if (chunk?.type !== 'chunk') {
           continue;
         }
-        for (const moduleId of Object.keys(chunk.modules ?? {})) {
-          const id = toManifestId(moduleId);
-          if (id !== null) {
-            moduleIds.add(id);
+        for (const [moduleId, moduleInfo] of Object.entries<any>(chunk.modules ?? {})) {
+          if (toManifestId(moduleId) !== null) {
+            rendered.set(moduleId, moduleInfo?.renderedLength ?? 0);
           }
         }
       }
-      writeFileSync(BOOT_MANIFEST_PATH, JSON.stringify([...moduleIds].sort(), null, 2) + '\n');
-      console.log(`bootManifestPlugin: wrote ${moduleIds.size} boot modules to ${BOOT_MANIFEST_PATH}`);
+
+      // Ordering edges between boot modules, with paths THROUGH non-boot modules (virtuals,
+      // react, app source) collapsed into direct edges — a boot module that imports a boot
+      // module via an intermediary still constrains evaluation order, and dropping such
+      // edges let the partition manufacture chunk cycles through the intermediary's chunk.
+      const reachableBoot = new Map<string, string[]>();
+      const bootTargetsOf = (start: string): string[] => {
+        const cached = reachableBoot.get(start);
+        if (cached) {
+          return cached;
+        }
+        const targets = new Set<string>();
+        const visited = new Set<string>([start]);
+        const walk = [...(this.getModuleInfo(start)?.importedIds ?? [])];
+        while (walk.length > 0) {
+          const dep = walk.pop()!;
+          if (visited.has(dep)) {
+            continue;
+          }
+          visited.add(dep);
+          if (rendered.has(dep)) {
+            targets.add(dep);
+            continue;
+          }
+          walk.push(...(this.getModuleInfo(dep)?.importedIds ?? []));
+        }
+        const result = [...targets];
+        reachableBoot.set(start, result);
+        return result;
+      };
+
+      // Iterative Tarjan SCC over the boot subgraph. Emission order is dependency-first
+      // (an SCC pops only after every SCC it depends on), so contiguous buckets over that
+      // order can only import from earlier buckets — the chunk DAG stays acyclic.
+      const edges = new Map<string, string[]>();
+      for (const moduleId of rendered.keys()) {
+        edges.set(moduleId, bootTargetsOf(moduleId));
+      }
+      const sccOrder: string[][] = [];
+      const index = new Map<string, number>();
+      const lowlink = new Map<string, number>();
+      const onStack = new Set<string>();
+      const stack: string[] = [];
+      let counter = 0;
+      const strongconnect = (root: string) => {
+        const work: [string, number][] = [[root, 0]];
+        while (work.length > 0) {
+          const frame = work[work.length - 1];
+          const [node, edgeIdx] = frame;
+          if (edgeIdx === 0) {
+            index.set(node, counter);
+            lowlink.set(node, counter);
+            counter++;
+            stack.push(node);
+            onStack.add(node);
+          }
+          const deps = edges.get(node) ?? [];
+          if (edgeIdx < deps.length) {
+            frame[1]++;
+            const dep = deps[edgeIdx];
+            if (!index.has(dep)) {
+              work.push([dep, 0]);
+            } else if (onStack.has(dep)) {
+              lowlink.set(node, Math.min(lowlink.get(node)!, index.get(dep)!));
+            }
+          } else {
+            if (lowlink.get(node) === index.get(node)) {
+              const component: string[] = [];
+              for (;;) {
+                const popped = stack.pop()!;
+                onStack.delete(popped);
+                component.push(popped);
+                if (popped === node) {
+                  break;
+                }
+              }
+              sccOrder.push(component);
+            }
+            work.pop();
+            if (work.length > 0) {
+              const [parent] = work[work.length - 1];
+              lowlink.set(parent, Math.min(lowlink.get(parent)!, lowlink.get(node)!));
+            }
+          }
+        }
+      };
+      for (const moduleId of rendered.keys()) {
+        if (!index.has(moduleId)) {
+          strongconnect(moduleId);
+        }
+      }
+
+      // Contiguous size-balanced buckets over the SCC order (an SCC is never split).
+      const partition: Record<string, number> = {};
+      let bucket = 0;
+      let bucketBytes = 0;
+      for (const component of sccOrder) {
+        const componentBytes = component.reduce((sum, moduleId) => sum + (rendered.get(moduleId) ?? 0), 0);
+        if (bucketBytes > 0 && bucketBytes + componentBytes > BOOT_CHUNK_TARGET_BYTES) {
+          bucket++;
+          bucketBytes = 0;
+        }
+        bucketBytes += componentBytes;
+        for (const moduleId of component) {
+          partition[toManifestId(moduleId)!] = bucket;
+        }
+      }
+
+      writeFileSync(BOOT_MANIFEST_PATH, JSON.stringify({ version: 2, partition }, null, 2) + '\n');
+
+      // Report genuine import cycles (SCCs with >1 module): the repo policy is no circular
+      // imports, so anything here that isn't a known-cyclic external (effect) is actionable.
+      const cycles = sccOrder
+        .filter((component) => component.length > 1)
+        .map((component) => component.map((moduleId) => toManifestId(moduleId)!).sort());
+      writeFileSync(path.join(dirname, 'boot-cycles.json'), JSON.stringify(cycles, null, 2) + '\n');
+      console.log(
+        `bootManifestPlugin: wrote ${rendered.size} boot modules in ${bucket + 1} buckets to ${BOOT_MANIFEST_PATH}; ` +
+          `${cycles.length} import cycles -> boot-cycles.json`,
+      );
     },
   };
 }

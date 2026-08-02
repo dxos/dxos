@@ -538,3 +538,33 @@ Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot
   the namespace-declaration -> module-file refactor first (code-style idiom), in core
   boot-path plugins. That refactor is where the boot-graph payoff of this migration lives
   (those barrels are what closure files import at boot).
+
+## Checkpoint 2026-08-02 (cycle-safe boot chunk consolidation: SHIPPED)
+
+- Final shape: **13 preload requests (was 520), 5 boot chunks (1084/742/363/341/286KB),
+  3.62MB statically reachable** (baseline 3.50 + chunk overhead; no strict-mode penalty),
+  chunk graph provably acyclic, warm-cold e2e green with best-yet container numbers
+  (profilerTotal 3828, navToReady 6988).
+- Crypto/yaml evictions landed first: @dxos/crypto/random (webcrypto randomBytes; sodium
+  stays for keys/sign/verify), config yaml deferred into ConfigService.load (−210KB).
+- The chunking journey, all measured: rolldown maxSize splitting breaks evaluation order —
+  size-cuts ignore dependency order, manufacturing CHUNK cycles even over an acyclic module
+  graph (module cycles unnecessary; user's instinct correct). rolldown's documented fix
+  (strictExecutionOrder + preserveEntrySignatures) costs +1.8MB via inhibited treeshaking
+  (module wrapping) — disqualified. Solution: compute the partition ourselves in
+  bootManifestPlugin — SCC condensation of the boot module graph (ordering edges CLOSED
+  through non-manifest intermediaries — dropping them manufactured cycles via the
+  intermediary's chunk, the first partition attempt's failure), dependency-first topological
+  order, contiguous ~1.5MB-rendered buckets; rolldown consumes it via a name-fn group with
+  includeDependenciesRecursively: false.
+- Manifest hygiene: regen is an explicit mode (DX_BOOT_MANIFEST_REGEN=1) on an UNGROUPED
+  build — a manifest written from a grouped build ratchets (grouping makes lazy modules
+  chunk-reachable; contamination self-perpetuates, observed 1476->3238 after a raced
+  build). Chunk-level module collection is the post-treeshake truth; parse-level
+  importedIds over-approximates (reaches treeshaken barrel siblings — sodium reappeared).
+- Bonus audit (boot-cycles.json): the boot graph contains only 5 real import cycles, ALL
+  vendored (protobufjs x2, semver, automerge x2) — zero in DXOS code; the no-circular-
+  imports policy holds.
+- Upstream candidate: rolldown feature request for cycle-aware maxSize (topological cuts).
+- Acceptance check added to the workflow: chunk-level SCC scan of the emitted bundle
+  (0 cycles required) before any boot e2e.
