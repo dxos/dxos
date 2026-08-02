@@ -339,9 +339,13 @@ checks must compare full op-id sets, and an attribution UI should collapse equal
    `A.diff`'s silent everything-is-new answer. Corollary: **epoch timing IS the fold-forward
    window policy — §10.7 q2 is answered by construction** ("the window is until the next epoch"),
    with no separate retention mechanism needed. Ordinary storage compaction is unaffected
-   (`A.save` preserves full ancestry; the fragments format bundles per-change members). Optional
-   affordance, not gating: the epoch tool could scan for conflict-flagged patches first and report
-   what it is about to drop.
+   (`A.save` preserves full ancestry; the fragments format bundles per-change members). Operational
+   model: a space carries a well-known epoch policy (cadence), and a peer offline past that window
+   owns whatever it can no longer reconcile automatically — bounded loss (late writes still merge
+   as raw data; reconciliation becomes manual), not disappearance. The ancestry-check failure
+   doubles as the app-level notification signal ("changes from before the epoch need review") with
+   zero extra bookkeeping; the epoch tool could additionally scan for conflict-flagged patches and
+   report what it is about to drop.
 2. **A first-class fold-write API.** The user-wins path (view-fork + sentinel actor + merge-back)
    works through public surface today but is a four-step dance; the runner should own it as one
    primitive (e.g. `Write.foldAt(heads, prop, value)` with a winner-policy option).

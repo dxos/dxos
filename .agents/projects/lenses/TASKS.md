@@ -491,7 +491,7 @@ the mechanism.
       previously unused, surfaces in `getEditHistoryWithDiffs` on all peers). Winner is a
       deterministic POLICY: live-handle `changeAt` → fold wins by Lamport-counter dominance;
       view-fork at migration heads + sentinel all-zeros actor + `docHandle.update(doc =>
-  A.merge(...))` → counters tie, fold deterministically loses (user wins — recommended
+A.merge(...))` → counters tie, fold deterministically loses (user wins — recommended
       default). Same-key fan-in conflicts history-native for free. Epoch interplay RATIFIED same
       day: epochs deliberately erase history — conflicts dropped, fold window closes, epoch timing
       IS the window policy (§10.7 q2 answered), ancestry check keeps the boundary safe. Writeups:
