@@ -135,7 +135,7 @@ const HostStory = () => {
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Recovery code (CLI login)</span>
           <button
-            className='rounded bg-accentSurface px-3 py-1 text-accentSurfaceText'
+            className='rounded bg-accent-bg px-3 py-1 text-accent-fg'
             onClick={onCreateRecoveryCode}
             data-testid='recovery-button'
           >

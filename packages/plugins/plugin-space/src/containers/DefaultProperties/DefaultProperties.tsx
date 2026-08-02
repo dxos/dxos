@@ -57,7 +57,7 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
         <Panel.Toolbar>
           <Toolbar.Root className='dx-document' />
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
             <Surface.Surface type={AppSurface.ObjectProperties} data={data} />

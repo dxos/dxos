@@ -121,7 +121,7 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
           <Panel.Toolbar>
             <Menu.Toolbar classNames='dx-document' />
           </Panel.Toolbar>
-          <Panel.Content>
+          <Panel.Content asChild>
             <Outline.Content classNames='dx-document' />
           </Panel.Content>
         </Panel.Root>

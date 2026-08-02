@@ -191,7 +191,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content asChild>
         <NotebookStack
           db={db}
           notebook={notebook}

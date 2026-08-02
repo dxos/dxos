@@ -24,7 +24,7 @@ execution and parallel legacy mechanisms:
    (`Panel.theme.ts:29`, `Toolbar.theme.ts:19` paint bare `bg-toolbar-surface`).
 2. **There are three contradictory elevation ladders** — the table in `css/DESIGN_SYSTEM.md`, the
    header comment in `css/theme/semantic.css:13-24`, and the actual token assignments below it all
-   disagree (e.g. card is documented as "raised, level 4", commented as level 3, and *assigned*
+   disagree (e.g. card is documented as "raised, level 4", commented as level 3, and _assigned_
    elevation 1 — **below** the base canvas). The "strictly monotonic" claim is false in light mode
    (elevations 0≡1 and 3≡4 share values).
 3. **Panel is universally adopted but shallowly conformant** (256 roots; only ~35% follow the
@@ -67,7 +67,7 @@ Column/Form nesting → composition/enforcement.
 1. **The failure handler is worse than the failure.** On an invalid `asChild` child, `slottable()`
    wraps the render result in an extra `<div role='none' class='dx-slot-warning'>`
    (`slots.ts:96-98`). Inside a grid/subgrid (exactly where these parts live) an extra div is a
-   *layout-breaking* change — the diagnostic corrupts the thing it diagnoses. It should warn
+   _layout-breaking_ change — the diagnostic corrupts the thing it diagnoses. It should warn
    loudly (dev-only) and render unmodified, or apply the warning class to the rendered element
    via the class merge instead of wrapping.
 2. **The check runs in production.** `Children.only` + symbol walk executes on every render of
@@ -75,7 +75,7 @@ Column/Form nesting → composition/enforcement.
 3. **`role: 'none'` is defaulted universally** (`composableProps`, `slots.ts:38`). Every part
    renders `role="none"` unless someone remembers to pass a role. For pure layout divs that's
    defensible; for parts like `Card.Header` (a `<header>`!) it actively strips landmark
-   semantics. The default belongs on the *parts that need it*, not in the shared prop merger.
+   semantics. The default belongs on the _parts that need it_, not in the shared prop merger.
 4. **Adoption is half-done and the seams drop props.** `react-ui` uses the factories throughout;
    `react-ui-form` uses `composable()` for 6 of ~12 parts; `react-ui-list` mixes `composable()`
    with raw `forwardRef` that provably drops Slot-injected `className`
@@ -98,7 +98,7 @@ check to dev, remove the universal `role='none'`, add a part factory, and finish
 ## 3. The Column grid
 
 `Column.Root` (3-track grid: gutter · `minmax(0,1fr)` · gutter) with `Row`/`Block`/`Center`/`Bleed`
-parts and the `withColumn` helpers; `Card.Root` *is* a `Column.Root` (`gutter='lg'`).
+parts and the `withColumn` helpers; `Card.Root` _is_ a `Column.Root` (`gutter='lg'`).
 
 ### The concept is sound
 
@@ -110,14 +110,14 @@ zero placement violations across 78 `Card.Root`s and 200+ sub-parts.
 
 For "put this child in the right track", the codebase currently uses **all** of:
 
-| Mechanism | Where |
-| --- | --- |
-| `--dx-col` custom property (`grid-column: var(--dx-col, auto)`) | `withColumn.center()`, `css/components/card.css:11-13` (section children) |
-| `.dx-gutter` marker class + `col-start-1/3` + `[&>*:not(.dx-gutter)]:col-start-2` | `Column.theme.ts:36,44`, repeated in `Card.theme.ts:31,60,78,93` |
-| `data-slot='start'/'end'` attribute | **set** by `Column.Block`/`Card` parts, **consumed by nothing** — the docstring in `Column.tsx:169` ("Placement is via `data-slot`") is stale |
-| Explicit `col-span-*` utilities as opt-out | `Card.theme.ts` (`poster`, `action`, `link`, `row fullWidth`) |
+| Mechanism                                                                         | Where                                                                                                                                         |
+| --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dx-col` custom property (`grid-column: var(--dx-col, auto)`)                   | `withColumn.center()`, `css/components/card.css:11-13` (section children)                                                                     |
+| `.dx-gutter` marker class + `col-start-1/3` + `[&>*:not(.dx-gutter)]:col-start-2` | `Column.theme.ts:36,44`, repeated in `Card.theme.ts:31,60,78,93`                                                                              |
+| `data-slot='start'/'end'` attribute                                               | **set** by `Column.Block`/`Card` parts, **consumed by nothing** — the docstring in `Column.tsx:169` ("Placement is via `data-slot`") is stale |
+| Explicit `col-span-*` utilities as opt-out                                        | `Card.theme.ts` (`poster`, `action`, `link`, `row fullWidth`)                                                                                 |
 
-Plus `withColumn.propagate()` — an arbitrary-variant chain keyed on `.dx-column-root` *and*
+Plus `withColumn.propagate()` — an arbitrary-variant chain keyed on `.dx-column-root` _and_
 `.dx-container` (`withColumn.ts:22-23`) — used by exactly two theme files. This is too many ways
 to say the same thing; each has different behavior around `display: contents` children, and none
 of it is discoverable without reading three files.
@@ -125,7 +125,7 @@ of it is discoverable without reading three files.
 ### Adoption reality
 
 - **19 `Column.Root`s repo-wide, 5 in plugins.** `Column.Center` (28 uses) is mostly consumed as
-  a *naked utility* inside `Dialog.Content`'s grid, not as part of a composed Column.
+  a _naked utility_ inside `Dialog.Content`'s grid, not as part of a composed Column.
 - **`Column.Bleed` has zero call sites** — including its own stories (`Column.stories.tsx:145`
   says "No Column.Bleed wrapper needed"). It is dead code, yet `Column.tsx:44` and the old
   `Column/AUDIT.md` name it the preferred ScrollArea wrapper. `Column/AUDIT.md` also documents
@@ -154,7 +154,7 @@ API affordance:
 2. Bare `Form.Content` relying on `withColumn.center()` — cards
    (`plugin-trip/.../SegmentCard.tsx:106-120`, with an apologetic comment).
 3. `Column.Center` + `Form.Content` — dialogs (`CreateObjectPanel.tsx:117-124`, whose comment
-   documents why subgrid *can't* work through the `display: contents` wrapper).
+   documents why subgrid _can't_ work through the `display: contents` wrapper).
 
 Meanwhile `FormCard.tsx:118` and `ExpandoCard.tsx:66` ship idiom 1 inside cards — i.e. the
 misalignment is live. `ArrayField.tsx:186` carries a `// TODO(burdon): Hacky.` `[--dx-col:auto]`
@@ -191,7 +191,7 @@ The shape (grid rows `auto 1fr auto` → toolbar/content/statusbar) is right, mi
 everywhere: 256 roots across 217 files. Issues:
 
 - **Conformance is shallow.** Of 258 `Panel.Content` sites: 35% are canonical
-  (`asChild` → ScrollArea or a scroll-owning component), 19% delegate *without* `asChild`
+  (`asChild` → ScrollArea or a scroll-owning component), 19% delegate _without_ `asChild`
   (49 sites — one-token additive fix), 17% wrap a hand-rolled flex/grid div (densest in
   devtools), and only 2 sites use the true anti-pattern (`overflow-y-auto` on a div). Only 22% of
   Panel files reference `ScrollArea` at all. `Panel.Toolbar` is healthiest (81% canonical
@@ -217,7 +217,7 @@ usage record, plus a well-factored composition layer (`react-ui-card`'s `CardTil
   `plugin-projects/.../ObjectCard.tsx:51`, `plugin-tasks/.../OutlineCard.tsx:22`).
 - `Card.Root` bakes `overflow-hidden` + `dx-card-surface` + width clamps into one class
   (`Card.theme.ts:20`); the width clamps (`dx-card-min-width`/`dx-card-max-width`) belong to the
-  *host context* (a card in a Mosaic stack vs a card filling a dialog) and are already fought
+  _host context_ (a card in a Mosaic stack vs a card filling a dialog) and are already fought
   with `fullWidth`/`max-w-none!`.
 - `Card.Menu`/`Card.ActionIconButton`/`Card.DragHandle` embed `IconButton` + translations —
   convenient, but they hard-pin geometry (see §6) rather than reading control-size tokens.
@@ -234,31 +234,31 @@ usage record, plus a well-factored composition layer (`react-ui-card`'s `CardTil
 `semantic.css` defines `--dx-elevation-0…8` and aliases named surfaces onto it. The three
 descriptions disagree:
 
-| Surface | DESIGN_SYSTEM.md table | semantic.css comment | **actual assignment** |
-| --- | --- | --- | --- |
-| deck/void | 0 | 0 | 0 |
-| l0 rail | 1 | 1 | **2** |
-| sidebar/header/l1/r0/r1 | 2 | 2 | **3** |
-| base/deck canvas | 3 | 1 | **2** |
-| card | 4 | 3 | **1** (below base!) |
-| group/input | 4 | 4 | **5** |
-| toolbar | 5 | 5 | **4** |
-| modal (dialog) | 6 | 5 | 6 |
-| popover/menu/toast | 7 | 6 | 7 |
-| elevation-8 | — | — | defined, unused |
+| Surface                 | DESIGN_SYSTEM.md table | semantic.css comment | **actual assignment** |
+| ----------------------- | ---------------------- | -------------------- | --------------------- |
+| deck/void               | 0                      | 0                    | 0                     |
+| l0 rail                 | 1                      | 1                    | **2**                 |
+| sidebar/header/l1/r0/r1 | 2                      | 2                    | **3**                 |
+| base/deck canvas        | 3                      | 1                    | **2**                 |
+| card                    | 4                      | 3                    | **1** (below base!)   |
+| group/input             | 4                      | 4                    | **5**                 |
+| toolbar                 | 5                      | 5                    | **4**                 |
+| modal (dialog)          | 6                      | 5                    | 6                     |
+| popover/menu/toast      | 7                      | 6                    | 7                     |
+| elevation-8             | —                      | —                    | defined, unused       |
 
 Additional defects:
 
 - **Light-mode monotonicity is broken**: `--dx-elevation-0` ≡ `-1` (`neutral-300`) and `-3` ≡ `-4`
   (`neutral-125`) — so "strictly monotonic, z-order low → high" (`semantic.css:14`) is false, and
   card ≡ deck, sidebar ≡ toolbar in light mode.
-- **Cards sit *below* the canvas in dark mode** (card = n-925, base = n-900): cards render as
-  recessed wells, while **sidebars sit *above* the canvas** (n-875). Prior art (Claude Code
+- **Cards sit _below_ the canvas in dark mode** (card = n-925, base = n-900): cards render as
+  recessed wells, while **sidebars sit _above_ the canvas** (n-875). Prior art (Claude Code
   desktop, Linear, Slack) does the opposite on both counts: chrome recedes below the canvas,
   content surfaces (cards/panels) rise above it. Claude desktop's dark ontology, for reference:
   `sidebar #0B0B0B < main #0D0D0D < panel #131313/#161616 < input #1F1F1F <
-  hover/selected #242424` — five levels plus derived states, nothing more.
-- **Role/level conflation.** "Toolbar" is a *role*; its level depends on context (a toolbar in a
+hover/selected #242424` — five levels plus derived states, nothing more.
+- **Role/level conflation.** "Toolbar" is a _role_; its level depends on context (a toolbar in a
   card ≠ the topbar). A fixed `toolbar-surface → elevation-4` mapping cannot express nesting, and
   is why `Panel.Toolbar` at every depth paints the same color today.
 
@@ -269,9 +269,9 @@ Additional defects:
 surface. Two delivery problems:
 
 1. **Zones are the only activation path and nobody uses them.** Surface entry must go through a
-   `dx-*-surface` class (which paints *and* publishes `--surface-bg`). Measured adoption: **25
+   `dx-*-surface` class (which paints _and_ publishes `--surface-bg`). Measured adoption: **25
    zone-class uses vs ~164 bare `bg-*-surface` zone roots (~13%)**. `dx-base/deck/sidebar/header/
-   group/input/toolbar-surface` have zero consumers. The l0/l1/r0/r1 chrome surfaces have **no
+group/input/toolbar-surface` have zero consumers. The l0/l1/r0/r1 chrome surfaces have **no
    zone class at all**, so the deck chrome structurally can't publish `--surface-bg`.
 2. **The derivation block is duplicated** — the oklch formulas appear once in `semantic.css`
    (root fallback) and again in `surface.css` for the zone list, with a comment demanding they be
@@ -284,37 +284,43 @@ then only needs to set `--surface-bg`:
 ```css
 [data-surface] {
   background-color: var(--surface-bg);
-  --color-hover-surface: light-dark(oklch(from var(--surface-bg) calc(l - 0.08) c h),
-                                    oklch(from var(--surface-bg) calc(l + 0.08) c h));
+  --color-hover-surface: light-dark(
+    oklch(from var(--surface-bg) calc(l - 0.08) c h),
+    oklch(from var(--surface-bg) calc(l + 0.08) c h)
+  );
   /* …current/selected/subtle, once… */
 }
-[data-surface='base']   { --surface-bg: var(--dx-elevation-base); }
-[data-surface='raised'] { --surface-bg: var(--dx-elevation-raised); }
+[data-surface='base'] {
+  --surface-bg: var(--dx-elevation-base);
+}
+[data-surface='raised'] {
+  --surface-bg: var(--dx-elevation-raised);
+}
 ```
 
 ### 5.3 Proposed normative ontology
 
 Separate three orthogonal axes that are currently entangled:
 
-- **Level** (z-order, ~6 stops — the *only* thing the neutral ramp encodes),
+- **Level** (z-order, ~6 stops — the _only_ thing the neutral ramp encodes),
 - **Role** (semantic alias naming a UI region — maps to a level, provides the vocabulary),
-- **Aspect** (state of an element *on* a level: rest / hover / selected / selected-hover /
+- **Aspect** (state of an element _on_ a level: rest / hover / selected / selected-hover /
   current / focus — always **derived** from the level's surface, never hand-assigned).
 
 **Levels** (dark values shown; light mirrors with distinct stops — fix the collisions):
 
-| Level | Name | Dark | Roles mapped |
-| --- | --- | --- | --- |
-| 0 | `sunken` | n-950 | scrim base, wells, deck gaps |
-| 1 | `chrome` | n-925 | sidebar, topbar, l0/l1/r0/r1, statusbar |
-| 2 | `base` | n-900 | document canvas, attention zone (rest) |
-| 3 | `raised` | n-850 | cards, side panels, group, input fields |
-| 4 | `overlay` | n-800 | dialogs, sheets, drawers (with scrim below) |
-| 5 | `popup` | n-775 | popover, menu, toast, tooltip |
+| Level | Name      | Dark  | Roles mapped                                |
+| ----- | --------- | ----- | ------------------------------------------- |
+| 0     | `sunken`  | n-950 | scrim base, wells, deck gaps                |
+| 1     | `chrome`  | n-925 | sidebar, topbar, l0/l1/r0/r1, statusbar     |
+| 2     | `base`    | n-900 | document canvas, attention zone (rest)      |
+| 3     | `raised`  | n-850 | cards, side panels, group, input fields     |
+| 4     | `overlay` | n-800 | dialogs, sheets, drawers (with scrim below) |
+| 5     | `popup`   | n-775 | popover, menu, toast, tooltip               |
 
 This covers the required set — base document (`base`), sidebar/topbar (`chrome`), side panels and
 cards (`raised`), dialogs (`overlay`), popovers (`popup`) — with **toolbars deliberately absent**:
-a toolbar is a *bar on its container* and should take the container's surface (optionally +1 ramp
+a toolbar is a _bar on its container_ and should take the container's surface (optionally +1 ramp
 stop via a derived `--color-bar-surface: oklch(from var(--surface-bg) …)` token, exactly like
 hover), not a global level. That fixes both the nesting problem and the current oddity of a
 "toolbar level" that sits between cards and dialogs.
@@ -349,9 +355,9 @@ Live consequence: `IconButton.theme.ts:16` emits unconditional `px-2`, silently 
 four `.dx-button[data-density]` paddings. State utilities already pay the `!important` tax for
 the same reason (`state.css` comments).
 
-**Rule to adopt:** *component geometry (heights, paddings, radii) and surface colors live in
+**Rule to adopt:** _component geometry (heights, paddings, radii) and surface colors live in
 `@layer dx-components` CSS driven by custom properties and `data-*` attributes; `tx()`/TS theme
-files emit only variant→attribute mappings and layout hints.* The `dx-button` +
+files emit only variant→attribute mappings and layout hints._ The `dx-button` +
 `data-density`/`data-variant` pattern is the model; `Input`, `IconButton`, `Select.Item`,
 `Menu.Item`, toolbar items should follow it. This is also the precondition for the density
 system (§7) — tokens can't win until padding leaves `className`.
@@ -379,7 +385,7 @@ overriding or delete the hooks.
 
 - **`dx-ring-pseudo` is the right approach** (ring on an `::after` above children; inset, so it
   survives ancestor clipping in scroll areas) and `dx-current` already uses it. It should become
-  the *single* ring mechanism.
+  the _single_ ring mechanism.
 - **`focus.css` is a 17-class zoo** (`dx-focus-ring`, `-inset`, `-always`, `-group`, `-group-x`,
   `-group-y`, each × `-always`, `-inset-over-all`, `-main`, `-subdued`, `-static`…) with heavy
   internal duplication and box-shadow rings that need `z-[1]` hacks. Target: ~4 primitives —
@@ -418,7 +424,7 @@ The ARIA-bound grammar (`state.md`) is good and the primitives that matter (`Lis
 - **17 distinct control heights** at fine pointer (4, 16, 20, 24, 26, 28, 32, 36, 40, 48, 49px …),
   from five sources: `button.css` densities (24/28/32/40), the parallel
   `fragments/density.ts` used only by `Input` (which disagrees with button padding at every
-  density and with button *height* at coarse-md), per-component hardcodes (`Select.Item` 32,
+  density and with button _height_ at coarse-md), per-component hardcodes (`Select.Item` 32,
   `Menu.Item` 36, `Calendar` 28/36, `input.triggerIcon` 28), the `--dx-rail-*` arithmetic
   (32/40/48/49 — with a `+1px` border fudge leaking 49px into a dozen layouts), and raw
   `h-7`/`h-8`/`h-[24px]` literals.
@@ -429,7 +435,7 @@ The ARIA-bound grammar (`state.md`) is good and the primitives that matter (`Lis
 - **Two density systems, no bridge**: React `Density` context (read by exactly 4 components:
   Button, Input, SegmentedInput ×3 hooks; provided in 5 places) vs `.dx-density-*` CSS classes
   that set three `--spacing-*` vars **no control consumes**. `.dx-density-md` is used in 5 places
-  but *not defined*; `sm` and `xs` are byte-identical; `tw-merge-config.ts:25` lists the
+  but _not defined_; `sm` and `xs` are byte-identical; `tw-merge-config.ts:25` lists the
   nonexistent class and omits the existing one. `Toolbar` accepts `density` but doesn't provide
   it to children, so a `sm` toolbar renders `md` (32px) buttons and clips.
 - **Padding tokens are unconsumed**: 44 hard-coded padding utilities across `react-ui` theme
@@ -447,15 +453,15 @@ The ARIA-bound grammar (`state.md`) is good and the primitives that matter (`Lis
 `theme/spacing.css`:
 
 ```css
---dx-control-sm: 1.5rem;  /* 24px fine / 30px coarse */
---dx-control-md: 2rem;    /* 32px fine / 40px coarse */
---dx-control-lg: 2.5rem;  /* 40px fine / 50px coarse */
+--dx-control-sm: 1.5rem; /* 24px fine / 30px coarse */
+--dx-control-md: 2rem; /* 32px fine / 40px coarse */
+--dx-control-lg: 2.5rem; /* 40px fine / 50px coarse */
 --dx-control: var(--dx-control-md);
 ```
 
 Decisions this forces (all recommended):
 
-1. **Keep rem** (the pointer-coarse enlargement is a *feature* — free touch targets); document
+1. **Keep rem** (the pointer-coarse enlargement is a _feature_ — free touch targets); document
    that "24/32/40" means "at fine pointer". The alternative (absolute px) breaks touch ergonomics
    and `lit-grid` interop for no gain.
 2. **Kill the 28px step** (`sm` today). Density collapses `xs|sm|md|lg` → `sm|md|lg`. Every
@@ -470,13 +476,22 @@ Decisions this forces (all recommended):
    exception, like checkbox/switch glyphs).
 
 **(b) One density mechanism, CSS-var based.** `DensityProvider` stops being a data source that
-four components poll and becomes a *class emitter*: it renders `dx-density-{sm,md,lg}` (all three
+four components poll and becomes a _class emitter_: it renders `dx-density-{sm,md,lg}` (all three
 defined!), and the classes set the variables:
 
 ```css
-.dx-density-sm { --dx-control: var(--dx-control-sm); --dx-control-pad: var(--spacing-trim-xs); }
-.dx-density-md { --dx-control: var(--dx-control-md); --dx-control-pad: var(--spacing-trim-sm); }
-.dx-density-lg { --dx-control: var(--dx-control-lg); --dx-control-pad: var(--spacing-trim-md); }
+.dx-density-sm {
+  --dx-control: var(--dx-control-sm);
+  --dx-control-pad: var(--spacing-trim-xs);
+}
+.dx-density-md {
+  --dx-control: var(--dx-control-md);
+  --dx-control-pad: var(--spacing-trim-sm);
+}
+.dx-density-lg {
+  --dx-control: var(--dx-control-lg);
+  --dx-control-pad: var(--spacing-trim-md);
+}
 ```
 
 Components consume only the vars, in `@layer dx-components`:
@@ -484,7 +499,7 @@ Components consume only the vars, in `@layer dx-components`:
 simultaneously fixes the cascade trap (§6.1), the Button/Input padding disagreement, the
 Toolbar-doesn't-propagate bug (a class on the toolbar root densifies all children, including
 `react-ui-menu` items, with zero React plumbing), and deletes `fragments/density.ts`. The
-`data-density` per-component attribute remains only as a local *override*.
+`data-density` per-component attribute remains only as a local _override_.
 
 **(c) One spacing ramp for all `react-ui-*` packages.** `--spacing-trim-{xs,sm,md,lg}` is today
 4/8/12/24 — add `16` (rename `lg`→`xl` or insert `trim-lg: 1rem`) so the ramp is 4/8/12/16/24,
@@ -504,15 +519,26 @@ Phases 2–4 are independent of each other after Phase 1.
 
 ### Phase 0 — Decisions (sign-off needed, no code)
 
-| # | Decision | Recommendation |
-| --- | --- | --- |
-| D1 | Elevation order: chrome vs base vs card | Flip to `chrome < base < raised` (§5.3); matches prior art and both existing docs |
-| D2 | Level vocabulary | 6 levels: `sunken, chrome, base, raised, overlay, popup`; toolbar becomes a derived *aspect* (`bar`) of its host surface, not a level |
-| D3 | Control scale | rem-based `--dx-control-{sm,md,lg}` = 1.5/2/2.5rem; 28px step eliminated |
-| D4 | Surface delivery | `data-surface` attribute + one universal derivation rule; zone classes become thin aliases during migration |
-| D5 | Geometry ownership | heights/paddings move from `className` (TS themes) into `@layer dx-components` vars (§6.1) |
+| #   | Decision                                | Recommendation                                                                                                                        |
+| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Elevation order: chrome vs base vs card | Flip to `chrome < base < raised` (§5.3); matches prior art and both existing docs                                                     |
+| D2  | Level vocabulary                        | 6 levels: `sunken, chrome, base, raised, overlay, popup`; toolbar becomes a derived _aspect_ (`bar`) of its host surface, not a level |
+| D3  | Control scale                           | rem-based `--dx-control-{sm,md,lg}` = 1.5/2/2.5rem; 28px step eliminated                                                              |
+| D4  | Surface delivery                        | `data-surface` attribute + one universal derivation rule; zone classes become thin aliases during migration                           |
+| D5  | Geometry ownership                      | heights/paddings move from `className` (TS themes) into `@layer dx-components` vars (§6.1)                                            |
 
-### Phase 1 — Truth & hygiene (small PRs, no visual change)
+### Phase 1 — Truth & hygiene (small PRs, no visual change) — **DONE**
+
+> Implemented (see git history). Scoping note: 1.1 was applied as _docs-follow-code_ — the ladder
+> docs/comments now describe the shipped assignments, light mode got six distinct stops
+> (elevation-1: n-300→n-250, elevation-3: n-125→n-150 — the only visual delta), and the D1
+> re-ordering remains a pending Phase 2 decision. `.dx-panel` was renamed to `.dx-callout` (its
+> hue selectors also now match same-element `data-hue`, and text pairs `text-{hue}-fg`);
+> `.dx-density-md` now exists as an explicit reset; `asChild` was added only where the child was
+> verified composable — 14 sites, plus 2 hand-rolled scrollers converted to the canonical
+> ScrollArea shape. The 49-site estimate proved optimistic: many delegations have headless roots
+> (`Form.Root`, `Stack.Root`, `Masonry.Root` render no DOM) or `Surface.Surface`, which is
+> deliberately not composable (accepts no ref) — making Surface slottable is Phase 5 material.
 
 1. **One ladder.** Rewrite `semantic.css` assignments + header comment + `DESIGN_SYSTEM.md` to a
    single story per D1/D2; give light mode six distinct stops (fix 0≡1, 3≡4); delete unused
@@ -584,11 +610,11 @@ Phases 2–4 are independent of each other after Phase 1.
 
 ### Metrics to re-run after each phase
 
-| Metric | Today |
-| --- | --- |
-| Surface-zone adoption (zone class vs bare `bg-*-surface` roots) | ~13% |
-| Panel canonical scroll shape | ~35% (54% after Phase 1.4) |
-| Distinct control heights (fine pointer) | 17 |
-| Hand-rolled 3-track grids | ≥10 |
-| Hand-rolled state styling sites | ~36 |
-| Dead `dx-*` classes / dead tokens | 6 / 8 |
+| Metric                                                          | Today                      |
+| --------------------------------------------------------------- | -------------------------- |
+| Surface-zone adoption (zone class vs bare `bg-*-surface` roots) | ~13%                       |
+| Panel canonical scroll shape                                    | ~35% (54% after Phase 1.4) |
+| Distinct control heights (fine pointer)                         | 17                         |
+| Hand-rolled 3-track grids                                       | ≥10                        |
+| Hand-rolled state styling sites                                 | ~36                        |
+| Dead `dx-*` classes / dead tokens                               | 6 / 8                      |

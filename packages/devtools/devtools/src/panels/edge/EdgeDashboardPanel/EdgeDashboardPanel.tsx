@@ -19,7 +19,7 @@ export const EdgeDashboardPanel = () => {
 
   return (
     <Panel.Root>
-      <Panel.Content classNames='flex-1 flex-row'>
+      <Panel.Content asChild classNames='flex-1 flex-row'>
         <JsonHighlighter data={formatData(serviceCredentials)} />
       </Panel.Content>
     </Panel.Root>

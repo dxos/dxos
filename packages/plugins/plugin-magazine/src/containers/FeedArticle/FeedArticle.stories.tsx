@@ -73,7 +73,7 @@ const DefaultStory = ({ feedUrl }: FeedArticleStoryProps) => {
           <Toolbar.Text>{feed.name}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content asChild>
         <PostStack id='story-feed' posts={posts} currentId={currentPostId} onAction={handleAction} />
       </Panel.Content>
     </Panel.Root>

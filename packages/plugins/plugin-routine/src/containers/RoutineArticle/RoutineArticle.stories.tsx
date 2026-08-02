@@ -14,7 +14,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -105,9 +105,13 @@ const DefaultStory = () => {
  * the live object so its own edits persist. */
 const EditableObject = ({ title, object }: { title: string; object: Obj.Unknown }) => (
   <Panel.Root>
-    <Panel.Content classNames='overflow-auto'>
-      <h2 className='mbe-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
-      <ObjectProperties object={object} />
+    <Panel.Content asChild>
+      <ScrollArea.Root orientation='vertical'>
+        <ScrollArea.Viewport>
+          <h2 className='mbe-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
+          <ObjectProperties object={object} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </Panel.Content>
   </Panel.Root>
 );

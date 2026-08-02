@@ -466,7 +466,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
         hoverableControls,
         hoverableFocusedWithinControls,
         onMessageSelect && 'cursor-pointer',
-        currentMessageId === message.id && 'bg-activeSurface',
+        currentMessageId === message.id && 'bg-current-surface',
         classNames,
       ]}
     >

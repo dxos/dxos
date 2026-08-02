@@ -42,16 +42,20 @@ mode; inverted toward white in light mode. Every named surface token is an alias
 `--dx-elevation-N` level. Never set a surface to a raw scale value — pick the level that matches the
 role and point the token there.
 
-| Level | Name     | Dark    | Light   | Named surfaces                                                                |
-| ----- | -------- | ------- | ------- | ----------------------------------------------------------------------------- |
-| 0     | `void`   | `n-950` | `n-200` | scrim base, window gaps                                                       |
-| 1     | `rail`   | `n-900` | `n-175` | `l0-surface` (icon rail)                                                      |
-| 2     | `chrome` | `n-875` | `n-150` | `sidebar-surface`, `header-surface`, `l1-surface`, `r0-surface`, `r1-surface` |
-| 3     | `canvas` | `n-850` | `n-125` | `base-surface`, `deck-surface`                                                |
-| 4     | `raised` | `n-825` | `n-100` | `card-surface`, `group-surface`, `input-surface`                              |
-| 5     | `bar`    | `n-800` | `n-75`  | `toolbar-surface` (sticky, drop-shadowed)                                     |
-| 6     | `modal`  | `n-775` | `n-50`  | `modal-surface` (dialogs)                                                     |
-| 7     | `float`  | `n-750` | `white` | `popover-surface` (menus, popovers, toasts, tooltips)                         |
+This table mirrors the shipped assignments in `semantic.css` (which is the source of truth — update
+both together). The re-ordering proposed in `AUDIT.md` (D1: chrome below base, card above base) is a
+pending decision, deliberately not applied here.
+
+| Level | Dark    | Light   | Named surfaces                                                                |
+| ----- | ------- | ------- | ----------------------------------------------------------------------------- |
+| 0     | `n-950` | `n-300` | `deck-surface`, scrim base                                                    |
+| 1     | `n-925` | `n-250` | `card-surface`                                                                |
+| 2     | `n-900` | `n-200` | `base-surface`, `attention-surface`, `l0-surface` (icon rail)                 |
+| 3     | `n-875` | `n-150` | `header-surface`, `sidebar-surface`, `l1-surface`, `r0-surface`, `r1-surface` |
+| 4     | `n-850` | `n-125` | `toolbar-surface` (sticky, drop-shadowed)                                     |
+| 5     | `n-825` | `n-100` | `focus-surface`, `group-surface`, `input-surface`                             |
+| 6     | `n-800` | `n-75`  | `modal-surface` (dialogs)                                                     |
+| 7     | `n-775` | `n-50`  | `popover-surface` (menus, popovers, toasts, tooltips)                         |
 
 The primitive `--dx-elevation-0…7` is defined in `semantic.css` using `light-dark()`. Raw scale values
 (`n-*`) are in `palette.css` — the table above is for human reference only.
@@ -59,17 +63,17 @@ The primitive `--dx-elevation-0…7` is defined in `semantic.css` using `light-d
 ### Visual hierarchy (dark)
 
 ```text
-popover/float   n-750  ↑ highest / closest to viewer
-modal/dialog    n-775
-toolbar         n-800  (sticky bar; content passes beneath)
-card/raised     n-825
-canvas/deck     n-850
-chrome/sidebar  n-875
-rail/L0         n-900
-void            n-950  ↓ lowest
+popover         n-775  ↑ highest / closest to viewer
+modal/dialog    n-800
+group/input     n-825
+toolbar         n-850  (sticky bar; content passes beneath)
+sidebar/header  n-875
+base/canvas     n-900
+card            n-925
+deck/void       n-950  ↓ lowest
 ```
 
-Each surface that hosts text declares a matching `*-fg` (defaulting to `n-950 / n-50`).
+Each surface that hosts text declares a matching `*-fg` (defaulting to `n-950 / n-150`).
 
 ## Elevation primitive
 
@@ -88,26 +92,36 @@ When adding a new surface:
 
 The system has three orthogonal states. Pick by what the ARIA / markup is saying.
 
-| State                      | Token                    | When                                                             | Value             |
-| -------------------------- | ------------------------ | ---------------------------------------------------------------- | ----------------- |
-| Active item, one-of-N      | `current-surface`        | `aria-current=true` (nav cursor, current row, current path)      | `n-100` / `n-900` |
-| Hovering on current item   | `current-surface-hover`  | pointer-over on a `current` element                              | `n-200` / `n-800` |
-| Text on a current surface  | `current-fg`             | text/icon color paired with `current-surface`                    | `n-950` / `n-50`  |
-| Selected / checked         | `selected-surface`       | `aria-selected=true` (multi-select, listbox option, checked row) | `n-150` / `n-850` |
-| Hovering on selected       | `selected-surface-hover` | pointer-over on a `selected` element                             | `n-250` / `n-750` |
-| Text on a selected surface | `selected-fg`            | text/icon color paired with `selected-surface`                   | `n-950` / `n-50`  |
-| Transient pointer-over     | `hover-surface`          | `:hover`, Radix `data-highlighted` (keyboard cursor in menus)    | `n-250` / `n-750` |
-| Text on a transient hover  | `hover-fg`               | text/icon color paired with `hover-surface`                      | `n-950` / `n-50`  |
+State surfaces are **derived from the host surface**, not fixed scale values: each token is a
+relative-oklch lightness offset from `--surface-bg` (published by the enclosing `dx-*-surface` zone
+class — see `components/surface.css`), darker in light mode and lighter in dark mode, so a highlight
+stays visible at any elevation. Offsets (L): hover-subtle ∓0.02, hover ∓0.08, current ∓0.10,
+current-hover ∓0.12; `selected-*` aliases `current-*`.
+
+| State                      | Token                    | When                                                             |
+| -------------------------- | ------------------------ | ---------------------------------------------------------------- |
+| Active item, one-of-N      | `current-surface`        | `aria-current=true` (nav cursor, current row, current path)      |
+| Hovering on current item   | `current-surface-hover`  | pointer-over on a `current` element                              |
+| Text on a current surface  | `current-fg`             | text/icon color paired with `current-surface`                    |
+| Selected / checked         | `selected-surface`       | `aria-selected=true` (multi-select, listbox option, checked row) |
+| Hovering on selected       | `selected-surface-hover` | pointer-over on a `selected` element                             |
+| Text on a selected surface | `selected-fg`            | text/icon color paired with `selected-surface`                   |
+| Transient pointer-over     | `hover-surface`          | `:hover`, Radix `data-highlighted` (keyboard cursor in menus)    |
+| Subtle region hover        | `hover-surface-subtle`   | large targets (rows, tiles) via `dx-hover`                       |
+| Text on a transient hover  | `hover-fg`               | text/icon color paired with `hover-surface`                      |
 
 **Why these three.** `current` describes one-of-N navigation/selection state ("you are here"); `selected` describes a checked item in a set (multi-select-able); `hover` is transient pointer feedback. Driving the distinction off ARIA keeps markup and tokens in sync.
 
 ### Visual hierarchy (state, dark)
 
+Relative to the host surface `S` (= `--surface-bg`), in oklch lightness:
+
 ```text
-card-surface          n-825    resting
-current-surface       n-100 / n-900    "I am the active one"
-current-surface-hover n-200 / n-800    hovering the active one
-hover-surface         n-250 / n-750    transient pointer-over anywhere else
+S                     resting
+S + 0.02              subtle region hover (hover-surface-subtle)
+S + 0.08              transient pointer-over (hover-surface)
+S + 0.10              "I am the active one" (current-surface / selected-surface)
+S + 0.12              hovering the active one (current-surface-hover)
 ```
 
 ## Consolidation: tokens that go away

@@ -147,7 +147,7 @@ const MockToolForm = ({ toolId, onRun }: { toolId: string; onRun: (args: Record<
       <label className='flex flex-col gap-1 text-xs'>
         <span className='font-medium'>args (JSON)</span>
         <textarea
-          className='min-h-24 rounded border border-separator bg-input p-2 font-mono text-xs'
+          className='min-h-24 rounded border border-separator bg-input-surface p-2 font-mono text-xs'
           value={json}
           onChange={(event) => setJson(event.target.value)}
           spellCheck={false}
@@ -155,7 +155,7 @@ const MockToolForm = ({ toolId, onRun }: { toolId: string; onRun: (args: Record<
       </label>
       <button
         type='button'
-        className='self-end rounded bg-accentSurface px-3 py-1 text-xs font-medium text-accentSurfaceText'
+        className='self-end rounded bg-accent-bg px-3 py-1 text-xs font-medium text-accent-fg'
         onClick={() => {
           try {
             onRun(JSON.parse(json));

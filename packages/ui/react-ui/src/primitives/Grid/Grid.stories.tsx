@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '../../testing';
 import { Grid } from './Grid';
 
 const Cell = ({ label, hue }: { label: string; hue: ChromaticPalette }) => (
-  <div data-hue={hue} className='dx-panel p-2 text-sm font-mono border rounded-sm'>
+  <div data-hue={hue} className='dx-callout p-2 text-sm font-mono border rounded-sm'>
     {label}
   </div>
 );

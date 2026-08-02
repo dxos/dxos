@@ -27,17 +27,3 @@ export const densityDimensions = (density: Density = 'md') => {
       return mdDimensions;
   }
 };
-
-export const densityBlockSize = (density: Density = 'md') => {
-  switch (density) {
-    case 'lg':
-      return lgBlockSize;
-    case 'sm':
-      return smBlockSize;
-    case 'xs':
-      return xsBlockSize;
-    case 'md':
-    default:
-      return mdBlockSize;
-  }
-};

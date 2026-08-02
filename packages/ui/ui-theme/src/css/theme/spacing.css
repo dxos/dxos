@@ -37,8 +37,6 @@
    * Density: md (default).
    */
   --spacing-form-padding: var(--spacing-trim-sm);
-  --spacing-icon-button-padding: var(--spacing-trim-xs);
-  --spacing-scroll-padding: 4px;
 }
 
 @layer dx-tokens {
@@ -47,8 +45,13 @@
    */
   .dx-density-lg {
     --spacing-form-padding: var(--spacing-trim-md);
-    --spacing-icon-button-padding: var(--spacing-trim-sm);
-    --spacing-scroll-padding: 8px;
+  }
+
+  /**
+   * Density: md — explicit reset so a nested region can restore the default inside lg/sm/xs.
+   */
+  .dx-density-md {
+    --spacing-form-padding: var(--spacing-trim-sm);
   }
 
   /**
@@ -56,8 +59,6 @@
    */
   .dx-density-sm {
     --spacing-form-padding: var(--spacing-trim-xs);
-    --spacing-icon-button-padding: var(--spacing-trim-xs);
-    --spacing-scroll-padding: 2px;
   }
 
   /**
@@ -65,8 +66,6 @@
    */
   .dx-density-xs {
     --spacing-form-padding: var(--spacing-trim-xs);
-    --spacing-icon-button-padding: var(--spacing-trim-xs);
-    --spacing-scroll-padding: 2px;
   }
 }
 
@@ -79,11 +78,6 @@
     --dx-line-1: 1px;
     --dx-line-2: 2px;
 
-    --dx-lacuna-12: 1.5rem;
-    --dx-lacuna-3: 0.375rem;
-    --dx-lacuna-4: 0.5rem;
-    --dx-lacuna-6: 0.75rem;
-
     /* Form:   8px */
     --dx-gutter-sm: 0.5rem;
     /* Dialog: 16px */
@@ -93,25 +87,15 @@
   }
 
   :root {
-    --dx-hair-line: 1px;
-    --dx-landmark-line: 1px;
-    --dx-modal-line: 1px;
-    --dx-no-line: 0px;
-    --dx-thick-line: 2px;
-    --dx-focus-line: 2px;
-
     --dx-no-line: var(--dx-line-0);
     --dx-hair-line: var(--dx-line-1);
     --dx-thick-line: var(--dx-line-2);
 
+    --dx-landmark-line: var(--dx-hair-line);
     --dx-focus-offset: var(--dx-no-line);
     --dx-focus-line: var(--dx-thick-line);
     --dx-modal-line: var(--dx-hair-line);
     --dx-grid-focus-indicator-width: var(--dx-hair-line);
-
-    --dx-input-md: var(--dx-lacuna-3);
-    --dx-input-lg: var(--dx-lacuna-4);
-    --dx-input-sm: var(--dx-lacuna-3);
 
     --dx-default-icons-size: 1rem; /* size=4 */
   }
@@ -130,7 +114,8 @@
     /* TODO(burdon): Remove direct usage. */
     --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem);
 
-    --dx-topbar-size: var(--dx-rail-size); /* 50px */
+    /* NOTE: px values below assume the 16px (pointer: fine) root font-size; coarse is 20px (×1.25). */
+    --dx-topbar-size: var(--dx-rail-size); /* 49px */
     --dx-toolbar-size: var(--dx-rail-action); /* 40px */
     --dx-statusbar-size: var(--dx-rail-item); /* 32px */
 

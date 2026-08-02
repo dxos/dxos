@@ -13,27 +13,31 @@
    * Elevation ladder — strictly monotonic, z-order low → high.
    * Dark: darker = lower. Light: lighter = higher (inverted toward white).
    *
-   * Level  Name     Roles
-   *   0    void     deck, scrim base
-   *   1    base     base content, L0 icon rail
-   *   2    chrome   L1/R sidebars, header
-   *   3    card     card
-   *   4    raised   group, input, focus/attention
-   *   5    bar      dialog/modal, toolbar (sticky, drop-shadowed)
-   *   6    modal    popover, menu, toast, tooltip
-   *   7    float    
+   * This table is the single source of truth for the shipped ladder (DESIGN_SYSTEM.md follows it):
+   *
+   * Level  Dark   Light  Surfaces
+   *   0    n-950  n-300  deck, scrim base
+   *   1    n-925  n-250  card
+   *   2    n-900  n-200  base content, attention, L0 icon rail
+   *   3    n-875  n-150  header, sidebars (L1/R0/R1)
+   *   4    n-850  n-125  toolbar
+   *   5    n-825  n-100  focus, group, input
+   *   6    n-800  n-75   dialog/modal
+   *   7    n-775  n-50   popover, menu, toast, tooltip
+   *
+   * NOTE: The re-ordering proposed in AUDIT.md (D1: chrome below base, card above base) is a
+   * pending Phase 2 decision; do not partially apply it here.
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
   --dx-elevation-0: light-dark(var(--color-neutral-300), var(--color-neutral-950));
-  --dx-elevation-1: light-dark(var(--color-neutral-300), var(--color-neutral-925));
+  --dx-elevation-1: light-dark(var(--color-neutral-250), var(--color-neutral-925));
   --dx-elevation-2: light-dark(var(--color-neutral-200), var(--color-neutral-900));
-  --dx-elevation-3: light-dark(var(--color-neutral-125), var(--color-neutral-875));
+  --dx-elevation-3: light-dark(var(--color-neutral-150), var(--color-neutral-875));
   --dx-elevation-4: light-dark(var(--color-neutral-125), var(--color-neutral-850));
   --dx-elevation-5: light-dark(var(--color-neutral-100), var(--color-neutral-825));
   --dx-elevation-6: light-dark(var(--color-neutral-75), var(--color-neutral-800));
   --dx-elevation-7: light-dark(var(--color-neutral-50), var(--color-neutral-775));
-  --dx-elevation-8: light-dark(white, var(--color-neutral-750));
 
   /** 
    * Elevation 0
@@ -119,10 +123,6 @@
   --color-popover-surface: var(--dx-elevation-7);
 
   /**
-   * Elevation 8
-   */
-
-  /**
    * Misc
    */
 
@@ -168,7 +168,7 @@
 
   /*
    * Subtle region hover for large highlight targets (list rows, tiles) where the full
-   * control-strength hover reads as too heavy. Consumed by `.dx-hover` / `.dx-hover-row`;
+   * control-strength hover reads as too heavy. Consumed by `.dx-hover`;
    * controls (buttons) keep --color-hover-surface.
    */
   --color-hover-surface-subtle: light-dark(

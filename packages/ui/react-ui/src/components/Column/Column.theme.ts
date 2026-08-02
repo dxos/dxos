@@ -51,14 +51,6 @@ const block: ComponentFunction<ColumnBlockStyleProps> = ({ end, compact, square 
   );
 
 /**
- * Bleed placement: spans all 3 columns of the parent Column.Root grid (gutter-to-gutter).
- * Use for `ScrollArea`, full-width dividers, tables, or any content that should ignore gutters.
- */
-const bleed: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('col-span-full grid grid-cols-subgrid min-h-0', ...etc);
-};
-
-/**
  * Center placement: places the element in column 2 (the central track between gutters) of the
  * parent Column.Root grid. Does NOT use subgrid — placement is explicit on this element only.
  * Safe to nest arbitrary compound components (including those that render `display: contents`).
@@ -71,6 +63,5 @@ export const columnTheme = {
   root,
   row,
   block,
-  bleed,
   center,
 };

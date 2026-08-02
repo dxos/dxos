@@ -73,7 +73,7 @@ export const MergePreview = forwardRef<HTMLDivElement, MergePreviewProps>(
             </Toolbar.Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <ScrollArea.Root orientation='vertical' centered>
             <ScrollArea.Viewport>
               <Card.Root fullWidth classNames='pb-form-gap'>

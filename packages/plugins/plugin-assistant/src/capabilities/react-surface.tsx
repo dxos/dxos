@@ -118,7 +118,7 @@ export default Capability.makeModule(() =>
 
           return (
             <Panel.Root role={role} className='dx-document'>
-              <Panel.Content>
+              <Panel.Content asChild>
                 <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} target={target} detailAxis='block' />
               </Panel.Content>
             </Panel.Root>

@@ -1,0 +1,140 @@
+/**
+ * Callout — hue-tinted panel: applies bg-{hue}-surface / border-{hue}-border / text-{hue}-fg via a
+ * data-hue attribute (on the element itself or an ancestor) or a BEM modifier.
+ * Example: <div className='dx-callout' data-hue='blue'>...</div>
+ * Example: <div className='dx-callout dx-callout--blue'>...</div>
+ */
+
+@layer dx-components {
+  .dx-callout[data-hue='neutral'],
+  [data-hue='neutral'] .dx-callout,
+  .dx-callout--neutral {
+    @apply bg-neutral-surface border-neutral-border text-neutral-fg;
+  }
+
+  .dx-callout[data-hue='red'],
+  [data-hue='red'] .dx-callout,
+  .dx-callout--red {
+    @apply bg-red-surface border-red-border text-red-fg;
+  }
+
+  .dx-callout[data-hue='orange'],
+  [data-hue='orange'] .dx-callout,
+  .dx-callout--orange {
+    @apply bg-orange-surface border-orange-border text-orange-fg;
+  }
+
+  .dx-callout[data-hue='amber'],
+  [data-hue='amber'] .dx-callout,
+  .dx-callout--amber {
+    @apply bg-amber-surface border-amber-border text-amber-fg;
+  }
+
+  .dx-callout[data-hue='yellow'],
+  [data-hue='yellow'] .dx-callout,
+  .dx-callout--yellow {
+    @apply bg-yellow-surface border-yellow-border text-yellow-fg;
+  }
+
+  .dx-callout[data-hue='lime'],
+  [data-hue='lime'] .dx-callout,
+  .dx-callout--lime {
+    @apply bg-lime-surface border-lime-border text-lime-fg;
+  }
+
+  .dx-callout[data-hue='green'],
+  [data-hue='green'] .dx-callout,
+  .dx-callout--green {
+    @apply bg-green-surface border-green-border text-green-fg;
+  }
+
+  .dx-callout[data-hue='emerald'],
+  [data-hue='emerald'] .dx-callout,
+  .dx-callout--emerald {
+    @apply bg-emerald-surface border-emerald-border text-emerald-fg;
+  }
+
+  .dx-callout[data-hue='teal'],
+  [data-hue='teal'] .dx-callout,
+  .dx-callout--teal {
+    @apply bg-teal-surface border-teal-border text-teal-fg;
+  }
+
+  .dx-callout[data-hue='cyan'],
+  [data-hue='cyan'] .dx-callout,
+  .dx-callout--cyan {
+    @apply bg-cyan-surface border-cyan-border text-cyan-fg;
+  }
+
+  .dx-callout[data-hue='sky'],
+  [data-hue='sky'] .dx-callout,
+  .dx-callout--sky {
+    @apply bg-sky-surface border-sky-border text-sky-fg;
+  }
+
+  .dx-callout[data-hue='blue'],
+  [data-hue='blue'] .dx-callout,
+  .dx-callout--blue {
+    @apply bg-blue-surface border-blue-border text-blue-fg;
+  }
+
+  .dx-callout[data-hue='indigo'],
+  [data-hue='indigo'] .dx-callout,
+  .dx-callout--indigo {
+    @apply bg-indigo-surface border-indigo-border text-indigo-fg;
+  }
+
+  .dx-callout[data-hue='violet'],
+  [data-hue='violet'] .dx-callout,
+  .dx-callout--violet {
+    @apply bg-violet-surface border-violet-border text-violet-fg;
+  }
+
+  .dx-callout[data-hue='purple'],
+  [data-hue='purple'] .dx-callout,
+  .dx-callout--purple {
+    @apply bg-purple-surface border-purple-border text-purple-fg;
+  }
+
+  .dx-callout[data-hue='fuchsia'],
+  [data-hue='fuchsia'] .dx-callout,
+  .dx-callout--fuchsia {
+    @apply bg-fuchsia-surface border-fuchsia-border text-fuchsia-fg;
+  }
+
+  .dx-callout[data-hue='pink'],
+  [data-hue='pink'] .dx-callout,
+  .dx-callout--pink {
+    @apply bg-pink-surface border-pink-border text-pink-fg;
+  }
+
+  .dx-callout[data-hue='rose'],
+  [data-hue='rose'] .dx-callout,
+  .dx-callout--rose {
+    @apply bg-rose-surface border-rose-border text-rose-fg;
+  }
+
+  .dx-callout[data-hue='info'],
+  [data-hue='info'] .dx-callout,
+  .dx-callout--info {
+    @apply bg-info-surface border-info-border text-info-fg;
+  }
+
+  .dx-callout[data-hue='success'],
+  [data-hue='success'] .dx-callout,
+  .dx-callout--success {
+    @apply bg-success-surface border-success-border text-success-fg;
+  }
+
+  .dx-callout[data-hue='warning'],
+  [data-hue='warning'] .dx-callout,
+  .dx-callout--warning {
+    @apply bg-warning-surface border-warning-border text-warning-fg;
+  }
+
+  .dx-callout[data-hue='error'],
+  [data-hue='error'] .dx-callout,
+  .dx-callout--error {
+    @apply bg-error-surface border-error-border text-error-fg;
+  }
+}

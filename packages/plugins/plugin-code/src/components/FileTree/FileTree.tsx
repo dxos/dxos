@@ -130,7 +130,7 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
         aria-pressed={isSelected}
         className={mx(
           'flex items-center gap-1 w-full text-start py-0.5 hover:bg-hover-surface',
-          isSelected && 'bg-activeSurface text-accent-text',
+          isSelected && 'bg-current-surface text-accent-text',
         )}
         style={indent}
         onClick={() => onSelect?.(node.path)}

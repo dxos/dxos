@@ -548,7 +548,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           deck surface, and the outline is what makes it read as a tile at all. */}
       {exposed && (
         <button
-          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-accentSurface'
+          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-focus-ring'
           aria-label={spineLabel}
           onClick={handleExposeSelect}
         />

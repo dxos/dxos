@@ -327,7 +327,7 @@ const useMarkdownStreamTextEditor = (
             xmlBlockDecoration({
               tag: 'prompt',
               lineClass:
-                'cm-prompt-line cm-prompt-bubble dx-panel bg-group-surface text-base-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
+                'cm-prompt-line cm-prompt-bubble dx-callout bg-group-surface text-base-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
               firstLineClass: 'pt-1.5 rounded-t-sm',
               lastLineClass: 'pb-1.5 rounded-b-sm',
               hideTags: true,
