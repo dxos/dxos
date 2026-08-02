@@ -429,8 +429,21 @@ Resolutions and directions from design review, each turning an "open" item into 
      case. Residual: late old-schema reorder+edit obscures live-to-baseline correspondence — the
      source array is retained, clean cases resolve via patch-index tracking, and genuinely
      ambiguous cases surface as history-native conflicts for review (ambiguity surfaced, not data
-     lost — within the bar). Spikes implied: baseline-view derivation + map-target convergence
-     (composes verified pieces); the late-reorder correspondence/conflict path.
+     lost — within the bar). **VERIFIED (2026-08-02, `migration-research-collections.test.ts`, 5
+     tests, 25/25 stability runs):** baseline-view derivation is reorder-immune and byte-identical
+     across peers (a peer that reorders before converting derives the same keys as one that
+     doesn't); re-runs are zero-write; a clean late edit folds to the right entry; a pure move is
+     decidable by content-matching (nothing parked); move+edit of the same element is correctly
+     classified ambiguous, folds nothing, and the late value stays readable in the retained
+     source. **Correction found:** "converges on plain map semantics" requires the right map
+     idiom — the Record container must be pre-seeded at creation (`itemsById: {}`) and every write
+     must be a per-key bracket assignment; assigning the WHOLE record replaces the container
+     object, and two concurrent conversions then hit container-level LWW (one peer's entire map
+     discarded; convergence only by content coincidence). Even per-key, two peers writing the SAME
+     key concurrently with equal content leave a genuine non-transient conflict record at that key
+     (cleared only by a later superseding write), and conflict-branch reconciliation can trail
+     head replication — so "identical keys converge" holds for read VALUES, and settle/zero-write
+     checks must wait for heads stable across sync rounds.
 
 ## Out of scope / open
 
