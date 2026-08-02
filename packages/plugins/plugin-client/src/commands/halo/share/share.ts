@@ -50,7 +50,7 @@ export const handler = Effect.fn(function* ({
           yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
 
           const url = new URL(host);
-          url.searchParams.append('deviceInvitationCode', invitationCode);
+          url.searchParams.set('deviceInvitationCode', invitationCode);
 
           if (!json) {
             yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);

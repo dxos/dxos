@@ -74,14 +74,43 @@ instead of folding.
 **Attention hysteresis.** Attention must always point at a plank the user can see, so when the
 attended plank folds (or leaves the viewport on mobile) `useFoldedPlanks` moves focus to the unfolded
 plank nearest the viewport centre. Attention is focus-driven, so it moves focus rather than setting
-attention directly. Two guards keep this from fighting the user: `scrollIntentRef` holds focus on a
-plank a navigation is still travelling to, and `handoffRef` marks attention this hook handed over so
-`useCollapseAfterAttended` does not read it as a deliberate choice and scroll back against the gesture.
+attention directly. `scrollIntentRef` holds that focus on a plank a navigation is still travelling to,
+so the hysteresis does not hand it straight back on the first scroll frame.
 
-**Collapse on attend.** `useCollapseAfterAttended` scrolls a newly attended plank flush against the
-left pile, which pushes everything after it off the trailing edge into the right pile. The offset
-cannot come from a rect or `offsetLeft` — while sticky, both report the _pinned_ position — so
-`scrollPlankToPile` sums the preceding planks' widths and gaps and backs off one spine each.
+**The deck scrolls only when asked.** There are exactly two animated writers of scroll position, and
+both are explicit:
+
+- `useScrollIntoView`, for navigation from outside the deck (`LayoutOperation.ScrollIntoView`). It also
+  focuses the plank, which is why an in-deck click does not reuse it — that would take the caret away
+  from a click landing in a document.
+- A delegated `pointerdown` on the stack: clicking a plank asks for it. Delegated because `Mosaic.Tile`
+  forwards no pointer handlers, and captured so it settles before the click reaches an editor.
+
+Three defenses keep those writers honest, each earned by a measured failure:
+
+- **The click yields to navigation.** A click on a plank is often a click on a _launcher_ — a mailbox
+  row opens a message — and both the click and the navigation it triggers would command the deck
+  (measured: two writers per click). The click defers briefly and drops itself when a navigation
+  intent appears or the deck changes under it.
+- **Arrival watchdog.** A smooth scroll is a request, not a guarantee: a reflow mid-glide makes the
+  browser abort it, stranding the deck (measured: command issued, deck never moved). A deck that sits
+  still without arriving gets the command again; sitting at the destination — including the clamped
+  one — is success.
+- **Scroll anchoring is off** (`overflow-anchor: none`). A tile growing — a companion opening — made
+  the browser silently shift the deck by exactly the width delta, with zero scroll commands; the
+  instrumentation that exonerated every writer is how this was found. The `LauncherManual` story is
+  the regression net for all three.
+
+The deck deliberately does **not** scroll in response to attention. This was tried and removed. A hook
+watched `attendedPlankId` and `companionId` and inferred "the user chose this plank", but attention also
+moves for reasons that are not a choice — a companion resolving a commit later, the fold hysteresis
+handing focus on, an exposé closing, a width cap recomputing. Each false positive earned a guard, and
+the hook ended up with six of them plus a scroll-command dedupe, while still moving the deck under the
+user when a companion opened. Intent is stated now, not deduced.
+
+The corollary matters when adding features: a layout change must never scroll. A companion widens its
+own tile, so the attended plank's edge does not move — nothing needs correcting, and correcting it is
+what caused the jump.
 
 ---
 
@@ -213,10 +242,17 @@ defaults to the last plank in the chain.
 ## 9. Keyboard
 
 - `meta+;` — toggle the exposé; `Escape` leaves it.
-- `←` / `→` — step to the previous/next plank and attend it. Gated on `isPlankLevelFocus()`: the
-  focused element must be the attendable container itself, so a caret in an editor, a list or a toolbar
-  keeps its own arrows. Reaching that level is tabster's groupper ladder — Escape leaves the editor,
-  Escape again lands on the plank.
+- `←` / `→` — step to the previous/next plank and attend it, without wrapping. Gated on
+  `isPlankLevelFocus()`: the focused element must be the attendable container itself, so a caret in an
+  editor, a list or a toolbar keeps its own arrows. Reaching that level is tabster's groupper ladder —
+  Escape leaves the editor, Escape again lands on the plank. In the exposé the gate is dropped, since
+  the miniatures are inert, and attention moves by focusing the target plank with `preventScroll` so
+  the row stays parked and the exposé stays open.
+
+  The step is computed from the _focused_ plank read out of the DOM, not from `attendedPlankId`:
+  attention arrives with a render, so held-down key repeat outruns it and every event in a burst would
+  step from the same stale plank — measured as eight rapid presses moving one plank.
+
 - `Escape` — exits fullscreen.
 
 The arrow stepping is deliberately _not_ tabster's Mover yet: that is the principled version
@@ -251,3 +287,174 @@ A green build is not a tested deck: the geometry lives in layout effects reading
 anything touching §3 or §7 wants a browser. Frame-level assertions (sampling `getComputedStyle` and
 rects across `requestAnimationFrame`) are what caught the exposé's scroll clamping, the fold crossfade
 and the FLIP ordering — none of which typecheck differently when broken.
+
+---
+
+## 12. Plugin-declared decks
+
+**Status: partially shipped.** P1–P3 are implemented and in this document's terms: the `DeckSpec` /
+`AppAnnotation.DeckAnnotation` contract, Collections as navigation targets seeding their children, and
+mailbox levels with below-pruning. Still open (phasing in [TASKS.md](./TASKS.md)): sizing intent (P4),
+container hooks (P5), and the decided-but-unbuilt items (Collections row, `mode` enum). The analysis
+below is kept because its corrections — notably `activeDeck` being the workspace identity — constrain
+the remaining work.
+
+### The problem
+
+A deck is currently one global thing. `DeckState.active` is a flat list of plank ids, its presentation
+derives only from that list's length, and every plugin opens into the same deck through the same
+`LayoutOperation.Open`. Three consequences:
+
+1. Selecting a Collection in the navtree does not give you the collection — attention stays on whatever
+   document was current, because nothing maps "this node was selected" to "the deck is now _this_".
+2. A plugin cannot say what shape its own deck should take. The mailbox wants
+   `mailbox → message → attachment`: opening a message replaces the message plank, and opening an
+   attachment stacks a third. Today `plugin-inbox` gets the middle level only by hand-passing
+   `name: '<mailbox>/message'` to `Open` (§5) — the mechanism exists but the _shape_ is hard-coded at
+   the call site, and nothing prunes a stale attachment plank.
+3. A plugin cannot influence initial sizing. A new message plank takes `DEFAULT_PLANK_SIZE` (50rem)
+   regardless; the mailbox wants its first two planks to fill the viewport.
+
+### The key observation — and its limit
+
+`StoredDeckState` is already a _map_ of decks:
+
+```ts
+{
+  activeDeck: string;
+  previousDeck: string;
+  decks: Record<string, DeckState>;
+}
+```
+
+`LayoutOperation.SwitchWorkspace` already lazily creates `decks[id]` and switches to it, and every
+mutation routes through `updateActiveDeck`. It is tempting to conclude that a deck per collection is
+free — just let something other than a workspace key a deck.
+
+**That is wrong, and it was the first thing implementation disproved.** `activeDeck` does double duty
+as the _workspace identity_:
+
+- `url-handler` serializes it into the URL's workspace slot (`bareWorkspace(state.activeDeck)`).
+- `url-handler` compares the parsed workspace against it and calls `SwitchWorkspace` when they differ,
+  so a non-workspace value would be fought back on every URL parse.
+- The `Layout` capability publishes it app-wide as `workspace`.
+
+Re-keying `decks[]` by a collection id therefore breaks URL round-tripping immediately. Giving a deck
+its own identity needs a key separate from the workspace, and agreement on where it belongs in the
+pair-chain grammar — which is why adoption below _seeds_ the active deck instead.
+
+### The model
+
+A graph node may declare a **deck spec**. When that node becomes the deck root, the deck adopts it.
+Declared on the node, because the app-graph is already how a plugin says what a node _is_ (`label`,
+`icon`, actions) and is already plugin-owned — which is the control point asked for.
+
+```ts
+type DeckSpec = {
+  /**
+   * Ordered levels. A plank opened at level `i` reuses that level's plank (via the existing plank
+   * name, §5) and closes every level deeper than `i`.
+   */
+  levels?: DeckLevel[];
+  /** What to open when the deck is adopted. `'children'` = the node's graph children. */
+  initial?: 'children' | 'none';
+};
+
+type DeckLevel = {
+  /** Level key; becomes the plank name as `<rootId>/<key>`, so §5 does the reuse. */
+  key: string;
+  /** Initial width only. A user drag writes `plankSizing` and wins from then on. */
+  size?: number | 'fill';
+};
+```
+
+Worked examples:
+
+```ts
+// Collection — its documents, side by side.
+{ initial: 'children' }
+
+// Mailbox — three levels, the first two sharing the viewport.
+{
+  levels: [
+    { key: 'mailbox', size: 'fill' },
+    { key: 'message', size: 'fill' },
+    { key: 'attachment' },
+  ],
+}
+```
+
+### Adoption
+
+Navigating to a node whose type declares `initial: 'children'` **seeds** the active deck with that
+node's openable graph children, in place of a plank showing the node itself. No new deck is created and
+`activeDeck` is untouched, so nothing about the URL or the workspace changes.
+
+Seeding applies only to a navigation, never an add: an `add`, a shift-forced add, or an `auto` that
+grew a sliding deck are all requests to put _this_ node beside what is already open, and replacing the
+deck there would discard the planks the user was working in.
+
+This is what fixes (1): selecting a Collection currently leaves attention alone because the selection
+does not change the deck at all. Seeding makes the collection's documents the deck, and attention
+follows the first.
+
+Two consequences of seeding rather than re-keying, both deliberate:
+
+- **No per-collection persistence.** Plank sets and widths are not remembered per collection; that
+  wants the deck-identity work above.
+- **A cap.** Every plank mounts an article surface, so `MAX_SEEDED_PLANKS` bounds how many a single
+  click opens. An arbitrary constant, and the first thing to revisit once the deck can virtualize
+  planks it is not showing.
+
+### Levels
+
+Levels are the generalization of the named planks that already ship. Opening at level `key` is:
+
+```ts
+Open({ subject, name: `${rootId}/${key}` });
+```
+
+which is exactly what `plugin-inbox` does by hand today — so the mailbox's existing behaviour becomes
+the degenerate case rather than a special case. Two additions are needed:
+
+- **Pruning.** Opening at level `i` must close planks at levels `> i`, or switching messages leaves the
+  previous message's attachment open. `layout.ts` owns this next to `addSubjectsToActiveDeck`.
+- **Level → plank mapping.** `DeckState` needs to know which plank sits at which level. A
+  `plankLevels: Record<string, string>` (plank id → level key) mirrors `plankNames`, or is derived
+  from it by parsing the name — deriving is cheaper and has one source of truth.
+
+### Sizing
+
+`size` is an _intent_, consumed only when a plank has no stored width:
+
+```ts
+const stored = plankSizing[id] ?? resolveInitialSize(level, viewportWidthPx);
+```
+
+`'fill'` means "share the space the two piles leave", which `useMaxPlankWidth` already computes
+(§3) — divided among the `'fill'` levels currently open. Because it only applies in the absence of a
+stored value, the first drag pins the width and the intent never fights the user afterwards.
+
+### Container hooks
+
+Containers should not hand-build plank names. A hook resolves the current deck's spec and does it:
+
+```ts
+const deck = useDeckLevels();
+deck.open(message, { level: 'message' }); // reuses the message plank, prunes deeper
+deck.close({ level: 'attachment' });
+```
+
+It belongs in `app-toolkit` rather than `plugin-deck`, so a plugin can push onto the deck without
+depending on the deck plugin — the same reason `LayoutOperation` lives there.
+
+### What this does not settle
+
+- **Companion vs level — settled: orthogonal.** A level is a position in the chain; a companion is a
+  per-plank affordance. Every plank in `mailbox → message → attachment` can independently show its own
+  companion, so the two compose rather than compete and §4 stands unchanged.
+- **Per-collection memory belongs in view state.** The plank set and widths a collection was left in
+  should live in `react-ui-attention` view state — the aspect the companion variant already uses
+  (§6) — rather than in a deck keyed by collection. View state is per-attendable, global and absent
+  from the URL, so `activeDeck` never needs separating from the workspace identity and the pair-chain
+  grammar is untouched. A later phase; nothing in §12 above depends on it.

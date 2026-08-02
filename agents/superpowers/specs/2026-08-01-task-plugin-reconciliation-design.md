@@ -1,6 +1,28 @@
 # Task-list plugin — reconciliation and MCP verb design
 
-Date: 2026-08-01 · Status: draft (overnight; for review) · Owner: burdon
+Date: 2026-08-01 · Status: **RESOLVED by `claude/competent-curie-20057f`** (kept as option record) · Owner: burdon
+
+> **Resolution (2026-08-01, user's branch):** the ontology landed differently from the proposal
+> below — see the branch as source of truth:
+>
+> - `ExternalProject` → **`TaskSet`** (`org.dxos.type.taskSet@0.2.0`, stays in `@dxos/types`) —
+>   pure container with NO task array; **membership is the ECHO parent edge** (TaskSet parents
+>   root tasks, a task parents its sub-tasks; `Task.taskSet` is the backref). Sync provenance via
+>   `Obj.getMeta` foreign keys.
+> - `Task@0.2.0`: `project` ref removed (parent-edge containment); `assigned: Ref<Person>` →
+>   `assignee: Actor.Actor` (DID / Person ref / email / name — humans AND agents); status gains
+>   `failed`/`cancelled`.
+> - `Outline`/`Journal` move to `@dxos/types` (`Outline@0.2.0`: `project` → `taskSet` ref;
+>   typename unchanged). **plugin-outliner is subsumed by `plugin-tasks`** (new `react-ui-task`
+>   package; TaskSetArticle).
+> - Verbs: `TaskOperation` (`taskCreate`/`taskUpdate`/`taskComplete`/`taskAssign`, keys
+>   `<plugin-tasks>.operation.*`) + `OutlineOperation` (`createOutline`/`convertToTask`/
+>   `quickEntry`) in plugin-tasks; `ProjectOperation` (`create`/`createChat`/`createRoutine`) in
+>   plugin-projects. Full v1 verb table incl. list/get + pagination:
+>   `plugin-projects/MILESTONE-5.md` §7.2; placement §7.3 (edge mcp-space-service projects the
+>   operations; `McpToolAnnotation` planned for phase 4; identity-through-the-call is the edge
+>   prerequisite for assignee-bearing writes).
+
 Project: `mcp` (milestone 3, task 4). Companion to
 [task-planning ⇄ Composer sync](./2026-08-01-task-planning-composer-sync-design.md).
 
@@ -18,7 +40,12 @@ Nothing owns the **task list as a first-class managed collection** (ordering, fi
 status board, agent access). `ExternalProject`'s name also now lies — the outliner uses it for
 native projects (rename tracked in `mcp` TASKS).
 
-## Proposal (for review — not implemented)
+## Proposal (SUPERSEDED — historical option record)
+
+> Everything below this line predates the resolution above and describes a `TaskList` model that
+> was **not** adopted. It is kept only to show which alternatives were weighed. For the shipped
+> schema, verb names, and operation keys, read the resolution block and
+> `plugin-projects/MILESTONE-5.md` §7.2–7.3 — not this section.
 
 ### Unified ontology (user direction 2026-08-01)
 
@@ -46,12 +73,9 @@ plugin-projects consumes via the `outline` ref. Sync engines (Linear/GitHub) plu
 
 ### Dedicated MCP verbs vs generic object verbs
 
-> **Superseding input (2026-08-01):** the user is producing an updated spec on another branch
-> (`claude/competent-curie-20057f`) introducing `TaskOperation` in a `plugin-tasks`. The MCP task
-> verbs below must **match those operations** (thin projections over the same operation keys —
-> the object-toolkit pattern), and `plugin-tasks` gets registered in the edge operation-service.
-> Constraint from the outliner registration attempt: the worker resolves all lazy operation
-> handlers, so plugin-tasks handler chunks must stay UI-free or only its schema can register.
+> **Superseded:** the verb names below (`listTasks`/`createTask`/…) were the pre-decision sketch.
+> The shipped verbs are `taskCreate`/`taskUpdate`/`taskComplete`/`taskAssign`/`taskList`, projected
+> from the `org.dxos.plugin.tasks.operation.*` keys — see the resolution block above.
 
 Recommendation: **keep the generic object verbs as the substrate; add a thin task verb set** —
 not because the generic verbs can't express tasks, but because model ergonomics and safety differ:
@@ -76,10 +100,9 @@ _object_ view. The outliner's convert-to-task is the promotion path between them
 `syncChecklist` operation could reconcile a checklist document with Task objects, but that is
 explicitly out of scope until both ends are in use.
 
-## Open questions
+## Open questions — resolved
 
-1. Naming decision (above) — blocks the rename task.
-2. Does plugin-tasks subsume the kanban plugin's task usage, or stay independent?
-3. Should task verbs live only in mcp-space-service, or as a proper operation set in the plugin
-   (so Composer-side agents share them)? Leaning: plugin operation set, projected by MCP —
-   same pattern as markdown/database ops.
+1. Naming: `ExternalProject` → `TaskSet` (stays in `@dxos/types`).
+2. Kanban: still open; plugin-tasks owns the durable task surface, kanban's usage is unreconciled.
+3. Placement: resolved as leaned — the verbs are a plugin operation set (plugin-tasks), projected
+   by mcp-space-service, the same pattern as the markdown/database ops.

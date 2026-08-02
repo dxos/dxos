@@ -120,6 +120,23 @@ type PlankContextValue = RenderedPlanks & {
 };
 
 /**
+ * The companion plank id to render beside `id`, or undefined when its companion is closed. Companion
+ * state is *per plank* (`DeckState.companionPlanks`) and rendering resolves from exactly that state —
+ * never from attention. Attention used to pick a single anchor here, which meant attention traffic
+ * re-anchored the companion between planks: tiles widened and narrowed with no user gesture, the engine
+ * answered a sticky tile's width change by silently shifting `scrollLeft` by the delta (zero scroll
+ * commands — writer instrumentation finds nothing), and a companion could be "open" in state yet render
+ * beside no visible plank. The variant (which tab) stays global view state, shared across planks.
+ */
+const useDeckCompanion = (id: string | undefined): string | undefined => {
+  const { deck } = useDeckContext('useDeckCompanion');
+  const companions = useCompanions(id);
+  const selectedVariant = useSelectedCompanionVariant();
+  const { companionId } = useSelectedCompanion(companions, selectedVariant);
+  return id && deck.companionPlanks.includes(id) ? companionId : undefined;
+};
+
+/**
  * What a plank tile needs from the deck around it. A context rather than props because `Mosaic.Stack`
  * instantiates the tile itself, passing a closed prop set with no consumer passthrough — and building the
  * tile component inline would give it a new identity per measurement, remounting every plank on each
@@ -130,8 +147,6 @@ type PlankContextValue = RenderedPlanks & {
  */
 const PlankContext = createContext<PlankContextValue>({
   planks: [],
-  companionId: undefined,
-  companionAnchorId: undefined,
   attendedPlankId: undefined,
   maxPlankWidthPx: Number.POSITIVE_INFINITY,
   captureExposeGeometry: () => {},
@@ -215,18 +230,14 @@ const getPlankId = (id: string) => id;
 type RenderedPlanks = {
   /** The real planks the deck lays out (`flatten` collapses these to the current plank). */
   planks: string[];
-  /** The derived companion node id (`<anchor>/~<variant>`), or undefined when no companion is shown. */
-  companionId: string | undefined;
-  /** The plank the companion shares a container with. */
-  companionAnchorId: string | undefined;
   /** The plank attention points into, or undefined when it points outside the deck. */
   attendedPlankId: string | undefined;
 };
 
 /**
- * What the deck renders: the real active planks, plus (when the companion is open) the derived companion
- * of the *attended* plank, which shares that plank's container rather than trailing the deck. The
- * companion is never stored in `deck.active` — it follows attention — so it is derived here.
+ * What the deck renders: the real active planks. Each plank whose id is in `deck.companionPlanks`
+ * renders its own companion beside it ({@link useDeckCompanion}, resolved per tile) — companions are
+ * per-plank state, so attention plays no part in what is laid out.
  *
  * When the `flatten` setting is on, only the current (last) active plank renders (plus its companion), so
  * the deck stays fullbleed/tiling; the earlier active entries are surfaced as breadcrumbs in the plank
@@ -237,27 +248,12 @@ const useRenderedPlanks = (): RenderedPlanks => {
   const { flatten } = useDeckSettings();
   const attended = useAttended();
   const planks = useMemo(() => getRenderedPlanks(deck.active, flatten), [flatten, deck.active]);
-  // The attended plank is both what the companion attaches to and what the deck collapses around, so it
-  // is resolved once here. Only the companion takes the last-plank fallback: collapsing the deck around a
-  // plank nobody attended would scroll it out from under the user.
+  // Resolved once here: the attended plank is what the click-to-front and arrow navigation key off.
   const attendedPlankId = findAttendedPlank(planks, attended);
-  const anchorId = attendedPlankId ?? planks[planks.length - 1];
-  const companions = useCompanions(anchorId ?? '');
-  const selectedVariant = useSelectedCompanionVariant();
-  const { companionId } = useSelectedCompanion(companions, selectedVariant);
-  const companion = anchorId && deck.companionPlanks.includes(anchorId) ? companionId : undefined;
 
   // Stable identity: this shape is the `PlankContext` value, so a new object per render would re-render
   // every tile on every deck render.
-  return useMemo(
-    () => ({
-      planks,
-      companionId: companion,
-      companionAnchorId: companion ? anchorId : undefined,
-      attendedPlankId,
-    }),
-    [planks, companion, anchorId, attendedPlankId],
-  );
+  return useMemo(() => ({ planks, attendedPlankId }), [planks, attendedPlankId]);
 };
 
 //
@@ -423,14 +419,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
-  const {
-    planks: rendered,
-    companionId,
-    companionAnchorId,
-    maxPlankWidthPx,
-    captureExposeGeometry,
-  } = usePlankContext();
-  const companion = id === companionAnchorId ? companionId : undefined;
+  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry } = usePlankContext();
+  const companion = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
@@ -477,9 +467,28 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   }, [invokePromise, id, captureExposeGeometry]);
 
   if (presentation === 'fullbleed') {
+    // A fullbleed pair flexes to the viewport rather than taking a stored total, so only the lower
+    // bound applies here — the Splitter's own clamp keeps the plank pane on screen.
+    const soloCompanionSize = Math.max(
+      MIN_COMPANION_SIZE,
+      deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
+    );
+    // The pair/solo choice mirrors the sliding return below so the first child keeps its component
+    // type across a presentation change — the reconciliation that keeps a plank's DOM (and therefore
+    // its content state and scroll) alive when the deck crosses 1↔2 planks.
     return (
       <Mosaic.Tile {...props} classNames='relative h-full w-full'>
-        <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
+        {companion ? (
+          <CompanionSplit
+            id={id}
+            companionId={companion}
+            active={deck.active}
+            companionSize={soloCompanionSize}
+            classNames={mx('absolute inset-0', mainPaddingTransitions)}
+          />
+        ) : (
+          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
+        )}
       </Mosaic.Tile>
     );
   }
@@ -695,7 +704,6 @@ const useFoldedPlanks = ({
   plankCount,
   maxPlankWidthPx,
   scrollIntentRef,
-  handoffRef,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   getPlankTiles: () => HTMLElement[];
@@ -704,8 +712,6 @@ const useFoldedPlanks = ({
   plankCount: number;
   maxPlankWidthPx: number;
   scrollIntentRef: RefObject<string | undefined>;
-  /** Set to the plank this hook hands attention to, so the collapse can tell it apart from a real choice. */
-  handoffRef: RefObject<string | undefined>;
 }) => {
   const { attention } = useAttentionContext(DECK_VIEWPORT_NAME);
   const wasExposedRef = useRef(expose);
@@ -821,9 +827,6 @@ const useFoldedPlanks = ({
         // `preventScroll` stops the focus call from fighting the scroll that triggered it.
         const plank = best?.tile.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR);
         if (plank && !plank.contains(document.activeElement)) {
-          // Recorded so the collapse does not treat this as the user choosing a plank and scroll it to
-          // the pile — that would drag the deck back against the gesture that handed attention over.
-          handoffRef.current = best?.tile.getAttribute('data-object-id') ?? undefined;
           plank.focus({ preventScroll: true });
         }
       }
@@ -853,18 +856,23 @@ const useFoldedPlanks = ({
     };
     // `maxPlankWidthPx` is a dep so the fold state recomputes when the width cap shrinks planks (else a
     // plank folded against its pre-cap width leaves a spine floating until the next scroll).
-  }, [
-    isSliding,
-    expose,
-    plankCount,
-    maxPlankWidthPx,
-    getPlankTiles,
-    attention,
-    viewportRef,
-    scrollIntentRef,
-    handoffRef,
-  ]);
+  }, [isSliding, expose, plankCount, maxPlankWidthPx, getPlankTiles, attention, viewportRef, scrollIntentRef]);
 };
+
+/**
+ * The last scroll this module commanded per viewport, so a burst of re-runs settling one interaction
+ * does not restart the smooth animation repeatedly. Keyed weakly: the entry dies with the viewport.
+ */
+const lastScrollCommand = new WeakMap<HTMLElement, { left: number; at: number }>();
+
+/** Window in which a repeat command to the same destination is treated as the same scroll. */
+const SCROLL_DEDUPE_MS = 600;
+
+/**
+ * How long a click waits before bringing its plank forward, giving a navigation the same gesture
+ * triggers time to claim it. Long enough for an operation round trip, short enough to read as instant.
+ */
+const CLICK_TO_FRONT_DELAY_MS = 150;
 
 /**
  * Scrolls a plank flush against the left pile — the deck's one notion of "bring this plank to the front",
@@ -880,11 +888,14 @@ const scrollPlankToPile = ({
   stack,
   tiles,
   index,
+  force = false,
 }: {
   viewport: HTMLDivElement;
   stack: HTMLDivElement;
   tiles: HTMLElement[];
   index: number;
+  /** Bypass the repeat-command dedupe — for the arrival watchdog, whose whole job is re-issuing. */
+  force?: boolean;
 }) => {
   const styles = getComputedStyle(stack);
   const gap = parseFloat(styles.columnGap) || 0;
@@ -893,7 +904,21 @@ const scrollPlankToPile = ({
   for (let plank = 0; plank < index; plank++) {
     naturalLeft += tiles[plank].offsetWidth + gap;
   }
-  viewport.scrollTo({ left: Math.max(0, naturalLeft - index * SPINE_PX), behavior: 'smooth' });
+  const left = Math.max(0, naturalLeft - index * SPINE_PX);
+
+  // The collapse legitimately re-runs while one interaction settles — attention lands, the companion
+  // resolves a commit later, the width cap recomputes — and each `scrollTo` *restarts* the smooth
+  // animation rather than continuing it, so repeats to the same destination read as a stutter. Opening
+  // a companion measured six commands to one target inside 30ms.
+  const previous = lastScrollCommand.get(viewport);
+  const now = performance.now();
+  if (!force && previous && previous.left === left && now - previous.at < SCROLL_DEDUPE_MS) {
+    return left;
+  }
+  lastScrollCommand.set(viewport, { left, at: now });
+
+  viewport.scrollTo({ left, behavior: 'smooth' });
+  return left;
 };
 
 /** Scrolls a plank into view for the one-shot navigation flag, then clears it. */
@@ -911,6 +936,11 @@ const useScrollIntoView = ({
   scrollIntentRef: RefObject<string | undefined>;
 }) => {
   const { invokePromise } = useOperationInvoker();
+  // Outlives the effect on purpose: the effect clears the one-shot flag, which re-runs it with no id —
+  // a cleanup there would kill the watchdog the moment it was armed.
+  const watchdogRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => cancelAnimationFrame(watchdogRef.current ?? 0), []);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -925,96 +955,47 @@ const useScrollIntoView = ({
       // The plank focuses itself off the same one-shot flag; record it so the fold hysteresis holds that
       // focus until the scroll below has actually brought the plank out of the pile.
       scrollIntentRef.current = scrollIntoViewId;
-      scrollPlankToPile({ viewport, stack, tiles, index });
+      const target = scrollPlankToPile({ viewport, stack, tiles, index });
+
+      // Arrival watchdog. A smooth scroll is a request, not a guarantee: a reflow mid-glide — a plank
+      // remounting, a list re-rendering, the scrollable width momentarily collapsing — makes the browser
+      // clamp or abort it, stranding the deck wherever the abort happened (measured in the app: the
+      // command was issued and the deck never moved). Arrival is owned by `useFoldedPlanks`, which
+      // clears the intent; until then, a deck that sits still without arriving gets the command again.
+      cancelAnimationFrame(watchdogRef.current ?? 0);
+      let attempts = 0;
+      let last = viewport.scrollLeft;
+      let still = 0;
+      const watch = () => {
+        if (scrollIntentRef.current !== scrollIntoViewId || attempts >= 2) {
+          return;
+        }
+        const current = viewport.scrollLeft;
+        // At the destination — including the clamped one, when the deck is too short to reach the
+        // commanded offset — means the glide finished; stillness there is success, not death.
+        const clamped = Math.max(0, Math.min(target, viewport.scrollWidth - viewport.clientWidth));
+        if (Math.abs(current - clamped) < 1) {
+          return;
+        }
+        still = Math.abs(current - last) < 1 ? still + 1 : 0;
+        last = current;
+        // ~250ms of stillness without arrival: the glide is dead, not slow.
+        if (still >= 15) {
+          attempts += 1;
+          still = 0;
+          const freshTiles = getPlankTiles();
+          const freshIndex = freshTiles.findIndex((tile) => tile.getAttribute('data-object-id') === scrollIntoViewId);
+          if (freshIndex === -1) {
+            return;
+          }
+          scrollPlankToPile({ viewport, stack, tiles: freshTiles, index: freshIndex, force: true });
+        }
+        watchdogRef.current = requestAnimationFrame(watch);
+      };
+      watchdogRef.current = requestAnimationFrame(watch);
     }
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
   }, [scrollIntoViewId, invokePromise, viewportRef, stackRef, getPlankTiles, scrollIntentRef]);
-};
-
-/**
- * Brings the attended plank to the front of the deck: scrolling it against the left pile pushes every
- * plank after it off the trailing edge, where the two-edge sticky pins them as the right pile — so
- * attending a plank collapses everything to its right to spines. Runs on a real change of attended plank
- * (not on every attention event) so it never fights a scroll the user is in the middle of.
- */
-const useCollapseAfterAttended = ({
-  viewportRef,
-  stackRef,
-  getPlankTiles,
-  isSliding,
-  expose,
-  attendedPlankId,
-  companionId,
-  scrollIntentRef,
-  handoffRef,
-}: {
-  viewportRef: RefObject<HTMLDivElement | null>;
-  stackRef: RefObject<HTMLDivElement | null>;
-  getPlankTiles: () => HTMLElement[];
-  isSliding: boolean;
-  /** The exposé shows the whole deck at once, so bringing a plank to the front there is meaningless. */
-  expose: boolean;
-  attendedPlankId: string | undefined;
-  /** Re-runs the collapse when the pair lands; see the comment on the effect. */
-  companionId: string | undefined;
-  scrollIntentRef: RefObject<string | undefined>;
-  handoffRef: RefObject<string | undefined>;
-}) => {
-  const wasExposedRef = useRef(expose);
-
-  // A layout effect, so a correction lands before paint instead of as a visible slide.
-  useLayoutEffect(() => {
-    const viewport = viewportRef.current;
-    const stack = stackRef.current;
-    const wasExposed = wasExposedRef.current;
-    wasExposedRef.current = expose;
-    if (!isSliding || expose || !attendedPlankId || !viewport || !stack) {
-      return;
-    }
-
-    // Closing the exposé is not the user choosing a plank — attention never moved — so the deck belongs
-    // exactly where `useExposeScroll` just put it back. Collapsing here would instead scroll the attended
-    // plank to the pile and return the user to a deck they did not leave.
-    if (wasExposed) {
-      return;
-    }
-
-    const tiles = getPlankTiles();
-    const index = tiles.findIndex((tile) => tile.getAttribute('data-object-id') === attendedPlankId);
-    if (index === -1) {
-      return;
-    }
-
-    // A navigation scroll is already travelling to its own target; letting this one interleave would
-    // fight it mid-flight (and the fold hysteresis keys off the same intent).
-    if (scrollIntentRef.current && scrollIntentRef.current !== attendedPlankId) {
-      return;
-    }
-
-    // Attention the fold hysteresis handed over because the previous plank scrolled out of view. The
-    // user is mid-gesture and did not pick this plank, so collapsing to it would drag the deck back
-    // against the swipe.
-    if (handoffRef.current === attendedPlankId) {
-      handoffRef.current = undefined;
-      return;
-    }
-
-    scrollPlankToPile({ viewport, stack, tiles, index });
-    // `companionId` is a dependency because the companion arrives a commit *later* than the attention
-    // that summoned it — `useCompanions` reads the graph in a commit-phase effect — so the first pass
-    // measures the deck before the pair widened. Without re-running here the scroll stays short by the
-    // companion's width, leaving the attended plank pinned and its neighbour riding over the companion.
-  }, [
-    isSliding,
-    expose,
-    attendedPlankId,
-    companionId,
-    getPlankTiles,
-    viewportRef,
-    stackRef,
-    scrollIntentRef,
-    handoffRef,
-  ]);
 };
 
 /**
@@ -1302,7 +1283,11 @@ export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
   const { overscroll } = useDeckSettings();
   const rendered = useRenderedPlanks();
-  const { planks, companionId, companionAnchorId, attendedPlankId } = rendered;
+  const { planks, attendedPlankId } = rendered;
+  // The last plank's companion feeds both the fullbleed pair (a singleton deck's only plank *is* the
+  // last) and the overscroll runway, which is sized to the last tile.
+  const lastPlankId = planks[planks.length - 1];
+  const lastPlankCompanionId = useDeckCompanion(lastPlankId);
   const breakpoint = useBreakpoints();
   const presentation = useDeckPresentation(planks.length);
   const fullscreenId = state.fullscreen;
@@ -1322,7 +1307,6 @@ export const DeckPlanks = () => {
 
   // The plank the fold hysteresis last handed attention to, so the collapse can ignore it. A ref for the
   // same reason as above: it changes per scroll frame and no render depends on it.
-  const handoffRef = useRef<string | undefined>(undefined);
 
   const getPlankTiles = usePlankTiles(stackRef);
   const { maxPlankWidthPx, viewportWidthPx } = useMaxPlankWidth({
@@ -1344,20 +1328,8 @@ export const DeckPlanks = () => {
     plankCount: planks.length,
     maxPlankWidthPx,
     scrollIntentRef,
-    handoffRef,
   });
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
-  useCollapseAfterAttended({
-    viewportRef,
-    stackRef,
-    getPlankTiles,
-    isSliding,
-    expose,
-    attendedPlankId,
-    companionId,
-    scrollIntentRef,
-    handoffRef,
-  });
   useExposeScale({ viewportRef, stackRef, hostRef, getPlankTiles, expose });
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
@@ -1372,6 +1344,8 @@ export const DeckPlanks = () => {
   captureRef.current = captureExposeGeometry;
   const navigationRef = useRef({ planks, attendedPlankId });
   navigationRef.current = { planks, attendedPlankId };
+  const getTilesRef = useRef(getPlankTiles);
+  getTilesRef.current = getPlankTiles;
 
   // Bound here rather than as a graph action so the shortcut works wherever the deck has focus; see the
   // note in DESIGN about promoting it once its binding is settled.
@@ -1399,20 +1373,35 @@ export const DeckPlanks = () => {
       if (step === 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) {
         return;
       }
-      if (exposeRef.current || !isPlankLevelFocus()) {
+      // The exposé shows every plank at once and its content is inert, so there is no caret to protect
+      // and no scrolling to do — arrows just walk attention along the row.
+      if (!exposeRef.current && !isPlankLevelFocus()) {
         return;
       }
 
       const { planks: current, attendedPlankId: attended } = navigationRef.current;
-      const index = attended ? current.indexOf(attended) : -1;
+      // Read the focused plank from the DOM, not from `attendedPlankId`: attention arrives with a
+      // render, so key repeat outruns it and every event in a burst would step from the same stale
+      // plank. Falls back to the attended id when focus is not on a plank (the pre-exposé case).
+      const focused = document.activeElement?.closest('[role="listitem"]')?.getAttribute('data-object-id');
+      const from = (focused && current.includes(focused) ? focused : undefined) ?? attended;
+      const index = from ? current.indexOf(from) : -1;
       const next = index === -1 ? current[0] : current[index + step];
       if (!next) {
         return;
       }
 
+      event.preventDefault();
+      if (exposeRef.current) {
+        // Attention is focus-driven, and `preventScroll` matters here: the exposé parks the scroll at
+        // zero to bring the whole row into frame, and focusing without it would scroll the row away.
+        const tile = getTilesRef.current().find((candidate) => candidate.getAttribute('data-object-id') === next);
+        tile?.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR)?.focus({ preventScroll: true });
+        return;
+      }
+
       // The same one-shot the spines and navigation use: it scrolls the plank to the front *and* attends
       // it, because the plank focuses itself off the flag.
-      event.preventDefault();
       void invokePromise(LayoutOperation.ScrollIntoView, { subject: next });
     };
 
@@ -1432,47 +1421,173 @@ export const DeckPlanks = () => {
     [invokePromise, expose, captureExposeGeometry],
   );
 
+  // Reveal a companion that opens past the trailing edge. The pair widens rightward and the deck does
+  // not move on layout changes, so a plank near the edge opens its companion off-screen; the reveal is
+  // the one bounded exception — scroll by exactly the overflow, so a pair that already fits does not
+  // move at all. Watched briefly rather than measured once: the split sizes the pair a frame or two
+  // after the companion appears. Keyed on a plank *entering* `companionPlanks` — the user's own toggle,
+  // the only event that widens a tile — so neither a splitter drag nor attention traffic ever triggers
+  // it.
+  const prevCompanionPlanksRef = useRef<readonly string[] | undefined>(undefined);
+  useLayoutEffect(() => {
+    const previous = prevCompanionPlanksRef.current;
+    prevCompanionPlanksRef.current = deck.companionPlanks;
+    const viewport = viewportRef.current;
+    if (!viewport || !isSliding || expose) {
+      return;
+    }
+    const opened = deck.companionPlanks.filter((id) => !(previous ?? []).includes(id) && planks.includes(id));
+    const openedId = opened[opened.length - 1];
+    if (!openedId) {
+      return;
+    }
+    const tile = getPlankTiles().find((candidate) => candidate.getAttribute('data-object-id') === openedId);
+    if (!tile) {
+      return;
+    }
+    let revealed = false;
+    const reveal = () => {
+      if (revealed) {
+        return;
+      }
+      const overflow = tile.getBoundingClientRect().right - viewport.getBoundingClientRect().right;
+      if (overflow > 1) {
+        revealed = true;
+        viewport.scrollTo({ left: Math.round(viewport.scrollLeft + overflow), behavior: 'smooth' });
+      }
+    };
+    reveal();
+    const observer = new ResizeObserver(reveal);
+    observer.observe(tile);
+    const timer = setTimeout(() => observer.disconnect(), 1500);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [deck.companionPlanks, planks, viewportRef, getPlankTiles, isSliding, expose]);
+
+  // The deliberate, user-initiated half of "bring a plank forward"; `useScrollIntoView` is the other
+  // half, for navigation from outside the deck. Delegated to the stack because `Mosaic.Tile` forwards
+  // no pointer handlers, and captured so it settles before the click reaches an editor. Deliberately
+  // *not* driven by attention: attention also moves for reasons that are not a choice — a companion
+  // resolving, a fold handing focus on — and acting on those moved the deck under the user.
+  //
+  // `ScrollIntoView` is not reused here because it also focuses the plank, which would take the caret
+  // away from a click landing in a document.
+  useEffect(() => {
+    const stack = stackRef.current;
+    if (!stack || !isSliding || expose) {
+      return;
+    }
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    const off = addEventListener(
+      stack,
+      'pointerdown',
+      (event) => {
+        const tile = event.target instanceof Element ? event.target.closest('[role="listitem"]') : undefined;
+        const id = tile?.getAttribute('data-object-id');
+        const viewport = viewportRef.current;
+        if (!id || !viewport) {
+          return;
+        }
+        // Only a click on a plank you are *not* already reading asks for anything. Clicking inside the
+        // current plank — its content, or a control in its toolbar such as the companion toggle — is
+        // interaction with what you already have, and moving the deck there yanks it out from under the
+        // pointer.
+        if (id === navigationRef.current.attendedPlankId) {
+          return;
+        }
+
+        // Deferred, and yielding: a click on a plank is often a click on a *launcher* — a mailbox row
+        // opens a message — and the navigation that results owns the gesture. The deck changing
+        // (`planks` identity) or a navigation intent appearing are both grounds to drop the click's own
+        // scroll; the two-writer collision this prevents was measured in the app and reproduced in the
+        // launcher story.
+        const planksAtClick = navigationRef.current.planks;
+        clearTimeout(pending);
+        pending = setTimeout(() => {
+          // No attended re-check here: the click itself focuses the plank, so by now attention has
+          // landed on `id` and re-checking would cancel every click-to-front — the gesture this
+          // handler exists for. "Already reading it" was decided at pointerdown time above.
+          if (scrollIntentRef.current || navigationRef.current.planks !== planksAtClick) {
+            return;
+          }
+          const tiles = getPlankTiles();
+          const index = tiles.findIndex((candidate) => candidate.getAttribute('data-object-id') === id);
+          if (index !== -1) {
+            scrollPlankToPile({ viewport, stack, tiles, index });
+          }
+        }, CLICK_TO_FRONT_DELAY_MS);
+      },
+      { capture: true },
+    );
+    return () => {
+      clearTimeout(pending);
+      off();
+    };
+  }, [stackRef, viewportRef, getPlankTiles, isSliding, expose, scrollIntentRef]);
+
   const plankContext = useMemo<PlankContextValue>(
     () => ({ ...rendered, maxPlankWidthPx, captureExposeGeometry }),
     [rendered, maxPlankWidthPx, captureExposeGeometry],
   );
 
+  // The last tile's width as actually laid out, so the runway below can wait for the split to size the
+  // pair before shrinking. Undefined until the tile is found, and reset when the last plank changes.
+  const [lastTileWidthPx, setLastTileWidthPx] = useState<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (!overscroll || !isSliding || expose || !lastPlankId) {
+      setLastTileWidthPx(undefined);
+      return;
+    }
+    const tile = getPlankTiles().find((candidate) => candidate.getAttribute('data-object-id') === lastPlankId);
+    if (!tile) {
+      setLastTileWidthPx(undefined);
+      return;
+    }
+    setLastTileWidthPx(tile.offsetWidth);
+    const observer = new ResizeObserver(() => setLastTileWidthPx(tile.offsetWidth));
+    observer.observe(tile);
+    return () => observer.disconnect();
+  }, [overscroll, isSliding, expose, lastPlankId, planks, getPlankTiles]);
+
   // Overscroll runway (experiment): trailing space so the last plank can scroll clear of the right edge
   // and sit at the front like any other, with only the preceding spines beside it. Sized to exactly that
   // resting position, so the deck never scrolls further than the last plank being fully forward.
   const overscrollPx = useMemo(() => {
-    const lastId = planks[planks.length - 1];
     // Suppressed in the exposé: the runway is trailing padding, so it would count towards the natural
     // width the scale has to fit and shrink every plank to buy back space nothing occupies.
-    if (!overscroll || !isSliding || expose || !lastId || !viewportWidthPx) {
+    if (!overscroll || !isSliding || expose || !lastPlankId || !viewportWidthPx) {
       return 0;
     }
-    const paired = companionAnchorId === lastId && !!companionId;
+    const paired = !!lastPlankCompanionId;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
-      lastId,
+      lastPlankId,
       paired,
       resolveMaxTileSize(maxPlankWidthPx, paired),
     );
-    return Math.max(0, viewportWidthPx - (planks.length - 1) * SPINE_PX - tileSize * REM_PX);
+    // The stored size predicts the pair a commit before the split actually widens the tile. Shrinking
+    // the runway on the prediction dips the deck's total width for that gap, and with the deck scrolled
+    // to the end the browser clamps `scrollLeft` by the dip — an instant leftward jump the reveal then
+    // has to animate back (measured: −247 for a 247px runway shrink, one frame, no scroll command).
+    // Taking the smaller of prediction and measurement makes the runway shrink only after the tile has
+    // genuinely widened, while still growing immediately when the pair closes — the total never dips.
+    const tileSizePx = tileSize * REM_PX;
+    const effectiveTileSizePx = lastTileWidthPx === undefined ? tileSizePx : Math.min(tileSizePx, lastTileWidthPx);
+    return Math.max(0, viewportWidthPx - (planks.length - 1) * SPINE_PX - effectiveTileSizePx);
   }, [
     overscroll,
     isSliding,
     expose,
     planks,
-    companionAnchorId,
-    companionId,
+    lastPlankId,
+    lastPlankCompanionId,
+    lastTileWidthPx,
     deck.plankSizing,
     maxPlankWidthPx,
     viewportWidthPx,
   ]);
-
-  // A fullbleed pair flexes to the viewport rather than taking a stored total, so only the lower bound
-  // applies here — the Splitter's own clamp keeps the plank pane on screen.
-  const soloCompanionSize = Math.max(
-    MIN_COMPANION_SIZE,
-    deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
-  );
 
   return (
     <PlankContext.Provider value={plankContext}>
@@ -1505,32 +1620,22 @@ export const DeckPlanks = () => {
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
           </>
-        ) : presentation === 'fullbleed' && companionAnchorId && companionId ? (
-          // A lone plank with its companion: the pair fills the viewport across the same seam it has as a
-          // sliding tile, so opening a second plank never moves it.
-          <CompanionSplit
-            id={companionAnchorId}
-            companionId={companionId}
-            active={deck.active}
-            companionSize={soloCompanionSize}
-            classNames={mx('absolute inset-0', mainPaddingTransitions)}
-          />
-        ) : presentation === 'fullbleed' && planks[0] ? (
-          // A singleton deck renders the plank directly as an absolute-inset child of this filled
-          // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
-          // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
-          <DeckPlank
-            id={planks[0]}
-            part='main'
-            // Pass the real deck.active (not the collapsed `planks`) so flat mode can derive the
-            // breadcrumb trail from the planks preceding the current one.
-            active={deck.active}
-            classNames={mx('absolute inset-0', mainIntrinsicSize)}
-          />
         ) : (
+          // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
+          // (its tile spans the viewport; see DeckPlankTile's fullbleed return). One tree, keyed by
+          // plank id, is what keeps a plank's DOM mounted across 1↔2 plank transitions; a separate
+          // fullbleed branch here remounted the surviving plank on every message open/close (the
+          // mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
+          // resolves against the viewport instead of a shrink-wrapped flex row.
           <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
-              <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
+              <ScrollArea.Viewport
+                ref={viewportRef}
+                // Scroll anchoring off: the deck owns its scroll position, and the browser's anchor
+                // compensation turns any tile growing (a companion opening) into a silent scroll no
+                // code commanded — measured as the deck shifting by exactly the width delta.
+                classNames={mx('[overflow-anchor:none]', breakpoint === 'mobile' && 'snap-x snap-mandatory')}
+              >
                 <Mosaic.Stack
                   ref={stackRef}
                   orientation='horizontal'
@@ -1552,7 +1657,7 @@ export const DeckPlanks = () => {
                             // along with the row.
                             expose && 'origin-left translate-x-(--deck-expose-inset) scale-(--deck-expose-scale)',
                           )
-                        : 'h-full'
+                        : 'h-full w-full'
                   }
                   getId={getPlankId}
                   items={planks}

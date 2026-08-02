@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database, Entity, Obj } from '@dxos/echo';
 
 import { TaskOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ task, title, description, status, priority, estimate, assignee }) {
+    Effect.fnUntraced(function* ({ task: taskRef, title, description, status, priority, estimate, assignee }) {
+      const task = yield* Database.load(taskRef);
       Obj.update(task, (task) => {
         if (title !== undefined) {
           task.title = title;
@@ -32,7 +33,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
           task.assignee = assignee;
         }
       });
-      return { task };
+      return { task: Entity.toJSON(task) };
     }),
   ),
 );
