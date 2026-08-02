@@ -7,7 +7,7 @@ import { type Context } from '@dxos/context';
 import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
 import { type QueryContext, QueryResultImpl } from '@dxos/echo-client';
 import { QueryAST } from '@dxos/echo-protocol';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

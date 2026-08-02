@@ -19,7 +19,9 @@ import { EdgeRegistryPluginProvider, PluginAssetCache } from '@dxos/app-framewor
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { bootLoader, useApp } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
-import { EdgeHttpClient } from '@dxos/edge-client';
+// Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
+// boot path uses.
+import { EdgeHttpClient } from '@dxos/edge-client/http';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';

@@ -30,7 +30,12 @@
       "types": "./dist/types/src/random.d.ts",
       "import": "./dist/lib/random.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./subtle": {
+      "types": "./vendor/subtle.d.ts",
+      "node": "./vendor/subtle-node.mjs",
+      "browser": "./vendor/subtle-browser.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {

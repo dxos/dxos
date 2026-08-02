@@ -2,7 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { subtleCrypto } from '@dxos/crypto';
+// Direct subtle entry: the barrel also exports the sodium-backed key helpers.
+import { subtleCrypto } from '@dxos/crypto/subtle';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
