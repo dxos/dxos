@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
@@ -21,6 +20,7 @@ import {
   headsOf,
   recordConflict,
   writesSince,
+  type TestDatabase,
 } from './harness';
 
 //
@@ -44,7 +44,7 @@ class AddressDoc extends Type.makeObject<AddressDoc>(
  * Cross-peer visibility isn't guaranteed the instant `waitUntilHeadsReplicated`/`updateIndexes`
  * resolve, so poll for the replicated object rather than reading the query result once.
  */
-const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc> => {
+const queryPersonById = async (db: TestDatabase, id: string): Promise<PersonDoc> => {
   let found: PersonDoc | undefined;
   await expect
     .poll(async () => {
@@ -56,7 +56,7 @@ const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc>
   return found;
 };
 
-const queryAddressById = async (db: EchoDatabase, id: string): Promise<AddressDoc> => {
+const queryAddressById = async (db: TestDatabase, id: string): Promise<AddressDoc> => {
   let found: AddressDoc | undefined;
   await expect
     .poll(async () => {
@@ -69,10 +69,10 @@ const queryAddressById = async (db: EchoDatabase, id: string): Promise<AddressDo
 };
 
 /** Every non-tombstoned `AddressDoc` whose `ownerId` points at `parentId` — the query-based path E3d needs. */
-const queryLiveChildrenOf = async (db: EchoDatabase, parentId: string): Promise<AddressDoc[]> =>
-  db.query(Query.select(Filter.and(Filter.type(AddressDoc), Filter.props({ ownerId: parentId })))).run();
+const queryLiveChildrenOf = async (db: TestDatabase, parentId: string): Promise<AddressDoc[]> =>
+  db.query(Query.select(Filter.type(AddressDoc, { ownerId: parentId }))).run();
 
-const queryTombstonedById = async (db: EchoDatabase, id: string): Promise<AddressDoc> => {
+const queryTombstonedById = async (db: TestDatabase, id: string): Promise<AddressDoc> => {
   let found: AddressDoc | undefined;
   await expect
     .poll(async () => {
@@ -92,7 +92,7 @@ const queryTombstonedById = async (db: EchoDatabase, id: string): Promise<Addres
  * into `parent.employerName`, record a displacement conflict for every loser, then tombstone every
  * candidate — `isDeleted`-guarded so a second call on an already-absorbed child performs zero writes.
  */
-const absorbChildren = (db: EchoDatabase, parent: PersonDoc, children: readonly AddressDoc[]): void => {
+const absorbChildren = (db: TestDatabase, parent: PersonDoc, children: readonly AddressDoc[]): void => {
   if (children.length === 0) {
     return;
   }

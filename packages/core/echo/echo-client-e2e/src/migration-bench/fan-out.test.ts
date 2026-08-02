@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
@@ -21,6 +20,7 @@ import {
   headsOf,
   recordConflict,
   writesSince,
+  type TestDatabase,
 } from './harness';
 
 //
@@ -118,7 +118,7 @@ const mergeThreeWay = (
  * the loser unless it already is one. Returns whether ANY write happened, for idempotence checks.
  */
 const applyThreeWayMerge = (
-  db: EchoDatabase,
+  db: TestDatabase,
   winner: ExtractedAddressDoc,
   loser: ExtractedAddressDoc,
   baseline: AddressFields,
@@ -160,7 +160,7 @@ const pickWinnerLoser = (
  * Cross-peer visibility isn't guaranteed the instant `waitUntilHeadsReplicated`/`updateIndexes`
  * resolve, so poll for the replicated object rather than reading the query result once.
  */
-const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc> => {
+const queryPersonById = async (db: TestDatabase, id: string): Promise<PersonDoc> => {
   let found: PersonDoc | undefined;
   await expect
     .poll(async () => {
@@ -172,19 +172,19 @@ const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc>
   return found;
 };
 
-const queryByIdentityKey = (db: EchoDatabase, identityKey: string): Promise<ExtractedAddressDoc[]> =>
+const queryByIdentityKey = (db: TestDatabase, identityKey: string): Promise<ExtractedAddressDoc[]> =>
   db.query(Filter.key(identityKey, { version: '1.0.0' })).run();
 
 /** A tombstoned object is excluded from a default `Filter.id` query but readable with `deleted: 'include'`. */
-const queryDeletedById = async (db: EchoDatabase, id: string): Promise<ExtractedAddressDoc> => {
+const queryDeletedById = async (db: TestDatabase, id: string): Promise<ExtractedAddressDoc> => {
   const [found] = await db.query(Query.select(Filter.id(id)).options({ deleted: 'include' })).run();
   invariant(found, 'expected the tombstoned object to remain queryable with deleted: include');
   return found;
 };
 
 type DuplicateScenario = {
-  db1: EchoDatabase;
-  db2: EchoDatabase;
+  db1: TestDatabase;
+  db2: TestDatabase;
   identityKey: string;
   baseline: AddressFields;
 };

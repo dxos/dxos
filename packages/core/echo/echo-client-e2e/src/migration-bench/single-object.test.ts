@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Annotation, Filter, Obj } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
@@ -24,6 +23,7 @@ import {
   headsOf,
   recordConflict,
   writesSince,
+  type TestDatabase,
 } from './harness';
 
 //
@@ -42,7 +42,7 @@ const MigrationVersionAnnotation = Annotation.make({
  * Cross-peer visibility isn't guaranteed the instant `waitUntilHeadsReplicated`/`updateIndexes`
  * resolve, so poll for the replicated object rather than reading the query result once.
  */
-const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc> => {
+const queryPersonById = async (db: TestDatabase, id: string): Promise<PersonDoc> => {
   let found: PersonDoc | undefined;
   await expect
     .poll(async () => {

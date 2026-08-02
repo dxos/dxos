@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 
 import { Context } from '@dxos/context';
 import { DXN, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, getObjectCore } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork, type TestReplicator } from '@dxos/echo-host/testing';
+import { type AnyProperties } from '@dxos/echo/internal';
 
 //
 // Consolidates `migration-research*.test.ts`'s findings into the definitive "fold-forward" schema
@@ -53,6 +53,9 @@ export class CompanyDoc extends Type.makeObject<CompanyDoc>(
   }),
 ) {}
 
+/** What the test builder actually returns — wider than the public `EchoDatabase` interface, which no longer carries the heads/index methods the bench drives. */
+export type TestDatabase = Awaited<ReturnType<EchoTestPeer['createDatabase']>>;
+
 export type PartitionedPair = {
   network: TestReplicationNetwork;
   peer1: EchoTestPeer;
@@ -62,7 +65,7 @@ export type PartitionedPair = {
   /** Reconnects with FRESH replicator instances (re-adding removed ones is unexplored/unneeded per prior research). */
   heal: () => Promise<void>;
   /** `waitUntilHeadsReplicated` both ways + `updateIndexes` both, so both dbs observe the fully merged state. */
-  syncAll: (db1: EchoDatabase, db2: EchoDatabase) => Promise<void>;
+  syncAll: (db1: TestDatabase, db2: TestDatabase) => Promise<void>;
 };
 
 /**
@@ -95,7 +98,7 @@ export const createPartitionedPair = async (
     await peer2.host.addReplicator(Context.default(), replicator2);
   };
 
-  const syncAll = async (db1: EchoDatabase, db2: EchoDatabase): Promise<void> => {
+  const syncAll = async (db1: TestDatabase, db2: TestDatabase): Promise<void> => {
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
     await db1.updateIndexes();
@@ -109,10 +112,10 @@ export const createPartitionedPair = async (
  * Automerge docs are immutable snapshots, so heads must be read off a FRESH `getDoc()` call every
  * time rather than cached from an earlier reference.
  */
-export const headsOf = <T extends Record<string, unknown>>(obj: T): Heads => A.getHeads(getObjectCore(obj).getDoc());
+export const headsOf = <T extends AnyProperties>(obj: T): Heads => A.getHeads(getObjectCore(obj).getDoc());
 
 /** Patches from `heads` to the object's CURRENT heads — re-fetches the doc, never reuses a stale snapshot. */
-export const diffSince = <T extends Record<string, unknown>>(obj: T, heads: Heads): Patch[] => {
+export const diffSince = <T extends AnyProperties>(obj: T, heads: Heads): Patch[] => {
   const doc = getObjectCore(obj).getDoc();
   return A.diff(doc, heads, A.getHeads(doc));
 };
@@ -133,7 +136,7 @@ export const propertyNameOf = (patch: Patch): string | undefined => {
  * peer's concurrent op arrives late — so zero-WRITE assertions must ignore it or they race
  * replication traffic.
  */
-export const writesSince = <T extends Record<string, unknown>>(obj: T, heads: Heads): Patch[] =>
+export const writesSince = <T extends AnyProperties>(obj: T, heads: Heads): Patch[] =>
   diffSince(obj, heads).filter((patch) => patch.action !== 'conflict');
 
 /** The subset of `propSet` actually touched by `patches` — the fold-detection primitive every suite builds on. */
@@ -153,11 +156,7 @@ export const changedProps = (patches: readonly Patch[], propSet: ReadonlySet<str
  * an Automerge patch (claim 3), so every bench write must compare before writing to stay idempotent.
  * For same-typed source/target pairs (`fullName` -> `name`, `name` -> `label`).
  */
-export const foldValue = <T extends Record<string, unknown>, K extends keyof T & string>(
-  obj: T,
-  from: K,
-  to: K,
-): boolean => {
+export const foldValue = <T extends AnyProperties, K extends keyof T & string>(obj: T, from: K, to: K): boolean => {
   const value = obj[from];
   if (obj[to] === value) {
     return false;
@@ -171,11 +170,7 @@ export const foldValue = <T extends Record<string, unknown>, K extends keyof T &
  * from the current value. For derived (`done` from `status === 'done'`) and cross-object
  * (`company.industry` from `person.employerName`) folds where source and target types differ.
  */
-export const foldInto = <T extends Record<string, unknown>, K extends keyof T & string>(
-  obj: T,
-  to: K,
-  next: T[K],
-): boolean => {
+export const foldInto = <T extends AnyProperties, K extends keyof T & string>(obj: T, to: K, next: T[K]): boolean => {
   if (obj[to] === next) {
     return false;
   }

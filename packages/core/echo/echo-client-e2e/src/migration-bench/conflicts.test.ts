@@ -12,14 +12,21 @@ import {
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj } from '@dxos/echo';
-import { type EchoDatabase, checkoutVersion, getEditHistoryWithDiffs } from '@dxos/echo-client';
+import { checkoutVersion, getEditHistoryWithDiffs } from '@dxos/echo-client';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { setDeep } from '@dxos/util';
 
-import { type PartitionedPair, PersonDoc, createPartitionedPair, foldValue, headsOf } from './harness';
+import {
+  type PartitionedPair,
+  PersonDoc,
+  createPartitionedPair,
+  foldValue,
+  headsOf,
+  type TestDatabase,
+} from './harness';
 
 //
 // M0 migration research follow-up: verifies the directive in `.agents/projects/lenses/DESIGN.md`
@@ -57,7 +64,7 @@ const conflictsOn = (obj: PersonDoc, prop: string): Conflicts | undefined =>
  * Cross-peer visibility isn't guaranteed the instant `waitUntilHeadsReplicated`/`updateIndexes`
  * resolve, so poll for the replicated object rather than reading the query result once.
  */
-const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc> => {
+const queryPersonById = async (db: TestDatabase, id: string): Promise<PersonDoc> => {
   let found: PersonDoc | undefined;
   await expect
     .poll(async () => {
@@ -79,8 +86,8 @@ const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc>
  */
 const buildRenameConflict = async (
   pair: PartitionedPair,
-  db1: EchoDatabase,
-  db2: EchoDatabase,
+  db1: TestDatabase,
+  db2: TestDatabase,
   obj1: PersonDoc,
   obj2: PersonDoc,
   foldOptions?: ChangeOptions<unknown>,

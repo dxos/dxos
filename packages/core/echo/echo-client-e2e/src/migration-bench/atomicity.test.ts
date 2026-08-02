@@ -8,13 +8,20 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Annotation, DXN, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { CompanyDoc, PersonDoc, createPartitionedPair, foldInto, headsOf, writesSince } from './harness';
+import {
+  CompanyDoc,
+  PersonDoc,
+  createPartitionedPair,
+  foldInto,
+  headsOf,
+  writesSince,
+  type TestDatabase,
+} from './harness';
 
 //
 // E5: definitive proof that multi-object non-atomicity is a REAL but TEMPORARY window, not
@@ -64,7 +71,7 @@ const runWriteSet = (company: CompanyDoc, person: PersonDoc): { step1: boolean; 
  * Cross-peer visibility isn't guaranteed the instant `waitUntilHeadsReplicated`/`updateIndexes`
  * resolve, so poll for the replicated object rather than reading the query result once.
  */
-const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc> => {
+const queryPersonById = async (db: TestDatabase, id: string): Promise<PersonDoc> => {
   let found: PersonDoc | undefined;
   await expect
     .poll(async () => {
@@ -76,7 +83,7 @@ const queryPersonById = async (db: EchoDatabase, id: string): Promise<PersonDoc>
   return found;
 };
 
-const queryCompanyById = async (db: EchoDatabase, id: string): Promise<CompanyDoc> => {
+const queryCompanyById = async (db: TestDatabase, id: string): Promise<CompanyDoc> => {
   let found: CompanyDoc | undefined;
   await expect
     .poll(async () => {
@@ -106,7 +113,7 @@ class HasManager extends Type.makeRelation<HasManager>(
  * test immediately (with a distinct message) rather than being retried away — a throw while parts
  * are in flight is exactly the failure mode this test predicts must NOT happen.
  */
-const pollForRelationWithoutThrowing = async (db: EchoDatabase, timeoutMs: number): Promise<HasManager | undefined> => {
+const pollForRelationWithoutThrowing = async (db: TestDatabase, timeoutMs: number): Promise<HasManager | undefined> => {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     let results: HasManager[];
