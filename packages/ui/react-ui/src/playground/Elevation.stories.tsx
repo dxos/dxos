@@ -253,6 +253,7 @@ const AppFrame = () => {
               <Toolbar.Separator />
               <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
               <Input.Root>
+                <Input.Label srOnly>Search</Input.Label>
                 <Input.TextInput placeholder='Search' />
               </Input.Root>
               <Select.Root defaultValue='all'>
