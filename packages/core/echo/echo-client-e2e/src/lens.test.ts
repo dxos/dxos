@@ -174,8 +174,16 @@ describe('object lens over a database-backed object', () => {
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
     await db2.updateIndexes();
 
-    const [task2] = await db2.query(Query.select(Filter.type(Task.Task))).run();
-    expect(task2).to.exist;
+    // Cross-peer visibility isn't guaranteed the instant `waitUntilHeadsReplicated`/`updateIndexes`
+    // resolve, so poll for the replicated object rather than reading the query result once.
+    let task2: Task.Task | undefined;
+    await expect
+      .poll(async () => {
+        [task2] = await db2.query(Query.select(Filter.type(Task.Task))).run();
+        return task2;
+      })
+      .toBeDefined();
+    invariant(task2, 'expected the replicated task to be queryable');
     expect(task2.id).to.eq(task1.id);
 
     // Peer 2 drives the object through the lens; peer 1 stays on the canonical type.
