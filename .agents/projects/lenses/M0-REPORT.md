@@ -330,7 +330,7 @@ checks must compare full op-id sets, and an attribution UI should collapse equal
 
 1. **Retention — RATIFIED (2026-08-02): epochs deliberately erase history, and that is fine.**
    Migration never depends on epochs (every E1-E5 and fold-forward test ran with zero epoch
-   machinery); epochs stay compaction you run when convenient. Accepted consequences at an epoch
+   machinery); epochs are a last resort, avoided as much as possible. Accepted consequences when one does run
    boundary, owned knowingly: (a) live conflict sets embedded in the erased history are dropped;
    (b) the heads-based fold-forward window **closes** — stored migration heads become foreign, so
    a peer offline since before the epoch loses automatic fold/conflict detection (its late writes
@@ -340,9 +340,10 @@ checks must compare full op-id sets, and an attribution UI should collapse equal
    window policy — §10.7 q2 is answered by construction** ("the window is until the next epoch"),
    with no separate retention mechanism needed. Ordinary storage compaction is unaffected
    (`A.save` preserves full ancestry; the fragments format bundles per-change members). Operational
-   model: a space carries a well-known epoch policy (cadence) — platform-owned; epoch management is
-   not exposed at the app level for the foreseeable future, apps at most consume the missed-epoch
-   signal — and a peer offline past that window owns whatever it can no longer reconcile
+   model: epochs are a last resort rather than routine cadence-driven compaction — platform-owned;
+   epoch management is not exposed at the app level for the foreseeable future, apps at most
+   consume the missed-epoch signal — so the fold-forward window is long-lived by default. When one
+   does run (well-known/announced), a peer offline past it owns whatever it can no longer reconcile
    automatically — bounded loss (late writes still merge
    as raw data; reconciliation becomes manual), not disappearance. The ancestry-check failure
    doubles as the app-level notification signal ("changes from before the epoch need review") with

@@ -1064,14 +1064,16 @@ marks itself `effectful`, requires being online, and claims a lease. It cannot r
 partition either blocks it or risks two leaders, so it must be the exception a migration asks for.
 
 **D. Epochs become compaction only, never the migration mechanism.** An epoch is a storage
-optimization, run when convenient; correctness never depends on one. This retires the current failure
+optimization and a **last resort, avoided as much as possible**; correctness never depends on one. This retires the current failure
 mode directly. Revised in review (2026-08-02, ratified): an epoch deliberately erases history and
 need NOT preserve the heads fold-forward relies on — running one closes the fold-forward window and
 drops live history-native conflicts, as an owned consequence (§10.7 q2 is thereby answered: the
 window is "until the next epoch"). The heads ancestry check is what keeps the boundary safe: a fold
-seeing foreign heads stops instead of re-applying the world. The operational model: a space carries
-a well-known epoch policy (cadence/timing) — owned and executed by the platform, NOT exposed as an
-app-level surface for the foreseeable future — and a peer offline past that window owns whatever
+seeing foreign heads stops instead of re-applying the world. The operational model: epochs are a
+last resort, not routine cadence-driven compaction — owned and executed by the platform, NOT
+exposed as an app-level surface for the foreseeable future — so the fold-forward window is
+long-lived by default and history-native conflicts persist until one actually runs. When a space
+does run one (well-known/announced), a peer offline past it owns whatever
 it can no longer reconcile automatically. Its late writes still merge as raw data (bounded loss:
 manual reconciliation, not disappearance), and the ancestry-check failure doubles as the signal
 apps may consume to notify the user ("changes from before the epoch need review"); consuming that
