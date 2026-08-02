@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: composer-startup-perf
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-02
+    summary: Fresh approach to composer-app startup — CPU-profile attribution instead of overlapping measures, flag-gated two-wave plugin deferral, and closing instrumentation gaps (boot:html-parsed, orphan worker/client marks, boot-loader fidelity). Successor to composer-app/AUDIT.md's 10 phases.
+    tasks: .agents/projects/composer-startup-perf/TASKS.md
+    design: .agents/projects/composer-startup-perf/DESIGN.md
+    prs: []
+    resume: 'Project created; verify run+measure loop then Phase A baselines.'
+
   - name: lenses
     status: active
     user: josiah
