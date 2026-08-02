@@ -174,14 +174,24 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
-        // Group modules per package instead of rolldown's default fine-grained splitting,
-        // which produced a ~4,800-chunk bundle (median chunk 1KB) whose request overhead
-        // dominates boot on HTTP/1.1. Package granularity bounds the cost of merging: a
-        // package is either on the boot path or behind a lazy island, so chunks rarely mix
-        // eager and lazy bytes.
+        // Consolidate rolldown's default fine-grained splitting (~4,800 chunks, median 1KB),
+        // whose per-request overhead dominates boot on HTTP/1.1. Priority order is the
+        // safety property: `boot` captures the entries' static graphs first ($initial), so
+        // the per-package group below it only ever merges lazy modules — merging a package's
+        // eager and lazy halves into one chunk would otherwise drag its lazy bytes into the
+        // boot preload set. App-own source is excluded from both groups: capturing an entry
+        // module dissolves its facade chunk and vite degrades the HTML to ordered <script>
+        // tags with no modulepreload list.
         codeSplitting: {
           groups: [
             { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+            {
+              name: 'boot',
+              tags: ['$initial'],
+              test: (moduleId: string) => !moduleId.includes('/packages/apps/'),
+              maxSize: 1024 * 1024,
+              priority: 5,
+            },
             { name: packageChunkName },
           ],
         },
@@ -664,7 +674,11 @@ function packageChunkName(moduleId: string): string | null {
     const name = segments[0].startsWith('@') ? `${segments[0].slice(1)}-${segments[1]}` : segments[0];
     return `vendor-${name}`;
   }
-  const workspacePackage = moduleId.match(/packages\/(?:[^/]+\/)*?([^/]+)\/(?:src|dist)\//);
+  // App packages are bundle entries — capturing an entry module into a group dissolves its
+  // facade chunk and vite degrades the HTML to ordered <script> tags with no preload list.
+  const workspacePackage = moduleId.includes('/packages/apps/')
+    ? null
+    : moduleId.match(/packages\/(?:[^/]+\/)*?([^/]+)\/(?:src|dist)\//);
   if (workspacePackage) {
     return `pkg-${workspacePackage[1]}`;
   }
