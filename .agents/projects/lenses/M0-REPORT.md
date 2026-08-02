@@ -394,21 +394,31 @@ Resolutions and directions from design review, each turning an "open" item into 
    so a fold and a concurrent edit to different ranges interleave via native text merging instead
    of clobbering. Remaining spike: duplicate-merge for text (unrelated docs, no shared history —
    needs an app-level three-way text diff against the recomputed baseline).
-2. **RATIFIED: non-owning refs are allowed to dangle/break.** The backlink gap list (markdown
-   links, id-keyed side maps, feed blocks, bare EIDs) is exactly the non-owning population, so the
-   fan-in cardinality pre-flight only needs completeness over owning/strong references — which the
-   `reverseRef` index covers. Repointing referrers is two composable patterns: lazy — an
-   `absorbedInto` redirect on the tombstoned child (the `mergedInto` mechanism generalized), with
-   a read-through lens projecting the absorbed fields back under the old target type so stale refs
-   heal at read time; eager — a referrer lens that retypes/repoints the ref property, run as an
-   ordinary migration by the same runner, opt-in per referrer type.
-3. **1→N key agreement: seed backfill stamps from the convergent `ObjID`.** The split key is
-   `<lensId>:<elementStampedId>`; new schemas stamp at creation. For existing unstamped
-   collections, the backfill derives each element's stamp from its automerge `ObjID` — verified
-   byte-identical across peers — so concurrent backfills agree deterministically with no
-   coordination. The ObjID's reorder-fragility is irrelevant once the stamp is copied into data.
-   Residual race (element reordered between two peers' backfills) converges via register semantics
-   - idempotent re-run. Sequencing: stamp phase, then split phase gated on stamp presence.
+2. **RATIFIED: non-owning refs are allowed to dangle/break.** Two orthogonal distinctions,
+   corrected in review: ALL actual `Ref`s are indexed (owning and non-owning alike), so
+   `referencedBy` is complete over refs; the gap list (markdown body links, id-keyed side maps,
+   feed blocks, bare-EID serializations) consists of reference-LIKE strings that are not refs at
+   all and carry no structural resolution guarantee — which is exactly why they may break. Owning
+   vs non-owning is about guaranteed resolution (strong deps), not indexing. Repointing referrers
+   is two composable patterns: lazy — an `absorbedInto` redirect on the tombstoned child (the
+   `mergedInto` mechanism generalized), with a read-through lens projecting the absorbed fields
+   back under the old target type so stale refs heal at read time; eager — a referrer lens that
+   retypes/repoints the ref property, run as an ordinary migration by the same runner, opt-in per
+   referrer type.
+3. **1→N key agreement — OPEN, candidates ranked.** The split key is
+   `<lensId>:<elementStampedId>`; new schemas stamp at creation and are fully solved. For existing
+   unstamped collections the backfill-stamp seed is NOT settled (corrected in review): (a)
+   ObjID-seeded — best zero-coordination candidate (concurrent backfills of an untouched element
+   derive identical stamps, verified 7c), but a concurrent REORDER is remove+insert: the stamp
+   written into the removed map is orphaned, the reinserted element is unstamped, and split
+   objects keyed off the dead stamp need explicit orphan cleanup (list-element
+   remove-vs-inner-edit semantics reasoned, not tested — spike needed); (b) random stamps — the
+   same orphan class on EVERY concurrent backfill pair, strictly worse; (c) content-hash — survives
+   reorders but falsely merges legitimately identical elements (two equal addresses in one list),
+   disqualifying; (d) Strategy-C coordination for the backfill only — the stamp phase is a
+   one-time transitional step, so paying leader/EDGE coordination once eliminates the race and
+   every later split is free; defensible despite the no-coordination default. Sequencing under any
+   choice: stamp phase first, split phase gated on stamp presence.
 
 ## Out of scope / open
 
