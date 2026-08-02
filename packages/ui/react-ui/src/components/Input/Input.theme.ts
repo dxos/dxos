@@ -129,13 +129,8 @@ const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'flex items-center justify-center tabular-nums',
-    props.density === 'lg'
-      ? 'size-12 rounded-xs'
-      : props.density === 'sm'
-        ? 'size-7 rounded-xs'
-        : props.density === 'xs'
-          ? 'size-6 rounded-xs'
-          : 'size-10 pointer-fine:size-8 rounded-xs',
+    // A PIN segment is a square control, so it takes the density height on both axes.
+    'size-(--dx-control) rounded-xs',
     'bg-input-surface text-base-fg transition-colors border border-input-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',

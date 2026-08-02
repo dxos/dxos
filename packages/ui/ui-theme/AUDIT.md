@@ -696,14 +696,19 @@ Phases 2–4 are independent of each other after Phase 1.
 
 ### Metrics to re-run after each phase
 
-Baseline is the state at the time of the audit; Now is after phases 1-2.
+Baseline is the state at the time of the audit; Now is after phases 1-3 (phase 4-5 pending).
 
 | Metric                                       | Baseline | Now                               |
 | -------------------------------------------- | -------- | --------------------------------- |
 | Surface-zone call sites (zone class vs bare) | 25       | **135**                           |
 | Panel canonical scroll shape                 | ~35%     | ~41% (14 `asChild` + 2 scrollers) |
-| Distinct control heights (fine pointer)      | 17       | 17 — Phase 3                      |
+| Distinct control heights (fine pointer)      | 17       | **8** (3 scale + 5 documented)    |
 | Hand-rolled 3-track grids                    | ≥10      | ≥10 — Phase 4                     |
 | Hand-rolled state styling sites              | ~36      | ~34 — Phase 2 item 4              |
+| Parallel density systems                     | 2        | **1**                             |
 | Dead `dx-*` classes / dead tokens            | 6 / 8    | **0 / 0**                         |
 | Contradictory elevation ladders              | 3        | **1**                             |
+
+The 8 remaining control heights are the 3-step scale (24/32/40) plus five documented exceptions:
+checkbox 16 and switch 20 (glyphs, not boxes), `Tag` ~20 (font-metric sized), `Card.Link`'s
+`min-h-1!` escape hatch, and `lit-grid`'s `defaultRowSize = 32` (a JS constant, immune to CSS).
