@@ -127,10 +127,10 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
     <li role='listitem'>
       <button
         type='button'
-        aria-pressed={isSelected}
+        aria-current={isSelected ? 'true' : undefined}
         className={mx(
-          'flex items-center gap-1 w-full text-start py-0.5 hover:bg-hover-surface',
-          isSelected && 'bg-current-surface text-accent-text',
+          'flex items-center gap-1 w-full text-start py-0.5 dx-hover dx-current',
+          isSelected && 'text-accent-text',
         )}
         style={indent}
         onClick={() => onSelect?.(node.path)}

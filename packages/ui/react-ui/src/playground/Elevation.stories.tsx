@@ -50,14 +50,34 @@ const proposedLadder: Record<string, string> = {
   '--color-toolbar-surface': 'light-dark(var(--color-neutral-100), var(--color-neutral-825))',
 };
 
+// The override is document-wide, so it is reference-counted and restores whatever was on the root
+// beforehand: in docs mode both stories mount at once, and an unguarded cleanup would strip the
+// tokens out from under the story still showing them.
+let ladderUsers = 0;
+let restoreLadder: Record<string, string> | undefined;
+
 const useProposedLadder = (enabled?: boolean) => {
   useLayoutEffect(() => {
     if (!enabled) {
       return;
     }
+
     const { style } = document.documentElement;
-    Object.entries(proposedLadder).forEach(([token, value]) => style.setProperty(token, value));
-    return () => Object.keys(proposedLadder).forEach((token) => style.removeProperty(token));
+    if (ladderUsers++ === 0) {
+      restoreLadder = Object.fromEntries(
+        Object.keys(proposedLadder).map((token) => [token, style.getPropertyValue(token)]),
+      );
+      Object.entries(proposedLadder).forEach(([token, value]) => style.setProperty(token, value));
+    }
+
+    return () => {
+      if (--ladderUsers === 0) {
+        Object.entries(restoreLadder ?? {}).forEach(([token, value]) =>
+          value ? style.setProperty(token, value) : style.removeProperty(token),
+        );
+        restoreLadder = undefined;
+      }
+    };
   }, [enabled]);
 };
 
