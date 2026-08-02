@@ -666,7 +666,22 @@ Phases 2–4 are independent of each other after Phase 1.
 5. Give `react-ui-form`'s default variant tokenized rhythm (`Form.Content` gap, field row
    min-height = `--dx-control`), and land list items on the grid.
 
-### Phase 4 — Column & Form nesting
+### Phase 4 — Column & Form nesting — **PARTIAL**
+
+> Done: `Column.Root` now publishes a context, and `Form.Viewport` reads it (`useInColumn`) to place
+> its body in the host's content track instead of nesting a second gutter grid — the cause of form
+> fields insetting differently from the card title above them, and of the three competing
+> form-in-card/dialog idioms. Scrolling viewports still own a grid, because the gutter hosts the
+> scrollbar. The dead `data-slot` writes on `Column.Block` are removed (placement has been
+> class-based for some time; the attribute was written and never read).
+>
+> **Verification gap:** this is confirmed by build + tests + the form-in-card stories rendering
+> correctly, but not by a numeric before/after inset — the browser bridge would not resolve
+> `.dx-column-root` in the plugin-preview stories. Worth a dedicated story (form inside a card, next
+> to a bare card) before calling the alignment fix proven.
+>
+> Outstanding: items 1, 3 and 4 below — consolidating on the single `--dx-col` placement mechanism,
+> migrating the ~10 hand-rolled 3-track grids, and sourcing `--dx-gutter-*` from the spacing ramp.
 
 1. Single placement mechanism (`--dx-col`); remove dead `data-slot` writes; consolidate the
    repeated `[&>*:not(.dx-gutter)]` selectors into one shared fragment/CSS rule.

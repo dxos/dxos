@@ -4,12 +4,26 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties } from 'react';
+import React, { type CSSProperties, createContext, useContext } from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
+
+//
+// Context
+//
+
+const ColumnContext = createContext(false);
+
+/**
+ * Whether the caller is already inside a `Column.Root`. A component that would otherwise establish
+ * its own gutter grid (a form viewport, say) should use this to place itself in the host's content
+ * track instead — nesting a second grid is what makes a form's fields inset differently from the
+ * card title above them.
+ */
+export const useInColumn = () => useContext(ColumnContext);
 
 //
 // Root
@@ -67,7 +81,7 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
         className={tx('column.root', { gutter }, className)}
         ref={forwardedRef}
       >
-        {children}
+        <ColumnContext.Provider value={true}>{children}</ColumnContext.Provider>
       </Comp>
     );
   },
@@ -140,7 +154,7 @@ type ColumnBlockProps = SlottableProps<{ end?: boolean; compact?: boolean; squar
  * `<Icon>` and an interactive `IconButton` align to the pixel. `end` opts into the trailing gutter
  * (column 3); default is the leading gutter (column 1). Placement is class-based (`col-start-*`
  * plus the `dx-gutter` marker — see `Column.theme.ts`), so it is robust to conditional rendering
- * and source order; the `data-slot` attribute is informational only.
+ * and source order.
  */
 const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
   ({ children, asChild, end, compact, square, ...props }, forwardedRef) => {
@@ -148,12 +162,7 @@ const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp
-        {...rest}
-        data-slot={end ? 'end' : 'start'}
-        className={tx('column.block', { end, compact, square }, className)}
-        ref={forwardedRef}
-      >
+      <Comp {...rest} className={tx('column.block', { end, compact, square }, className)} ref={forwardedRef}>
         {children}
       </Comp>
     );
