@@ -456,12 +456,15 @@ Resolutions and directions from design review, each turning an "open" item into 
      no stable-id field is a definition error ("compose a stamping migration first") — the same
      define-time-visibility spirit as `coverage`.
    - **Id-less arrays compose in two steps, each an ordinary proven migration:** step 1 stamps a
-     stable id into each element (per-element presence-guarded write — idempotent, re-runnable,
-     fold-forward covers late-created elements; seed the id from the element's ObjID so concurrent
-     stampers derive the SAME id and no conflict even arises); step 2, shipped after step 1 has
-     settled, splits by element id — peers split independently from their own state and the merge
-     engine collapses same-key duplicates PASSIVELY. No baseline agreement, no sweep, no active
-     tracking in the main path.
+     stable id into each element — a purely schema-level, presence-guarded write
+     (`element.id ??= randomId()`), idempotent, re-runnable, fold-forward covering late-created
+     elements. **Random ids suffice**: the temporal gate carries all the correctness — concurrent
+     stampers produce per-element register conflicts that ordinary LWW settles, and step 2 does
+     not exist until they have. (ObjID-seeding demotes to optional noise reduction — fewer
+     transient conflict markers during rollout — not a correctness ingredient.) Step 2, shipped
+     after step 1 has reconciled, splits by element id — peers split independently from their own
+     state and the merge engine collapses same-key duplicates PASSIVELY. No baseline agreement, no
+     sweep, no active tracking in the main path.
    - **Residual, owned:** a peer partitioned across the entire step-1 rollout that also
      reorder-recreated an element can stamp a competing id; if it wins the register race after
      step 2 derived keys from the loser, the result is a duplicate + orphan pair — rare (requires
