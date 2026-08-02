@@ -133,6 +133,24 @@ Blocking questions, all in DESIGN.md §12 "What this does not settle":
       prop identity that remounts the list rather than updating it; the deck's own planks are known not
       to remount (DESIGN.md §1), so this is likely inside `MailboxArticle`.
 
+- [x] **Message click jumped the deck; companion open slid the plank; the mailbox stack flashed** —
+      one investigation, three coupled causes, found after the storybook/app split forced a process
+      change: build the missing fixture first (`LauncherManual` — a plank whose _content_ opens another
+      plank, the shape no story had), reproduce red, then instrument every scroll writer with stacks in
+      both environments. 1. _Click/navigation collision_ — the click-to-front pointerdown and the `ScrollIntoView` the same
+      click triggers both commanded the deck (measured: `scrollTo(0)` + `scrollTo(680)` per click,
+      app and fixture). The click now defers `CLICK_TO_FRONT_DELAY_MS` and yields when a navigation
+      intent appears or the deck changes under it. 2. _Dead glides_ — a smooth scroll is a request, not a guarantee; a mid-flight reflow strands the
+      deck where the abort happened (measured in the app: command issued, deck never moved, settled
+      at 0). `useScrollIntoView` now runs an arrival watchdog: still-without-arrival re-issues the
+      command (force past the dedupe), at-destination-including-clamp stands down. 3. _Browser scroll anchoring_ — the companion widening its tile made Chrome silently shift the
+      deck by exactly the width delta with **zero** scroll commands (680→207 for a 473px growth),
+      which is why writer-instrumentation kept exonerating the geometry. `overflow-anchor: none` on
+      the deck viewport; the deck owns its scroll.
+      Also fixed en passant: `companionPlanks` accreted an entry per plank ever opened (a live profile
+      held fourteen, with dupes) — `computeActiveUpdates` now prunes to open planks, unit-tested.
+      Verified in the app: message click = one writer, arrives at 680; companion open = zero writers,
+      zero movement; companion arriving _with_ a navigation = one writer, arrives, stays.
 - [ ] **Seeding a collection highlights every child in the navtree** — the navtree marks anything in
       `layout.active` (`NavTreeContainer.tsx:56`), and seeding puts all the children there, so clicking
       a collection paints its whole subtree. Wanted: the collection reads as selected, not its contents.

@@ -86,6 +86,21 @@ both are explicit:
 - A delegated `pointerdown` on the stack: clicking a plank asks for it. Delegated because `Mosaic.Tile`
   forwards no pointer handlers, and captured so it settles before the click reaches an editor.
 
+Three defenses keep those writers honest, each earned by a measured failure:
+
+- **The click yields to navigation.** A click on a plank is often a click on a _launcher_ — a mailbox
+  row opens a message — and both the click and the navigation it triggers would command the deck
+  (measured: two writers per click). The click defers briefly and drops itself when a navigation
+  intent appears or the deck changes under it.
+- **Arrival watchdog.** A smooth scroll is a request, not a guarantee: a reflow mid-glide makes the
+  browser abort it, stranding the deck (measured: command issued, deck never moved). A deck that sits
+  still without arriving gets the command again; sitting at the destination — including the clamped
+  one — is success.
+- **Scroll anchoring is off** (`overflow-anchor: none`). A tile growing — a companion opening — made
+  the browser silently shift the deck by exactly the width delta, with zero scroll commands; the
+  instrumentation that exonerated every writer is how this was found. The `LauncherManual` story is
+  the regression net for all three.
+
 The deck deliberately does **not** scroll in response to attention. This was tried and removed. A hook
 watched `attendedPlankId` and `companionId` and inferred "the user chose this plank", but attention also
 moves for reasons that are not a choice — a companion resolving a commit later, the fold hysteresis

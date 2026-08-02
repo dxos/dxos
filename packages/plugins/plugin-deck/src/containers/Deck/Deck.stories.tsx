@@ -5,13 +5,14 @@
 import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useMemo, useRef } from 'react';
+import * as Option from 'effect/Option';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapabilityState, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin } from '@dxos/app-toolkit';
+import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -104,6 +105,56 @@ const TestArticle = ({ title, content }: { title: string; content: string }) => 
   );
 };
 
+//
+// Launcher fixture — reproduces the app shape the plain stories miss: a plank whose *content* opens
+// another plank (the mailbox's message list). Every collision between an in-deck click and the
+// navigation it triggers lives on this path, and none of the editor-only stories exercise it.
+//
+
+const LAUNCHER_ID = 'story-launcher';
+const LAUNCHER_MESSAGES = Array.from({ length: 4 }, (_, index) => ({
+  id: `story-message-${index + 1}`,
+  title: `Message ${index + 1}`,
+  icon: 'ph--envelope--regular',
+}));
+
+const TestLauncher = ({ launcherId }: { launcherId: string }) => {
+  const { invokePromise } = useOperationInvoker();
+  // Selection state, so a click re-renders the launcher's own subtree the way the mailbox list does.
+  const [selected, setSelected] = useState<string | undefined>(undefined);
+
+  const handleOpen = useCallback(
+    (messageId: string) => {
+      setSelected(messageId);
+      // The exact shape MailboxArticle dispatches: a level-open relative to this plank as the root.
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${launcherId}/${messageId}`],
+        root: launcherId,
+        level: 'message',
+        disposition: 'add',
+        navigation: 'immediate',
+      });
+    },
+    [invokePromise, launcherId],
+  );
+
+  return (
+    <div className='grid content-start gap-1 p-2' data-testid='story.launcher'>
+      {LAUNCHER_MESSAGES.map((message) => (
+        <button
+          key={message.id}
+          className='rounded-sm border border-separator p-3 text-start hover:bg-hoverSurface'
+          data-testid='story.launcher.row'
+          data-selected={selected === message.id}
+          onClick={() => handleOpen(message.id)}
+        >
+          {message.title}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 // In-memory deck settings so stories don't read/write the persisted plugin settings.
 const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
@@ -189,8 +240,21 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
       Effect.succeed(
         Capability.contributes(Capabilities.ReactSurface, [
           Surface.create({
+            id: 'storyLauncher',
+            filter: Surface.makeFilter(
+              AppSurface.Article,
+              (data) =>
+                data.companionTo == null && (data.subject as { launcher?: boolean } | undefined)?.launcher === true,
+            ),
+            component: ({ data }) => <TestLauncher launcherId={String(data.attendableId)} />,
+          }),
+          Surface.create({
             id: 'storyArticle',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
+            filter: Surface.makeFilter(
+              AppSurface.Article,
+              (data) =>
+                data.companionTo == null && (data.subject as { launcher?: boolean } | undefined)?.launcher !== true,
+            ),
             component: ({ data }) => {
               const subject = data.subject as StoryItem | undefined;
               const title = subject?.title ?? String(data.attendableId);
@@ -228,13 +292,39 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           id: 'storyItems',
           match: NodeMatcher.whenRoot,
           connector: () =>
-            Effect.succeed(
-              STORY_ITEMS.map((item) =>
+            Effect.succeed([
+              ...STORY_ITEMS.map((item) =>
                 Node.make({
                   id: item.id,
                   type: 'story-item',
                   data: item,
                   properties: { label: item.title, icon: item.icon },
+                }),
+              ),
+              // The launcher declares its chain on the node, the way the app resolves it off the type.
+              Node.make({
+                id: LAUNCHER_ID,
+                type: 'story-launcher',
+                data: { id: LAUNCHER_ID, title: 'Inbox', launcher: true },
+                properties: {
+                  label: 'Inbox',
+                  icon: 'ph--tray--regular',
+                  deck: { levels: [{ key: 'list' }, { key: 'message' }] },
+                },
+              }),
+            ]),
+        }),
+        GraphBuilder.createExtension({
+          id: 'storyLauncherMessages',
+          match: NodeMatcher.whenNodeType('story-launcher'),
+          connector: () =>
+            Effect.succeed(
+              LAUNCHER_MESSAGES.map((message) =>
+                Node.make({
+                  id: message.id,
+                  type: 'story-message',
+                  data: message,
+                  properties: { label: message.title, icon: message.icon },
                 }),
               ),
             ),
@@ -243,7 +333,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         // plank to plank as attention changes.
         GraphBuilder.createExtension({
           id: 'storyItemCompanions',
-          match: NodeMatcher.whenNodeType('story-item'),
+          match: (node) =>
+            node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
           connector: (node) =>
             Effect.succeed([
               AppNode.makeCompanion({
@@ -275,6 +366,8 @@ type DefaultStoryProps = {
   sidebarState?: StoredDeckState['sidebarState'];
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
+  /** Open the launcher fixture as the first plank (the mailbox-shaped path). */
+  launcher?: boolean;
   /**
    * Layout experiments to switch on (see `Settings`). They are settings rather than props, so the story
    * seeds them into the settings atom the deck actually reads.
@@ -292,6 +385,7 @@ const DefaultStory = ({
   count = 0,
   sidebarState = 'closed',
   companionPlanks = NO_COMPANIONS,
+  launcher = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: DefaultStoryProps) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
@@ -310,17 +404,21 @@ const DefaultStory = ({
   // seeded `active` list holds the materialized ids rather than the bare `STORY_ITEMS` ids.
   const rootChildren = useConnections(graph, Node.RootId, 'child');
   const items = useMemo(() => rootChildren.filter((node) => node.type === 'story-item'), [rootChildren]);
+  const launcherNode = useMemo(() => rootChildren.find((node) => node.type === 'story-launcher'), [rootChildren]);
 
   // Seed the deck's active planks in one shot rather than opening them one by one: each `Open` schedules
   // its own scroll-into-view, so a multi-plank deck would visibly page from plank to plank on load.
   // Seeding `active` directly mounts every plank in place with no scrolling.
   const seeded = useRef(false);
   useEffect(() => {
-    if (seeded.current || (count > 0 && items.length < count)) {
+    if (seeded.current || (count > 0 && items.length < count) || (launcher && !launcherNode)) {
       return;
     }
     seeded.current = true;
-    const active = items.slice(0, count).map((item) => item.id);
+    const active = [
+      ...(launcher && launcherNode ? [launcherNode.id] : []),
+      ...items.slice(0, count).map((item) => item.id),
+    ];
     const open = companionPlanks.map((position) => active[position - 1]).filter((id): id is string => !!id);
     updateState((current) => ({
       ...current,
@@ -330,7 +428,7 @@ const DefaultStory = ({
         [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
       },
     }));
-  }, [items, count, sidebarState, companionPlanks, updateState]);
+  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState]);
 
   return (
     <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
@@ -468,6 +566,21 @@ export const CompanionFollowsAttention: Story = {
 // A `closed` sidebar persisted from below `lg` (dismissing the drawer) must present as the L0 rail at
 // `lg`+, where `closed` would otherwise render L0 off-screen and inert with every control that could
 // reopen it either `lg:hidden` or inside L0 itself.
+/**
+ * The mailbox-shaped path: a launcher plank whose rows level-open a message plank beside it.
+ *
+ * Test:
+ * 1. Click a row in the Inbox plank — exactly one smooth scroll brings the message plank forward; the
+ *    deck must not lurch toward the launcher first or bounce back after.
+ * 2. Click a different row — the message plank is reused in place (no third plank), no scroll at all if
+ *    it is already front.
+ * 3. Open the message plank's companion from its toolbar — neither plank moves.
+ * 4. Repeat 1–3 quickly — no jitter; the deck never travels twice for one click.
+ */
+export const LauncherManual: Story = {
+  args: { launcher: true },
+};
+
 export const SidebarClosedAtDesktop: Story = {
   tags: ['test'],
   args: { count: 1, sidebarState: 'closed' },

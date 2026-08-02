@@ -860,6 +860,12 @@ const lastScrollCommand = new WeakMap<HTMLElement, { left: number; at: number }>
 const SCROLL_DEDUPE_MS = 600;
 
 /**
+ * How long a click waits before bringing its plank forward, giving a navigation the same gesture
+ * triggers time to claim it. Long enough for an operation round trip, short enough to read as instant.
+ */
+const CLICK_TO_FRONT_DELAY_MS = 150;
+
+/**
  * Scrolls a plank flush against the left pile — the deck's one notion of "bring this plank to the front",
  * shared by navigation, a folded spine returning its plank to view, and attention moving between planks.
  *
@@ -873,11 +879,14 @@ const scrollPlankToPile = ({
   stack,
   tiles,
   index,
+  force = false,
 }: {
   viewport: HTMLDivElement;
   stack: HTMLDivElement;
   tiles: HTMLElement[];
   index: number;
+  /** Bypass the repeat-command dedupe — for the arrival watchdog, whose whole job is re-issuing. */
+  force?: boolean;
 }) => {
   const styles = getComputedStyle(stack);
   const gap = parseFloat(styles.columnGap) || 0;
@@ -894,12 +903,13 @@ const scrollPlankToPile = ({
   // a companion measured six commands to one target inside 30ms.
   const previous = lastScrollCommand.get(viewport);
   const now = performance.now();
-  if (previous && previous.left === left && now - previous.at < SCROLL_DEDUPE_MS) {
-    return;
+  if (!force && previous && previous.left === left && now - previous.at < SCROLL_DEDUPE_MS) {
+    return left;
   }
   lastScrollCommand.set(viewport, { left, at: now });
 
   viewport.scrollTo({ left, behavior: 'smooth' });
+  return left;
 };
 
 /** Scrolls a plank into view for the one-shot navigation flag, then clears it. */
@@ -917,6 +927,11 @@ const useScrollIntoView = ({
   scrollIntentRef: RefObject<string | undefined>;
 }) => {
   const { invokePromise } = useOperationInvoker();
+  // Outlives the effect on purpose: the effect clears the one-shot flag, which re-runs it with no id —
+  // a cleanup there would kill the watchdog the moment it was armed.
+  const watchdogRef = useRef<number | undefined>(undefined);
+
+  useEffect(() => () => cancelAnimationFrame(watchdogRef.current ?? 0), []);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -931,7 +946,44 @@ const useScrollIntoView = ({
       // The plank focuses itself off the same one-shot flag; record it so the fold hysteresis holds that
       // focus until the scroll below has actually brought the plank out of the pile.
       scrollIntentRef.current = scrollIntoViewId;
-      scrollPlankToPile({ viewport, stack, tiles, index });
+      const target = scrollPlankToPile({ viewport, stack, tiles, index });
+
+      // Arrival watchdog. A smooth scroll is a request, not a guarantee: a reflow mid-glide — a plank
+      // remounting, a list re-rendering, the scrollable width momentarily collapsing — makes the browser
+      // clamp or abort it, stranding the deck wherever the abort happened (measured in the app: the
+      // command was issued and the deck never moved). Arrival is owned by `useFoldedPlanks`, which
+      // clears the intent; until then, a deck that sits still without arriving gets the command again.
+      cancelAnimationFrame(watchdogRef.current ?? 0);
+      let attempts = 0;
+      let last = viewport.scrollLeft;
+      let still = 0;
+      const watch = () => {
+        if (scrollIntentRef.current !== scrollIntoViewId || attempts >= 2) {
+          return;
+        }
+        const current = viewport.scrollLeft;
+        // At the destination — including the clamped one, when the deck is too short to reach the
+        // commanded offset — means the glide finished; stillness there is success, not death.
+        const clamped = Math.max(0, Math.min(target, viewport.scrollWidth - viewport.clientWidth));
+        if (Math.abs(current - clamped) < 1) {
+          return;
+        }
+        still = Math.abs(current - last) < 1 ? still + 1 : 0;
+        last = current;
+        // ~250ms of stillness without arrival: the glide is dead, not slow.
+        if (still >= 15) {
+          attempts += 1;
+          still = 0;
+          const freshTiles = getPlankTiles();
+          const freshIndex = freshTiles.findIndex((tile) => tile.getAttribute('data-object-id') === scrollIntoViewId);
+          if (freshIndex === -1) {
+            return;
+          }
+          scrollPlankToPile({ viewport, stack, tiles: freshTiles, index: freshIndex, force: true });
+        }
+        watchdogRef.current = requestAnimationFrame(watch);
+      };
+      watchdogRef.current = requestAnimationFrame(watch);
     }
     void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
   }, [scrollIntoViewId, invokePromise, viewportRef, stackRef, getPlankTiles, scrollIntentRef]);
@@ -1369,7 +1421,8 @@ export const DeckPlanks = () => {
     if (!stack || !isSliding || expose) {
       return;
     }
-    return addEventListener(
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    const off = addEventListener(
       stack,
       'pointerdown',
       (event) => {
@@ -1387,15 +1440,34 @@ export const DeckPlanks = () => {
           return;
         }
 
-        const tiles = getPlankTiles();
-        const index = tiles.findIndex((candidate) => candidate === tile);
-        if (index !== -1) {
-          scrollPlankToPile({ viewport, stack, tiles, index });
-        }
+        // Deferred, and yielding: a click on a plank is often a click on a *launcher* — a mailbox row
+        // opens a message — and the navigation that results owns the gesture. The deck changing
+        // (`planks` identity) or a navigation intent appearing are both grounds to drop the click's own
+        // scroll; the two-writer collision this prevents was measured in the app and reproduced in the
+        // launcher story.
+        const planksAtClick = navigationRef.current.planks;
+        clearTimeout(pending);
+        pending = setTimeout(() => {
+          if (scrollIntentRef.current || navigationRef.current.planks !== planksAtClick) {
+            return;
+          }
+          if (id === navigationRef.current.attendedPlankId) {
+            return;
+          }
+          const tiles = getPlankTiles();
+          const index = tiles.findIndex((candidate) => candidate.getAttribute('data-object-id') === id);
+          if (index !== -1) {
+            scrollPlankToPile({ viewport, stack, tiles, index });
+          }
+        }, CLICK_TO_FRONT_DELAY_MS);
       },
       { capture: true },
     );
-  }, [stackRef, viewportRef, getPlankTiles, isSliding, expose]);
+    return () => {
+      clearTimeout(pending);
+      off();
+    };
+  }, [stackRef, viewportRef, getPlankTiles, isSliding, expose, scrollIntentRef]);
 
   const plankContext = useMemo<PlankContextValue>(
     () => ({ ...rendered, maxPlankWidthPx, captureExposeGeometry }),
@@ -1495,7 +1567,13 @@ export const DeckPlanks = () => {
         ) : (
           <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
-              <ScrollArea.Viewport ref={viewportRef} classNames={breakpoint === 'mobile' && 'snap-x snap-mandatory'}>
+              <ScrollArea.Viewport
+                ref={viewportRef}
+                // Scroll anchoring off: the deck owns its scroll position, and the browser's anchor
+                // compensation turns any tile growing (a companion opening) into a silent scroll no
+                // code commanded — measured as the deck shifting by exactly the width delta.
+                classNames={mx('[overflow-anchor:none]', breakpoint === 'mobile' && 'snap-x snap-mandatory')}
+              >
                 <Mosaic.Stack
                   ref={stackRef}
                   orientation='horizontal'
