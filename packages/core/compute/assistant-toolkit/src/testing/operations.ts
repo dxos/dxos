@@ -8,7 +8,7 @@ import { SpaceProperties } from '@dxos/client-protocol';
 import { Instructions, OperationHandlerSet, Routine, Skill, Trigger } from '@dxos/compute';
 import { Collection, Feed, Tag } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { Employer, Organization, Person } from '@dxos/types';
+import { Employer, Organization, Outline, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentHandlers } from '../operations';
 import { AgentWizardHandlers } from '../skills/agent-wizard/operations';
@@ -19,7 +19,7 @@ import { DelegationHandlers } from '../skills/delegation/operations';
 import { MemoryHandlers } from '../skills/memory/operations';
 import { PlanningHandlers } from '../skills/planning/operations';
 import { SkillManagerHandlers } from '../skills/skill-manager/operations';
-import { Agent, Chat, Plan } from '../types';
+import { Agent, Chat } from '../types';
 import { Memory } from '../types/Memory';
 
 /**
@@ -51,8 +51,10 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
     Memory,
     Organization.Organization,
     Person.Person,
-    Plan.Plan,
+    Outline.Outline,
     Routine.Routine,
+    Task.Task,
+    TaskSet.TaskSet,
     Skill.Skill,
     SpaceProperties,
     Tag.Tag,

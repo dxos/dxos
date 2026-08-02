@@ -24,6 +24,13 @@ export const handler = Effect.fn(function* ({
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
 
+  // Validate up front — an invalid host inside `onConnecting` would abort after the invitation
+  // is already hosted, without printing the codes.
+  yield* Effect.try({
+    try: () => new URL(host),
+    catch: () => new Error(`--host must be an absolute URL: ${host}`),
+  });
+
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = client.halo.share({
     authMethod: Invitation.AuthMethod.SHARED_SECRET,
@@ -42,17 +49,17 @@ export const handler = Effect.fn(function* ({
           // Copy auth code to clipboard
           yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
 
-          if (!json) {
-            yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
-          }
+          const url = new URL(host);
+          url.searchParams.set('deviceInvitationCode', invitationCode);
 
           if (!json) {
+            yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
             yield* Console.log(`\nInvitation: ${invitationCode}\n`);
+            // Print the joinable URL even when not opening so it can be pasted manually.
+            yield* Console.log(`\nURL: ${url.toString()}\n`);
           }
 
           if (open) {
-            const url = new URL(host);
-            url.searchParams.append('deviceInvitationCode', invitationCode);
             yield* openBrowser(url.toString()).pipe(
               Effect.catchAll(() => Console.error(`Failed to open browser: ${url.toString()}`)),
             );
