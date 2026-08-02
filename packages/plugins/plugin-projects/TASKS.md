@@ -375,10 +375,10 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
 - [~] **Phase 4 — MCP verbs** — DXOS SIDE DONE 2026-08-02 (edge side pending). Ownership
   RATIFIED (MILESTONE-5 §7.3): **dxos defines, edge projects**; an edge-only tool is a
   contract defect. Contract in §7.4.
-  SHIPPED HERE: `McpToolAnnotation` in @dxos/compute/Operation (`Operation.mcpTool({name,
-  description?, safety, aspect?})` + `getMcpTool`) — **verified that the annotation survives
-  `Operation.serialize`**, which is what lets edge read the tool list off the operation
-  registry instead of a curated table; `taskList` (filters taskSet/project/status/assignee/
+  SHIPPED HERE: `McpToolAnnotation` in @dxos/compute/Operation — the pipeable
+  `Operation.mcpTool(...)` combinator plus `getMcpTool`, carrying name/description/safety/aspect.
+  **Verified that the annotation survives `Operation.serialize`**, which is what lets edge read
+  the tool list off the operation registry instead of a curated table; `taskList` (filters taskSet/project/status/assignee/
   includeSubtasks, opaque `after` cursor + `limit`) — closes the edge-only exception;
   `projectList`/`projectGet`/`projectUpdate`; `outlineGet`/`outlineUpdate` (item-wise upsert
   preserves prose); all 12 verbs annotated; serialize guards in both plugins assert the
