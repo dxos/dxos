@@ -223,7 +223,9 @@ export const useApp = ({
                 // (i.e. after the first real paint of the shell). `setTimeout`
                 // fallback for browsers without requestIdleCallback (webkit).
                 const scheduleIdle =
-                  typeof requestIdleCallback === 'function' ? requestIdleCallback : (cb: () => void) => setTimeout(cb, 250);
+                  typeof requestIdleCallback === 'function'
+                    ? requestIdleCallback
+                    : (cb: () => void) => setTimeout(cb, 250);
                 scheduleIdle(() => {
                   void EffectEx.runAndForwardErrors(manager.enableDeferred().pipe(Effect.ignore));
                 });
