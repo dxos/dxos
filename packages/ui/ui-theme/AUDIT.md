@@ -10,6 +10,11 @@ Method: direct review of the primitives and theme CSS, plus four exhaustive repo
 control sizing and density). Counts below are from those surveys (ripgrep over `packages/**`,
 10k+ TS/TSX files). All paths relative to the repo root.
 
+**How to read this document.** Sections 1-7 are the findings **as of the audit** and are left
+unedited as the baseline — they are not a description of the tree today. Section 8 is the live
+plan: each phase records what has landed, and the closing metrics table tracks baseline against
+current. Phases 1 and 2 are done.
+
 ---
 
 ## 1. Executive summary
@@ -609,16 +614,18 @@ Phases 2–4 are independent of each other after Phase 1.
 > opaque `--surface-bg`. Either add a `--surface-alpha` knob to the zone rule or accept that
 > translucent floaters do not publish a surface.
 
-1. Implement the universal derivation rule + `data-surface` levels (D4); collapse
-   `surface.css` to per-level one-liners; keep `dx-*-surface` classes as aliases that set only
-   `--surface-bg`.
-2. Wire the owning primitives: `Main`/deck chrome (`l0/l1/r0/r1` get zones at last),
-   `Panel.Toolbar` + `Toolbar.Root` (bar aspect of host surface), `Dialog.Content`,
-   `Popover`/`Menu`/`Toast` (already correct), `Card.Root` (already correct).
-3. Migrate the ~164 bare `bg-*-surface` zone roots (scriptable: the survey has the list;
-   leaf/decorative uses stay).
-4. Widen `dx-current` to `[aria-current]:not([aria-current='false'])` or normalize Tree; route
-   `Menu`/`Calendar`/`DatePicker`/`Slider` themes through `dx-hover`/`dx-highlighted`.
+1. ~~Implement the universal derivation rule + `data-surface` levels (D4); collapse
+   `surface.css`; keep `dx-*-surface` classes as aliases.~~ **Done.**
+2. ~~Wire the owning primitives: `Main`/deck chrome (`l0/l1/r0/r1` get zones at last),
+   `Panel.Toolbar` + `Toolbar.Root` (bar aspect of host surface).~~ **Done.**
+   `Dialog.Content` and `Popover`/`Menu`/`Toast`/`Card.Root` were already correct.
+3. ~~Migrate the bare `bg-*-surface` zone roots.~~ **Done** — 106 migrated; the ~70 that remain are
+   the deliberate leaf/decorative/control skips described above.
+4. **Outstanding.** Widen `dx-current` to `[aria-current]:not([aria-current='false'])` or normalize
+   Tree; route `Menu`/`Calendar`/`DatePicker`/`Slider` themes through `dx-hover`/`dx-highlighted`.
+5. **Outstanding.** Resolve the three mechanism limits above: give `.dx-input`/`.dx-button`/`.dx-tag`
+   a `--surface-bg` declaration instead of `@apply bg-*-surface`, and decide whether translucent
+   floaters get a `--surface-alpha` knob.
 
 ### Phase 3 — Sizing & density
 
@@ -664,11 +671,14 @@ Phases 2–4 are independent of each other after Phase 1.
 
 ### Metrics to re-run after each phase
 
-| Metric                                                          | Today                      |
-| --------------------------------------------------------------- | -------------------------- |
-| Surface-zone adoption (zone class vs bare `bg-*-surface` roots) | ~13%                       |
-| Panel canonical scroll shape                                    | ~35% (54% after Phase 1.4) |
-| Distinct control heights (fine pointer)                         | 17                         |
-| Hand-rolled 3-track grids                                       | ≥10                        |
-| Hand-rolled state styling sites                                 | ~36                        |
-| Dead `dx-*` classes / dead tokens                               | 6 / 8                      |
+Baseline is the state at the time of the audit; Now is after phases 1-2.
+
+| Metric                                       | Baseline | Now                               |
+| -------------------------------------------- | -------- | --------------------------------- |
+| Surface-zone call sites (zone class vs bare) | 25       | **135**                           |
+| Panel canonical scroll shape                 | ~35%     | ~41% (14 `asChild` + 2 scrollers) |
+| Distinct control heights (fine pointer)      | 17       | 17 — Phase 3                      |
+| Hand-rolled 3-track grids                    | ≥10      | ≥10 — Phase 4                     |
+| Hand-rolled state styling sites              | ~36      | ~34 — Phase 2 item 4              |
+| Dead `dx-*` classes / dead tokens            | 6 / 8    | **0 / 0**                         |
+| Contradictory elevation ladders              | 3        | **1**                             |
