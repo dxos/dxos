@@ -23,9 +23,11 @@ export type MergePassResult = {
 /**
  * Apply the deterministic merge to every group of duplicates among `entities`.
  *
- * Being a pure function of the candidate set, this is safe to run redundantly: every peer runs
- * it on space open and they agree, and a second pass over the same entities is a no-op. Groups
- * of one are skipped, so a space with no duplicates costs one grouping pass and no writes.
+ * This is the client-side executor behind `db.mergeDuplicates()`; the automatic path runs in the
+ * worker off the indexing stream (`echo-host`'s natural-key merge). Being a pure function of the
+ * candidate set, it is safe to run redundantly — a client pass racing the worker converges, and a
+ * second pass over the same entities is a no-op. Groups of one are skipped, so a space with no
+ * duplicates costs one grouping pass and no writes.
  *
  * Writes only the fields whose values differ from the merged result, rather than replacing the
  * whole object — a whole-object replace would rewrite every field, so a concurrent edit to a
@@ -52,10 +54,11 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
     if (naturalKey === undefined) {
       continue;
     }
+    // Objects only — relations are not merge subjects (their endpoints would not be reconciled).
     // Feed-backed entities have no automerge core to merge into (out of scope, see DESIGN.md);
     // and an entity already merged away is not a candidate — it keeps its natural key so a late
     // peer can still recognize it, so a query including tombstones would otherwise re-merge it.
-    if (!isEchoObject(entity) || getObjectCore(entity).getMergedInto() !== undefined) {
+    if (!Obj.isObject(entity) || !isEchoObject(entity) || getObjectCore(entity).getMergedInto() !== undefined) {
       continue;
     }
     const group = groups.get(naturalKey);
@@ -78,7 +81,10 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
 
     Obj.update(winner, (winner) => {
       for (const [field, value] of Object.entries(result.data)) {
-        if ((winner as Record<string, unknown>)[field] !== value) {
+        // Structural comparison, not reference: `value` is a snapshot copy, so a reference check
+        // would always differ for container values and rewrite the winner's own nested fields —
+        // a whole-subtree put that a concurrent nested edit would lose to.
+        if (!_jsonEqual((winner as Record<string, unknown>)[field], value)) {
           (winner as Record<string, unknown>)[field] = value;
         }
       }
@@ -132,31 +138,72 @@ export const rewriteReferences = (referrers: readonly Obj.Unknown[], entities: r
   }
 
   let rewritten = 0;
+
+  // Returns a replacement for `value`, or `undefined` when nothing inside it points at a loser.
+  // Containers are rebuilt only when a contained ref changed — refs sit inside arrays (a
+  // collection's members) and nested records, which a top-level-only sweep would miss — and an
+  // untouched field is never written, so it cannot lose a last-write-wins race it was not part of.
+  const rewriteValue = (value: unknown): unknown => {
+    if (Ref.isRef(value)) {
+      const uri = EID.tryParse(value.uri);
+      // Type references are `dxn:` rather than `echo:` and are never merge subjects here.
+      if (!uri) {
+        return undefined;
+      }
+      const current = EID.getEntityId(uri);
+      if (!current) {
+        return undefined;
+      }
+      const resolved = resolveMerged(current, entities);
+      const target = resolved === current ? undefined : byId.get(resolved);
+      if (!target) {
+        return undefined;
+      }
+      rewritten++;
+      return Ref.make(target);
+    }
+    if (Array.isArray(value)) {
+      const replacements = value.map(rewriteValue);
+      return replacements.some((replacement) => replacement !== undefined)
+        ? value.map((element, index) => replacements[index] ?? element)
+        : undefined;
+    }
+    if (value !== null && typeof value === 'object') {
+      const entries = Object.entries(value);
+      const replacements = entries.map(([, nested]) => rewriteValue(nested));
+      return replacements.some((replacement) => replacement !== undefined)
+        ? Object.fromEntries(entries.map(([key, nested], index) => [key, replacements[index] ?? nested]))
+        : undefined;
+    }
+    return undefined;
+  };
+
   for (const referrer of referrers) {
     Obj.update(referrer, (referrer) => {
       for (const [field, value] of Object.entries(referrer as Record<string, unknown>)) {
-        if (!Ref.isRef(value)) {
-          continue;
-        }
-        const uri = EID.tryParse(value.uri);
-        // Type references are `dxn:` rather than `echo:` and are never merge subjects here.
-        if (!uri) {
-          continue;
-        }
-        const current = EID.getEntityId(uri);
-        if (!current) {
-          continue;
-        }
-        const resolved = resolveMerged(current, entities);
-        const target = resolved === current ? undefined : byId.get(resolved);
-        if (target) {
-          (referrer as Record<string, unknown>)[field] = Ref.make(target);
-          rewritten++;
+        const replacement = rewriteValue(value);
+        if (replacement !== undefined) {
+          (referrer as Record<string, unknown>)[field] = replacement;
         }
       }
     });
   }
   return rewritten;
+};
+
+/**
+ * Structural equality good enough for a write-only-if-different guard: a false negative costs one
+ * redundant (idempotent) write, never a wrong value.
+ */
+const _jsonEqual = (a: unknown, b: unknown): boolean => {
+  if (a === b) {
+    return true;
+  }
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
 };
 
 /**
@@ -171,9 +218,9 @@ export const getMergedFrom = (entity: Obj.Unknown): EntityId[] => getObjectCore(
 /**
  * True once the entity has been merged into another.
  *
- * Distinct from being deleted: the tombstone reaches the index a moment after the redirect is
- * written, so a query can still surface a merged-away entity. Callers presenting results use this
- * to drop it rather than waiting for the index.
+ * Distinct from being deleted: a merged-away entity carries a redirect and stays that way (the
+ * worker re-tombstones a restored loser), whereas a plainly deleted entity can be restored.
+ * Diagnostics use this to tell the two tombstone kinds apart.
  */
 export const isMergedAway = (entity: Obj.Unknown): boolean =>
   isEchoObject(entity) && getObjectCore(entity).getMergedInto() !== undefined;
@@ -187,6 +234,9 @@ export const isMergedAway = (entity: Obj.Unknown): boolean =>
  * would lose. Instead this diffs the loser against the heads recorded at merge time and carries
  * across exactly the fields that changed since, then re-records the heads so the same edit is
  * never folded twice.
+ *
+ * The worker performs the same fold automatically when a late edit re-indexes a tombstoned
+ * loser (`echo-host`'s natural-key merge); this client-side pass is the manual counterpart.
  *
  * @returns The number of fields folded.
  */

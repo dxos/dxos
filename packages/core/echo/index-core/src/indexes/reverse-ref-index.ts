@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { ATTR_META } from '@dxos/echo/internal';
 import { EID } from '@dxos/keys';
 
 import { EscapedPropPath } from '../utils';
@@ -116,8 +117,16 @@ export class ReverseRefIndex implements Index {
               // Delete existing references for this record.
               yield* sql`DELETE FROM reverseRef WHERE recordId = ${recordId}`;
 
-              // Extract references from data.
-              const refs = extractReferences(data as unknown as Record<string, unknown>);
+              // Document objects carry `@meta` only so the entity-meta index can extract the
+              // natural key — indexing `meta.tags` here would make `Query.incoming()` on a Tag
+              // return everything merely tagged with it. Queue blocks always carried meta, so
+              // their extraction is unchanged.
+              const extractable = object.documentId
+                ? Object.fromEntries(
+                    Object.entries(data as unknown as Record<string, unknown>).filter(([key]) => key !== ATTR_META),
+                  )
+                : (data as unknown as Record<string, unknown>);
+              const refs = extractReferences(extractable);
 
               // Insert new references.
               yield* Effect.forEach(

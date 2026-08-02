@@ -7,14 +7,14 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Entity, Obj, Query, type QueryAST, type QueryResult } from '@dxos/echo';
+import { type Entity, Query, type QueryAST, type QueryResult } from '@dxos/echo';
 import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { getDeep, isNonNullable } from '@dxos/util';
 
-import { isMergedAway } from '../merge';
+import { getObjectCore, isEchoObject } from '../echo-handler';
 import { type QueryContext, type SourceEntry } from './query-context';
 
 /**
@@ -254,14 +254,17 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
   }
 
   /**
-   * Drop entities that were merged away, so a caller never observes a duplicate alongside its
-   * survivor — the failure this prevents is code that reads `results.length` or asserts a
-   * singleton and breaks on a duplicate it did not create.
+   * Drop entities whose tombstone the index has not caught up with yet — the failure this
+   * prevents is code that reads `results.length` or asserts a singleton and breaks on a
+   * merged-away duplicate it did not create.
    *
    * Read-only by design: the merge itself runs in the worker off the indexing stream (see
    * `echo-host`'s natural-key merge), and its tombstones leave query results through ordinary
-   * deleted-filtering once re-indexed. This filter only covers the gap in between — an entity
-   * whose redirect has replicated but whose tombstone the index has not caught up with yet.
+   * deleted-filtering once re-indexed. This filter only covers the gap in between — cached
+   * reactive-query entries hydrated before the re-index. It keys on the deleted flag rather
+   * than `mergedInto` (the merge writes both in one change) so that it can never hide a live
+   * entity: a loser resurrected by `db.add` stays visible until the worker re-tombstones it,
+   * instead of becoming a live-but-unqueryable zombie.
    */
   private _collapseDuplicates(entries: SourceEntry<T>[]): SourceEntry<T>[] {
     // A query that explicitly asks for tombstones is asking to see what was merged away, so
@@ -270,7 +273,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       return entries;
     }
 
-    return entries.filter(({ result }) => !(Obj.isObject(result) && isMergedAway(result)));
+    return entries.filter(({ result }) => !(isEchoObject(result) && getObjectCore(result).isDeleted()));
   }
 
   private _uniqueObjects(entries: SourceEntry<T>[]): T[] {

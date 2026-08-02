@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Filter, Merge, Obj, Query } from '@dxos/echo';
+import { Filter, Merge, Obj, Query, Relation } from '@dxos/echo';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
@@ -150,24 +150,117 @@ describe('merge convergence', () => {
     await db2.flush();
     await db1.waitUntilHeadsReplicated(await db2.getDocumentHeads());
 
-    await waitForCondition({
-      condition: async () => (await allTasks(db1)).some((task: any) => task.id === loserId && task.description),
-      timeout: 5_000,
-    });
+    // No fold call anywhere: the late edit re-indexes the tombstoned loser, and the worker
+    // carries the changed fields to the winner. Re-running the field-wise merge would not
+    // rescue this — it prefers the smallest id, which is the winner.
+    for (const db of [db1, db2]) {
+      await waitForCondition({
+        condition: async () => {
+          const live = await liveTasks(db);
+          return live.length === 1 && live[0].id === winner && live[0].description === 'written after the merge';
+        },
+        timeout: 10_000,
+      });
+    }
 
-    // Re-running the field-wise merge would not rescue this: it prefers the smallest id, which is
-    // the winner. The fold carries exactly the late edit across.
-    const all = await allTasks(db1);
-    expect(foldLateEdits(all)).toBe(1);
-    await db1.flush();
-
-    const survivors = await liveTasks(db1);
-    expect(survivors).toHaveLength(1);
-    expect(survivors[0].id).toBe(winner);
-    expect(survivors[0].description).toBe('written after the merge');
-
-    // The watermark advanced, so the same edit is not folded twice.
+    // The watermark advanced, so a manual pass finds nothing left to fold.
     expect(foldLateEdits(await allTasks(db1))).toBe(0);
+  });
+
+  test('a restored loser is re-tombstoned and its edits carried to the winner', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    await using db = await peer.createDatabase(spaceKey);
+
+    const first = seed(db, 'one');
+    const second = seed(db, 'two');
+    await db.flush();
+
+    const winner = first.id < second.id ? first.id : second.id;
+    await waitForLiveWinner(db, winner);
+
+    // `db.add` un-deletes a tombstone, which would otherwise leave a live duplicate that
+    // detection ignores forever. Editing in the same tick makes one indexing pass see both.
+    const loserId = winner === first.id ? second.id : first.id;
+    const loser = (await allTasks(db)).find((task: any) => task.id === loserId);
+    db.add(loser);
+    Obj.update(loser, (loser: any) => {
+      loser.description = 'edited after the restore';
+    });
+    await db.flush();
+
+    // The redirect is sticky: the restore converges back to one live entity, and the restore's
+    // edit survives on the winner rather than on the re-tombstoned loser.
+    await waitForCondition({
+      condition: async () => {
+        const live = await liveTasks(db);
+        return live.length === 1 && live[0].id === winner && live[0].description === 'edited after the restore';
+      },
+      timeout: 10_000,
+    });
+  });
+
+  test('relations sharing a natural key are not merged', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Task, TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
+    });
+    await using db = await peer.createDatabase(spaceKey);
+
+    // `Merge.setNaturalKey` rejects relations, so stamp the key the way a legacy or hostile
+    // writer would — directly on meta — and verify the worker refuses to act on it.
+    const makeEmployment = () => {
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'someone' }));
+      const organization = db.add(Obj.make(TestSchema.Organization, { name: 'somewhere' }));
+      const employment = db.add(
+        Relation.make(TestSchema.EmployedBy, {
+          [Relation.Source]: person,
+          [Relation.Target]: organization,
+          role: 'employee',
+        }),
+      );
+      Relation.update(employment, (mutable) => {
+        Relation.getMeta(mutable).naturalKey = 'org.example.employment';
+      });
+      return employment;
+    };
+    const employment1 = makeEmployment();
+    const employment2 = makeEmployment();
+
+    // Sentinel pair: once these tasks have merged, the worker has provably processed the batch
+    // that also carried the relations' key.
+    const first = seed(db, 'one');
+    const second = seed(db, 'two');
+    await db.flush();
+    await waitForLiveWinner(db, first.id < second.id ? first.id : second.id);
+
+    const employments = await db.query(Filter.type(TestSchema.EmployedBy)).run();
+    expect(employments.map((relation: any) => relation.id).sort()).toEqual([employment1.id, employment2.id].sort());
+  });
+
+  test('a long-string field folds across without corruption', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    await using db = await peer.createDatabase(spaceKey);
+
+    // Above 300k characters the client stores the value as an unmergeable raw string, which a
+    // naive deep-clone in the worker would flatten into a `{ val }` map. Stamp it on the loser,
+    // so the merge must carry it across documents.
+    const longText = 'x'.repeat(300_001);
+    const first = seed(db, 'one');
+    const second = seed(db, 'two');
+    const loser = first.id < second.id ? second : first;
+    Obj.update(loser, (task: any) => {
+      task.description = longText;
+    });
+    await db.flush();
+
+    const winner = first.id < second.id ? first.id : second.id;
+    await waitForLiveWinner(db, winner);
+
+    const [survivor] = await liveTasks(db);
+    expect(typeof survivor.description).toBe('string');
+    expect(survivor.description).toBe(longText);
   });
 
   test('a partial view merges into a chain that still resolves to the global minimum', async ({ expect }) => {

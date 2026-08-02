@@ -7,7 +7,7 @@ import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
 import { Merge } from '@dxos/echo';
-import { type DatabaseDirectory, type EntityStructure } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, type EntityStructure, PROPERTY_ID } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { type EntityId, type SpaceId } from '@dxos/keys';
@@ -33,7 +33,12 @@ export type NaturalKeyMergeContext = {
  * `documentsSaved` event re-indexes the tombstones, which is what removes the losers from query
  * results everywhere.
  *
- * @returns The number of duplicate groups merged.
+ * Already-redirected entities that re-index — a straggler peer's late edits replicating onto a
+ * tombstone, or a loser resurrected by `db.add` — are serviced too: their post-merge edits are
+ * folded into the winner and the tombstone is re-asserted, which is what makes `mergedInto`
+ * sticky and the convergence argument hold without any client-side pass.
+ *
+ * @returns The number of duplicate groups that required writes (a merge or a late-edit fold).
  */
 export const mergeNaturalKeyDuplicates = async (
   ctx: Context,
@@ -90,26 +95,48 @@ const _mergeGroup = async (
 ): Promise<boolean> => {
   // Re-verify against the documents: the index row is derived state and can trail the truth —
   // an entity already merged away (or whose key changed) must not be merged again.
-  const members: GroupMember[] = [];
+  const loaded = new Map<EntityId, GroupMember>();
+  const candidates: GroupMember[] = [];
+  const redirected: GroupMember[] = [];
   for (const { objectId, documentId } of group) {
     const handle = await loadDoc<DatabaseDirectory>(ctx, documentId as DocumentId);
     const entity = handle?.doc()?.objects?.[objectId];
-    if (
-      !entity ||
-      entity.system?.deleted ||
-      entity.system?.mergedInto !== undefined ||
-      entity.meta?.naturalKey !== naturalKey
-    ) {
+    // Objects only: relations and types index as document entities too, but merging a relation
+    // would tombstone it without reconciling its endpoints, and merging a type would break
+    // schema resolution for its instances. Read the kind leniently — throwing here would wedge
+    // the indexing loop on one corrupt entity.
+    if (!entity || (entity.system?.kind ?? 'object') !== 'object' || entity.meta?.naturalKey !== naturalKey) {
       continue;
     }
-    members.push({ objectId, handle: handle!, entity });
-  }
-  if (members.length < 2) {
-    return false;
+    const member: GroupMember = { objectId, handle: handle!, entity };
+    loaded.set(objectId, member);
+    if (entity.system?.mergedInto !== undefined) {
+      // Already merged away — not a candidate, but late edits (a straggler peer, or a restore)
+      // may need folding into the winner, and the tombstone is sticky.
+      redirected.push(member);
+    } else if (!entity.system?.deleted) {
+      // A user-deleted entity without a redirect is neither: deletion is respected, not merged.
+      candidates.push(member);
+    }
   }
 
+  const merged = candidates.length >= 2 && _mergeCandidates(naturalKey, candidates);
+
+  let folded = false;
+  for (const loser of redirected) {
+    folded = _foldRedirected(loser, loaded) || folded;
+  }
+
+  return merged || folded;
+};
+
+/**
+ * Merge live duplicates: fold every loser's state into the minimum-id winner, then redirect and
+ * tombstone the losers.
+ */
+const _mergeCandidates = (naturalKey: string, candidates: readonly GroupMember[]): boolean => {
   const result = Merge.merge(
-    members.map(({ objectId, entity }) => ({
+    candidates.map(({ objectId, entity }) => ({
       id: objectId,
       naturalKey,
       data: (entity.data ?? {}) as Record<string, unknown>,
@@ -117,7 +144,7 @@ const _mergeGroup = async (
     })),
   );
 
-  const byId = new Map(members.map((member) => [member.objectId, member]));
+  const byId = new Map(candidates.map((member) => [member.objectId, member]));
   const winner = byId.get(result.winner);
   if (!winner) {
     return false;
@@ -132,12 +159,22 @@ const _mergeGroup = async (
     }
   }
 
+  // The verification snapshots above are separated from this write by awaited doc loads, during
+  // which a replicated change may have landed — so the change callback re-checks the winner is
+  // still a live candidate, and aborts the whole group if not (tombstoning the losers without
+  // having folded their state would strand it).
+  let applied = false;
   winner.handle.change((doc: DatabaseDirectory) => {
     const entity = doc.objects?.[winner.objectId];
-    if (!entity) {
+    if (!entity || entity.system?.mergedInto !== undefined || entity.meta?.naturalKey !== naturalKey) {
       return;
     }
-    entity.data ??= {};
+    // `x ??= y` evaluates to the plain right-hand value, not the proxy the document wraps it in,
+    // so every container is re-read through the entity after assignment — mutations on the alias
+    // of the right-hand value would go nowhere.
+    if (entity.data === undefined) {
+      entity.data = {};
+    }
     for (const [field, value] of Object.entries(result.data)) {
       // Per-field writes, and only where the value differs, so a concurrent edit to a field the
       // merge never touched keeps its last-write-wins outcome.
@@ -145,15 +182,35 @@ const _mergeGroup = async (
         entity.data[field] = _clone(value);
       }
     }
-    const meta = (entity.meta ??= { keys: [] });
+    if (entity.meta === undefined) {
+      entity.meta = { keys: [] };
+    }
+    const keys = entity.meta.keys;
     for (const key of result.keys) {
-      if (!meta.keys.some((existing) => existing.source === key.source && existing.id === key.id)) {
-        meta.keys.push(_clone(key));
+      if (!keys.some((existing) => existing.source === key.source && existing.id === key.id)) {
+        keys.push(_clone(key));
       }
     }
-    const system = (entity.system ??= {});
-    system.mergedFrom = [...absorbed].sort();
+    if (entity.system === undefined) {
+      entity.system = {};
+    }
+    // Append to the existing list rather than assigning a new one: concurrent assignments are
+    // whole-list conflicts and LWW would drop one peer's ids; concurrent inserts both survive,
+    // and reads deduplicate.
+    if (entity.system.mergedFrom === undefined) {
+      entity.system.mergedFrom = [];
+    }
+    const mergedFrom = entity.system.mergedFrom;
+    for (const id of [...absorbed].sort()) {
+      if (!mergedFrom.includes(id)) {
+        mergedFrom.push(id);
+      }
+    }
+    applied = true;
   });
+  if (!applied) {
+    return false;
+  }
 
   for (const loserId of result.losers) {
     const loser = byId.get(loserId);
@@ -164,16 +221,94 @@ const _mergeGroup = async (
     const heads = A.getHeads(loser.handle.doc());
     loser.handle.change((doc: DatabaseDirectory) => {
       const entity = doc.objects?.[loser.objectId];
-      if (!entity) {
+      // A redirect that landed concurrently wins — overwriting it would clobber the watermark
+      // its fold depends on. The two winners share the key, so a later pass reconciles them.
+      if (!entity || entity.system?.mergedInto !== undefined) {
         return;
       }
-      const system = (entity.system ??= {});
-      system.mergedInto = result.winner;
-      system.mergedAtHeads = [...heads];
-      system.deleted = true;
+      if (entity.system === undefined) {
+        entity.system = {};
+      }
+      entity.system.mergedInto = result.winner;
+      entity.system.mergedAtHeads = [...heads];
+      entity.system.deleted = true;
     });
   }
 
+  return true;
+};
+
+/**
+ * Service an already-redirected entity: fold data edits made since its recorded watermark into
+ * the surviving entity, and re-assert the tombstone.
+ *
+ * This is what makes the redirect durable. A peer offline during the merge keeps editing its
+ * copy; those edits replicate onto the tombstone, re-index it, and land here — re-running the
+ * field-wise merge could not rescue them (it prefers the smallest-id candidate, the winner).
+ * And `db.add` un-deletes, so a restored loser would otherwise be a live duplicate that
+ * detection ignores forever; re-tombstoning makes `mergedInto` sticky, with the restore's edits
+ * carried to the winner by the same fold.
+ */
+const _foldRedirected = (loser: GroupMember, loaded: ReadonlyMap<EntityId, GroupMember>): boolean => {
+  const mergedInto = loser.entity.system?.mergedInto;
+  const mergedAtHeads = loser.entity.system?.mergedAtHeads;
+  if (mergedInto === undefined) {
+    return false;
+  }
+
+  const winnerId = Merge.resolveRedirect(loser.objectId, (id) => loaded.get(id)?.entity.system?.mergedInto);
+  const winner = winnerId !== loser.objectId ? loaded.get(winnerId) : undefined;
+
+  const doc = loser.handle.doc();
+  const currentHeads = A.getHeads(doc);
+  let changedFields: string[] = [];
+  if (mergedAtHeads !== undefined && winner !== undefined && !winner.entity.system?.deleted) {
+    const prefix = ['objects', loser.objectId, 'data'];
+    const changed = new Set<string>();
+    for (const patch of A.diff(doc, mergedAtHeads, currentHeads)) {
+      if (patch.path.length > prefix.length && prefix.every((key, index) => patch.path[index] === key)) {
+        changed.add(String(patch.path[prefix.length]));
+      }
+    }
+    changedFields = [...changed].filter((field) => field !== PROPERTY_ID);
+  }
+
+  if (changedFields.length > 0 && winner !== undefined) {
+    winner.handle.change((target: DatabaseDirectory) => {
+      const entity = target.objects?.[winner.objectId];
+      if (!entity || entity.system?.mergedInto !== undefined) {
+        return;
+      }
+      if (entity.data === undefined) {
+        entity.data = {};
+      }
+      for (const field of changedFields) {
+        const value = (loser.entity.data as Record<string, unknown> | undefined)?.[field];
+        if (value === undefined) {
+          delete entity.data[field];
+        } else if (!_jsonEqual(entity.data[field], value)) {
+          entity.data[field] = _clone(value);
+        }
+      }
+    });
+  }
+
+  const needsTombstone = loser.entity.system?.deleted !== true;
+  if (changedFields.length === 0 && !needsTombstone) {
+    return false;
+  }
+  loser.handle.change((target: DatabaseDirectory) => {
+    const entity = target.objects?.[loser.objectId];
+    // A concurrent redirect elsewhere owns the watermark now; leave it to that merge's fold.
+    if (!entity || entity.system === undefined || entity.system.mergedInto !== mergedInto) {
+      return;
+    }
+    if (changedFields.length > 0) {
+      // Advance the watermark so the same edit is never folded twice.
+      entity.system.mergedAtHeads = [...currentHeads];
+    }
+    entity.system.deleted = true;
+  });
   return true;
 };
 
@@ -187,6 +322,11 @@ const _clone = <T>(value: T): T => {
   }
   if (value instanceof Uint8Array) {
     return new Uint8Array(value) as T;
+  }
+  // Long strings are stored as unmergeable raw strings; the generic branch would flatten one
+  // into a `{ val }` map — silent corruption of the field.
+  if (value instanceof A.RawString) {
+    return new A.RawString(value.val) as T;
   }
   if (Array.isArray(value)) {
     return value.map(_clone) as T;

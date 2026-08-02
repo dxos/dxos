@@ -12,6 +12,7 @@ import * as Layer from 'effect/Layer';
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
+import { IndexTracker } from '../index-tracker';
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
 
@@ -525,6 +526,62 @@ describe('EntityMetaIndex', () => {
       const afterUpdate = yield* index.queryAll({ spaceIds: [spaceId], includeAllQueues: true });
       expect(afterUpdate).toHaveLength(1);
       expect(afterUpdate[0].queueNamespace).toBe('trace');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('upgrading a pre-naturalKey table resets index cursors so everything re-indexes', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      // The table as a build before `naturalKey` would have created it. Existing rows hold NULL
+      // after the ALTER, and re-indexing is per-object, so without a cursor reset an unchanged
+      // duplicate would never become visible to detection.
+      yield* sql`CREATE TABLE objectMeta (
+        recordId INTEGER PRIMARY KEY AUTOINCREMENT,
+        objectId TEXT NOT NULL,
+        queueId TEXT NOT NULL DEFAULT '',
+        queueNamespace TEXT NOT NULL DEFAULT '',
+        spaceId TEXT NOT NULL,
+        documentId TEXT NOT NULL DEFAULT '',
+        entityKind TEXT NOT NULL,
+        typeDXN TEXT NOT NULL,
+        deleted INTEGER NOT NULL,
+        source TEXT,
+        target TEXT,
+        parent TEXT,
+        version INTEGER NOT NULL,
+        createdAt INTEGER,
+        updatedAt INTEGER
+      )`;
+
+      const tracker = new IndexTracker();
+      yield* tracker.migrate();
+      yield* tracker.updateCursors([
+        { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toEqual([]);
+      const columns = yield* sql<{ name: string }>`SELECT name FROM pragma_table_info('objectMeta')`;
+      expect(columns.map(({ name }) => name)).toContain('naturalKey');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('a fresh database keeps its index cursors across migration', () =>
+    Effect.gen(function* () {
+      const tracker = new IndexTracker();
+      yield* tracker.migrate();
+
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+      yield* tracker.updateCursors([
+        { indexName: 'fts5', spaceId: null, sourceName: 'automerge', resourceId: 'doc-1', cursor: 'heads-1' },
+      ]);
+
+      // Re-running the migration (every startup does) must not wipe progress.
+      yield* index.migrate();
+      expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

@@ -27,10 +27,22 @@ export const getNaturalKey = (entity: Entity.Unknown | Entity.Snapshot): string 
 
 /**
  * Declare an entity's natural key, or clear it when passed `undefined`.
+ *
+ * Objects only: relations and types are not merge subjects yet — merging a relation would
+ * tombstone it without reconciling its endpoints, and merging a type would break schema
+ * resolution for its instances.
+ *
+ * @throws On a non-object entity, or an empty-string key (which would group unrelated entities).
  */
 export const setNaturalKey = (entity: Entity.Unknown, naturalKey: string | undefined): void => {
-  Obj.update(entity as Obj.Unknown, (mutable) => {
-    Obj.getMeta(mutable).naturalKey = naturalKey;
+  if (!Obj.isObject(entity)) {
+    throw new TypeError('Natural keys are limited to objects; relations and types are not merge subjects.');
+  }
+  if (naturalKey !== undefined && naturalKey.length === 0) {
+    throw new TypeError('Natural key must be a non-empty string.');
+  }
+  Obj.update(entity, (entity) => {
+    Obj.getMeta(entity).naturalKey = naturalKey;
   });
 };
 

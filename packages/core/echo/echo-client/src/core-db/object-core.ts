@@ -566,15 +566,21 @@ export class ObjectCore {
   /**
    * Record entities as having merged into this one. Idempotent: re-recording an id already
    * present rewrites nothing, so a repeated merge pass is a no-op.
+   *
+   * Appends to the existing list rather than assigning a new one: concurrent assignments are
+   * whole-list conflicts and last-write-wins would drop one peer's ids, while concurrent inserts
+   * both survive — {@link getMergedFrom} deduplicates.
    */
   addMergedFrom(ids: readonly EntityId[]): void {
-    const merged = new Set(this.getMergedFrom());
-    const before = merged.size;
-    for (const id of ids) {
-      merged.add(id);
+    const existing = new Set(this.getMergedFrom());
+    const missing = [...new Set(ids)].filter((id) => !existing.has(id)).sort();
+    if (missing.length === 0) {
+      return;
     }
-    if (merged.size !== before) {
-      this._setRaw([SYSTEM_NAMESPACE, 'mergedFrom'], [...merged].sort());
+    if (existing.size === 0 && this._getRaw([SYSTEM_NAMESPACE, 'mergedFrom']) === undefined) {
+      this._setRaw([SYSTEM_NAMESPACE, 'mergedFrom'], missing);
+    } else {
+      this.arrayPush([SYSTEM_NAMESPACE, 'mergedFrom'], missing);
     }
   }
 
@@ -749,18 +755,38 @@ export const objectIsUpdated = (objId: string, event: DocHandleChangePayload<Dat
  * without an eager migration. Scoped strictly to the `meta` namespace so unrelated values in `data` are
  * untouched.
  */
+const dedupeForeignKeys = (keys: readonly unknown[]): unknown[] => {
+  const seen = new Set<string>();
+  return keys.filter((key) => {
+    const { source, id } = (key ?? {}) as { source?: string; id?: string };
+    // JSON-composite rather than concatenation, so a delimiter inside one part cannot collide.
+    const composite = JSON.stringify([source, id]);
+    if (seen.has(composite)) {
+      return false;
+    }
+    seen.add(composite);
+    return true;
+  });
+};
+
 const upgradeMeta = (path: Doc.KeyPath, value: unknown): unknown => {
   if (path[0] !== META_NAMESPACE) {
     return value;
   }
-  // Whole `meta` object: backfill required fields and upgrade tag ids.
+  // Whole `meta` object: backfill required fields, upgrade tag ids, deduplicate keys.
   if (path.length === 1 && value != null && typeof value === 'object') {
     const meta = value as Record<string, unknown>;
     return {
       ...meta,
+      keys: Array.isArray(meta.keys) ? dedupeForeignKeys(meta.keys) : meta.keys,
       tags: Array.isArray(meta.tags) ? meta.tags.map(upgradeTagRef) : [],
       annotations: meta.annotations ?? {},
     };
+  }
+  // `meta.keys`: peers merging concurrently both append the same missing key, and automerge keeps
+  // both insertions — normalizing on read makes the list a set.
+  if (path.length === 2 && path[1] === 'keys') {
+    return Array.isArray(value) ? dedupeForeignKeys(value) : value;
   }
   // `meta.tags`: default to an empty array when absent; upgrade string entries.
   if (path.length === 2 && path[1] === 'tags') {

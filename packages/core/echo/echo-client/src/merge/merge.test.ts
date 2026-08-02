@@ -196,6 +196,67 @@ describe('Merge', () => {
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
+  test('an un-rewritten reference resolves through the redirect to the winner', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const first = Obj.make(TestSchema.Task, { title: 'first' });
+      const second = Obj.make(TestSchema.Task, { title: 'second' });
+      for (const task of [first, second]) {
+        Merge.setNaturalKey(task, 'org.example.seed');
+        yield* Database.add(task);
+      }
+      const referrer = Obj.make(TestSchema.Task, { title: 'referrer', previous: Ref.make(second) });
+      yield* Database.add(referrer);
+      mergeDuplicates([first, second]);
+      yield* Database.flush();
+
+      // No rewrite pass ran: the reference still names the loser, and resolution follows
+      // `system.mergedInto` to the survivor — this is what makes rewriting an optimization
+      // rather than a correctness requirement.
+      expect(referrer.previous!.uri).toContain(second.id);
+      expect(referrer.previous!.target?.id).toBe(first.id);
+      const loaded = yield* Effect.promise(() => referrer.previous!.load());
+      expect(loaded.id).toBe(first.id);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('references inside arrays are rewritten too', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const first = Obj.make(TestSchema.Task, { title: 'first' });
+      const second = Obj.make(TestSchema.Task, { title: 'second' });
+      for (const task of [first, second]) {
+        Merge.setNaturalKey(task, 'org.example.seed');
+        yield* Database.add(task);
+      }
+
+      // A collection-shaped referrer: the refs sit inside an array, where a top-level-only
+      // traversal would never look — precisely how a root collection points at its members.
+      const untouched = Obj.make(TestSchema.Task, { title: 'untouched' });
+      yield* Database.add(untouched);
+      const referrer = Obj.make(TestSchema.Task, {
+        title: 'referrer',
+        subTasks: [Ref.make(second), Ref.make(untouched)],
+      });
+      yield* Database.add(referrer);
+      mergeDuplicates([first, second]);
+      yield* Database.flush();
+
+      const all = yield* Database.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run;
+      expect(rewriteReferences([referrer], all)).toBe(1);
+      yield* Database.flush();
+
+      expect(referrer.subTasks![0].uri).toContain(first.id);
+      // The sibling entry the merge never touched keeps its target.
+      expect(referrer.subTasks![1].uri).toContain(untouched.id);
+      expect(rewriteReferences([referrer], all)).toBe(0);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
   // The database-level entry point: detection, merge, and reference rewriting in one pass.
   test('db.mergeDuplicates collapses duplicates and repoints references', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });

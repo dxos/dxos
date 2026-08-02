@@ -9,6 +9,7 @@ import { type EntityId } from '@dxos/keys';
 
 import * as Merge from './Merge';
 import * as Obj from './Obj';
+import * as Relation from './Relation';
 import { TestSchema } from './testing';
 
 // Ids are compared lexicographically, so fixed ULID-shaped literals keep the ordering readable:
@@ -78,6 +79,21 @@ describe('Merge', () => {
       const object = task('one');
       Merge.setNaturalKey(object, 'org.example.seed');
       expect(Merge.getNaturalKey(Obj.getSnapshot(object))).toBe('org.example.seed');
+    });
+
+    test('rejects relations — they are not merge subjects', ({ expect }) => {
+      const person = Obj.make(TestSchema.Person, { name: 'Test' });
+      const organization = Obj.make(TestSchema.Organization, { name: 'DXOS' });
+      const employment = Relation.make(TestSchema.EmployedBy, {
+        [Relation.Source]: person,
+        [Relation.Target]: organization,
+        role: 'CEO',
+      });
+      expect(() => Merge.setNaturalKey(employment, 'org.example.employment')).toThrow(TypeError);
+    });
+
+    test('rejects an empty-string key', ({ expect }) => {
+      expect(() => Merge.setNaturalKey(task('one'), '')).toThrow(TypeError);
     });
   });
 

@@ -393,22 +393,20 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Collapse entities that declare the same natural key into one, and repoint references at the
    * survivor.
    *
-   * Being a pure function of the entities it sees, every peer computes the same winner, so peers
-   * merging concurrently — or the same peer merging twice — converge rather than fight; a pass
-   * with nothing to merge writes nothing. Entities that declare no natural key are never
-   * candidates, so this is inert for data that has not opted in.
+   * Merging is automatic — the worker runs it off the indexing stream as duplicates replicate in
+   * (see `echo-host`'s natural-key merge) — so this explicit pass exists for what the automatic
+   * path deliberately leaves alone: rewriting references to name the survivor directly. Refs to
+   * losers already resolve through the redirect; rewriting them is an optimization and the
+   * compatibility path for clients too old to follow `mergedInto`.
    *
-   * NOT yet run automatically on space open, which is the intended trigger. Detection currently
-   * scans every entity, which hydrates the whole space into the working set — acceptable for an
-   * explicit call, but not on every open. Making it automatic needs `meta.naturalKey` indexed so
-   * detection asks the index for entities carrying one, and hydrates only actual duplicates.
-   * A filter cannot express that lookup ("has any natural key", grouped), so it needs a dedicated
-   * index query rather than query-planner pushdown.
+   * Being a pure function of the entities it sees, every peer computes the same result, so a
+   * pass racing the worker converges rather than fights, and a pass with nothing to merge
+   * writes nothing. Detection here scans the whole space (hydrating it) — acceptable for an
+   * explicit call; the worker's index point-lookup is what keeps the automatic path cheap.
    */
   async mergeDuplicates(): Promise<MergePassResult> {
-    // Includes tombstones: the merge itself now happens inside query evaluation, so by the time a
-    // plain query returns, the duplicates are already collapsed and the losers filtered out. What
-    // is left for this pass is repointing references at the survivors, which needs the losers.
+    // Includes tombstones: the worker usually merges before this pass ever sees the duplicates,
+    // so what is left is repointing references at the survivors — which needs the losers.
     const entities = await this.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
     const result = mergeDuplicates(entities);
     const rewritten = rewriteReferences(entities, entities);

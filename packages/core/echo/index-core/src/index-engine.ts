@@ -7,7 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -81,8 +81,9 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
     if (obj.data.id) {
       acc.objects.add(obj.data.id as EntityId);
     }
-    // Queue (feed) entities are out of merge scope — they have no automerge document to merge.
-    if (obj.documentId) {
+    // Queue (feed) entities are out of merge scope — they have no automerge document to merge —
+    // and relations are excluded: they are not merge subjects (endpoints would not be reconciled).
+    if (obj.documentId && (obj.data as Record<string, unknown>)[ATTR_RELATION_SOURCE] === undefined) {
       const naturalKey = (obj.data[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey;
       if (typeof naturalKey === 'string') {
         const keys = acc.naturalKeys.get(obj.spaceId) ?? new Set();

@@ -121,9 +121,20 @@ const buildSourceCondition = (
   return sql.or(conditions);
 };
 
+// SQLite caps bound variables (conventionally 999); chunk well below it, matching the FTS index.
+const QUERY_CHUNK_SIZE = 500;
+
 export class EntityMetaIndex implements Index {
   migrate = Effect.fn('EntityMetaIndex.runMigrations')(function* () {
     const sql = yield* SqlClient.SqlClient;
+
+    // Detect an upgrade from a schema without `naturalKey` BEFORE the DDL runs: rows indexed by
+    // the old build hold NULL where a key may exist in the document, and re-indexing is
+    // per-object — an unchanged object would never repopulate, so duplicate detection would
+    // silently miss it forever. The fix is a one-time cursor reset (below) forcing a full
+    // re-index; a fresh database creates the table with the column and skips it.
+    const priorColumns = yield* sql<{ name: string }>`SELECT name FROM pragma_table_info('objectMeta')`;
+    const needsNaturalKeyBackfill = priorColumns.length > 0 && !priorColumns.some(({ name }) => name === 'naturalKey');
 
     yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (
       recordId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -164,14 +175,23 @@ export class EntityMetaIndex implements Index {
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_naturalKey ON objectMeta(spaceId, naturalKey)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
+
+    if (needsNaturalKeyBackfill) {
+      // The tracker migrates before the indexes, so the cursor table exists here. Dropping every
+      // cursor re-presents all documents to the indexing loop, whose per-index upserts are
+      // idempotent — the one-time cost of a full re-index buys correct duplicate detection over
+      // data indexed before the column existed.
+      yield* sql`DELETE FROM indexCursor`;
+    }
   });
 
   /**
-   * Live (non-deleted, non-queue) rows carrying any of the given natural keys in one space.
+   * Document-backed object rows carrying any of the given natural keys in one space.
    *
    * The detection point-lookup for natural-key merging: called with only the keys seen in a just
-   * indexed batch, so its cost is proportional to writes that carry a natural key — a key that
-   * comes back with more than one row is a duplicate group.
+   * indexed batch, so its cost is proportional to writes that carry a natural key. Tombstoned
+   * rows are included — a merged-away loser that received late edits must be found so those
+   * edits can be folded into the winner; the merge re-verifies every row against its document.
    */
   queryByNaturalKeys = Effect.fn('EntityMetaIndex.queryByNaturalKeys')(
     (
@@ -183,9 +203,17 @@ export class EntityMetaIndex implements Index {
           return [];
         }
         const sql = yield* SqlClient.SqlClient;
-        const rows =
-          yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('naturalKey', naturalKeys)} AND deleted = 0 AND queueId = ''`;
-        return rows.map((row) => ({ ...row, deleted: !!row.deleted }));
+        // Chunked to stay under SQLite's bound-variable limit — an initial index of a fresh
+        // clone can present thousands of keys in one batch, and a thrown query here would skip
+        // detection for the whole batch with no retry.
+        const results: EntityMeta[] = [];
+        for (let offset = 0; offset < naturalKeys.length; offset += QUERY_CHUNK_SIZE) {
+          const chunk = naturalKeys.slice(offset, offset + QUERY_CHUNK_SIZE);
+          const rows =
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('naturalKey', chunk)} AND entityKind = 'object' AND queueId = ''`;
+          results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
+        }
+        return results;
       }),
   );
 
