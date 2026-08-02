@@ -340,8 +340,10 @@ checks must compare full op-id sets, and an attribution UI should collapse equal
    window policy — §10.7 q2 is answered by construction** ("the window is until the next epoch"),
    with no separate retention mechanism needed. Ordinary storage compaction is unaffected
    (`A.save` preserves full ancestry; the fragments format bundles per-change members). Operational
-   model: a space carries a well-known epoch policy (cadence), and a peer offline past that window
-   owns whatever it can no longer reconcile automatically — bounded loss (late writes still merge
+   model: a space carries a well-known epoch policy (cadence) — platform-owned; epoch management is
+   not exposed at the app level for the foreseeable future, apps at most consume the missed-epoch
+   signal — and a peer offline past that window owns whatever it can no longer reconcile
+   automatically — bounded loss (late writes still merge
    as raw data; reconciliation becomes manual), not disappearance. The ancestry-check failure
    doubles as the app-level notification signal ("changes from before the epoch need review") with
    zero extra bookkeeping; the epoch tool could additionally scan for conflict-flagged patches and

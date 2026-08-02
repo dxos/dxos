@@ -1070,11 +1070,12 @@ need NOT preserve the heads fold-forward relies on — running one closes the fo
 drops live history-native conflicts, as an owned consequence (§10.7 q2 is thereby answered: the
 window is "until the next epoch"). The heads ancestry check is what keeps the boundary safe: a fold
 seeing foreign heads stops instead of re-applying the world. The operational model: a space carries
-a well-known epoch policy (cadence/timing), and a peer offline past that window owns whatever it
-can no longer reconcile automatically — its late writes still merge as raw data (bounded loss:
-manual reconciliation, not disappearance), and the ancestry-check failure doubles as the app-level
-notification signal ("changes from before the epoch need review"), so no separate bookkeeping is
-needed to tell the user.
+a well-known epoch policy (cadence/timing) — owned and executed by the platform, NOT exposed as an
+app-level surface for the foreseeable future — and a peer offline past that window owns whatever
+it can no longer reconcile automatically. Its late writes still merge as raw data (bounded loss:
+manual reconciliation, not disappearance), and the ancestry-check failure doubles as the signal
+apps may consume to notify the user ("changes from before the epoch need review"); consuming that
+signal is the full extent of app involvement.
 
 **And version state moves onto the object.** A space-level scalar cannot say which objects migrated
 and races between peers. `EntityMeta.version` already exists per object and `transform` can already
