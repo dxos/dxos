@@ -35,8 +35,8 @@ import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import {
   APP_KEY,
   LOG_STORE_DB_NAME,
-  PARAM_LOG_LEVEL,
   PARAM_DEFER,
+  PARAM_LOG_LEVEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
   defaultStorageIsEmpty,
