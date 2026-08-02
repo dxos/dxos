@@ -514,3 +514,27 @@ Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot
   rule (definition-closure files import only designated light subpaths, never barrels) so
   each boot-graph leak class becomes a lint error; light /types-style subpaths roll out
   package-by-package driven by lint findings.
+
+## Checkpoint 2026-08-02 (plugin subpath migration: mechanical tranche shipped)
+
+- Spike (plugin-sheet) successful: per-namespace exports (./Sheet etc.) + autofix rewrite
+  decoupled the pilot island — SpaceGenerator closure 8.41 -> 7.70MB, hyperformula engine
+  and sheet component/model chunks fully out. Two rule/infra findings: (1) a package MUST
+  export "./package.json" or dxos-subpath-imports cannot read its exports map under Node
+  exports encapsulation and silently no-ops; (2) the rule is now exports-map-driven for
+  every @dxos/plugin-* (no allowlist growth).
+- Codemod (scratchpad gen-plugin-subpaths.py) added exports/typesVersions/vite entries to
+  71 plugins (namespace modules under src/types); repo-wide lint --fix rewrote 258
+  consumer files (cross-plugin barrel statements 707 -> 519).
+- Verified: full workspace build green; assistant 165 / inbox 226 / space 30 / markdown 30
+  / kanban 14 / thread 4 tests green (markdown's 2 initial failures were concurrency
+  flakes — solo rerun green); boot graph unchanged 4.03MB/522; warm-cold e2e green.
+- Remaining 519 barrel statements target irregular layouts, concentrated in:
+  plugin-space (SpaceOperation 83, SpaceCapabilities 52), plugin-graph (Node/GraphBuilder/
+  Graph — wholesale `export * from '@dxos/app-graph'`, consumers should import app-graph
+  directly), plugin-client (ClientCapabilities 67, ClientEvents 13), plugin-testing (dev-
+  only, ignorable). BLOCKER for these: the names are `export namespace X {}` DECLARATIONS
+  inside shared files, not module re-exports — a subpath cannot extract them. They need
+  the namespace-declaration -> module-file refactor first (code-style idiom), in core
+  boot-path plugins. That refactor is where the boot-graph payoff of this migration lives
+  (those barrels are what closure files import at boot).
