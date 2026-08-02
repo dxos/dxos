@@ -3,44 +3,50 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 
-import { Avatar } from '../components/Avatars';
-import { Button, IconButton } from '../components/Button';
-import { Card } from '../components/Card';
-import { Dialog } from '../components/Dialog';
-import { Icon } from '../components/Icon';
-import { Input } from '../components/Input';
-import { Main, useSidebars } from '../components/Main';
-import { DropdownMenu } from '../components/Menu';
-import { Message } from '../components/Message';
-import { Panel } from '../components/Panel';
-import { Popover } from '../components/Popover';
-import { ScrollArea } from '../components/ScrollArea';
-import { Select } from '../components/Select';
-import { Separator } from '../components/Separator';
-import { Status } from '../components/Status';
-import { Tag } from '../components/Tag';
-import { Toolbar } from '../components/Toolbar';
+import {
+  Avatar,
+  Button,
+  Card,
+  Dialog,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  Input,
+  Main,
+  Message,
+  Panel,
+  Popover,
+  ScrollArea,
+  Select,
+  Separator,
+  Status,
+  Tag,
+  Toolbar,
+  useSidebars,
+} from '../components';
 import { withLayout, withTheme } from '../testing';
 
 /**
  * Kitchen-sink app frame built only from `@dxos/react-ui` primitives at their default props, so
  * every surface shown is the one the app actually paints. Doubles as the review harness for the
- * elevation ladder: the `Proposed` stories re-point the named surface tokens per AUDIT.md decision
- * D1 (chrome below the canvas, cards above it) without touching any component.
+ * elevation ladder: `Proposed` re-points the named surface tokens per AUDIT.md decision D1 (chrome
+ * below the canvas, cards above it) without touching any component.
  */
 
 // The `--dx-elevation-*` knobs cannot be overridden from a descendant scope — substitution into the
 // named tokens already ran at `:root` — so the preview redefines the named tokens on the root.
+const chromeSurface = 'light-dark(var(--color-neutral-250), var(--color-neutral-925))';
+
 const proposedLadder: Record<string, string> = {
   '--color-card-surface': 'light-dark(var(--color-neutral-125), var(--color-neutral-850))',
-  '--color-sidebar-surface': 'light-dark(var(--color-neutral-250), var(--color-neutral-925))',
-  '--color-header-surface': 'light-dark(var(--color-neutral-250), var(--color-neutral-925))',
-  '--color-l0-surface': 'light-dark(var(--color-neutral-250), var(--color-neutral-925))',
-  '--color-l1-surface': 'light-dark(var(--color-neutral-250), var(--color-neutral-925))',
-  '--color-r0-surface': 'light-dark(var(--color-neutral-250), var(--color-neutral-925))',
-  '--color-r1-surface': 'light-dark(var(--color-neutral-250), var(--color-neutral-925))',
+  '--color-sidebar-surface': chromeSurface,
+  '--color-header-surface': chromeSurface,
+  '--color-l0-surface': chromeSurface,
+  '--color-l1-surface': chromeSurface,
+  '--color-r0-surface': chromeSurface,
+  '--color-r1-surface': chromeSurface,
   '--color-toolbar-surface': 'light-dark(var(--color-neutral-100), var(--color-neutral-825))',
 };
 
@@ -97,7 +103,7 @@ const NavigationCard = () => (
   </Card.Root>
 );
 
-const ContentCard = () => (
+const ContactCard = () => (
   <Card.Root>
     <Card.Header>
       <Card.DragHandle />
@@ -115,7 +121,9 @@ const ContentCard = () => (
         <Card.Block>
           <Icon icon='ph--tag--regular' />
         </Card.Block>
-        <Tag hue='blue'>tag</Tag>
+        <Card.Text>
+          <Tag hue='blue'>design</Tag> <Tag hue='emerald'>theme</Tag>
+        </Card.Text>
       </Card.Row>
       <Card.Section title='Inputs'>
         <Input.Root>
@@ -143,22 +151,22 @@ const MessageCard = () => (
     <Card.Header>
       <Card.Block>
         <Avatar.Root>
-          <Avatar.Content fallback='DX' />
+          <Avatar.Content fallback='DX' size={6} variant='circle' />
         </Avatar.Root>
       </Card.Block>
       <Card.Title>Avatar, message, status</Card.Title>
     </Card.Header>
     <Card.Body>
-      <Card.Row>
+      <Card.Row fullWidth>
         <Message.Root valence='warning'>
           <Message.Title>Message.Root</Message.Title>
           <Message.Content>A valence surface nested inside a card.</Message.Content>
         </Message.Root>
       </Card.Row>
-      <Card.Row>
+      <Card.Row fullWidth>
         <Status progress={0.6} />
       </Card.Row>
-      <Card.Row>
+      <Card.Row fullWidth>
         <Separator />
       </Card.Row>
       <Card.Row>
@@ -183,120 +191,27 @@ const MessageCard = () => (
   </Card.Root>
 );
 
-const AppFrame = () => (
-  <Main.Root defaultNavigationSidebarState='expanded' defaultComplementarySidebarState='expanded'>
-    <Main.Overlay />
-
-    <Main.NavigationSidebar label='Navigation'>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Toolbar.Text>Navigation</Toolbar.Text>
-            <Toolbar.Separator />
-            <NavigationToggle close />
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root>
-            <ScrollArea.Viewport>
-              <NavigationCard />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-      </Panel.Root>
-    </Main.NavigationSidebar>
-
-    <Main.Content>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <NavigationToggle />
-            <Toolbar.Separator />
-            <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
-            <Input.Root>
-              <Input.TextInput placeholder='Search' />
-            </Input.Root>
-            <Select.Root defaultValue='all'>
-              <Select.TriggerButton placeholder='Filter' />
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    <Select.Option value='all'>All</Select.Option>
-                    <Select.Option value='mine'>Mine</Select.Option>
-                  </Select.Viewport>
-                  <Select.Arrow />
-                </Select.Content>
-              </Select.Portal>
-            </Select.Root>
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Viewport>
-                    <DropdownMenu.Item>
-                      <Icon icon='ph--copy--regular' />
-                      Duplicate
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item>
-                      <Icon icon='ph--trash--regular' />
-                      Delete
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Viewport>
-                  <DropdownMenu.Arrow />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-            <Toolbar.Separator />
-            <ComplementaryToggle />
-          </Toolbar.Root>
-        </Panel.Toolbar>
-
-        <Panel.Content asChild>
-          <ScrollArea.Root centered>
-            <ScrollArea.Viewport>
-              <ContentCard />
-              <MessageCard />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-
-        <Panel.Statusbar asChild>
-          <Toolbar.Root>
-            <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Home' />
-            <Toolbar.Separator />
-            <Toolbar.Text>Statusbar</Toolbar.Text>
-            <Toolbar.Separator />
-            <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' />
-          </Toolbar.Root>
-        </Panel.Statusbar>
-      </Panel.Root>
-    </Main.Content>
-
-    <Main.ComplementarySidebar label='Complementary'>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <ComplementaryToggle close />
-            <Toolbar.Separator />
-            <Toolbar.Text>Companion</Toolbar.Text>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root>
-            <ScrollArea.Viewport>
-              <NavigationCard />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-      </Panel.Root>
-    </Main.ComplementarySidebar>
-  </Main.Root>
+const CompanionCard = ({ index }: { index: number }) => (
+  <Card.Root>
+    <Card.Header>
+      <Card.Block>
+        <Avatar.Root>
+          <Avatar.Content fallback={`${index}`} size={6} variant='circle' />
+        </Avatar.Root>
+      </Card.Block>
+      <Card.Title>{`Companion card ${index}`}</Card.Title>
+      <Card.Menu items={[{ label: 'Dismiss', icon: 'ph--x--regular', onClick: () => {} }]} />
+    </Card.Header>
+    <Card.Body>
+      <Card.Row>
+        <Card.Text variant='description'>Scroll to compare the card surface against the sidebar.</Card.Text>
+      </Card.Row>
+    </Card.Body>
+  </Card.Root>
 );
 
-const DialogFrame = () => (
-  <Dialog.Root defaultOpen modal>
+const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => (
+  <Dialog.Root open={open} onOpenChange={onOpenChange} modal>
     <Dialog.Overlay>
       <Dialog.Content>
         <Dialog.Header>
@@ -307,7 +222,7 @@ const DialogFrame = () => (
         </Dialog.Header>
         <Dialog.Body>
           <Dialog.Description>Nested surfaces inside a dialog: card, input, popover.</Dialog.Description>
-          <ContentCard />
+          <ContactCard />
         </Dialog.Body>
         <Dialog.ActionBar>
           <Dialog.Close asChild>
@@ -319,51 +234,154 @@ const DialogFrame = () => (
   </Dialog.Root>
 );
 
+const AppFrame = () => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  return (
+    <Main.Root defaultNavigationSidebarState='expanded' defaultComplementarySidebarState='expanded'>
+      <Main.Overlay />
+
+      <Main.NavigationSidebar label='Navigation'>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <Toolbar.Text>Navigation</Toolbar.Text>
+              <Toolbar.Separator />
+              <NavigationToggle close />
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                <NavigationCard />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Content>
+        </Panel.Root>
+      </Main.NavigationSidebar>
+
+      <Main.Content classNames='w-full'>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <NavigationToggle />
+              <Toolbar.Separator />
+              <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
+              <Input.Root>
+                <Input.TextInput placeholder='Search' />
+              </Input.Root>
+              <Select.Root defaultValue='all'>
+                <Select.TriggerButton placeholder='Filter' />
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      <Select.Option value='all'>All</Select.Option>
+                      <Select.Option value='mine'>Mine</Select.Option>
+                    </Select.Viewport>
+                    <Select.Arrow />
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger asChild>
+                  <Toolbar.IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' />
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content>
+                    <DropdownMenu.Viewport>
+                      <DropdownMenu.Item onSelect={() => setDialogOpen(true)}>
+                        <Icon icon='ph--gear--regular' />
+                        Open dialog
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item>
+                        <Icon icon='ph--copy--regular' />
+                        Duplicate
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item>
+                        <Icon icon='ph--trash--regular' />
+                        Delete
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Viewport>
+                    <DropdownMenu.Arrow />
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
+              <Toolbar.Separator />
+              <ComplementaryToggle />
+            </Toolbar.Root>
+          </Panel.Toolbar>
+
+          <Panel.Content asChild>
+            <ScrollArea.Root centered>
+              <ScrollArea.Viewport>
+                <ContactCard />
+                <MessageCard />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Content>
+
+          <Panel.Statusbar asChild>
+            <Toolbar.Root>
+              <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Home' />
+              <Toolbar.Separator />
+              <Toolbar.Text>Statusbar</Toolbar.Text>
+              <Toolbar.Separator />
+              <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' />
+            </Toolbar.Root>
+          </Panel.Statusbar>
+        </Panel.Root>
+      </Main.Content>
+
+      <Main.ComplementarySidebar label='Complementary'>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <ComplementaryToggle close />
+              <Toolbar.Separator />
+              <Toolbar.Text>Companion</Toolbar.Text>
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <ScrollArea.Root>
+              <ScrollArea.Viewport>
+                {Array.from({ length: 12 }, (_, index) => (
+                  <CompanionCard key={index} index={index + 1} />
+                ))}
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Content>
+        </Panel.Root>
+      </Main.ComplementarySidebar>
+
+      <SettingsDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+    </Main.Root>
+  );
+};
+
 type StoryProps = { proposed?: boolean };
 
-const AppStory = ({ proposed }: StoryProps) => {
+const DefaultStory = ({ proposed }: StoryProps) => {
   useProposedLadder(proposed);
   return <AppFrame />;
 };
 
-const DialogStory = ({ proposed }: StoryProps) => {
-  useProposedLadder(proposed);
-  return (
-    <>
-      <AppFrame />
-      <DialogFrame />
-    </>
-  );
-};
-
 const meta = {
   title: 'ui/react-ui-core/playground/Elevation',
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<typeof meta>;
 
 export const Current: Story = {
-  render: AppStory,
   args: { proposed: false },
 };
 
 export const Proposed: Story = {
-  render: AppStory,
-  args: { proposed: true },
-};
-
-export const CurrentWithDialog: Story = {
-  render: DialogStory,
-  args: { proposed: false },
-};
-
-export const ProposedWithDialog: Story = {
-  render: DialogStory,
   args: { proposed: true },
 };
