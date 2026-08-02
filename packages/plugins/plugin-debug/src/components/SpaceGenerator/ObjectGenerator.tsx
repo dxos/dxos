@@ -8,7 +8,7 @@ import { EID, Filter, Key, Type, View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
 import { Drawing } from '@dxos/plugin-illustrator';
 import { Markdown } from '@dxos/plugin-markdown';
-import { Sheet } from '@dxos/plugin-sheet';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Tldraw } from '@dxos/plugin-tldraw';
 import { random } from '@dxos/random';

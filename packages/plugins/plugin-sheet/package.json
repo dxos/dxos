@@ -90,7 +90,28 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Sheet": {
+      "source": "./src/types/Sheet.ts",
+      "types": "./dist/types/src/types/Sheet.d.ts",
+      "import": "./dist/lib/Sheet.mjs"
+    },
+    "./SheetCapabilities": {
+      "source": "./src/types/SheetCapabilities.ts",
+      "types": "./dist/types/src/types/SheetCapabilities.d.ts",
+      "import": "./dist/lib/SheetCapabilities.mjs"
+    },
+    "./SheetEvents": {
+      "source": "./src/types/SheetEvents.ts",
+      "types": "./dist/types/src/types/SheetEvents.d.ts",
+      "import": "./dist/lib/SheetEvents.mjs"
+    },
+    "./SheetOperation": {
+      "source": "./src/types/SheetOperation.ts",
+      "types": "./dist/types/src/types/SheetOperation.d.ts",
+      "import": "./dist/lib/SheetOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -176,5 +197,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Sheet": [
+        "dist/types/src/types/Sheet.d.ts"
+      ],
+      "SheetCapabilities": [
+        "dist/types/src/types/SheetCapabilities.d.ts"
+      ],
+      "SheetEvents": [
+        "dist/types/src/types/SheetEvents.d.ts"
+      ],
+      "SheetOperation": [
+        "dist/types/src/types/SheetOperation.d.ts"
+      ]
+    }
   }
 }

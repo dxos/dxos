@@ -9,7 +9,14 @@ import { createRequire } from 'node:module';
  * package once its exports map carries an entry per namespace segment — the fix keeps names the
  * exports map cannot resolve (flat re-exports such as errors) on the barrel import.
  */
-const DXOS_SUBPATH_PACKAGES = new Set(['@dxos/app-framework', '@dxos/app-toolkit', '@dxos/compute']);
+const DXOS_SUBPATH_PACKAGES = new Set([
+  '@dxos/app-framework',
+  '@dxos/app-toolkit',
+  '@dxos/compute',
+  // Pilot for per-namespace plugin API entrypoints (Sheet, SheetCapabilities, ...): consumers
+  // import the namespace they need instead of the barrel, which pulls the component graph.
+  '@dxos/plugin-sheet',
+]);
 
 /**
  * ESLint rule to transform barrel imports of designated @dxos packages into subpath imports,
