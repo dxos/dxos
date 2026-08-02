@@ -443,8 +443,12 @@ the mechanism.
       migration heads — position is perfectly stable inside a frozen snapshot, deterministic
       across peers, zero coordination, never reads the live array; map-target convergence needs no
       merge engine). Residual: late reorder+edit correspondence surfaces as history-native
-      conflicts, not silent loss. Spikes: baseline derivation + map convergence; the
-      late-correspondence path. Details in M0-REPORT.md follow-on §3.
+      conflicts, not silent loss. SPIKES RUN AND PROVEN (migration-research-collections.test.ts,
+      5 tests, 25/25 stable): reorder-immune convergent keys, clean folds, decidable pure moves,
+      move+edit correctly parked with nothing lost. Correction: Record targets need pre-seeded
+      container + per-key bracket writes (whole-record assignment = container-level LWW, one
+      peer's map silently discarded); same-key concurrent equal writes leave a real non-transient
+      key conflict until superseded. Details in M0-REPORT.md follow-on §3.
 - [x] **Claim 8 · does a dangling relation degrade gracefully? — YES, confirmed cross-peer.**
       A relation created with two brand-new endpoints under partition surfaces on the other peer
       with both endpoints resolvable after heal; queries never throw at any point (every poll
