@@ -41,7 +41,15 @@ export type DeckInitial = Schema.Schema.Type<typeof DeckInitial>;
  * rungs. The graph builder surfaces it onto the node so the deck reads it like any other node property.
  */
 export const DeckSpec = Schema.Struct({
-  levels: Schema.optional(Schema.Array(DeckLevel)),
+  levels: Schema.optional(
+    Schema.Array(DeckLevel).pipe(
+      // Keys must be unique: a duplicate would make two rungs share one plank name, so `levelOf` and
+      // the below-pruning become ambiguous.
+      Schema.filter((levels) => new Set(levels.map((level) => level.key)).size === levels.length, {
+        message: () => 'level keys must be unique',
+      }),
+    ),
+  ),
   initial: Schema.optional(DeckInitial),
 });
 export type DeckSpec = Schema.Schema.Type<typeof DeckSpec>;
@@ -56,7 +64,7 @@ const isDeckSpec = Schema.is(DeckSpec);
  * `Node.properties` is an untyped bag that any plugin can write, so a malformed spec must read as
  * "no spec" instead of reaching the deck's geometry.
  */
-export const fromNode = (node: { properties: Readonly<Record<string, any>> } | undefined): DeckSpec | undefined => {
+export const fromNode = (node: { properties: Readonly<Record<string, unknown>> } | undefined): DeckSpec | undefined => {
   const value = node?.properties?.[DECK_SPEC_PROPERTY];
   return value !== undefined && isDeckSpec(value) ? value : undefined;
 };

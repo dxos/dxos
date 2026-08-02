@@ -1,8 +1,6 @@
 ---
 '@dxos/app-toolkit': patch
 '@dxos/plugin-deck': patch
-'@dxos/plugin-inbox': patch
-'@dxos/plugin-space': patch
 ---
 
 Plugin-declared decks and deck scroll stability. A type can now declare how the deck behaves when one

@@ -290,10 +290,14 @@ and the FLIP ordering — none of which typecheck differently when broken.
 
 ---
 
-## 12. PROPOSED — plugin-declared decks
+## 12. Plugin-declared decks
 
-**Status: proposal, not built.** Supersedes the "deck as a global mode" model in §2/§6. Nothing below
-has been implemented; the phasing is in [TASKS.md](./TASKS.md).
+**Status: partially shipped.** P1–P3 are implemented and in this document's terms: the `DeckSpec` /
+`AppAnnotation.DeckAnnotation` contract, Collections as navigation targets seeding their children, and
+mailbox levels with below-pruning. Still open (phasing in [TASKS.md](./TASKS.md)): sizing intent (P4),
+container hooks (P5), and the decided-but-unbuilt items (Collections row, `mode` enum). The analysis
+below is kept because its corrections — notably `activeDeck` being the workspace identity — constrain
+the remaining work.
 
 ### The problem
 
@@ -353,7 +357,7 @@ type DeckSpec = {
    */
   levels?: DeckLevel[];
   /** What to open when the deck is adopted. `'children'` = the node's graph children. */
-  initial?: 'children' | 'none' | ((node: Node) => string[]);
+  initial?: 'children' | 'none';
 };
 
 type DeckLevel = {

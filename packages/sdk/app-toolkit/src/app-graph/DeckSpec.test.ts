@@ -13,8 +13,6 @@ const mailbox: DeckSpec.DeckSpec = {
   levels: [{ key: 'mailbox', size: 'fill' }, { key: 'message', size: 'fill' }, { key: 'attachment' }],
 };
 
-const node = (deck: unknown) => ({ properties: { deck } });
-
 describe('fromNode', () => {
   test('reads a declared spec', ({ expect }) => {
     expect(DeckSpec.fromNode(node(mailbox))).toEqual(mailbox);
@@ -36,6 +34,12 @@ describe('fromNode', () => {
 
   test('accepts a spec with no levels', ({ expect }) => {
     expect(DeckSpec.fromNode(node({ initial: 'children' }))).toEqual({ initial: 'children' });
+  });
+
+  // A duplicate key would make two rungs share one plank name, so level resolution and pruning
+  // become ambiguous.
+  test('rejects duplicate level keys', ({ expect }) => {
+    expect(DeckSpec.fromNode(node({ levels: [{ key: 'message' }, { key: 'message' }] }))).toBeUndefined();
   });
 });
 
@@ -93,3 +97,5 @@ describe('DeckAnnotation', () => {
     ).toBeUndefined();
   });
 });
+
+const node = (deck: unknown) => ({ properties: { deck } });

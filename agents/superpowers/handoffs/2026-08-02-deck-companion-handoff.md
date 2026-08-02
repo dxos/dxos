@@ -1,9 +1,7 @@
 # Handoff: deck scroll/companion instability (Composer app vs storybook)
 
-For an agent with zero prior context. All paths relative to the worktree
-`/Users/burdon/Code/dxos/dxos/.claude/worktrees/blissful-nightingale-fc1283`, branch
-`claude/plugin-deck-companion-position-0193ec`. Line numbers refer to the current working tree
-(4 files uncommitted — see §7).
+For an agent with zero prior context. All paths are relative to the session's assigned worktree on
+branch `claude/plugin-deck-companion-position-0193ec`. Line numbers refer to that working tree.
 
 ## 1. System orientation
 
@@ -47,10 +45,10 @@ Status: three root causes fixed and app-verified (§5). **Still open:**
 **Clicking a message row in the mailbox plank:**
 
 1. Row click: `packages/plugins/plugin-inbox/src/components/InboxStack/InboxStack.tsx`
-   `handleMessageClick` (~~:447) / `handleCurrentChange` (~~:184) → `onAction({type:'current',
+   `handleMessageClick` (:447) / `handleCurrentChange` (:184) → `onAction({type:'current',
 messageId, newPlank: metaKey||ctrlKey})`.
 2. `packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx` `handleAction` →
-   `handleNavigate` (~:230-250): dispatches `LayoutOperation.Select` then `LayoutOperation.Open`
+   `handleNavigate` (:230-250): dispatches `LayoutOperation.Select` then `LayoutOperation.Open`
    with `{subject: ['<mailboxId>/<messageId>'], root: mailboxId, level: 'message',
 disposition: 'add', navigation: 'immediate'}` (`:244`; meta-click omits root/level → own plank).
 3. Open handler: `packages/plugins/plugin-deck/src/operations/open.ts` — validates path, dedups by
@@ -91,7 +89,7 @@ disposition: 'add', navigation: 'immediate'}` (`:244`; meta-click omits root/lev
    (`src/operations/update-companion.ts:26`) — targets
    `resolveCompanionAnchor(deck.active, attention.getCurrent())`, i.e. the ATTENDED plank.
 4. **Rendering (the crux)**: `DeckViewport.tsx` `useRenderedPlanks` (`:235-261`):
-   ```
+   ```text
    anchorId   = findAttendedPlank(planks, attended) ?? last plank        // attention!
    companions = useCompanions(anchorId)
    companion  = anchorId ∈ deck.companionPlanks ? selectedCompanionId : undefined
@@ -161,7 +159,7 @@ hide-not-unmount) before mounting many.
   `layout.ts` + `layout.test.ts` + `open.ts` (companion-follows-swap ✓ verified).
 - Servers: 5174 = Composer `DX_PLUGIN_SET=minimal` vite dev from this worktree
   (`packages/apps/composer-app`); 9021 = worktree storybook. User's Chrome tab via claude-in-chrome
-  MCP; real mailbox `rich@braneframe.com` in the profile. Chrome tab page zoom ≈84.5%: extension
+  MCP; the maintainer's own mailbox account already connected in the local profile. Chrome tab page zoom ≈84.5%: extension
   click coords = pageCoords / 1.1837 — recalibrate with a one-shot pointerdown probe. Playwright MCP
   drives 9021 at 100%.
 - Suites: `pnpm --filter plugin-deck exec vitest run --project=node` (77) / `--project=storybook`

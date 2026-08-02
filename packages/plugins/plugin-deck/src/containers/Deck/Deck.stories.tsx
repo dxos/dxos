@@ -569,9 +569,6 @@ export const CompanionPerPlank: Story = {
   },
 };
 
-// A `closed` sidebar persisted from below `lg` (dismissing the drawer) must present as the L0 rail at
-// `lg`+, where `closed` would otherwise render L0 off-screen and inert with every control that could
-// reopen it either `lg:hidden` or inside L0 itself.
 /**
  * The mailbox-shaped path: a launcher plank whose rows level-open a message plank beside it.
  *
@@ -587,6 +584,9 @@ export const LauncherManual: Story = {
   args: { launcher: true },
 };
 
+// A `closed` sidebar persisted from below `lg` (dismissing the drawer) must present as the L0 rail at
+// `lg`+, where `closed` would otherwise render L0 off-screen and inert with every control that could
+// reopen it either `lg:hidden` or inside L0 itself.
 export const SidebarClosedAtDesktop: Story = {
   tags: ['test'],
   args: { count: 1, sidebarState: 'closed' },
