@@ -680,7 +680,7 @@ Phases 2–4 are independent of each other after Phase 1.
 > and the form card contains zero nested column roots.
 >
 > That story earned its keep immediately — it caught a regression in the first cut of this change.
-> The context provider was placed *inside* the `asChild` branch, so Radix `Slot` merged its props
+> The context provider was placed _inside_ the `asChild` branch, so Radix `Slot` merged its props
 > into the `Provider` instead of the real element, silently dropping every class on every
 > `Column.Root asChild` — which includes `Card.Root`. Cards lost their surface, border and width
 > clamp, and nothing failed: no test, no type error, no console warning, only the pixels. Providers
