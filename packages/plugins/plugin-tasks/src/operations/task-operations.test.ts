@@ -19,10 +19,6 @@ const testLayer = () =>
     types: [Task.Task, TaskSet.TaskSet],
   });
 
-/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
-const loadTask = (snapshot: unknown) =>
-  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);
-
 describe('task operations', () => {
   it.effect('create-task defaults status and parents to the task set', () =>
     Effect.gen(function* () {
@@ -94,3 +90,7 @@ describe('task operations', () => {
     }).pipe(Effect.provide(testLayer())),
   );
 });
+
+/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
+const loadTask = (snapshot: unknown) =>
+  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);

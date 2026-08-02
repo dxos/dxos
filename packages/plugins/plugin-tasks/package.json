@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-tasks",
   "version": "0.10.0",
-  "private": true,
   "description": "Task surface: markdown outlines and durable tasks",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

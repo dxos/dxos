@@ -109,10 +109,14 @@ const mcp = async (method, params, id) => {
   return text.includes('data: ') ? JSON.parse(text.split('data: ')[1].split('\n')[0]) : JSON.parse(text);
 };
 let callId = 1;
+// Never dereference an unexpected response shape: a malformed result is exactly what this smoke
+// test exists to report, so it must surface as FAIL rather than a TypeError.
+const describeValue = (value) => (value === undefined ? 'undefined' : JSON.stringify(value).slice(0, 400));
 const call = async (name, callArgs) => {
   const resp = await mcp('tools/call', { name, arguments: { spaceId: args.space, ...callArgs } }, ++callId);
-  if (resp.error || resp.result?.isError)
-    fail(name, JSON.stringify(resp.error ?? resp.result.structuredContent).slice(0, 400));
+  if (resp.error || resp.result?.isError || !resp.result?.structuredContent) {
+    fail(name, describeValue(resp.error ?? resp.result?.structuredContent ?? resp));
+  }
   return resp.result.structuredContent;
 };
 const uriOf = (obj) => obj['@uri'] ?? `echo:///${obj.id}`;
@@ -136,8 +140,8 @@ console.log('taskSet:', taskSetId);
 // --- 2. taskCreate: root task + sub-task (parent-edge containment). ---
 step('taskCreate');
 const { task: rootTask } = await call('taskCreate', { taskSetId, title: 'Ship the task verbs', priority: 'high' });
-rootTask?.title === 'Ship the task verbs' || fail('taskCreate', JSON.stringify(rootTask).slice(0, 300));
-rootTask.status === 'todo' || fail('taskCreate default status', rootTask.status);
+rootTask?.title === 'Ship the task verbs' || fail('taskCreate', describeValue(rootTask));
+rootTask?.status === 'todo' || fail('taskCreate default status', describeValue(rootTask?.status));
 const rootTaskId = uriOf(rootTask);
 const { task: subTask } = await call('taskCreate', { taskSetId, title: 'Write the e2e', parentId: rootTaskId });
 const subTaskId = uriOf(subTask);
@@ -146,13 +150,13 @@ console.log('tasks:', rootTaskId, subTaskId);
 // --- 3. taskUpdate: schema-checked patch. ---
 step('taskUpdate');
 const { task: updated } = await call('taskUpdate', { id: rootTaskId, status: 'in-progress', estimate: 2 });
-updated.status === 'in-progress' || fail('taskUpdate', JSON.stringify(updated).slice(0, 300));
+updated?.status === 'in-progress' || fail('taskUpdate', describeValue(updated));
 
 // --- 4. taskAssign + taskComplete. ---
 step('taskAssign + taskComplete');
 await call('taskAssign', { id: subTaskId, assignee: { role: 'assistant', name: 'Scout' } });
 const { task: completed } = await call('taskComplete', { id: subTaskId });
-completed.status === 'done' || fail('taskComplete', JSON.stringify(completed).slice(0, 300));
+completed?.status === 'done' || fail('taskComplete', describeValue(completed));
 
 // --- 5. taskList: both tasks visible with final states. ---
 step('taskList');

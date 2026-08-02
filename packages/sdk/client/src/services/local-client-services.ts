@@ -90,18 +90,15 @@ const setupNetworking = async (
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
+  const iceProviders = config.get('runtime.services.iceProviders');
+  const iceProvider = iceProviders && createIceProvider(iceProviders);
   if (signals || edgeFeatures?.signaling) {
     const {
       // EdgeSignalManager needs an EdgeConnection and is created in the services host; without edge
       // signaling fall back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
       signalManager = edgeFeatures?.signaling ? undefined : new MemorySignalManager(new MemorySignalManagerContext()),
-      // NOTE: the former bun → MemoryTransportFactory guard ("P2P causes seg fault in bun") was a
-      // node-datachannel@0.30.0 darwin-arm64 binary crash, fixed by the 0.32.3 bump — RTC works
-      // under bun and node alike (loopback repro: .agents/projects/mcp/scripts/bun-rtc-loopback.mjs).
-      transportFactory = createRtcTransportFactory(
-        { iceServers: config.get('runtime.services.ice') },
-        config.get('runtime.services.iceProviders') && createIceProvider(config.get('runtime.services.iceProviders')!),
-      ),
+      // node-datachannel supports bun and node alike, so both use the RTC transport.
+      transportFactory = createRtcTransportFactory({ iceServers: config.get('runtime.services.ice') }, iceProvider),
     } = options;
 
     return {
