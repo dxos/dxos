@@ -18,7 +18,16 @@ import { OutlineOperation } from '../types';
 const handler: Operation.WithHandler<typeof OutlineOperation.UpdateOutline> = OutlineOperation.UpdateOutline.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ outline: outlineRef, items, content }) {
-      if (items !== undefined && content !== undefined) {
+      // The transform is resolved from the arguments alone, before any I/O: a bad argument must
+      // fail as `InvalidOperationInput`, never as a storage error from loading the ref first.
+      // Each branch closes over its own narrowed input, so no assertion is needed downstream.
+      const apply =
+        items !== undefined && content === undefined
+          ? (current: string) => Outline.upsertChecklistItems(current, items)
+          : content !== undefined && items === undefined
+            ? () => content
+            : undefined;
+      if (apply === undefined) {
         return yield* Effect.fail(
           new InvalidOperationInput({ message: 'Provide exactly one of `items` or `content`.' }),
         );
@@ -26,17 +35,8 @@ const handler: Operation.WithHandler<typeof OutlineOperation.UpdateOutline> = Ou
 
       const outline = yield* Database.load(outlineRef);
       const text = yield* Database.load(outline.content);
-      // Resolved before the update so each branch narrows on its own input, and the mutation
-      // closure just assigns a `string`.
-      const next = items !== undefined ? Outline.upsertChecklistItems(text.content, items) : content;
-      if (next === undefined) {
-        return yield* Effect.fail(
-          new InvalidOperationInput({ message: 'Provide exactly one of `items` or `content`.' }),
-        );
-      }
-
       Obj.update(text, (text) => {
-        text.content = next;
+        text.content = apply(text.content);
       });
 
       return { id: outline.id, content: text.content };

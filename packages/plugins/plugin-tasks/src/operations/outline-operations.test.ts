@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { URI } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
@@ -61,6 +62,20 @@ describe('outline operations', () => {
 
       const neither = yield* Effect.exit(updateOutline.handler({ outline: Ref.make(outline) }));
       expect(neither._tag).toBe('Failure');
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('update-outline validates arguments before touching the database', () =>
+    Effect.gen(function* () {
+      // A bad argument must report as an argument error even when the ref cannot be loaded —
+      // i.e. validation runs before the read, so the caller never sees a storage error instead.
+      const dangling: Ref.Ref<Outline.Outline> = Ref.fromURI(URI.make('echo:///01JQNEVERWASADOCUMENT00'));
+
+      for (const input of [{}, { content: 'x', items: [{ title: 'y', done: false }] }]) {
+        const exit = yield* Effect.exit(updateOutline.handler({ outline: dangling, ...input }));
+        expect(exit._tag).toBe('Failure');
+        expect(String(exit)).toContain('InvalidOperationInput');
+      }
     }).pipe(Effect.provide(testLayer())),
   );
 });
