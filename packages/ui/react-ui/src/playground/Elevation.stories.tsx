@@ -3,7 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useLayoutEffect, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
+
+import { random } from '@dxos/random';
 
 import {
   Avatar,
@@ -27,6 +29,8 @@ import {
   useSidebars,
 } from '../components';
 import { withLayout, withTheme } from '../testing';
+
+random.seed(1);
 
 /**
  * Kitchen-sink app frame built only from `@dxos/react-ui` primitives at their default props, so
@@ -211,24 +215,27 @@ const MessageCard = () => (
   </Card.Root>
 );
 
-const CompanionCard = ({ index }: { index: number }) => (
-  <Card.Root>
-    <Card.Header>
-      <Card.Block>
-        <Avatar.Root>
-          <Avatar.Content fallback={`${index}`} size={6} variant='circle' />
-        </Avatar.Root>
-      </Card.Block>
-      <Card.Title>{`Companion card ${index}`}</Card.Title>
-      <Card.Menu items={[{ label: 'Dismiss', icon: 'ph--x--regular', onClick: () => {} }]} />
-    </Card.Header>
-    <Card.Body>
-      <Card.Row>
-        <Card.Text variant='description'>Scroll to compare the card surface against the sidebar.</Card.Text>
-      </Card.Row>
-    </Card.Body>
-  </Card.Root>
-);
+const CompanionCard = ({ index }: { index: number }) => {
+  const text = useMemo(() => random.lorem.paragraph(), []);
+  return (
+    <Card.Root fullWidth>
+      <Card.Header>
+        <Card.Block>
+          <Avatar.Root>
+            <Avatar.Content fallback={`${index}`} size={6} variant='circle' />
+          </Avatar.Root>
+        </Card.Block>
+        <Card.Title>{`Companion card ${index}`}</Card.Title>
+        <Card.Menu items={[{ label: 'Dismiss', icon: 'ph--x--regular', onClick: () => {} }]} />
+      </Card.Header>
+      <Card.Body>
+        <Card.Row>
+          <Card.Text variant='description'>{text}</Card.Text>
+        </Card.Row>
+      </Card.Body>
+    </Card.Root>
+  );
+};
 
 const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => (
   <Dialog.Root open={open} onOpenChange={onOpenChange} modal>
@@ -362,9 +369,9 @@ const AppFrame = () => {
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <ScrollArea.Root>
-              <ScrollArea.Viewport>
-                {Array.from({ length: 12 }, (_, index) => (
+            <ScrollArea.Root centered padding>
+              <ScrollArea.Viewport className='flex flex-col items-center py-3 gap-3'>
+                {Array.from({ length: 20 }, (_, index) => (
                   <CompanionCard key={index} index={index + 1} />
                 ))}
               </ScrollArea.Viewport>
