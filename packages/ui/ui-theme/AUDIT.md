@@ -537,15 +537,15 @@ defect** unless annotated as intentionally off-ramp.
 Ordered so that every phase leaves the tree consistent; each item names an owner artifact.
 Phases 2–4 are independent of each other after Phase 1.
 
-### Phase 0 — Decisions (sign-off needed, no code)
+### Phase 0 — Decisions — **ALL APPROVED**
 
-| #   | Decision                                | Recommendation                                                                                                                        |
-| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Elevation order: chrome vs base vs card | Flip to `chrome < base < raised` (§5.3); matches prior art and both existing docs                                                     |
-| D2  | Level vocabulary                        | 6 levels: `sunken, chrome, base, raised, overlay, popup`; toolbar becomes a derived _aspect_ (`bar`) of its host surface, not a level |
-| D3  | Control scale                           | rem-based `--dx-control-{sm,md,lg}` = 1.5/2/2.5rem; 28px step eliminated                                                              |
-| D4  | Surface delivery                        | `data-surface` attribute + one universal derivation rule; zone classes become thin aliases during migration                           |
-| D5  | Geometry ownership                      | heights/paddings move from `className` (TS themes) into `@layer dx-components` vars (§6.1)                                            |
+| #   | Decision                                | Recommendation                                                                                                                                      |
+| --- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Elevation order: chrome vs base vs card | **Approved.** Flip to `chrome < base < raised` (§5.3); matches prior art and both existing docs                                                     |
+| D2  | Level vocabulary                        | **Approved.** 6 levels: `sunken, chrome, base, raised, overlay, popup`; toolbar becomes a derived _aspect_ (`bar`) of its host surface, not a level |
+| D3  | Control scale                           | **Approved.** rem-based `--dx-control-{sm,md,lg}` = 1.5/2/2.5rem; 28px step eliminated                                                              |
+| D4  | Surface delivery                        | **Approved.** `data-surface` attribute + one universal derivation rule; zone classes become thin aliases during migration                           |
+| D5  | Geometry ownership                      | **Approved.** heights/paddings move from `className` (TS themes) into `@layer dx-components` vars (§6.1)                                            |
 
 ### Phase 1 — Truth & hygiene (small PRs, no visual change) — **DONE**
 
@@ -575,7 +575,20 @@ Phases 2–4 are independent of each other after Phase 1.
 4. **Cheap conformance wins**: add missing `asChild` at the 49 Panel.Content delegation sites;
    fix the two `overflow-y-auto` panels; fix the one `ScrollArea.Root` missing `asChild`.
 
-### Phase 2 — Surfaces & aspects
+### Phase 2 — Surfaces & aspects — **LANDED (core); migration outstanding**
+
+> Done: the six-level ladder with the D1 flip; toolbar/group/input converted to host-derived
+> aspects; `data-surface` zones plus the derivation blocks in `surface.css`; `Main.Content` enters
+> the base zone (fixing the "canvas paints nothing" defect in §4); `Panel.Toolbar`/`Statusbar` and
+> `Toolbar.Root` take the bar aspect; `.dx-main-sidebar` uses the chrome level.
+>
+> Two mechanism findings worth keeping: (a) `light-dark()` nested inside a relative-color
+> expression resolves unreliably, so aspects step by a `--dx-lift` direction variable (+1 dark, -1
+> light) instead of branching — this also halves the CSS; (b) a `--color-x: var(--color-y)` alias
+> substitutes at the scope that _declares_ it, so aliases must be re-declared in each zone.
+> `--color-selected-surface` had been frozen to the root value by this since it was introduced.
+>
+> Outstanding: the ~164 bare `bg-*-surface` zone roots (items 3-4 below).
 
 1. Implement the universal derivation rule + `data-surface` levels (D4); collapse
    `surface.css` to per-level one-liners; keep `dx-*-surface` classes as aliases that set only

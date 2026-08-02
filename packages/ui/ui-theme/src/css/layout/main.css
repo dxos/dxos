@@ -80,9 +80,10 @@
     .dark & {
       @apply backdrop-blur-lg;
     }
-    background-color: var(--color-sidebar-surface);
+    /* Chrome level; the aspect derivation for this subtree keys off --surface-bg (see surface.css). */
+    --surface-bg: var(--dx-surface-chrome);
+    background-color: var(--surface-bg);
     color: var(--color-sidebar-fg);
-    --surface-bg: var(--color-sidebar-surface);
 
     /* Current / selected items read one stop brighter than default body text. */
     & :is([aria-current]:not([aria-current='false']), [aria-selected='true']) {

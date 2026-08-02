@@ -2,108 +2,171 @@
  * Surfaces
  *
  * A surface zone paints a background AND publishes its colour as `--surface-bg`, so descendant
- * controls can derive a visible hover/current highlight from the actual surface (see the
- * derivation block below) and surface-matching elements (avatars, gradients) can read it directly.
+ * aspects (bar, well, hover, current, selected) derive from the actual surface and stay visible at
+ * any elevation, and surface-matching elements (avatars, gradients) can read it directly.
  *
- * Always enter a surface via one of these `dx-*-surface` classes. A bare `bg-*-surface` utility
- * paints the colour but does NOT publish `--surface-bg`, so control hover collapses onto the
- * base-surface fallback and can become invisible when the surface shares that elevation.
+ * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/semantic.css`.
+ * The `dx-*-surface` classes are role-named aliases of the same thing, kept because they read well
+ * at call sites (`dx-card-surface` says more than `data-surface="raised"`).
+ *
+ * A bare `bg-*-surface` utility paints the colour but does NOT publish `--surface-bg`, so every
+ * aspect inside it collapses onto the base-surface fallback — never use one to enter a zone.
  */
 
 @layer dx-components {
-  .dx-base-surface {
-    @apply bg-base-surface text-base-fg;
-    --surface-bg: var(--color-base-surface);
-  }
-
+  [data-surface='sunken'],
   .dx-deck-surface {
-    @apply bg-deck-surface text-base-fg;
-    --surface-bg: var(--color-deck-surface);
+    --surface-bg: var(--dx-surface-sunken);
   }
 
-  .dx-sidebar-surface {
-    @apply bg-sidebar-surface text-base-fg;
-    --surface-bg: var(--color-sidebar-surface);
+  [data-surface='chrome'],
+  .dx-sidebar-surface,
+  .dx-header-surface,
+  .dx-l0-surface,
+  .dx-l1-surface,
+  .dx-r0-surface,
+  .dx-r1-surface {
+    --surface-bg: var(--dx-surface-chrome);
   }
 
-  .dx-header-surface {
-    @apply bg-header-surface text-base-fg;
-    --surface-bg: var(--color-header-surface);
+  [data-surface='base'],
+  .dx-base-surface,
+  .dx-attention-surface {
+    --surface-bg: var(--dx-surface-base);
   }
 
+  [data-surface='raised'],
   .dx-card-surface {
-    @apply bg-card-surface text-base-fg;
-    --surface-bg: var(--color-card-surface);
+    --surface-bg: var(--dx-surface-raised);
   }
 
-  .dx-group-surface {
-    @apply bg-group-surface text-base-fg;
-    --surface-bg: var(--color-group-surface);
+  [data-surface='overlay'],
+  .dx-modal-surface {
+    --surface-bg: var(--dx-surface-overlay);
   }
 
-  .dx-input-surface {
-    @apply bg-input-surface text-base-fg;
-    --surface-bg: var(--color-input-surface);
+  [data-surface='popup'],
+  .dx-popover-surface {
+    --surface-bg: var(--dx-surface-popup);
   }
 
+  /*
+   * Aspect zones. These do not pick a level — they take a step off whatever hosts them and then
+   * republish that as `--surface-bg`, so a control inside a toolbar or a well derives its own
+   * states from the aspect rather than from the level underneath it.
+   */
+  [data-surface='bar'],
   .dx-toolbar-surface {
-    @apply bg-toolbar-surface text-base-fg;
     --surface-bg: var(--color-toolbar-surface);
   }
 
-  .dx-modal-surface {
-    @apply bg-modal-surface text-base-fg backdrop-blur-md;
-    --surface-bg: var(--color-modal-surface);
+  [data-surface='well'],
+  .dx-group-surface,
+  .dx-input-surface {
+    --surface-bg: var(--color-group-surface);
   }
 
+  /* Every zone paints its published surface and takes the default ink. */
+  [data-surface],
+  .dx-deck-surface,
+  .dx-sidebar-surface,
+  .dx-header-surface,
+  .dx-l0-surface,
+  .dx-l1-surface,
+  .dx-r0-surface,
+  .dx-r1-surface,
+  .dx-base-surface,
+  .dx-attention-surface,
+  .dx-card-surface,
+  .dx-modal-surface,
+  .dx-popover-surface,
+  .dx-toolbar-surface,
+  .dx-group-surface,
+  .dx-input-surface {
+    background-color: var(--surface-bg);
+    @apply text-base-fg;
+  }
+
+  /* Floating levels frost whatever passes beneath them. */
+  [data-surface='overlay'],
+  [data-surface='popup'],
+  .dx-modal-surface,
   .dx-popover-surface {
-    @apply bg-popover-surface text-base-fg backdrop-blur-md;
-    --surface-bg: var(--color-popover-surface);
-  }
-
-  .dx-attention-surface {
-    @apply bg-attention-surface text-base-fg;
-    --surface-bg: var(--color-attention-surface);
+    @apply backdrop-blur-md;
   }
 }
 
 @layer dx-tokens {
   /*
-   * Re-derive the state colours (hover, current, selected) off the host surface for every context
-   * that publishes its own --surface-bg. Custom-property substitution runs once per scope, so the
-   * formula must be repeated here (it cannot simply inherit from semantic.css, which resolved it
-   * against the root surface). Listing all surface zones in one block keeps the offsets identical
-   * across surfaces — there is no per-surface divergence to tune.
+   * Aspect derivation. Custom-property substitution runs once per scope, so the formulas must be
+   * re-evaluated wherever `--surface-bg` changes — these two blocks are that one place
+   * (semantic.css declares the same formulas against the root fallback, for content outside any
+   * zone). Keep the offsets in sync with the Aspects block there.
    *
-   * Magnitudes mirror semantic.css; selected-* track current-* via the aliases declared there.
+   * States re-derive in EVERY zone, including the aspect zones: a row inside a toolbar should
+   * highlight against the toolbar, not against the level beneath it.
    */
-  .dx-base-surface,
+  [data-surface],
   .dx-deck-surface,
   .dx-sidebar-surface,
   .dx-header-surface,
+  .dx-l0-surface,
+  .dx-l1-surface,
+  .dx-r0-surface,
+  .dx-r1-surface,
+  .dx-base-surface,
+  .dx-attention-surface,
   .dx-card-surface,
-  .dx-group-surface,
-  .dx-input-surface,
-  .dx-toolbar-surface,
   .dx-modal-surface,
   .dx-popover-surface,
-  .dx-attention-surface,
+  .dx-toolbar-surface,
+  .dx-group-surface,
+  .dx-input-surface,
   .dx-main-sidebar {
-    --color-hover-surface: light-dark(
-      oklch(from var(--surface-bg) calc(l - 0.08) c h),
-      oklch(from var(--surface-bg) calc(l + 0.08) c h)
-    );
-    --color-hover-surface-subtle: light-dark(
-      oklch(from var(--surface-bg) calc(l - 0.02) c h),
-      oklch(from var(--surface-bg) calc(l + 0.02) c h)
-    );
-    --color-current-surface: light-dark(
-      oklch(from var(--surface-bg) calc(l - 0.1) c h),
-      oklch(from var(--surface-bg) calc(l + 0.1) c h)
-    );
-    --color-current-surface-hover: light-dark(
-      oklch(from var(--surface-bg) calc(l - 0.12) c h),
-      oklch(from var(--surface-bg) calc(l + 0.12) c h)
-    );
+    --color-hover-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.08) c h);
+    --color-hover-surface-subtle: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.02) c h);
+    --color-current-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.1) c h);
+    --color-current-surface-hover: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.12) c h);
+
+    /*
+     * Aliases must be re-declared, not inherited: a `--color-x: var(--color-y)` alias substitutes
+     * at the scope that DECLARES it, so one written only at `:root` freezes to the root value and
+     * ignores the zone it is used in.
+     */
+    --color-selected-surface: var(--color-current-surface);
+    --color-selected-surface-hover: var(--color-current-surface-hover);
+  }
+
+  /*
+   * Bar and well re-derive only in LEVEL zones. Deriving them inside an aspect zone would be
+   * circular — that zone's own `--surface-bg` is defined *from* one of these tokens — so a bar
+   * nested in a bar keeps the outer step rather than compounding.
+   */
+  [data-surface='sunken'],
+  [data-surface='chrome'],
+  [data-surface='base'],
+  [data-surface='raised'],
+  [data-surface='overlay'],
+  [data-surface='popup'],
+  .dx-deck-surface,
+  .dx-sidebar-surface,
+  .dx-header-surface,
+  .dx-l0-surface,
+  .dx-l1-surface,
+  .dx-r0-surface,
+  .dx-r1-surface,
+  .dx-base-surface,
+  .dx-attention-surface,
+  .dx-card-surface,
+  .dx-modal-surface,
+  .dx-popover-surface,
+  .dx-main-sidebar {
+    --color-toolbar-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.025) c h);
+    --color-group-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.05) c h);
+    --color-group-alt-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.08) c h);
+
+    /* Re-declared for the same reason as the state aliases above. */
+    --color-input-surface: var(--color-group-surface);
+    --color-focus-surface: var(--color-group-surface);
   }
 }

@@ -38,55 +38,79 @@ Token names follow `--color-{name}-{part}[-{state}]`:
 ## Surfaces
 
 Surfaces are governed by a strict elevation ladder: **lighter = higher = closer to the viewer** in dark
-mode; inverted toward white in light mode. Every named surface token is an alias of exactly one
-`--dx-elevation-N` level. Never set a surface to a raw scale value — pick the level that matches the
-role and point the token there.
+mode; inverted toward white in light mode. Chrome sits **below** the document canvas and content
+surfaces sit **above** it, so the app reads as paper on a desk rather than paper in a well.
 
-This table mirrors the shipped assignments in `semantic.css` (which is the source of truth — update
-both together). The re-ordering proposed in `AUDIT.md` (D1: chrome below base, card above base) is a
-pending decision, deliberately not applied here.
+There are exactly six **levels**. Every named surface token is an alias of exactly one of them —
+never set a surface to a raw scale value. This table mirrors the assignments in `semantic.css`,
+which is the source of truth; update both together.
 
-| Level | Dark    | Light   | Named surfaces                                                                |
-| ----- | ------- | ------- | ----------------------------------------------------------------------------- |
-| 0     | `n-950` | `n-300` | `deck-surface`, scrim base                                                    |
-| 1     | `n-925` | `n-250` | `card-surface`                                                                |
-| 2     | `n-900` | `n-200` | `base-surface`, `attention-surface`, `l0-surface` (icon rail)                 |
-| 3     | `n-875` | `n-150` | `header-surface`, `sidebar-surface`, `l1-surface`, `r0-surface`, `r1-surface` |
-| 4     | `n-850` | `n-125` | `toolbar-surface` (sticky, drop-shadowed)                                     |
-| 5     | `n-825` | `n-100` | `focus-surface`, `group-surface`, `input-surface`                             |
-| 6     | `n-800` | `n-75`  | `modal-surface` (dialogs)                                                     |
-| 7     | `n-775` | `n-50`  | `popover-surface` (menus, popovers, toasts, tooltips)                         |
+| Level     | Dark    | Light   | Named surfaces                                             |
+| --------- | ------- | ------- | ---------------------------------------------------------- |
+| `sunken`  | `n-950` | `n-300` | `deck-surface`, scrim base                                 |
+| `chrome`  | `n-925` | `n-250` | `sidebar-surface`, `header-surface`, `l0/l1/r0/r1-surface` |
+| `base`    | `n-900` | `n-200` | `base-surface`, `attention-surface`                        |
+| `raised`  | `n-850` | `n-125` | `card-surface`                                             |
+| `overlay` | `n-800` | `n-75`  | `modal-surface` (dialogs, sheets, drawers)                 |
+| `popup`   | `n-775` | `n-50`  | `popover-surface` (menus, popovers, toasts, tooltips)      |
 
-The primitive `--dx-elevation-0…7` is defined in `semantic.css` using `light-dark()`. Raw scale values
-(`n-*`) are in `palette.css` — the table above is for human reference only.
+The primitive `--dx-surface-{sunken…popup}` is defined in `semantic.css` using `light-dark()`. Raw
+scale values (`n-*`) are in `palette.css` — the table above is for human reference only.
+
+### Aspects — derived, not levels
+
+Toolbars, groups and inputs are **not** levels. They are _aspects_: a step off whichever surface
+hosts them, computed with relative oklch from `--surface-bg` and stepped by `--dx-lift` (`+1` dark,
+`-1` light, set in `base.css`). That is what makes nesting work — a toolbar in a card and a toolbar
+on the canvas each read as a bar on their own host instead of jumping to one global tone.
+
+| Aspect        | Offset  | Tokens                                            |
+| ------------- | ------- | ------------------------------------------------- |
+| bar           | `0.025` | `toolbar-surface`                                 |
+| well          | `0.05`  | `group-surface`, `input-surface`, `focus-surface` |
+| hover-subtle  | `0.02`  | `hover-surface-subtle`                            |
+| hover         | `0.08`  | `hover-surface`, `group-alt-surface`              |
+| current       | `0.10`  | `current-surface`, `selected-surface`             |
+| current-hover | `0.12`  | `current-surface-hover`, `selected-surface-hover` |
+
+**Entering a zone.** A zone paints the level _and_ publishes `--surface-bg`, from which the aspects
+re-derive for that subtree. Use `data-surface="<level>"` or the equivalent `dx-*-surface` class — a
+bare `bg-*-surface` utility paints the colour but publishes nothing, so every aspect inside it
+collapses onto the base-surface fallback.
+
+Two mechanical rules govern the derivation blocks in `components/surface.css`:
+
+- **Aliases must be re-declared per zone.** A `--color-x: var(--color-y)` alias substitutes at the
+  scope that _declares_ it, so an alias written only at `:root` freezes to the root value.
+- **Bar and well re-derive only in level zones.** An aspect zone defines its own `--surface-bg`
+  _from_ those tokens, so re-deriving them there would be circular.
 
 ### Visual hierarchy (dark)
 
 ```text
-popover         n-775  ↑ highest / closest to viewer
-modal/dialog    n-800
-group/input     n-825
-toolbar         n-850  (sticky bar; content passes beneath)
-sidebar/header  n-875
-base/canvas     n-900
-card            n-925
-deck/void       n-950  ↓ lowest
+popup           n-775  ↑ highest / closest to viewer
+overlay         n-800
+raised / card   n-850
+base / canvas   n-900
+chrome/sidebar  n-925
+sunken / deck   n-950  ↓ lowest
 ```
 
 Each surface that hosts text declares a matching `*-fg` (defaulting to `n-950 / n-150`).
 
 ## Elevation primitive
 
-The `--dx-elevation-0…7` custom properties in `semantic.css` are the single source of truth for the
+The `--dx-surface-*` custom properties in `semantic.css` are the single source of truth for the
 surface ladder. They are private (`--dx-*` prefix) — never use them directly in component CSS; use the
 named surface tokens (`bg-card-surface`, `dx-modal-surface`, etc.) instead.
 
 When adding a new surface:
 
-1. Decide which elevation level the new surface belongs to (see the table above).
-2. Add `--color-<name>-surface: var(--dx-elevation-N);` in the Surfaces block of `semantic.css`.
+1. Decide whether it is a **level** or an **aspect**. If it should shift with whatever hosts it
+   (a bar, a well, a state), it is an aspect — add it to the aspect block, not the ladder.
+2. For a level, add `--color-<name>-surface: var(--dx-surface-<level>);` in `semantic.css`.
 3. Add a matching `--color-<name>-fg` if text/icons sit on it.
-4. If the surface needs a utility class (like `dx-modal-surface`), add it to `surface.css`.
+4. Add the zone to `surface.css` so it publishes `--surface-bg` and re-derives the aspects.
 
 ## State tokens (rationalized)
 
@@ -194,7 +218,7 @@ Each provides `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`.
 
 ## Adding a new token
 
-1. Does an existing semantic token already cover it? For a new named surface, check the elevation ladder first — the new surface probably fits an existing level and should alias `--dx-elevation-N` rather than a raw scale value.
+1. Does an existing semantic token already cover it? For a new named surface, check the elevation ladder first — the new surface probably fits an existing level and should alias `--dx-surface-<level>` rather than a raw scale value.
 2. Does it represent a new named surface, state, or status? Add it to `semantic.css` referencing scale or hue-role tokens — never raw hex.
 3. Follow the suffix order: `{name}-{part}[-{state}]`.
 4. If the new token will be used through a Tailwind utility that the source-scan can't see (e.g. CSS file, dynamic class), add it to `@source inline(...)` in [`main.css`](./main.css).

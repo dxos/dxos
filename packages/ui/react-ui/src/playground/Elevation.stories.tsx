@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
 
@@ -34,56 +34,14 @@ random.seed(1);
 
 /**
  * Kitchen-sink app frame built only from `@dxos/react-ui` primitives at their default props, so
- * every surface shown is the one the app actually paints. Doubles as the review harness for the
- * elevation ladder: `Proposed` re-points the named surface tokens per AUDIT.md decision D1 (chrome
- * below the canvas, cards above it) without touching any component.
+ * every surface shown is the one the app actually paints — the review harness for the elevation
+ * ladder (`theme/semantic.css`) and the aspects derived from it.
+ *
+ * Reading the frame outward: the sidebars and topbar are `chrome` (below the canvas), the content
+ * region is `base`, cards are `raised` (above the canvas), the dialog is `overlay`, and the popover
+ * is `popup`. Toolbars and inputs take no level of their own — they step off whichever surface
+ * hosts them, which is why the toolbar in the sidebar and the toolbar on the canvas differ.
  */
-
-// The `--dx-elevation-*` knobs cannot be overridden from a descendant scope — substitution into the
-// named tokens already ran at `:root` — so the preview redefines the named tokens on the root.
-const chromeSurface = 'light-dark(var(--color-neutral-250), var(--color-neutral-925))';
-
-const proposedLadder: Record<string, string> = {
-  '--color-card-surface': 'light-dark(var(--color-neutral-125), var(--color-neutral-850))',
-  '--color-sidebar-surface': chromeSurface,
-  '--color-header-surface': chromeSurface,
-  '--color-l0-surface': chromeSurface,
-  '--color-l1-surface': chromeSurface,
-  '--color-r0-surface': chromeSurface,
-  '--color-r1-surface': chromeSurface,
-  '--color-toolbar-surface': 'light-dark(var(--color-neutral-100), var(--color-neutral-825))',
-};
-
-// The override is document-wide, so it is reference-counted and restores whatever was on the root
-// beforehand: in docs mode both stories mount at once, and an unguarded cleanup would strip the
-// tokens out from under the story still showing them.
-let ladderUsers = 0;
-let restoreLadder: Record<string, string> | undefined;
-
-const useProposedLadder = (enabled?: boolean) => {
-  useLayoutEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
-    const { style } = document.documentElement;
-    if (ladderUsers++ === 0) {
-      restoreLadder = Object.fromEntries(
-        Object.keys(proposedLadder).map((token) => [token, style.getPropertyValue(token)]),
-      );
-      Object.entries(proposedLadder).forEach(([token, value]) => style.setProperty(token, value));
-    }
-
-    return () => {
-      if (--ladderUsers === 0) {
-        Object.entries(restoreLadder ?? {}).forEach(([token, value]) =>
-          value ? style.setProperty(token, value) : style.removeProperty(token),
-        );
-        restoreLadder = undefined;
-      }
-    };
-  }, [enabled]);
-};
 
 const NavigationToggle = ({ close }: { close?: boolean }) => {
   const { toggleNavigationSidebar } = useSidebars('StoryElevation__NavigationToggle');
@@ -385,12 +343,7 @@ const AppFrame = () => {
   );
 };
 
-type StoryProps = { proposed?: boolean };
-
-const DefaultStory = ({ proposed }: StoryProps) => {
-  useProposedLadder(proposed);
-  return <AppFrame />;
-};
+const DefaultStory = () => <AppFrame />;
 
 const meta = {
   title: 'ui/react-ui-core/playground/Elevation',
@@ -405,10 +358,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Current: Story = {
-  args: { proposed: false },
-};
-
-export const Proposed: Story = {
-  args: { proposed: true },
-};
+export const Default: Story = {};
