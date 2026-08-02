@@ -183,6 +183,9 @@ export default defineConfig((env) => ({
         // module dissolves its facade chunk and vite degrades the HTML to ordered <script>
         // tags with no modulepreload list.
         codeSplitting: {
+          // Packages below this fall through to the `shared` sweep instead of emitting a
+          // micro-chunk per package.
+          minSize: 10 * 1024,
           groups: [
             { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
             {
@@ -192,7 +195,18 @@ export default defineConfig((env) => ({
               maxSize: 1024 * 1024,
               priority: 5,
             },
-            { name: packageChunkName },
+            { name: packageChunkName, priority: 1 },
+            // Sweep the residue — modules too small for a package chunk — into shared
+            // chunks. maxModuleSize keeps substantial modules on automatic chunking so a
+            // lazy island never has to fetch a large unrelated module; only the micro-module
+            // tail (the ~2,300 sub-1KB chunks of the default splitting) is merged.
+            {
+              name: 'shared',
+              test: (moduleId: string) => !moduleId.includes('/packages/apps/'),
+              maxModuleSize: 8 * 1024,
+              maxSize: 256 * 1024,
+              priority: 0,
+            },
           ],
         },
       },
