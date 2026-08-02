@@ -45,7 +45,7 @@ export const GetContext = Operation.make({
     id: Schema.String,
     name: Schema.String,
     instructions: Schema.String,
-    plan: Schema.String,
+    checklist: Schema.String,
   }),
   services: [Harness.HarnessService, Database.Service],
 });

@@ -4,7 +4,7 @@
 
 import { Collection, Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Event, ExternalProject, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
+import { Event, Message, Organization, Person, Pipeline, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -89,16 +89,16 @@ export const translations = [
         'delete-object.label': 'Delete pipeline',
         'object-deleted.label': 'Pipeline deleted',
       },
-      [Type.getTypename(ExternalProject.ExternalProject)]: {
-        'typename.label': 'External project',
-        'typename.label_zero': 'External projects',
-        'typename.label_one': 'External project',
-        'typename.label_other': 'External projects',
-        'object-name.placeholder': 'New external project',
-        'add-object.label': 'Add external project',
-        'rename-object.label': 'Rename external project',
-        'delete-object.label': 'Delete external project',
-        'object-deleted.label': 'External project deleted',
+      [Type.getTypename(TaskSet.TaskSet)]: {
+        'typename.label': 'Task set',
+        'typename.label_zero': 'Task sets',
+        'typename.label_one': 'Task set',
+        'typename.label_other': 'Task sets',
+        'object-name.placeholder': 'New task set',
+        'add-object.label': 'Add task set',
+        'rename-object.label': 'Rename task set',
+        'delete-object.label': 'Delete task set',
+        'object-deleted.label': 'Task set deleted',
       },
       [Type.getTypename(Task.Task)]: {
         'typename.label': 'Task',

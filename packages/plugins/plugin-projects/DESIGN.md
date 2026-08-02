@@ -13,6 +13,31 @@ automation scoping, and project-scoped assistance, and other plugins are expecte
 to extend it (via artifacts, templates) or use projects directly. It is intended
 to be one of the core aspects of Composer.
 
+## Product model: two forms of work (decided 2026-08-01)
+
+> **Markdown checklists are the cheap, fluid form of work; ECHO `Task` objects in a
+> `TaskSet` are the durable, assignable form; promotion links the two.**
+
+- **Ad hoc**: a markdown checklist (an `Outline` in a project; a chat-owned outline in a
+  standalone chat) is where work is brainstormed — cheap to write, reorder, and discard,
+  and equally editable by humans and agents as plain text. This is the in-product form of
+  the repo's own `TASKS.md` workflow.
+- **Durable**: when an item becomes real it is **promoted** to an ECHO `Task` (the
+  outliner's convert-to-task pattern, #12423): the markdown line carries the `echo://`
+  link back and its label follows renames. Tasks are assignable (`assignee: Actor` —
+  human by Person ref, agent by DID), syncable (GitHub/Linear mirrors), and queryable.
+- **Containment is the ECHO parent edge, not ref fields**: a `TaskSet` parents its root
+  tasks; a task parents its sub-tasks (one tree: `TaskSet → Task → sub-Task`; set
+  membership of a sub-task is transitive). No membership arrays, no backrefs; deletion
+  cascades structurally.
+- **Delegation is the promotion moment for agents**: only a durable `Task` can be
+  delegated to a sub-agent — delegating is exactly when scratch becomes real. There is
+  no separate `Plan` type; the conversation's working set IS its outline plus the open
+  tasks it has promoted.
+- **A project tracks both forms**: `Project.outline` (scratch surface) and
+  `Project.taskSets` (durable containers). Project chats write the project's outline;
+  standalone chats own theirs.
+
 ## Background: Project, Agent, Chat, AiSession
 
 **Agent**: a durable named actor (`org.dxos.type.agent@0.1.0`,
@@ -50,6 +75,34 @@ conversation by replaying the feed. The consequence that shapes this design:
 anything a session needs beyond its feed has to be handed to it explicitly.
 
 ## Types
+
+### Type inventory (by package)
+
+All types relevant to the project/task/plan model in one place. "M5 target" is the Milestone 5
+end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01); blank = unchanged.
+
+| Type              | Package (today)           | Role                                                             | M5 target                                                                                                |
+| ----------------- | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSets: Ref<TaskSet>[]` / `plan`; stays in compute                   |
+| `Instructions`    | `@dxos/compute`           | Prompt text + skills + objects + commands                        |                                                                                                          |
+| `Routine`         | `@dxos/compute`           | Triggered automation (instructions or runnable operation)        |                                                                                                          |
+| `Skill`           | `@dxos/compute`           | Toolkit definition bound into sessions                           |                                                                                                          |
+| `ExternalProject` | `@dxos/types`             | Task container (name lies — used natively since #12423)          | **Renamed `TaskSet`** (`org.dxos.type.taskSet@0.2.0`): lightweight, possibly externally synced           |
+| `Task`            | `@dxos/types`             | Work item: title/status/priority/assigned/estimate/project       | 0.2.0: `assignee: Actor` (was `assigned: Ref<Person>`), `taskSet` (was `project`), +`failed`/`cancelled` |
+| `Actor`           | `@dxos/types` (struct)    | Identity shape (`Message.sender`): role/contact/DID/email/name   | Also `Task.assignee` — agents by DID, no `Ref<Agent>` variant                                            |
+| `Person`          | `@dxos/types`             | Contact record; target of `Actor.contact`                        |                                                                                                          |
+| `Milestone`       | — (does not exist)        | Phasing marker                                                   | DEFERRED; when added: ECHO type, `Task.milestone?: Ref<Milestone>`, owned by TaskSet                     |
+| `Outline`         | `plugin-outliner`         | `{name, content: Ref<Text>}` hierarchical checklist document     | **Moves to `@dxos/types`**; `project` field renamed `taskSet`                                            |
+| `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)                                      |
+| `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `plan`                 |                                                                                                          |
+| `Agent`           | `@dxos/assistant-toolkit` | Identity/preset owning no conversation state                     | Assignment target only via DID on `Actor`                                                                |
+| `Collection`      | `@dxos/echo`              | Ordered ref collection (used by `Project.artifacts`)             |                                                                                                          |
+| `Text`            | `@dxos/schema`            | CRDT text (content of `Outline`, documents)                      |                                                                                                          |
+
+Plugin ownership after M5: **plugin-tasks** (renamed plugin-outliner) owns the TaskSet/Task/
+Outline surfaces and `TaskOperation.*`; **plugin-projects** owns Project lifecycle, agentic
+wiring, and composition; **plugin-github / plugin-linear** sync into `TaskSet`/`Task` via meta
+foreign keys; **plugin-kanban** adopts the plugin-tasks model.
 
 ### `Project` (`@dxos/compute`)
 

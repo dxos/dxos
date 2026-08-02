@@ -47,7 +47,6 @@ import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
 import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
 import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
-import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
@@ -68,6 +67,7 @@ import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
+import { TasksPlugin } from '@dxos/plugin-tasks/plugin';
 import { TerraPlugin } from '@dxos/plugin-terra/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
@@ -127,7 +127,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       StudioPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
-      OutlinerPlugin.meta.profile.key,
+      TasksPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
@@ -185,7 +185,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isTauri && !isMobile && !isPopover && NativePlugin(),
     isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
     OsrmPlugin(),
-    OutlinerPlugin(),
+    TasksPlugin(),
     PaymentsPlugin(),
     PipelinePlugin(),
     PresenterPlugin(),
