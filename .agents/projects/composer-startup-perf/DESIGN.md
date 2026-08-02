@@ -126,8 +126,11 @@ otel` (~75 modules of @opentelemetry) — needs a protocols subpath or barrel sl
   ranked by host `replayLast=[Startup, SetupReactSurface]` (the umbrella startup event is marked
   fired before the events it causes, so its ReactRoot modules must replay after clientReady), and
   (b) strictly sequential `enableDeferred` (concurrent plugins can activate each other's
-  just-registered UI modules). 4/4 cold boots + deep link clean after. Known non-fatal: assistant
-  `generateHomeSuggestions` fires before its service during wave 2.
+  just-registered UI modules). Validation on the hardened build (prod preview, playwright
+  persistent context, `?profiler=1&defer=1`): 4/4 cold boots clean (no fatal, no invariant
+  console errors over a 20s wave-2 window), deep link into a wave-2 document clean, and 10/10
+  warm `page.reload()`s reach the account testid with no System Error dialog. Known non-fatal:
+  assistant `generateHomeSuggestions` fires before its service during wave 2.
 
 - **2026-08-02 CPU-profile attribution (dev, warm vite, fresh browser context; script
   `scripts/profile-startup.mjs`).** Full set navToReady ~12.2–13.2s vs minimal ~7.4s. Self-time

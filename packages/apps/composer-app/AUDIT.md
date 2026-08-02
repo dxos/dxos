@@ -1031,12 +1031,15 @@ cost one debugging round).
 
 ### 12.6 Follow-ups (tracked in the project TASKS.md)
 
-- **Floor**: every stub still reaches ~1,311 raw modules via the
-  `@dxos/app-framework` root barrel (effect 260, fast-check 223 via effect
-  `Schema→FastCheck`, otel, @effect/platform) — needs a light `Plugin`-only
-  entry or barrel slimming.
-- **Guardrail**: fail CI when `index.html`'s modulepreload count/bytes regress —
-  this regression grew silently for six weeks because nothing watched the graph.
+- **Floor**: every stub still reaches ~1,311 raw modules; the floor is deep, not
+  wide (`core/plugin.ts` alone reaches 889), so the cuts are the three deep
+  chains — effect `Schema→FastCheck` (alias fast-check to a stub in app builds),
+  `plugin.ts`/`config` → the `@dxos/protocols` dist barrel (automerge + otel via
+  effect-runtime) — not a light entry point.
+- ~~**Guardrail**~~ **Shipped**: `scripts/check-preload-budget.mjs` runs in the
+  `bundle` task and fails at >600 chunks / >4.5 MB eager preloads (entry chunk
+  included) — this regression grew silently for six weeks because nothing
+  watched the graph.
 - **Stub sweep**: enforce the handler-set leaf rule across the other 44 plugins.
 - **Deferral default-on**: product call on wave-2 UX (late surface pop-in,
   deep-link promote-on-demand).

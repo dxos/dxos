@@ -23,15 +23,21 @@ const MAX_PRELOAD_BYTES = 4.5 * 1024 * 1024;
 
 const outDir = path.join(process.cwd(), 'out/composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
-const preloads = [...html.matchAll(/rel="modulepreload"[^>]*href="([^"]+)"/g)].map((match) => match[1]);
+const preloads = [
+  // The eager graph = the entry chunk(s) plus their modulepreloaded static closure.
+  ...[...html.matchAll(/<script[^>]*type="module"[^>]*src="([^"]+)"/g)].map((match) => match[1]),
+  ...[...html.matchAll(/rel="modulepreload"[^>]*href="([^"]+)"/g)].map((match) => match[1]),
+];
 
 let bytes = 0;
 for (const href of preloads) {
-  try {
-    bytes += statSync(path.join(outDir, href)).size;
-  } catch {
-    // Asset emitted elsewhere (e.g. absolute URL) — count as zero.
+  if (/^[a-z]+:\/\//.test(href)) {
+    // External URL — not part of the built output.
+    continue;
   }
+  // Fail closed: a missing local asset would silently shrink the measured
+  // budget and let a regression through.
+  bytes += statSync(path.join(outDir, href)).size;
 }
 
 const megabytes = (bytes / 1024 / 1024).toFixed(2);

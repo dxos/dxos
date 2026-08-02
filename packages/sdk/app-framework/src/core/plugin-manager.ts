@@ -282,9 +282,10 @@ export interface PluginManager {
    * Intended to be called by the host once the app is interactive; runs each
    * plugin through the normal `enable()` path (chunk resolve + module
    * registration + replay of already-fired activation events). Idempotent —
-   * subsequent calls are no-ops.
+   * subsequent calls are no-ops. Individual enable failures are recorded on
+   * {@link PluginManager.failed} and logged, never surfaced as a failure here.
    */
-  enableDeferred(): Effect.Effect<void, Error>;
+  enableDeferred(): Effect.Effect<void>;
   deactivate(id: string): Effect.Effect<boolean, Error>;
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error>;
 
@@ -700,7 +701,7 @@ class ManagerImpl implements PluginManager {
     });
   }
 
-  enableDeferred(): Effect.Effect<void, Error> {
+  enableDeferred(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const ids = this._deferredIds;
       if (ids.length === 0) {
@@ -708,7 +709,7 @@ class ManagerImpl implements PluginManager {
       }
       this._deferredIds = [];
       log('enabling deferred plugins', { count: ids.length });
-      performance.mark('deferred:start');
+      performance.mark('startup:deferred:start');
       // Strictly sequential: event replay activates modules by event key across ALL
       // registered plugins, so two plugins replaying concurrently can activate each
       // other's UI modules before their capability producers — plugin B's `startup`
@@ -716,15 +717,21 @@ class ManagerImpl implements PluginManager {
       // replaying `clientReady`. Sequential also keeps the post-paint main thread calm.
       yield* Effect.all(
         ids.map((id) =>
-          this.enable(id).pipe(
-            Effect.tapError((error) => Effect.sync(() => log.warn('deferred enable failed', { id, error }))),
-            Effect.ignore,
-          ),
+          Effect.gen(this, function* () {
+            // A plugin disabled between construction and wave 2 must stay disabled.
+            if (!this._get(this._enabledAtom).includes(id)) {
+              return;
+            }
+            yield* this.enable(id).pipe(
+              Effect.tapError((error) => Effect.sync(() => log.warn('deferred enable failed', { id, error }))),
+              Effect.ignore,
+            );
+          }),
         ),
         { concurrency: 1 },
       );
-      performance.mark('deferred:end');
-      performance.measure('startup:deferred', 'deferred:start', 'deferred:end');
+      performance.mark('startup:deferred:end');
+      performance.measure('startup:deferred', 'startup:deferred:start', 'startup:deferred:end');
       log('deferred plugins enabled', { count: ids.length });
     });
   }

@@ -1,6 +1,6 @@
 # Composer Startup Performance — Tasks
 
-_Resume: (1) rerun prod harness for BENCHMARKS rows (was interrupted), (2) AUDIT.md addendum documenting the 2026-08-02 regression audit + fixes, (3) B2 deep-link check, (4) e2e-dev harness confirm, (5) remaining Phase E follow-ups (floor, guardrail, stub sweep). Uncommitted: none. Last: plugin-calls placeholder fix committed (0a7cea1bde); all servers stopped 03:04 by user request, resuming ~06:05._
+_Resume: PR #12438 open and green — remaining backlog: stub sweep, floor chain cuts (fast-check stub alias, protocols barrel), A4 dev-transform attribution, observability.ClientReady decomposition, C2/C3 boot-loader items, deferral default-on decision. Last: CodeRabbit round 2 addressed (guardrail counts entry chunk + fails closed; deferred enables skip disabled plugins; enableDeferred typed Effect<void>; warm reloads re-validated 10/10 on hardened build)._
 
 ## Phase 0: verify tooling (no code changes)
 
