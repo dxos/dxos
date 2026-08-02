@@ -722,6 +722,25 @@ trigger and its cost (§10.7 q6); and the two-late-children-into-one-tombstoned-
 which combines verified pieces (tombstone late writes + declared fan-in resolution) but was not run
 as a single scenario.
 
+#### Addendum (2026-08-02) — conflicts are history-native, not app-level records
+
+Direction change after review: no shadow conflict records — all history, including migration
+conflicts, must be browsable via automerge history (which history browsing already builds on).
+Verified strategy (`echo-client-e2e/src/migration-research-history.test.ts`, first-ever use of
+`A.getConflicts` in DXOS): **write the fold via `changeAt` at the recorded migration heads**, so a
+rename's re-keyed late value lands _concurrent_ with any direct edit — a real CRDT conflict on the
+target key, replicating identically, permanently reviewable at the conflict frontier from ops
+alone (via `A.clone` first — a live-doc view's `getConflicts` is emptied by later writes), and
+discoverable by an unmodified history walker (`conflict: true` put patches). Attribution rides on
+change `message`/`time` (plumbed, previously unused). The winner is a deterministic policy choice,
+not a coin flip: plain live-handle `changeAt` gives the fold a higher Lamport counter (fold wins);
+forking from a view at the migration heads with a sentinel all-zeros actor ties the counters and
+deterministically loses (user wins — the recommended default), merged back via
+`docHandle.update((doc) => A.merge(doc, clone))`. Same-key fan-in conflicts are history-native for
+free. Cost: epochs' materialize-to-POJO history erasure would destroy live conflicts — this
+strategy forces §10.6-D (epochs preserve history or drain conflicts first) from preference into
+requirement. Full findings: M0-REPORT.md "History-native conflicts".
+
 **Net, phase verdict:** every M0 claim in both tracks was answered and none broke the §10.1 bar.
 Single-object rewrite migrations (including chains) are reachable now with the Track A constraint
 set; entity-lifecycle migrations are reachable **conditional on** the object-merging engine landing

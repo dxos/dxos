@@ -256,11 +256,94 @@ guards.
 
 The same declaration is M2's fold-forward standing rule: "re-apply whenever old-shaped data
 appears" is `run()` again, with one addition — an `assign` whose target changed since the stamped
-heads _and_ whose values disagree downgrades to a `conflicts[field] = { mine, theirs }` record
-instead of overwriting (the E1/E4 classification, including equal-values-never-conflict so racing
-peers' identical folds don't mint self-conflicts). And the forward-compatibility effects-as-data
-buys: when Automerge ships cross-object transactions, `applyGuarded` hands the same grouped write
-set to one transaction and the E5 window disappears — no declaration or call-site changes.
+heads _and_ whose values disagree downgrades to a conflict instead of overwriting (the E1/E4
+classification, including equal-values-never-conflict so racing peers' identical folds don't mint
+self-conflicts). _How_ that conflict is represented is settled by the following section — the
+app-level `conflicts[field]` record used throughout the bench is **superseded** by the
+history-native representation. And the forward-compatibility effects-as-data buys: when Automerge
+ships cross-object transactions, `applyGuarded` hands the same grouped write set to one transaction
+and the E5 window disappears — no declaration or call-site changes.
+
+## History-native conflicts: the `changeAt` strategy (supersedes app-level conflict records)
+
+_Directive (2026-08-02): no external/shadow history tracking — all history, including migration
+conflicts, should be browsable via automerge history, since history browsing is already built on it
+(`edit-history.ts`, devtools ObjectsPanel, plugin-review checkpoints). Verified empirically in
+`echo-client-e2e/src/migration-research-history.test.ts` (6 tests, 10/10 stable after a
+convergence-poll fix; `A.getConflicts` had never been called anywhere in DXOS before this file)._
+
+**The mechanism.** A fold written normally is causally downstream — automerge sees a plain
+sequential overwrite and its conflict machinery never engages, which is why the bench originally
+reached for app-level records. The fix: **write the fold via `changeAt` at the recorded migration
+heads**. For a rename, the fold _re-keys_ the late source write onto the target property and
+places it in the concurrent past — so the fold write and any direct edit since the migration are
+genuinely concurrent ops on one key, and automerge's own conflict machinery engages. Verified
+end-to-end (H1): a real two-value conflict set on `name` (`{opId → 'direct', opId → 'late'}`),
+replicating to the other peer with an identical set and winner, with ECHO's reactive/index layers
+noticing the `changeAt` write like any other (no bypass — it flows through the same `'change'`
+event pipeline).
+
+**What this buys, each verified:**
+
+- **Permanent reviewability from ops alone (H2).** After a resolution write clears the live
+  conflict, `A.getConflicts` at the recorded conflict frontier still returns both values — the
+  alternative history is derivable forever from the op DAG, no shadow record. One sharp caveat
+  found: a view taken from the _live_ doc shares its handle, and a later write silently empties
+  `getConflicts` on it (plain value reads stay frozen correctly) — historical conflict inspection
+  must go through `A.clone` first, or re-derive from a freshly loaded doc. This belongs in the
+  history-browsing helper, not in callers.
+- **Discoverable by an unmodified history browser (H2).** Walking `getEditHistoryWithDiffs`'s own
+  heads sequence and re-diffing pairwise surfaces the conflict moment as a `put` patch flagged
+  `conflict: true` (or a bare `ConflictPatch`) — zero migration-specific knowledge needed to find
+  and render "a conflict happened here".
+- **Attribution inside automerge history (H3).** `changeAt` (and ordinary `change`) accept
+  `{ message, time }`; ECHO plumbs them through and `getEditHistoryWithDiffs` already surfaces
+  them — a fold stamped `message: 'fold:<migrationId>'` is identifiable in the existing history
+  driver on every peer, with zero new plumbing. (Unused anywhere in ECHO until now.)
+- **The winner is a deterministic POLICY CHOICE, not a coin flip (H4).** Two deterministic options,
+  both verified:
+  - _Fold wins_ — plain `handle.changeAt` on the live doc: the fold's op inherits the doc's
+    current op-counter bookkeeping, so it carries a **higher Lamport counter** than the direct
+    edit and wins by counter dominance, regardless of actor. Deterministic, but silently
+    overrides the user's edit (conflict set still preserved for review).
+  - _User wins (recommended default)_ — fork from `A.view(doc, migrationHeads)` (a snapshot the
+    runner has by construction), `A.clone` with a **sentinel all-zeros actor**, `changeAt` on the
+    clone, merge back via `core.docHandle.update((doc) => A.merge(doc, foldedClone))` (the only
+    doc-level merge path a handle exposes — it works today). Forking from the _old_ state makes
+    the counters tie, so the lexicographically-lowest actor deterministically **loses**: the
+    user's direct edit stays the presented winner, the fold's value sits in the conflict set
+    awaiting explicit resolution. "User beats migration by default, conflict browsable."
+  - The counter pitfall is load-bearing: clone from the _current_ doc and the sentinel actor is
+    irrelevant — counter dominance decides before actor comparison is reached. Verified both ways.
+- **Same-key fan-in conflicts are history-native for free (H5).** Two peers concurrently absorbing
+  different values into one parent property already produce a real conflict set — `changeAt` is
+  only needed to _manufacture_ concurrency for causally-downstream folds and renames. E3's
+  declared resolution becomes an ordinary causal write that clears the conflict; the pre-resolution
+  frontier remains reviewable (via the clone caveat above).
+
+**Noise to design around (H4a):** two peers independently folding the same value author distinct
+ops — the conflict set can transiently differ per peer (same count, different fold op-ids) until
+all ops replicate, and the converged set may hold the same value under multiple op-ids. Convergence
+checks must compare full op-id sets, and an attribution UI should collapse equal-valued entries.
+
+**What it costs / still needs:**
+
+1. **The retention decision (the one structural tension).** A history-native conflict lives _only_
+   in the op DAG. Epochs today (`compactDocumentsEpochMigration`, `PRUNE_AUTOMERGE_ROOT_HISTORY`,
+   `REPLACE_AUTOMERGE_ROOT`) materialize docs to plain objects and erase all history — they would
+   destroy every live conflict and every reviewable frontier. Ordinary storage compaction is safe
+   (`A.save` preserves full ancestry; the fragments format bundles per-change members). So
+   adopting this strategy **forces the §10.6-D posture**: epochs demoted to an operation that must
+   either preserve history or drain live conflicts first — a policy decision that has to be made
+   deliberately, not inherited.
+2. **A first-class fold-write API.** The user-wins path (view-fork + sentinel actor + merge-back)
+   works through public surface today but is a four-step dance; the runner should own it as one
+   primitive (e.g. `Write.foldAt(heads, prop, value)` with a winner-policy option).
+3. **Heads ancestry checks still apply** — a stored frontier that predates an epoch re-root
+   silently yields garbage diffs/views (E1 constraint 3), unchanged by this strategy.
+4. **Unextended (plausible, untested):** projecting a merge loser's field values onto the winner
+   at the merge-baseline heads would make E4's duplicate-merge conflicts history-native the same
+   way; and text/collaborative fields were not exercised.
 
 ## Consolidated obligations for the implementation plan
 
@@ -269,6 +352,9 @@ set to one transaction and the E5 window disappears — no declaration or call-s
 2. Per migration event, per object: pre- and post-heads + a marker on `EntityMeta.annotations`;
    heads must be ancestry-checked before use (epoch interaction).
 3. Every fold/merge/runner write: value-compare first; equal values never conflict.
+   3a. Conflicts are represented history-natively (fold-at-heads + `getConflicts`, see the
+   `changeAt` section), not as app-level records; the winner is a declared policy (user-wins via
+   view-fork + sentinel actor recommended); epochs must preserve or drain live conflicts.
 4. Composed chain folds and per-object write batches: single `Obj.update`.
 5. Late-created entities: a query-based detection path ("old-shaped and unmarked"), structurally
    separate from the heads-based property fold.
