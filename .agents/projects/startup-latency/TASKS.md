@@ -568,3 +568,37 @@ Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot
 - Upstream candidate: rolldown feature request for cycle-aware maxSize (topological cuts).
 - Acceptance check added to the workflow: chunk-level SCC scan of the emitted bundle
   (0 cycles required) before any boot e2e.
+
+## Checkpoint 2026-08-02 (boot divergence: tooling + category-1 evictions)
+
+- Goal shift (user): the checked-in boot manifest is brittle — chunking should work in a
+  single pass. Investigated: rolldown's group `name` callback DOES receive a ChunkingContext
+  with getModuleInfo (importedIds vs dynamicallyImportedIds are separate), so the partition
+  is computable in-process. Prototyped it: mechanically works (12 chunks, no manifest) BUT
+  the graph there is PARSE-level while the boot set is post-treeshake — boot went
+  3.62 -> 5.22MB and bip39/react-aria returned. Structural: post-treeshake truth is only
+  observable after chunking, i.e. too late to feed back into it.
+- Implication: single-pass is viable only once the parse graph converges on the treeshaken
+  one, i.e. once boot-reachable code stops importing barrels. So the manifest stays as an
+  explicitly TEMPORARY crutch with a defined exit condition, and divergence is the metric.
+- Built the divergence report (DX_BOOT_DIVERGENCE=1): walks the parse-level closure of the
+  entry, diffs against the manifest, and attributes each divergent module to the boot-side
+  import that pulls it in. Work-list + CI gate + readiness signal in one.
+- Divergence classes (measured, source bytes): (1) OUR barrels ~2.3MB — fixable by subpaths;
+  (2) EXTERNAL package barrels ~1.1MB — NOT fixable by our lint: @effect/rpc is already
+  subpath-imported and RpcServer legitimately boots (the tab serves the WebRTC bridge), its
+  HTTP transport leaking from inside; @effect-atom/atom-react publishes no subpaths at all
+  (only '.' + jsx runtimes). Both need upstream or pnpm patch; (3) component coupling —
+  react-ui's core Input statically imports SegmentedInput -> DatePicker -> Calendar ->
+  react-aria; treeshaking (not import hygiene) is what saves it. Needs a UI refactor; parked.
+- Category-1 evictions landed: date-fns all-locales barrel -> per-locale entry (966KB);
+  @dxos/edge-client/http subpath, which also removed the barrel from the REAL boot set
+  (809KB); @dxos/crypto/subtle subpath off the sodium-bearing barrel (233KB);
+  @dxos/credentials/assertions off the seedphrase/bip39 barrel (~150KB).
+- Result: divergence 9,113 -> 7,048KB (-23%, leaking imports 90 -> 83); boot 13 preloads /
+  5 chunks / 3.69MB (flat, forbidden list clean); warm-cold e2e green (profilerTotal 4635).
+- Remaining category-1 (small): observability -> opentelemetry semantic-conventions 221KB,
+  app-toolkit 95KB, schema/util 85KB, config -> client-protocol 72KB, echo/index-core 63KB.
+- Open question for the manifest exit: categories 2+3 look irreducible without upstream work
+  or a UI refactor, so single-pass may need a tolerance (accept N KB of over-approximation)
+  rather than requiring zero divergence.
