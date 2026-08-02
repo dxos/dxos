@@ -602,3 +602,17 @@ Remaining navToReady = client init + identity render (out of scope) + ~2.8s boot
 - Open question for the manifest exit: categories 2+3 look irreducible without upstream work
   or a UI refactor, so single-pass may need a tolerance (accept N KB of over-approximation)
   rather than requiring zero divergence.
+
+## Definitive A/B refresh (2026-08-02, user-run, real hardware, warm-cold, N=4)
+
+| metric        |            main (mean) | branch 08-01 (mean) |   branch now (mean) |  vs main |
+| ------------- | ---------------------: | ------------------: | ------------------: | -------: |
+| navToReady    | 14369 ms (13965-14860) | 9134 ms (8941-9302) | 5659 ms (5494-5773) | **-61%** |
+| profilerTotal |    8335 ms (8168-8626) | 2847 ms (2791-2885) | 3532 ms (3460-3582) | **-58%** |
+
+navToReady fell a further 38% after the boot-chunk consolidation + leak evictions.
+profilerTotal ROSE 2847 -> 3532 while total fell: the profiler window opens at `main:start`,
+which used to fire late (520 serialized chunk requests resolved first), so eval work sat
+OUTSIDE the window; at 13 requests main:start fires almost immediately and that work is now
+inside it. Time outside the window collapsed ~6.3s -> ~2.1s. Use navToReady as the headline;
+profilerTotal is only comparable at constant boot-request count.
