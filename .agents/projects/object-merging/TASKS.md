@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: worker-side merging is live (§4.8); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints, collaborative-text policy. Uncommitted: none. Last: worker-side merge (index column, IndexingResult.naturalKeys trigger, raw-doc executor), client hook demoted to read-only; all 4 suites green._
+_Resume: worker-side merging is live and hardened (§4.8 + 2026-08-02 review); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. Last: adversarial-review fixes — automatic straggler fold + sticky tombstone in the worker, resolver follows redirects, objects-only guards, RawString clone, structural write guard, mergedFrom/meta.keys convergence, index backfill + chunking, @meta contained to the meta index; all suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -52,8 +52,10 @@ than by a spike.
       set-wise `merge` (permutation-independent, not a pairwise fold),
       `resolveRedirect` (transitive, terminates on cycles and forward refs).
       39 unit tests + 4 DB round-trip tests.
-- [ ] `system.mergedInto` / `system.mergedAtHeads` — schema fields landed; resolver
-      redirect-following and the proto-guard snapshot still to do.
+- [x] `system.mergedInto` / `system.mergedAtHeads` schema fields + **resolver
+      redirect-following** (sync + async ref resolution, 2026-08-02): an
+      un-rewritten ref to a merged-away loser resolves to the survivor.
+- [ ] Proto-guard snapshot for the new `system` fields.
 - [ ] Internal relation-endpoint mutation (plumb `ObjectCore.setSource/setTarget`).
 - [ ] Creation-side API for declaring an identity key (+ `db.ensure`-style helper).
 
@@ -81,6 +83,16 @@ than by a spike.
       path keeps a read-only filter dropping already-redirected losers. Covers
       entities reached by id/ref too — detection is write-driven, not result-set
       driven — which retires the separate merge-on-load item.
+- [x] **2026-08-02 hardening** (adversarial review of the shipped path; DESIGN
+      decision log has the full list): automatic straggler fold + sticky tombstone
+      (worker services redirected entities on re-index — restore converges back,
+      late edits reach the winner); objects-only enforced at API, detection, and
+      worker; RawString-safe clone; structural (not reference) write guard in the
+      client executor; `mergedFrom`/`meta.keys` append-in-place + dedup-on-read;
+      ref rewrite recurses into arrays/nested records; query filter keys on the
+      deleted flag (no restored-zombie); one-time cursor reset backfills the
+      `naturalKey` column; chunked detection lookup; `@meta` stripped from FTS and
+      reverse-ref content for document objects.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).
@@ -143,6 +155,17 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
   replication, but queries read through the index, which settles a tick later — a
   merge run immediately after it can see one object short. The convergence tests wait
   on the observable result instead.
+- **`x ??= y` inside an automerge `change` callback returns the plain right-hand
+  value, not the proxy the document wraps it in.** Mutating the alias
+  (`(system.mergedFrom ??= []).push(id)`) writes into a detached array and the
+  document never sees it — silently. Assign, then re-read through the parent.
+- **The serialized object JSON fans out to three indexes.** Adding `@meta` for the
+  entity-meta column also fed full-text search and the reverse-ref index; both had
+  to learn to strip it for document objects (queue blocks always carried it).
+- **Re-indexing is per-object, so a new column never backfills by itself.** Rows
+  written before `naturalKey` existed stay NULL until the object itself changes;
+  the migration resets index cursors once when it adds the column to an existing
+  table.
 
 ### References
 
