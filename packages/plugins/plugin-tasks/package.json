@@ -40,8 +40,12 @@
       "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
-      "source": "./src/TasksPlugin.tsx",
+      "source": {
+        "workerd": "./src/TasksPlugin.workerd.ts",
+        "default": "./src/TasksPlugin.tsx"
+      },
       "types": "./dist/types/src/TasksPlugin.d.ts",
+      "workerd": "./dist/lib/TasksPlugin.workerd.mjs",
       "default": "./dist/lib/TasksPlugin.mjs"
     },
     "#translations": {
