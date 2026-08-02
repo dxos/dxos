@@ -219,8 +219,8 @@ describe('merge convergence', () => {
           role: 'employee',
         }),
       );
-      Relation.update(employment, (mutable) => {
-        Relation.getMeta(mutable).naturalKey = 'org.example.employment';
+      Relation.update(employment, (employment) => {
+        Relation.getMeta(employment).naturalKey = 'org.example.employment';
       });
       return employment;
     };
@@ -250,8 +250,8 @@ describe('merge convergence', () => {
     const first = seed(db, 'one');
     const second = seed(db, 'two');
     const loser = first.id < second.id ? second : first;
-    Obj.update(loser, (task: any) => {
-      task.description = longText;
+    Obj.update(loser, (loser: any) => {
+      loser.description = longText;
     });
     await db.flush();
 
