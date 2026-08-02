@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: Milestone 5 Phases 1+3 + Phase 2 core MERGED 2026-08-01 as PR #12431. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, play test), then Phase 4 MCP verbs. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
+_Resume: M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; Phase 4 DXOS SIDE DONE locally (unpushed, unsigned commits — 1Password agent unreachable): McpToolAnnotation + every §7.2 verb now exists app-side. Next: open the Phase 4 PR, then Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, play test). Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
 
 _Superseded pointer (2026-07-29): Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
@@ -372,23 +372,26 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       consumers: plugin-assistant chat task list (currently checklist-form), kanban adoption.
       REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
       goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
-- [ ] **Phase 4 — MCP verbs** — IN PROGRESS 2026-08-02. Ownership RATIFIED (MILESTONE-5 §7.3):
-      **dxos defines, edge projects**; a tool that exists only edge-side is a contract defect.
-      Contract written up in §7.4 (`McpToolAnnotation` + the three hard rules learned from the
-      2026-08-02 edge smoke: refs-in/`Entity.toJSON`-out; schemas must survive
-      `Operation.serialize` (one bad annotation breaks EVERY space-scoped invocation on that
-      registry — `serialize.test.ts` mandatory); handlers must be workerd-safe, no React/
-      app-toolkit, `*.workerd.ts` entry when a plugin is registered whole).
-      DXOS SIDE (mine): McpToolAnnotation in @dxos/compute/Operation (pattern:
-      Visible/Idempotent — `Annotation.make` + pipeable combinator + reader off
-      `PersistentOperation`; `serialize` already carries `meta.annotations`, so edge reads the
-      marker from the registry — no curated table); missing read verbs `taskList` (filters +
-      after/limit — closes the §7.3 exception where edge hand-rolled it),
-      `projectList`/`projectGet`/`projectUpdate`, `outlineGet`/`outlineUpdate`; annotate the
-      shipped write verbs (task ×4 + projectCreate); workerd audit of plugin-projects handlers.
-      EDGE SIDE (peer agent): annotation-driven projection, delete local taskList, identity
-      through invokeOperation. ALREADY GREEN: task write verbs verified end-to-end over OAuth
-      2026-08-02 (`e2e-task-smoke.mjs`, 52/52 workerd tests, edge branch `mcp-task-tools`).
+- [~] **Phase 4 — MCP verbs** — DXOS SIDE DONE 2026-08-02 (edge side pending). Ownership
+  RATIFIED (MILESTONE-5 §7.3): **dxos defines, edge projects**; an edge-only tool is a
+  contract defect. Contract in §7.4.
+  SHIPPED HERE: `McpToolAnnotation` in @dxos/compute/Operation (`Operation.mcpTool({name,
+    description?, safety, aspect?})` + `getMcpTool`) — **verified that the annotation survives
+  `Operation.serialize`**, which is what lets edge read the tool list off the operation
+  registry instead of a curated table; `taskList` (filters taskSet/project/status/assignee/
+  includeSubtasks, opaque `after` cursor + `limit`) — closes the edge-only exception;
+  `projectList`/`projectGet`/`projectUpdate`; `outlineGet`/`outlineUpdate` (item-wise upsert
+  preserves prose); all 12 verbs annotated; serialize guards in both plugins assert the
+  annotation round-trips. Tests: plugin-tasks 21, plugin-projects 21, compute 46.
+  FINDINGS: (1) `projectCreate`/`createChat`/`createRoutine` are **NOT projectable** — they
+  resolve `Capability.Service` (templates/plugin registry), app-only; remote project creation
+  would need a capability-free path, not a projection. (2) The projected project definitions
+  live in a **worker-safe leaf module** (`ProjectMcpOperation`, imports compute/echo/keys
+  only) so loading them on the edge does not drag `@dxos/app-framework` /
+  `@dxos/assistant-toolkit` via the creation verbs.
+  EDGE SIDE (peer agent): switch projection to the annotation, delete local taskList, land
+  identity-through-invokeOperation. Already green there: task write verbs verified over OAuth
+  2026-08-02 (`e2e-task-smoke.mjs`, 52/52 workerd tests, branch `mcp-task-tools`).
 
 - [ ] **Phase 5 — MCP-first dogfood** (alongside 2–4) — this milestone as a Project in the
       shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync

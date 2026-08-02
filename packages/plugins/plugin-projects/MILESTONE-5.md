@@ -216,18 +216,18 @@ by domain prefix:
 
 Status as of 2026-08-02 — "app" = defined in a plugin here, "edge" = projected as an MCP tool:
 
-| Verb                           | Shape (cf. Linear MCP)                                                                                                                 | app | edge               |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | --- | ------------------ |
-| `projectList`                  | `list_projects` — id/name/status summary rows                                                                                          | ✗   | ✗                  |
-| `projectGet`                   | `get_project` — full: goals, task summary, artifact list                                                                               | ✗   | ✗                  |
-| `projectCreate`                | `save_project` — template-driven (`ProjectOperation.Create` exists)                                                                    | ✓   | ✗                  |
-| `projectUpdate`                | goals/description patch                                                                                                                | ✗   | ✗                  |
-| `taskList`                     | `list_issues` — filters: `taskSetId? / projectId? / status? / assignee?`; paginated (`after`/`limit`, Linear-style — DECIDED, day one) | ✗   | ✓ (§7.3 exception) |
-| `taskCreate`                   | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                                | ✓   | ✓                  |
-| `taskUpdate`                   | schema-checked field patch (title/status/priority/assignee/estimate)                                                                   | ✓   | ✓                  |
-| `taskComplete`                 | the 90% action as one verb                                                                                                             | ✓   | ✓                  |
-| `taskAssign`                   | set the `Actor` (person ref/email/name, or agent by DID)                                                                               | ✓   | ✓                  |
-| `outlineGet` / `outlineUpdate` | read/write a Project's markdown checklist (promotion verb rides along)                                                                 | ✗   | ✗                  |
+| Verb                           | Shape (cf. Linear MCP)                                                                                                  | app | edge                               |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | --- | ---------------------------------- |
+| `projectList`                  | `list_projects` — id/name/description + task-set and goal counts                                                        | ✓   | ✗ (pending)                        |
+| `projectGet`                   | `get_project` — goals, per-task-set open/total, outline markdown, artifact list                                         | ✓   | ✗ (pending)                        |
+| `projectCreate`                | `save_project` — template-driven; **NOT projectable**: resolves `Capability.Service` (app-only)                         | ✓   | n/a                                |
+| `projectUpdate`                | name/description/goals patch (goals replaced wholesale)                                                                 | ✓   | ✗ (pending)                        |
+| `taskList`                     | `list_issues` — filters `taskSet`/`project`/`status`/`assignee`/`includeSubtasks`; paginated (opaque `after` + `limit`) | ✓   | ✓ (edge to switch to the app verb) |
+| `taskCreate`                   | `save_issue` — defaults status, resolves taskSet ref, optional assignee                                                 | ✓   | ✓                                  |
+| `taskUpdate`                   | schema-checked field patch (title/status/priority/assignee/estimate)                                                    | ✓   | ✓                                  |
+| `taskComplete`                 | the 90% action as one verb                                                                                              | ✓   | ✓                                  |
+| `taskAssign`                   | set the `Actor` (person ref/email/name, or agent by DID)                                                                | ✓   | ✓                                  |
+| `outlineGet` / `outlineUpdate` | read/write the checklist markdown; update upserts items by title (preserving prose) or replaces wholesale               | ✓   | ✗ (pending)                        |
 
 Milestone verbs follow §5 when it lands. Deliberately not in v1: comments (no comment model on
 Task yet), cycles (no sprint concept), external side-effects (`send`/sync-push — per §2.7's
@@ -253,9 +253,14 @@ is a defect in this contract, not a shortcut — it drifts the moment the app-si
 - **edge**: reads the annotation off the operation registry and projects; owns transport, auth,
   identity, and the tunnel. Activates on the next `@dxos/*` pin bump — same rhythm as
   #12423/#785.
-- **Known exception to close**: `taskList` shipped edge-side first (2026-08-02 smoke) with no
-  app-side definition. Phase 4 adds it here with the §7.2 filters and pagination; edge then
-  deletes its local implementation.
+- **Known exception — app side now closed (2026-08-02)**: `taskList` shipped edge-side first,
+  with no app-side definition. It now exists here (`TaskOperation.ListTasks`) with the §7.2
+  filters and pagination; edge switches to the projected verb and deletes its local one.
+- **Not everything is projectable, and that is fine**: `projectCreate`/`createChat`/
+  `createRoutine` resolve `Capability.Service` (templates, plugin registry) which exists only
+  inside the app. They stay app-only; the projected surface is reads plus field patches. If
+  remote project creation is wanted later it needs a capability-free creation path, not a
+  projection of these.
 
 ### 7.4 `McpToolAnnotation` — the projection contract
 
