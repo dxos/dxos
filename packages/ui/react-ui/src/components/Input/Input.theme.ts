@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
+import { staticDisabled } from '@dxos/ui-theme';
 import { getSize, mx, sizeValue, snapSize, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
@@ -48,11 +48,15 @@ const valence = (valence?: MessageValence) => {
   }
 };
 
+// Height and inline padding come from the density knobs (theme/spacing.css) rather than utilities,
+// so a density class on any ancestor resizes the control without a matching React prop.
+const controlSize = 'min-h-(--dx-control) px-(--dx-control-pad)';
+
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   'py-0 w-full bg-transparent text-current placeholder-placeholder',
   'dx-focus-subdued',
-  densityDimensions(props.density),
+  controlSize,
   props.disabled && staticDisabled,
 ];
 
@@ -60,7 +64,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   'py-0 w-full text-base-fg placeholder-placeholder',
   'dx-input',
-  densityDimensions(props.density),
+  controlSize,
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
 

@@ -10,7 +10,11 @@
 
   /* Base styles */
   .dx-button {
-    @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2rem] px-3;
+    @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden;
+    /* Geometry comes from the density knobs, not from utilities in the class list: `utilities` is
+     * the last cascade layer, so any `px-*`/`h-*` a theme emits would silently beat a rule here. */
+    min-block-size: var(--dx-control);
+    padding-inline: var(--dx-control-pad);
     @apply font-medium transition-colors duration-100 ease-linear bg-input-bg;
     /* The default variant inherits ambient valence colors when rendered inside a valence surface
      * (e.g. Message.Root, which sets --dx-valence-*); otherwise it falls back to the base input styling. */
@@ -116,21 +120,14 @@
   .dx-button:not([data-props~='wrap']) {
     @apply truncate;
   }
-  .dx-button[data-density='lg'] {
-    @apply min-h-[2.5rem] px-3;
-  }
+  /* `data-density` is handled by the shared density rule in theme/spacing.css, which sets
+   * --dx-control / --dx-control-pad; only the type-scale tweak is button-specific. */
+  .dx-button[data-density='xs'],
   .dx-button[data-density='sm'] {
-    @apply min-h-[1.75rem] px-2;
+    @apply text-xs;
   }
-  .dx-button[data-density='xs'] {
-    @apply min-h-[1.5rem] px-1 text-xs;
-  }
-  .dx-button[data-density='xs'].aspect-square {
-    @apply size-6 px-0;
-  }
-  @media (pointer: fine) {
-    .dx-button[data-density='md'] {
-      @apply min-h-[2rem] px-2.5;
-    }
+  .dx-button.aspect-square {
+    padding-inline: 0;
+    inline-size: var(--dx-control);
   }
 }

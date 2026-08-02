@@ -14,12 +14,12 @@ export type ToolbarStyleProps = Partial<{
 const layout =
   'w-full shrink-0 flex flex-nowrap p-1 gap-1 items-center overflow-x-auto scrollbar-none dx-contain-layout';
 
+// The bar declares its density so the shared rule (theme/spacing.css) resizes both the bar and
+// every control inside it; the height then follows the same knob rather than a hard-coded step.
 const root: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
     'dx-toolbar-surface shadow-sm',
-    density === 'lg' && 'h-(--dx-rail-size) px-3!',
-    density === 'sm' && 'h-7 px-2!',
-    density === 'xs' && 'h-6 px-1!',
+    density && `dx-density-${density}`,
     disabled && '*:opacity-20',
     !layoutManaged && layout,
     ...etc,

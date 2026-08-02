@@ -627,7 +627,25 @@ Phases 2–4 are independent of each other after Phase 1.
    a `--surface-bg` declaration instead of `@apply bg-*-surface`, and decide whether translucent
    floaters get a `--surface-alpha` knob.
 
-### Phase 3 — Sizing & density
+### Phase 3 — Sizing & density — **CORE LANDED; sweep outstanding**
+
+> Done: `--dx-control-{sm,md,lg}` = 1.5/2/2.5rem (24/32/40 at fine pointer); the 28px step is gone
+> and `xs` is an alias of `sm`. One density mechanism — `.dx-density-*` sets `--dx-control` and
+> `--dx-control-pad`, `DensityProvider` emits that class on a `display: contents` wrapper, and
+> `data-density` on a control is a local override of the same knobs. Button and Input geometry moved
+> out of `className` into `@layer dx-components` / token utilities (D5), which is what lets the
+> tokens win; `IconButton`'s unconditional `px-2` — previously overriding all four densities — is
+> gone, and icon-only buttons are exact 24/32/40 squares. Rails now derive from the control scale
+> and the `+1px` border fudge is deleted (`--dx-rail-size` 49px → 48px). `fragments/density.ts`
+> (the parallel React-side scale) is deleted.
+>
+> Verified in-browser: sm 24px/pad 4, md 32px/pad 8, lg 40px/pad 12, `xs`≡`sm`, and a toolbar button
+> that never reads the React context resizes from an ancestor density class.
+>
+> Outstanding: the long tail — `react-ui-form`/`react-ui-list` theme literals (`h-8`, `px-3`,
+> `py-2`), the escape hatches (`min-h-1!`, `min-h-0 h-7 w-7 p-0`, grid accessory `w-6`), the
+> remaining fixed-height controls (`Select.Item` 32, `Menu.Item` 36, `Calendar` 28/36,
+> `input.triggerIcon` 28), and extending `--spacing-trim-*` with a 16 step.
 
 1. Land `--dx-control-*` tokens + rewritten `.dx-density-*` classes (D3, §7.2b); make
    `DensityProvider` emit the class; keep `data-density` as local override.

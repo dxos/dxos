@@ -34,37 +34,51 @@
   --spacing-form-section-gap: var(--spacing-trim-md);
 
   /**
-   * Density: md (default).
+   * Control scale — the three canonical control heights. rem-based, so they scale with the
+   * pointer-coarse root font-size (16px fine / 20px coarse) and touch targets grow for free:
+   *   sm 1.5rem = 24px fine / 30px coarse
+   *   md 2rem   = 32px fine / 40px coarse
+   *   lg 2.5rem = 40px fine / 50px coarse
+   * The old 28px step is gone; `xs` is an alias of `sm`.
    */
+  --dx-control-sm: 1.5rem;
+  --dx-control-md: 2rem;
+  --dx-control-lg: 2.5rem;
+
+  /**
+   * Density: md (default). One mechanism — a density class sets these two knobs and every control
+   * reads them, so density cascades to any subtree (including react-ui-menu items) with no React
+   * plumbing. `data-density` on a control remains a local override.
+   */
+  --dx-control: var(--dx-control-md);
+  --dx-control-pad: var(--spacing-trim-sm);
   --spacing-form-padding: var(--spacing-trim-sm);
 }
 
 @layer dx-tokens {
-  /**
-   * Density: lg — large touch targets (~40px controls).
-   */
-  .dx-density-lg {
+  /** Density: lg — large touch targets. */
+  .dx-density-lg,
+  [data-density='lg'] {
+    --dx-control: var(--dx-control-lg);
+    --dx-control-pad: var(--spacing-trim-md);
     --spacing-form-padding: var(--spacing-trim-md);
   }
 
-  /**
-   * Density: md — explicit reset so a nested region can restore the default inside lg/sm/xs.
-   */
-  .dx-density-md {
+  /** Density: md — explicit reset so a nested region can restore the default inside lg/sm. */
+  .dx-density-md,
+  [data-density='md'] {
+    --dx-control: var(--dx-control-md);
+    --dx-control-pad: var(--spacing-trim-sm);
     --spacing-form-padding: var(--spacing-trim-sm);
   }
 
-  /**
-   * Density: sm — compact (~28px controls).
-   */
-  .dx-density-sm {
-    --spacing-form-padding: var(--spacing-trim-xs);
-  }
-
-  /**
-   * Density: xs — ultra-compact (~24px controls).
-   */
-  .dx-density-xs {
+  /** Density: sm — compact. `xs` is retained as an alias for call-site compatibility. */
+  .dx-density-sm,
+  .dx-density-xs,
+  [data-density='sm'],
+  [data-density='xs'] {
+    --dx-control: var(--dx-control-sm);
+    --dx-control-pad: var(--spacing-trim-xs);
     --spacing-form-padding: var(--spacing-trim-xs);
   }
 }
@@ -105,19 +119,20 @@
   }
 
   :root {
-    --dx-rail-content: 3rem;
-    /** TODO(burdon): Audit. */
-    /** TODO(burdon): Density (2 sizes). */
-    --dx-rail-size: calc(var(--dx-rail-content) + 1px);
-    --dx-rail-item: calc(var(--dx-rail-content) - 1rem);
-    /* TODO(burdon): Added 1px for border. */
-    /* TODO(burdon): Remove direct usage. */
-    --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem);
+    /*
+     * Rails derive from the control scale rather than their own arithmetic, so a bar and the
+     * controls inside it land on the same grid. The old `+1px` border fudge is gone — a border
+     * belongs to the element's box, not to the size token (it leaked 49px into a dozen layouts).
+     * NOTE: px values assume the 16px (pointer: fine) root font-size; coarse is 20px (×1.25).
+     */
+    --dx-rail-content: 3rem; /* 48px — the rail gutter, not a control */
+    --dx-rail-size: var(--dx-rail-content); /* 48px */
+    --dx-rail-item: var(--dx-control-md); /* 32px */
+    --dx-rail-action: var(--dx-control-lg); /* 40px */
 
-    /* NOTE: px values below assume the 16px (pointer: fine) root font-size; coarse is 20px (×1.25). */
-    --dx-topbar-size: var(--dx-rail-size); /* 49px */
-    --dx-toolbar-size: var(--dx-rail-action); /* 40px */
-    --dx-statusbar-size: var(--dx-rail-item); /* 32px */
+    --dx-topbar-size: var(--dx-rail-size); /* 48px */
+    --dx-toolbar-size: var(--dx-control-lg); /* 40px */
+    --dx-statusbar-size: var(--dx-control-md); /* 32px */
 
     /** NOTE: Sidebar optimized to show plank + companion with sidebar open on 16" MBP. */
     --dx-nav-sidebar-size: 350px;
