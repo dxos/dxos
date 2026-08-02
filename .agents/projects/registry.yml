@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/composer-startup-perf/TASKS.md
     design: .agents/projects/composer-startup-perf/DESIGN.md
     prs: []
-    resume: 'Project created; verify run+measure loop then Phase A baselines.'
+    resume: 'OVERNIGHT 2026-08-02 (paused 03:04, resuming ~06:05 by user request; all servers stopped). SHIPPED on branch: profiler dev-default fix (isTrue strictness misuse — profiler was silently OFF in dev since AUDIT phase 7a); C1 instrumentation (pre-main measure, boot:html-parsed emitted by boot loader, client/worker service marks, lazy:<id> resolve measures, long-task observer — all in the profiler snapshot); diagnosis tooling (scripts/profile-startup.mjs CDP CPU profile + request waterfall, analyze-cpuprofile.mjs, trace-eager-graph.mjs over DX_STATS graph.json); HEADLINE REGRESSION FOUND: prod cold 6.7s->18.0s profilerTotal since 06-16 because the eager static graph regrew to 879 chunks/10.8MB — fixed to 519/3.72MB via lazy stubs (progress, theme), handler-set leaf splits (inbox/blogger/space/spotlight/registry), registry #paths split, ResetDialog React.lazy, edge-client dynamic import, app-toolkit/events + credentials/seedphrase + client/version subpaths; two-wave deferral behind ?defer=1 (ManagerOptions.deferred + enableDeferred, useApp defer predicate MUST be referentially stable): dev ready 9.7->4.5s, prod total 16.5->~10s, 10/10 warm reloads; plugin-calls AudioContext moved to call join (~430ms). NEXT: rerun prod harness for BENCHMARKS rows, AUDIT.md addendum, B2 deep-link check, e2e-dev confirm, Phase E follow-ups (app-framework barrel floor ~1,311 modules/stub, preload-count CI guardrail, stub sweep). Machine was heavily loaded (LA 32) — treat absolute ms as relative only.'
 
   - name: lenses
     status: active

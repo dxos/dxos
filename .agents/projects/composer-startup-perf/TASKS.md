@@ -1,6 +1,6 @@
 # Composer Startup Performance — Tasks
 
-_Resume: deep-link B2 check + harness rows + plugin-calls fix. Uncommitted: none expected (commit per batch). Last: deferral shipped behind ?defer=1 — dev ready −53%, prod −40%, 10/10 warm reloads._
+_Resume: (1) rerun prod harness for BENCHMARKS rows (was interrupted), (2) AUDIT.md addendum documenting the 2026-08-02 regression audit + fixes, (3) B2 deep-link check, (4) e2e-dev harness confirm, (5) remaining Phase E follow-ups (floor, guardrail, stub sweep). Uncommitted: none. Last: plugin-calls placeholder fix committed (0a7cea1bde); all servers stopped 03:04 by user request, resuming ~06:05._
 
 ## Phase 0: verify tooling (no code changes)
 
