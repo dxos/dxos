@@ -675,10 +675,16 @@ Phases 2–4 are independent of each other after Phase 1.
 > scrollbar. The dead `data-slot` writes on `Column.Block` are removed (placement has been
 > class-based for some time; the attribute was written and never read).
 >
-> **Verification gap:** this is confirmed by build + tests + the form-in-card stories rendering
-> correctly, but not by a numeric before/after inset — the browser bridge would not resolve
-> `.dx-column-root` in the plugin-preview stories. Worth a dedicated story (form inside a card, next
-> to a bare card) before calling the alignment fix proven.
+> **Verified** by a dedicated story, `ui/react-ui-form/FormInCard` (a form card beside a reference
+> card): the reference row, the form labels and the form inputs all sit at 34px from the card edge,
+> and the form card contains zero nested column roots.
+>
+> That story earned its keep immediately — it caught a regression in the first cut of this change.
+> The context provider was placed *inside* the `asChild` branch, so Radix `Slot` merged its props
+> into the `Provider` instead of the real element, silently dropping every class on every
+> `Column.Root asChild` — which includes `Card.Root`. Cards lost their surface, border and width
+> clamp, and nothing failed: no test, no type error, no console warning, only the pixels. Providers
+> in a slottable part must wrap the `Comp`, never sit between it and its child.
 >
 > Outstanding: items 1, 3 and 4 below — consolidating on the single `--dx-col` placement mechanism,
 > migrating the ~10 hand-rolled 3-track grids, and sourcing `--dx-gutter-*` from the spacing ramp.

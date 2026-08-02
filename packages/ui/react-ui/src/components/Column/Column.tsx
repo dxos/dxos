@@ -65,24 +65,28 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const gutterSize = gutterSizes[gutter];
+    // The provider wraps `Comp` rather than the children: under `asChild`, `Comp` is a Slot that
+    // merges its props into its single child, and a Provider in that position would swallow them.
     return (
-      <Comp
-        {...rest}
-        role={role ?? 'none'}
-        style={
-          {
-            ...rest.style,
-            '--gutter': gutterSize,
-            '--dx-col': '2 / span 1',
-            'gridTemplateColumns': subgrid ? 'subgrid' : [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
-            ...(subgrid && { gridColumn: '1 / -1' }),
-          } as CSSProperties
-        }
-        className={tx('column.root', { gutter }, className)}
-        ref={forwardedRef}
-      >
-        <ColumnContext.Provider value={true}>{children}</ColumnContext.Provider>
-      </Comp>
+      <ColumnContext.Provider value={true}>
+        <Comp
+          {...rest}
+          role={role ?? 'none'}
+          style={
+            {
+              ...rest.style,
+              '--gutter': gutterSize,
+              '--dx-col': '2 / span 1',
+              'gridTemplateColumns': subgrid ? 'subgrid' : [gutterSize, 'minmax(0,1fr)', gutterSize].join(' '),
+              ...(subgrid && { gridColumn: '1 / -1' }),
+            } as CSSProperties
+          }
+          className={tx('column.root', { gutter }, className)}
+          ref={forwardedRef}
+        >
+          {children}
+        </Comp>
+      </ColumnContext.Provider>
     );
   },
 );
