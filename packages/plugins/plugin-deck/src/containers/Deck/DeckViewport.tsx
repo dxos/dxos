@@ -120,6 +120,23 @@ type PlankContextValue = RenderedPlanks & {
 };
 
 /**
+ * The companion plank id to render beside `id`, or undefined when its companion is closed. Companion
+ * state is *per plank* (`DeckState.companionPlanks`) and rendering resolves from exactly that state —
+ * never from attention. Attention used to pick a single anchor here, which meant attention traffic
+ * re-anchored the companion between planks: tiles widened and narrowed with no user gesture, the engine
+ * answered a sticky tile's width change by silently shifting `scrollLeft` by the delta (zero scroll
+ * commands — writer instrumentation finds nothing), and a companion could be "open" in state yet render
+ * beside no visible plank. The variant (which tab) stays global view state, shared across planks.
+ */
+const useDeckCompanion = (id: string | undefined): string | undefined => {
+  const { deck } = useDeckContext('useDeckCompanion');
+  const companions = useCompanions(id);
+  const selectedVariant = useSelectedCompanionVariant();
+  const { companionId } = useSelectedCompanion(companions, selectedVariant);
+  return id && deck.companionPlanks.includes(id) ? companionId : undefined;
+};
+
+/**
  * What a plank tile needs from the deck around it. A context rather than props because `Mosaic.Stack`
  * instantiates the tile itself, passing a closed prop set with no consumer passthrough — and building the
  * tile component inline would give it a new identity per measurement, remounting every plank on each
@@ -130,8 +147,6 @@ type PlankContextValue = RenderedPlanks & {
  */
 const PlankContext = createContext<PlankContextValue>({
   planks: [],
-  companionId: undefined,
-  companionAnchorId: undefined,
   attendedPlankId: undefined,
   maxPlankWidthPx: Number.POSITIVE_INFINITY,
   captureExposeGeometry: () => {},
@@ -215,18 +230,14 @@ const getPlankId = (id: string) => id;
 type RenderedPlanks = {
   /** The real planks the deck lays out (`flatten` collapses these to the current plank). */
   planks: string[];
-  /** The derived companion node id (`<anchor>/~<variant>`), or undefined when no companion is shown. */
-  companionId: string | undefined;
-  /** The plank the companion shares a container with. */
-  companionAnchorId: string | undefined;
   /** The plank attention points into, or undefined when it points outside the deck. */
   attendedPlankId: string | undefined;
 };
 
 /**
- * What the deck renders: the real active planks, plus (when the companion is open) the derived companion
- * of the *attended* plank, which shares that plank's container rather than trailing the deck. The
- * companion is never stored in `deck.active` — it follows attention — so it is derived here.
+ * What the deck renders: the real active planks. Each plank whose id is in `deck.companionPlanks`
+ * renders its own companion beside it ({@link useDeckCompanion}, resolved per tile) — companions are
+ * per-plank state, so attention plays no part in what is laid out.
  *
  * When the `flatten` setting is on, only the current (last) active plank renders (plus its companion), so
  * the deck stays fullbleed/tiling; the earlier active entries are surfaced as breadcrumbs in the plank
@@ -237,27 +248,12 @@ const useRenderedPlanks = (): RenderedPlanks => {
   const { flatten } = useDeckSettings();
   const attended = useAttended();
   const planks = useMemo(() => getRenderedPlanks(deck.active, flatten), [flatten, deck.active]);
-  // The attended plank is both what the companion attaches to and what the deck collapses around, so it
-  // is resolved once here. Only the companion takes the last-plank fallback: collapsing the deck around a
-  // plank nobody attended would scroll it out from under the user.
+  // Resolved once here: the attended plank is what the click-to-front and arrow navigation key off.
   const attendedPlankId = findAttendedPlank(planks, attended);
-  const anchorId = attendedPlankId ?? planks[planks.length - 1];
-  const companions = useCompanions(anchorId ?? '');
-  const selectedVariant = useSelectedCompanionVariant();
-  const { companionId } = useSelectedCompanion(companions, selectedVariant);
-  const companion = anchorId && deck.companionPlanks.includes(anchorId) ? companionId : undefined;
 
   // Stable identity: this shape is the `PlankContext` value, so a new object per render would re-render
   // every tile on every deck render.
-  return useMemo(
-    () => ({
-      planks,
-      companionId: companion,
-      companionAnchorId: companion ? anchorId : undefined,
-      attendedPlankId,
-    }),
-    [planks, companion, anchorId, attendedPlankId],
-  );
+  return useMemo(() => ({ planks, attendedPlankId }), [planks, attendedPlankId]);
 };
 
 //
@@ -423,14 +419,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const breakpoint = useBreakpoints();
-  const {
-    planks: rendered,
-    companionId,
-    companionAnchorId,
-    maxPlankWidthPx,
-    captureExposeGeometry,
-  } = usePlankContext();
-  const companion = id === companionAnchorId ? companionId : undefined;
+  const { planks: rendered, maxPlankWidthPx, captureExposeGeometry } = usePlankContext();
+  const companion = useDeckCompanion(id);
   const presentation = useDeckPresentation(rendered.length);
   const isMobile = breakpoint === 'mobile';
   const exposed = !!state.expose;
@@ -477,9 +467,28 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   }, [invokePromise, id, captureExposeGeometry]);
 
   if (presentation === 'fullbleed') {
+    // A fullbleed pair flexes to the viewport rather than taking a stored total, so only the lower
+    // bound applies here — the Splitter's own clamp keeps the plank pane on screen.
+    const soloCompanionSize = Math.max(
+      MIN_COMPANION_SIZE,
+      deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
+    );
+    // The pair/solo choice mirrors the sliding return below so the first child keeps its component
+    // type across a presentation change — the reconciliation that keeps a plank's DOM (and therefore
+    // its content state and scroll) alive when the deck crosses 1↔2 planks.
     return (
       <Mosaic.Tile {...props} classNames='relative h-full w-full'>
-        <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
+        {companion ? (
+          <CompanionSplit
+            id={id}
+            companionId={companion}
+            active={deck.active}
+            companionSize={soloCompanionSize}
+            classNames={mx('absolute inset-0', mainPaddingTransitions)}
+          />
+        ) : (
+          <DeckPlank id={id} part='main' active={deck.active} classNames={mx('absolute inset-0', mainIntrinsicSize)} />
+        )}
       </Mosaic.Tile>
     );
   }
@@ -1274,7 +1283,11 @@ export const DeckPlanks = () => {
   const { state, deck } = useDeckContext('DeckPlanks');
   const { overscroll } = useDeckSettings();
   const rendered = useRenderedPlanks();
-  const { planks, companionId, companionAnchorId, attendedPlankId } = rendered;
+  const { planks, attendedPlankId } = rendered;
+  // The last plank's companion feeds both the fullbleed pair (a singleton deck's only plank *is* the
+  // last) and the overscroll runway, which is sized to the last tile.
+  const lastPlankId = planks[planks.length - 1];
+  const lastPlankCompanionId = useDeckCompanion(lastPlankId);
   const breakpoint = useBreakpoints();
   const presentation = useDeckPresentation(planks.length);
   const fullscreenId = state.fullscreen;
@@ -1412,42 +1425,25 @@ export const DeckPlanks = () => {
   // not move on layout changes, so a plank near the edge opens its companion off-screen; the reveal is
   // the one bounded exception — scroll by exactly the overflow, so a pair that already fits does not
   // move at all. Watched briefly rather than measured once: the split sizes the pair a frame or two
-  // after the companion appears. Keyed on the companion *appearing*, so a splitter drag later never
-  // triggers it.
-  const prevCompanionRef = useRef<string | undefined>(undefined);
-  // The scroll as the user last saw it, recorded off scroll events so the value predates the commit
-  // that widens the pair — by effect time the browser has already shifted the viewport.
-  const settledScrollRef = useRef(0);
-  useEffect(() => {
-    const viewport = viewportRef.current;
-    if (!viewport) {
-      return;
-    }
-    settledScrollRef.current = viewport.scrollLeft;
-    return addEventListener(viewport, 'scroll', () => {
-      settledScrollRef.current = viewport.scrollLeft;
-    });
-  }, [viewportRef]);
+  // after the companion appears. Keyed on a plank *entering* `companionPlanks` — the user's own toggle,
+  // the only event that widens a tile — so neither a splitter drag nor attention traffic ever triggers
+  // it.
+  const prevCompanionPlanksRef = useRef<readonly string[] | undefined>(undefined);
   useLayoutEffect(() => {
-    const previous = prevCompanionRef.current;
-    prevCompanionRef.current = companionId;
+    const previous = prevCompanionPlanksRef.current;
+    prevCompanionPlanksRef.current = deck.companionPlanks;
     const viewport = viewportRef.current;
-    if (!viewport || !isSliding || expose || !companionId || previous === companionId || !companionAnchorId) {
+    if (!viewport || !isSliding || expose) {
       return;
     }
-    const tile = getPlankTiles().find((candidate) => candidate.getAttribute('data-object-id') === companionAnchorId);
+    const opened = deck.companionPlanks.filter((id) => !(previous ?? []).includes(id) && planks.includes(id));
+    const openedId = opened[opened.length - 1];
+    if (!openedId) {
+      return;
+    }
+    const tile = getPlankTiles().find((candidate) => candidate.getAttribute('data-object-id') === openedId);
     if (!tile) {
       return;
-    }
-    // Undo the browser's own shift before paint. Widening a sticky tile makes the engine move the
-    // scroll by the width delta with no scroll command at all (measured: −473 for a 473px growth, one
-    // frame). The shift only exists once layout has flushed, so force it with a rect read *first* —
-    // checked before the flush, the scroll still reads clean and the restore never fires (measured:
-    // the shift painted for several frames). Restoring here, still pre-paint, means the intermediate
-    // state is never seen, and the reveal below corrects only genuine overflow.
-    tile.getBoundingClientRect();
-    if (Math.abs(viewport.scrollLeft - settledScrollRef.current) > 1) {
-      viewport.scrollLeft = settledScrollRef.current;
     }
     let revealed = false;
     const reveal = () => {
@@ -1468,7 +1464,7 @@ export const DeckPlanks = () => {
       clearTimeout(timer);
       observer.disconnect();
     };
-  }, [companionId, companionAnchorId, viewportRef, getPlankTiles, isSliding, expose]);
+  }, [deck.companionPlanks, planks, viewportRef, getPlankTiles, isSliding, expose]);
 
   // The deliberate, user-initiated half of "bring a plank forward"; `useScrollIntoView` is the other
   // half, for navigation from outside the deck. Delegated to the stack because `Mosaic.Tile` forwards
@@ -1510,10 +1506,10 @@ export const DeckPlanks = () => {
         const planksAtClick = navigationRef.current.planks;
         clearTimeout(pending);
         pending = setTimeout(() => {
+          // No attended re-check here: the click itself focuses the plank, so by now attention has
+          // landed on `id` and re-checking would cancel every click-to-front — the gesture this
+          // handler exists for. "Already reading it" was decided at pointerdown time above.
           if (scrollIntentRef.current || navigationRef.current.planks !== planksAtClick) {
-            return;
-          }
-          if (id === navigationRef.current.attendedPlankId) {
             return;
           }
           const tiles = getPlankTiles();
@@ -1536,42 +1532,62 @@ export const DeckPlanks = () => {
     [rendered, maxPlankWidthPx, captureExposeGeometry],
   );
 
+  // The last tile's width as actually laid out, so the runway below can wait for the split to size the
+  // pair before shrinking. Undefined until the tile is found, and reset when the last plank changes.
+  const [lastTileWidthPx, setLastTileWidthPx] = useState<number | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (!overscroll || !isSliding || expose || !lastPlankId) {
+      setLastTileWidthPx(undefined);
+      return;
+    }
+    const tile = getPlankTiles().find((candidate) => candidate.getAttribute('data-object-id') === lastPlankId);
+    if (!tile) {
+      setLastTileWidthPx(undefined);
+      return;
+    }
+    setLastTileWidthPx(tile.offsetWidth);
+    const observer = new ResizeObserver(() => setLastTileWidthPx(tile.offsetWidth));
+    observer.observe(tile);
+    return () => observer.disconnect();
+  }, [overscroll, isSliding, expose, lastPlankId, planks, getPlankTiles]);
+
   // Overscroll runway (experiment): trailing space so the last plank can scroll clear of the right edge
   // and sit at the front like any other, with only the preceding spines beside it. Sized to exactly that
   // resting position, so the deck never scrolls further than the last plank being fully forward.
   const overscrollPx = useMemo(() => {
-    const lastId = planks[planks.length - 1];
     // Suppressed in the exposé: the runway is trailing padding, so it would count towards the natural
     // width the scale has to fit and shrink every plank to buy back space nothing occupies.
-    if (!overscroll || !isSliding || expose || !lastId || !viewportWidthPx) {
+    if (!overscroll || !isSliding || expose || !lastPlankId || !viewportWidthPx) {
       return 0;
     }
-    const paired = companionAnchorId === lastId && !!companionId;
+    const paired = !!lastPlankCompanionId;
     const { tileSize } = resolveTileSizes(
       deck.plankSizing,
-      lastId,
+      lastPlankId,
       paired,
       resolveMaxTileSize(maxPlankWidthPx, paired),
     );
-    return Math.max(0, viewportWidthPx - (planks.length - 1) * SPINE_PX - tileSize * REM_PX);
+    // The stored size predicts the pair a commit before the split actually widens the tile. Shrinking
+    // the runway on the prediction dips the deck's total width for that gap, and with the deck scrolled
+    // to the end the browser clamps `scrollLeft` by the dip — an instant leftward jump the reveal then
+    // has to animate back (measured: −247 for a 247px runway shrink, one frame, no scroll command).
+    // Taking the smaller of prediction and measurement makes the runway shrink only after the tile has
+    // genuinely widened, while still growing immediately when the pair closes — the total never dips.
+    const tileSizePx = tileSize * REM_PX;
+    const effectiveTileSizePx = lastTileWidthPx === undefined ? tileSizePx : Math.min(tileSizePx, lastTileWidthPx);
+    return Math.max(0, viewportWidthPx - (planks.length - 1) * SPINE_PX - effectiveTileSizePx);
   }, [
     overscroll,
     isSliding,
     expose,
     planks,
-    companionAnchorId,
-    companionId,
+    lastPlankId,
+    lastPlankCompanionId,
+    lastTileWidthPx,
     deck.plankSizing,
     maxPlankWidthPx,
     viewportWidthPx,
   ]);
-
-  // A fullbleed pair flexes to the viewport rather than taking a stored total, so only the lower bound
-  // applies here — the Splitter's own clamp keeps the plank pane on screen.
-  const soloCompanionSize = Math.max(
-    MIN_COMPANION_SIZE,
-    deck.plankSizing[COMPANION_SIZE_KEY] ?? DEFAULT_COMPANION_SIZE,
-  );
 
   return (
     <PlankContext.Provider value={plankContext}>
@@ -1604,29 +1620,13 @@ export const DeckPlanks = () => {
               classNames={mx('absolute inset-0', mainIntrinsicSize)}
             />
           </>
-        ) : presentation === 'fullbleed' && companionAnchorId && companionId ? (
-          // A lone plank with its companion: the pair fills the viewport across the same seam it has as a
-          // sliding tile, so opening a second plank never moves it.
-          <CompanionSplit
-            id={companionAnchorId}
-            companionId={companionId}
-            active={deck.active}
-            companionSize={soloCompanionSize}
-            classNames={mx('absolute inset-0', mainPaddingTransitions)}
-          />
-        ) : presentation === 'fullbleed' && planks[0] ? (
-          // A singleton deck renders the plank directly as an absolute-inset child of this filled
-          // container (today's solo look). Routing it through the horizontal Mosaic.Stack/ScrollArea
-          // collapses it — an `absolute inset-0` plank contributes no intrinsic size to a flex tile.
-          <DeckPlank
-            id={planks[0]}
-            part='main'
-            // Pass the real deck.active (not the collapsed `planks`) so flat mode can derive the
-            // breadcrumb trail from the planks preceding the current one.
-            active={deck.active}
-            classNames={mx('absolute inset-0', mainIntrinsicSize)}
-          />
         ) : (
+          // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
+          // (its tile spans the viewport; see DeckPlankTile's fullbleed return). One tree, keyed by
+          // plank id, is what keeps a plank's DOM mounted across 1↔2 plank transitions; a separate
+          // fullbleed branch here remounted the surviving plank on every message open/close (the
+          // mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
+          // resolves against the viewport instead of a shrink-wrapped flex row.
           <Mosaic.Container orientation='horizontal' classNames={['absolute inset-0', mainPaddingTransitions]}>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
@@ -1657,7 +1657,7 @@ export const DeckPlanks = () => {
                             // along with the row.
                             expose && 'origin-left translate-x-(--deck-expose-inset) scale-(--deck-expose-scale)',
                           )
-                        : 'h-full'
+                        : 'h-full w-full'
                   }
                   getId={getPlankId}
                   items={planks}

@@ -84,8 +84,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      // The deck companion is a whole-deck toggle that renders beside whichever plank is attended, so
-      // offer it on any plank that has one while the companion is off.
+      // Companions are per-plank: offer the toggle on any plank that has one while its own is off.
       companion: companions.length > 0 && !deck.companionPlanks.includes(id),
     }),
     [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id, active?.length],
