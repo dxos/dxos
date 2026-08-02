@@ -433,7 +433,12 @@ the mechanism.
       within-fold-window key only; a durable 1→N split key is an explicit id field stamped in the
       element at creation. The rich-text lens's block identity inherits the same verdict — cut/paste
       or drag of a block mints a new ObjID, so "stable block identity via Automerge cursors"
-      (Phase 6) needs stamped ids too, not bare list identity.
+      (Phase 6) needs stamped ids too, not bare list identity. RESOLUTION PATH (2026-08-02 review):
+      new schemas stamp at creation; existing collections get a backfill phase that seeds each
+      element's stamp from its convergent ObjID — concurrent backfills agree deterministically with
+      no coordination, the ObjID's reorder-fragility is irrelevant once copied into data, and the
+      split phase gates on stamp presence (residual mid-backfill-reorder race converges via
+      register semantics + idempotent re-run).
 - [x] **Claim 8 · does a dangling relation degrade gracefully? — YES, confirmed cross-peer.**
       A relation created with two brand-new endpoints under partition surfaces on the other peer
       with both endpoints resolvable after heal; queries never throw at any point (every poll

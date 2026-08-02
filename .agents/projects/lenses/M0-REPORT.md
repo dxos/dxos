@@ -382,14 +382,43 @@ checks must compare full op-id sets, and an attribution UI should collapse equal
 10. 1→N splits: durable per-element key must be stamped into elements (automerge list identity is
     convergent but destroyed by any reorder).
 
+## Follow-on directions (2026-08-02 review)
+
+Resolutions and directions from design review, each turning an "open" item into a scoped plan:
+
+1. **Text fields: schema-declared, splice-routed.** Every ECHO string is already automerge Text at
+   the storage layer, so "collaborative text" is a policy declared in the schema (a field/type
+   annotation the lens machinery can read), not something detectable from storage. Fields so
+   marked route through the `Write` vocabulary's existing `splice` verb — folds diff the derived
+   text against current and emit minimal splices (the rich-text lens already demonstrates this),
+   so a fold and a concurrent edit to different ranges interleave via native text merging instead
+   of clobbering. Remaining spike: duplicate-merge for text (unrelated docs, no shared history —
+   needs an app-level three-way text diff against the recomputed baseline).
+2. **RATIFIED: non-owning refs are allowed to dangle/break.** The backlink gap list (markdown
+   links, id-keyed side maps, feed blocks, bare EIDs) is exactly the non-owning population, so the
+   fan-in cardinality pre-flight only needs completeness over owning/strong references — which the
+   `reverseRef` index covers. Repointing referrers is two composable patterns: lazy — an
+   `absorbedInto` redirect on the tombstoned child (the `mergedInto` mechanism generalized), with
+   a read-through lens projecting the absorbed fields back under the old target type so stale refs
+   heal at read time; eager — a referrer lens that retypes/repoints the ref property, run as an
+   ordinary migration by the same runner, opt-in per referrer type.
+3. **1→N key agreement: seed backfill stamps from the convergent `ObjID`.** The split key is
+   `<lensId>:<elementStampedId>`; new schemas stamp at creation. For existing unstamped
+   collections, the backfill derives each element's stamp from its automerge `ObjID` — verified
+   byte-identical across peers — so concurrent backfills agree deterministically with no
+   coordination. The ObjID's reorder-fragility is irrelevant once the stamp is copied into data.
+   Residual race (element reordered between two peers' backfills) converges via register semantics
+   - idempotent re-run. Sequencing: stamp phase, then split phase gated on stamp presence.
+
 ## Out of scope / open
 
 - Real epoch/compaction behavior against stored heads (only the foreign-heads failure shape is
   characterized).
 - The collapse engine itself (PR #12412) — the bench proves the substrate and the improved merge
   semantics, not the worker-integrated engine.
-- Non-`Ref` back-reference gaps for the fan-in cardinality check (markdown links, feed blocks,
-  side maps, bare-EID relation endpoints).
+- Non-`Ref` back-reference gaps — downgraded from risk to accepted (see Follow-on directions:
+  non-owning refs are allowed to dangle; the cardinality check needs completeness only over
+  owning/indexed refs).
 - The fold-forward trigger and its runtime cost (DESIGN.md §10.7 q6).
 - Collaborative-text merge policy (a text baseline would extend only-on-conflict discipline to
   text; unexplored).
