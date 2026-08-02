@@ -1,6 +1,7 @@
 {
   "name": "@dxos/react-ui-task",
   "version": "0.10.0",
+  "private": true,
   "description": "Task list components over the durable Task/TaskSet model.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
