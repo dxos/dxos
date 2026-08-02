@@ -225,6 +225,26 @@ usage record, plus a well-factored composition layer (`react-ui-card`'s `CardTil
   paths), and `react-ui-mosaic`'s `Board/Column.tsx` exports a kanban `Column` namespace that
   collides with the layout primitive's name.
 
+### Defaults that fail when composed (found by the kitchen-sink story)
+
+Building `react-ui/src/playground/Elevation.stories.tsx` purely from primitives at **default props,
+no `classNames`**, exposed four defects that every existing story hides by passing layout overrides.
+Each is a default-composition bug, not a story bug — they are listed here rather than patched around:
+
+1. **`Panel.Content` paints no background** (computed `rgba(0,0,0,0)`). The main content region —
+   the most-used container in the system — never enters a `base-surface` zone, so it shows whatever
+   is behind it and publishes no `--surface-bg`, breaking state derivation for everything inside it.
+   This is §5.2's zone-adoption problem at its single highest-traffic site. Fix in Phase 2 by having
+   `Panel.Root`/`Content` enter the base zone by default.
+2. **`Tag` in a `Card.Row` stretches to full width** — the center track is `1fr` and `Tag` is a bare
+   span with no intrinsic sizing or `justify-self`, so any inline-sized element dropped into a row
+   inflates to a solid bar. Rows should not stretch inline content by default.
+3. **`Avatar.Content` overflows a `Card.Block` gutter** and clips the adjacent `Card.Title`. The
+   gutter is a `--dx-rail-item` square; `Avatar`'s default size exceeds it. Either the block should
+   constrain its child or `Avatar` should default to the rail-item size (§7.2a).
+4. **`Message.Title` truncates to one glyph** (`M…`) inside a card row — the title competes for the
+   center track without a `min-width: 0` chain.
+
 ---
 
 ## 5. Elevation, surfaces, and state (ui-theme)
@@ -604,8 +624,10 @@ Phases 2–4 are independent of each other after Phase 1.
      names (catches `dx-row`/`dx-active`); `bg-*-surface` on an element that also sets
      `overflow`/`grid`/`flex` container roles without `data-surface`; raw padding literals in
      `*.theme.ts`.
-   - Storybook: a `Theme.stories` page rendering the 6 levels × aspects matrix and the 3 control
-     sizes, so regressions are visible in review.
+   - Storybook: extend `react-ui/src/playground/Elevation.stories.tsx` (the kitchen-sink app frame,
+     landed in Phase 1) with the 3 control sizes alongside its existing levels × aspects coverage,
+     so regressions are visible in review. Keep it default-props-only — that constraint is what
+     surfaced the four composition defects in §4.
 4. Either wire theme overriding (`bridgeTv`) or delete `formSlots`/`listSlots` and the hook.
 
 ### Metrics to re-run after each phase
