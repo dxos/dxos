@@ -40,7 +40,7 @@ these three slots filled in:**
 
 ```text
 Repro contract
-1. Do you have a repro? (steps / story / recording — whatever you have)
+1. User repro: <steps / story / recording, or "not provided yet">
 2. My candidate repro: <numbered steps + the measurement that detects the failure>
 3. Acceptance criteria: <what observation, in which environment, counts as fixed>
 ```

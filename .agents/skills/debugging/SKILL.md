@@ -65,10 +65,16 @@ existing framework logs.
 1. **Rotate the sink before each reproduction** — `app.log` only self-truncates on dev-server restart, so clear it between iterations, but move the previous capture aside rather than destroying it (the run you are about to overwrite may hold the only evidence of an intermittent failure):
 
    ```bash
-   mv packages/apps/composer-app/app.log "$(mktemp packages/apps/composer-app/app.log.XXXXXX)" && : > packages/apps/composer-app/app.log
+   mv packages/apps/composer-app/app.log "$(mktemp packages/apps/composer-app/app.log.XXXXXX)" && touch packages/apps/composer-app/app.log
    ```
 
-   **Always rotate to a unique destination.** A fixed name (`app.log.prev`) clobbers the previous capture on the second iteration, which is exactly the evidence loss the rotation exists to prevent; `mktemp` allocates the destination atomically, so back-to-back rotations cannot collide the way a timestamp suffix can. The dev server keeps appending to the same path, so the new file starts empty and each rotated capture stays queryable with the same tooling. For tests, rotate `<package>/test.log` (node) or `<package>/test-browser.log` (browser) the same way — unique suffix included — and re-run the test yourself between iterations. The log is shared with whoever else is attached to that dev server — never delete a sink you did not create, and if a capture predates your session, keep it.
+   **Always rotate to a unique destination.** A fixed name (`app.log.prev`) clobbers the previous capture on the second iteration, which is exactly the evidence loss the rotation exists to prevent; `mktemp` allocates the destination atomically, so back-to-back rotations cannot collide the way a timestamp suffix can.
+
+   **`touch`, never `: >`.** The dev-server sink appends by path (`fs.appendFile`), reopening the file per write, so it recreates `app.log` on its own after the `mv`; truncating instead would wipe any lines it already wrote in the window between the two commands.
+
+   **Node tests rotate only between runs.** The node file processor holds an open fd (`openSync(path, 'a')`), so a rotation during a live run follows the inode — output keeps landing in the rotated file while the new `test.log` stays empty. Rotate `<package>/test.log` (node) or `<package>/test-browser.log` (browser) with the same unique-destination rule, but do it between runs, and re-run the test yourself each iteration.
+
+   The log is shared with whoever else is attached to that dev server — never delete a sink you did not create, and if a capture predates your session, keep it.
 
 2. Reproduce (yourself via browser tools whenever possible — see `debugging-ui`).
 
