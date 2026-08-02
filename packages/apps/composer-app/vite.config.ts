@@ -159,9 +159,7 @@ export default defineConfig((env) => ({
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
     target: [...browserTargets],
-    rollupOptions: {
-      // NOTE: Set cache to `false` to help debug flaky builds.
-      // cache: false,
+    rolldownOptions: {
       input: {
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
@@ -176,12 +174,16 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
-        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
-        // record form that worked in Rollup is rejected at runtime.
-        manualChunks: (id: string) => {
-          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
-            return 'react';
-          }
+        // Group modules per package instead of rolldown's default fine-grained splitting,
+        // which produced a ~4,800-chunk bundle (median chunk 1KB) whose request overhead
+        // dominates boot on HTTP/1.1. Package granularity bounds the cost of merging: a
+        // package is either on the boot path or behind a lazy island, so chunks rarely mix
+        // eager and lazy bytes.
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
+            { name: packageChunkName },
+          ],
         },
       },
     },
@@ -650,6 +652,28 @@ export default defineConfig((env) => ({
 
   ...createTestConfig({ dirname, node: true, storybook: true }),
 }));
+
+/**
+ * Chunk-group name for a module: one group per npm package / workspace package. Returning
+ * `null` (app source, virtual modules) leaves the module to rolldown's default chunking.
+ */
+function packageChunkName(moduleId: string): string | null {
+  const nodeModulesIdx = moduleId.lastIndexOf('node_modules/');
+  if (nodeModulesIdx !== -1) {
+    const segments = moduleId.slice(nodeModulesIdx + 'node_modules/'.length).split('/');
+    const name = segments[0].startsWith('@') ? `${segments[0].slice(1)}-${segments[1]}` : segments[0];
+    return `vendor-${name}`;
+  }
+  const workspacePackage = moduleId.match(/packages\/(?:[^/]+\/)*?([^/]+)\/(?:src|dist)\//);
+  if (workspacePackage) {
+    return `pkg-${workspacePackage[1]}`;
+  }
+  const vendored = moduleId.match(/\/vendor\/([^/]+)\//);
+  if (vendored) {
+    return `vendor-${vendored[1]}`;
+  }
+  return null;
+}
 
 /**
  * Generate nicer chunk names.
