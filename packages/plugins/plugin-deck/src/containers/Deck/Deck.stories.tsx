@@ -502,14 +502,14 @@ export const OnePlankWithCompanion: Story = {
   },
 };
 
-// The companion shares a container with the attended plank, and each plank remembers whether its own
-// companion is open — here planks 1 and 3 start open, planks 2 and 4 closed.
+// Each plank remembers whether its own companion is open, and every open companion renders beside its
+// own plank — here planks 1 and 3 start open, planks 2 and 4 closed.
 //
 // Test:
-// 1. Confirm the companion sits inside the first plank's container, immediately to its right.
-// 2. Click the second plank; confirm it shows NO companion, and the planks after it fold to spines.
-// 3. Click the third plank; confirm its companion is showing again.
-// 4. Close the companion on the third plank, then return to the first; confirm the first is still open.
+// 1. Confirm companions sit inside the first and third planks' containers, immediately to their right.
+// 2. Click the second plank; confirm it shows no companion of its own and the deck does not move.
+// 3. Close the companion on the third plank; confirm the first plank's is untouched.
+// 4. Reopen it from the third plank's toolbar; confirm neither plank moves.
 // 5. Drag the seam between a plank and its companion; confirm only those two panes resize, and that
 //    closing the companion afterwards leaves the plank at the width you dragged it to.
 export const ManyPlanksWithCompanion: Story = {
@@ -540,9 +540,11 @@ const showingCompanionsFor = (canvasElement: HTMLElement): string[] => [
   ),
 ];
 
-// The companion belongs to a plank, not to the deck: it follows attention from plank to plank, and each
-// plank remembers whether its own is open. Planks 1 and 3 start open here, plank 2 closed.
-export const CompanionFollowsAttention: Story = {
+// Companions are per-plank state: every plank whose companion is open renders it beside that plank, and
+// attention plays no part in what is laid out. Planks 1 and 3 start open here, plank 2 closed. (This
+// replaces the follows-attention model, whose re-anchoring resized tiles on attention traffic and let
+// the engine silently shift the deck's scroll.)
+export const CompanionPerPlank: Story = {
   tags: ['test'],
   args: { count: 3, companionPlanks: [1, 3] },
   play: async ({ canvasElement }) => {
@@ -550,16 +552,20 @@ export const CompanionFollowsAttention: Story = {
     const canvas = within(canvasElement);
     await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
 
-    // Nothing is attended yet, so the companion falls back to the last plank — which has its own open.
-    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Notes']));
+    // Both open companions render, each beside its own plank, before anything is attended.
+    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']));
 
-    // Plank 2 was left closed, so attending it shows no companion at all.
+    // Attending the companion-less plank must not change what is laid out — under the old model this
+    // re-anchored the companion and emptied the deck of companions entirely. The settle delay is the
+    // regression net: the old behavior re-rendered within a commit, so still-visible after it means
+    // attention no longer drives layout.
     await attendPlank(canvasElement, 2);
-    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual([]));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
 
-    // Plank 1 was left open, so returning to it brings its companion back.
     await attendPlank(canvasElement, 1);
-    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview']));
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
   },
 };
 
