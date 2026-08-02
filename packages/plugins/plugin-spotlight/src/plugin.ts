@@ -8,4 +8,4 @@ import { meta } from './meta';
 
 export const SpotlightPlugin = Plugin.lazy(meta, () => import('#plugin'));
 
-export { SpotlightOperationHandlerSet } from './operations';
+export { SpotlightOperationHandlerSet } from './operations/handler-set';

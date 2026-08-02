@@ -10,7 +10,7 @@ import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 
 import { PluginDetail } from '#components';
-import { getPluginPath } from '#meta';
+import { getPluginPath } from '#paths';
 
 import {
   useCatalogEntry,

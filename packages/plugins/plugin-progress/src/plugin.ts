@@ -2,4 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ProgressPlugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const ProgressPlugin = Plugin.lazy(meta, () => import('#plugin'));

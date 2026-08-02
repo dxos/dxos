@@ -18,6 +18,11 @@
     "#containers": "./src/containers/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#paths": {
+      "source": "./src/paths.ts",
+      "types": "./dist/types/src/paths.d.ts",
+      "default": "./dist/lib/paths.mjs"
+    },
     "#plugin": {
       "source": {
         "workerd": "./src/RegistryPlugin.workerd.ts",

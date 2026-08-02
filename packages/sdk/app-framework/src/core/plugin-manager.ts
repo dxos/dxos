@@ -739,6 +739,7 @@ class ManagerImpl implements PluginManager {
 
       return yield* Effect.gen(this, function* () {
         log('resolving lazy plugin', { id });
+        performance.mark(`lazy:${id}:start`);
         yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: `lazy:${id}` });
         const resolvedPlugin = yield* Plugin.resolveLazy(plugin).pipe(
           // Cap how long a remote import can hang. Without this the host can
@@ -757,6 +758,8 @@ class ManagerImpl implements PluginManager {
         this._update(this._pluginsAtom, (plugins) =>
           plugins.map((p) => (p.meta.profile.key === id ? resolvedPlugin : p)),
         );
+        performance.mark(`lazy:${id}:end`);
+        performance.measure(`lazy:${id}`, `lazy:${id}:start`, `lazy:${id}:end`);
         yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;
       }).pipe(

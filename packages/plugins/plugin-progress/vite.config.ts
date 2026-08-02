@@ -12,6 +12,7 @@ export default defineConfig({
     components: 'src/components/index.ts',
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
+    testing: 'src/testing.ts',
     translations: 'src/translations.ts',
   },
   jsx: 'react',

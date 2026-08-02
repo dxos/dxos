@@ -6,8 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 
-import { DXOS_VERSION, Remote } from '@dxos/client';
-import { Config, Defaults, Envs, Local, Storage } from '@dxos/config';
+// Subpath import: the `@dxos/client` barrel reaches the whole client-services graph statically;
+// only the version constant is needed here (`Remote` comes from `@dxos/config` directly).
+import { DXOS_VERSION } from '@dxos/client/version';
+import { Config, Defaults, Envs, Local, Remote, Storage } from '@dxos/config';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';

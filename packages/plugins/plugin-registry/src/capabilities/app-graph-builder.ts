@@ -11,7 +11,8 @@ import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
-import { REGISTRY_ID, meta } from '#meta';
+import { meta } from '#meta';
+import { REGISTRY_ID } from '#paths';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
 import { LOAD_PLUGIN_DIALOG } from '../containers';

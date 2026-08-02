@@ -15,7 +15,8 @@ import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-u
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
-import { getPluginPath, meta } from '#meta';
+import { meta } from '#meta';
+import { getPluginPath } from '#paths';
 
 import { useDisableConfirmation } from '../../hooks';
 

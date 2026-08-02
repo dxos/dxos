@@ -4,7 +4,6 @@
 
 export * from './did';
 export * from './invitations';
-export * from './seedphrase';
 export * from './passcode';
 export * from './presentations';
 export * from './credentials';

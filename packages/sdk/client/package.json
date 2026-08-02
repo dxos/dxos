@@ -80,6 +80,11 @@
       "source": "./src/services/dedicated/coordinator-worker-entrypoint.ts",
       "types": "./dist/types/src/services/dedicated/coordinator-worker-entrypoint.d.ts",
       "import": "./dist/lib/services/dedicated/coordinator-worker-entrypoint.mjs"
+    },
+    "./version": {
+      "source": "./src/version.ts",
+      "types": "./dist/types/src/version.d.ts",
+      "import": "./dist/lib/version.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

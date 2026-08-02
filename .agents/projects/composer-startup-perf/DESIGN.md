@@ -123,5 +123,5 @@ Instead change **which plugins are in the pre-ready set**:
   deferral tier attacks the right axis; (3) the ~2.5s idle floor needs decomposition (C1 orphan
   marks: client.initialize / worker spawn / OPFS).
 - **2026-08-02 profiler was silently OFF in dev.** `isTrue(param, default)` misuse in main.tsx —
-  the second arg is a *strictness* flag, so AUDIT phase 7a's "default-on in dev" never worked
+  the second arg is a _strictness_ flag, so AUDIT phase 7a's "default-on in dev" never worked
   (also means dev BENCHMARKS rows since then recorded no profiler data). Fixed.

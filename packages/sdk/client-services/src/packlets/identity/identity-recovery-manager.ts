@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { type Context } from '@dxos/context';
-import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
+import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials/seedphrase';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';

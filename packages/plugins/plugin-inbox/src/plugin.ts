@@ -8,4 +8,4 @@ import { meta } from './meta';
 
 export const InboxPlugin = Plugin.lazy(meta, () => import('#plugin'));
 
-export { InboxOperationHandlerSet } from './operations';
+export { InboxOperationHandlerSet } from './operations/handler-set';

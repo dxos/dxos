@@ -11,14 +11,15 @@ import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode, useCallback } from 'react';
+import React, { StrictMode, Suspense, lazy, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { bootLoader, useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { EdgeHttpClient } from '@dxos/edge-client';
+// Subpath import: the app-toolkit barrel statically reaches sdk/client (and bip39 via the
+// credentials barrel), which does not belong in the pre-main module graph.
+import * as AppActivationEvents from '@dxos/app-toolkit/events';
 import { EffectEx } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
@@ -30,7 +31,9 @@ import { defaultTx } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
-import { ResetDialog } from './components';
+// Lazy: the fatal-error dialog pulls `@dxos/react-ui-form` (and its pickers/editor graph) — it must
+// not be part of the eager startup bundle for an error path that almost never renders.
+const ResetDialog = lazy(() => import('./components/ResetDialog').then((module) => ({ default: module.ResetDialog })));
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import {
   APP_KEY,
@@ -462,7 +465,14 @@ const main = async () => {
   const setupEvents = [AppActivationEvents.SetupSettings];
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
+  // Dynamic import: the edge-client barrel statically drags @dxos/credentials (bip39 wordlists)
+  // and @effect/platform http into the pre-main graph; the registry provider doesn't need any of
+  // it before plugins-init.
+  const pluginRegistryProvider = edgeUrl
+    ? await import('@dxos/edge-client').then(
+        ({ EdgeHttpClient }) => new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)),
+      )
+    : undefined;
 
   profiler?.mark('plugins:end');
   profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
@@ -496,14 +506,16 @@ const main = async () => {
       >
         <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
           <Tooltip.Provider>
-            <ResetDialog
-              error={error}
-              logStore={logStore}
-              observability={observability}
-              needRefresh={needRefresh}
-              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-              onReset={import.meta.env.DEV ? handleReset : undefined}
-            />
+            <Suspense fallback={null}>
+              <ResetDialog
+                error={error}
+                logStore={logStore}
+                observability={observability}
+                needRefresh={needRefresh}
+                onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+                onReset={import.meta.env.DEV ? handleReset : undefined}
+              />
+            </Suspense>
           </Tooltip.Provider>
         </ThemeProvider>
       </ErrorBoundary>

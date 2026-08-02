@@ -8,4 +8,4 @@ import { meta } from './meta';
 
 export const BloggerPlugin = Plugin.lazy(meta, () => import('#plugin'));
 
-export { BloggerOperationHandlerSet } from './operations';
+export { BloggerOperationHandlerSet } from './operations/handler-set';

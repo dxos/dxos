@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-// Eager re-export of `ThemePlugin`. See `@dxos/plugin-testing/src/core.ts`
-// for the rationale.
-export * from '#plugin';
+import { Plugin } from '@dxos/app-framework';
+
+import { meta } from './meta';
+
+export const ThemePlugin = Plugin.lazy(meta, () => import('#plugin'));

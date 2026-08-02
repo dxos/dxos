@@ -8,4 +8,4 @@ import { meta } from './meta';
 
 export const SpacePlugin = Plugin.lazy(meta, () => import('#plugin'));
 
-export { SpaceOperationHandlerSet } from './operations';
+export { SpaceOperationHandlerSet } from './operations/handler-set';

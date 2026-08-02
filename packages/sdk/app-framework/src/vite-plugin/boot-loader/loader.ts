@@ -191,7 +191,9 @@ export const bootLoaderPlugin = ({ status, markSvg, include = ['index.html'] }: 
         {
           tag: 'script',
           injectTo: 'body-prepend',
-          children: `window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, status })};`,
+          // `boot:html-parsed` is the "lower bound of perceivable" mark consumed by
+          // composer's startup telemetry and the playwright harness (bootLoaderVisibleMs).
+          children: `performance.mark('boot:html-parsed');window.__BOOT_LOADER_CONFIG__=${JSON.stringify({ rootId, markSvg, status })};`,
         },
         {
           tag: 'script',

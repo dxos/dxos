@@ -20,9 +20,9 @@
  *   and a self-time-by-package table on stdout.
  */
 
+import { chromium } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { chromium } from '@playwright/test';
 
 const arg = (name, fallback) => {
   const index = process.argv.indexOf(`--${name}`);
@@ -91,6 +91,21 @@ const main = async () => {
   const page = await context.newPage();
   const cdp = await context.newCDPSession(page);
 
+  // Request log: enough to reconstruct the fetch waterfall (who serialized on whom).
+  const requests = [];
+  const t0 = Date.now();
+  page.on('request', (request) => {
+    const entry = { url: request.url(), start: Date.now() - t0, end: null };
+    requests.push(entry);
+    request
+      .response()
+      .then(async (response) => {
+        entry.end = Date.now() - t0;
+        entry.status = response?.status();
+      })
+      .catch(() => {});
+  });
+
   await cdp.send('Profiler.enable');
   await cdp.send('Profiler.setSamplingInterval', { interval: 200 });
   await cdp.send('Profiler.start');
@@ -108,7 +123,11 @@ const main = async () => {
 
   const { profile } = await cdp.send('Profiler.stop');
   const snapshot = await page
-    .evaluate(() => (window /** @type {any} */).composer?.profiler?.snapshot?.() ?? null)
+    .evaluate(
+      () =>
+        window/** @type {any} */ .composer?.profiler
+          ?.snapshot?.() ?? null,
+    )
     .catch(() => null);
   await browser.close();
 
@@ -120,7 +139,7 @@ const main = async () => {
   const reportPath = path.join(outDir, `startup-${label}-attribution.json`);
   writeFileSync(
     reportPath,
-    `${JSON.stringify({ url, label, ready, navToReady, totalMs, attribution, snapshot }, null, 2)}\n`,
+    `${JSON.stringify({ url, label, ready, navToReady, totalMs, attribution, snapshot, requests }, null, 2)}\n`,
   );
 
   console.log(`\nurl: ${url}  ready: ${ready}  navToReady: ${navToReady}ms  sampled: ${totalMs}ms`);

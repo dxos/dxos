@@ -53,7 +53,7 @@ import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { ProgressPlugin } from '@dxos/plugin-progress/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';

@@ -23,7 +23,7 @@ import { Mailbox } from '@dxos/plugin-inbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { ProgressPlugin } from '@dxos/plugin-progress/testing';
 import { translations as progressTranslations } from '@dxos/plugin-progress/translations';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
