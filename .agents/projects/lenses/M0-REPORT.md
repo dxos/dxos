@@ -405,20 +405,32 @@ Resolutions and directions from design review, each turning an "open" item into 
    back under the old target type so stale refs heal at read time; eager — a referrer lens that
    retypes/repoints the ref property, run as an ordinary migration by the same runner, opt-in per
    referrer type.
-3. **1→N key agreement — OPEN, candidates ranked.** The split key is
-   `<lensId>:<elementStampedId>`; new schemas stamp at creation and are fully solved. For existing
-   unstamped collections the backfill-stamp seed is NOT settled (corrected in review): (a)
-   ObjID-seeded — best zero-coordination candidate (concurrent backfills of an untouched element
-   derive identical stamps, verified 7c), but a concurrent REORDER is remove+insert: the stamp
-   written into the removed map is orphaned, the reinserted element is unstamped, and split
-   objects keyed off the dead stamp need explicit orphan cleanup (list-element
-   remove-vs-inner-edit semantics reasoned, not tested — spike needed); (b) random stamps — the
-   same orphan class on EVERY concurrent backfill pair, strictly worse; (c) content-hash — survives
-   reorders but falsely merges legitimately identical elements (two equal addresses in one list),
-   disqualifying; (d) Strategy-C coordination for the backfill only — the stamp phase is a
-   one-time transitional step, so paying leader/EDGE coordination once eliminates the race and
-   every later split is free; defensible despite the no-coordination default. Sequencing under any
-   choice: stamp phase first, split phase gated on stamp presence.
+3. **1→N element identity — SOLVED by reframing (2026-08-02, second pass): keyed collections +
+   baseline-view derivation; embedded stamps rejected as a class.** The prior candidates all
+   anchored identity to array structure (position, ObjID, or a stamp written into the element),
+   and every such scheme inherits reorder fragility — a reorder is remove+insert, and a concurrent
+   reorderer recreates the element from a snapshot that may not include the stamp yet. Embedded
+   stamps also carry a subtle clone hazard: copy-pasting an element duplicates its stamp, forcing
+   a false merge. Two escape routes, both reorder-immune by construction:
+   - **Destination model: keyed collections.** Entries in a `Record<id, Item>` with order as
+     separate data (id-array with first-occurrence dedupe, or a fractional-index field). A reorder
+     becomes an order-write that cannot touch identity; map-key robustness is bench-proven
+     (claim 1); cloning cannot silently duplicate identity (map insertion requires minting a key).
+     Wants a first-class ECHO ordered-collection type (array API, map+order storage). Most
+     substantial DXOS collections are already `Ref`-array shaped; inline struct arrays are the
+     residual case. (Automerge Table is vestigial in v3 — no API; a native list-move op would also
+     solve this upstream but does not exist — watch, don't wait.)
+   - **Transition: baseline-view key derivation.** The conversion migration derives each element's
+     key as `<lensId>:<parentId>:<baselineIndex>` from `A.view(doc, baselineHeads)` — the frozen
+     baseline every peer already shares via the recorded migration heads. Position is perfectly
+     stable inside a frozen snapshot, so the derivation is deterministic across peers with zero
+     coordination and never reads the live (reorderable) array. With a keyed-map target,
+     convergence is plain map-key semantics — the merge engine is not even needed for the clean
+     case. Residual: late old-schema reorder+edit obscures live-to-baseline correspondence — the
+     source array is retained, clean cases resolve via patch-index tracking, and genuinely
+     ambiguous cases surface as history-native conflicts for review (ambiguity surfaced, not data
+     lost — within the bar). Spikes implied: baseline-view derivation + map-target convergence
+     (composes verified pieces); the late-reorder correspondence/conflict path.
 
 ## Out of scope / open
 

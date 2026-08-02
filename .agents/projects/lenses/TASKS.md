@@ -433,13 +433,18 @@ the mechanism.
       within-fold-window key only; a durable 1→N split key is an explicit id field stamped in the
       element at creation. The rich-text lens's block identity inherits the same verdict — cut/paste
       or drag of a block mints a new ObjID, so "stable block identity via Automerge cursors"
-      (Phase 6) needs stamped ids too, not bare list identity. STAMPING (2026-08-02 review): new
-      schemas stamp at creation — solved; the BACKFILL seed for existing collections stays OPEN
-      with ranked candidates (ObjID-seeded best zero-coordination option but a concurrent reorder
-      orphans the stamp and leaves orphan-keyed splits needing cleanup — remove-vs-inner-edit
-      semantics unverified, spike needed; random strictly worse; content-hash falsely merges
-      identical elements; Strategy-C-coordinated one-time backfill eliminates the race and is
-      defensible for a transitional step). Split phase gates on stamp presence regardless.
+      (Phase 6) needs stable ids too, not bare list identity. RESOLVED by reframing (2026-08-02,
+      second pass): embedded stamps rejected as a CLASS (anything anchored to array structure
+      inherits reorder fragility, plus the clone hazard — copying an element duplicates its stamp
+      into a false merge). The answer: (1) destination model = KEYED COLLECTIONS
+      (`Record<id, Item>` + separate order data; reorder becomes an order-write that cannot touch
+      identity; wants a first-class ECHO ordered-collection type); (2) transition = BASELINE-VIEW
+      key derivation (`<lensId>:<parentId>:<baselineIndex>` computed from `A.view` at the recorded
+      migration heads — position is perfectly stable inside a frozen snapshot, deterministic
+      across peers, zero coordination, never reads the live array; map-target convergence needs no
+      merge engine). Residual: late reorder+edit correspondence surfaces as history-native
+      conflicts, not silent loss. Spikes: baseline derivation + map convergence; the
+      late-correspondence path. Details in M0-REPORT.md follow-on §3.
 - [x] **Claim 8 · does a dangling relation degrade gracefully? — YES, confirmed cross-peer.**
       A relation created with two brand-new endpoints under partition surfaces on the other peer
       with both endpoints resolvable after heal; queries never throw at any point (every poll
