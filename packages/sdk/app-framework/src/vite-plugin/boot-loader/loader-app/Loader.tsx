@@ -133,18 +133,25 @@ export const Loader: Component<LoaderProps> = (props) => {
   // under the ring's conic fade mask, whose hard edge bisects the dot into a
   // half-circle.
   const arc = () => {
+    const TWO_PI = 2 * Math.PI;
+    const TOP = -Math.PI / 2; // 12 o'clock
     const fraction = Math.min(shown() / 100, 0.9999);
-    const sweep = fraction * 2 * Math.PI;
-    const start = -Math.PI / 2; // 12 o'clock
-    const end = start - sweep; // anticlockwise (decreasing angle)
-    const x0 = RING_CENTER + RING_RADIUS * Math.cos(start);
-    const y0 = RING_CENTER + RING_RADIUS * Math.sin(start);
-    const headX = RING_CENTER + RING_RADIUS * Math.cos(end);
-    const headY = RING_CENTER + RING_RADIUS * Math.sin(end);
-    const largeArc = sweep > Math.PI ? 1 : 0;
-    // sweep-flag 0 = anticlockwise (negative-angle) direction.
+    const sweep = fraction * TWO_PI;
+    const head = TOP - sweep; // anticlockwise (decreasing angle)
+    const start = TOP - (fraction * Math.PI) / 2;
+    // Anticlockwise span from start to head, normalized to [0, 2π).
+    const span = (((start - head) % TWO_PI) + TWO_PI) % TWO_PI;
+    const largeArc = span > Math.PI ? 1 : 0;
+    // const startX = RING_CENTER + RING_RADIUS * Math.cos(top);
+    // const startY = RING_CENTER + RING_RADIUS * Math.sin(top);
+    const startX = RING_CENTER + RING_RADIUS * Math.cos(start);
+    const startY = RING_CENTER + RING_RADIUS * Math.sin(start);
+    const headX = RING_CENTER + RING_RADIUS * Math.cos(head);
+    const headY = RING_CENTER + RING_RADIUS * Math.sin(head);
     return {
-      d: `M ${x0} ${y0} A ${RING_RADIUS} ${RING_RADIUS} 0 ${largeArc} 0 ${headX} ${headY}`,
+      d: `M ${startX} ${startY} A ${RING_RADIUS} ${RING_RADIUS} 0 ${largeArc} 0 ${headX} ${headY}`,
+      startX,
+      startY,
       headX,
       headY,
     };
@@ -170,6 +177,7 @@ export const Loader: Component<LoaderProps> = (props) => {
          */}
         {shown() > 0 ? (
           <svg id='boot-loader-ring-head' viewBox='0 0 100 100' aria-hidden='true'>
+            {/* <circle class='boot-loader-ring-marker' cx={arc().startX} cy={arc().startY} r={MARKER_RADIUS / 3} /> */}
             <circle class='boot-loader-ring-marker' cx={arc().headX} cy={arc().headY} r={MARKER_RADIUS} />
           </svg>
         ) : null}
