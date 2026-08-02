@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Organization, Person } from '@dxos/types';
 
 import { type PageAction } from '#types';

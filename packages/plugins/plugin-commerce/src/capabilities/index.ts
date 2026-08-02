@@ -4,7 +4,7 @@
 
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { CommerceEvents } from '../types';
 

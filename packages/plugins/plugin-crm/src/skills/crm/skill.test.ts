@@ -12,7 +12,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { ProfileOf } from '#types';

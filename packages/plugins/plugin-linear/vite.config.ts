@@ -14,8 +14,8 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-      'LinearEvents': 'src/types/LinearEvents.ts',
-    'LinearOperation': 'src/types/LinearOperation.ts',
-},
+    LinearEvents: 'src/types/LinearEvents.ts',
+    LinearOperation: 'src/types/LinearOperation.ts',
+  },
   test: { node: true },
 });

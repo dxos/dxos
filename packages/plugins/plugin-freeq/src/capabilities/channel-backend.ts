@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
-import { ThreadCapabilities } from '@dxos/plugin-thread';
+import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { Message } from '@dxos/types';
 
 import { FREEQ_BACKEND_KIND } from '../constants';

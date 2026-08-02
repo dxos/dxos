@@ -42,7 +42,7 @@ import {
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Graph } from '@dxos/plugin-graph';
-import { ScriptOperation } from '@dxos/plugin-script';
+import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';

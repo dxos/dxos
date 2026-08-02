@@ -9,7 +9,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Order, Query } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';

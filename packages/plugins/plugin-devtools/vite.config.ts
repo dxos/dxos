@@ -16,9 +16,9 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-      'Devtools': 'src/types/Devtools.ts',
+    'Devtools': 'src/types/Devtools.ts',
     'DevtoolsEvents': 'src/types/DevtoolsEvents.ts',
-},
+  },
   jsx: 'react',
   test: { node: true, storybook: true },
 });

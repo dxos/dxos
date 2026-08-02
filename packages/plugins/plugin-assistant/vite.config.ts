@@ -25,11 +25,11 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-      'Assistant': 'src/types/Assistant.ts',
+    'Assistant': 'src/types/Assistant.ts',
     'AssistantOperation': 'src/types/AssistantOperation.ts',
     'AssistantCapabilities': 'src/types/AssistantCapabilities.ts',
     'Ollama': 'src/types/Ollama.ts',
-},
+  },
   jsx: 'react',
   test: { node: true, storybook: true },
 });

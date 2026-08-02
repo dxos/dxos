@@ -3,7 +3,8 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import { StudioCapabilities, StudioEvents } from '@dxos/plugin-studio/types';
 
 export const Connector = Capability.lazyModule(

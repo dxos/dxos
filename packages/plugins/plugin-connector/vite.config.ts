@@ -20,10 +20,10 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-      'Connection': 'src/types/Connection.ts',
+    'Connection': 'src/types/Connection.ts',
     'ConnectorEvents': 'src/types/ConnectorEvents.ts',
     'ConnectorOperation': 'src/types/ConnectorOperation.ts',
-},
+  },
   jsx: 'react',
   test: { node: true, storybook: true },
 });

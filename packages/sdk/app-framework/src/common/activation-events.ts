@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { log } from '@dxos/log';
 
-import { ActivationEvent as ActivationEvent$, type PluginManager } from '../core';
+import { type PluginManager, ActivationEvent as ActivationEvent$ } from '../core';
 
 /**
  * Fired when the app is started.

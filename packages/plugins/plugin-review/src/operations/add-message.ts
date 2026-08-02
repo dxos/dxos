@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 

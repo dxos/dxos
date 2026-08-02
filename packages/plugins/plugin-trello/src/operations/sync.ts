@@ -15,7 +15,8 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import { UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';

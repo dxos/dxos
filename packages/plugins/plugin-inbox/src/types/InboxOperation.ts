@@ -15,12 +15,12 @@ import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { FactStore } from '@dxos/pipeline-rdf/fact-store';
 import {
-  Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
 } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports

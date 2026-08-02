@@ -5,7 +5,7 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { CodeCapabilities, CodeEvents } from '#types';
 

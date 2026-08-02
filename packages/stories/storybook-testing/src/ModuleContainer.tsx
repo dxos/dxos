@@ -13,7 +13,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { StorybookCapabilities } from '@dxos/plugin-testing';
+import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';

@@ -18,10 +18,10 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
     'util': 'src/util/index.ts',
-      'Game': 'src/types/Game.ts',
+    'Game': 'src/types/Game.ts',
     'GameCapabilities': 'src/types/GameCapabilities.ts',
     'GameEvents': 'src/types/GameEvents.ts',
-},
+  },
   jsx: 'react',
   test: { node: true },
 });

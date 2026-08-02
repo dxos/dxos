@@ -22,10 +22,10 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-      'Kanban': 'src/types/Kanban.ts',
+    'Kanban': 'src/types/Kanban.ts',
     'KanbanEvents': 'src/types/KanbanEvents.ts',
     'KanbanOperation': 'src/types/KanbanOperation.ts',
-},
+  },
   jsx: 'react',
   test: { node: true, browser: 'chromium', storybook: true },
 });

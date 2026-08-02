@@ -20,7 +20,7 @@ import { bundleFunction } from '@dxos/edge-compute/native';
 import { failedInvariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Message } from '@dxos/types';

@@ -17,7 +17,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { LINEAR_API_URL } from '../constants';
 import { LinearGraphQLError } from '../errors';

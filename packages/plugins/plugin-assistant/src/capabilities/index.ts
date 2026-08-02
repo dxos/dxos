@@ -7,10 +7,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
-import { RoutineCapabilities, RoutineEvents } from '@dxos/plugin-routine';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { AssistantCapabilities, AssistantEvents } from '#types';
 

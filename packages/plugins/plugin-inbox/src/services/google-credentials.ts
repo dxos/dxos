@@ -10,7 +10,7 @@ import * as Credential from '@dxos/compute/Credential';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 

@@ -11,13 +11,13 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import {
-  Connection,
   ConnectionTestError,
   Connector,
   type CredentialForm,
   type OnTokenCreated,
   type TestConnection,
 } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {

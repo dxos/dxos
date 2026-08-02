@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
-import { RoutineCapabilities } from '@dxos/plugin-routine';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 //
 // Capability Module

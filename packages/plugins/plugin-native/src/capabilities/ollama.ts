@@ -24,7 +24,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { log } from '@dxos/log';
-import { AssistantCapabilities, type Ollama } from '@dxos/plugin-assistant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import type * as Ollama from '@dxos/plugin-assistant/Ollama';
 
 // NOTE: Running ollama on non-standard port (config Tauri).
 const OLLAMA_HOST = 'http://localhost:21434';

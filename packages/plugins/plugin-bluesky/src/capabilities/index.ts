@@ -4,8 +4,10 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Connector as ConnectorCapability, ConnectorEvents } from '@dxos/plugin-connector';
-import { ThreadCapabilities, ThreadEvents } from '@dxos/plugin-thread';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
 import { BlueskyEvents } from '../events';
 

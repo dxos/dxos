@@ -12,7 +12,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { meta } from '#meta';
 import { PresenterOperation } from '#types';

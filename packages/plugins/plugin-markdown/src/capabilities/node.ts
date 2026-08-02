@@ -3,7 +3,7 @@
 //
 
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));

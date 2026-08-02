@@ -11,7 +11,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
-import { ExtractedFrom } from '@dxos/plugin-inbox';
+import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { Booking, Segment, Trip } from '../../types';

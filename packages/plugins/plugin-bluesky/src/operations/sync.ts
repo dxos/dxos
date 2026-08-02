@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Subscription } from '@dxos/plugin-magazine';
+import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';
 import { BlueskyApi } from '../services';

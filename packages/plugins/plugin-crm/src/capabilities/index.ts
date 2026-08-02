@@ -5,7 +5,8 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ProjectCapabilities, ProjectsEvents } from '@dxos/plugin-projects/types';
-import { RoutineCapabilities, RoutineEvents } from '@dxos/plugin-routine';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 
 import { CrmEvents } from '#types';
 

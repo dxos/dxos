@@ -9,8 +9,9 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Cursor } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import * as Connection from '@dxos/plugin-connector/Connection';
+import { UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { Expando } from '@dxos/schema';
 
 import { TRELLO_SOURCE } from '../constants';

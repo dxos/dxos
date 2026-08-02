@@ -20,7 +20,7 @@ export default defineConfig({
     'testing/index': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-      'Booking': 'src/types/Booking.ts',
+    'Booking': 'src/types/Booking.ts',
     'BookingOperation': 'src/types/BookingOperation.ts',
     'BookingSearch': 'src/types/BookingSearch.ts',
     'Place': 'src/types/Place.ts',
@@ -31,7 +31,7 @@ export default defineConfig({
     'TripCapabilities': 'src/types/TripCapabilities.ts',
     'TripEvents': 'src/types/TripEvents.ts',
     'TripOperation': 'src/types/TripOperation.ts',
-},
+  },
   jsx: 'react',
   test: { node: true, storybook: true },
 });

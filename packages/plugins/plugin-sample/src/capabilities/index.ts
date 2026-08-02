@@ -8,7 +8,7 @@
 // capabilities that have no maker use `Capability.lazyModule()` directly.
 
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { SampleCapabilities, SampleEvents } from '#types';
 

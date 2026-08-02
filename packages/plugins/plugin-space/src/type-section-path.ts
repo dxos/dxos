@@ -3,7 +3,8 @@
 //
 
 import { type CapabilityManager } from '@dxos/app-framework';
-import { AppCapabilities, GraphPath } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type GraphBuilder } from '@dxos/plugin-graph';
 
 /**

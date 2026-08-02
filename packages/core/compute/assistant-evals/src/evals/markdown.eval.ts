@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { Database } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { trim } from '@dxos/util';
 

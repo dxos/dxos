@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { useOptionalAtomCapabilityState, useOptionalCapabilities } from '@dxos/app-framework/ui';
-import { type Settings, TranscriptionCapabilities } from '@dxos/plugin-transcription';
+import type * as Settings from '@dxos/plugin-transcription/Settings';
+import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { DropdownMenu, Icon, IconButton, MicButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

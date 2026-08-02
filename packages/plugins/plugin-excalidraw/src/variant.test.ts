@@ -15,12 +15,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import {
-  Drawing,
-  DrawingOperation,
-  IllustratorCapabilities,
-  IllustratorOperationHandlerSet,
-} from '@dxos/plugin-illustrator';
+import { IllustratorOperationHandlerSet } from '@dxos/plugin-illustrator';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { ExcalidrawBuilder } from '#model';
 

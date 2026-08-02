@@ -11,7 +11,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Filter, Obj } from '@dxos/echo';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { GraphBuilder, Node, type NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';

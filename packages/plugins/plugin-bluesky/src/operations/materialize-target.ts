@@ -8,7 +8,7 @@ import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Subscription } from '@dxos/plugin-magazine';
+import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { BLUESKY_SOURCE, BLUESKY_TARGET } from '../constants';
 import { MaterializeBlueskyTarget } from './definitions';

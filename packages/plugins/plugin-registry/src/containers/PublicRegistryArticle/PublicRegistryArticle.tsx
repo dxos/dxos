@@ -11,7 +11,7 @@ import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 

@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Client } from '@dxos/client';
 import { Database, Obj, type Ref } from '@dxos/echo';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { AtprotoRepoError, EdgeNotConfiguredError, MissingHandleError, PdsResolutionError } from '../errors';
 import { canonicalStringify } from '../hash';

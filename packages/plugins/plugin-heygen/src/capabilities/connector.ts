@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { Connection, Connector } from '@dxos/plugin-connector';
+import { Connector } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants';
 

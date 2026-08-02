@@ -13,7 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
 import { crmProject } from './crm-project';

@@ -12,7 +12,8 @@ import * as Routine from '@dxos/compute/Routine';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { RoutineCapabilities, RoutineOperation } from '@dxos/plugin-routine';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
 import { ProjectOperation } from '#types';
 

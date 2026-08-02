@@ -12,8 +12,8 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
 import { AccessToken, Cursor } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
-import { Kanban } from '@dxos/plugin-kanban';
+import * as Connection from '@dxos/plugin-connector/Connection';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import { Expando } from '@dxos/schema';
 
 import { TRELLO_SOURCE } from '../constants';

@@ -16,8 +16,8 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     types: 'src/types/index.ts',
-      'StorybookCapabilities': 'src/types/StorybookCapabilities.ts',
-},
+    StorybookCapabilities: 'src/types/StorybookCapabilities.ts',
+  },
   jsx: 'react',
   test: { node: true },
 });

@@ -9,13 +9,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import {
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
   GetSyncTargetsInput,
   GetSyncTargetsOutput,
   MaterializeTargetInput,
   MaterializeTargetOutput,
 } from '@dxos/plugin-connector';
+import type * as Connection from '@dxos/plugin-connector/Connection';
 
 import { meta } from '#meta';
 

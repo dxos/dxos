@@ -14,8 +14,8 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-      'GitHubEvents': 'src/types/GitHubEvents.ts',
-    'GitHubOperation': 'src/types/GitHubOperation.ts',
-},
+    GitHubEvents: 'src/types/GitHubEvents.ts',
+    GitHubOperation: 'src/types/GitHubOperation.ts',
+  },
   test: { node: true },
 });

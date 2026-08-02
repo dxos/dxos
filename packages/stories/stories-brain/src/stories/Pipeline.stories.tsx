@@ -51,7 +51,7 @@ import {
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
 import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';

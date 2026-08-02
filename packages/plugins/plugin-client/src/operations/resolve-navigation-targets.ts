@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace, NavigationOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, EID } from '@dxos/echo';
 import { Position } from '@dxos/util';
 

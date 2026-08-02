@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Filter, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
 import { Blog } from '../types';

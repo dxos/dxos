@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ATMOSPHERE_PROVIDER_ID, type Connection } from '@dxos/plugin-connector';
+import { ATMOSPHERE_PROVIDER_ID } from '@dxos/plugin-connector';
+import type * as Connection from '@dxos/plugin-connector/Connection';
 
 /**
  * Connector ids that authenticate against the AT Protocol. `atmosphere` is plugin-connector's

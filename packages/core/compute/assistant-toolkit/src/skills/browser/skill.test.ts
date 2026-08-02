@@ -16,7 +16,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Person } from '@dxos/types';

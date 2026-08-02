@@ -14,7 +14,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
-import { AssistantOperation } from '@dxos/plugin-assistant';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 
 import { ProjectOperation } from '#types';
 

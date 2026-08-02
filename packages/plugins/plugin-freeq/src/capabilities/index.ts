@@ -3,7 +3,8 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { ThreadCapabilities, ThreadEvents } from '@dxos/plugin-thread';
+import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
+import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
 import * as FreeqCapabilities from '../FreeqCapabilities';
 

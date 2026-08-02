@@ -9,7 +9,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
 import { type ProjectCapabilities } from '@dxos/plugin-projects/types';
 import { makeRoutine } from '@dxos/plugin-routine';

@@ -21,10 +21,10 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-      'RoutineCapabilities': 'src/types/RoutineCapabilities.ts',
+    'RoutineCapabilities': 'src/types/RoutineCapabilities.ts',
     'RoutineEvents': 'src/types/RoutineEvents.ts',
     'RoutineOperation': 'src/types/RoutineOperation.ts',
-},
+  },
   jsx: 'react',
   test: { node: true, storybook: true },
 });

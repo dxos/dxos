@@ -9,7 +9,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useActiveSpace, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 
 /** LEFT: the mailbox article (includes the connect/sync auth button). */

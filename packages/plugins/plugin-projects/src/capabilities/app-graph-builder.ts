@@ -17,7 +17,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';

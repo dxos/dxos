@@ -19,11 +19,11 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
     'testing': 'src/testing.ts',
-      'PresenterCapabilities': 'src/types/PresenterCapabilities.ts',
+    'PresenterCapabilities': 'src/types/PresenterCapabilities.ts',
     'PresenterEvents': 'src/types/PresenterEvents.ts',
     'PresenterOperation': 'src/types/PresenterOperation.ts',
     'Settings': 'src/types/Settings.ts',
-},
+  },
   jsx: 'react',
   test: { node: true, storybook: true },
 });

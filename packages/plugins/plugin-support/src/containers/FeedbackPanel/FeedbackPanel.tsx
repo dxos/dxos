@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import { useAtomCapability, useCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
-import { ObservabilityCapabilities } from '@dxos/plugin-observability';
+import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import { useConfig } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Panel } from '@dxos/react-ui';

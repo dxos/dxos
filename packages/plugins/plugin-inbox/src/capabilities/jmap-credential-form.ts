@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { Connection, type CredentialForm } from '@dxos/plugin-connector';
+import { type CredentialForm } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { Jmap } from '../apis';
 import { JMAP_DEFAULT_HOST } from '../constants';

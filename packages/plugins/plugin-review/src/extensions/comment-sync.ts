@@ -10,7 +10,7 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
-import { type Markdown } from '@dxos/plugin-markdown';
+import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments } from '@dxos/ui-editor';

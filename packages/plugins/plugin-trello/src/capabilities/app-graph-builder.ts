@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { isCursorForTarget } from '@dxos/plugin-connector';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Kanban } from '@dxos/plugin-kanban';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
 
 import { meta } from '#meta';
 

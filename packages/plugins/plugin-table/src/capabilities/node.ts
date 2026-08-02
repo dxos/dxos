@@ -3,7 +3,7 @@
 //
 
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 // The capabilities `TablePlugin.node` activates, and only those. A lazy module defers its import at
 // runtime but a bundler still walks it, so listing the React surfaces here would pull the plugin's

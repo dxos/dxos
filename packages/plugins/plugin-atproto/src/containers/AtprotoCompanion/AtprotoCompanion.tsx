@@ -9,7 +9,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';

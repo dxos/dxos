@@ -16,11 +16,11 @@ import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
   COMPANION_VIEW_STATE_CONTEXT,
-  DeckCapabilities,
   PLANK_COMPANION_TYPE,
-  type StoredDeckState,
   companionAspect,
+  type StoredDeckState,
 } from '@dxos/plugin-deck';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 

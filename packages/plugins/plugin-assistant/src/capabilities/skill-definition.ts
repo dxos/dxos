@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import {
@@ -25,7 +24,7 @@ import {
   WebSearchSkill,
   makeDelegationStrategy,
 } from '@dxos/assistant-toolkit';
-import { RoutineCapabilities } from '@dxos/plugin-routine';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 import { AssistantSkill } from '#skills';
 

@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Thread } from '@dxos/types';
 
 import { CommentCapabilities } from '../types';

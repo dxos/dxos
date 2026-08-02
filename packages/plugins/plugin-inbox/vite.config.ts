@@ -24,7 +24,7 @@ export default defineConfig({
     'testing/node': 'src/testing/node.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-      'Calendar': 'src/types/Calendar.ts',
+    'Calendar': 'src/types/Calendar.ts',
     'ExtractedFrom': 'src/types/ExtractedFrom.ts',
     'InboxCapabilities': 'src/types/InboxCapabilities.ts',
     'InboxEvents': 'src/types/InboxEvents.ts',
@@ -33,7 +33,7 @@ export default defineConfig({
     'Settings': 'src/types/Settings.ts',
     'DraftEvent': 'src/types/DraftEvent.ts',
     'SystemTags': 'src/types/SystemTags.ts',
-},
+  },
   jsx: 'react',
   // Many stories here use `withClientProvider` (ECHO/Automerge-backed); per-file isolation
   // re-instantiates that WASM module graph for every story file and exhausts the single headless

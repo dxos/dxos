@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { ProjectOperation } from '@dxos/plugin-projects/types';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';

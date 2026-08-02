@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { ClientEvents } from '../types';
 import { ClientCapabilities } from '../types';

@@ -8,7 +8,7 @@ import { Filter, Ref, Type, View } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { ChessSkill } from '@dxos/plugin-chess';
 import { MapSkill } from '@dxos/plugin-map';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ViewModel } from '@dxos/schema';
 import { trim } from '@dxos/util';
 

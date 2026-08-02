@@ -13,7 +13,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex, Text } from '@dxos/schema';
 
 import { mailboxFacts } from './mailbox-facts';

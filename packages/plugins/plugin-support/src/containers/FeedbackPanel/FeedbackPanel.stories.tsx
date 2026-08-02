@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN } from '@dxos/keys';
 import { type Observability } from '@dxos/observability';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ObservabilityCapabilities } from '@dxos/plugin-observability';
+import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { InboxCapabilities } from '@dxos/plugin-inbox';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
 import {
   AppGraphBuilder,

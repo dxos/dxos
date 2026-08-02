@@ -8,7 +8,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
-import { Graph } from '@dxos/plugin-explorer';
+import * as Graph from '@dxos/plugin-explorer/Graph';
 import { Text } from '@dxos/schema';
 
 export type CellType = 'markdown' | 'script' | 'query' | 'prompt' | 'view';

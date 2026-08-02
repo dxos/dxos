@@ -8,7 +8,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { FileCapabilities, FileEvents } from '#types';
 

@@ -33,7 +33,7 @@ import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Feed, Tag, Type } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';

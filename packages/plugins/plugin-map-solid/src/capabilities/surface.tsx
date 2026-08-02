@@ -10,7 +10,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Map } from '@dxos/plugin-map';
+import * as Map from '@dxos/plugin-map/Map';
 import { Position } from '@dxos/util';
 
 export default Capability.makeModule(() =>

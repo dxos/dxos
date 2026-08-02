@@ -5,7 +5,7 @@
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { RoutineCapabilities } from '@dxos/plugin-routine';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 // Server-safe `#capabilities` barrel: the subset of modules the workerd entry activates,
 // declared without importing browser-only capability packages (so the workerd bundle stays

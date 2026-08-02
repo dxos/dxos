@@ -12,7 +12,8 @@ import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Connection, findBindingForTarget } from '@dxos/plugin-connector';
+import { findBindingForTarget } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 

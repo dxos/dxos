@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Calendar } from '@dxos/plugin-inbox';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { RoutineOperation } from '@dxos/plugin-routine/types';
 import { Event } from '@dxos/types';
 import { trim } from '@dxos/util';
