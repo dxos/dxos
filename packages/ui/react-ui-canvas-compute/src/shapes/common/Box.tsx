@@ -32,7 +32,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
 
     return (
       <div ref={forwardedRef} className='flex flex-col h-full w-full justify-between'>
-        <div className='flex shrink-0 w-full justify-between items-center h-[32px] bg-input-surface'>
+        <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
           <Icon icon={icon} classNames='mx-2' />
           <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>
           <IconButton
@@ -49,7 +49,7 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
           />
         </div>
         <div className={mx('flex flex-col h-full grow overflow-hidden', classNames)}>{children}</div>
-        <div className='flex shrink-0 w-full justify-between items-center h-[32px] bg-input-surface'>
+        <div className='flex shrink-0 w-full justify-between items-center h-[32px] dx-input-surface'>
           <div className='grow px-2 text-sm truncate'>{debug ? shape.id : status}</div>
           {openable && (
             <IconButton

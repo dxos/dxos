@@ -116,7 +116,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
               return (
                 <ListItem
                   key={model.name}
-                  className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 w-full'
+                  className='flex flex-col gap-0.5 rounded-sm dx-input-surface px-2 py-1.5 w-full'
                 >
                   <div className='flex items-center gap-2'>
                     <span className='grow truncate font-medium'>{model.name}</span>
@@ -157,7 +157,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
                 : (progress?.status ?? t('settings.ollama.pulling.label'));
               return (
-                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 w-full'>
+                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm dx-input-surface px-2 py-1.5 w-full'>
                   <div className='flex items-center gap-2'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
                     <IconButton

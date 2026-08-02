@@ -86,7 +86,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           className={mx(
             'absolute z-1 inset-y-0 end-0 w-(--dx-r0-size)!',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
-            'grid grid-cols-1 grid-rows-[1fr_min-content] bg-r0-surface dx-contain-layout dx-app-drag',
+            'grid grid-cols-1 grid-rows-[1fr_min-content] dx-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
@@ -162,7 +162,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
   return (
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
-        <Toolbar.Root style={iconSize(5)} classNames='bg-header-surface'>
+        <Toolbar.Root style={iconSize(5)} classNames='dx-header-surface'>
           <IconButton
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
             label={toLocalizedString(companion.properties.label, t)}
@@ -175,7 +175,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
           <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='bg-r1-surface'>
+      <Panel.Content classNames='dx-r1-surface'>
         <Surface.Surface
           type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
           data={data}

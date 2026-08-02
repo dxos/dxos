@@ -172,7 +172,7 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   return (
     <Panel.Root>
-      <Panel.Toolbar classNames='bg-toolbar-surface'>
+      <Panel.Toolbar classNames='dx-toolbar-surface'>
         <Toolbar.Root classNames='dx-document'>
           <Toolbar.IconButton
             square

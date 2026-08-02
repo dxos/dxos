@@ -588,7 +588,26 @@ Phases 2–4 are independent of each other after Phase 1.
 > substitutes at the scope that _declares_ it, so aliases must be re-declared in each zone.
 > `--color-selected-surface` had been frozen to the root value by this since it was introduced.
 >
-> Outstanding: the ~164 bare `bg-*-surface` zone roots (items 3-4 below).
+> Zone migration done: every bare `bg-*-surface` that acts as a zone root now uses the matching
+> `dx-*-surface` class. Deliberately left as bare utilities: leaf/decorative fills (swatches, avatar
+> tiles, keycaps, media posters, `<pre>` dumps), transient state fills, and classes applied to a
+> control rather than a region (a zone class would paint an unconditional background and defeat the
+> control's own hover/focus chrome).
+>
+> Two structural limits of the zone classes, found while migrating:
+>
+> - **`@apply` cannot take a zone class.** `dx-*-surface` lives in `@layer dx-components`, so it is
+>   not a Tailwind utility. Four CSS sites still `@apply bg-*-surface` (`input.css`, `button.css`,
+>   `tag.css`, `size.css`); they need a `--surface-bg` declaration instead of a class swap.
+> - **A zone class loses to a same-layer component class with higher specificity.** `Select`'s
+>   trigger is a `Button`, and `.dx-button[data-variant='default']` sets `background` in the same
+>   layer, so only a utility-layer `bg-*` wins there. This is the mirror image of the §6.1 cascade
+>   problem and another reason to move component geometry/paint onto custom properties (D5).
+>
+> Known gap: **alpha-modified surfaces have no zone equivalent.** `bg-base-surface/70` (2 sites, both
+> in plugin-terra floating panels) cannot become a zone class, because the `dx-*` classes paint an
+> opaque `--surface-bg`. Either add a `--surface-alpha` knob to the zone rule or accept that
+> translucent floaters do not publish a surface.
 
 1. Implement the universal derivation rule + `data-surface` levels (D4); collapse
    `surface.css` to per-level one-liners; keep `dx-*-surface` classes as aliases that set only

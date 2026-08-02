@@ -199,7 +199,7 @@ export const DeckContentEmpty = () => {
   const { state } = useDeckState();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
-    <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
+    <div className='grid place-items-center p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
       <Surface.Surface type={Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
@@ -1480,7 +1480,7 @@ export const DeckPlanks = () => {
           but no style. */}
       <div
         ref={hostRef}
-        className='relative bg-deck-surface overflow-hidden'
+        className='relative dx-deck-surface overflow-hidden'
         // `--deck-expose-scale` is absent here on purpose: `useExposeScale` writes it directly so it is in
         // place before the FLIP measures. The rest are constants.
         style={

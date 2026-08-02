@@ -103,7 +103,7 @@ const HorizontalStory = () => {
 const GridCell = ({ border, items }: { border?: boolean; items: Item[] }) => {
   const [current, setCurrent] = useState<string | undefined>();
   return (
-    <div className='overflow-hidden bg-base-surface'>
+    <div className='overflow-hidden dx-base-surface'>
       <Focus.Group classNames='h-full' border={border}>
         {items.map((item) => (
           <Focus.Item

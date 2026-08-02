@@ -34,7 +34,7 @@ export const Default: Story = {
   render: () => {
     const [selected, setSelected] = useState(0);
     return (
-      <div className='flex flex-col w-[30rem] p-2 bg-attention-surface rounded-lg'>
+      <div className='flex flex-col w-[30rem] p-2 dx-attention-surface rounded-lg'>
         <TogglePanel.Root open>
           <TogglePanel.Content classNames='grid grid-rows-[max-content_1fr]'>
             <TogglePanel.Header>

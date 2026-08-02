@@ -125,7 +125,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
     <Editor.Root ref={editorRef} extensions={extensions}>
       <Editor.Content>
         <Editor.Toolbar classNames='dx-document' attendableId={DOCUMENT_ID} customActions={customActions} />
-        <div className='dx-container dx-document bg-base-surface' {...attentionAttrs}>
+        <div className='dx-container dx-document dx-base-surface' {...attentionAttrs}>
           <Editor.View initialValue={content} selectionEnd />
         </div>
         <CommentsList

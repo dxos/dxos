@@ -56,7 +56,7 @@ export const Main = () => {
       <Panel.Toolbar asChild>
         <AppBar {...appBarProps} />
       </Panel.Toolbar>
-      <Panel.Content role='article' className='bg-base-surface'>
+      <Panel.Content role='article' className='dx-base-surface'>
         <Surface.Surface
           key={id}
           type={AppSurface.Article}

@@ -44,7 +44,7 @@ const SplitStory = () => {
   const [tab, setTab] = useState('notes');
   const activeTab = TABS.find((entry) => entry.id === tab);
   return (
-    <div className='w-full grid grid-cols-2 px-3 gap-3 bg-deck-surface'>
+    <div className='w-full grid grid-cols-2 px-3 gap-3 dx-deck-surface'>
       <MainPane id='plank-main' label='Main plank' />
       <Pane.Root>
         <Pane.Toolbar>
@@ -65,7 +65,7 @@ const SplitStory = () => {
 // Two main planks side by side; click either to move attention — only the attended plank's sigil and
 // title take the accent color.
 const TwoPanesStory = () => (
-  <div className='w-full flex h-full px-3 gap-3 bg-deck-surface'>
+  <div className='w-full flex h-full px-3 gap-3 dx-deck-surface'>
     <MainPane id='plank-a' label='Pane A' />
     <MainPane id='plank-b' label='Pane B' />
   </div>

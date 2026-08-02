@@ -65,7 +65,7 @@ const GRID_LAYOUT = mx(
 const PaneTools = ({ children }: { children: ReactNode }) => (
   <section
     aria-label='Tools'
-    className='[grid-area:tools] overflow-auto rounded border border-separator bg-base-surface p-2'
+    className='[grid-area:tools] overflow-auto rounded border border-separator dx-base-surface p-2'
   >
     {children}
   </section>
@@ -74,7 +74,7 @@ const PaneTools = ({ children }: { children: ReactNode }) => (
 const PaneForm = ({ children }: { children: ReactNode }) => (
   <section
     aria-label='Form'
-    className='[grid-area:form] overflow-auto rounded border border-separator bg-base-surface p-3'
+    className='[grid-area:form] overflow-auto rounded border border-separator dx-base-surface p-3'
   >
     {children}
   </section>
@@ -83,7 +83,7 @@ const PaneForm = ({ children }: { children: ReactNode }) => (
 const PaneResults = ({ children }: { children: ReactNode }) => (
   <section
     aria-label='Results'
-    className='[grid-area:results] overflow-auto rounded border border-separator bg-base-surface p-3'
+    className='[grid-area:results] overflow-auto rounded border border-separator dx-base-surface p-3'
   >
     {children}
   </section>

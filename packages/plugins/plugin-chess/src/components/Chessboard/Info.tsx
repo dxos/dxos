@@ -30,7 +30,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
   return (
     <div
       className={mx(
-        'grid grid-rows-[min-content_1fr_min-content] w-full min-w-[18rem] p-2 overflow-hidden bg-group-surface rounded-xs',
+        'grid grid-rows-[min-content_1fr_min-content] w-full min-w-[18rem] p-2 overflow-hidden dx-group-surface rounded-xs',
         classNames,
       )}
     >

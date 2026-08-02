@@ -47,7 +47,7 @@ export class ReasoningWidget extends WidgetType {
           .append(
             Domino.of('div')
               .classNames(
-                'relative z-10 bg-base-surface rounded-sm text-sm text-subdued py-1',
+                'relative z-10 dx-base-surface rounded-sm text-sm text-subdued py-1',
                 'grid grid-cols-[24px_1fr] gap-x-0.5 items-start',
               )
               .append(

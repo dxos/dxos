@@ -223,7 +223,7 @@ export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: Rea
     // The class stays for rules scoped to `.dark`.
     <div className={mode} style={{ colorScheme: mode }}>
       <ThemeProvider tx={tx} themeMode={mode}>
-        <div className='bg-base-surface text-base-fg p-2 overflow-auto border border-separator rounded'>
+        <div className='dx-base-surface text-base-fg p-2 overflow-auto border border-separator rounded'>
           <div className='pb-1 text-xs uppercase tracking-wide text-description'>{mode}</div>
           {children}
         </div>

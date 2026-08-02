@@ -54,7 +54,7 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
     <Comp
       {...composableProps(props, {
         style: iconSize(5),
-        classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) bg-header-surface',
+        classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',
       })}
       ref={forwardedRef}
     >

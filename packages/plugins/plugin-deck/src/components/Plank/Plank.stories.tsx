@@ -78,7 +78,7 @@ const DefaultStory = () => {
   const personNode = useNode(person, 'ph--user--regular');
 
   return (
-    <div className='flex h-full gap-3 p-3 bg-deck-surface'>
+    <div className='flex h-full gap-3 p-3 dx-deck-surface'>
       <Plank node={organizationNode} classNames={PLANK_CLASSNAMES} />
       <Plank node={personNode} classNames={PLANK_CLASSNAMES} />
     </div>

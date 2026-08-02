@@ -316,7 +316,7 @@ const SurfaceHighlight = ({ infoRef, rect }: { infoRef: InfoRef; rect: DOMRect }
             setExpand(false);
           }}
         >
-          <div className='absolute left-1 right-1 bottom-1 max-h-[20rem] overflow-auto bg-card-surface ring-2 ring-separator rounded-sm opacity-90'>
+          <div className='absolute left-1 right-1 bottom-1 max-h-[20rem] overflow-auto dx-card-surface ring-2 ring-separator rounded-sm opacity-90'>
             <pre className='inline-block p-2 text-xs text-description font-mono font-thin'>
               {JSON.stringify({ info, metric }, null, 2)}
             </pre>

@@ -55,7 +55,7 @@ type DebugCardProps = {
 
 const DebugCard = ({ object }: DebugCardProps) => {
   return (
-    <div className='border border-separator rounded-lg p-4 bg-base-surface'>
+    <div className='border border-separator rounded-lg p-4 dx-base-surface'>
       <div className='flex items-center justify-between mb-2'>
         <h3 className='font-medium text-lg'>{Entity.getLabel(object)}</h3>
         <p className='flex gap-2 items-center'>

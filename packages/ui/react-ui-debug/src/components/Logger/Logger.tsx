@@ -571,7 +571,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                         context: record.context,
                       }}
                     />
-                    {frames && <ErrorStack classNames='p-1 bg-input-surface' frames={frames} />}
+                    {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
               </Listbox.Item>

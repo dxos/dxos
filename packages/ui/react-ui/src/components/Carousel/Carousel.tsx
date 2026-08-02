@@ -347,8 +347,8 @@ const CarouselSlide = ({
     <div
       className={mx(
         transition === 'slide'
-          ? 'relative shrink-0 basis-full h-full bg-base-surface'
-          : 'absolute inset-0 w-full h-full bg-base-surface',
+          ? 'relative shrink-0 basis-full h-full dx-base-surface'
+          : 'absolute inset-0 w-full h-full dx-base-surface',
         classNames,
       )}
     >

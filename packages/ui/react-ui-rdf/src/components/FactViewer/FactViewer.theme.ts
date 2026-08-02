@@ -22,7 +22,7 @@ const factViewerStyles = tv({
     graphTree: 'w-full h-full',
 
     // Subject group card.
-    group: 'shrink-0 flex flex-col bg-card-surface border border-subdued-separator rounded-sm overflow-hidden',
+    group: 'shrink-0 flex flex-col dx-card-surface border border-subdued-separator rounded-sm overflow-hidden',
     groupHeader: 'flex px-3 py-1 items-center justify-between',
     groupConflict: 'flex items-center gap-1',
 

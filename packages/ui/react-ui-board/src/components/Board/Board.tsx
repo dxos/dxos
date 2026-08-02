@@ -992,7 +992,7 @@ const BoardZoom = ({ classNames }: BoardZoomProps) => {
   const { t } = useTranslation(translationKey);
   const { zoom, minZoom, zoomIn, zoomOut } = useBoardContext(BOARD_ZOOM_NAME);
   return (
-    <div role='group' className={mx('flex items-center rounded-sm bg-modal-surface', classNames)}>
+    <div role='group' className={mx('flex items-center rounded-sm dx-modal-surface', classNames)}>
       <IconButton
         icon='ph--minus--regular'
         iconOnly
@@ -1071,7 +1071,7 @@ const BoardMap = ({ classNames }: BoardMapProps) => {
 
   return (
     <div
-      className={mx('relative overflow-hidden rounded-sm border border-separator bg-modal-surface', classNames)}
+      className={mx('relative overflow-hidden rounded-sm border border-separator dx-modal-surface', classNames)}
       style={{ aspectRatio: `${bounds.width} / ${bounds.height}` }}
     >
       {tiles.map(([id, position]) => {

@@ -49,7 +49,7 @@ const DefaultStory = ({ state: stateProp, ...args }: ProgressMeterProps) => {
   }, [stateProp]);
 
   return (
-    <Panel.Root classNames='bg-base-surface'>
+    <Panel.Root classNames='dx-base-surface'>
       <Panel.Toolbar asChild>
         <Toolbar.Root />
       </Panel.Toolbar>

@@ -88,7 +88,7 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
       </Panel.Toolbar>
       <Panel.Content asChild>
         <Visualization.Root
-          classNames='bg-base-surface'
+          classNames='dx-base-surface'
           model={model}
           variant='neighborhood'
           focus={subject.id}

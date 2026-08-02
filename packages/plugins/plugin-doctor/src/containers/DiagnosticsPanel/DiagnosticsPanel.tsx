@@ -182,7 +182,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
   const status = result.error ? 'error' : result.issues.length === 0 ? 'pass' : 'issues';
   const label = toLocalizedString(result.label, t);
   return (
-    <section className='rounded border border-separator bg-base-surface'>
+    <section className='rounded border border-separator dx-base-surface'>
       <header className='flex items-center justify-between gap-2 p-2'>
         <span className='text-sm font-medium truncate'>{label}</span>
         {status === 'pass' && (
