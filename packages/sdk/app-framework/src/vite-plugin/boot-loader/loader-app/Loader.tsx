@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Component, For, createEffect, createSignal, onCleanup, onMount } from 'solid-js';
+import { type Component, For, createEffect, createSignal, onCleanup, untrack } from 'solid-js';
 
 import { type LoaderStore } from './store';
 
@@ -11,6 +11,7 @@ import { type LoaderStore } from './store';
 // clipped at the viewBox edge.
 const RING_RADIUS = 48;
 const RING_CENTER = 50;
+
 // Leading-edge marker: a small dot drawn at the arc's head in an unmasked layer.
 const MARKER_RADIUS = 1; // viewBox units → ~3.8px on the 384px disc
 
@@ -85,12 +86,16 @@ export const Loader: Component<LoaderProps> = (props) => {
   // Eased display progress. A `<path>`'s `d` can't be CSS-transitioned, so the
   // arc would snap on every store tick; instead we ease a displayed value toward
   // the store's progress with a requestAnimationFrame loop (~per-frame lerp) and
-  // recompute the path each frame. This restores the compositor-smooth growth
-  // the old `transition: stroke-dashoffset` gave, while keeping the path +
-  // `marker-end` (the marker rides the arc's recomputed end automatically).
+  // recompute the path each frame. Each frame is main-thread JS + SVG repaint, so
+  // the loop must not run when there is nothing to ease: it parks itself once the
+  // displayed value settles on the target, and the store effect below re-kicks it
+  // on the next progress tick. Under `prefers-reduced-motion` the value snaps to
+  // the target on each tick and the loop never runs.
   const [shown, setShown] = createSignal(props.store.progress());
+  const reducedMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   let raf: number | undefined;
   const animate = () => {
+    raf = undefined;
     const target = props.store.progress();
     const current = shown();
     // Snap when within a hair to settle; otherwise lerp ~18% of the gap/frame.
@@ -98,11 +103,20 @@ export const Loader: Component<LoaderProps> = (props) => {
     if (next !== current) {
       setShown(next);
     }
-    raf = requestAnimationFrame(animate);
+    if (next !== target) {
+      raf = requestAnimationFrame(animate);
+    }
   };
 
-  onMount(() => {
-    raf = requestAnimationFrame(animate);
+  createEffect(() => {
+    const target = props.store.progress();
+    if (reducedMotion) {
+      setShown(target);
+      return;
+    }
+    if (raf == null && target !== untrack(shown)) {
+      raf = requestAnimationFrame(animate);
+    }
   });
 
   onCleanup(() => {
@@ -129,7 +143,11 @@ export const Loader: Component<LoaderProps> = (props) => {
     const headY = RING_CENTER + RING_RADIUS * Math.sin(end);
     const largeArc = sweep > Math.PI ? 1 : 0;
     // sweep-flag 0 = anticlockwise (negative-angle) direction.
-    return { d: `M ${x0} ${y0} A ${RING_RADIUS} ${RING_RADIUS} 0 ${largeArc} 0 ${headX} ${headY}`, headX, headY };
+    return {
+      d: `M ${x0} ${y0} A ${RING_RADIUS} ${RING_RADIUS} 0 ${largeArc} 0 ${headX} ${headY}`,
+      headX,
+      headY,
+    };
   };
 
   // Once host-driven, the brand mark eases grayscale → colour and stays there.
@@ -146,8 +164,10 @@ export const Loader: Component<LoaderProps> = (props) => {
         >
           {shown() > 0 ? <path class='boot-loader-ring-progress' d={arc().d} /> : null}
         </svg>
-        {/* Leading-edge dot in its own unmasked layer (see `arc()`), so the ring's fade mask
-            never clips it. Stacked over `#boot-loader-ring` via the disc grid. */}
+        {/*
+         * Leading-edge dot in its own unmasked layer (see `arc()`), so the ring's fade mask
+         * never clips it. Stacked over `#boot-loader-ring` via the disc grid.
+         */}
         {shown() > 0 ? (
           <svg id='boot-loader-ring-head' viewBox='0 0 100 100' aria-hidden='true'>
             <circle class='boot-loader-ring-marker' cx={arc().headX} cy={arc().headY} r={MARKER_RADIUS} />
