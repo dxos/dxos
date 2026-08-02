@@ -443,7 +443,23 @@ Resolutions and directions from design review, each turning an "open" item into 
      key concurrently with equal content leave a genuine non-transient conflict record at that key
      (cleared only by a later superseding write), and conflict-branch reconciliation can trail
      head replication — so "identical keys converge" holds for read VALUES, and settle/zero-write
-     checks must wait for heads stable across sync rounds.
+     checks must wait for stable heads across sync rounds.
+4. **Baseline agreement under a marker race — GAP FOUND IN REVIEW; derivability sweep designed,
+   NOT verified.** The spikes pinned both peers to identical baseline heads; genuinely independent
+   starts stamp DIFFERENT heads (each peer's own), the marker register converges to one winner by
+   LWW, and same-key entries reconcile via the guarded re-run against the winning baseline — but
+   entries whose keys only the LOSING baseline derives (e.g. its source array was longer) are
+   ORPHANS: no key collision, no duplicate pair for the merge engine, and no cleanup was
+   specified. The closing design rests on the derivability invariant (source retained + outputs a
+   pure function of (source, baseline)): after the marker settles, the legitimate key set is
+   exactly "derivable from the winning baseline + the late-insert rule over post-baseline source
+   history"; any entry outside that set is redundant by construction — a **derivability sweep**
+   folds its accumulated post-creation edits into the correctly-keyed twin (E4 three-way merge,
+   paired by source-element correspondence instead of key equality) and tombstones it.
+   Deterministic, idempotent, lossless — same shape as the standing fold rule, extended from
+   values to membership. Alternative that avoids the race instead of repairing it: run the
+   one-time conversion under Strategy C coordination. SPIKE OWED: marker race with different heads
+   → orphaned keys → sweep → orphan-edit folding, as one scenario.
 
 ## Out of scope / open
 
