@@ -130,9 +130,9 @@ describe('resolveLevelOpen', () => {
     expect(open()).toEqual({ next: [root, 'msg-1'], name: 'inbox/message' });
   });
 
-  test('reuses the level plank rather than growing the deck', ({ expect }) => {
+  test('reuses the level plank rather than growing the deck, and names the replaced plank', ({ expect }) => {
     const result = open({ active: [root, 'msg-1'], plankNames: { 'inbox/message': 'msg-1' }, subjectId: 'msg-2' });
-    expect(result).toEqual({ next: [root, 'msg-2'], name: 'inbox/message' });
+    expect(result).toEqual({ next: [root, 'msg-2'], name: 'inbox/message', replacedId: 'msg-1' });
   });
 
   // The point of levels over a bare name: a second message must not leave the first one's attachment

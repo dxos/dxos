@@ -187,8 +187,15 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           next,
           boundName && input.subject[0] ? { name: boundName, plankId: input.subject[0] } : undefined,
         );
+        // The companion follows a level swap: the new plank stands in for the replaced one, and closing
+        // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
+        // one-frame snap measured at exactly the lost width.
+        const companionPlanks =
+          levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
+            ? [...deckUpdates.companionPlanks, input.subject[0]]
+            : deckUpdates.companionPlanks;
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { ...deckUpdates, plankNames }),
+          updateActiveDeck(state, { ...deckUpdates, companionPlanks, plankNames }),
         );
       }
 

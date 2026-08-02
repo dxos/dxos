@@ -156,7 +156,7 @@ export const resolveLevelOpen = ({
   root: string;
   level: string;
   subjectId: string;
-}): { next: string[]; name: string } | undefined => {
+}): { next: string[]; name: string; replacedId?: string } | undefined => {
   const levels = spec?.levels;
   const index = levels?.findIndex((entry) => entry.key === level) ?? -1;
   if (!levels || index === -1) {
@@ -176,11 +176,16 @@ export const resolveLevelOpen = ({
   const parentName = index > 0 ? DeckSpec.plankName(root, levels[index - 1].key) : undefined;
   const parent = (parentName && plankNames[parentName]) || root;
 
+  const replacedId = plankNames[name];
   return {
     next: addSubjectsToActiveDeck(pruned, [subjectId], {
       pivotId: pruned.includes(parent) ? parent : undefined,
-      replaceId: plankNames[name],
+      replaceId: replacedId,
     }),
     name,
+    // Surfaced so per-plank state riding the level (an open companion) can follow the swap: the new
+    // plank stands in for the old one, and losing the companion mid-read both surprises and, by
+    // narrowing the deck, makes the browser clamp the scroll in a visible snap.
+    replacedId,
   };
 };

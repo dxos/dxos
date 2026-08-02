@@ -1408,6 +1408,68 @@ export const DeckPlanks = () => {
     [invokePromise, expose, captureExposeGeometry],
   );
 
+  // Reveal a companion that opens past the trailing edge. The pair widens rightward and the deck does
+  // not move on layout changes, so a plank near the edge opens its companion off-screen; the reveal is
+  // the one bounded exception — scroll by exactly the overflow, so a pair that already fits does not
+  // move at all. Watched briefly rather than measured once: the split sizes the pair a frame or two
+  // after the companion appears. Keyed on the companion *appearing*, so a splitter drag later never
+  // triggers it.
+  const prevCompanionRef = useRef<string | undefined>(undefined);
+  // The scroll as the user last saw it, recorded off scroll events so the value predates the commit
+  // that widens the pair — by effect time the browser has already shifted the viewport.
+  const settledScrollRef = useRef(0);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) {
+      return;
+    }
+    settledScrollRef.current = viewport.scrollLeft;
+    return addEventListener(viewport, 'scroll', () => {
+      settledScrollRef.current = viewport.scrollLeft;
+    });
+  }, [viewportRef]);
+  useLayoutEffect(() => {
+    const previous = prevCompanionRef.current;
+    prevCompanionRef.current = companionId;
+    const viewport = viewportRef.current;
+    if (!viewport || !isSliding || expose || !companionId || previous === companionId || !companionAnchorId) {
+      return;
+    }
+    const tile = getPlankTiles().find((candidate) => candidate.getAttribute('data-object-id') === companionAnchorId);
+    if (!tile) {
+      return;
+    }
+    // Undo the browser's own shift before paint. Widening a sticky tile makes the engine move the
+    // scroll by the width delta with no scroll command at all (measured: −473 for a 473px growth, one
+    // frame). The shift only exists once layout has flushed, so force it with a rect read *first* —
+    // checked before the flush, the scroll still reads clean and the restore never fires (measured:
+    // the shift painted for several frames). Restoring here, still pre-paint, means the intermediate
+    // state is never seen, and the reveal below corrects only genuine overflow.
+    tile.getBoundingClientRect();
+    if (Math.abs(viewport.scrollLeft - settledScrollRef.current) > 1) {
+      viewport.scrollLeft = settledScrollRef.current;
+    }
+    let revealed = false;
+    const reveal = () => {
+      if (revealed) {
+        return;
+      }
+      const overflow = tile.getBoundingClientRect().right - viewport.getBoundingClientRect().right;
+      if (overflow > 1) {
+        revealed = true;
+        viewport.scrollTo({ left: Math.round(viewport.scrollLeft + overflow), behavior: 'smooth' });
+      }
+    };
+    reveal();
+    const observer = new ResizeObserver(reveal);
+    observer.observe(tile);
+    const timer = setTimeout(() => observer.disconnect(), 1500);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, [companionId, companionAnchorId, viewportRef, getPlankTiles, isSliding, expose]);
+
   // The deliberate, user-initiated half of "bring a plank forward"; `useScrollIntoView` is the other
   // half, for navigation from outside the deck. Delegated to the stack because `Mosaic.Tile` forwards
   // no pointer handlers, and captured so it settles before the click reaches an editor. Deliberately
