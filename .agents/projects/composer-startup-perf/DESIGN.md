@@ -112,4 +112,16 @@ Instead change **which plugins are in the pre-ready set**:
 
 ## 6. Decisions & findings log
 
-- (running log — newest first)
+- **2026-08-02 CPU-profile attribution (dev, warm vite, fresh browser context; script
+  `scripts/profile-startup.mjs`).** Full set navToReady ~12.2–13.2s vs minimal ~7.4s. Self-time
+  split (full): `(program)` parse/compile+GC 4.4–5.2s, `(idle)` waiting on workers/network
+  3.5–3.8s, Effect schema eval (SchemaAST+Schema+ParseResult) ~1.1s, `plugin-calls` 313–432ms
+  (single-plugin outlier), Atom ~270ms, echo ~200ms. Minimal cuts ~42% roughly proportionally
+  (program 2.7s, idle 2.5s, schema ~0.6s) → plugin count drives parse+schema+idle together;
+  ~7.4s floor is core infra. Confirms (1) per-module `module:*` measures are an
+  overlapping-window artifact (modules "cost" 3.4s each while true JS total is ~3.5s); (2) the
+  deferral tier attacks the right axis; (3) the ~2.5s idle floor needs decomposition (C1 orphan
+  marks: client.initialize / worker spawn / OPFS).
+- **2026-08-02 profiler was silently OFF in dev.** `isTrue(param, default)` misuse in main.tsx —
+  the second arg is a *strictness* flag, so AUDIT phase 7a's "default-on in dev" never worked
+  (also means dev BENCHMARKS rows since then recorded no profiler data). Fixed.
