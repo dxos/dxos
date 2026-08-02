@@ -71,7 +71,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Dream": {
+      "source": "./src/types/Dream.ts",
+      "types": "./dist/types/src/types/Dream.d.ts",
+      "import": "./dist/lib/Dream.mjs"
+    },
+    "./Sequence": {
+      "source": "./src/types/Sequence.ts",
+      "types": "./dist/types/src/types/Sequence.d.ts",
+      "import": "./dist/lib/Sequence.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -115,5 +126,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Dream": [
+        "dist/types/src/types/Dream.d.ts"
+      ],
+      "Sequence": [
+        "dist/types/src/types/Sequence.d.ts"
+      ]
+    }
   }
 }

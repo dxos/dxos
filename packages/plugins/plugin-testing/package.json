@@ -59,7 +59,13 @@
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
-    }
+    },
+    "./StorybookCapabilities": {
+      "source": "./src/types/StorybookCapabilities.ts",
+      "types": "./dist/types/src/types/StorybookCapabilities.d.ts",
+      "import": "./dist/lib/StorybookCapabilities.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -102,5 +108,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "StorybookCapabilities": [
+        "dist/types/src/types/StorybookCapabilities.d.ts"
+      ]
+    }
   }
 }

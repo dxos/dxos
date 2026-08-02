@@ -14,7 +14,9 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'TrelloEvents': 'src/types/TrelloEvents.ts',
+    'TrelloOperation': 'src/types/TrelloOperation.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

@@ -21,7 +21,12 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
     'util': 'src/util/index.ts',
-  },
+      'Drawing': 'src/types/Drawing.ts',
+    'LegacySketch': 'src/types/LegacySketch.ts',
+    'DrawingOperation': 'src/types/DrawingOperation.ts',
+    'IllustratorCapabilities': 'src/types/IllustratorCapabilities.ts',
+    'IllustratorEvents': 'src/types/IllustratorEvents.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

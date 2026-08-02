@@ -70,7 +70,28 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Journal": {
+      "source": "./src/types/Journal.ts",
+      "types": "./dist/types/src/types/Journal.d.ts",
+      "import": "./dist/lib/Journal.mjs"
+    },
+    "./Outline": {
+      "source": "./src/types/Outline.ts",
+      "types": "./dist/types/src/types/Outline.d.ts",
+      "import": "./dist/lib/Outline.mjs"
+    },
+    "./OutlineOperation": {
+      "source": "./src/types/OutlineOperation.ts",
+      "types": "./dist/types/src/types/OutlineOperation.d.ts",
+      "import": "./dist/lib/OutlineOperation.mjs"
+    },
+    "./OutlinerEvents": {
+      "source": "./src/types/OutlinerEvents.ts",
+      "types": "./dist/types/src/types/OutlinerEvents.d.ts",
+      "import": "./dist/lib/OutlinerEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -133,5 +154,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Journal": [
+        "dist/types/src/types/Journal.d.ts"
+      ],
+      "Outline": [
+        "dist/types/src/types/Outline.d.ts"
+      ],
+      "OutlineOperation": [
+        "dist/types/src/types/OutlineOperation.d.ts"
+      ],
+      "OutlinerEvents": [
+        "dist/types/src/types/OutlinerEvents.d.ts"
+      ]
+    }
   }
 }

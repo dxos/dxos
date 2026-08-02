@@ -116,7 +116,28 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Notebook": {
+      "source": "./src/types/Notebook.ts",
+      "types": "./dist/types/src/types/Notebook.d.ts",
+      "import": "./dist/lib/Notebook.mjs"
+    },
+    "./ScriptCapabilities": {
+      "source": "./src/types/ScriptCapabilities.ts",
+      "types": "./dist/types/src/types/ScriptCapabilities.d.ts",
+      "import": "./dist/lib/ScriptCapabilities.mjs"
+    },
+    "./ScriptEvents": {
+      "source": "./src/types/ScriptEvents.ts",
+      "types": "./dist/types/src/types/ScriptEvents.d.ts",
+      "import": "./dist/lib/ScriptEvents.mjs"
+    },
+    "./ScriptOperation": {
+      "source": "./src/types/ScriptOperation.ts",
+      "types": "./dist/types/src/types/ScriptOperation.d.ts",
+      "import": "./dist/lib/ScriptOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -231,5 +252,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Notebook": [
+        "dist/types/src/types/Notebook.d.ts"
+      ],
+      "ScriptCapabilities": [
+        "dist/types/src/types/ScriptCapabilities.d.ts"
+      ],
+      "ScriptEvents": [
+        "dist/types/src/types/ScriptEvents.d.ts"
+      ],
+      "ScriptOperation": [
+        "dist/types/src/types/ScriptOperation.d.ts"
+      ]
+    }
   }
 }

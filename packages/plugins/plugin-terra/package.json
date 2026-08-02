@@ -66,7 +66,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Terra": {
+      "source": "./src/types/Terra.ts",
+      "types": "./dist/types/src/types/Terra.d.ts",
+      "import": "./dist/lib/Terra.mjs"
+    },
+    "./TerraObject": {
+      "source": "./src/types/TerraObject.ts",
+      "types": "./dist/types/src/types/TerraObject.d.ts",
+      "import": "./dist/lib/TerraObject.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -107,5 +118,15 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "Terra": [
+        "dist/types/src/types/Terra.d.ts"
+      ],
+      "TerraObject": [
+        "dist/types/src/types/TerraObject.d.ts"
+      ]
+    }
   }
 }

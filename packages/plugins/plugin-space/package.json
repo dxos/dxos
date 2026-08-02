@@ -115,7 +115,13 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./SpaceCapability": {
+      "source": "./src/types/SpaceCapability.ts",
+      "types": "./dist/types/src/types/SpaceCapability.d.ts",
+      "import": "./dist/lib/SpaceCapability.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -210,5 +216,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "SpaceCapability": [
+        "dist/types/src/types/SpaceCapability.d.ts"
+      ]
+    }
   }
 }

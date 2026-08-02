@@ -126,7 +126,28 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Assistant": {
+      "source": "./src/types/Assistant.ts",
+      "types": "./dist/types/src/types/Assistant.d.ts",
+      "import": "./dist/lib/Assistant.mjs"
+    },
+    "./AssistantOperation": {
+      "source": "./src/types/AssistantOperation.ts",
+      "types": "./dist/types/src/types/AssistantOperation.d.ts",
+      "import": "./dist/lib/AssistantOperation.mjs"
+    },
+    "./AssistantCapabilities": {
+      "source": "./src/types/AssistantCapabilities.ts",
+      "types": "./dist/types/src/types/AssistantCapabilities.d.ts",
+      "import": "./dist/lib/AssistantCapabilities.mjs"
+    },
+    "./Ollama": {
+      "source": "./src/types/Ollama.ts",
+      "types": "./dist/types/src/types/Ollama.d.ts",
+      "import": "./dist/lib/Ollama.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -249,5 +270,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Assistant": [
+        "dist/types/src/types/Assistant.d.ts"
+      ],
+      "AssistantOperation": [
+        "dist/types/src/types/AssistantOperation.d.ts"
+      ],
+      "AssistantCapabilities": [
+        "dist/types/src/types/AssistantCapabilities.d.ts"
+      ],
+      "Ollama": [
+        "dist/types/src/types/Ollama.d.ts"
+      ]
+    }
   }
 }

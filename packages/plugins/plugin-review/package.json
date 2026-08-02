@@ -105,7 +105,28 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./CommentCapabilities": {
+      "source": "./src/types/CommentCapabilities.ts",
+      "types": "./dist/types/src/types/CommentCapabilities.d.ts",
+      "import": "./dist/lib/CommentCapabilities.mjs"
+    },
+    "./CommentOperation": {
+      "source": "./src/types/CommentOperation.ts",
+      "types": "./dist/types/src/types/CommentOperation.d.ts",
+      "import": "./dist/lib/CommentOperation.mjs"
+    },
+    "./ReviewEvents": {
+      "source": "./src/types/ReviewEvents.ts",
+      "types": "./dist/types/src/types/ReviewEvents.d.ts",
+      "import": "./dist/lib/ReviewEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -187,5 +208,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "CommentCapabilities": [
+        "dist/types/src/types/CommentCapabilities.d.ts"
+      ],
+      "CommentOperation": [
+        "dist/types/src/types/CommentOperation.d.ts"
+      ],
+      "ReviewEvents": [
+        "dist/types/src/types/ReviewEvents.d.ts"
+      ]
+    }
   }
 }

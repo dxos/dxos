@@ -23,7 +23,12 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'Markdown': 'src/types/Markdown.ts',
+    'MarkdownCapabilities': 'src/types/MarkdownCapabilities.ts',
+    'MarkdownEvents': 'src/types/MarkdownEvents.ts',
+    'MarkdownOperation': 'src/types/MarkdownOperation.ts',
+    'Settings': 'src/types/Settings.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

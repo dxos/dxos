@@ -76,7 +76,43 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./CodeCapabilities": {
+      "source": "./src/types/CodeCapabilities.ts",
+      "types": "./dist/types/src/types/CodeCapabilities.d.ts",
+      "import": "./dist/lib/CodeCapabilities.mjs"
+    },
+    "./CodeEvents": {
+      "source": "./src/types/CodeEvents.ts",
+      "types": "./dist/types/src/types/CodeEvents.d.ts",
+      "import": "./dist/lib/CodeEvents.mjs"
+    },
+    "./CodeOperation": {
+      "source": "./src/types/CodeOperation.ts",
+      "types": "./dist/types/src/types/CodeOperation.d.ts",
+      "import": "./dist/lib/CodeOperation.mjs"
+    },
+    "./CodeProject": {
+      "source": "./src/types/CodeProject.ts",
+      "types": "./dist/types/src/types/CodeProject.d.ts",
+      "import": "./dist/lib/CodeProject.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./SourceFile": {
+      "source": "./src/types/SourceFile.ts",
+      "types": "./dist/types/src/types/SourceFile.d.ts",
+      "import": "./dist/lib/SourceFile.mjs"
+    },
+    "./Spec": {
+      "source": "./src/types/Spec.ts",
+      "types": "./dist/types/src/types/Spec.d.ts",
+      "import": "./dist/lib/Spec.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -136,5 +172,30 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "CodeCapabilities": [
+        "dist/types/src/types/CodeCapabilities.d.ts"
+      ],
+      "CodeEvents": [
+        "dist/types/src/types/CodeEvents.d.ts"
+      ],
+      "CodeOperation": [
+        "dist/types/src/types/CodeOperation.d.ts"
+      ],
+      "CodeProject": [
+        "dist/types/src/types/CodeProject.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "SourceFile": [
+        "dist/types/src/types/SourceFile.d.ts"
+      ],
+      "Spec": [
+        "dist/types/src/types/Spec.d.ts"
+      ]
+    }
   }
 }

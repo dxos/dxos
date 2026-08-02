@@ -61,7 +61,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./LinearEvents": {
+      "source": "./src/types/LinearEvents.ts",
+      "types": "./dist/types/src/types/LinearEvents.d.ts",
+      "import": "./dist/lib/LinearEvents.mjs"
+    },
+    "./LinearOperation": {
+      "source": "./src/types/LinearOperation.ts",
+      "types": "./dist/types/src/types/LinearOperation.d.ts",
+      "import": "./dist/lib/LinearOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -97,5 +108,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "LinearEvents": [
+        "dist/types/src/types/LinearEvents.d.ts"
+      ],
+      "LinearOperation": [
+        "dist/types/src/types/LinearOperation.d.ts"
+      ]
+    }
   }
 }

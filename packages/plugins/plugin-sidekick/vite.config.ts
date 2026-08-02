@@ -16,7 +16,9 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'Profile': 'src/types/Profile.ts',
+    'Sidekick': 'src/types/Sidekick.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

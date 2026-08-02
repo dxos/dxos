@@ -76,7 +76,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Bookmark": {
+      "source": "./src/types/Bookmark.ts",
+      "types": "./dist/types/src/types/Bookmark.d.ts",
+      "import": "./dist/lib/Bookmark.mjs"
+    },
+    "./BookmarkOperation": {
+      "source": "./src/types/BookmarkOperation.ts",
+      "types": "./dist/types/src/types/BookmarkOperation.d.ts",
+      "import": "./dist/lib/BookmarkOperation.mjs"
+    },
+    "./BookmarksEvents": {
+      "source": "./src/types/BookmarksEvents.ts",
+      "types": "./dist/types/src/types/BookmarksEvents.d.ts",
+      "import": "./dist/lib/BookmarksEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -127,5 +143,18 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "Bookmark": [
+        "dist/types/src/types/Bookmark.d.ts"
+      ],
+      "BookmarkOperation": [
+        "dist/types/src/types/BookmarkOperation.d.ts"
+      ],
+      "BookmarksEvents": [
+        "dist/types/src/types/BookmarksEvents.d.ts"
+      ]
+    }
   }
 }

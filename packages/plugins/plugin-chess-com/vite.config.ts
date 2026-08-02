@@ -19,7 +19,10 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'ChessComAccount': 'src/types/ChessComAccount.ts',
+    'ChessComEvents': 'src/types/ChessComEvents.ts',
+    'ChessComOperation': 'src/types/ChessComOperation.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

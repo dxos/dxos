@@ -75,7 +75,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./DeckCapabilities": {
+      "source": "./src/types/DeckCapabilities.ts",
+      "types": "./dist/types/src/types/DeckCapabilities.d.ts",
+      "import": "./dist/lib/DeckCapabilities.mjs"
+    },
+    "./DeckOperation": {
+      "source": "./src/types/DeckOperation.ts",
+      "types": "./dist/types/src/types/DeckOperation.d.ts",
+      "import": "./dist/lib/DeckOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -149,5 +165,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "DeckCapabilities": [
+        "dist/types/src/types/DeckCapabilities.d.ts"
+      ],
+      "DeckOperation": [
+        "dist/types/src/types/DeckOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

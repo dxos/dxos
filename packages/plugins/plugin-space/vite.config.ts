@@ -22,7 +22,8 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'SpaceCapability': 'src/types/SpaceCapability.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

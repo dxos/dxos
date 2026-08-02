@@ -86,7 +86,43 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./HelpCapabilities": {
+      "source": "./src/types/HelpCapabilities.ts",
+      "types": "./dist/types/src/types/HelpCapabilities.d.ts",
+      "import": "./dist/lib/HelpCapabilities.mjs"
+    },
+    "./HelpOperation": {
+      "source": "./src/types/HelpOperation.ts",
+      "types": "./dist/types/src/types/HelpOperation.d.ts",
+      "import": "./dist/lib/HelpOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Support": {
+      "source": "./src/types/Support.ts",
+      "types": "./dist/types/src/types/Support.d.ts",
+      "import": "./dist/lib/Support.mjs"
+    },
+    "./SupportCapabilities": {
+      "source": "./src/types/SupportCapabilities.ts",
+      "types": "./dist/types/src/types/SupportCapabilities.d.ts",
+      "import": "./dist/lib/SupportCapabilities.mjs"
+    },
+    "./SupportOperation": {
+      "source": "./src/types/SupportOperation.ts",
+      "types": "./dist/types/src/types/SupportOperation.d.ts",
+      "import": "./dist/lib/SupportOperation.mjs"
+    },
+    "./Tour": {
+      "source": "./src/types/Tour.ts",
+      "types": "./dist/types/src/types/Tour.d.ts",
+      "import": "./dist/lib/Tour.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -157,5 +193,30 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "HelpCapabilities": [
+        "dist/types/src/types/HelpCapabilities.d.ts"
+      ],
+      "HelpOperation": [
+        "dist/types/src/types/HelpOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Support": [
+        "dist/types/src/types/Support.d.ts"
+      ],
+      "SupportCapabilities": [
+        "dist/types/src/types/SupportCapabilities.d.ts"
+      ],
+      "SupportOperation": [
+        "dist/types/src/types/SupportOperation.d.ts"
+      ],
+      "Tour": [
+        "dist/types/src/types/Tour.d.ts"
+      ]
+    }
   }
 }

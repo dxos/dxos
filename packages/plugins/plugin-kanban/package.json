@@ -106,7 +106,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Kanban": {
+      "source": "./src/types/Kanban.ts",
+      "types": "./dist/types/src/types/Kanban.d.ts",
+      "import": "./dist/lib/Kanban.mjs"
+    },
+    "./KanbanEvents": {
+      "source": "./src/types/KanbanEvents.ts",
+      "types": "./dist/types/src/types/KanbanEvents.d.ts",
+      "import": "./dist/lib/KanbanEvents.mjs"
+    },
+    "./KanbanOperation": {
+      "source": "./src/types/KanbanOperation.ts",
+      "types": "./dist/types/src/types/KanbanOperation.d.ts",
+      "import": "./dist/lib/KanbanOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -168,5 +184,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Kanban": [
+        "dist/types/src/types/Kanban.d.ts"
+      ],
+      "KanbanEvents": [
+        "dist/types/src/types/KanbanEvents.d.ts"
+      ],
+      "KanbanOperation": [
+        "dist/types/src/types/KanbanOperation.d.ts"
+      ]
+    }
   }
 }

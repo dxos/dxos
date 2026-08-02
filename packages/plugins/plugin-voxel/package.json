@@ -75,7 +75,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Voxel": {
+      "source": "./src/types/Voxel.ts",
+      "types": "./dist/types/src/types/Voxel.d.ts",
+      "import": "./dist/lib/Voxel.mjs"
+    },
+    "./VoxelEvents": {
+      "source": "./src/types/VoxelEvents.ts",
+      "types": "./dist/types/src/types/VoxelEvents.d.ts",
+      "import": "./dist/lib/VoxelEvents.mjs"
+    },
+    "./VoxelOperation": {
+      "source": "./src/types/VoxelOperation.ts",
+      "types": "./dist/types/src/types/VoxelOperation.d.ts",
+      "import": "./dist/lib/VoxelOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -122,5 +138,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Voxel": [
+        "dist/types/src/types/Voxel.d.ts"
+      ],
+      "VoxelEvents": [
+        "dist/types/src/types/VoxelEvents.d.ts"
+      ],
+      "VoxelOperation": [
+        "dist/types/src/types/VoxelOperation.d.ts"
+      ]
+    }
   }
 }

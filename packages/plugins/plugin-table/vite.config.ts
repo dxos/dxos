@@ -20,7 +20,9 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'TableEvents': 'src/types/TableEvents.ts',
+    'TableOperation': 'src/types/TableOperation.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

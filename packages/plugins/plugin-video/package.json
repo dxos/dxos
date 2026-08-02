@@ -81,7 +81,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Video": {
+      "source": "./src/types/Video.ts",
+      "types": "./dist/types/src/types/Video.d.ts",
+      "import": "./dist/lib/Video.mjs"
+    },
+    "./VideoEvents": {
+      "source": "./src/types/VideoEvents.ts",
+      "types": "./dist/types/src/types/VideoEvents.d.ts",
+      "import": "./dist/lib/VideoEvents.mjs"
+    },
+    "./VideoOperation": {
+      "source": "./src/types/VideoOperation.ts",
+      "types": "./dist/types/src/types/VideoOperation.d.ts",
+      "import": "./dist/lib/VideoOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -141,5 +157,18 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "Video": [
+        "dist/types/src/types/Video.d.ts"
+      ],
+      "VideoEvents": [
+        "dist/types/src/types/VideoEvents.d.ts"
+      ],
+      "VideoOperation": [
+        "dist/types/src/types/VideoOperation.d.ts"
+      ]
+    }
   }
 }

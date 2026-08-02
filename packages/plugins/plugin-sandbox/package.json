@@ -56,7 +56,18 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Sandbox": {
+      "source": "./src/types/Sandbox.ts",
+      "types": "./dist/types/src/types/Sandbox.d.ts",
+      "import": "./dist/lib/Sandbox.mjs"
+    },
+    "./SandboxEvents": {
+      "source": "./src/types/SandboxEvents.ts",
+      "types": "./dist/types/src/types/SandboxEvents.d.ts",
+      "import": "./dist/lib/SandboxEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -88,5 +99,15 @@
     "@dxos/plugin-testing": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "Sandbox": [
+        "dist/types/src/types/Sandbox.d.ts"
+      ],
+      "SandboxEvents": [
+        "dist/types/src/types/SandboxEvents.d.ts"
+      ]
+    }
   }
 }

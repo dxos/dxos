@@ -16,7 +16,12 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'Meeting': 'src/types/Meeting.ts',
+    'MeetingCapabilities': 'src/types/MeetingCapabilities.ts',
+    'MeetingEvents': 'src/types/MeetingEvents.ts',
+    'MeetingOperation': 'src/types/MeetingOperation.ts',
+    'Settings': 'src/types/Settings.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

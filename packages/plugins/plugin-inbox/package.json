@@ -119,7 +119,53 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Calendar": {
+      "source": "./src/types/Calendar.ts",
+      "types": "./dist/types/src/types/Calendar.d.ts",
+      "import": "./dist/lib/Calendar.mjs"
+    },
+    "./ExtractedFrom": {
+      "source": "./src/types/ExtractedFrom.ts",
+      "types": "./dist/types/src/types/ExtractedFrom.d.ts",
+      "import": "./dist/lib/ExtractedFrom.mjs"
+    },
+    "./InboxCapabilities": {
+      "source": "./src/types/InboxCapabilities.ts",
+      "types": "./dist/types/src/types/InboxCapabilities.d.ts",
+      "import": "./dist/lib/InboxCapabilities.mjs"
+    },
+    "./InboxEvents": {
+      "source": "./src/types/InboxEvents.ts",
+      "types": "./dist/types/src/types/InboxEvents.d.ts",
+      "import": "./dist/lib/InboxEvents.mjs"
+    },
+    "./InboxOperation": {
+      "source": "./src/types/InboxOperation.ts",
+      "types": "./dist/types/src/types/InboxOperation.d.ts",
+      "import": "./dist/lib/InboxOperation.mjs"
+    },
+    "./Mailbox": {
+      "source": "./src/types/Mailbox.ts",
+      "types": "./dist/types/src/types/Mailbox.d.ts",
+      "import": "./dist/lib/Mailbox.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./DraftEvent": {
+      "source": "./src/types/DraftEvent.ts",
+      "types": "./dist/types/src/types/DraftEvent.d.ts",
+      "import": "./dist/lib/DraftEvent.mjs"
+    },
+    "./SystemTags": {
+      "source": "./src/types/SystemTags.ts",
+      "types": "./dist/types/src/types/SystemTags.d.ts",
+      "import": "./dist/lib/SystemTags.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -241,5 +287,36 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Calendar": [
+        "dist/types/src/types/Calendar.d.ts"
+      ],
+      "ExtractedFrom": [
+        "dist/types/src/types/ExtractedFrom.d.ts"
+      ],
+      "InboxCapabilities": [
+        "dist/types/src/types/InboxCapabilities.d.ts"
+      ],
+      "InboxEvents": [
+        "dist/types/src/types/InboxEvents.d.ts"
+      ],
+      "InboxOperation": [
+        "dist/types/src/types/InboxOperation.d.ts"
+      ],
+      "Mailbox": [
+        "dist/types/src/types/Mailbox.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "DraftEvent": [
+        "dist/types/src/types/DraftEvent.d.ts"
+      ],
+      "SystemTags": [
+        "dist/types/src/types/SystemTags.d.ts"
+      ]
+    }
   }
 }

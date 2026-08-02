@@ -110,7 +110,28 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./TranscriptionCapabilities": {
+      "source": "./src/types/TranscriptionCapabilities.ts",
+      "types": "./dist/types/src/types/TranscriptionCapabilities.d.ts",
+      "import": "./dist/lib/TranscriptionCapabilities.mjs"
+    },
+    "./TranscriptionEvents": {
+      "source": "./src/types/TranscriptionEvents.ts",
+      "types": "./dist/types/src/types/TranscriptionEvents.d.ts",
+      "import": "./dist/lib/TranscriptionEvents.mjs"
+    },
+    "./TranscriptOperation": {
+      "source": "./src/types/TranscriptOperation.ts",
+      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
+      "import": "./dist/lib/TranscriptOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -197,5 +218,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "TranscriptionCapabilities": [
+        "dist/types/src/types/TranscriptionCapabilities.d.ts"
+      ],
+      "TranscriptionEvents": [
+        "dist/types/src/types/TranscriptionEvents.d.ts"
+      ],
+      "TranscriptOperation": [
+        "dist/types/src/types/TranscriptOperation.d.ts"
+      ]
+    }
   }
 }

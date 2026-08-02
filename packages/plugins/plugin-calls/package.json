@@ -81,7 +81,18 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./CallsCapabilities": {
+      "source": "./src/types/CallsCapabilities.ts",
+      "types": "./dist/types/src/types/CallsCapabilities.d.ts",
+      "import": "./dist/lib/CallsCapabilities.mjs"
+    },
+    "./CallsEvents": {
+      "source": "./src/types/CallsEvents.ts",
+      "types": "./dist/types/src/types/CallsEvents.d.ts",
+      "import": "./dist/lib/CallsEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -153,5 +164,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "CallsCapabilities": [
+        "dist/types/src/types/CallsCapabilities.d.ts"
+      ],
+      "CallsEvents": [
+        "dist/types/src/types/CallsEvents.d.ts"
+      ]
+    }
   }
 }

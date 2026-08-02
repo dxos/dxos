@@ -61,7 +61,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./TrelloEvents": {
+      "source": "./src/types/TrelloEvents.ts",
+      "types": "./dist/types/src/types/TrelloEvents.d.ts",
+      "import": "./dist/lib/TrelloEvents.mjs"
+    },
+    "./TrelloOperation": {
+      "source": "./src/types/TrelloOperation.ts",
+      "types": "./dist/types/src/types/TrelloOperation.d.ts",
+      "import": "./dist/lib/TrelloOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -104,5 +115,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "TrelloEvents": [
+        "dist/types/src/types/TrelloEvents.d.ts"
+      ],
+      "TrelloOperation": [
+        "dist/types/src/types/TrelloOperation.d.ts"
+      ]
+    }
   }
 }

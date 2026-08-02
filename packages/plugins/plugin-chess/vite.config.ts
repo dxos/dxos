@@ -21,7 +21,12 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'Chess': 'src/types/Chess.ts',
+    'ChessEvents': 'src/types/ChessEvents.ts',
+    'ChessOperation': 'src/types/ChessOperation.ts',
+    'ChessPositionIndex': 'src/types/ChessPositionIndex.ts',
+    'PlayerReview': 'src/types/PlayerReview.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

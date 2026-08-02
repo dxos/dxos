@@ -65,7 +65,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Stack": {
+      "source": "./src/types/Stack.ts",
+      "types": "./dist/types/src/types/Stack.d.ts",
+      "import": "./dist/lib/Stack.mjs"
+    },
+    "./StackEvents": {
+      "source": "./src/types/StackEvents.ts",
+      "types": "./dist/types/src/types/StackEvents.d.ts",
+      "import": "./dist/lib/StackEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -123,5 +134,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Stack": [
+        "dist/types/src/types/Stack.d.ts"
+      ],
+      "StackEvents": [
+        "dist/types/src/types/StackEvents.d.ts"
+      ]
+    }
   }
 }

@@ -61,7 +61,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./DiscordEvents": {
+      "source": "./src/types/DiscordEvents.ts",
+      "types": "./dist/types/src/types/DiscordEvents.d.ts",
+      "import": "./dist/lib/DiscordEvents.mjs"
+    },
+    "./DiscordOperation": {
+      "source": "./src/types/DiscordOperation.ts",
+      "types": "./dist/types/src/types/DiscordOperation.d.ts",
+      "import": "./dist/lib/DiscordOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -108,5 +119,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "DiscordEvents": [
+        "dist/types/src/types/DiscordEvents.d.ts"
+      ],
+      "DiscordOperation": [
+        "dist/types/src/types/DiscordOperation.d.ts"
+      ]
+    }
   }
 }

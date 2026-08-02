@@ -65,7 +65,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Board": {
+      "source": "./src/types/Board.ts",
+      "types": "./dist/types/src/types/Board.d.ts",
+      "import": "./dist/lib/Board.mjs"
+    },
+    "./BoardEvents": {
+      "source": "./src/types/BoardEvents.ts",
+      "types": "./dist/types/src/types/BoardEvents.d.ts",
+      "import": "./dist/lib/BoardEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -120,5 +131,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Board": [
+        "dist/types/src/types/Board.d.ts"
+      ],
+      "BoardEvents": [
+        "dist/types/src/types/BoardEvents.d.ts"
+      ]
+    }
   }
 }

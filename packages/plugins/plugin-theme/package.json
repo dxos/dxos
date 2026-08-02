@@ -49,7 +49,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./ThemeCapabilities": {
+      "source": "./src/types/ThemeCapabilities.ts",
+      "types": "./dist/types/src/types/ThemeCapabilities.d.ts",
+      "import": "./dist/lib/ThemeCapabilities.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -89,5 +100,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "ThemeCapabilities": [
+        "dist/types/src/types/ThemeCapabilities.d.ts"
+      ]
+    }
   }
 }

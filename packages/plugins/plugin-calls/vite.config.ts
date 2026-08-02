@@ -18,7 +18,9 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'CallsCapabilities': 'src/types/CallsCapabilities.ts',
+    'CallsEvents': 'src/types/CallsEvents.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

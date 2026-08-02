@@ -86,7 +86,33 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./BrainCapabilities": {
+      "source": "./src/types/BrainCapabilities.ts",
+      "types": "./dist/types/src/types/BrainCapabilities.d.ts",
+      "import": "./dist/lib/BrainCapabilities.mjs"
+    },
+    "./BrainEvents": {
+      "source": "./src/types/BrainEvents.ts",
+      "types": "./dist/types/src/types/BrainEvents.d.ts",
+      "import": "./dist/lib/BrainEvents.mjs"
+    },
+    "./BrainOperation": {
+      "source": "./src/types/BrainOperation.ts",
+      "types": "./dist/types/src/types/BrainOperation.d.ts",
+      "import": "./dist/lib/BrainOperation.mjs"
+    },
+    "./BrainSettings": {
+      "source": "./src/types/BrainSettings.ts",
+      "types": "./dist/types/src/types/BrainSettings.d.ts",
+      "import": "./dist/lib/BrainSettings.mjs"
+    },
+    "./BrainSurface": {
+      "source": "./src/types/BrainSurface.ts",
+      "types": "./dist/types/src/types/BrainSurface.d.ts",
+      "import": "./dist/lib/BrainSurface.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -130,5 +156,24 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "react": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "BrainCapabilities": [
+        "dist/types/src/types/BrainCapabilities.d.ts"
+      ],
+      "BrainEvents": [
+        "dist/types/src/types/BrainEvents.d.ts"
+      ],
+      "BrainOperation": [
+        "dist/types/src/types/BrainOperation.d.ts"
+      ],
+      "BrainSettings": [
+        "dist/types/src/types/BrainSettings.d.ts"
+      ],
+      "BrainSurface": [
+        "dist/types/src/types/BrainSurface.d.ts"
+      ]
+    }
   }
 }

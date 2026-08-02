@@ -114,7 +114,33 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Markdown": {
+      "source": "./src/types/Markdown.ts",
+      "types": "./dist/types/src/types/Markdown.d.ts",
+      "import": "./dist/lib/Markdown.mjs"
+    },
+    "./MarkdownCapabilities": {
+      "source": "./src/types/MarkdownCapabilities.ts",
+      "types": "./dist/types/src/types/MarkdownCapabilities.d.ts",
+      "import": "./dist/lib/MarkdownCapabilities.mjs"
+    },
+    "./MarkdownEvents": {
+      "source": "./src/types/MarkdownEvents.ts",
+      "types": "./dist/types/src/types/MarkdownEvents.d.ts",
+      "import": "./dist/lib/MarkdownEvents.mjs"
+    },
+    "./MarkdownOperation": {
+      "source": "./src/types/MarkdownOperation.ts",
+      "types": "./dist/types/src/types/MarkdownOperation.d.ts",
+      "import": "./dist/lib/MarkdownOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -203,5 +229,24 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Markdown": [
+        "dist/types/src/types/Markdown.d.ts"
+      ],
+      "MarkdownCapabilities": [
+        "dist/types/src/types/MarkdownCapabilities.d.ts"
+      ],
+      "MarkdownEvents": [
+        "dist/types/src/types/MarkdownEvents.d.ts"
+      ],
+      "MarkdownOperation": [
+        "dist/types/src/types/MarkdownOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

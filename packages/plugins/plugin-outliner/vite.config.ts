@@ -16,7 +16,11 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'Journal': 'src/types/Journal.ts',
+    'Outline': 'src/types/Outline.ts',
+    'OutlineOperation': 'src/types/OutlineOperation.ts',
+    'OutlinerEvents': 'src/types/OutlinerEvents.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

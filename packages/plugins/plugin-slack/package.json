@@ -61,7 +61,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./SlackEvents": {
+      "source": "./src/types/SlackEvents.ts",
+      "types": "./dist/types/src/types/SlackEvents.d.ts",
+      "import": "./dist/lib/SlackEvents.mjs"
+    },
+    "./SlackOperation": {
+      "source": "./src/types/SlackOperation.ts",
+      "types": "./dist/types/src/types/SlackOperation.d.ts",
+      "import": "./dist/lib/SlackOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -99,5 +110,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "SlackEvents": [
+        "dist/types/src/types/SlackEvents.d.ts"
+      ],
+      "SlackOperation": [
+        "dist/types/src/types/SlackOperation.d.ts"
+      ]
+    }
   }
 }

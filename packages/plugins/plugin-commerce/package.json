@@ -36,7 +36,33 @@
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
-    }
+    },
+    "./CommerceEvents": {
+      "source": "./src/types/CommerceEvents.ts",
+      "types": "./dist/types/src/types/CommerceEvents.d.ts",
+      "import": "./dist/lib/CommerceEvents.mjs"
+    },
+    "./Provider": {
+      "source": "./src/types/Provider.ts",
+      "types": "./dist/types/src/types/Provider.d.ts",
+      "import": "./dist/lib/Provider.mjs"
+    },
+    "./Result": {
+      "source": "./src/types/Result.ts",
+      "types": "./dist/types/src/types/Result.d.ts",
+      "import": "./dist/lib/Result.mjs"
+    },
+    "./Search": {
+      "source": "./src/types/Search.ts",
+      "types": "./dist/types/src/types/Search.d.ts",
+      "import": "./dist/lib/Search.mjs"
+    },
+    "./SearchOperation": {
+      "source": "./src/types/SearchOperation.ts",
+      "types": "./dist/types/src/types/SearchOperation.d.ts",
+      "import": "./dist/lib/SearchOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -92,5 +118,24 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "CommerceEvents": [
+        "dist/types/src/types/CommerceEvents.d.ts"
+      ],
+      "Provider": [
+        "dist/types/src/types/Provider.d.ts"
+      ],
+      "Result": [
+        "dist/types/src/types/Result.d.ts"
+      ],
+      "Search": [
+        "dist/types/src/types/Search.d.ts"
+      ],
+      "SearchOperation": [
+        "dist/types/src/types/SearchOperation.d.ts"
+      ]
+    }
   }
 }

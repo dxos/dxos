@@ -86,7 +86,48 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Artifact": {
+      "source": "./src/types/Artifact.ts",
+      "types": "./dist/types/src/types/Artifact.d.ts",
+      "import": "./dist/lib/Artifact.mjs"
+    },
+    "./Generation": {
+      "source": "./src/types/Generation.ts",
+      "types": "./dist/types/src/types/Generation.d.ts",
+      "import": "./dist/lib/Generation.mjs"
+    },
+    "./GenerationService": {
+      "source": "./src/types/GenerationService.ts",
+      "types": "./dist/types/src/types/GenerationService.d.ts",
+      "import": "./dist/lib/GenerationService.mjs"
+    },
+    "./Lightbox": {
+      "source": "./src/types/Lightbox.ts",
+      "types": "./dist/types/src/types/Lightbox.d.ts",
+      "import": "./dist/lib/Lightbox.mjs"
+    },
+    "./StudioCapabilities": {
+      "source": "./src/types/StudioCapabilities.ts",
+      "types": "./dist/types/src/types/StudioCapabilities.d.ts",
+      "import": "./dist/lib/StudioCapabilities.mjs"
+    },
+    "./StudioEvents": {
+      "source": "./src/types/StudioEvents.ts",
+      "types": "./dist/types/src/types/StudioEvents.d.ts",
+      "import": "./dist/lib/StudioEvents.mjs"
+    },
+    "./StudioOperation": {
+      "source": "./src/types/StudioOperation.ts",
+      "types": "./dist/types/src/types/StudioOperation.d.ts",
+      "import": "./dist/lib/StudioOperation.mjs"
+    },
+    "./Variant": {
+      "source": "./src/types/Variant.ts",
+      "types": "./dist/types/src/types/Variant.d.ts",
+      "import": "./dist/lib/Variant.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -153,5 +194,33 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Artifact": [
+        "dist/types/src/types/Artifact.d.ts"
+      ],
+      "Generation": [
+        "dist/types/src/types/Generation.d.ts"
+      ],
+      "GenerationService": [
+        "dist/types/src/types/GenerationService.d.ts"
+      ],
+      "Lightbox": [
+        "dist/types/src/types/Lightbox.d.ts"
+      ],
+      "StudioCapabilities": [
+        "dist/types/src/types/StudioCapabilities.d.ts"
+      ],
+      "StudioEvents": [
+        "dist/types/src/types/StudioEvents.d.ts"
+      ],
+      "StudioOperation": [
+        "dist/types/src/types/StudioOperation.d.ts"
+      ],
+      "Variant": [
+        "dist/types/src/types/Variant.d.ts"
+      ]
+    }
   }
 }

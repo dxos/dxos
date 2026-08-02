@@ -81,7 +81,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Tldraw": {
+      "source": "./src/types/Tldraw.ts",
+      "types": "./dist/types/src/types/Tldraw.d.ts",
+      "import": "./dist/lib/Tldraw.mjs"
+    },
+    "./TldrawCapabilities": {
+      "source": "./src/types/TldrawCapabilities.ts",
+      "types": "./dist/types/src/types/TldrawCapabilities.d.ts",
+      "import": "./dist/lib/TldrawCapabilities.mjs"
+    },
+    "./TldrawEvents": {
+      "source": "./src/types/TldrawEvents.ts",
+      "types": "./dist/types/src/types/TldrawEvents.d.ts",
+      "import": "./dist/lib/TldrawEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -154,5 +170,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Tldraw": [
+        "dist/types/src/types/Tldraw.d.ts"
+      ],
+      "TldrawCapabilities": [
+        "dist/types/src/types/TldrawCapabilities.d.ts"
+      ],
+      "TldrawEvents": [
+        "dist/types/src/types/TldrawEvents.d.ts"
+      ]
+    }
   }
 }

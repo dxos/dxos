@@ -65,7 +65,13 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./ConductorEvents": {
+      "source": "./src/types/ConductorEvents.ts",
+      "types": "./dist/types/src/types/ConductorEvents.d.ts",
+      "import": "./dist/lib/ConductorEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -114,5 +120,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "ConductorEvents": [
+        "dist/types/src/types/ConductorEvents.d.ts"
+      ]
+    }
   }
 }

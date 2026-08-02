@@ -71,7 +71,28 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./DebugEvents": {
+      "source": "./src/types/DebugEvents.ts",
+      "types": "./dist/types/src/types/DebugEvents.d.ts",
+      "import": "./dist/lib/DebugEvents.mjs"
+    },
+    "./DebugNodes": {
+      "source": "./src/types/DebugNodes.ts",
+      "types": "./dist/types/src/types/DebugNodes.d.ts",
+      "import": "./dist/lib/DebugNodes.mjs"
+    },
+    "./DebugSurface": {
+      "source": "./src/types/DebugSurface.ts",
+      "types": "./dist/types/src/types/DebugSurface.d.ts",
+      "import": "./dist/lib/DebugSurface.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -152,5 +173,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "DebugEvents": [
+        "dist/types/src/types/DebugEvents.d.ts"
+      ],
+      "DebugNodes": [
+        "dist/types/src/types/DebugNodes.d.ts"
+      ],
+      "DebugSurface": [
+        "dist/types/src/types/DebugSurface.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

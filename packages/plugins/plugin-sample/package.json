@@ -81,7 +81,33 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./SampleCapabilities": {
+      "source": "./src/types/SampleCapabilities.ts",
+      "types": "./dist/types/src/types/SampleCapabilities.d.ts",
+      "import": "./dist/lib/SampleCapabilities.mjs"
+    },
+    "./SampleEvents": {
+      "source": "./src/types/SampleEvents.ts",
+      "types": "./dist/types/src/types/SampleEvents.d.ts",
+      "import": "./dist/lib/SampleEvents.mjs"
+    },
+    "./SampleItem": {
+      "source": "./src/types/SampleItem.ts",
+      "types": "./dist/types/src/types/SampleItem.d.ts",
+      "import": "./dist/lib/SampleItem.mjs"
+    },
+    "./SampleOperation": {
+      "source": "./src/types/SampleOperation.ts",
+      "types": "./dist/types/src/types/SampleOperation.d.ts",
+      "import": "./dist/lib/SampleOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -129,5 +155,24 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "SampleCapabilities": [
+        "dist/types/src/types/SampleCapabilities.d.ts"
+      ],
+      "SampleEvents": [
+        "dist/types/src/types/SampleEvents.d.ts"
+      ],
+      "SampleItem": [
+        "dist/types/src/types/SampleItem.d.ts"
+      ],
+      "SampleOperation": [
+        "dist/types/src/types/SampleOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

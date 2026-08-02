@@ -71,7 +71,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./NativeFilesystemCapabilities": {
+      "source": "./src/types/NativeFilesystemCapabilities.ts",
+      "types": "./dist/types/src/types/NativeFilesystemCapabilities.d.ts",
+      "import": "./dist/lib/NativeFilesystemCapabilities.mjs"
+    },
+    "./NativeFilesystemEvents": {
+      "source": "./src/types/NativeFilesystemEvents.ts",
+      "types": "./dist/types/src/types/NativeFilesystemEvents.d.ts",
+      "import": "./dist/lib/NativeFilesystemEvents.mjs"
+    },
+    "./NativeFilesystemOperation": {
+      "source": "./src/types/NativeFilesystemOperation.ts",
+      "types": "./dist/types/src/types/NativeFilesystemOperation.d.ts",
+      "import": "./dist/lib/NativeFilesystemOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -121,5 +137,18 @@
     "@dxos/react-ui": "workspace:^",
     "effect": "catalog:",
     "react": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "NativeFilesystemCapabilities": [
+        "dist/types/src/types/NativeFilesystemCapabilities.d.ts"
+      ],
+      "NativeFilesystemEvents": [
+        "dist/types/src/types/NativeFilesystemEvents.d.ts"
+      ],
+      "NativeFilesystemOperation": [
+        "dist/types/src/types/NativeFilesystemOperation.d.ts"
+      ]
+    }
   }
 }

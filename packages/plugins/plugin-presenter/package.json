@@ -77,7 +77,28 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./PresenterCapabilities": {
+      "source": "./src/types/PresenterCapabilities.ts",
+      "types": "./dist/types/src/types/PresenterCapabilities.d.ts",
+      "import": "./dist/lib/PresenterCapabilities.mjs"
+    },
+    "./PresenterEvents": {
+      "source": "./src/types/PresenterEvents.ts",
+      "types": "./dist/types/src/types/PresenterEvents.d.ts",
+      "import": "./dist/lib/PresenterEvents.mjs"
+    },
+    "./PresenterOperation": {
+      "source": "./src/types/PresenterOperation.ts",
+      "types": "./dist/types/src/types/PresenterOperation.d.ts",
+      "import": "./dist/lib/PresenterOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -142,5 +163,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "PresenterCapabilities": [
+        "dist/types/src/types/PresenterCapabilities.d.ts"
+      ],
+      "PresenterEvents": [
+        "dist/types/src/types/PresenterEvents.d.ts"
+      ],
+      "PresenterOperation": [
+        "dist/types/src/types/PresenterOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

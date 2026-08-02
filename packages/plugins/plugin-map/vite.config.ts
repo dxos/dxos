@@ -21,7 +21,12 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'Map': 'src/types/Map.ts',
+    'MapAction': 'src/types/MapAction.ts',
+    'MapCapabilities': 'src/types/MapCapabilities.ts',
+    'MapEvents': 'src/types/MapEvents.ts',
+    'MapOperation': 'src/types/MapOperation.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

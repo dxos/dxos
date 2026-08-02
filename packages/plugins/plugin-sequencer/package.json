@@ -77,7 +77,43 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Score": {
+      "source": "./src/types/Score.ts",
+      "types": "./dist/types/src/types/Score.d.ts",
+      "import": "./dist/lib/Score.mjs"
+    },
+    "./ScoreOperation": {
+      "source": "./src/types/ScoreOperation.ts",
+      "types": "./dist/types/src/types/ScoreOperation.d.ts",
+      "import": "./dist/lib/ScoreOperation.mjs"
+    },
+    "./Sequence": {
+      "source": "./src/types/Sequence.ts",
+      "types": "./dist/types/src/types/Sequence.d.ts",
+      "import": "./dist/lib/Sequence.mjs"
+    },
+    "./SequencerEvents": {
+      "source": "./src/types/SequencerEvents.ts",
+      "types": "./dist/types/src/types/SequencerEvents.d.ts",
+      "import": "./dist/lib/SequencerEvents.mjs"
+    },
+    "./Track": {
+      "source": "./src/types/Track.ts",
+      "types": "./dist/types/src/types/Track.d.ts",
+      "import": "./dist/lib/Track.mjs"
+    },
+    "./Note": {
+      "source": "./src/types/Note.ts",
+      "types": "./dist/types/src/types/Note.d.ts",
+      "import": "./dist/lib/Note.mjs"
+    },
+    "./Patch": {
+      "source": "./src/types/Patch.ts",
+      "types": "./dist/types/src/types/Patch.d.ts",
+      "import": "./dist/lib/Patch.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -124,5 +160,30 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "Score": [
+        "dist/types/src/types/Score.d.ts"
+      ],
+      "ScoreOperation": [
+        "dist/types/src/types/ScoreOperation.d.ts"
+      ],
+      "Sequence": [
+        "dist/types/src/types/Sequence.d.ts"
+      ],
+      "SequencerEvents": [
+        "dist/types/src/types/SequencerEvents.d.ts"
+      ],
+      "Track": [
+        "dist/types/src/types/Track.d.ts"
+      ],
+      "Note": [
+        "dist/types/src/types/Note.d.ts"
+      ],
+      "Patch": [
+        "dist/types/src/types/Patch.d.ts"
+      ]
+    }
   }
 }

@@ -16,7 +16,12 @@ export default defineConfig({
     types: 'src/types/index.ts',
     util: 'src/util/index.ts',
     operations: 'src/operations/index.ts',
-  },
+      'CrxCapabilities': 'src/types/CrxCapabilities.ts',
+    'CrxEvents': 'src/types/CrxEvents.ts',
+    'CrxOperation': 'src/types/CrxOperation.ts',
+    'PageAction': 'src/types/PageAction.ts',
+    'Settings': 'src/types/Settings.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

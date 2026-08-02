@@ -95,7 +95,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Connection": {
+      "source": "./src/types/Connection.ts",
+      "types": "./dist/types/src/types/Connection.d.ts",
+      "import": "./dist/lib/Connection.mjs"
+    },
+    "./ConnectorEvents": {
+      "source": "./src/types/ConnectorEvents.ts",
+      "types": "./dist/types/src/types/ConnectorEvents.d.ts",
+      "import": "./dist/lib/ConnectorEvents.mjs"
+    },
+    "./ConnectorOperation": {
+      "source": "./src/types/ConnectorOperation.ts",
+      "types": "./dist/types/src/types/ConnectorOperation.d.ts",
+      "import": "./dist/lib/ConnectorOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -174,5 +190,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Connection": [
+        "dist/types/src/types/Connection.d.ts"
+      ],
+      "ConnectorEvents": [
+        "dist/types/src/types/ConnectorEvents.d.ts"
+      ],
+      "ConnectorOperation": [
+        "dist/types/src/types/ConnectorOperation.d.ts"
+      ]
+    }
   }
 }

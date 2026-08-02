@@ -100,7 +100,18 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./TableEvents": {
+      "source": "./src/types/TableEvents.ts",
+      "types": "./dist/types/src/types/TableEvents.d.ts",
+      "import": "./dist/lib/TableEvents.mjs"
+    },
+    "./TableOperation": {
+      "source": "./src/types/TableOperation.ts",
+      "types": "./dist/types/src/types/TableOperation.d.ts",
+      "import": "./dist/lib/TableOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -160,5 +171,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "TableEvents": [
+        "dist/types/src/types/TableEvents.d.ts"
+      ],
+      "TableOperation": [
+        "dist/types/src/types/TableOperation.d.ts"
+      ]
+    }
   }
 }

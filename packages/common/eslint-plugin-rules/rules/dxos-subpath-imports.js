@@ -9,14 +9,16 @@ import { createRequire } from 'node:module';
  * package once its exports map carries an entry per namespace segment — the fix keeps names the
  * exports map cannot resolve (flat re-exports such as errors) on the barrel import.
  */
-const DXOS_SUBPATH_PACKAGES = new Set([
-  '@dxos/app-framework',
-  '@dxos/app-toolkit',
-  '@dxos/compute',
-  // Pilot for per-namespace plugin API entrypoints (Sheet, SheetCapabilities, ...): consumers
-  // import the namespace they need instead of the barrel, which pulls the component graph.
-  '@dxos/plugin-sheet',
-]);
+const DXOS_SUBPATH_PACKAGES = new Set(['@dxos/app-framework', '@dxos/app-toolkit', '@dxos/compute']);
+
+/**
+ * Every plugin package participates: consumers import the namespace they need
+ * (`@dxos/plugin-sheet/Sheet`) instead of the barrel, which statically pulls the plugin's whole
+ * component graph. Resolution is exports-map-driven, so a plugin without per-namespace entries
+ * is a no-op. NOTE: the package must export `./package.json`, or the exports map is unreadable
+ * under Node exports encapsulation and the rule silently skips it.
+ */
+const isSubpathPackage = (source) => DXOS_SUBPATH_PACKAGES.has(source) || source.startsWith('@dxos/plugin-');
 
 /**
  * ESLint rule to transform barrel imports of designated @dxos packages into subpath imports,
@@ -78,7 +80,7 @@ export default {
       ImportDeclaration: (node) => {
         const source = String(node.source.value);
         // Only rewrite BARREL imports of designated packages; subpath imports are already correct.
-        if (!DXOS_SUBPATH_PACKAGES.has(source)) {
+        if (!isSubpathPackage(source)) {
           return;
         }
         const packageName = source;

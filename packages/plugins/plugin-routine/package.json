@@ -106,7 +106,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./RoutineCapabilities": {
+      "source": "./src/types/RoutineCapabilities.ts",
+      "types": "./dist/types/src/types/RoutineCapabilities.d.ts",
+      "import": "./dist/lib/RoutineCapabilities.mjs"
+    },
+    "./RoutineEvents": {
+      "source": "./src/types/RoutineEvents.ts",
+      "types": "./dist/types/src/types/RoutineEvents.d.ts",
+      "import": "./dist/lib/RoutineEvents.mjs"
+    },
+    "./RoutineOperation": {
+      "source": "./src/types/RoutineOperation.ts",
+      "types": "./dist/types/src/types/RoutineOperation.d.ts",
+      "import": "./dist/lib/RoutineOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -194,5 +210,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "RoutineCapabilities": [
+        "dist/types/src/types/RoutineCapabilities.d.ts"
+      ],
+      "RoutineEvents": [
+        "dist/types/src/types/RoutineEvents.d.ts"
+      ],
+      "RoutineOperation": [
+        "dist/types/src/types/RoutineOperation.d.ts"
+      ]
+    }
   }
 }

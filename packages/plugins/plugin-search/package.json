@@ -80,7 +80,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./SearchEvents": {
+      "source": "./src/types/SearchEvents.ts",
+      "types": "./dist/types/src/types/SearchEvents.d.ts",
+      "import": "./dist/lib/SearchEvents.mjs"
+    },
+    "./SearchOperation": {
+      "source": "./src/types/SearchOperation.ts",
+      "types": "./dist/types/src/types/SearchOperation.d.ts",
+      "import": "./dist/lib/SearchOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -143,5 +154,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "SearchEvents": [
+        "dist/types/src/types/SearchEvents.d.ts"
+      ],
+      "SearchOperation": [
+        "dist/types/src/types/SearchOperation.d.ts"
+      ]
+    }
   }
 }

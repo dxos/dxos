@@ -69,7 +69,13 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./SimpleLayoutCapabilities": {
+      "source": "./src/types/SimpleLayoutCapabilities.ts",
+      "types": "./dist/types/src/types/SimpleLayoutCapabilities.d.ts",
+      "import": "./dist/lib/SimpleLayoutCapabilities.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -127,5 +133,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "SimpleLayoutCapabilities": [
+        "dist/types/src/types/SimpleLayoutCapabilities.d.ts"
+      ]
+    }
   }
 }

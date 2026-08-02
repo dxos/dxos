@@ -16,7 +16,8 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'SimpleLayoutCapabilities': 'src/types/SimpleLayoutCapabilities.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

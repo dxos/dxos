@@ -55,7 +55,23 @@
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
-    }
+    },
+    "./DuffelCapabilities": {
+      "source": "./src/types/DuffelCapabilities.ts",
+      "types": "./dist/types/src/types/DuffelCapabilities.d.ts",
+      "import": "./dist/lib/DuffelCapabilities.mjs"
+    },
+    "./DuffelEvents": {
+      "source": "./src/types/DuffelEvents.ts",
+      "types": "./dist/types/src/types/DuffelEvents.d.ts",
+      "import": "./dist/lib/DuffelEvents.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -94,5 +110,18 @@
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "DuffelCapabilities": [
+        "dist/types/src/types/DuffelCapabilities.d.ts"
+      ],
+      "DuffelEvents": [
+        "dist/types/src/types/DuffelEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

@@ -17,7 +17,11 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'ObservabilityCapabilities': 'src/types/ObservabilityCapabilities.ts',
+    'ObservabilityEvents': 'src/types/ObservabilityEvents.ts',
+    'ObservabilityOperation': 'src/types/ObservabilityOperation.ts',
+    'Settings': 'src/types/Settings.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

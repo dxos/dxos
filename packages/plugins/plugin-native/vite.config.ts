@@ -14,7 +14,11 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'NativeCapabilities': 'src/types/NativeCapabilities.ts',
+    'NativeEvents': 'src/types/NativeEvents.ts',
+    'Settings': 'src/types/Settings.ts',
+    'Update': 'src/types/Update.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

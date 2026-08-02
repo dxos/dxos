@@ -82,7 +82,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./CrmEvents": {
+      "source": "./src/types/CrmEvents.ts",
+      "types": "./dist/types/src/types/CrmEvents.d.ts",
+      "import": "./dist/lib/CrmEvents.mjs"
+    },
+    "./CrmOperation": {
+      "source": "./src/types/CrmOperation.ts",
+      "types": "./dist/types/src/types/CrmOperation.d.ts",
+      "import": "./dist/lib/CrmOperation.mjs"
+    },
+    "./ProfileOf": {
+      "source": "./src/types/ProfileOf.ts",
+      "types": "./dist/types/src/types/ProfileOf.d.ts",
+      "import": "./dist/lib/ProfileOf.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -129,5 +145,18 @@
     "@effect/vitest": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "CrmEvents": [
+        "dist/types/src/types/CrmEvents.d.ts"
+      ],
+      "CrmOperation": [
+        "dist/types/src/types/CrmOperation.d.ts"
+      ],
+      "ProfileOf": [
+        "dist/types/src/types/ProfileOf.d.ts"
+      ]
+    }
   }
 }

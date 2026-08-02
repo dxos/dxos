@@ -81,7 +81,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./DoctorCapabilities": {
+      "source": "./src/types/DoctorCapabilities.ts",
+      "types": "./dist/types/src/types/DoctorCapabilities.d.ts",
+      "import": "./dist/lib/DoctorCapabilities.mjs"
+    },
+    "./DoctorEvents": {
+      "source": "./src/types/DoctorEvents.ts",
+      "types": "./dist/types/src/types/DoctorEvents.d.ts",
+      "import": "./dist/lib/DoctorEvents.mjs"
+    },
+    "./DoctorOperation": {
+      "source": "./src/types/DoctorOperation.ts",
+      "types": "./dist/types/src/types/DoctorOperation.d.ts",
+      "import": "./dist/lib/DoctorOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -117,5 +133,18 @@
   "peerDependencies": {
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "DoctorCapabilities": [
+        "dist/types/src/types/DoctorCapabilities.d.ts"
+      ],
+      "DoctorEvents": [
+        "dist/types/src/types/DoctorEvents.d.ts"
+      ],
+      "DoctorOperation": [
+        "dist/types/src/types/DoctorOperation.d.ts"
+      ]
+    }
   }
 }

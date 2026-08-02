@@ -16,7 +16,10 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'NativeFilesystemCapabilities': 'src/types/NativeFilesystemCapabilities.ts',
+    'NativeFilesystemEvents': 'src/types/NativeFilesystemEvents.ts',
+    'NativeFilesystemOperation': 'src/types/NativeFilesystemOperation.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

@@ -66,7 +66,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Ibkr": {
+      "source": "./src/types/Ibkr.ts",
+      "types": "./dist/types/src/types/Ibkr.d.ts",
+      "import": "./dist/lib/Ibkr.mjs"
+    },
+    "./IbkrEvents": {
+      "source": "./src/types/IbkrEvents.ts",
+      "types": "./dist/types/src/types/IbkrEvents.d.ts",
+      "import": "./dist/lib/IbkrEvents.mjs"
+    },
+    "./IbkrOperation": {
+      "source": "./src/types/IbkrOperation.ts",
+      "types": "./dist/types/src/types/IbkrOperation.d.ts",
+      "import": "./dist/lib/IbkrOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -125,5 +141,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Ibkr": [
+        "dist/types/src/types/Ibkr.d.ts"
+      ],
+      "IbkrEvents": [
+        "dist/types/src/types/IbkrEvents.d.ts"
+      ],
+      "IbkrOperation": [
+        "dist/types/src/types/IbkrOperation.d.ts"
+      ]
+    }
   }
 }

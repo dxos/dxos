@@ -110,7 +110,33 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Map": {
+      "source": "./src/types/Map.ts",
+      "types": "./dist/types/src/types/Map.d.ts",
+      "import": "./dist/lib/Map.mjs"
+    },
+    "./MapAction": {
+      "source": "./src/types/MapAction.ts",
+      "types": "./dist/types/src/types/MapAction.d.ts",
+      "import": "./dist/lib/MapAction.mjs"
+    },
+    "./MapCapabilities": {
+      "source": "./src/types/MapCapabilities.ts",
+      "types": "./dist/types/src/types/MapCapabilities.d.ts",
+      "import": "./dist/lib/MapCapabilities.mjs"
+    },
+    "./MapEvents": {
+      "source": "./src/types/MapEvents.ts",
+      "types": "./dist/types/src/types/MapEvents.d.ts",
+      "import": "./dist/lib/MapEvents.mjs"
+    },
+    "./MapOperation": {
+      "source": "./src/types/MapOperation.ts",
+      "types": "./dist/types/src/types/MapOperation.d.ts",
+      "import": "./dist/lib/MapOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -165,5 +191,24 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Map": [
+        "dist/types/src/types/Map.d.ts"
+      ],
+      "MapAction": [
+        "dist/types/src/types/MapAction.d.ts"
+      ],
+      "MapCapabilities": [
+        "dist/types/src/types/MapCapabilities.d.ts"
+      ],
+      "MapEvents": [
+        "dist/types/src/types/MapEvents.d.ts"
+      ],
+      "MapOperation": [
+        "dist/types/src/types/MapOperation.d.ts"
+      ]
+    }
   }
 }

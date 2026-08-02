@@ -21,7 +21,11 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'Settings': 'src/types/Settings.ts',
+    'CommentCapabilities': 'src/types/CommentCapabilities.ts',
+    'CommentOperation': 'src/types/CommentOperation.ts',
+    'ReviewEvents': 'src/types/ReviewEvents.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

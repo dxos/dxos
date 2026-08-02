@@ -15,7 +15,10 @@ export default defineConfig({
     services: 'src/services/index.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'PaymentsCapabilities': 'src/types/PaymentsCapabilities.ts',
+    'PaymentsEvents': 'src/types/PaymentsEvents.ts',
+    'Settings': 'src/types/Settings.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

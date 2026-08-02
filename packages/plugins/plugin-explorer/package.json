@@ -85,7 +85,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./ExplorerAction": {
+      "source": "./src/types/ExplorerAction.ts",
+      "types": "./dist/types/src/types/ExplorerAction.d.ts",
+      "import": "./dist/lib/ExplorerAction.mjs"
+    },
+    "./ExplorerEvents": {
+      "source": "./src/types/ExplorerEvents.ts",
+      "types": "./dist/types/src/types/ExplorerEvents.d.ts",
+      "import": "./dist/lib/ExplorerEvents.mjs"
+    },
+    "./Graph": {
+      "source": "./src/types/Graph.ts",
+      "types": "./dist/types/src/types/Graph.d.ts",
+      "import": "./dist/lib/Graph.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -157,5 +173,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "ExplorerAction": [
+        "dist/types/src/types/ExplorerAction.d.ts"
+      ],
+      "ExplorerEvents": [
+        "dist/types/src/types/ExplorerEvents.d.ts"
+      ],
+      "Graph": [
+        "dist/types/src/types/Graph.d.ts"
+      ]
+    }
   }
 }

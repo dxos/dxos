@@ -16,7 +16,12 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     containers: 'src/containers/index.ts',
-  },
+      'BrainCapabilities': 'src/types/BrainCapabilities.ts',
+    'BrainEvents': 'src/types/BrainEvents.ts',
+    'BrainOperation': 'src/types/BrainOperation.ts',
+    'BrainSettings': 'src/types/BrainSettings.ts',
+    'BrainSurface': 'src/types/BrainSurface.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

@@ -71,7 +71,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Profile": {
+      "source": "./src/types/Profile.ts",
+      "types": "./dist/types/src/types/Profile.d.ts",
+      "import": "./dist/lib/Profile.mjs"
+    },
+    "./Sidekick": {
+      "source": "./src/types/Sidekick.ts",
+      "types": "./dist/types/src/types/Sidekick.d.ts",
+      "import": "./dist/lib/Sidekick.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -110,5 +121,15 @@
     "@dxos/ui-theme": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "Profile": [
+        "dist/types/src/types/Profile.d.ts"
+      ],
+      "Sidekick": [
+        "dist/types/src/types/Sidekick.d.ts"
+      ]
+    }
   }
 }

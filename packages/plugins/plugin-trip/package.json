@@ -87,7 +87,63 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Booking": {
+      "source": "./src/types/Booking.ts",
+      "types": "./dist/types/src/types/Booking.d.ts",
+      "import": "./dist/lib/Booking.mjs"
+    },
+    "./BookingOperation": {
+      "source": "./src/types/BookingOperation.ts",
+      "types": "./dist/types/src/types/BookingOperation.d.ts",
+      "import": "./dist/lib/BookingOperation.mjs"
+    },
+    "./BookingSearch": {
+      "source": "./src/types/BookingSearch.ts",
+      "types": "./dist/types/src/types/BookingSearch.d.ts",
+      "import": "./dist/lib/BookingSearch.mjs"
+    },
+    "./Place": {
+      "source": "./src/types/Place.ts",
+      "types": "./dist/types/src/types/Place.d.ts",
+      "import": "./dist/lib/Place.mjs"
+    },
+    "./Routing": {
+      "source": "./src/types/Routing.ts",
+      "types": "./dist/types/src/types/Routing.d.ts",
+      "import": "./dist/lib/Routing.mjs"
+    },
+    "./RoutingOperation": {
+      "source": "./src/types/RoutingOperation.ts",
+      "types": "./dist/types/src/types/RoutingOperation.d.ts",
+      "import": "./dist/lib/RoutingOperation.mjs"
+    },
+    "./Segment": {
+      "source": "./src/types/Segment.ts",
+      "types": "./dist/types/src/types/Segment.d.ts",
+      "import": "./dist/lib/Segment.mjs"
+    },
+    "./Trip": {
+      "source": "./src/types/Trip.ts",
+      "types": "./dist/types/src/types/Trip.d.ts",
+      "import": "./dist/lib/Trip.mjs"
+    },
+    "./TripCapabilities": {
+      "source": "./src/types/TripCapabilities.ts",
+      "types": "./dist/types/src/types/TripCapabilities.d.ts",
+      "import": "./dist/lib/TripCapabilities.mjs"
+    },
+    "./TripEvents": {
+      "source": "./src/types/TripEvents.ts",
+      "types": "./dist/types/src/types/TripEvents.d.ts",
+      "import": "./dist/lib/TripEvents.mjs"
+    },
+    "./TripOperation": {
+      "source": "./src/types/TripOperation.ts",
+      "types": "./dist/types/src/types/TripOperation.d.ts",
+      "import": "./dist/lib/TripOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -158,5 +214,42 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Booking": [
+        "dist/types/src/types/Booking.d.ts"
+      ],
+      "BookingOperation": [
+        "dist/types/src/types/BookingOperation.d.ts"
+      ],
+      "BookingSearch": [
+        "dist/types/src/types/BookingSearch.d.ts"
+      ],
+      "Place": [
+        "dist/types/src/types/Place.d.ts"
+      ],
+      "Routing": [
+        "dist/types/src/types/Routing.d.ts"
+      ],
+      "RoutingOperation": [
+        "dist/types/src/types/RoutingOperation.d.ts"
+      ],
+      "Segment": [
+        "dist/types/src/types/Segment.d.ts"
+      ],
+      "Trip": [
+        "dist/types/src/types/Trip.d.ts"
+      ],
+      "TripCapabilities": [
+        "dist/types/src/types/TripCapabilities.d.ts"
+      ],
+      "TripEvents": [
+        "dist/types/src/types/TripEvents.d.ts"
+      ],
+      "TripOperation": [
+        "dist/types/src/types/TripOperation.d.ts"
+      ]
+    }
   }
 }

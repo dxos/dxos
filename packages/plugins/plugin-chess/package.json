@@ -105,7 +105,33 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Chess": {
+      "source": "./src/types/Chess.ts",
+      "types": "./dist/types/src/types/Chess.d.ts",
+      "import": "./dist/lib/Chess.mjs"
+    },
+    "./ChessEvents": {
+      "source": "./src/types/ChessEvents.ts",
+      "types": "./dist/types/src/types/ChessEvents.d.ts",
+      "import": "./dist/lib/ChessEvents.mjs"
+    },
+    "./ChessOperation": {
+      "source": "./src/types/ChessOperation.ts",
+      "types": "./dist/types/src/types/ChessOperation.d.ts",
+      "import": "./dist/lib/ChessOperation.mjs"
+    },
+    "./ChessPositionIndex": {
+      "source": "./src/types/ChessPositionIndex.ts",
+      "types": "./dist/types/src/types/ChessPositionIndex.d.ts",
+      "import": "./dist/lib/ChessPositionIndex.mjs"
+    },
+    "./PlayerReview": {
+      "source": "./src/types/PlayerReview.ts",
+      "types": "./dist/types/src/types/PlayerReview.d.ts",
+      "import": "./dist/lib/PlayerReview.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -158,5 +184,24 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Chess": [
+        "dist/types/src/types/Chess.d.ts"
+      ],
+      "ChessEvents": [
+        "dist/types/src/types/ChessEvents.d.ts"
+      ],
+      "ChessOperation": [
+        "dist/types/src/types/ChessOperation.d.ts"
+      ],
+      "ChessPositionIndex": [
+        "dist/types/src/types/ChessPositionIndex.d.ts"
+      ],
+      "PlayerReview": [
+        "dist/types/src/types/PlayerReview.d.ts"
+      ]
+    }
   }
 }

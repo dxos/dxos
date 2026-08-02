@@ -61,7 +61,18 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./GitHubEvents": {
+      "source": "./src/types/GitHubEvents.ts",
+      "types": "./dist/types/src/types/GitHubEvents.d.ts",
+      "import": "./dist/lib/GitHubEvents.mjs"
+    },
+    "./GitHubOperation": {
+      "source": "./src/types/GitHubOperation.ts",
+      "types": "./dist/types/src/types/GitHubOperation.d.ts",
+      "import": "./dist/lib/GitHubOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -98,5 +109,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "GitHubEvents": [
+        "dist/types/src/types/GitHubEvents.d.ts"
+      ],
+      "GitHubOperation": [
+        "dist/types/src/types/GitHubOperation.d.ts"
+      ]
+    }
   }
 }

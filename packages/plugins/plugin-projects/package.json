@@ -2,7 +2,7 @@
   "name": "@dxos/plugin-projects",
   "version": "0.1.0",
   "private": true,
-  "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
+  "description": "Projects \u2014 interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -80,7 +80,23 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./ProjectCapabilities": {
+      "source": "./src/types/ProjectCapabilities.ts",
+      "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
+      "import": "./dist/lib/ProjectCapabilities.mjs"
+    },
+    "./ProjectOperation": {
+      "source": "./src/types/ProjectOperation.ts",
+      "types": "./dist/types/src/types/ProjectOperation.d.ts",
+      "import": "./dist/lib/ProjectOperation.mjs"
+    },
+    "./ProjectsEvents": {
+      "source": "./src/types/ProjectsEvents.ts",
+      "types": "./dist/types/src/types/ProjectsEvents.d.ts",
+      "import": "./dist/lib/ProjectsEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -127,5 +143,18 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "ProjectCapabilities": [
+        "dist/types/src/types/ProjectCapabilities.d.ts"
+      ],
+      "ProjectOperation": [
+        "dist/types/src/types/ProjectOperation.d.ts"
+      ],
+      "ProjectsEvents": [
+        "dist/types/src/types/ProjectsEvents.d.ts"
+      ]
+    }
   }
 }

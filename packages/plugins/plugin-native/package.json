@@ -60,7 +60,28 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./NativeCapabilities": {
+      "source": "./src/types/NativeCapabilities.ts",
+      "types": "./dist/types/src/types/NativeCapabilities.d.ts",
+      "import": "./dist/lib/NativeCapabilities.mjs"
+    },
+    "./NativeEvents": {
+      "source": "./src/types/NativeEvents.ts",
+      "types": "./dist/types/src/types/NativeEvents.d.ts",
+      "import": "./dist/lib/NativeEvents.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Update": {
+      "source": "./src/types/Update.ts",
+      "types": "./dist/types/src/types/Update.d.ts",
+      "import": "./dist/lib/Update.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -107,5 +128,21 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "NativeCapabilities": [
+        "dist/types/src/types/NativeCapabilities.d.ts"
+      ],
+      "NativeEvents": [
+        "dist/types/src/types/NativeEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Update": [
+        "dist/types/src/types/Update.d.ts"
+      ]
+    }
   }
 }

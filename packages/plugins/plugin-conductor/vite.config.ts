@@ -15,7 +15,8 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'ConductorEvents': 'src/types/ConductorEvents.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

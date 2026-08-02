@@ -60,7 +60,23 @@
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
-    }
+    },
+    "./PaymentsCapabilities": {
+      "source": "./src/types/PaymentsCapabilities.ts",
+      "types": "./dist/types/src/types/PaymentsCapabilities.d.ts",
+      "import": "./dist/lib/PaymentsCapabilities.mjs"
+    },
+    "./PaymentsEvents": {
+      "source": "./src/types/PaymentsEvents.ts",
+      "types": "./dist/types/src/types/PaymentsEvents.d.ts",
+      "import": "./dist/lib/PaymentsEvents.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -103,5 +119,18 @@
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "typesVersions": {
+    "*": {
+      "PaymentsCapabilities": [
+        "dist/types/src/types/PaymentsCapabilities.d.ts"
+      ],
+      "PaymentsEvents": [
+        "dist/types/src/types/PaymentsEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

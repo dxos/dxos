@@ -90,7 +90,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./ThreadCapabilities": {
+      "source": "./src/types/ThreadCapabilities.ts",
+      "types": "./dist/types/src/types/ThreadCapabilities.d.ts",
+      "import": "./dist/lib/ThreadCapabilities.mjs"
+    },
+    "./ThreadEvents": {
+      "source": "./src/types/ThreadEvents.ts",
+      "types": "./dist/types/src/types/ThreadEvents.d.ts",
+      "import": "./dist/lib/ThreadEvents.mjs"
+    },
+    "./ThreadOperation": {
+      "source": "./src/types/ThreadOperation.ts",
+      "types": "./dist/types/src/types/ThreadOperation.d.ts",
+      "import": "./dist/lib/ThreadOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -150,5 +166,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "ThreadCapabilities": [
+        "dist/types/src/types/ThreadCapabilities.d.ts"
+      ],
+      "ThreadEvents": [
+        "dist/types/src/types/ThreadEvents.d.ts"
+      ],
+      "ThreadOperation": [
+        "dist/types/src/types/ThreadOperation.d.ts"
+      ]
+    }
   }
 }

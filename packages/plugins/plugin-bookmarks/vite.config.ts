@@ -16,7 +16,10 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'Bookmark': 'src/types/Bookmark.ts',
+    'BookmarkOperation': 'src/types/BookmarkOperation.ts',
+    'BookmarksEvents': 'src/types/BookmarksEvents.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });

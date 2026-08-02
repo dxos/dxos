@@ -75,7 +75,33 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Meeting": {
+      "source": "./src/types/Meeting.ts",
+      "types": "./dist/types/src/types/Meeting.d.ts",
+      "import": "./dist/lib/Meeting.mjs"
+    },
+    "./MeetingCapabilities": {
+      "source": "./src/types/MeetingCapabilities.ts",
+      "types": "./dist/types/src/types/MeetingCapabilities.d.ts",
+      "import": "./dist/lib/MeetingCapabilities.mjs"
+    },
+    "./MeetingEvents": {
+      "source": "./src/types/MeetingEvents.ts",
+      "types": "./dist/types/src/types/MeetingEvents.d.ts",
+      "import": "./dist/lib/MeetingEvents.mjs"
+    },
+    "./MeetingOperation": {
+      "source": "./src/types/MeetingOperation.ts",
+      "types": "./dist/types/src/types/MeetingOperation.d.ts",
+      "import": "./dist/lib/MeetingOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -143,5 +169,24 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Meeting": [
+        "dist/types/src/types/Meeting.d.ts"
+      ],
+      "MeetingCapabilities": [
+        "dist/types/src/types/MeetingCapabilities.d.ts"
+      ],
+      "MeetingEvents": [
+        "dist/types/src/types/MeetingEvents.d.ts"
+      ],
+      "MeetingOperation": [
+        "dist/types/src/types/MeetingOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
   }
 }

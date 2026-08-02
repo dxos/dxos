@@ -77,7 +77,23 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    }
+    },
+    "./Game": {
+      "source": "./src/types/Game.ts",
+      "types": "./dist/types/src/types/Game.d.ts",
+      "import": "./dist/lib/Game.mjs"
+    },
+    "./GameCapabilities": {
+      "source": "./src/types/GameCapabilities.ts",
+      "types": "./dist/types/src/types/GameCapabilities.d.ts",
+      "import": "./dist/lib/GameCapabilities.mjs"
+    },
+    "./GameEvents": {
+      "source": "./src/types/GameEvents.ts",
+      "types": "./dist/types/src/types/GameEvents.d.ts",
+      "import": "./dist/lib/GameEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [
@@ -121,5 +137,18 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Game": [
+        "dist/types/src/types/Game.d.ts"
+      ],
+      "GameCapabilities": [
+        "dist/types/src/types/GameCapabilities.d.ts"
+      ],
+      "GameEvents": [
+        "dist/types/src/types/GameEvents.d.ts"
+      ]
+    }
   }
 }

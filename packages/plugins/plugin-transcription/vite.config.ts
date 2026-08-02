@@ -22,7 +22,11 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
     'testing': 'src/testing/index.ts',
-  },
+      'Settings': 'src/types/Settings.ts',
+    'TranscriptionCapabilities': 'src/types/TranscriptionCapabilities.ts',
+    'TranscriptionEvents': 'src/types/TranscriptionEvents.ts',
+    'TranscriptOperation': 'src/types/TranscriptOperation.ts',
+},
   jsx: 'react',
   test: { node: { environment: 'jsdom' }, storybook: true },
 });

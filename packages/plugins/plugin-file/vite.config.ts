@@ -19,7 +19,11 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
-  },
+      'FileCapabilities': 'src/types/FileCapabilities.ts',
+    'FileEvents': 'src/types/FileEvents.ts',
+    'FileOperation': 'src/types/FileOperation.ts',
+    'Settings': 'src/types/Settings.ts',
+},
   jsx: 'react',
   test: { node: true },
 });

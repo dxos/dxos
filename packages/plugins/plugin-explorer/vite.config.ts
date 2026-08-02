@@ -17,7 +17,10 @@ export default defineConfig({
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
-  },
+      'ExplorerAction': 'src/types/ExplorerAction.ts',
+    'ExplorerEvents': 'src/types/ExplorerEvents.ts',
+    'Graph': 'src/types/Graph.ts',
+},
   jsx: 'react',
   test: { node: true, storybook: true },
 });
