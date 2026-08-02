@@ -150,8 +150,10 @@ const main = async () => {
 
   // The startup profiler is on by default in dev so every devloop produces
   // a BENCHMARKS row without remembering `?profiler=1`. Production explicitly
-  // opts in (or out) via the URL parameter.
-  const profilerEnabled = isTrue(url.searchParams.get(PARAM_PROFILER), Boolean(import.meta.env?.DEV));
+  // opts in (or out) via the URL parameter. NOTE: `isTrue`'s second argument is
+  // a strictness flag, not a default — an absent param must fall back explicitly.
+  const profilerParam = url.searchParams.get(PARAM_PROFILER);
+  const profilerEnabled = profilerParam == null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);

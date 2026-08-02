@@ -8,10 +8,12 @@ Prove the measure loop works in this worktree before touching anything.
 
 ### Tasks
 
-- [ ] **Start `composer-app:serve` (full plugin set) and load it** — capture
-  `window.composer.profiler.snapshot()` from a real load.
+- [x] **Start `composer-app:serve` (full plugin set) and load it** — verified on :5180
+  (launch config `composer-app-proto`); warm-dev snapshot captured (profilerTotal ~23.8s,
+  first-interactive ~30s, noisy double-reload). FINDING: profiler was silently OFF in dev —
+  `isTrue(param, default)` misuse (second arg is a strictness flag); fixed in main.tsx.
 - [ ] **Start `serve-min` and compare** — same snapshot, minimal set.
-- [ ] **Storybook starts** — own port (never 9009), smoke only.
+- [x] **Storybook starts** — verified on :9014 (`storybook-9014` config), index.json serving; stopped after smoke.
 - [ ] **Run the dev-startup harness** (`composer-app:e2e-dev`) once to confirm it still works.
 
 ## Phase A: diagnosis (attribution, not aggregate measures)
