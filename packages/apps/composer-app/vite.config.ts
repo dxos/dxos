@@ -150,6 +150,20 @@ export default defineConfig((env) => ({
       ],
     },
   },
+  preview: {
+    // With https enabled (and no proxy) vite serves preview over HTTP/2, whose stream
+    // multiplexing removes the ~6-connection HTTP/1.1 request serialization across the
+    // ~500-chunk boot preload wave — the dominant pre-main cost when previewing locally.
+    // Same opt-in as `server`: HTTPS=true with key/cert at the repo root.
+    https:
+      process.env.HTTPS === 'true'
+        ? {
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
+          }
+        : undefined,
+  },
+
   oxc: {
     target: [...browserTargets],
   },
@@ -174,40 +188,17 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
-        // Consolidate rolldown's default fine-grained splitting (~4,800 chunks, median 1KB),
-        // whose per-request overhead dominates boot on HTTP/1.1. Priority order is the
-        // safety property: `boot` captures the entries' static graphs first ($initial), so
-        // the per-package group below it only ever merges lazy modules — merging a package's
-        // eager and lazy halves into one chunk would otherwise drag its lazy bytes into the
-        // boot preload set. App-own source is excluded from both groups: capturing an entry
-        // module dissolves its facade chunk and vite degrades the HTML to ordered <script>
-        // tags with no modulepreload list.
+        // Only React is pinned to a stable chunk; everything else keeps rolldown's default
+        // splitting. Consolidation experiments (2026-08): per-package groups bloated the
+        // static boot graph 4.03->10.07MB (packages pair thin eager entries with heavy lazy
+        // islands, and merging welds the halves together); a `$initial`-tagged boot group
+        // bloated it to 19MB (the tag spans all five HTML entries and, with
+        // includeDependenciesRecursively defaulting to true, their recursive deps — every
+        // entry then pulls the merged blob). Safe consolidation needs a per-entry static
+        // module manifest; until then the ~4,800-chunk shape stands and HTTP/1.1 request
+        // serialization is addressed by serving preview over HTTP/2 instead.
         codeSplitting: {
-          // Packages below this fall through to the `shared` sweep instead of emitting a
-          // micro-chunk per package.
-          minSize: 10 * 1024,
-          groups: [
-            { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
-            {
-              name: 'boot',
-              tags: ['$initial'],
-              test: (moduleId: string) => !moduleId.includes('/packages/apps/'),
-              maxSize: 1024 * 1024,
-              priority: 5,
-            },
-            { name: packageChunkName, priority: 1 },
-            // Sweep the residue — modules too small for a package chunk — into shared
-            // chunks. maxModuleSize keeps substantial modules on automatic chunking so a
-            // lazy island never has to fetch a large unrelated module; only the micro-module
-            // tail (the ~2,300 sub-1KB chunks of the default splitting) is merged.
-            {
-              name: 'shared',
-              test: (moduleId: string) => !moduleId.includes('/packages/apps/'),
-              maxModuleSize: 8 * 1024,
-              maxSize: 256 * 1024,
-              priority: 0,
-            },
-          ],
+          groups: [{ name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/ }],
         },
       },
     },
@@ -676,32 +667,6 @@ export default defineConfig((env) => ({
 
   ...createTestConfig({ dirname, node: true, storybook: true }),
 }));
-
-/**
- * Chunk-group name for a module: one group per npm package / workspace package. Returning
- * `null` (app source, virtual modules) leaves the module to rolldown's default chunking.
- */
-function packageChunkName(moduleId: string): string | null {
-  const nodeModulesIdx = moduleId.lastIndexOf('node_modules/');
-  if (nodeModulesIdx !== -1) {
-    const segments = moduleId.slice(nodeModulesIdx + 'node_modules/'.length).split('/');
-    const name = segments[0].startsWith('@') ? `${segments[0].slice(1)}-${segments[1]}` : segments[0];
-    return `vendor-${name}`;
-  }
-  // App packages are bundle entries — capturing an entry module into a group dissolves its
-  // facade chunk and vite degrades the HTML to ordered <script> tags with no preload list.
-  const workspacePackage = moduleId.includes('/packages/apps/')
-    ? null
-    : moduleId.match(/packages\/(?:[^/]+\/)*?([^/]+)\/(?:src|dist)\//);
-  if (workspacePackage) {
-    return `pkg-${workspacePackage[1]}`;
-  }
-  const vendored = moduleId.match(/\/vendor\/([^/]+)\//);
-  if (vendored) {
-    return `vendor-${vendored[1]}`;
-  }
-  return null;
-}
 
 /**
  * Generate nicer chunk names.
