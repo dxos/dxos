@@ -1,7 +1,7 @@
 # ECHO Lenses — Tasks
 
 _Resume: **MIGRATION RESEARCH COMPLETE AND CONSOLIDATED** (2026-08-02, branch
-`claude/m0-migrations-research-zw15ml`, no PR by request). The definitive record is
+`claude/m0-migrations-research-zw15ml`, DRAFT PR #12439). The definitive record is
 [M0-REPORT.md](./M0-REPORT.md) — final design (8 outcomes incl. the ratified array-fan-out
 two-step, history-native conflicts, epoch policy), evidence map, and everything ruled out with
 reasons; DESIGN.md §10.3 "Outcomes" is the summary that points to it. The proving suite is
