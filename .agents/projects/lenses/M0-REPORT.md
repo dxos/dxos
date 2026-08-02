@@ -417,8 +417,8 @@ Resolutions and directions from design review, each turning an "open" item into 
 - The collapse engine itself (PR #12412) — the bench proves the substrate and the improved merge
   semantics, not the worker-integrated engine.
 - Non-`Ref` back-reference gaps — downgraded from risk to accepted (see Follow-on directions:
-  non-owning refs are allowed to dangle; the cardinality check needs completeness only over
-  owning/indexed refs).
+  all real refs ARE indexed; the gap shapes are non-ref reference-like strings with no resolution
+  guarantee, allowed to break).
 - The fold-forward trigger and its runtime cost (DESIGN.md §10.7 q6).
 - Collaborative-text merge policy (a text baseline would extend only-on-conflict discipline to
   text; unexplored).
