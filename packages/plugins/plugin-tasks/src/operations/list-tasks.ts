@@ -39,14 +39,12 @@ const handler: Operation.WithHandler<typeof TaskOperation.ListTasks> = TaskOpera
       }
       if (project) {
         const projectObject = yield* Database.load(project);
-        // Read the ref array structurally: `Project` lives in @dxos/compute, which plugin-tasks
-        // must not depend on (it would invert the publishable-plugin dependency direction).
-        const taskSets = (projectObject as { taskSets?: ReadonlyArray<Ref.Ref<Obj.Unknown>> }).taskSets ?? [];
-        for (const ref of taskSets) {
-          const loaded = yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined));
-          if (loaded) {
-            containers.push(loaded.id);
-          }
+        // Read the ref structurally: `Project` lives in @dxos/compute, which plugin-tasks must
+        // not depend on (it would invert the publishable-plugin dependency direction).
+        const ref = (projectObject as { taskSet?: Ref.Ref<Obj.Unknown> }).taskSet;
+        const loaded = ref ? yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+        if (loaded) {
+          containers.push(loaded.id);
         }
       }
 

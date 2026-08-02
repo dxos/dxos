@@ -35,7 +35,7 @@ describe('project operations', () => {
       yield* Database.add(
         Project.make({
           name: 'Spring Blend',
-          taskSets: [Ref.make(taskSet)],
+          taskSet: Ref.make(taskSet),
           goals: [{ id: 'g1', text: 'Ship the blend' }],
         }),
       );
@@ -47,7 +47,7 @@ describe('project operations', () => {
 
       const matched = yield* listProjects.handler({ match: 'spring' });
       expect(matched.projects).toHaveLength(1);
-      expect(matched.projects[0]).toMatchObject({ name: 'Spring Blend', taskSetCount: 1, goalCount: 1 });
+      expect(matched.projects[0]).toMatchObject({ name: 'Spring Blend', hasTaskSet: true, goalCount: 1 });
     }).pipe(Effect.provide(testLayer())),
   );
 
@@ -66,7 +66,7 @@ describe('project operations', () => {
       const project = yield* Database.add(
         Project.make({
           name: 'Spring Blend',
-          taskSets: [Ref.make(taskSet)],
+          taskSet: Ref.make(taskSet),
           goals: [{ id: 'g1', text: 'Ship the blend', status: 'open' }],
           outline: Ref.make(outline),
           artifacts: Ref.make(artifacts),
@@ -78,7 +78,7 @@ describe('project operations', () => {
 
       expect(result.name).toBe('Spring Blend');
       expect(result.goals).toHaveLength(1);
-      expect(result.taskSets).toEqual([{ id: taskSet.id, name: 'Sprint', openCount: 1, totalCount: 2 }]);
+      expect(result.taskSet).toEqual({ id: taskSet.id, name: 'Sprint', openCount: 1, totalCount: 2 });
       expect(result.outline?.content).toContain('- [ ] first');
       expect(result.artifacts).toHaveLength(1);
     }).pipe(Effect.provide(testLayer())),

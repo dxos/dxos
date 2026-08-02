@@ -19,24 +19,14 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = Pr
     Effect.fnUntraced(function* ({ project: projectRef }) {
       const project = yield* Database.load(projectRef);
 
-      const taskSets = [];
-      for (const ref of project.taskSets ?? []) {
-        const taskSet = yield* Database.load(ref).pipe(Effect.orElseSucceed(() => undefined));
-        if (!taskSet) {
-          continue;
-        }
-        // Membership is the parent edge, so counts come from the children query.
-        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run.pipe(
-          Effect.orElseSucceed(() => []),
-        );
-        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
-        taskSets.push({
-          id: taskSet.id,
-          name: taskSet.name,
-          openCount: tasks.filter((task) => (task.status ?? 'todo') !== 'done').length,
-          totalCount: tasks.length,
-        });
-      }
+      const taskSet = project.taskSet
+        ? yield* Database.load(project.taskSet).pipe(Effect.orElseSucceed(() => undefined))
+        : undefined;
+      // Membership is the parent edge, so counts come from the children query.
+      const taskSetChildren = taskSet
+        ? yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run.pipe(Effect.orElseSucceed(() => []))
+        : [];
+      const tasks = taskSetChildren.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
 
       const outline = project.outline
         ? yield* Database.load(project.outline).pipe(Effect.orElseSucceed(() => undefined))
@@ -61,7 +51,14 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.GetProject> = Pr
         name: project.name,
         description: project.description,
         goals: [...(project.goals ?? [])],
-        taskSets,
+        taskSet: taskSet
+          ? {
+              id: taskSet.id,
+              name: taskSet.name,
+              openCount: tasks.filter((task) => (task.status ?? 'todo') !== 'done').length,
+              totalCount: tasks.length,
+            }
+          : undefined,
         outline: outline && outlineText ? { id: outline.id, content: outlineText.content } : undefined,
         artifacts,
       };

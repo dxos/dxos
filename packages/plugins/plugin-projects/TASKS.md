@@ -316,7 +316,7 @@ summaries), and the `stories-projects` storybook strategy.
 Design: [`MILESTONE-5.md`](./MILESTONE-5.md) (2026-08-01, v3 — Phase 0 DECIDED). Project
 optionally composes Goals / Outline / Tasks / Plan (Milestones DEFERRED);
 **ExternalProject → `TaskSet`** (lightweight, possibly externally synced task container;
-`Project.taskSets: Ref<TaskSet>[]` (array, revised 2026-08-01); `Task.taskSet` backref); plugin-outliner is taken over
+`Project.taskSet: Ref<TaskSet>` (single ref); `Task` membership by parent edge); plugin-outliner is taken over
 as `plugin-tasks`; `Task.assignee` becomes `Actor`; Plan⇄Task promotion path; Linear-shaped
 camelCase MCP verbs layered over the generic object API (the §2.7 "fourth channel"). Type
 inventory table added to DESIGN.md § Types. Stage is dogfooded over MCP
@@ -334,7 +334,7 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
 - [x] **Phase 1 — schema + call-site sweep** — DONE 2026-08-01 (branch
       `claude/competent-curie-20057f`): `TaskSet` (org.dxos.type.taskSet@0.2.0) replaces
       ExternalProject; Task 0.2.0 (assignee: Actor, +failed/cancelled);
-      Project 0.3.0 (goals/outline/taskSets); Outline → @dxos/types 0.2.0; linear push maps
+      Project 0.3.0 (goals/outline/taskSet); Outline → @dxos/types 0.2.0; linear push maps
       failed/cancelled → Linear `canceled`. Sweep: outliner, github/linear sync +
       materialize-target, assistant-toolkit, plugin-space, plugin-assistant, onboarding
       exemplar, stories-brain/assistant, translations.

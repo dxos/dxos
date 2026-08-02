@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof ProjectMcpOperation.ListProjects> = 
           id: project.id,
           name: project.name,
           description: project.description,
-          taskSetCount: project.taskSets?.length ?? 0,
+          hasTaskSet: project.taskSet !== undefined,
           goalCount: project.goals?.length ?? 0,
         })),
       };

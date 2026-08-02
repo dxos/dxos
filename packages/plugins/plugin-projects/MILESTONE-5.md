@@ -10,7 +10,7 @@ The full type inventory (current → target, by package) is tabulated in
 [`DESIGN.md` § Types](./DESIGN.md#types).
 
 Phase 0 DECIDED (user, 2026-08-01): **`ExternalProject` → `TaskSet`** — a lightweight collection
-of tasks, possibly synced externally; `Project` owns an array of them via `taskSets` (§2; REVISED from single-ref 2026-08-01). The task
+of tasks, possibly synced externally; `Project` owns one via `taskSet` (§2). The task
 plugin is a **takeover of plugin-outliner** (§4). **Milestones deferred**, leaning
 `Ref<Milestone>` object over label (§5). Actor stays DID-based for agents (§3.2). Kanban adopts
 the task surface; `taskList` paginates Linear-style from day one (§7).
@@ -39,7 +39,7 @@ manipulating the real objects while Composer shows them live.
   (mirroring a GitHub repo's issues or a Linear project) are the same type — sync provenance is
   carried by `Obj.getMeta` foreign keys exactly as plugin-github/plugin-linear `sync.ts` already
   mark objects, not by the type name.
-- **`Project.taskSets: Ref<TaskSet>[]`** — the umbrella owns an array of TaskSets (REVISED from single-ref, user 2026-08-01), parented like
+- **`Project.taskSet?: Ref<TaskSet>`** — the umbrella owns (at most) one TaskSet (briefly an array on 2026-08-01; reverted to a single ref 2026-08-02, user), parented like
   `instructions`/`artifacts`. A synced TaskSet can be adopted by a Project (linking an existing
   mirror rather than scaffolding a native one), which is how "routines over a repo's issues"
   composes without the Project itself being the sync target.
@@ -101,7 +101,7 @@ Project {
   name?, description?, instructions?, routines, artifacts?   // unchanged
   goals?: Goal[]                 // lightweight inline structs
   outline?: Ref<Outline>         // ad hoc markdown checklist — the scratch surface (§6)
-  taskSets: Ref<TaskSet>[]       // owned (or adopted synced) task containers
+  taskSet?: Ref<TaskSet>         // owned (or adopted synced) task container
   // NO plan field (REVISED 2026-08-01): Plan is removed — see §6
   // milestones — DEFERRED, see §5
 }

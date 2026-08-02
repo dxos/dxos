@@ -48,8 +48,8 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline)),
 
-    /** Owned (or adopted synced) task containers; membership is the ECHO parent edge. */
-    taskSets: Schema.Array(Ref.Ref(TaskSet.TaskSet)),
+    /** Owned (or adopted synced) task container; membership is the ECHO parent edge. */
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),
@@ -59,11 +59,10 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
 /** Factory wrapper around `Obj.make` for {@link Project}. */
 export const make = (
-  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines' | 'taskSets'> & {
+  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines'> & {
     routines?: ReadonlyArray<Ref.Ref<Routine.Routine>>;
-    taskSets?: ReadonlyArray<Ref.Ref<TaskSet.TaskSet>>;
   } = {},
-): Project => Obj.make(Project, { ...props, routines: props.routines ?? [], taskSets: props.taskSets ?? [] });
+): Project => Obj.make(Project, { ...props, routines: props.routines ?? [] });
 
 /** Bindings a chat session should receive when running in a project's context. */
 export type ContextBindings = {

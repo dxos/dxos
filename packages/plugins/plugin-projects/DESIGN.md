@@ -35,7 +35,7 @@ to be one of the core aspects of Composer.
   no separate `Plan` type; the conversation's working set IS its outline plus the open
   tasks it has promoted.
 - **A project tracks both forms**: `Project.outline` (scratch surface) and
-  `Project.taskSets` (durable containers). Project chats write the project's outline;
+  `Project.taskSet` (the durable container). Project chats write the project's outline;
   standalone chats own theirs.
 
 ## Background: Project, Agent, Chat, AiSession
@@ -83,7 +83,7 @@ end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01);
 
 | Type              | Package (today)           | Role                                                             | M5 target                                                                                                |
 | ----------------- | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSets: Ref<TaskSet>[]` / `plan`; stays in compute                   |
+| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSet: Ref<TaskSet>` / `plan`; stays in compute                      |
 | `Instructions`    | `@dxos/compute`           | Prompt text + skills + objects + commands                        |                                                                                                          |
 | `Routine`         | `@dxos/compute`           | Triggered automation (instructions or runnable operation)        |                                                                                                          |
 | `Skill`           | `@dxos/compute`           | Toolkit definition bound into sessions                           |                                                                                                          |

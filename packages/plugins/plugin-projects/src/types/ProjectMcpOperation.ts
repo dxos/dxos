@@ -31,7 +31,7 @@ export const ListProjects = Operation.make({
   meta: {
     key: makeKey('projectList'),
     name: 'List Projects',
-    description: 'List the projects in the space: id, name, description, and task-set count.',
+    description: 'List the projects in the space: id, name, description, goal count, and whether a task set is linked.',
     icon: 'ph--list-bullets--regular',
   },
   services: [Database.Service],
@@ -46,7 +46,7 @@ export const ListProjects = Operation.make({
         id: Schema.String,
         name: Schema.optional(Schema.String),
         description: Schema.optional(Schema.String),
-        taskSetCount: Schema.Number,
+        hasTaskSet: Schema.Boolean,
         goalCount: Schema.Number,
       }),
     ),
@@ -69,7 +69,7 @@ export const GetProject = Operation.make({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
     goals: Schema.Array(Project.Goal),
-    taskSets: Schema.Array(
+    taskSet: Schema.optional(
       Schema.Struct({
         id: Schema.String,
         name: Schema.optional(Schema.String),
