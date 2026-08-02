@@ -5,17 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database, Entity, Obj } from '@dxos/echo';
 
 import { TaskOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof TaskOperation.AssignTask> = TaskOperation.AssignTask.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ task, assignee }) {
+    Effect.fnUntraced(function* ({ task: taskRef, assignee }) {
+      const task = yield* Database.load(taskRef);
       Obj.update(task, (task) => {
         task.assignee = assignee;
       });
-      return { task };
+      return { task: Entity.toJSON(task) };
     }),
   ),
 );

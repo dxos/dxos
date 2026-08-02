@@ -4,6 +4,8 @@
 
 import { produce } from 'immer';
 
+import { DeckSpec } from '@dxos/app-toolkit';
+
 import { type DeckAction } from '#types';
 
 export type AddSubjectsToActiveDeckOptions = {
@@ -97,4 +99,93 @@ export const incrementPlank = (deck: string[], adjustment: DeckAction.Adjustment
       [draft[index], draft[index + 1]] = [draft[index + 1], draft[index]];
     }
   });
+};
+
+/**
+ * Upper bound on the planks a seeded deck opens at once. Every plank mounts its article surface, so a
+ * large collection would otherwise instantiate an editor per document on a single navtree click.
+ */
+export const MAX_SEEDED_PLANKS = 8;
+
+/**
+ * The planks a deck opens when navigating to a node whose type declares `initial: 'children'`, or
+ * `undefined` when the open should proceed normally.
+ *
+ * Seeds only a navigation (`addBesideOrigin === false`): an `add`, a shift-forced add, or an `auto`
+ * that grew a sliding deck are all requests to put *this* node beside what is already open, and
+ * replacing the deck there would discard the planks the user was working in.
+ */
+export const resolveSeededPlanks = ({
+  initial,
+  addBesideOrigin,
+  children,
+}: {
+  initial: 'children' | 'none' | undefined;
+  addBesideOrigin: boolean;
+  /** Ids of the node's openable graph children, in order. */
+  children: readonly string[];
+}): string[] | undefined => {
+  // An empty collection falls through to the ordinary open, which shows the collection itself rather
+  // than leaving the user on an empty deck.
+  if (addBesideOrigin || initial !== 'children' || children.length === 0) {
+    return undefined;
+  }
+  return children.slice(0, MAX_SEEDED_PLANKS);
+};
+
+/**
+ * The next `active` list for an open at `level` of `root`'s declared chain, plus the plank name that
+ * level occupies. `undefined` when the level is not declared, so the caller falls back to an ordinary
+ * open rather than inventing a chain.
+ *
+ * Two things a plain named open cannot do. The level supplies the name, so callers stop hand-building
+ * it; and opening at a level closes every level below it, so reading a second message drops the first
+ * one's attachment instead of leaving it stranded beside an unrelated message.
+ */
+export const resolveLevelOpen = ({
+  active,
+  plankNames,
+  spec,
+  root,
+  level,
+  subjectId,
+}: {
+  active: readonly string[];
+  plankNames: Record<string, string>;
+  spec: DeckSpec.DeckSpec | undefined;
+  root: string;
+  level: string;
+  subjectId: string;
+}): { next: string[]; name: string; replacedId?: string } | undefined => {
+  const levels = spec?.levels;
+  const index = levels?.findIndex((entry) => entry.key === level) ?? -1;
+  if (!levels || index === -1) {
+    return undefined;
+  }
+
+  const name = DeckSpec.plankName(root, level);
+  const stale = new Set(
+    DeckSpec.levelsBelow(spec, level)
+      .map((entry) => plankNames[DeckSpec.plankName(root, entry.key)])
+      .filter((id): id is string => !!id),
+  );
+  const pruned = active.filter((id) => !stale.has(id));
+
+  // Anchored to the level above so the chain reads left to right whatever else is open. The topmost
+  // level falls back to the root itself, whose plank is opened normally and so carries no level name.
+  const parentName = index > 0 ? DeckSpec.plankName(root, levels[index - 1].key) : undefined;
+  const parent = (parentName && plankNames[parentName]) || root;
+
+  const replacedId = plankNames[name];
+  return {
+    next: addSubjectsToActiveDeck(pruned, [subjectId], {
+      pivotId: pruned.includes(parent) ? parent : undefined,
+      replaceId: replacedId,
+    }),
+    name,
+    // Surfaced so per-plank state riding the level (an open companion) can follow the swap: the new
+    // plank stands in for the old one, and losing the companion mid-read both surprises and, by
+    // narrowing the deck, makes the browser clamp the scroll in a visible snap.
+    replacedId,
+  };
 };

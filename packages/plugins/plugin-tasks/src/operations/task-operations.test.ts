@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, EID, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Task, TaskSet } from '@dxos/types';
 
@@ -25,7 +25,8 @@ describe('task operations', () => {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
 
-      const { task } = yield* createTask.handler({ taskSet, title: '  Ship it  ' });
+      const { task: snapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: '  Ship it  ' });
+      const task = yield* loadTask(snapshot);
 
       expect(task.title).toBe('Ship it');
       expect(task.status).toBe('todo');
@@ -40,9 +41,15 @@ describe('task operations', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Sprint' }));
       yield* Database.flush();
-      const { task: parent } = yield* createTask.handler({ taskSet, title: 'Epic' });
+      const { task: parentSnapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Epic' });
+      const parent = yield* loadTask(parentSnapshot);
 
-      const { task: child } = yield* createTask.handler({ taskSet, title: 'Step one', parent: Ref.make(parent) });
+      const { task: childSnapshot } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Step one',
+        parent: Ref.make(parent),
+      });
+      const child = yield* loadTask(childSnapshot);
 
       expect(Obj.getParent(child)?.id).toBe(parent.id);
     }).pipe(Effect.provide(testLayer())),
@@ -52,9 +59,14 @@ describe('task operations', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
       yield* Database.flush();
-      const { task } = yield* createTask.handler({ taskSet, title: 'Draft', priority: 'low' });
+      const { task: snapshot } = yield* createTask.handler({
+        taskSet: Ref.make(taskSet),
+        title: 'Draft',
+        priority: 'low',
+      });
+      const task = yield* loadTask(snapshot);
 
-      yield* updateTask.handler({ task, status: 'in-progress', estimate: 3 });
+      yield* updateTask.handler({ task: Ref.make(task), status: 'in-progress', estimate: 3 });
 
       expect(task.title).toBe('Draft');
       expect(task.priority).toBe('low');
@@ -67,13 +79,18 @@ describe('task operations', () => {
     Effect.gen(function* () {
       const taskSet = yield* Database.add(TaskSet.make({}));
       yield* Database.flush();
-      const { task } = yield* createTask.handler({ taskSet, title: 'Review' });
+      const { task: snapshot } = yield* createTask.handler({ taskSet: Ref.make(taskSet), title: 'Review' });
+      const task = yield* loadTask(snapshot);
 
-      yield* assignTask.handler({ task, assignee: { role: 'assistant', name: 'Scout' } });
-      yield* completeTask.handler({ task });
+      yield* assignTask.handler({ task: Ref.make(task), assignee: { role: 'assistant', name: 'Scout' } });
+      yield* completeTask.handler({ task: Ref.make(task) });
 
       expect(task.assignee).toMatchObject({ role: 'assistant', name: 'Scout' });
       expect(task.status).toBe('done');
     }).pipe(Effect.provide(testLayer())),
   );
 });
+
+/** Handlers return a JSON snapshot (wire-safe); reload the live object to assert graph state. */
+const loadTask = (snapshot: unknown) =>
+  Database.resolve(EID.parse(`echo:///${(snapshot as { id: string }).id}`), Task.Task);

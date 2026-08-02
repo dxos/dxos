@@ -29,9 +29,11 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const { invokePromise } = useOperationInvoker();
+    // `anchor` names the plank this control belongs to: companions are per-plank, and resolving the
+    // target from attention instead would close whichever plank happened to be attended.
     const handleCloseCompanion = useCallback(() => {
-      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null });
-    }, [invokePromise]);
+      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null, anchor: primary });
+    }, [invokePromise, primary]);
     return (
       <div ref={forwardedRef} className='contents dx-app-no-drag'>
         <PlankControl
