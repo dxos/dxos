@@ -69,6 +69,7 @@ export class MediaManager extends Resource {
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
+  private _placeholderTracksReady = false;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
 
@@ -103,7 +104,7 @@ export class MediaManager extends Resource {
    * failure degrades to no placeholders rather than failing the join.
    */
   private async _ensurePlaceholderTracks(): Promise<void> {
-    if (this._blackCanvasStreamTrack) {
+    if (this._placeholderTracksReady) {
       return;
     }
     try {
@@ -124,6 +125,7 @@ export class MediaManager extends Resource {
         }
       }
       this.stateUpdated.emit(this._state);
+      this._placeholderTracksReady = true;
     } catch (err) {
       log.warn('failed to create placeholder media tracks; calls will be unavailable', { err });
     }
@@ -135,6 +137,10 @@ export class MediaManager extends Resource {
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
     this._state.screenshareTrack?.stop();
+    // Placeholders were created against the now-disposed context; a reopen must rebuild them.
+    this._blackCanvasStreamTrack = undefined;
+    this._inaudibleAudioStreamTrack = undefined;
+    this._placeholderTracksReady = false;
     this._pushTracksTask = undefined;
     this._pullTracksTask = undefined;
   }

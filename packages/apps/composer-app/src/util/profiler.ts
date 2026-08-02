@@ -47,8 +47,11 @@ export type Profiler = {
 };
 
 /**
- * Collects performance marks/measures from plugin-manager and dumps a startup timeline.
- * Tree-shaken in production when VITE_DEBUG is not set.
+ * Measures app startup: marks `startup:main:start` on creation, collects the
+ * `startup:` / `event:` / `module:` / `lazy:` performance measures plus service
+ * marks and long tasks into a {@link ProfilerSnapshot}, and on {@link Profiler.dump}
+ * finalizes `startup:total`, logs a console report, and persists the snapshot to
+ * localStorage + the {@link BROADCAST_CHANNEL_NAME} BroadcastChannel.
  */
 export const startupProfiler = (): Profiler => {
   performance.mark('startup:main:start');
@@ -62,13 +65,15 @@ export const startupProfiler = (): Profiler => {
   // Long tasks starve paint (and the boot loader's status updates); record them
   // for the snapshot. `buffered: true` back-fills tasks from before this call.
   const longTasks: Array<{ duration: number; startTime: number }> = [];
+  const recordLongTasks = (entries: Iterable<PerformanceEntry>) => {
+    for (const entry of entries) {
+      longTasks.push({ duration: Math.round(entry.duration), startTime: Math.round(entry.startTime) });
+    }
+  };
+  let longTaskObserver: PerformanceObserver | undefined;
   try {
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        longTasks.push({ duration: Math.round(entry.duration), startTime: Math.round(entry.startTime) });
-      }
-    });
-    observer.observe({ type: 'longtask', buffered: true });
+    longTaskObserver = new PerformanceObserver((list) => recordLongTasks(list.getEntries()));
+    longTaskObserver.observe({ type: 'longtask', buffered: true });
   } catch {
     // Long Tasks API unavailable (firefox/safari) — snapshot reports zero.
   }
@@ -162,6 +167,11 @@ export const startupProfiler = (): Profiler => {
       performance.measure('startup:total', 'startup:main:start', 'startup:ready');
       complete = true;
       finishedAt = new Date().toISOString();
+
+      // Drain buffered long-task entries not yet delivered to the callback, and stop
+      // observing so post-ready tasks can't mutate a snapshot marked `complete`.
+      recordLongTasks(longTaskObserver?.takeRecords() ?? []);
+      longTaskObserver?.disconnect();
 
       const snap = collect();
 

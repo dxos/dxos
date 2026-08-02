@@ -96,10 +96,11 @@ plugin-manager.ts:699). NOT yields inside the cascade (phase-4 revert lesson).
 
 ## Phase D: targeted fixes from attribution
 
-- [ ] **plugin-calls: defer placeholder media tracks to call join** — `MediaManager._open()`
-      eagerly runs `createBlackCanvasStreamTrack` + `createInaudibleAudioStreamTrack`
-      (`new AudioContext()`) at startup ≈ 430ms main-thread, consumed only once a call is active
-      (comment at media-manager.ts:89 says so). Create on first call join instead.
+- [x] **plugin-calls: defer placeholder media tracks to call join** — `MediaManager._open()`
+      eagerly ran `createBlackCanvasStreamTrack` + `createInaudibleAudioStreamTrack`
+      (`new AudioContext()`) at startup ≈ 430ms main-thread, consumed only once a call is active.
+      Now created lazily via `_ensurePlaceholderTracks()` on first `join()` (completion flag,
+      reset in `_close()`).
 - [ ] **observability.module.ClientReady** — 3.1s on prod cold (snapshot 2026-08-02); decompose.
 
 ## Phase C2/C3: boot-loader feedback (as time allows)

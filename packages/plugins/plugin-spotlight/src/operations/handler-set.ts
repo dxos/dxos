@@ -8,5 +8,5 @@
 import { OperationHandlerSet } from '@dxos/compute';
 
 export const SpotlightOperationHandlerSet = OperationHandlerSet.async(() =>
-  import('./handlers').then((module) => module.default),
+  import('./handlers').then((module) => module.handlers),
 );

@@ -13,7 +13,7 @@ import { SpotlightCapabilities } from '../types';
 
 const DISMISS_DEBOUNCE_MS = 100;
 
-const handlers: Operation.WithHandler<Operation.Definition.Any>[] = [
+export const handlers: Operation.WithHandler<Operation.Definition.Any>[] = [
   // UpdateDialog — switch content or schedule dismiss.
   LayoutOperation.UpdateDialog.pipe(
     Operation.withHandler(
@@ -26,6 +26,7 @@ const handlers: Operation.WithHandler<Operation.Definition.Any>[] = [
          * dismiss is cancelled.
          */
         if (input.subject) {
+          const subject = input.subject;
           // Cancel any pending dismiss and switch content.
           yield* Capabilities.updateAtomValue(SpotlightCapabilities.State, (state) => {
             if (state.dismissTimeout !== undefined) {
@@ -34,7 +35,7 @@ const handlers: Operation.WithHandler<Operation.Definition.Any>[] = [
             return {
               ...state,
               dismissTimeout: undefined,
-              dialogContent: { component: input.subject!, props: input.props },
+              dialogContent: { component: subject, props: input.props },
             };
           });
         } else if (input.state === false) {
@@ -45,9 +46,10 @@ const handlers: Operation.WithHandler<Operation.Definition.Any>[] = [
             }
             return {
               ...state,
-              dismissTimeout: setTimeout(async () => {
-                const { invoke } = await import('@tauri-apps/api/core');
-                await invoke('hide_spotlight');
+              dismissTimeout: setTimeout(() => {
+                void import('@tauri-apps/api/core')
+                  .then(({ invoke }) => invoke('hide_spotlight'))
+                  .catch((err) => log.catch(err));
               }, DISMISS_DEBOUNCE_MS),
             };
           });
@@ -126,5 +128,3 @@ const handlers: Operation.WithHandler<Operation.Definition.Any>[] = [
   LayoutOperation.Expose.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.AddToast.pipe(Operation.withHandler(() => Effect.void)),
 ];
-
-export default handlers;

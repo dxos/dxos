@@ -199,6 +199,9 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
+    // Cancels the pending wave-2 idle callback so an unmount between ready and
+    // the idle tick cannot run `enableDeferred()` against a shut-down manager.
+    let cancelWave2: (() => void) | undefined;
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDaemon(
@@ -222,13 +225,17 @@ export const useApp = ({
                 // Wave 2: enable the deferred plugins once the browser is idle
                 // (i.e. after the first real paint of the shell). `setTimeout`
                 // fallback for browsers without requestIdleCallback (webkit).
-                const scheduleIdle =
-                  typeof requestIdleCallback === 'function'
-                    ? requestIdleCallback
-                    : (cb: () => void) => setTimeout(cb, 250);
-                scheduleIdle(() => {
+                const runWave2 = () => {
+                  cancelWave2 = undefined;
                   void EffectEx.runAndForwardErrors(manager.enableDeferred().pipe(Effect.ignore));
-                });
+                };
+                if (typeof requestIdleCallback === 'function') {
+                  const handle = requestIdleCallback(runWave2);
+                  cancelWave2 = () => cancelIdleCallback(handle);
+                } else {
+                  const handle = setTimeout(runWave2, 250);
+                  cancelWave2 = () => clearTimeout(handle);
+                }
                 // Trigger startup profiler dump if available.
                 (globalThis as any).composer?.profiler?.dump();
                 // Notify any host observability layer that startup completed.
@@ -328,6 +335,7 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
+      cancelWave2?.();
       void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         void EffectEx.runAndForwardErrors(manager.shutdown());
