@@ -27,7 +27,7 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "storybook": "10.2.0"
+    "storybook": "10.5.5"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
