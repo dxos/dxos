@@ -18,12 +18,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       if (input.subject === null) {
-        // Closing is aimed at the plank the companion is currently beside — the attended one — since
-        // that is the only companion on screen to close. The selected variant is left intact so
+        // Closing targets the named plank: companions are per-plank, so the close control says which
+        // plank it belongs to. Callers that cannot know (the URL handler pruning a companion the URL no
+        // longer carries) fall back to the attended plank. The selected variant is left intact so
         // reopening restores the last tab.
         const deck = yield* DeckCapabilities.getDeck();
         const attention = yield* Capability.get(AttentionCapabilities.Attention);
-        const plankId = resolveCompanionAnchor(deck.active, attention.getCurrent());
+        const plankId = input.anchor ?? resolveCompanionAnchor(deck.active, attention.getCurrent());
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { companionPlanks: deck.companionPlanks.filter((id) => id !== plankId) }),
         );

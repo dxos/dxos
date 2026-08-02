@@ -19,7 +19,9 @@ import { useGmailTags } from '#hooks';
 import { getMessageBodyText, getMessageProps } from '../../util';
 
 export type InboxStackAction =
-  | { type: 'current'; messageId: string }
+  // `newPlank` when the gesture asked for its own plank (meta/ctrl click) rather than reusing the
+  // one the mailbox keeps for whichever message is being read.
+  | { type: 'current'; messageId: string; newPlank?: boolean }
   | { type: 'current-conversation'; conversationId: string; messageId: string }
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
@@ -444,7 +446,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     const handleMessageClick = useCallback(
       (event: MouseEvent, messageId: string) => {
         event.stopPropagation();
-        onAction?.({ type: 'current', messageId });
+        onAction?.({ type: 'current', messageId, newPlank: event.metaKey || event.ctrlKey });
       },
       [onAction],
     );
