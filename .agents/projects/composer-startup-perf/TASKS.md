@@ -65,9 +65,11 @@ Ground truth from `trace-eager-graph.mjs` + sourcemap byte attribution. Eager gr
 - [x] **util/config.ts `@dxos/client` barrel** → `@dxos/client/version` subpath (new export);
       `Remote` now from `@dxos/config`.
 - [ ] **Verify prod cold + dev-warm improvements end-to-end** (harness rows + CPU profile).
-- [ ] **Floor follow-up:** every stub still reaches ~1,311 raw modules via the `@dxos/app-framework`
-      root barrel (920 modules: effect 260 + fast-check 223 via effect/Schema→FastCheck + otel +
-      @effect/platform) and `dx.config` chain. Needs a light `Plugin`-only entry or barrel slimming.
+- [ ] **Floor follow-up:** analyzed 2026-08-02 (DESIGN.md §6) — the floor is deep, not wide:
+      `core/plugin.ts` alone reaches 889 modules, so a light entry point won't help alone. Cut the
+      three deep chains instead: effect/Schema→FastCheck (alias fast-check to a stub in app
+      builds), plugin.ts → @dxos/protocols dist barrel (automerge + otel via effect-runtime;
+      needs subpath/barrel slim), config → same protocols barrel. Each is PR-sized.
 - [x] **Guardrail:** `scripts/check-preload-budget.mjs` runs in the `bundle` task (which the
       preview deploy runs on every PR) — fails at >600 chunks / >4.5MB eager preloads with
       diagnosis instructions (current: 519 / 3.73MB).

@@ -112,6 +112,23 @@ Instead change **which plugins are in the pre-ready set**:
 
 ## 6. Decisions & findings log
 
+- **2026-08-02 (later) app-framework floor decomposition.** The ~1,311-module floor every plugin
+  stub pays is _deep, not wide_: `core/plugin.ts` ALONE reaches 889 modules, so a light
+  `@dxos/app-framework/plugin` entry would not help by itself. Three deep chains to cut instead:
+  (1) `plugin.ts → effect/Schema.js → FastCheck → fast-check` (223 modules / 142KB) — upstream
+  effect design (Schema statically imports FastCheck for Arbitrary); candidate: alias fast-check
+  to a stub in app builds since the app never generates arbitraries; (2)
+  `plugin.ts → @dxos/protocols dist barrel` → automerge.js + `effect-runtime → common/effect →
+otel` (~75 modules of @opentelemetry) — needs a protocols subpath or barrel slim; (3) the
+  `config` chain hits the same protocols barrel. Each is its own PR-sized change.
+- **2026-08-02 (later) wave-2 replay races (B2).** Cold `?defer=1` boots hit
+  `No capability found` invariants → System Error. Fixed with (a) sequential pendingReset replay
+  ranked by host `replayLast=[Startup, SetupReactSurface]` (the umbrella startup event is marked
+  fired before the events it causes, so its ReactRoot modules must replay after clientReady), and
+  (b) strictly sequential `enableDeferred` (concurrent plugins can activate each other's
+  just-registered UI modules). 4/4 cold boots + deep link clean after. Known non-fatal: assistant
+  `generateHomeSuggestions` fires before its service during wave 2.
+
 - **2026-08-02 CPU-profile attribution (dev, warm vite, fresh browser context; script
   `scripts/profile-startup.mjs`).** Full set navToReady ~12.2–13.2s vs minimal ~7.4s. Self-time
   split (full): `(program)` parse/compile+GC 4.4–5.2s, `(idle)` waiting on workers/network
