@@ -346,6 +346,18 @@ const _mergeCandidates = async (
     });
   }
 
+  // The durability rule's dual: returning marks the key serviced and lets the orchestrator clear
+  // its durable intent, so the tombstones must be on disk first — an intent must never die before
+  // the tombstone it claims exists.
+  const flushedDocs = new Set([winner.handle.documentId]);
+  for (const loserId of result.losers) {
+    const loser = byId.get(loserId);
+    if (loser && !flushedDocs.has(loser.handle.documentId)) {
+      flushedDocs.add(loser.handle.documentId);
+      await flushDoc(ctx, loser.handle.documentId);
+    }
+  }
+
   return true;
 };
 
@@ -380,7 +392,7 @@ const _foldRedirected = async (
   if (!handle || !doc || !entity || mergedInto === undefined || entity.meta?.naturalKey !== naturalKey) {
     return false;
   }
-  const mergedAtHeads = entity.system?.mergedAtHeads;
+  const mergedAtHeads = _watermarkUnion(entity);
 
   const winnerId = Merge.resolveRedirect(loserId, (id) => handles.get(id)?.doc()?.objects?.[id]?.system?.mergedInto);
   const winnerHandle = winnerId !== loserId ? handles.get(winnerId) : undefined;
@@ -449,7 +461,42 @@ const _foldRedirected = async (
     }
     targetEntity.system.deleted = true;
   });
+  // The durability rule's dual, as in `_mergeCandidates`: the watermark advance and re-asserted
+  // tombstone must be on disk before the intent that claims this fold happened can be cleared.
+  await flushDoc(ctx, handle.documentId);
   return true;
+};
+
+/**
+ * The effective fold watermark: the stored `mergedAtHeads` unioned with every conflicting value
+ * of that register.
+ *
+ * Peers merging the same group concurrently each record their own watermark; automerge keeps one
+ * as the register value and the rest as conflicts. Diffing from the union means an edit *any*
+ * peer already folded is never re-presented — a re-fold from a stale surviving watermark would
+ * write the loser's old value over a newer edit made on the winner since.
+ */
+const _watermarkUnion = (entity: EntityStructure): string[] | undefined => {
+  const system = entity.system;
+  const stored = system?.mergedAtHeads;
+  if (system === undefined || stored === undefined) {
+    return undefined;
+  }
+  const hashes = new Set<string>();
+  const collect = (value: unknown): void => {
+    if (Array.isArray(value)) {
+      for (const hash of value) {
+        if (typeof hash === 'string') {
+          hashes.add(hash);
+        }
+      }
+    }
+  };
+  collect(stored);
+  for (const conflicting of Object.values(A.getConflicts(system, 'mergedAtHeads') ?? {})) {
+    collect(conflicting);
+  }
+  return [...hashes];
 };
 
 /**

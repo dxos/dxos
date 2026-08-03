@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: worker-side merging is live and twice hardened (§4.8; 2026-08-02 and 2026-08-03 reviews); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. Last: second-review fixes — worker reads/writes in one synchronous block with applied-gated watermarks, durable natural-key intent log (crash-proof trigger + per-group retry), winner flushed before tombstones, client executor respects deletion, rewrite pass skips tombstoned referrers, DESIGN reworded canonicity→agreement + §4.10 key-mutation semantics; all suites green._
+_Resume: worker-side merging is live and hardened through three review rounds (§4.8; 2026-08-02, 2026-08-03 ×2); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. Last: third-review fixes — transitive deletion follows redirects (relations/children at a loser stay visible), prototype-safe merge accumulation, loser docs flushed before intent clear, conflict-union fold watermark in both engines; all suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -109,6 +109,23 @@ than by a spike.
       canonicity→agreement, flag story, and stale claims reconciled. New unit
       suite `echo-host/db-host/natural-key-merge.test.ts` drives the group merge
       against real repo handles with injected mid-load/mid-flush mutations.
+- [x] **2026-08-03 hardening, later** (third adversarial review; DESIGN decision
+      log "2026-08-03, later" has the full list): transitive deletion follows
+      `mergedInto` redirects — relations and children anchored at a merge loser
+      stay visible, judged at the survivor (was: silent permanent disappearance
+      on new clients, `@parent` included and previously undeclared);
+      prototype-safe field accumulation in `Merge.merge`/`candidateOf` (`field in
+    data` dropped `toString`/`constructor`/… fields; `__proto__` polluted the
+      accumulator); loser documents flushed before a group reports serviced — the
+      durability rule's dual, since the orchestrator clears the durable intent on
+      that report; fold watermark read as the union of the stored register and
+      its automerge conflicts in both engines, so a concurrent merge's stale
+      surviving watermark never re-folds already-folded edits over newer winner
+      state (residual value-register race documented in DESIGN §4.2 and
+      `Merge.merge`'s doc). Regression tests in `Merge.test.ts` (prototype
+      fields), `merge.test.ts` (relation/child at loser), and
+      `natural-key-merge.test.ts` (flush ordering ×2, concurrent-merge watermark
+      conflict via forked-and-merged doc states).
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).

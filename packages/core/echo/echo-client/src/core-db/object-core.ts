@@ -547,9 +547,38 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'mergedAtHeads'], [...heads]);
   }
 
+  /**
+   * The fold watermark: the stored `mergedAtHeads` unioned with every conflicting value of the
+   * register. Peers merging concurrently each record their own watermark and automerge keeps one
+   * plus conflicts; a fold diffing from the union never re-presents an edit any peer already
+   * folded — a re-fold from a stale surviving watermark would overwrite newer winner edits.
+   */
   getMergedAtHeads(): string[] | undefined {
     const value = this._getRaw([SYSTEM_NAMESPACE, 'mergedAtHeads']);
-    return Array.isArray(value) ? value : undefined;
+    if (!Array.isArray(value)) {
+      return undefined;
+    }
+    const hashes = new Set<string>();
+    const collect = (candidate: unknown): void => {
+      if (Array.isArray(candidate)) {
+        for (const hash of candidate) {
+          if (typeof hash === 'string') {
+            hashes.add(hash);
+          }
+        }
+      }
+    };
+    collect(value);
+    const doc = this.doc ?? this.docHandle?.doc();
+    const system = doc
+      ? getDeep<AutomergeDoc<{ mergedAtHeads?: string[] }>>(doc, [...this.mountPath, SYSTEM_NAMESPACE])
+      : undefined;
+    if (system !== undefined && typeof system === 'object') {
+      for (const conflicting of Object.values(A.getConflicts(system, 'mergedAtHeads') ?? {})) {
+        collect(conflicting);
+      }
+    }
+    return [...hashes];
   }
 
   /**
@@ -689,6 +718,10 @@ export class ObjectCore {
    * unresolved references are treated as not-deleted. Strong dependencies guarantee parent/relation
    * endpoints load alongside the dependent entity, so this stays a synchronous core lookup —
    * `loadObjectCoreById` is avoided because it may be async.
+   *
+   * A merged-away dependency is a renamed one, not a removed one: the walk follows `mergedInto`
+   * redirects and judges deletion at the survivor, so relations and children anchored at a merge
+   * loser stay visible while the survivor lives.
    */
   private _isReferencedCoreDeleted(ref: EncodedReference | undefined, remainingDepth: number): boolean {
     if (!ref || !this.entityManager) {
@@ -700,8 +733,26 @@ export class ObjectCore {
     if (!entityId || (spaceId !== undefined && spaceId !== this.entityManager.spaceId)) {
       return false;
     }
-    const core = this.entityManager.getObjectCoreById(entityId);
+    const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId));
     return core != null && core.isDeleted(remainingDepth - 1);
+  }
+
+  /**
+   * Follow `mergedInto` redirects to the live end of the chain. Edges must strictly decrease the
+   * id — a non-decreasing edge is corrupt data and terminates the walk at the current entity,
+   * matching `Merge.resolveRedirect`. A hop whose core is not loaded returns `undefined`: the
+   * survivor cannot be judged synchronously, and an unresolvable dependency is treated as live.
+   */
+  private _resolveMergeRedirect(core: ObjectCore | undefined): ObjectCore | undefined {
+    let current = core;
+    while (current) {
+      const next = current.getMergedInto();
+      if (next === undefined || next >= current.id) {
+        return current;
+      }
+      current = this.entityManager?.getObjectCoreById(next);
+    }
+    return undefined;
   }
 
   setDeleted(value: boolean): void {

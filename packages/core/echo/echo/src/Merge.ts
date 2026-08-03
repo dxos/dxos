@@ -82,17 +82,19 @@ const isDataField = (field: string): boolean => field !== PROPERTY_ID && !field.
 export const candidateOf = (entity: Entity.Unknown | Entity.Snapshot): Candidate => {
   const meta = Obj.getMeta(entity as any);
   const snapshot = Obj.getSnapshot(entity as any) as Record<string, unknown>;
-  const data: Record<string, unknown> = {};
+  // Accumulate in a Map: on a plain object, field names colliding with `Object.prototype`
+  // members (`toString`, `__proto__`, ...) would be dropped or would mutate the prototype.
+  const data = new Map<string, unknown>();
   for (const [field, value] of Object.entries(snapshot)) {
     if (isDataField(field)) {
-      data[field] = value;
+      data.set(field, value);
     }
   }
 
   return {
     id: (entity as { id: EntityId }).id,
     naturalKey: meta.naturalKey,
-    data,
+    data: Object.fromEntries(data),
     keys: meta.keys,
   };
 };
@@ -187,6 +189,9 @@ const compareForeignKeys = (a: ForeignKey, b: ForeignKey): number =>
  * peer ends at the same winner with the same fields — but not that the final value of every field
  * equals what this function would return over the union: once an entity is tombstoned it never
  * re-enters the field-wise merge, so a fold can carry a field onto a winner that had defined it.
+ * Likewise, folds run by different peers race as ordinary register writes on the winner —
+ * resolved deterministically, so agreement still holds, but sequential straggler edits observed
+ * by different folders can resolve to the earlier value.
  *
  * @throws If given no candidates.
  */
@@ -209,11 +214,13 @@ export const merge = (candidates: readonly Candidate[]): MergeResult => {
   const ordered = [...byId.values()].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   const [winner, ...losers] = ordered;
 
-  const data: Record<string, unknown> = {};
+  // Accumulate in a Map: on a plain object, `field in data` would see `Object.prototype`
+  // members (`toString`, `__proto__`, ...) as already present and silently drop those fields.
+  const data = new Map<string, unknown>();
   for (const candidate of ordered) {
     for (const [field, value] of Object.entries(candidate.data)) {
-      if (value !== undefined && !(field in data)) {
-        data[field] = value;
+      if (value !== undefined && !data.has(field)) {
+        data.set(field, value);
       }
     }
   }
@@ -228,7 +235,7 @@ export const merge = (candidates: readonly Candidate[]): MergeResult => {
   }
   keys.sort(compareForeignKeys);
 
-  return { winner: winner.id, losers: losers.map(({ id }) => id), data, keys };
+  return { winner: winner.id, losers: losers.map(({ id }) => id), data: Object.fromEntries(data), keys };
 };
 
 //

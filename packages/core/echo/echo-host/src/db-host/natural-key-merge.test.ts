@@ -263,6 +263,141 @@ describe('mergeNaturalKeyGroup', () => {
     expect(survivor?.system?.mergedInto).toBeUndefined();
     expect(survivor?.system?.deleted).toBeFalsy();
   });
+
+  test('loser tombstones are flushed before the group reports serviced', async ({ expect }) => {
+    // The orchestrator clears the durable intent when the group reports serviced, so the
+    // tombstones must already be on disk — an intent must never die before the tombstone it
+    // claims exists. The winner's fold flushes first, then every loser document, each already
+    // carrying its tombstone at flush time.
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { title: 'a' })],
+      [ID_B, makeEntity(KEY, { title: 'b' })],
+      [ID_C, makeEntity(KEY, { title: 'c' })],
+    ]);
+    const flushed: string[] = [];
+    const tombstonedAtFlush = new Map<EntityId, boolean>();
+    const context: NaturalKeyGroupContext = {
+      ...fixture.context,
+      flushDoc: async (_ctx, documentId) => {
+        flushed.push(documentId);
+        const member = fixture.group.find((entry) => entry.documentId === documentId);
+        if (member) {
+          tombstonedAtFlush.set(member.objectId, entityOf(fixture, member.objectId)?.system?.deleted === true);
+        }
+      },
+    };
+
+    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context)).toBe(true);
+
+    const documentIdOf = (id: EntityId) => fixture.handles.get(id)?.documentId;
+    expect(flushed[0]).toBe(documentIdOf(ID_A));
+    expect(new Set(flushed.slice(1))).toEqual(new Set([documentIdOf(ID_B), documentIdOf(ID_C)]));
+    expect(tombstonedAtFlush.get(ID_B)).toBe(true);
+    expect(tombstonedAtFlush.get(ID_C)).toBe(true);
+  });
+
+  test('a stale surviving watermark from a concurrent merge never re-folds already-folded edits', async ({
+    expect,
+  }) => {
+    // Two peers merge the same pair concurrently: each records its own `mergedAtHeads`, and
+    // automerge keeps one value plus a conflict. Diffing from the union of both means an edit
+    // the other peer already folded is never re-presented — a re-fold from the stale surviving
+    // watermark would overwrite the newer winner edit ('v3') with the loser's old value ('v2').
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { title: 'a' })],
+      [ID_B, makeEntity(KEY, { title: 'v1' })],
+    ]);
+    const handleB = fixture.handles.get(ID_B);
+    if (!handleB) {
+      throw new Error('fixture is missing the loser handle');
+    }
+
+    // Peer 2's view: sees a later edit ('v2'), merges, and records a watermark covering it.
+    let fork = A.clone(handleB.doc());
+    fork = A.change(fork, (doc) => {
+      const entity = doc.objects?.[ID_B];
+      if (entity) {
+        entity.data.title = 'v2';
+      }
+    });
+    const peer2Watermark = A.getHeads(fork);
+    fork = A.change(fork, (doc) => {
+      const entity = doc.objects?.[ID_B];
+      if (entity?.system) {
+        entity.system.mergedInto = ID_A;
+        entity.system.mergedAtHeads = [...peer2Watermark];
+        entity.system.deleted = true;
+      }
+    });
+
+    // Peer 1's view (this host): never saw 'v2'. The extra edits pump the op counter so peer 1's
+    // register write deterministically survives the conflict — leaving the STALE watermark.
+    edit(fixture, ID_B, (entity) => {
+      entity.data.note = 'n1';
+    });
+    edit(fixture, ID_B, (entity) => {
+      entity.data.note = 'n2';
+    });
+    edit(fixture, ID_B, (entity) => {
+      entity.data.note = 'n3';
+    });
+    const peer1Watermark = A.getHeads(handleB.doc());
+    redirect(fixture, ID_B, ID_A);
+
+    // The concurrent states meet; peer 2's fold ('v2') replicated onto the winner too, and a
+    // user has since edited the winner to 'v3'.
+    handleB.update((doc) => A.merge(doc, fork));
+    edit(fixture, ID_A, (entity) => {
+      entity.data.title = 'v2';
+    });
+    edit(fixture, ID_A, (entity) => {
+      entity.data.title = 'v3';
+    });
+
+    // Precondition for the scenario: the stale watermark survived, the other rides as a conflict.
+    const loser = entityOf(fixture, ID_B);
+    expect([...(loser?.system?.mergedAtHeads ?? [])]).toEqual(peer1Watermark);
+    expect(loser?.system && A.getConflicts(loser.system, 'mergedAtHeads')).toBeDefined();
+
+    // Nothing is above the union, so the pass folds nothing and 'v3' stands.
+    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(false);
+    expect(entityOf(fixture, ID_A)?.data.title).toBe('v3');
+
+    // The union must not over-suppress: a genuinely new straggler edit, above both watermarks,
+    // still folds — without re-presenting the already-folded title.
+    edit(fixture, ID_B, (entity) => {
+      entity.data.description = 'late';
+    });
+    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, fixture.context)).toBe(true);
+    expect(entityOf(fixture, ID_A)?.data.description).toBe('late');
+    expect(entityOf(fixture, ID_A)?.data.title).toBe('v3');
+  });
+
+  test('a fold flushes the advanced watermark before the group reports serviced', async ({ expect }) => {
+    // Same dual on the fold path: the watermark advance claims the fold happened, so it must be
+    // durable before the intent that would retry it is cleared.
+    const fixture = setup([
+      [ID_A, makeEntity(KEY, { title: 'a' })],
+      [ID_B, makeEntity(KEY, { title: 'b' })],
+    ]);
+    redirect(fixture, ID_B, ID_A);
+    edit(fixture, ID_B, (entity) => {
+      entity.data.title = 'straggler';
+    });
+    const flushed: string[] = [];
+    const context: NaturalKeyGroupContext = {
+      ...fixture.context,
+      flushDoc: async (_ctx, documentId) => {
+        flushed.push(documentId);
+      },
+    };
+
+    expect(await mergeNaturalKeyGroup(Context.default(), KEY, fixture.group, context)).toBe(true);
+
+    expect(entityOf(fixture, ID_A)?.data.title).toBe('straggler');
+    const documentIdOf = (id: EntityId) => fixture.handles.get(id)?.documentId;
+    expect(flushed).toEqual([documentIdOf(ID_A), documentIdOf(ID_B)]);
+  });
 });
 
 describe('mergeNaturalKeyDuplicates', () => {

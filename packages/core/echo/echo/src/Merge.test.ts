@@ -282,6 +282,38 @@ describe('Merge', () => {
       expect(twice.winner).toBe(once.winner);
     });
 
+    test('field names colliding with Object.prototype members merge like any other field', ({ expect }) => {
+      // A plain-object accumulator checked with `in` would see these as already present and drop
+      // them from every candidate; `__proto__` would silently mutate the prototype instead.
+      const result = Merge.merge([
+        candidate(idA, { title: 'from A' }),
+        candidate(idB, {
+          toString: 'B toString',
+          constructor: 'B ctor',
+          valueOf: 'B valueOf',
+          hasOwnProperty: 'B own',
+        }),
+      ]);
+      expect(result.data).toEqual({
+        title: 'from A',
+        toString: 'B toString',
+        constructor: 'B ctor',
+        valueOf: 'B valueOf',
+        hasOwnProperty: 'B own',
+      });
+      expect(result.data.toString).toBe('B toString');
+    });
+
+    test('an own __proto__ field is stored as data, not as the prototype', ({ expect }) => {
+      // JSON.parse produces own `__proto__` properties, so imported data can carry one.
+      const evil = JSON.parse('{"__proto__": {"polluted": true}, "title": "from B"}');
+      const result = Merge.merge([candidate(idA, {}), candidate(idB, evil)]);
+      expect(Object.getPrototypeOf(result.data)).toBe(Object.prototype);
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(Object.getOwnPropertyDescriptor(result.data, '__proto__')?.value).toEqual({ polluted: true });
+      expect(result.data.title).toBe('from B');
+    });
+
     test('unions foreign keys, deduplicated and deterministically ordered', ({ expect }) => {
       const result = Merge.merge([
         candidate(

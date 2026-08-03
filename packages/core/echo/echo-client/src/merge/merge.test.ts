@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { waitForCondition } from '@dxos/async';
-import { Database, Filter, Merge, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Merge, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 
@@ -120,6 +120,74 @@ describe('Merge', () => {
       // The winner absorbed the field only the loser defined.
       expect(after[0].title).toBe('from the first writer');
       expect(after[0].description).toBe('only here');
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('a relation anchored at a merge loser stays visible and is judged at the survivor', async ({ expect }) => {
+    await using peer = await builder.createPeer({
+      types: [TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy],
+    });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      // Ids are ULIDs minted in creation order, so the first-created duplicate wins the merge.
+      const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
+      Merge.setNaturalKey(winner, 'org.example.alice');
+      yield* Database.add(winner);
+
+      const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
+      Merge.setNaturalKey(loser, 'org.example.alice');
+      yield* Database.add(loser);
+
+      const org = yield* Database.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
+      const relation = yield* Database.add(
+        Relation.make(TestSchema.EmployedBy, {
+          [Relation.Source]: loser,
+          [Relation.Target]: org,
+          role: 'CEO',
+        }),
+      );
+
+      const result = mergeDuplicates([winner, loser]);
+      expect(result.merged).toHaveLength(1);
+
+      // A merged-away endpoint is renamed, not removed: transitive deletion follows the redirect
+      // and judges the survivor, so the relation stays in queries.
+      expect(Relation.isDeleted(relation)).toBe(false);
+      const relations = yield* Database.query(Filter.type(TestSchema.EmployedBy)).run;
+      expect(relations).toHaveLength(1);
+
+      // Deletion semantics still apply — at the live end of the chain: removing the survivor
+      // transitively deletes the relation.
+      yield* Database.remove(winner);
+      expect(Relation.isDeleted(relation)).toBe(true);
+      const afterDelete = yield* Database.query(Filter.type(TestSchema.EmployedBy)).run;
+      expect(afterDelete).toHaveLength(0);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
+  test('a child whose parent merged away stays visible', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      const winner = Obj.make(TestSchema.Person, { name: 'Alice (first writer)' });
+      Merge.setNaturalKey(winner, 'org.example.alice');
+      yield* Database.add(winner);
+
+      const loser = Obj.make(TestSchema.Person, { name: 'Alice (second writer)' });
+      Merge.setNaturalKey(loser, 'org.example.alice');
+      yield* Database.add(loser);
+
+      const child = yield* Database.add(Obj.make(TestSchema.Task, { title: 'filed under Alice' }));
+      Obj.setParent(child, loser);
+
+      const result = mergeDuplicates([winner, loser]);
+      expect(result.merged).toHaveLength(1);
+
+      expect(Obj.isDeleted(child)).toBe(false);
+      const tasks = yield* Database.query(Filter.type(TestSchema.Task)).run;
+      expect(tasks.map(({ id }) => id)).toContain(child.id);
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
