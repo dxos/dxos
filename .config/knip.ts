@@ -238,6 +238,27 @@ const peerSatisfyingDependencies = (dir: string, names: string[]): string[] => {
 };
 
 /**
+ * Dependencies a package only ever imports a type from. `--strict` does not credit a type-only
+ * import, on the reasoning that nothing needs the package at runtime — but the emitted `.d.ts`
+ * still references it, so a consumer's typecheck resolves it and it belongs in `dependencies`.
+ * Scoped to names the package actually type-imports, so one it never mentions is still reported.
+ */
+const typeOnlyDependencies = (dir: string, names: string[]): string[] => {
+  // Only production files decide this: a story importing the package for a value says nothing about
+  // whether the published code needs it at runtime.
+  const sources = globSync(`${dir}/src/**/*.{ts,tsx}`)
+    .filter((file) => !/\.(?:stories|solid-stories|lit-stories|test|spec|eval)\.[tj]sx?$/.test(file))
+    .filter((file) => !file.includes('/testing/') && !file.includes('/stories/'))
+    .map((file) => readFileSync(file, 'utf8'));
+  return names.filter((name) => {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const typeOnly = new RegExp(`import type [^;]*? from '${escaped}(?:/[^']*)?'`);
+    const value = new RegExp(`import (?!type )[^;]*? from '${escaped}(?:/[^']*)?'`);
+    return sources.some((source) => typeOnly.test(source)) && !sources.some((source) => value.test(source));
+  });
+};
+
+/**
  * A `--bundlePackage` is inlined into the workspace's own build, so esbuild resolves that package's
  * requires against this workspace. Its dependencies therefore have to be declared here too, even
  * though nothing in the workspace imports them.
@@ -268,6 +289,29 @@ const ROOT_REFERENCED = globSync(['*.config.{ts,mts}', 'vitest/**/*.{ts,mjs}']).
  * dependencies rather than the workspace. Drop this to see the root backlog.
  */
 const rootManifest = JSON.parse(readFileSync('package.json', 'utf8'));
+
+/**
+ * Every workspace package's public entry points, mapped to source. Knip resolves a cross-package
+ * import through the published conditions, and for a type-only import that is `types` — which
+ * points into `dist/types`. That exists after a build and not on a clean checkout, so without this
+ * the same command reports different results locally and in CI.
+ */
+const WORKSPACE_PATHS: Record<string, string[]> = {};
+for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.json', 'vendor/**/package.json'], {
+  exclude: (path) => path.includes('node_modules'),
+})) {
+  const dir = dirname(manifest);
+  const { name, exports = {} } = JSON.parse(readFileSync(manifest, 'utf8'));
+  if (!name) {
+    continue;
+  }
+  for (const [subpath, target] of Object.entries(exports)) {
+    const [source] = sourceTargets(target).filter((path) => MODULE.test(path));
+    if (source) {
+      WORKSPACE_PATHS[join(name, subpath).replace(/\/$/, '')] = [join(dir, source.replace(/^\.\//, ''))];
+    }
+  }
+}
 
 const workspaces: KnipConfig['workspaces'] = {
   '.': {
@@ -341,11 +385,12 @@ for (const manifest of globSync(
       ...AUXILIARY_ENTRY,
     ],
     project: PROJECT.map((path) => `${path}!`),
-    paths,
+    paths: { ...WORKSPACE_PATHS, ...paths },
     ignoreDependencies: [
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...moonInvokedDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
+      ...typeOnlyDependencies(dir, Object.keys(dependencies)),
       ...bundledDependencies(dir),
     ],
   };
