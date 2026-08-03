@@ -73,6 +73,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../devtools/cli-util"
+    },
+    {
       "path": "../../devtools/devtools"
     },
     {
@@ -80,6 +83,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/client-services"
@@ -119,6 +125,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-terminal"
     },
     {
       "path": "../../ui/ui-theme"

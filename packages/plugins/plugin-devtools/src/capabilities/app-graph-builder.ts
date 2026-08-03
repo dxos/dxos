@@ -72,6 +72,15 @@ export default Capability.makeModule(
                     },
                   }),
                   Node.make({
+                    id: Devtools.nodeId(Devtools.Cli),
+                    data: Devtools.Cli,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['cli.label', { ns: meta.profile.key }],
+                      icon: 'ph--terminal-window--regular',
+                    },
+                  }),
+                  Node.make({
                     id: Devtools.nodeId(Devtools.Client.id),
                     data: null,
                     type: Devtools.id,

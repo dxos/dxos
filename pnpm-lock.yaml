@@ -11123,6 +11123,12 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/cli-util':
+        specifier: workspace:*
+        version: link:../../devtools/cli-util
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/client-services':
         specifier: workspace:*
         version: link:../../sdk/client-services
@@ -11219,6 +11225,9 @@ importers:
       '@dxos/react-ui-table':
         specifier: workspace:*
         version: link:../../ui/react-ui-table
+      '@dxos/react-ui-terminal':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-terminal
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -11231,6 +11240,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect/cli':
+        specifier: 'catalog:'
+        version: 0.75.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@tldraw/tldraw':
         specifier: 'catalog:'
         version: 3.0.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -25123,24 +25135,9 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
-      '@dxos/cli-util':
-        specifier: workspace:*
-        version: link:../../devtools/cli-util
-      '@dxos/client':
-        specifier: workspace:*
-        version: link:../../sdk/client
-      '@dxos/echo':
-        specifier: workspace:*
-        version: link:../../core/echo/echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-space
-      '@dxos/react-client':
-        specifier: workspace:*
-        version: link:../../sdk/react-client
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils

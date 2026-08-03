@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     cli: 'src/cli/index.ts',
+    testing: 'src/testing.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

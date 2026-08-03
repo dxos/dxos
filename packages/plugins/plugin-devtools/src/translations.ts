@@ -18,6 +18,7 @@ export const translations = [
         'devtools-overview.label': 'Stats',
         'debug-app-graph.label': 'App Graph',
         'debug-tools-explorer.label': 'SDK Explorer',
+        'cli.label': 'CLI',
 
         'reset-data.label': 'Reset data (ERASES ALL DATA)',
         'client.label': 'Client',

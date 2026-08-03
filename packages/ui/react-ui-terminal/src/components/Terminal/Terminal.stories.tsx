@@ -11,15 +11,11 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import React, { useMemo } from 'react';
+import { userEvent } from 'storybook/test';
 
-import { CommandConfig } from '@dxos/cli-util';
-import { ClientService } from '@dxos/client';
-import { Database } from '@dxos/echo';
-import { database, queue, space as spaceCommand } from '@dxos/plugin-space/commands';
-import { useClient } from '@dxos/react-client';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { runCommand, waitForTerminal } from '../../testing';
 import { Terminal } from './Terminal';
 
 const BOLD = '\x1b[1m';
@@ -28,7 +24,8 @@ const CYAN = '\x1b[36m';
 const RESET = '\x1b[0m';
 
 //
-// A self-contained command tree, to exercise the terminal without any DXOS services.
+// A self-contained command tree. Mounting a real CLI against a DXOS client is the CliPanel story
+// in plugin-devtools, which is also what ships as the devtools panel.
 //
 
 const greet = Command.make(
@@ -65,7 +62,7 @@ const colors = Command.make('colors', {}, () =>
 
 const demo = Command.make('demo').pipe(Command.withSubcommands([greet, ask, colors]));
 
-const DemoStory = () => {
+const DefaultStory = () => {
   const command = useMemo(() => demo, []);
 
   return (
@@ -78,59 +75,40 @@ const DemoStory = () => {
   );
 };
 
-//
-// The real dx command tree, against a live in-browser client.
-//
-
-const DxStory = () => {
-  const client = useClient();
-  const { space } = useClientStory();
-
-  const cli = useMemo(() => {
-    if (!space) {
-      return undefined;
-    }
-
-    const command = Command.make('dx', {
-      json: Options.boolean('json', { ifPresent: true }).pipe(Options.withDescription('JSON output.')),
-    }).pipe(
-      Command.provide(({ json }) =>
-        Layer.succeed(CommandConfig, { json, verbose: false, profile: 'default', logLevel: 'info' }),
-      ),
-      Command.withSubcommands([spaceCommand, database, queue]),
-    );
-
-    const layer = Layer.mergeAll(ClientService.fromClient(client), Database.layer(space.db));
-    return { command, layer };
-  }, [client, space]);
-
-  if (!cli) {
-    return null;
-  }
-
-  return (
-    <Terminal
-      command={cli.command}
-      layer={cli.layer}
-      name='dx'
-      banner={`${BOLD}DXOS CLI${RESET}\n${DIM}Try: space list · database query · space --help${RESET}`}
-    />
-  );
-};
-
 const meta = {
   title: 'ui/react-ui-terminal/Terminal',
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { layout: 'fullscreen' },
-} satisfies Meta;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-export const Default: StoryObj<typeof meta> = {
-  render: () => <DemoStory />,
-};
+type Story = StoryObj<typeof meta>;
 
-export const DxCli: StoryObj<typeof meta> = {
-  render: () => <DxStory />,
-  decorators: [withClientProvider({ createIdentity: true, createSpace: true })],
+export const Default: Story = {};
+
+/**
+ * Drives the shell end to end: a command is parsed, run, and its output rendered.
+ */
+export const Spec: Story = {
+  play: async ({ canvasElement }) => {
+    const keyboard = (text: string) => userEvent.keyboard(text);
+    await waitForTerminal(canvasElement, 'demo>');
+
+    await runCommand(canvasElement, 'greet world', keyboard);
+    await waitForTerminal(canvasElement, 'Hello, world.');
+
+    // Options are parsed, not merely echoed.
+    await runCommand(canvasElement, 'greet ada --loud', keyboard);
+    await waitForTerminal(canvasElement, 'HELLO, ADA!');
+
+    // An unknown command is reported once, by the CLI itself.
+    await runCommand(canvasElement, 'bogus', keyboard);
+    await waitForTerminal(canvasElement, 'Invalid subcommand');
+
+    // The shell survives the failure and keeps accepting commands.
+    await runCommand(canvasElement, 'greet again', keyboard);
+    await waitForTerminal(canvasElement, 'Hello, again.');
+  },
 };

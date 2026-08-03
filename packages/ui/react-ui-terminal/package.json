@@ -22,6 +22,11 @@
       "source": "./src/cli/index.ts",
       "types": "./dist/types/src/cli/index.d.ts",
       "import": "./dist/lib/cli.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -41,12 +46,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/cli-util": "workspace:*",
-    "@dxos/client": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/plugin-space": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

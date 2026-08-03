@@ -45,7 +45,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
-import { DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
+import { CliPanel, DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
 import { Devtools } from '#types';
 
 const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
@@ -74,6 +74,11 @@ export default Capability.makeModule(
         id: 'toolsExplorer',
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: () => <ToolsExplorer serverUrl={MCP_SERVER_URL} />,
+      }),
+      Surface.create({
+        id: 'cli',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Cli),
+        component: () => <CliPanel />,
       }),
       Surface.create({
         id: 'registry',
