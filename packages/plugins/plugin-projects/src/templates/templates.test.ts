@@ -47,7 +47,7 @@ describe('project templates', () => {
 
     const instructions = await project.instructions?.tryLoad();
     const artifacts = await project.artifacts?.tryLoad();
-    const taskSet = await project.taskSets[0]?.tryLoad();
+    const taskSet = await project.taskSet?.tryLoad();
     expect(instructions).toBeDefined();
     expect(artifacts).toBeDefined();
     expect(taskSet).toBeDefined();

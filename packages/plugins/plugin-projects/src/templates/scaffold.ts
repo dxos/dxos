@@ -41,7 +41,7 @@ export const scaffoldProject = ({ name, description, text, ...instructionsProps 
   Obj.update(project, (project) => {
     project.instructions = Ref.make(instructions);
     project.artifacts = Ref.make(artifacts);
-    project.taskSets = [Ref.make(tasks)];
+    project.taskSet = Ref.make(tasks);
   });
   return project;
 };

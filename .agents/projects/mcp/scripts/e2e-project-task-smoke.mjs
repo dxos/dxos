@@ -134,7 +134,7 @@ const projectName = `E2E Project ${new Date().toISOString()}`;
 const { project } = await call('projectCreate', { name: projectName });
 project?.id || fail('projectCreate', describeValue(project));
 const projectId = uriOf(project);
-const taskSetRef = project.taskSets?.[0]?.['/'] ?? fail('projectCreate taskSet', describeValue(project.taskSets));
+const taskSetRef = project.taskSet?.['/'] ?? fail('projectCreate taskSet', describeValue(project.taskSet));
 // Refs come back space-relative; task verbs accept either form.
 const taskSetId = taskSetRef;
 console.log('project:', projectId, 'taskSet:', taskSetId);
@@ -175,7 +175,7 @@ const { results: projects } = await call('projectList', { limit: 100 });
 projects.some((entry) => entry?.name === projectName) ||
   fail('projectList', JSON.stringify(projects.map((entry) => entry?.name)).slice(0, 300));
 const { project: reloaded } = await call('projectGet', { id: projectId });
-reloaded?.taskSets?.[0]?.['/'] === taskSetRef || fail('projectGet', describeValue(reloaded));
+reloaded?.taskSet?.['/'] === taskSetRef || fail('projectGet', describeValue(reloaded));
 console.log(`listed ${projects.length} projects; project graph verified.`);
 
 // --- 7. Optional: assert the project renders in Composer. ---
