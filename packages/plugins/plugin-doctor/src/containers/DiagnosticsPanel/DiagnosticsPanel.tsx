@@ -199,7 +199,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
         </Message.Root>
       )}
       {result.issues.length > 0 && (
-        <ul className='border-t border-separator divide-y divide-separator'>
+        <ul className='border-t border-separator divide-y divide-subdued-separator'>
           {result.issues.map((issue) => (
             <IssueRow key={issue.id} issue={issue} />
           ))}

@@ -239,7 +239,7 @@ export const StoragePanel = () => {
 
         {selectedValue && (
           <ScrollArea.Root thin>
-            <ScrollArea.Viewport classNames='divide-y divide-separator'>
+            <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
               {selectedValue.kind === 'blob' && (
                 <>
                   <div className='p-1'>Downloaded {formatPercent(calculateBlobProgress(selectedValue.blob))}</div>

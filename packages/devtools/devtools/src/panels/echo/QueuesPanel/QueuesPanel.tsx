@@ -68,7 +68,7 @@ export const QueuesPanel = () => {
       </Panel.Toolbar>
       <Panel.Content>
         {/* TODO(burdon): Convert to MasterDetailTable. */}
-        <div className='flex grow flex-col overflow-hidden divide-y divide-separator'>
+        <div className='flex grow flex-col overflow-hidden divide-y divide-subdued-separator'>
           <DynamicTable rows={rows} properties={properties} features={features} onRowClick={handleRowClicked} />
           <div className={mx('flex overflow-auto', 'h-1/2')}>
             {selected && <ObjectDataViewer object={selectedVersionObject ?? selected} />}

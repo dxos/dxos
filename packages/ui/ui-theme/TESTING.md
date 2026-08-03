@@ -14,8 +14,13 @@ Fastest way to see everything at once:
 moon run storybook-react:serve -- --port 9014 --no-open --ci
 ```
 
-Then `ui/react-ui-core/playground/Elevation` (whole-app frame) and
-`ui/react-ui-form/FormInCard` (grid alignment).
+Then:
+
+- `ui/react-ui-core/playground/Elevation` (whole-app frame)
+- `ui/react-ui-form/FormInCard` (grid alignment)
+
+TODO(burdon): Elevation story is still too fake: we need to show the react-ui-editor, react-ui-list, react-ui-mosaic, react-ui-form components; move real test to storybook-testing.
+TODO(burdon): FormInCard needs padding at the bottom (end) of the form.
 
 ---
 
@@ -61,6 +66,7 @@ These derive from the host surface, so they moved everywhere at once.
 ## 4. Control sizes and density — 24 / 32 / 40
 
 The scale is now three sizes; the old 28px step is gone. `xs` is an alias of `sm`.
+TODO(burdon): Remove "xs" if it is just an alias.
 
 - **Anything that was `sm` (28px) is now 24px** — visibly tighter. Check dense toolbars, the
   `Calendar` (nav buttons and day cells both moved), `Select` scroll buttons, and

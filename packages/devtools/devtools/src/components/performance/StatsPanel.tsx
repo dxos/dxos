@@ -112,7 +112,11 @@ export const StatsPanel = ({
   return (
     <ScrollArea.Root thin>
       <ScrollArea.Viewport>
-        <Accordion.Root classNames='divide-y divide-separator' value={openPanels} onValueChange={handleValueChange}>
+        <Accordion.Root
+          classNames='divide-y divide-subdued-separator'
+          value={openPanels}
+          onValueChange={handleValueChange}
+        >
           {() => (
             <>
               <Panel

@@ -110,7 +110,7 @@ const MultiSelectStory = () => {
 //
 
 const CollapsibleStory = () => (
-  <List variant='unordered' className='dx-container border border-separator divide-y divide-separator'>
+  <List variant='unordered' className='dx-container border border-separator divide-y divide-subdued-separator'>
     {items.slice(0, 3).map((item) => (
       <ListItem key={item.id} collapsible defaultOpen={item.id === items[0].id}>
         <ListItemOpenTrigger asChild>

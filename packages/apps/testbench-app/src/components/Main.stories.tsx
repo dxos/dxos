@@ -16,7 +16,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({
-      classNames: 'grid grid-rows-2 h-full divide-y divide-separator grow overflow-hidden',
+      classNames: 'grid grid-rows-2 h-full divide-y divide-subdued-separator grow overflow-hidden',
     }),
     withMultiClientProvider({
       numClients: 2,

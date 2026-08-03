@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useState } from 'react';
+import React, { Children, type PropsWithChildren, useState } from 'react';
 
 import { type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -46,7 +46,10 @@ export const FormFieldSetContainer = ({
   const { t } = useTranslation(translationKey);
   // TODO(burdon): Generalize collapse state (cf. useSelection in react-ui-attention, plugin-markdown cursor state).
   const [collapsed, setCollapsed] = useState(false);
-  const showBody = !(collapsible && collapsed);
+  // An empty object/array renders no sub-fields, so there is nothing to collapse — offering the
+  // toggle (and the click target on the header) would be a control that does nothing.
+  const canCollapse = collapsible && Children.toArray(children).length > 0;
+  const showBody = !(canCollapse && collapsed);
 
   const content = (
     <>
@@ -57,7 +60,7 @@ export const FormFieldSetContainer = ({
           readonly={readonly}
           classNames='pl-2'
           actions={
-            collapsible ? (
+            canCollapse ? (
               <ToggleIconButton
                 active={!collapsed}
                 classNames='px-1 mr-0.5'
@@ -69,17 +72,17 @@ export const FormFieldSetContainer = ({
               />
             ) : undefined
           }
-          onClick={collapsible ? () => setCollapsed((value) => !value) : undefined}
+          onClick={canCollapse ? () => setCollapsed((value) => !value) : undefined}
         />
       )}
-      {showBody && (collapsible ? <div className={styles.fieldSetBody()}>{children}</div> : children)}
+      {showBody && (canCollapse ? <div className={styles.fieldSetBody()}>{children}</div> : children)}
     </>
   );
 
   // Nested groups render inside an indented, bordered container with a collapse toggle. A non-collapsible
   // group only materializes a wrapper when `classNames` is supplied — otherwise the body flows straight
   // into the parent grid (the default, grid-transparent behavior).
-  if (collapsible) {
+  if (canCollapse) {
     return (
       <div className={styles.fieldSetBoxOuter()}>
         <div className={styles.fieldSetBox({ class: mx(classNames) })}>{content}</div>

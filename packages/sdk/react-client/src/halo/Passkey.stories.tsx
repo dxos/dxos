@@ -115,7 +115,7 @@ const Test = () => {
           Authenticate with Passkey
         </Button>
       </div>
-      <div className='flex flex-col min-w-[28rem] divide-y divide-separator border border-separator rounded-sm'>
+      <div className='flex flex-col min-w-[28rem] divide-y divide-subdued-separator border border-separator rounded-sm'>
         <JsonHighlighter data={{ identity, credentials: credentials.length }} />
       </div>
     </>

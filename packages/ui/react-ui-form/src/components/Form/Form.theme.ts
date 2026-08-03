@@ -50,6 +50,9 @@ const formStyles = tv({
         sectionDescription: 'px-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.
         fieldSet: 'flex flex-col gap-trim-md',
+        // Nested groups render their sub-fields through `fieldSetBody`, so it needs the same gap as
+        // `fieldSet` — otherwise fields inside a group sit flush while their top-level siblings don't.
+        fieldSetBody: 'flex flex-col gap-trim-md px-trim-sm pb-trim-sm',
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',

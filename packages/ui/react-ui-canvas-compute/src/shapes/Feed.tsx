@@ -46,7 +46,7 @@ export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   return (
     <Box shape={shape} status={`${items.length} items`} onAction={handleAction}>
       <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='divide-y divide-separator'>
+        <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
           {[...items].map((item, i) => (
             <FeedItem key={i} classNames='p-1 px-2' item={item} />
           ))}

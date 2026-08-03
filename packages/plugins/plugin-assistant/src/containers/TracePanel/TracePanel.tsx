@@ -105,7 +105,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         {...composableProps(props, {
           ...attentionAttrs,
           classNames: mx(
-            'h-full grid divide-y divide-separator',
+            'h-full grid divide-y divide-subdued-separator',
             !tracePanelDebug && selectedCommit
               ? 'grid-rows-[minmax(0,160px)_1fr_minmax(0,206px)]'
               : 'grid-rows-[minmax(0,160px)_1fr]',
