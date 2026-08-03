@@ -4,8 +4,8 @@
 
 import { useMemo } from 'react';
 
-import { type AppNode } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { type AppNode, AppSpace } from '@dxos/app-toolkit';
+import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import { Attention, useAttended } from '@dxos/react-ui-attention';
@@ -71,12 +71,15 @@ export const resolveActiveCompanion = (
 /**
  * Every companion applicable right now, grouped most-specific-first. Node companions come from the
  * attended plank, so the first group re-resolves as attention moves; workspace and global companions
- * hang off the graph root and are split by their declared scope.
+ * hang off the graph root and are split by their declared scope. Workspace companions are dropped
+ * outside a space — a panel over the space's database has nothing to show in a workspace without one.
  */
 export const useCompanionGroups = (): CompanionGroups => {
   const { graph } = useAppGraph();
   const { deck } = useDeckState();
   const attended = useAttended();
+  const layout = useLayout();
+  const inSpace = !!AppSpace.getActiveSpaceId(layout.workspace);
 
   const anchorId = useMemo(() => resolveCompanionAnchor(deck.active, attended), [deck.active, attended]);
   const anchorNode = useNode(graph, anchorId);
@@ -97,11 +100,10 @@ export const useCompanionGroups = (): CompanionGroups => {
       }),
     ];
 
-    return SCOPE_ORDER.map((scope) => ({
-      scope,
-      companions: entries.filter((entry) => entry.scope === scope),
-    })).filter((group) => group.companions.length > 0);
-  }, [nodeCompanions, rootCompanions]);
+    return SCOPE_ORDER.filter((scope) => scope !== 'workspace' || inSpace)
+      .map((scope) => ({ scope, companions: entries.filter((entry) => entry.scope === scope) }))
+      .filter((group) => group.companions.length > 0);
+  }, [nodeCompanions, rootCompanions, inSpace]);
 
   return { groups, anchorId, anchorSubject: anchorNode?.data };
 };

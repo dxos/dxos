@@ -125,9 +125,11 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
+          {/* Rows size to their content rather than to a uniform tab height, so the group separators are
+              hairlines instead of empty tab-sized slots; the buttons carry their own height. */}
           <Tabs.Tablist
             data-joyride='complementary-sidebar/companions'
-            classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'
+            classNames='grid grid-cols-1 auto-rows-min overflow-y-auto scrollbar-none gap-1 p-1'
           >
             {groups.map((group, index) => (
               <Fragment key={group.scope}>
