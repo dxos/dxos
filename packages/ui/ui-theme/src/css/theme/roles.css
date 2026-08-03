@@ -10,13 +10,12 @@
 @theme {
   /*
    * Text emphasis — foregrounds at decreasing emphasis, anchored on --color-base-fg (strongest):
-   *   base-fg → description → subdued → placeholder (weakest).
+   *   base-fg → description → subdued (weakest). `placeholder` is host-derived — see surfaces.css.
    * Tuned for legibility against the surfaces rather than mapped to the elevation ladder (which
    * governs backgrounds, not text contrast), so these stay explicit neutrals.
    */
   --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
   --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-600));
-  --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
 
   /*
    * Controls — the input/control fill is a deliberate off-ladder token (cf. the grid "paper"

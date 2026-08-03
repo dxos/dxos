@@ -50,7 +50,7 @@ const valence = (valence?: MessageValence) => {
 
 // Height and inline padding come from the density knobs (theme/spacing.css) rather than utilities,
 // so a density class on any ancestor resizes the control without a matching React prop.
-const controlSize = 'min-h-(--dx-control) px-(--dx-control-pad)';
+const controlSize = 'min-h-(--dx-control) px-(--dx-control-pad) leading-(--dx-control-leading)';
 
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',

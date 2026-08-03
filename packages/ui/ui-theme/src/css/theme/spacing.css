@@ -54,6 +54,8 @@
    */
   --dx-control: var(--dx-control-md);
   --dx-control-pad: var(--spacing-trim-sm);
+  /* Text must fit inside --dx-control; at sm the default line box overshoots 24px. */
+  --dx-control-leading: normal;
   --spacing-form-padding: var(--spacing-trim-sm);
 }
 
@@ -79,6 +81,7 @@
   [data-density='sm'] {
     --dx-control: var(--dx-control-sm);
     --dx-control-pad: var(--spacing-trim-xs);
+    --dx-control-leading: 22px;
     --spacing-form-padding: var(--spacing-trim-xs);
   }
 }

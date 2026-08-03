@@ -127,6 +127,7 @@
     --color-hover-surface-subtle: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.02) c h);
     --color-current-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.1) c h);
     --color-current-surface-hover: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.12) c h);
+    --color-placeholder: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.3) c h);
 
     /*
      * Aliases must be re-declared, not inherited: a `--color-x: var(--color-y)` alias substitutes

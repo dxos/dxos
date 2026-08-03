@@ -122,6 +122,10 @@
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.08) c h
   );
 
+  /* Placeholder ink is an aspect too: a fixed neutral reads correctly on one surface only, so it
+   * lifts away from the host like the state surfaces do (offset 0.30). */
+  --color-placeholder: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.3) c h);
+
   /* State aspects — same host-derived mechanism; see the offsets above. */
   --color-hover-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.08) c h);
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
