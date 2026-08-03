@@ -73,6 +73,7 @@ export default Capability.makeModule(
               label: ['space-objects.label', { ns: meta.profile.key }],
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
+              scope: 'workspace',
               position: Position.last,
             }),
           ]),

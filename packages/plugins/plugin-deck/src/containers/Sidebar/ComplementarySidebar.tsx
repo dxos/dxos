@@ -2,24 +2,41 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
+import { Icon, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
-import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
+import { Pane } from '#components';
+import {
+  type CompanionEntry,
+  resolveActiveCompanion,
+  useBreakpoints,
+  useCompanionGroups,
+  useDeckSettings,
+  useDeckState,
+} from '#hooks';
 import { meta } from '#meta';
 
 import { layoutAppliesTopbar } from '../../util';
+import { PlankControl } from '../Deck/PlankControls';
 import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
+import { SidebarResizeHandle } from './SidebarResizeHandle';
 
 const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
+
+/** The theme property the sidebar's expanded width is read from; `--dx-r1-size` derives from it. */
+const SIZE_PROPERTY = '--dx-complementary-sidebar-size';
+
+/** Mirrors the theme default for {@link SIZE_PROPERTY}, used until the user drags the seam. */
+const DEFAULT_SIZE = 25;
+const MIN_SIZE = 18;
+const MAX_SIZE = 60;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -32,9 +49,13 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
 
-  const companions = useDeckCompanions();
-  const activeCompanion = companions.find((companion) => Attention.getLinkedVariant(companion.id) === current);
-  const activeId = activeCompanion && Attention.getLinkedVariant(activeCompanion.id);
+  const { groups, anchorId, anchorSubject } = useCompanionGroups();
+  const companions = useMemo(() => groups.flatMap((group) => group.companions), [groups]);
+
+  // `current` is the user's preference, not necessarily what is showable — see `resolveActiveCompanion`.
+  const activeId = useMemo(() => resolveActiveCompanion(current, groups), [current, groups]);
+
+  const activeCompanion = companions.find((companion) => companion.value === activeId);
   const [internalValue, setInternalValue] = useState(activeId);
 
   useEffect(() => {
@@ -58,26 +79,50 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     [state.complementarySidebarState, activeId, invokePromise, updateState],
   );
 
-  const data = useMemo(
-    () =>
-      activeCompanion && {
-        id: activeCompanion.id,
-        subject: activeCompanion.data,
-      },
-    [activeCompanion?.id, activeCompanion?.data],
-  );
-
+  // Collapse only when there is genuinely nothing to show. Keying this on the resolved selection instead
+  // would collapse on navigation: the node group is read in a commit-phase effect, so it is briefly
+  // empty while the anchor changes.
+  const empty = groups.length === 0;
   useEffect(() => {
-    if (!activeId) {
+    if (empty) {
       void invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, invokePromise]);
+  }, [empty, invokePromise]);
+
+  const size = state.complementarySidebarSize ?? DEFAULT_SIZE;
+
+  // Publish the committed width where the theme declares it, so the sidebar and everything sized
+  // against it (the deck, `--dx-r1-size`) agree. The drag previews the same property directly.
+  useEffect(() => {
+    document.documentElement.style.setProperty(SIZE_PROPERTY, `${size}rem`);
+    return () => {
+      document.documentElement.style.removeProperty(SIZE_PROPERTY);
+    };
+  }, [size]);
+
+  const handleSizeChange = useCallback(
+    (next: number) => updateState((state) => ({ ...state, complementarySidebarSize: next })),
+    [updateState],
+  );
 
   return (
     <Main.ComplementarySidebar
       label={label}
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
+      {state.complementarySidebarState === 'expanded' && (
+        <SidebarResizeHandle
+          classNames='hidden lg:block'
+          property={SIZE_PROPERTY}
+          side='inline-end'
+          size={size}
+          minSize={MIN_SIZE}
+          maxSize={MAX_SIZE}
+          label={t('resize-complementary-sidebar.label')}
+          onSizeChange={handleSizeChange}
+        />
+      )}
+
       {/* R0 Tabs */}
       <Tabs.Root classNames='contents' orientation='vertical' value={internalValue}>
         <div
@@ -89,27 +134,35 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
-            {companions.map((companion) => (
-              <Tabs.IconButton
-                key={Attention.getLinkedVariant(companion.id)}
-                value={Attention.getLinkedVariant(companion.id)}
-                classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-                label={toLocalizedString(companion.properties.label, t)}
-                icon={companion.properties.icon}
-                iconOnly
-                tooltipSide='left'
-                data-value={Attention.getLinkedVariant(companion.id)}
-                {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
-                variant={
-                  activeId === Attention.getLinkedVariant(companion.id)
-                    ? state.complementarySidebarState === 'expanded'
-                      ? 'primary'
-                      : 'ghost'
-                    : 'ghost'
-                }
-                onClick={handleTabClick}
-              />
+          {/* Rows size to their content rather than to a uniform tab height, so the group separators are
+              hairlines instead of empty tab-sized slots; the buttons carry their own height. */}
+          <Tabs.Tablist
+            data-joyride='complementary-sidebar/companions'
+            classNames='grid grid-cols-1 auto-rows-min overflow-y-auto scrollbar-none gap-1 p-1'
+          >
+            {groups.map((group, index) => (
+              <Fragment key={group.scope}>
+                {index > 0 && <div role='none' className='mx-1 border-t border-subdued-separator' />}
+                {group.companions.map((companion) => (
+                  <Tabs.IconButton
+                    key={companion.value}
+                    value={companion.value}
+                    classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
+                    label={toLocalizedString(companion.node.properties.label, t)}
+                    icon={companion.node.properties.icon}
+                    iconOnly
+                    tooltipSide='left'
+                    data-value={companion.value}
+                    {...(companion.node.properties.joyride && { 'data-joyride': companion.node.properties.joyride })}
+                    variant={
+                      activeId === companion.value && state.complementarySidebarState === 'expanded'
+                        ? 'primary'
+                        : 'ghost'
+                    }
+                    onClick={handleTabClick}
+                  />
+                ))}
+              </Fragment>
             ))}
           </Tabs.Tablist>
           <div
@@ -124,65 +177,102 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         </div>
 
         {/* R1 Content. */}
-        {activeId &&
-          companions.map((companion) => (
-            <Tabs.Panel
-              key={Attention.getLinkedVariant(companion.id)}
-              value={Attention.getLinkedVariant(companion.id)}
-              classNames={[
-                'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
-              ]}
-              {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
-            >
-              <ComplementarySidebarPanel companion={companion} activeId={activeId} data={data} />
-            </Tabs.Panel>
-          ))}
+        {activeCompanion && (
+          <Tabs.Panel
+            key={activeCompanion.value}
+            value={activeCompanion.value}
+            classNames={[
+              'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
+              'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
+            ]}
+            {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
+          >
+            <ComplementarySidebarPanel companion={activeCompanion} anchorId={anchorId} anchorSubject={anchorSubject} />
+          </Tabs.Panel>
+        )}
       </Tabs.Root>
     </Main.ComplementarySidebar>
   );
 };
 
 type ComplementarySidebarPanelProps = {
-  companion: DeckCompanion;
-  activeId: string;
-  data?: {
-    id: string;
-    subject: any;
-  };
+  companion: CompanionEntry;
+  anchorId?: string;
+  anchorSubject?: unknown;
 };
 
-const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
+const ComplementarySidebarPanel = ({ companion, anchorId, anchorSubject }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = useOperationInvoker();
+  const { flatten } = useDeckSettings();
+  const { node, variant, scope } = companion;
 
-  if (Attention.getLinkedVariant(companion.id) !== activeId && !data) {
-    return null;
-  }
+  // A node companion is *about* the attended node, so its heading tracks that node's attention; a
+  // workspace or global panel relates to nothing in particular and stays neutral.
+  const attendableId = scope === 'node' ? anchorId : undefined;
+
+  // Popping clones this panel into the deck, pinned to the node it is currently showing. Flat mode
+  // renders one plank at a time, so a pinned clone has nowhere to sit beside its source.
+  const canPop = scope === 'node' && !!anchorId && !flatten;
+  const handlePop = useCallback(() => {
+    void invokePromise(LayoutOperation.Open, {
+      subject: [node.id],
+      pivotId: anchorId,
+      disposition: 'add',
+      navigation: 'immediate',
+      // Attention stays on the source: the clone is a reference pinned beside what you are working in,
+      // and taking attention would also swap the sidebar out from under the panel just popped.
+      scrollIntoView: false,
+    });
+  }, [invokePromise, node.id, anchorId]);
+
+  // Node companions keep the article contract they render under in the deck, so plugins need no change;
+  // root companions keep their per-variant role.
+  const surface =
+    scope === 'node' ? (
+      <Surface.Surface
+        type={AppSurface.Article}
+        data={{
+          attendableId: anchorId,
+          subject: node.data,
+          companionTo: anchorSubject,
+          variant,
+          properties: node.properties,
+        }}
+        limit={1}
+        fallback={PlankErrorFallback}
+        placeholder={<PlankLoading />}
+      />
+    ) : (
+      <Surface.Surface
+        type={AppSurface.deckCompanion(variant)}
+        data={{ id: node.id, subject: node.data }}
+        fallback={PlankErrorFallback}
+        placeholder={<PlankLoading />}
+      />
+    );
 
   return (
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
+        {/* Same anatomy as a plank heading: sigil, title, then the controls cluster. */}
         <Toolbar.Root style={iconSize(5)} classNames='bg-header-surface'>
-          <IconButton
-            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-            label={toLocalizedString(companion.properties.label, t)}
-            icon={companion.properties.icon}
-            iconOnly
-            tooltipSide='left'
-            data-value={Attention.getLinkedVariant(companion.id)}
-            variant='default'
-          />
-          <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
+          <Pane.Sigil attendableId={attendableId} isMenu={false} data-value={companion.value}>
+            <span className='sr-only'>{toLocalizedString(node.properties.label, t)}</span>
+            <Icon icon={node.properties.icon} />
+          </Pane.Sigil>
+          <Pane.Title attendableId={attendableId}>{toLocalizedString(node.properties.label, t)}</Pane.Title>
+          {canPop && (
+            <PlankControl
+              label={t('pop-companion.label')}
+              icon='ph--arrow-square-out--regular'
+              data-testid='complementarySidebar.pop'
+              onClick={handlePop}
+            />
+          )}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='bg-r1-surface'>
-        <Surface.Surface
-          type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
-          data={data}
-          fallback={PlankErrorFallback}
-          placeholder={<PlankLoading />}
-        />
-      </Panel.Content>
+      <Panel.Content classNames='bg-r1-surface'>{surface}</Panel.Content>
     </Panel.Root>
   );
 };

@@ -18,6 +18,9 @@ export const translations = [
         'close-complementary-sidebar.label': 'Close context sidebar',
         'sidebar.title': 'Navigation sidebar',
         'complementary-sidebar.title': 'Context sidebar',
+        'resize-complementary-sidebar.label': 'Resize context sidebar',
+        'pop-companion.label': 'Open in deck',
+        'companion-source.label': 'Go to source',
         'plugin-error.message': 'Content failed to render.',
         'content-fallback.message': 'Unsupported',
         'content-fallback.description':
@@ -45,8 +48,6 @@ export const translations = [
         'show-fullscreen-plank.label': 'Fullscreen',
         'close.label': 'Close',
         'minify.label': 'Minify',
-        'open-companion.label': 'Open companion side-by-side',
-        'close-companion.label': 'Close companion',
         'close-current.label': 'Close current plank',
         'close-others.label': 'Close other planks',
         'close-all.label': 'Close all planks',

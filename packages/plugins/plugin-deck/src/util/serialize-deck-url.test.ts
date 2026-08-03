@@ -64,18 +64,31 @@ describe('serializeDeckToUrl', () => {
     expect(path).toBe(`/w/${WORKSPACE_A}/doc/A/w/${WORKSPACE_B}/task/B`);
   });
 
-  test('appends the attended plank companion pair', ({ expect }) => {
+  test('a popped companion serializes in deck order, self-contained', ({ expect }) => {
+    // The caller represents the clone through its source, so the pair stands alone: its position in the
+    // chain is just where the plank sits, not what it is attached to.
     const path = serializeDeckToUrl({
       workspace: WORKSPACE_A,
       workspaceKey: 'w',
-      active: ['docA', 'sheetB'],
+      active: ['docA', 'docA/~comments', 'sheetB'],
       representations: new Map([
         ['docA', rep('doc', 'A')],
+        ['docA/~comments', rep('companion', 'doc~A~comments')],
         ['sheetB', rep('sheet', 'B')],
       ]),
-      companion: { plankId: 'docA', node: { key: 'comments', workspace: WORKSPACE_A } },
     });
-    expect(path).toBe(`/w/${WORKSPACE_A}/doc/A/comments/sheet/B`);
+    expect(path).toBe(`/w/${WORKSPACE_A}/doc/A/companion/doc~A~comments/sheet/B`);
+  });
+
+  test('the sidebar selection trails the chain as a context pair', ({ expect }) => {
+    const path = serializeDeckToUrl({
+      workspace: WORKSPACE_A,
+      workspaceKey: 'w',
+      active: ['docA'],
+      representations: new Map([['docA', rep('doc', 'A')]]),
+      context: '~comments',
+    });
+    expect(path).toBe(`/w/${WORKSPACE_A}/doc/A/context/~comments`);
   });
 
   test('skips a plank with no representation and warns', ({ expect }) => {

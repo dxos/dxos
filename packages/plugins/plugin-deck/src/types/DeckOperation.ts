@@ -16,7 +16,6 @@ const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name
 
 const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
-  Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
   Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
   Schema.Literal('expand').annotations({
     description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",

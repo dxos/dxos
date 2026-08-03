@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: companions-sidebar
+    status: active
+    user: josiah
+    host: remote
+    created: 2026-08-03
+    summary: Experimental refactor — merge plank + deck companions into one companion concept (scope node|workspace|global) rendered in a resizable complementary sidebar; the branch is the experiment, landing it is the accept decision. Supersedes the per-plank companion model from PR #12424 (deck project) — coordinate before landing.
+    tasks: .agents/projects/companions-sidebar/TASKS.md
+    design: .agents/projects/companions-sidebar/DESIGN.md
+    prs: []
+    resume: 'Phase 1 DONE and browser-verified — the complementary sidebar is drag-resizable (SidebarResizeHandle), width persists as StoredDeckState.complementarySidebarSize, and data-sidebar-resizing on :root suppresses the width transition so the deck tracks the seam in the same frame. NEXT: Phase 2 — add scope (node/workspace/global) to the companion builders, then render the three-group rail in ComplementarySidebar.'
   - name: lenses
     status: active
     user: josiah

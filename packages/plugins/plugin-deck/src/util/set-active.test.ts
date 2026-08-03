@@ -57,22 +57,6 @@ describe('computeActiveUpdates', () => {
     });
   });
 
-  describe('companionPlanks', () => {
-    // Entries survived every close, so a long-lived deck accreted one per plank ever opened — a live
-    // profile measured fourteen, with duplicates.
-    test('prunes companion state for planks no longer open, and dedupes', ({ expect }) => {
-      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['a', 'a', 'b', 'ghost'] });
-      const { deckUpdates } = computeActiveUpdates({ next: ['a'], deck });
-      expect(deckUpdates.companionPlanks).toEqual(['a']);
-    });
-
-    test('keeps companion state for planks that remain open', ({ expect }) => {
-      const deck = makeDeck({ active: ['a', 'b'], companionPlanks: ['b'] });
-      const { deckUpdates } = computeActiveUpdates({ next: ['a', 'b'], deck });
-      expect(deckUpdates.companionPlanks).toEqual(['b']);
-    });
-  });
-
   describe('empty next', () => {
     test('clears active when next is empty', ({ expect }) => {
       const deck = makeDeck({ active: ['a', 'b'] });

@@ -94,6 +94,7 @@ type SidebarState = 'expanded' | 'collapsed' | 'closed';
 
 type MainContextValue = {
   resizing: boolean;
+  setResizing: Dispatch<SetStateAction<boolean>>;
 
   // Navigation
   navigationSidebarState: SidebarState;
@@ -106,6 +107,9 @@ type MainContextValue = {
 
 const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
   resizing: false,
+  setResizing: (_resizing) => {
+    log.warn('Not initialized');
+  },
 
   navigationSidebarState: 'closed',
   setNavigationSidebarState: (_nextState) => {
@@ -218,6 +222,7 @@ const MainRoot = ({
         setComplementarySidebarState,
       }}
       resizing={resizing}
+      setResizing={setResizing}
     >
       {children}
     </MainProvider>

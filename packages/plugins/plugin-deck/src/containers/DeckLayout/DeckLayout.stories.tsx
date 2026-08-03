@@ -131,6 +131,9 @@ const createItem = (depth = 0, maxDepth = 3): Item => ({
 
 const STORY_ITEMS = Array.from({ length: 5 }, () => createItem());
 
+/** Deck-scoped companions; ids must be camelCase for {@link AppSurface.deckCompanion}. */
+const STORY_DECK_COMPANIONS = ['storyPanel', 'storyInfo'] as const;
+
 /**
  * Maps a nested {@link Item} tree to graph nodes so `Graph.getConnections` / `useConnections` see children.
  */
@@ -223,6 +226,17 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               );
             },
           }),
+          ...STORY_DECK_COMPANIONS.map((variant) =>
+            Surface.create({
+              id: variant,
+              filter: Surface.makeFilter(AppSurface.deckCompanion(variant)),
+              component: () => (
+                <div className='p-2 text-sm' data-testid={`storyDeckCompanion.${variant}`}>
+                  {variant}
+                </div>
+              ),
+            }),
+          ),
         ]),
       ),
   }),
@@ -238,6 +252,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         GraphBuilder.createExtension({
           id: 'storyItemCompanions',
           match: NodeMatcher.whenNodeType('story-item'),
+          // Only the first item offers `beta`, so moving attention to any other item exercises the
+          // fallback to the node group's first companion.
           connector: (node) =>
             Effect.succeed([
               AppNode.makeCompanion({
@@ -247,11 +263,36 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 data: { variant: 'alpha', parentId: node.id },
                 position: Position.first,
               }),
-              AppNode.makeCompanion({
-                variant: 'beta',
-                label: 'Companion Beta',
-                icon: 'ph--chat-circle--regular',
-                data: { variant: 'beta', parentId: node.id },
+              ...(node.data === STORY_ITEMS[0]
+                ? [
+                    AppNode.makeCompanion({
+                      variant: 'beta',
+                      label: 'Companion Beta',
+                      icon: 'ph--chat-circle--regular',
+                      data: { variant: 'beta', parentId: node.id },
+                    }),
+                  ]
+                : []),
+            ]),
+        }),
+        GraphBuilder.createExtension({
+          id: 'storyDeckCompanions',
+          match: NodeMatcher.whenRoot,
+          connector: () =>
+            Effect.succeed([
+              AppNode.makeDeckCompanion({
+                id: STORY_DECK_COMPANIONS[0],
+                label: 'Story Panel',
+                icon: 'ph--book-open--regular',
+                data: STORY_DECK_COMPANIONS[0],
+                position: Position.first,
+              }),
+              AppNode.makeDeckCompanion({
+                id: STORY_DECK_COMPANIONS[1],
+                label: 'Story Info',
+                icon: 'ph--info--regular',
+                data: STORY_DECK_COMPANIONS[1],
+                position: Position.last,
               }),
             ]),
         }),
@@ -271,7 +312,9 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
   const layout = useLayout();
   const { invokePromise } = useOperationInvoker();
 
-  const items = useConnections(graph, Node.RootId, 'child');
+  const connections = useConnections(graph, Node.RootId, 'child');
+  // Companions are addressed from the sidebar rail, not the tree — the real navtree hides them the same way.
+  const items = useMemo(() => connections.filter((node) => node.properties.disposition !== 'hidden'), [connections]);
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
@@ -283,7 +326,15 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
               key={node.id}
               id={node.id}
               classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
-              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
+              // Adds rather than replaces, so multi-plank flows (and popped companions beside their
+              // source) are reachable from the nav.
+              onClick={() =>
+                void invokePromise(LayoutOperation.Open, {
+                  subject: [node.id],
+                  disposition: 'add',
+                  navigation: 'immediate',
+                })
+              }
             >
               <Listbox.ItemContent
                 icon={node.properties.icon}
@@ -373,6 +424,43 @@ export const ManyPlanks: Story = {
         subject: [STORY_ITEMS[1].id],
         disposition: 'add',
         navigation: 'immediate',
+      });
+    });
+
+    return <DeckLayout />;
+  },
+};
+
+/** Two planks with the sidebar expanded — the fixture for popping a companion out and pinning it. */
+export const ComplementarySidebarTwoPlanks: Story = {
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.Open, {
+        subject: [STORY_ITEMS[1].id],
+        disposition: 'add',
+        navigation: 'immediate',
+      });
+      await invokePromise(LayoutOperation.UpdateComplementary, {
+        subject: STORY_DECK_COMPANIONS[0],
+        state: 'expanded',
+      });
+    });
+
+    return <DeckLayout />;
+  },
+};
+
+/** Exercises the complementary sidebar expanded, including its resizable inner seam. */
+export const ComplementarySidebarExpanded: Story = {
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.UpdateComplementary, {
+        subject: STORY_DECK_COMPANIONS[0],
+        state: 'expanded',
       });
     });
 

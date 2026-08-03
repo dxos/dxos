@@ -24,6 +24,7 @@ export default Capability.makeModule(
     const builder = GraphBuilder.from(/* localStorage.getItem(KEY) ?? */ undefined, registry, {
       anchorKey: UrlPath.WORKSPACE_KEY,
       linkedKey: UrlPath.COMPANION_KEY,
+      contextKey: UrlPath.CONTEXT_KEY,
     });
     // const interval = setInterval(() => {
     //   localStorage.setItem(KEY, builder.graph.pickle());

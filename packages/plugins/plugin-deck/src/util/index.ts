@@ -3,7 +3,7 @@
 //
 
 export * from './companion-anchor';
-export * from './companion-view-state';
+export * from './companion-url';
 export * from './layoutAppliesTopbar';
 export * from './migrate-persisted-state';
 export * from './resolve-sidebar-state';

@@ -34,6 +34,7 @@ export default Capability.makeModule(
                 label: ['search.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 data: space,
+                scope: 'workspace',
               }),
             ];
           }).pipe(Effect.orDie),

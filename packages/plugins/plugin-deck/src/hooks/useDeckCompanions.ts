@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type AppNode } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, type Node as NodeType } from '@dxos/plugin-graph';
 import { useConnections } from '@dxos/plugin-graph/hooks';
@@ -18,6 +19,8 @@ export type DeckCompanion = NodeType.Node<
     // TODO(burdon): Scroll area should be controlled by surface.
     /** If true, the panel will not be wrapped in a scroll area. */
     fixed?: boolean;
+    /** Absent on companions contributed before scopes existed; those are global. */
+    scope?: Exclude<AppNode.CompanionScope, 'node'>;
     position?: Position.Position;
     joyride?: string;
   }

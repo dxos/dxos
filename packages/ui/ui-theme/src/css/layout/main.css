@@ -162,6 +162,15 @@
     }
   }
 
+  /**
+   * While a sidebar seam is dragged its width follows the pointer, so every box sized against it must
+   * track the same frame — a transition here leaves the deck trailing the seam by its duration.
+   */
+  :root[data-sidebar-resizing='true']
+    :is(.dx-main-sidebar, .dx-main-bounce-layout, .dx-main-content-padding-transitions, .dx-main-intrinsic-size) {
+    transition-duration: 0ms;
+  }
+
   .dx-main-overlay {
     @apply fixed inset-0 bg-scrim-surface;
     transition-property: opacity;

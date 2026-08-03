@@ -209,6 +209,7 @@ export default Capability.makeModule(
               label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',
+              scope: 'workspace',
               position: Position.last,
             }),
           ]),
