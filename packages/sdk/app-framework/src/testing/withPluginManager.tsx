@@ -15,7 +15,7 @@ import { type MaybeProvider, getProviderValue } from '@dxos/util';
 import { ActivationEvents, Capabilities } from '../common';
 import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../ui';
-import { activateConvergedModules } from './converge';
+import { activateDemandGatedModules } from './demand-gated';
 import { StorybookErrorFallback } from './StorybookErrorFallback';
 
 /**
@@ -139,7 +139,7 @@ const WithPluginManagerApp = ({
     // isolation — fire every start event so start-gated modules are present regardless of
     // which plugin's surface the story exercises. A story switch shuts the manager down
     // mid-trickle, interrupting the activation fiber — expected; real failures still surface.
-    EffectEx.runDetached(activateConvergedModules(pluginManager));
+    EffectEx.runDetached(activateDemandGatedModules(pluginManager));
   }, [fireEvents, pluginManager, storyId]);
 
   // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;

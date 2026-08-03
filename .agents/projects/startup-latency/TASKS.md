@@ -429,6 +429,16 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 - [ ] appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
 - [ ] Tier-aware per-commit trend line (Phase 1 leftover)
 - [ ] Warm-reload race root-cause — still gates any scheduling change (round barriers)
+- [ ] **Storybook cannot catch demand-gating regressions (fidelity gap, recorded 2026-08-03).**
+      `withPluginManager` fires every core+enabled plugin's start event unconditionally via
+      `activateConvergedModules`, because a story mounts exactly one surface and honouring real
+      demand would activate almost nothing. Consequence: a module start-gated behind a surface
+      nobody renders still passes in storybook but would fail in the app. Only the runtime
+      `modules-at-ready` budget covers that case — do not read green stories as evidence the
+      gating is correct.
+  - Note: `useApp` now fires `Idle` itself, so the `Idle` element of `activateConvergedModules`
+    is redundant on the decorator path (idempotent, not a bug). Its real remaining job there is
+    the per-plugin start events; simplify when fixing the race.
 - [x] Delete `OWN_PLUGIN_SPECIFIER` / `resolveOwnPlugin` — zero production users (one synthetic
       test, one comment); removed from the public `ActivationEvent` surface
 - [ ] **Collapse `ActivationSpec` to one mode (own PR, user-directed 2026-08-03).** Dependency
@@ -447,6 +457,16 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
   - Unlocks the namespace fix: once the scheduler stops special-casing `Startup`, `Startup` and
     `pluginStart` move from `core/activation-event.ts` to `common/activation-events.ts` and the
     duplicate `PluginStart` wrapper is deleted.
+  - Fold in: **collapse `requires` defaulting to one site.** It currently happens three times —
+    `capability.ts:549` (`lazyModule`), `:578` (`inlineModule`), and again in
+    `normalizeActivation`, because the value re-enters through `ModuleEntry` where it is optional.
+    Delete the two upstream ones, not the normalizer: `addModule` also accepts raw `ModuleEntry`
+    literals that nothing upstream touches, so `resolveModule` is the only funnel every module
+    passes through. Payoff beyond the dedup — both upstream sites carry an `as Requires`
+    "Correlation cast" that exists solely to make premature defaulting fit the generic, so the
+    casts go with them. Check first: `plugin.test.ts:237`/`:252` assert `requires` on the
+    unresolved module (move to `activation.requires`), and whether `moduleMaker`
+    (`capability.ts:637`) collapses too.
 
 ## Checkpoint 2026-08-01 (per-plugin start events landed)
 

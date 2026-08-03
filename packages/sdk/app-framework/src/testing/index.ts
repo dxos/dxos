@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './converge';
+export * from './demand-gated';
 export * from './harness';
 export * from './operationCapture';
 export * from './service';
