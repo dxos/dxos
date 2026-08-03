@@ -187,6 +187,50 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
   }
 };
 
+/**
+ * Origins permitted to assert the `composer.space` relying party via WebAuthn Related Origin
+ * Requests.
+ *
+ * Composer registers passkeys with `rp: { id: location.hostname }` (plugin-client
+ * `create-passkey.ts`), so production credentials are permanently scoped to the `composer.space`
+ * relying party. WebAuthn otherwise only lets a page assert an RP ID that is a registrable-domain
+ * suffix of its own origin, which would confine every ceremony to `*.composer.space`. Listing an
+ * origin here is what lets the MCP passkey ceremony — served from the `hub-service` worker on
+ * `auth.dxos.org` — reach those existing credentials without re-registration.
+ *
+ * `composer.space` itself is deliberately absent: same-origin assertions are always permitted.
+ *
+ * Clients are only required to support 5 unique eTLD+1 labels, so entries are not free — but every
+ * `*.composer.space` origin shares one label, and `dxos` covers `auth.dxos.org`.
+ *
+ * https://w3c.github.io/webauthn/#sctn-related-origins
+ */
+const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.org'];
+
+/**
+ * Handle /.well-known/webauthn — the Related Origin Requests manifest.
+ *
+ * The response must be `application/json`; browsers reject the manifest on any other content type,
+ * which is why this is a Worker route rather than a static asset (an extensionless asset is served
+ * as `application/octet-stream`) and why it is listed in `run_worker_first` (the SPA fallback would
+ * otherwise answer with index.html).
+ */
+const handleWebAuthnWellKnown = (request: Request): Response => {
+  if (request.method !== 'GET' && request.method !== 'HEAD') {
+    // RFC 9110 §15.5.6 requires a 405 to advertise the methods the resource does support.
+    return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+  }
+
+  const body = JSON.stringify({ origins: WEBAUTHN_RELATED_ORIGINS });
+  return new Response(request.method === 'HEAD' ? null : body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, max-age=300',
+    },
+  });
+};
+
 const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
@@ -285,6 +329,11 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
 const handler: ExportedHandler<Env> = {
   fetch: async (request, env, _context) => {
     const url = new URL(request.url);
+
+    // WebAuthn Related Origin Requests manifest (must precede the SPA fallback).
+    if (url.pathname === '/.well-known/webauthn') {
+      return handleWebAuthnWellKnown(request);
+    }
 
     // API routes.
     if (url.pathname === '/api/feedback-logs') {
