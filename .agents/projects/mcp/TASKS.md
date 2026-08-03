@@ -50,6 +50,8 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 
 ## Milestone 5 — passkey auth + space management (user-directed 2026-08-03)
 
+- [x] #12443 MERGED 2026-08-03 05:06Z (squash 71aa2a68): plugin-projects workerd entry + `ProjectOperationHandlerSet` export, task set in `scaffoldProject`, plugin-space worker-safe imports. Unblocks edge#789 once plugin-projects publishes
+
 Spec: `edge:packages/services/mcp-space-service/DESIGN.md` §4.2–4.6 (audit, hub, passkey design,
 space session, open questions) and §9 (milestones M6–M9).
 
@@ -63,17 +65,33 @@ space session, open questions) and §9 (milestones M6–M9).
       (`hub-protocol/src/middleware.ts`, with `allowEphemeralIdentity` for invitation bootstrap)
 - [x] DESIGN.md extended: §4.1 (Composer signed-challenge) marked SUPERSEDED — booting Composer
       to approve a connection is too slow; identity moves to a hub-hosted server-side endpoint
-- [ ] M6 passkey auth from Claude: hub route + account credentials, MCP `/authorize` delegation +
-      `/authorize/callback`, `DX_AUTH_BASE_URL` config. DECIDED: RP ID `auth.dxos.org`
-      (localhost in dev); build on existing Account tables; hosted inside hub-service; e2e via CDP
-      virtual authenticator **plus one manual Touch ID pass** before the milestone closes
+- [x] ANSWERED by Josiah on edge#789 (2026-08-03) — two of the earlier decisions are SUPERSEDED:
+      (1) NO new storage: account-grade credentials are HALO credentials held by the **agents
+      service**; do not extend `Account`, revive `Passkey`, or touch the hub schema. Auth composes
+      `IdentityRecovery` (agents/prisma/schema.prisma:27) + `verifyWebauthnSignature`
+      (sdk/edge-crypto/src/webauthn.ts:24) + hub `lookupAccount`; `@simplewebauthn/server` comes
+      OUT of hub-service. (2) RP ID stays **composer.space** via Related Origin Requests —
+      `composer.space/.well-known/webauthn` (application/json) lists `https://auth.dxos.org`, so
+      existing passkeys work with NO re-registration. (3) My audit was WRONG that no server-side
+      passkey verification exists: `db-service/src/worker/api-handler/recovery.ts:199` does it
+      today (in EDGE, not the hub). (4) Passkeys were never being deprecated; the two `TODO`s mean
+      "delete these two models" — `Passkey` came from an old demo app and never shipped
+- [ ] M6 passkey auth from Claude (reshaped): harden `verifyWebauthnSignature` (it checks
+      challenge + signature but NOT `rpIdHash`, `clientDataJSON.origin`, UV flag or signature
+      counter — load-bearing once a second origin asserts); add registration with per-credential
+      labels + a revocation surface (`createRecoveryCredential` has neither); serve the
+      well-known file; MCP `/authorize` delegation + `/authorize/callback`; `DX_AUTH_BASE_URL`.
+      FIRST TASK = the dev-origin problem: local credentials are scoped to `localhost` by
+      `rp: { id: location.hostname }` (plugin-client/src/operations/create-passkey.ts:49), so the
+      well-known file on composer.space cannot reach them — more than a config change.
+      E2E via CDP virtual authenticator **plus one manual Touch ID pass** before M6 closes
 - [ ] M7 identity through `invokeOperation` (prerequisite for trusting assignee-bearing verbs)
 - [ ] M8 space management: sticky session (KV `session:<grantId>:currentSpace`) then CRUD; needs
       the `space.create`-in-workerd spike first
 - [ ] M9 Claude connector-directory listing (self-serve custom-connector URL is the interim path)
-- [ ] ASK JOSIAH: (1) RP ID migration — existing passkeys are bound to Composer's origin, so
-      either re-register at the auth origin or adopt WebAuthn Related Origin Requests;
-      (2) ownership of the vestigial `Identity`/`Passkey` tables vs the new account credentials
+- [x] ASK JOSIAH — ANSWERED (see above). Note: RORs support is not universal (clients need only
+      5 unique eTLD+1 labels; we are far from the limit) — check the device-support matrix and
+      keep a fallback before committing the UX
 - [ ] BLOCKER #12446 (dmaretskyi): `database.objectCreate` hangs after the write lands; blocks M8
       live acceptance, not M6
 
