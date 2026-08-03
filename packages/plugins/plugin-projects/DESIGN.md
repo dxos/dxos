@@ -91,7 +91,7 @@ end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01);
 
 | Type              | Package (today)           | Role                                                             | M5 target                                                                                                |
 | ----------------- | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSet: Ref<TaskSet>` / `plan`; stays in compute                      |
+| `Project`         | `@dxos/compute`           | Umbrella container: instructions, routines, artifacts, chats     | 0.3.0 adds `goals` / `outline` / `taskSet: Ref<TaskSet>` (single, optional); stays in compute            |
 | `Instructions`    | `@dxos/compute`           | Prompt text + skills + objects + commands                        |                                                                                                          |
 | `Routine`         | `@dxos/compute`           | Triggered automation (instructions or runnable operation)        |                                                                                                          |
 | `Skill`           | `@dxos/compute`           | Toolkit definition bound into sessions                           |                                                                                                          |
@@ -101,8 +101,8 @@ end-state per [`MILESTONE-5.md`](./MILESTONE-5.md) (Phase 0 decided 2026-08-01);
 | `Person`          | `@dxos/types`             | Contact record; target of `Actor.contact`                        |                                                                                                          |
 | `Milestone`       | — (does not exist)        | Phasing marker                                                   | DEFERRED; when added: ECHO type, `Task.milestone?: Ref<Milestone>`, owned by TaskSet                     |
 | `Outline`         | `plugin-outliner`         | `{name, content: Ref<Text>}` hierarchical checklist document     | **Moves to `@dxos/types`**; `project` field renamed `taskSet`                                            |
-| `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop | `Plan.Task` gains `taskRef?: Ref<Task>` (promotion / write-through)                                      |
-| `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `plan`                 |                                                                                                          |
+| `Plan`            | `@dxos/assistant-toolkit` | Conversation working set: embedded tasks driving supervisor loop | **REMOVED** — the working set is the chat's outline plus the tasks promoted from it                      |
+| `Chat`            | `@dxos/assistant-toolkit` | Conversation: feed + `instructions` ref + `outline`              | `plan` dropped; `outline` is the scratch checklist                                                       |
 | `Agent`           | `@dxos/assistant-toolkit` | Identity/preset owning no conversation state                     | Assignment target only via DID on `Actor`                                                                |
 | `Collection`      | `@dxos/echo`              | Ordered ref collection (used by `Project.artifacts`)             |                                                                                                          |
 | `Text`            | `@dxos/schema`            | CRDT text (content of `Outline`, documents)                      |                                                                                                          |
@@ -272,44 +272,42 @@ objects, so it is not the default.
 Creating artifacts of other types from a project chat (Outline, Sheet,
 Organization/Contact) builds on the same skill and is tracked separately.
 
-### The delegation strategy, and why `Plan` is not an artifact
+### The delegation strategy, and why the working set is conversation-scoped
 
-`Chat.plan` is the one piece of durable state that stays on the conversation
-rather than graduating to the project, because the supervisor loop is keyed on it.
+There is no `Plan` type. A conversation's working set is its **outline** (the
+markdown checklist, `Chat.outline` for a standalone chat or the project's outline
+for a project chat) plus the durable `Task` objects promoted out of it.
 
 The loop lives in `assistant-toolkit/src/supervisor/delegation-strategy.ts` and
 runs after every turn:
 
-1. **Reconcile.** Resolve the chat backed by this conversation feed, read its
-   plan, and select tasks that are `delegated === true`, `in-progress`, and not
-   already running. Only explicitly delegated tasks spawn sub-agents — a task
-   created by ordinary planning (`update-tasks`) stays in the plan and is not
-   double-delegated.
+1. **Reconcile.** Resolve the chat backed by this conversation feed, load its
+   outline and that outline's `TaskSet`, and select the set's children that are
+   durable `Task`s with `assignee.role === 'assistant'`, `status === 'in-progress'`,
+   and not already running. Ordinary checklist items are never spawned — being a
+   durable, agent-assigned task **is** the delegation signal, so promotion and
+   delegation are the same act.
 2. **Synthesize.** For each, build a minimal `Instructions` whose goal is the task
-   text, bound with the supervisor's own skills **minus the delegation skill** —
+   title, bound with the supervisor's own skills **minus the delegation skill** —
    otherwise a sub-agent could recursively delegate.
-3. **Spawn.** Invoke `RunInstructions` as its own process, recording the pid on
-   the task record so a resumed session can reattach rather than re-spawn.
-4. **Complete.** On exit, update the task's status, extract any artifact ids the
-   sub-agent reported, and post a templated message back into the conversation.
+3. **Spawn.** Invoke `RunInstructions` as its own process. The task ↔ process
+   mapping lives runtime-side (the supervisor's `activeIds`, keyed by task id);
+   **nothing is stamped on the durable task**, so no `agentPid` field exists.
+4. **Complete.** On exit, set the task's status (`done` / `failed`), **check off
+   the matching checklist line** in the outline markdown so the fluid form follows
+   the durable one, extract any artifact ids the sub-agent reported, and post a
+   templated message back into the conversation.
 
-That shape is why the plan is conversation-scoped. The dispatcher's unit of work
-is a feed: `reconcile` and `onComplete` both receive one and resolve the chat from
-it. `activeIds` — the set of running delegations — is likewise per-feed. A plan
-shared by every chat in a project would put concurrent supervisors on one task
-list, and nothing in the model arbitrates two agents claiming the same task or
-reconciles their status writes.
+That shape is why the working set is conversation-scoped. The dispatcher's unit of
+work is a feed: `reconcile` and `onComplete` both receive one and resolve the chat
+from it. `activeIds` is likewise per-feed. A task list shared by every chat in a
+project would put concurrent supervisors on one list, and nothing in the model
+arbitrates two agents claiming the same task or reconciles their status writes.
 
-So the plan is correctly the conversation's task ledger, and the artifact question
-is really about **lifecycle, not schema**: should a _completed_ plan graduate into
-the project's artifacts collection as a record of what was done? That is worth
-doing — it is exactly the kind of durable work product the collection is for — but
-it is a promotion step at completion, not a relocation of the live field. Open
-until the completion signal is defined (there is no "plan is finished" state
-today; tasks complete individually).
-
-Note the field is a plain `Ref` with no relation: unlike the agent linkage, the
-plan is owned by exactly one chat, so a field is the right encoding.
+The artifact question that remains is about **lifecycle, not schema**: should a
+completed body of work graduate into the project's artifacts collection as a record
+of what was done? Open until a completion signal is defined — there is no
+"work is finished" state today; tasks complete individually.
 
 ## Project chats
 
@@ -559,9 +557,9 @@ ECHO types for the harness client) to host it.
   `Routine` lives in `@dxos/compute`.
 - Project-scoped agent roster (relation or parenting), and artifact provenance
   (which routine or agent produced what).
-- Promote a completed `Plan` into the project's artifacts collection — needs a
-  plan-level completion signal, which does not exist today (see "The delegation
-  strategy, and why `Plan` is not an artifact").
+- Promote a completed body of work into the project's artifacts collection — needs a
+  completion signal above the individual task, which does not exist today (see "The
+  delegation strategy, and why the working set is conversation-scoped").
 - Remove plugin-sidekick, which this plugin obviates.
 
 Task-level follow-ups live in `./TASKS.md`.
