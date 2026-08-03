@@ -1,6 +1,6 @@
 # CRM Pipeline Operations — Tasks
 
-_Resume: exploration phase — review plugin-crm, plugin-projects, plugin-inbox, pipeline-email, stories-inbox._
+_Resume: Phase 3 implementation — remove instructions.ts, scaffold operations, tests._
 
 ## Phase 1: Review & audit
 
@@ -11,17 +11,17 @@ test coverage sits. Deliverable: AUDIT + spec in
 
 ### Tasks
 
-- [ ] **Review plugin-crm, plugin-projects, plugin-inbox, pipeline-email, stories-inbox**
-- [ ] **AUDIT all operations that interact with Mailbox messages and Person/Organization objects**
-- [ ] **Determine: fixture-driven test that extracts Person/Organization via the pipeline?**
-- [ ] **Determine: mechanism to trigger the pipeline from the Mailbox (cursor vs message Feed)?**
-- [ ] **Determine: mechanism to trigger an operation after message sync?**
+- [x] **Review plugin-crm, plugin-projects, plugin-inbox, pipeline-email, stories-inbox** — four parallel explorations, findings in the spec.
+- [x] **AUDIT all operations that interact with Mailbox messages and Person/Organization objects** — spec §2.
+- [x] **Determine: fixture-driven test that extracts Person/Organization via the pipeline?** — yes, via sync tests + analyze-mailbox; none CRM-owned (spec §3.1).
+- [x] **Determine: mechanism to trigger the pipeline from the Mailbox (cursor vs message Feed)?** — yes: `Cursor.makeFeed` + `runFactPipeline` precedent; three cursor mechanisms (spec §3.2).
+- [x] **Determine: mechanism to trigger an operation after message sync?** — no completion event by design; feed trigger is the mechanism (spec §3.3).
 
 ## Phase 2: Spec
 
-- [ ] **High-level spec for CRM-managed actions; map each to existing functionality**
-- [ ] **Design plugin-crm research routines/operations for Person/Organization**
-- [ ] **Consider: plugin-crm creates a Project (from template) with routines to run the pipeline on sync**
+- [x] **High-level spec for CRM-managed actions; map each to existing functionality** — spec §4 (15 actions).
+- [x] **Design plugin-crm research routines/operations for Person/Organization** — spec §5.2–5.3 (`ResearchPerson`/`ResearchOrganization`/`ProcessMailbox`).
+- [x] **Consider: plugin-crm creates a Project (from template) with routines to run the pipeline on sync** — yes: new `crmPipeline` template, runnable spec + feed trigger (spec §5.4).
 
 ## Phase 3: Implementation
 
