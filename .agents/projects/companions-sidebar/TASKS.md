@@ -145,6 +145,10 @@ approved, implementation awaiting go-ahead.
       id). Update url-handler serialize + parse and `serialize-deck-url` tests.
 - [ ] **Assistant provisioner** — provision companion chats for popped assistant
       clones in `deck.active` regardless of sidebar state.
+- [ ] **Attention linkage** — node-scoped sidebar panel headings become
+      attention-aware (accent when the anchor is attended; workspace/global stay
+      neutral); a clone's heading shows `related` when its source is attended
+      (may need the source→clone direction added to the attention tracker).
 - [ ] **Verify** — unit tests (URL round-trip incl. orphaned clone), browser
       pass: pop → pinned clone; attend elsewhere → clone unchanged, sidebar
       rebinds; attend clone → node group empty; crumb jump; dedup on re-pop.

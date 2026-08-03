@@ -63,6 +63,14 @@ companions render through `AppSurface.Article` with `companionTo` (as today);
 workspace/global-scoped through `AppSurface.deckCompanion(variant)`. Contract
 unification is a possible follow-up, not part of the experiment.
 
+**Attention linkage (ratified 2026-08-03).** A node-scoped panel's heading is
+attention-aware: sigil/title take the accent (via `useAttention` +
+`Pane.Title`-style treatment bound to the anchor) whenever the anchor node is
+attended, signalling "this panel is about the thing you're attending".
+Workspace/global panel headings keep the neutral treatment — they relate to
+nothing in particular. Today's plain `IconButton` heading is replaced by the
+attention-aware sigil.
+
 **Resizable sidebar.** The complementary sidebar gains a drag handle on the R1
 inner edge that overrides `--dx-complementary-sidebar-size`; width persists in
 `StoredDeckState` (new `complementarySidebarSize`), mirroring the plank-seam
@@ -138,6 +146,11 @@ pop time, so multiple clones with different sources can sit side by side
   companion has no companions), i.e. exactly what any node without companions
   shows; the existing selection fallback picks the first workspace/global
   panel. Zero special-casing.
+- **Attention linkage**: a clone's heading shows the `related` accent when its
+  _source_ node is attended (and ordinary attention when the clone itself is).
+  The attention tracker already computes companion→parent relatedness for
+  linked segments; the source→clone direction may need a small tracker or
+  consumer-side extension — attending `<src>` should light `<src>/~<variant>`.
 - **URL**: clone planks take over the `companion` chain key with a
   self-contained id that encodes source + variant, so a clone survives its
   source being closed and pairs keep meaning "contents of the deck, in order".
