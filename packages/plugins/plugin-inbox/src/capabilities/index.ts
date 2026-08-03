@@ -12,11 +12,9 @@ import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
-import { InboxCapabilities, InboxEvents } from '#types';
+import { InboxCapabilities } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: InboxEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const Connector = Capability.lazyModule(
@@ -35,12 +33,12 @@ export const SummarizeExtractor = Capability.inlineModule(
   () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
 );
 export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
+  // Graph start, not the inbox's own: a deep link is resolved before any inbox surface exists,
+  // so gating this on the surface that the resolution leads to would never resolve.
   requires: [ClientCapabilities.Client],
-  activatesOn: InboxEvents.Start,
+  activatesOn: AppCapability.GraphStart,
 });
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: InboxEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.role.article',
@@ -53,5 +51,4 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const InboxSettings = AppCapability.settings(() => import('./settings'), {
   provides: [InboxCapabilities.Settings],
-  activatesOn: InboxEvents.Start,
 });

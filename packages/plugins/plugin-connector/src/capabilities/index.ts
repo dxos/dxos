@@ -12,7 +12,6 @@ export * from './connector-coordinator';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [Connector],
-  activatesOn: ConnectorEvents.Start,
 });
 export const BuiltinConnectors = Capability.lazyModule(
   'BuiltinConnectors',
@@ -25,9 +24,7 @@ export const OAuthRedirect = Capability.lazyModule(
   { requires: [ConnectorCoordinator], provides: [], activatesOn: ConnectorEvents.Start },
   () => import('./oauth-redirect'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ConnectorEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.formInput'],
 });

@@ -4,11 +4,10 @@
 
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { PaymentsCapabilities, PaymentsEvents } from '#types';
+import { PaymentsCapabilities } from '#types';
 
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [PaymentsCapabilities.Settings],
-  activatesOn: PaymentsEvents.Start,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],

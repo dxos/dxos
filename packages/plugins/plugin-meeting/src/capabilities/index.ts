@@ -13,7 +13,6 @@ import { MeetingCapabilities, MeetingEvents } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
   requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
-  activatesOn: MeetingEvents.Start,
 });
 export const CallExtension = Capability.lazyModule(
   'CallExtension',
@@ -30,9 +29,7 @@ export const MeetingSettings = Capability.lazyModule(
   { provides: [MeetingCapabilities.Settings], activatesOn: MeetingEvents.Start },
   () => import('./settings'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: MeetingEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });

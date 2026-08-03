@@ -12,7 +12,9 @@ import { SimpleLayoutCapabilities } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const SpotlightDismiss = Capability.lazyModule(
   'SpotlightDismiss',
   {

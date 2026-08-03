@@ -6,7 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { IllustratorCapabilities, IllustratorEvents } from '@dxos/plugin-illustrator/types';
 
-import { TldrawCapabilities, TldrawEvents } from '#types';
+import { TldrawCapabilities } from '#types';
 
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
@@ -16,5 +16,4 @@ export const DrawingVariant = Capability.lazyModule(
 
 export const TldrawSettings = AppCapability.settings(() => import('./settings'), {
   provides: [TldrawCapabilities.Settings],
-  activatesOn: TldrawEvents.Start,
 });

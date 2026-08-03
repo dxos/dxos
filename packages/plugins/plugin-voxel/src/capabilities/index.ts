@@ -5,10 +5,8 @@
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { VoxelEvents } from '#types';
-
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: VoxelEvents.Start,
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
 });

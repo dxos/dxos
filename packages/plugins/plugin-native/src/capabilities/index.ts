@@ -13,7 +13,6 @@ import { NativeCapabilities, NativeEvents } from '#types';
 
 export const NativeSettings = AppCapability.settings(() => import('./settings'), {
   provides: [NativeCapabilities.Settings],
-  activatesOn: NativeEvents.Start,
 });
 export const Ollama = Capability.lazyModule(
   'Ollama',
@@ -25,7 +24,7 @@ export const Ollama = Capability.lazyModule(
   () => import('./ollama'),
 );
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: NativeEvents.Start,
+  roles: ['org.dxos.role.article'],
 });
 export const SpotlightListener = Capability.lazyModule(
   'SpotlightListener',

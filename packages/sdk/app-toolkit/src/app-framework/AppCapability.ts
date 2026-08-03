@@ -36,13 +36,32 @@ type Maker<C extends Capability$.AnyTag> = <
 // Lazy module makers (loader-based bodies).
 //
 
-/** Module maker contributing app graph builder extensions. */
+/**
+ * The graph plugin's start event, by key convention (see {@link AssistantStart} for why the key
+ * rather than an import).
+ */
+export const GraphStart = ActivationEvents.PluginStart('org.dxos.plugin.graph');
+
+/**
+ * Module maker contributing app-graph node builders. Gated by default on the GRAPH plugin's
+ * start rather than the contributing plugin's own: a builder is what puts a plugin's items in
+ * the navtree, so gating it on the plugin's own start (fired when its surface renders) is a
+ * deadlock — the item never appears, so it can never be opened. Graph builders belong to the
+ * graph feature's lifecycle. Declare `activatesOn` to override.
+ */
 export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Capability$.moduleMaker(
   'AppGraphBuilder',
   AppCapabilities.AppGraphBuilder,
+  { activatesOn: GraphStart },
 );
 
-/** Module maker contributing settings. */
+/**
+ * Module maker contributing settings. Ungated: settings VALUES are read app-wide through the
+ * strict `useAtomCapability` hook — including from components that mount with the shell at ready
+ * (the transcription driver's `ReactContext`, `DeckLayout`) and from `requires` on boot modules —
+ * so any post-ready gate trips the missing-capability invariant. The bodies are thin (an atom and
+ * a schema); the panel that EDITS them is a surface and stays deferred.
+ */
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,

@@ -19,9 +19,7 @@ export const Migrations = Capability.lazyModule(
   { provides: [ClientCapabilities.Migration] },
   () => import('./migrations'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: IllustratorEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });

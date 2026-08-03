@@ -24,12 +24,9 @@ export const AgentRunner = Capability.lazyModule(
   { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
   () => import('./agent-runner'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ReviewEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./history-graph'), {
   name: 'HistoryGraph',
-  activatesOn: ReviewEvents.Start,
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Markdown = Capability.lazyModule(
@@ -53,9 +50,7 @@ export const MarkdownBinding = Capability.lazyModule(
   },
   () => import('./markdown-binding'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ReviewEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
@@ -65,7 +60,6 @@ export const HistorySurface = AppCapability.surface(() => import('./history-surf
 });
 export const CommentsSettings = AppCapability.settings(() => import('./settings'), {
   provides: [CommentCapabilities.Settings],
-  activatesOn: ReviewEvents.Start,
 });
 export const CommentState = Capability.lazyModule(
   'CommentState',

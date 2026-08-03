@@ -9,8 +9,6 @@ import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 
-import { BlueskyEvents } from '../events';
-
 export const ChannelBackend = Capability.lazyModule(
   'BlueskyChannelBackend',
   { provides: [ThreadCapabilities.ChannelBackend], activatesOn: ThreadEvents.Start },
@@ -21,6 +19,4 @@ export const Connector = Capability.lazyModule(
   { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: BlueskyEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

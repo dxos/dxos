@@ -6,7 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { IllustratorCapabilities, IllustratorEvents } from '@dxos/plugin-illustrator/types';
 
-import { ExcalidrawCapabilities, ExcalidrawEvents } from '#types';
+import { ExcalidrawCapabilities } from '#types';
 
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',
@@ -16,7 +16,6 @@ export const DrawingVariant = Capability.lazyModule(
 
 export const ExcalidrawSettings = AppCapability.settings(() => import('./settings'), {
   provides: [ExcalidrawCapabilities.Settings],
-  activatesOn: ExcalidrawEvents.Start,
 });
 
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

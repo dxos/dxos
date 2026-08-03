@@ -9,11 +9,8 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { MagazineEvents } from '#types';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AttentionCapabilities.ViewState],
-  activatesOn: MagazineEvents.Start,
 });
 export const RoutineTemplates = Capability.lazyModule(
   'RoutineTemplates',
@@ -22,9 +19,7 @@ export const RoutineTemplates = Capability.lazyModule(
 );
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: MagazineEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.objectProperties'],
 });

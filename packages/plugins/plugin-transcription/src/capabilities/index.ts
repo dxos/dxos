@@ -12,9 +12,7 @@ import { TranscriptionCapabilities, TranscriptionEvents } from '#types';
 // RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
 // (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
 // any of them while the driver mounts trips the missing-capability invariant.
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: TranscriptionEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const EntityLookup = Capability.lazyModule(
   'EntityLookup',
   { activatesOn: TranscriptionEvents.Start, provides: [TranscriptionCapabilities.EntityLookup] },
@@ -40,9 +38,7 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const TextContent = AppCapability.textContent(() => import('./text-content'), {
   activatesOn: TranscriptionEvents.Start,
 });
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: TranscriptionEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });

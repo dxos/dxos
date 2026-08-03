@@ -5,9 +5,7 @@
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { BoardEvents } from '#types';
-
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: BoardEvents.Start,
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });

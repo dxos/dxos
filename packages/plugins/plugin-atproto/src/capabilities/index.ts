@@ -10,9 +10,7 @@ import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 
 import { AtprotoCapabilities, AtprotoEvents } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: AtprotoEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const AtprotoConnector = Capability.lazyModule(
   'AtprotoConnector',
   { provides: [Connector], activatesOn: ConnectorEvents.Start },

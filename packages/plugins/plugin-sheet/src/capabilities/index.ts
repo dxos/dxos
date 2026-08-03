@@ -36,9 +36,7 @@ export const Markdown = Capability.lazyModule(
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
   () => import('./markdown-extension'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: SheetEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
 });

@@ -10,7 +10,6 @@ import { CrxCapabilities, CrxEvents } from '#types';
 
 export const CrxSettings = AppCapability.settings(() => import('./settings'), {
   provides: [CrxCapabilities.Settings],
-  activatesOn: CrxEvents.Start,
 });
 export const InstallPageActions = Capability.lazyModule(
   'InstallPageActions',
@@ -21,14 +20,12 @@ export const InstallPageActions = Capability.lazyModule(
   },
   () => import('./install-page-actions'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: CrxEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const PageActionProvider = Capability.lazyModule(
   'PageActionProvider',
   { provides: [CrxCapabilities.PageAction], activatesOn: CrxEvents.Start },
   () => import('./page-action-provider'),
 );
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: CrxEvents.Start,
+  roles: ['org.dxos.role.article'],
 });

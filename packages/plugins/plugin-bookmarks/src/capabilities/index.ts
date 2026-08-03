@@ -12,9 +12,7 @@ export const CommentConfig = AppCapability.commentConfig(() => import('./comment
   activatesOn: BookmarksEvents.Start,
 });
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: BookmarksEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 
 export const PageActionProvider = Capability.lazyModule(
   'PageActionProvider',

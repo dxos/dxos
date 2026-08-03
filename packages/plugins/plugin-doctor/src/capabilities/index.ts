@@ -7,18 +7,14 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { DoctorCapabilities, DoctorEvents } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: DoctorEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const DiagnosticProviders = Capability.lazyModule(
   'DiagnosticProviders',
   { provides: [DoctorCapabilities.DiagnosticProvider], activatesOn: DoctorEvents.Start },
   () => import('./diagnostic-providers'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: DoctorEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: DoctorEvents.Start,
+  roles: ['org.dxos.role.deckCompanion.diagnostics'],
 });

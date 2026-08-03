@@ -8,11 +8,7 @@ import { ProjectCapabilities, ProjectsEvents } from '@dxos/plugin-projects/types
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 
-import { CrmEvents } from '#types';
-
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: CrmEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
@@ -28,6 +24,4 @@ export const ProjectTemplates = Capability.lazyModule(
 
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: CrmEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

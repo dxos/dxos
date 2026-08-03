@@ -42,13 +42,10 @@ export const Markdown = Capability.lazyModule(
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
   () => import('./markdown-extension'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: FileEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.formInput', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [FileCapabilities.SettingsAtom],
-  activatesOn: FileEvents.Start,
 });

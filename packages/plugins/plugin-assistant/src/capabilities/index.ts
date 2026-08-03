@@ -41,9 +41,7 @@ export const Connector = Capability.lazyModule(
   { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: AssistantEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
@@ -87,9 +85,7 @@ export const MarkdownExtension = Capability.lazyModule(
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
   () => import('./markdown-extension'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: AssistantEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.plugin.assistant.role.chatSurface',
@@ -104,7 +100,6 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [AssistantCapabilities.Settings],
-  activatesOn: AssistantEvents.Start,
 });
 export const AssistantState = Capability.lazyModule(
   'AssistantState',

@@ -8,13 +8,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { InboxCapabilities, InboxEvents } from '@dxos/plugin-inbox/types';
 import { ProjectCapabilities, ProjectsEvents } from '@dxos/plugin-projects/types';
 
-import { BrainCapabilities, BrainEvents } from '#types';
+import { BrainCapabilities } from '#types';
 
 export * from './fact-store';
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: BrainEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const FactStore = Capability.lazyModule(
   'FactStore',
@@ -22,11 +20,10 @@ export const FactStore = Capability.lazyModule(
   () => import('./fact-store'),
 );
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: BrainEvents.Start,
+  roles: ['org.dxos.plugin.brain.surface.facts'],
 });
 export const Settings = AppCapability.settings(() => import('./settings'), {
   provides: [BrainCapabilities.Settings],
-  activatesOn: BrainEvents.Start,
 });
 export const MailboxAction = Capability.lazyModule(
   'MailboxAction',

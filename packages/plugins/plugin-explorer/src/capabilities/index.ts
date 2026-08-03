@@ -5,12 +5,8 @@
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ExplorerEvents } from '#types';
-
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ExplorerEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: ExplorerEvents.Start,
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });

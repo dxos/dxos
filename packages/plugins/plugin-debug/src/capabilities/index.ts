@@ -9,9 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { DebugCapabilities, DebugEvents, type DebugPluginOptions } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: DebugEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.plugin.debug.surface.stats',
@@ -26,7 +24,6 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
 });
 export const DebugSettings = AppCapability.settings(() => import('./settings'), {
   provides: [DebugCapabilities.Settings],
-  activatesOn: DebugEvents.Start,
 });
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',

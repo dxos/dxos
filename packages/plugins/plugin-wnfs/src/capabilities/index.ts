@@ -6,7 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { FileCapabilities, FileEvents } from '@dxos/plugin-file/types';
 
-import { WnfsCapabilities, WnfsEvents } from '#types';
+import { WnfsCapabilities } from '#types';
 
 export const BlobBackend = Capability.lazyModule(
   'BlobBackend',
@@ -22,8 +22,10 @@ export const Dependencies = Capability.lazyModule(
   'Dependencies',
   {
     requires: [ClientCapabilities.Client],
+    // The file plugin's start, not wnfs's own: wnfs contributes no surface, so nothing would
+    // ever fire its own start — and these are exactly the requires of the blob backend below.
     provides: [WnfsCapabilities.Blockstore, WnfsCapabilities.Instances],
-    activatesOn: WnfsEvents.Start,
+    activatesOn: FileEvents.Start,
   },
   () => import('./dependencies'),
 );

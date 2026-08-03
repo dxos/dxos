@@ -8,9 +8,7 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { ScriptCapabilities, ScriptEvents } from '#types';
 
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  activatesOn: ScriptEvents.Start,
-});
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const Compiler = Capability.lazyModule(
@@ -22,13 +20,10 @@ export const Compiler = Capability.lazyModule(
   },
   () => import('./compiler'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: ScriptEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  activatesOn: ScriptEvents.Start,
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
 });
 export const ScriptSettings = AppCapability.settings(() => import('./settings'), {
   provides: [ScriptCapabilities.Settings],
-  activatesOn: ScriptEvents.Start,
 });

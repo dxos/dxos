@@ -15,6 +15,8 @@ import * as Scope from 'effect/Scope';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import { Capabilities } from '../../common';
+import * as ActivationEvent from '../activation-event';
 import * as Capability from '../capability';
 import * as CapabilityManager from '../capability-manager';
 import { CapabilityNotFoundError, ProvidesMismatchError } from '../errors';
@@ -282,6 +284,35 @@ export class ModuleLoader {
    * result against the declared provides, and expand it to registry entries. Instrumented
    * with a span, a slow-activation warning, and a devtools track entry.
    */
+  /**
+   * A surface rendering is the demand signal for its own plugin: the feature is now in use, so
+   * the contributions other plugins target at it (editor extensions, variants, integrations)
+   * should load. Firing here rather than from a blanket post-startup sweep is what keeps an
+   * unvisited feature's code off the wire entirely.
+   *
+   * Forked, not awaited: contributions are read through the reactive capability atoms, so a
+   * consumer re-renders when they land, and awaiting here would deadlock a surface behind
+   * modules that may themselves resolve surfaces. Re-firing an already-fired event is a no-op
+   * in the manager, so no dedup is needed at this call site.
+   */
+  #fireOwnStartForSurface(
+    capabilities: readonly Capability.Any[],
+    pluginId: string | undefined,
+  ): Effect.Effect<void, never, Plugin.Service> {
+    if (!pluginId || !capabilities.some((capability) => capability.interface === Capabilities.ReactSurface)) {
+      return Effect.void;
+    }
+    return Effect.gen(function* () {
+      const manager = yield* Plugin.Service;
+      yield* manager.activate(ActivationEvent.pluginStart(pluginId)).pipe(
+        Effect.catchAll((error) =>
+          Effect.sync(() => log.warn('plugin start event failed', { pluginId, error: String(error) })),
+        ),
+        Effect.forkDaemon,
+      );
+    });
+  }
+
   #runActivation(
     module: Plugin.PluginModule,
     parentEvent: string,
@@ -327,13 +358,16 @@ export class ModuleLoader {
       performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
       performance.measure(`module-run:${module.id}`, `module:${module.id}:run`, `module:${module.id}:end`);
       yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activated', module: module.id });
+
       log('loaded module', {
         module: module.id,
         parentEvent,
         elapsed,
         failed: false,
       });
-      return CapabilityManager.expandContributions(normalized);
+      const expanded = CapabilityManager.expandContributions(normalized);
+      yield* this.#fireOwnStartForSurface(expanded, pluginId);
+      return expanded;
     }).pipe(
       Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
       Effect.withSpan('ModuleLoader.load'),

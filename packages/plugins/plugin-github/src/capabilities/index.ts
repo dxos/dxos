@@ -7,13 +7,9 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 
-import { GitHubEvents } from '#types';
-
 export const Connector = Capability.lazyModule(
   'GitHubConnector',
   { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: GitHubEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

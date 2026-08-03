@@ -10,13 +10,10 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { MapCapabilities, MapEvents } from '@dxos/plugin-map/types';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { TripEvents } from '#types';
-
 import skillDefinition from './skill-definition';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AttentionCapabilities.ViewState],
-  activatesOn: TripEvents.Start,
 });
 export const SkillDefinition = Capability.inlineModule(
   'SkillDefinition',
@@ -29,13 +26,10 @@ export const MarkerProvider = Capability.lazyModule(
   { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start },
   () => import('./marker-provider'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
-  activatesOn: TripEvents.Start,
-});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.section'],
 });
 export const Settings = AppCapability.settings(() => import('./settings'), {
   requires: [Capabilities.AtomRegistry],
-  activatesOn: TripEvents.Start,
 });
