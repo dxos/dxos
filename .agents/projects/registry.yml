@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: companions-sidebar
+    status: active
+    user: josiah
+    host: remote
+    created: 2026-08-03
+    summary: Experimental refactor — merge plank + deck companions into one companion concept (scope node|workspace|global) rendered in a resizable complementary sidebar; the branch is the experiment, landing it is the accept decision. Supersedes the per-plank companion model from PR #12424 (deck project) — coordinate before landing.
+    tasks: .agents/projects/companions-sidebar/TASKS.md
+    design: .agents/projects/companions-sidebar/DESIGN.md
+    prs: []
+    resume: 'Design ratified (tabs kept, node/workspace/global scopes, attention fallback = first available, one-panel trade-off accepted). Next: Phase 1 — resizable complementary sidebar (drag handle + persisted complementarySidebarSize).'
   - name: lenses
     status: active
     user: josiah
