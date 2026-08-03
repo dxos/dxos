@@ -10,7 +10,14 @@ import path from 'node:path';
 import { log } from '@dxos/log';
 
 import { INITIAL_URL } from './app-manager';
-import { appendBenchmarkRow, collectStartupReport, trackNetwork, waitForReady, writeReport } from './harness-helpers';
+import {
+  appendBenchmarkRow,
+  appendRunSample,
+  collectStartupReport,
+  trackNetwork,
+  waitForReady,
+  writeReport,
+} from './harness-helpers';
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
 // `process.exit` at spec-collection time — keeps the playwright report and
@@ -168,6 +175,7 @@ test.describe.serial('Startup timing harness', () => {
       report.fetchedUrls = counts.urls;
 
       writeReport(`startup-warm-cold-${browserName}.json`, report);
+      appendRunSample('warm-cold', report);
       appendBenchmarkRow(report);
       log.info('warm-cold start report', {
         browser: browserName,

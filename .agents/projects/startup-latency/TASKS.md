@@ -279,9 +279,24 @@ numbers, lever comparisons, and CI thresholds key on warm-cold; its
       first-run: identity + home actionable)
 - [ ] RUM prerequisite: extend observability `composer.startup` with the waterfall marks +
       web-vitals (LCP/INP/CLS) so field p75 exists before claiming wins
-- [ ] CI budget gate = our harness (not Lighthouse): thresholds on boot bytes, activations,
-      lab TBT, definition-closure budget (audit-opdefs); alert thresholds below pass line;
-      p75-style reporting over N runs on a fixed runner
+- [x] CI budget gate = our harness (not Lighthouse). Landed as two tasks, split by what a
+      shared runner can actually decide: - `composer-app:check-boot-budget` — static. Entry + modulepreload closure of the built
+      index.html; 30 entries / 4.75 MB (today 20 / 4.44 MB). Bytes catch leaks (margin is
+      under the smallest leak class we have hit); count catches the chunk partition ceasing
+      to apply, and is NOT a bytes proxy — buckets follow the SCC condensation, and the count
+      moved 13 -> 20 on a legitimate change. - `composer-app:check-startup-budget` — runtime. Median modules-at-ready over 5 warm-cold
+      repeats, budget 300 (baseline 283). The only metric whose signal clears in-container
+      noise: same-commit repeats vary <=10 while the activation regression this branch shipped
+      and reverted moved it +17..+27. It is also the only one that can see that class at all —
+      moving a module onto the startup pass changes nothing statically.
+- [ ] **TODO (blocked: no fixed runner).** Gate on `profilerTotal` / `navToReady` / lab TBT.
+      Today they are recorded per run and trended, never failed on: repeats of one unchanged
+      commit spanned 3828-7330 ms profilerTotal (1.9x) and 6851-10576 ms navToReady purely from
+      container contention, while the same branch measured +/-1.7% on real hardware — the noise
+      is environmental, so a shared runner can never gate them. Needs a self-hosted or
+      consistently-sized runner first; revisit the modules-at-ready threshold at the same time.
+      Also still open from the original item: definition-closure budget (audit-opdefs), alert
+      thresholds below the pass line, and p75-style reporting over N runs.
 
 Activation optimization (each lever measured individually via harness + TBT):
 

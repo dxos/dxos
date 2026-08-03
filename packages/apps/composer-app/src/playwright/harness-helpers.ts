@@ -4,7 +4,7 @@
 
 import { type Page } from '@playwright/test';
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -108,6 +108,27 @@ const REPORT_DIR = path.join(here, '..', '..', '..', '..', '..', 'test-results',
 export const writeReport = (name: string, payload: unknown): void => {
   mkdirSync(REPORT_DIR, { recursive: true });
   writeFileSync(path.join(REPORT_DIR, name), `${JSON.stringify(payload, null, 2)}\n`);
+};
+
+/** Per-scenario sample log consumed by `scripts/check-startup-budget.mjs`. */
+export const runSamplePath = (scenario: string): string => path.join(REPORT_DIR, `startup-${scenario}.runs.jsonl`);
+
+/**
+ * Appends one run's headline numbers to a per-scenario JSONL log. Separate from
+ * {@link writeReport}, which keeps only the newest full report and so cannot express a sample
+ * set: `--repeat-each` runs would each overwrite the last. The budget check needs the set
+ * because a single startup sample decides nothing — repeats of one unchanged commit have spanned
+ * 3828–7330 ms of `profilerTotal` in-container.
+ */
+export const appendRunSample = (scenario: string, report: StartupReport): void => {
+  mkdirSync(REPORT_DIR, { recursive: true });
+  const sample = {
+    scenario,
+    modulesAtReady: report.profile.moduleCount,
+    profilerTotal: report.profilerTotal,
+    navigationToReady: report.navigationToReady,
+  };
+  appendFileSync(runSamplePath(scenario), `${JSON.stringify(sample)}\n`);
 };
 
 export const waitForReady = async (page: Page, timeout = 30_000): Promise<void> => {

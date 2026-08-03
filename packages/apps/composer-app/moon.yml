@@ -23,6 +23,21 @@ tasks:
     inputs:
       - scripts/check-boot-budget.mjs
       - out/composer/index.html
+  # Runtime budget on startup: repeats the warm-cold harness scenario and gates on the MEDIAN
+  # modules-at-ready. `--repeat-each` reuses one preview server across the runs, and the samples
+  # accumulate via `appendRunSample`; the stale log is cleared first so a rerun cannot inherit a
+  # previous commit's numbers. Not cacheable — the point is to measure this commit.
+  check-startup-budget:
+    script: >-
+      rm -f ../../../test-results/composer-app/startup-warm-cold.runs.jsonl &&
+      pnpm exec playwright test --config=src/playwright/playwright.config.ts --grep "warm-cold" --repeat-each=5 &&
+      node scripts/check-startup-budget.mjs
+    env:
+      DX_PWA: 'false'
+    options:
+      cache: false
+    deps:
+      - bundle
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
   # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
   # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a

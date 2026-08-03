@@ -3,7 +3,9 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { format as formatDate } from 'date-fns';
+// Subpath, not the `date-fns` barrel: this component is boot-reachable via
+// `Input` -> `SegmentedInput` -> `DatePicker`, and the barrel drags the whole library with it.
+import { format as formatDate } from 'date-fns/format';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
