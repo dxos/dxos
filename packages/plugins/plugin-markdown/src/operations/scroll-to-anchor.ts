@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { log } from '@dxos/log';
 import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor/headless';
 
 import { MarkdownCapabilities, MarkdownOperation } from '../types';
@@ -17,8 +18,14 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = 
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, cursor, id }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
-      const entry = editorViews.get(subject);
+      // Views register under `attendableId ?? documentId`, and callers hold one or the other — a
+      // companion knows its context plank's attendable id, the graph knows the object URI. Accept
+      // either so a caller holding the id the view did not register under still reaches it.
+      const entry = editorViews.get(subject) ?? editorViews.getByDocumentId(subject);
       if (!entry) {
+        // Loud, because the failure is otherwise invisible: the comment stays highlighted on whichever
+        // thread was current while the app-side selection has already moved on.
+        log.warn('no editor view for anchor target', { subject });
         return;
       }
 

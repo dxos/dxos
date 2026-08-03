@@ -236,13 +236,15 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         // Scroll plank into view (deck handler).
         void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
 
-        // Scroll within content to anchor (comment config per typename).
-        if (anchor.anchor && attendableId) {
+        // Scroll within content to anchor (comment config per typename). Fall back to the object URI:
+        // this is what tells the editor which thread is current, so skipping it when the companion has
+        // no attendable id leaves the previous comment highlighted while the app selection moves on.
+        if (anchor.anchor) {
           const typename = Obj.getTypename(subject);
           const commentConfig = commentConfigs.find(({ id }) => id === typename);
           if (commentConfig?.scrollToAnchor) {
             void invokePromise(commentConfig.scrollToAnchor, {
-              subject: attendableId,
+              subject: attendableId ?? subjectId,
               cursor: anchor.anchor,
               id: threadId,
             });
@@ -250,7 +252,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         }
       }
     },
-    [state.current, invokePromise, registry, stateAtom, attendableId, subject, commentConfigs],
+    [state.current, invokePromise, registry, stateAtom, attendableId, subjectId, subject, commentConfigs],
   );
 
   const handleComment = useCallback(
