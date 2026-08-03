@@ -73,9 +73,10 @@ export class FeedStore {
       migrations: MIGRATIONS,
       baseline: { throughId: 1, when: SqlMigrator.tableExists('feeds') },
     }).pipe(
-      // A MigrationError means the bundled manifest is malformed — a defect, not something a
-      // caller can recover from — so it dies rather than widening this signature beyond SqlError.
-      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      // A SqlMigrationError means the bundled manifest is malformed or contradicts the database's
+      // history — a defect, not something a caller can recover from — so it dies rather than
+      // widening this signature beyond SqlError.
+      Effect.catchTag('SqlMigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
       Effect.withSpan('FeedStore.migrate'),
     ),

@@ -6,14 +6,15 @@ import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { SqlMigrations, SqlMigrator } from '@dxos/sql-sqlite';
+import { SqlMigrations, SqlMigrator, SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 import snapshot from './migrations/snapshot.sql?raw';
 import { LEGACY_DDL, describeSchema, migrate } from './testing/schema-harness';
 
-const TestLayer = SqliteClient.layer({ filename: ':memory:' });
+const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 
 /** Migrations stamped onto a database that predates migration tracking. */
 const BASELINED_THROUGH = 1;
@@ -172,6 +173,61 @@ describe('feed migration history', () => {
       expect(executed).toEqual([[later.id, later.name]]);
       const columns = yield* sql.unsafe<{ name: string }>('PRAGMA table_info("cursor_tokens")');
       expect(columns.map((column) => column.name)).toContain('probe');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  // The @effect/sql migrator this replaced advanced a high-water mark, so a migration numbered
+  // below a recorded id was skipped forever. Pending work is now a set difference.
+  it.effect('applies a migration inserted below the highest recorded id', () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const high = { id: NEXT_FREE_ID + 5, name: 'high', sql: 'ALTER TABLE cursor_tokens ADD COLUMN high TEXT' };
+      yield* SqlMigrator.run({ table: MIGRATIONS_TABLE, migrations: [...MIGRATIONS, high] });
+
+      const infill = { id: NEXT_FREE_ID, name: 'infill', sql: 'ALTER TABLE cursor_tokens ADD COLUMN infill TEXT' };
+      const executed = yield* SqlMigrator.run({
+        table: MIGRATIONS_TABLE,
+        migrations: [...MIGRATIONS, infill, high],
+      });
+
+      expect(executed).toEqual([[infill.id, infill.name]]);
+      const columns = yield* sql.unsafe<{ name: string }>('PRAGMA table_info("cursor_tokens")');
+      expect(columns.map((column) => column.name)).toContain('infill');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('reports a migration edited after it was applied', () =>
+    Effect.gen(function* () {
+      yield* migrate();
+
+      const edited = MIGRATIONS.map((migration) =>
+        migration.id === 1 ? { ...migration, sql: `${migration.sql}\n-- edited after the fact` } : migration,
+      );
+      const error = yield* Effect.flip(SqlMigrator.run({ table: MIGRATIONS_TABLE, migrations: edited }));
+
+      expect(error._tag === 'SqlMigrationError' && error.reason).toEqual('checksum-mismatch');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('accepts an unchanged manifest on every subsequent run', () =>
+    Effect.gen(function* () {
+      yield* migrate();
+      // Guards against a checksum that is not stable across runs, which would make every open fail.
+      expect(yield* migrate()).toEqual([]);
+      expect(yield* migrate()).toEqual([]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('rejects a manifest with duplicate ids', () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        SqlMigrator.run({
+          table: MIGRATIONS_TABLE,
+          migrations: [...MIGRATIONS, { id: 1, name: 'clash', sql: 'SELECT 1' }],
+        }),
+      );
+
+      expect(error._tag === 'SqlMigrationError' && error.reason).toEqual('duplicate-id');
     }).pipe(Effect.provide(TestLayer)),
   );
 

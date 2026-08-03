@@ -6,7 +6,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
-import { SqlMigrator } from '@dxos/sql-sqlite';
+import { SqlMigrator, type SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations';
 
@@ -70,14 +70,14 @@ type ForeignKey = { from: string; table: string; to: string; on_delete: string; 
 export const migrate = (): Effect.Effect<
   ReadonlyArray<readonly [id: number, name: string]>,
   SqlError.SqlError,
-  SqlClient.SqlClient
+  SqlClient.SqlClient | SqlTransaction.SqlTransaction
 > =>
   SqlMigrator.run({
     table: MIGRATIONS_TABLE,
     migrations: MIGRATIONS,
     baseline: { throughId: 1, when: SqlMigrator.tableExists('feeds') },
     // Mirrors `FeedStore.migrate`, so the tests exercise the same error handling as production.
-  }).pipe(Effect.catchTag('MigrationError', (error) => Effect.die(error)));
+  }).pipe(Effect.catchTag('SqlMigrationError', (error) => Effect.die(error)));
 
 /**
  * Reads the physical shape of every user table, so two databases can be compared by what SQLite
