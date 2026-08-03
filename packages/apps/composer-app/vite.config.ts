@@ -44,6 +44,23 @@ const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(file
  */
 const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
+/**
+ * Glob matching the entry of every plugin the minimal registry can reach, for optimize-deps
+ * scanning. Derived from the registry sources so adding a plugin to `plugin-defs.minimal.tsx`
+ * needs no edit here; a specifier scan is enough because a missed plugin costs a
+ * "discovered new dependencies" reload rather than a wrong build.
+ */
+const minimalPluginEntries = () => {
+  const names = new Set<string>();
+  for (const file of ['src/plugin-defs.minimal.tsx', 'src/plugin-defs.core.tsx']) {
+    const source = readFileSync(path.join(dirname, file), 'utf8');
+    for (const [, name] of source.matchAll(/@dxos\/plugin-([a-z0-9-]+)/g)) {
+      names.add(name);
+    }
+  }
+  return path.resolve(rootDir, `packages/plugins/plugin-{${[...names].sort().join(',')}}/src/index.{ts,tsx}`);
+};
+
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
@@ -297,14 +314,10 @@ export default defineConfig((env) => ({
       './devtools.html',
       './reset.html',
       './recovery.html',
-      // Under DX_PLUGIN_SET=minimal only the plugins registered in
-      // plugin-defs.minimal.tsx are scanned — keep the brace list in sync.
-      isMinimalPluginSet
-        ? path.resolve(
-            rootDir,
-            'packages/plugins/plugin-{assistant,attention,client,connector,debug,deck,devtools,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
-          )
-        : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+      // Under DX_PLUGIN_SET=minimal, scan only the plugins the minimal registry can reach,
+      // read from the registry sources themselves — the hand-maintained list this replaces
+      // had drifted from them (missing `tasks`/`progress`, still naming a removed `outliner`).
+      isMinimalPluginSet ? minimalPluginEntries() : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
   },
   resolve: {
