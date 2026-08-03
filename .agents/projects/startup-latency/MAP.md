@@ -1,6 +1,8 @@
 # Phase 1 map — measured startup structure and per-module classification (2026-07-31)
 
-The [DESIGN.md](./DESIGN.md) Phase 1 deliverable. Companion artifacts: [`map.json`](./map.json)
+The [DESIGN.md](./DESIGN.md) Phase 1 deliverable. Companion artifact: [`map.json`](./map.json)
+(the generating pipeline — `scripts/analyze-startup.mjs` and the `DX_CHUNK_STATS` vite plugin —
+was removed once the map was complete; recover it from git history if it needs regenerating)
 (all 456 modules classified, with per-module timings and byte attribution),
 [`CONSUMERS.md`](./CONSUMERS.md) (consumer-kind audit), [`SUBSTRATE.md`](./SUBSTRATE.md)
 (demand-signal substrate answers). Supersedes [`AUDIT-modules.md`](./AUDIT-modules.md) (2026-07-19)
@@ -15,7 +17,7 @@ runs for timing, 2 further cold runs for complete per-URL byte accounting. New i
 plugin-definition chunks, full-population export (was top-10), static `getModules()` inventory in
 the report, node-side per-URL byte accounting (the browser resource-timing buffer silently caps at
 250 entries — do not use it for byte totals), and a `DX_CHUNK_STATS=1` build emitting per-chunk ×
-per-package byte attribution joined by `scripts/analyze-startup.mjs`.
+per-package byte attribution joined by the (since-removed) `scripts/analyze-startup.mjs`.
 
 **Environment caveat.** Runs are from a 4-vCPU container. With ~395 modules activating
 concurrently, per-module durations sit on a contention plateau (~3.2 s each in round 1
@@ -93,7 +95,7 @@ its shape.
 
 ## Byte attribution (cold startup fetches 38.1 MB, 1,937 URLs)
 
-Top offenders, each traced to its importer chain (`analyze-startup.mjs` + chunk-stats):
+Top offenders, each traced to its importer chain:
 
 | package                                | startup bytes | how it gets loaded                                                                                                                                |
 | -------------------------------------- | ------------: | ------------------------------------------------------------------------------------------------------------------------------------------------- |

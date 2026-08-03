@@ -560,58 +560,6 @@ export default defineConfig((env) => ({
       },
     }),
 
-    // Byte attribution for the startup-latency map: which chunk carries which package's bytes,
-    // and which module facade owns the chunk. `scripts/analyze-startup.mjs` joins this against
-    // the harness report's fetched-resource list to attribute startup bytes per plugin.
-    isTrue(process.env.DX_CHUNK_STATS) && {
-      name: 'chunk-stats',
-      generateBundle(_options: unknown, bundle: Record<string, any>) {
-        const packageOf = (id: string): string => {
-          const nodeModules = id.lastIndexOf('node_modules/');
-          if (nodeModules !== -1) {
-            const rest = id.slice(nodeModules + 'node_modules/'.length);
-            const [scope, name] = rest.split('/');
-            return scope.startsWith('@') ? `${scope}/${name}` : scope;
-          }
-          const pkg = id.match(/packages\/[^/]+\/([^/]+)\/src\//);
-          if (pkg) {
-            return `@dxos/${pkg[1]}`;
-          }
-          return id.includes('composer-app') ? 'composer-app' : 'other';
-        };
-        const chunks = Object.values(bundle)
-          .filter((output: any) => output.type === 'chunk')
-          .map((chunk: any) => {
-            const byPackage: Record<string, number> = {};
-            for (const [id, mod] of Object.entries(chunk.modules ?? {})) {
-              const pkg = packageOf(id);
-              byPackage[pkg] = (byPackage[pkg] ?? 0) + ((mod as any).renderedLength ?? 0);
-            }
-            return {
-              fileName: chunk.fileName,
-              bytes: chunk.code?.length ?? 0,
-              isEntry: chunk.isEntry ?? false,
-              isDynamicEntry: chunk.isDynamicEntry ?? false,
-              facadeModuleId: chunk.facadeModuleId ?? null,
-              imports: chunk.imports ?? [],
-              dynamicImports: chunk.dynamicImports ?? [],
-              byPackage,
-            };
-          });
-        const assets = Object.values(bundle)
-          .filter((output: any) => output.type === 'asset')
-          .map((asset: any) => ({
-            fileName: asset.fileName,
-            bytes: typeof asset.source === 'string' ? Buffer.byteLength(asset.source) : (asset.source?.byteLength ?? 0),
-          }));
-        const outDir = path.join(dirname, 'out');
-        if (!existsSync(outDir)) {
-          mkdirSync(outDir);
-        }
-        writeFileSync(path.join(outDir, 'chunk-stats.json'), JSON.stringify({ chunks, assets }, null, 2));
-      },
-    },
-
     isTrue(process.env.DX_STATS) && [
       visualizer({
         emitFile: true,
@@ -719,99 +667,13 @@ const bootPartition: Map<string, number> = (() => {
   }
 })();
 
-function bootGroupName(moduleId: string, ctx: any): string | null {
-  reportBootDivergence(ctx);
+function bootGroupName(moduleId: string): string | null {
   const id = toManifestId(moduleId);
   if (id === null) {
     return null;
   }
   const group = bootPartition.get(id);
   return group === undefined ? null : `boot-${group}`;
-}
-
-/** The page entry whose static closure defines the boot set. */
-const BOOT_ENTRY = path.resolve(dirname, 'src/main.tsx');
-
-// Opt-in (DX_BOOT_DIVERGENCE=1): the manifest exists only because the module graph reachable
-// at chunking time is PARSE-level, while the boot set is what survives treeshaking — walking
-// `importedIds` follows barrel re-exports that treeshaking deletes. Every such divergence is a
-// barrel import in boot-reachable code, and eliminating them (per-namespace subpath imports)
-// converges the two graphs; at zero divergence the partition can be computed in-process and
-// this manifest deleted. This report is the work-list and the readiness signal for that.
-let divergenceReported = false;
-
-function reportBootDivergence(ctx: any): void {
-  if (!isTrue(process.env.DX_BOOT_DIVERGENCE) || divergenceReported || bootPartition.size === 0) {
-    return;
-  }
-  divergenceReported = true;
-
-  const infoCache = new Map<string, any>();
-  const infoOf = (moduleId: string) => {
-    if (!infoCache.has(moduleId)) {
-      infoCache.set(moduleId, ctx.getModuleInfo(moduleId));
-    }
-    return infoCache.get(moduleId);
-  };
-  if (!infoOf(BOOT_ENTRY)) {
-    console.warn(`boot divergence: entry ${BOOT_ENTRY} not in the module graph.`);
-    return;
-  }
-
-  // Parse-level static closure of the entry, keeping parent links to attribute each leak.
-  const parent = new Map<string, string>();
-  const visited = new Set<string>([BOOT_ENTRY]);
-  const walk = [BOOT_ENTRY];
-  while (walk.length > 0) {
-    const from = walk.pop()!;
-    for (const dep of infoOf(from)?.importedIds ?? []) {
-      if (!visited.has(dep)) {
-        visited.add(dep);
-        parent.set(dep, from);
-        walk.push(dep);
-      }
-    }
-  }
-
-  const bytesByCulprit = new Map<string, { bytes: number; via: string; example: string }>();
-  let totalBytes = 0;
-  for (const moduleId of visited) {
-    const id = toManifestId(moduleId);
-    if (id === null || bootPartition.has(id)) {
-      continue;
-    }
-    // Walk back to the last module that is genuinely boot code — the manifest, plus app-own
-    // source, which is boot code that `toManifestId` excludes only because entry modules must
-    // not be captured into a group. Without the latter, every leak reached through app source
-    // walks all the way to the entry and attributes to nothing.
-    let node = moduleId;
-    let hop = parent.get(node);
-    while (hop) {
-      const hopId = toManifestId(hop);
-      if ((hopId !== null && bootPartition.has(hopId)) || hop.includes('/packages/apps/')) {
-        break;
-      }
-      node = hop;
-      hop = parent.get(hop);
-    }
-    const bytes = infoOf(moduleId)?.code?.length ?? 0;
-    totalBytes += bytes;
-    const relative = (id: string) => (id.startsWith(rootDir) ? id.slice(rootDir.length + 1) : id);
-    const key = hop ? `${relative(hop)} -> ${relative(node)}` : `(entry) -> ${relative(node)}`;
-    const entry = bytesByCulprit.get(key) ?? { bytes: 0, via: key, example: id };
-    entry.bytes += bytes;
-    bytesByCulprit.set(key, entry);
-  }
-
-  const ranked = [...bytesByCulprit.values()].sort((a, b) => b.bytes - a.bytes);
-  console.log(
-    `\nboot divergence: ${(totalBytes / 1024) | 0}KB of parse-reachable source is not in the boot set ` +
-      `(${ranked.length} leaking imports). Each is a barrel import in boot code:`,
-  );
-  for (const { bytes, via, example } of ranked.slice(0, 20)) {
-    console.log(`  ${String((bytes / 1024) | 0).padStart(6)}KB  ${via}\n            e.g. ${example}`);
-  }
-  console.log('');
 }
 
 /** Target rendered (pre-minify) bytes per boot chunk; ~1.5MB rendered ≈ 400-500KB minified. */
@@ -980,16 +842,7 @@ function bootManifestPlugin(): PluginOption {
 
       writeFileSync(BOOT_MANIFEST_PATH, JSON.stringify({ version: 2, partition }, null, 2) + '\n');
 
-      // Report genuine import cycles (SCCs with >1 module): the repo policy is no circular
-      // imports, so anything here that isn't a known-cyclic external (effect) is actionable.
-      const cycles = sccOrder
-        .filter((component) => component.length > 1)
-        .map((component) => component.map((moduleId) => toManifestId(moduleId)!).sort());
-      writeFileSync(path.join(dirname, 'boot-cycles.json'), JSON.stringify(cycles, null, 2) + '\n');
-      console.log(
-        `bootManifestPlugin: wrote ${rendered.size} boot modules in ${bucket + 1} buckets to ${BOOT_MANIFEST_PATH}; ` +
-          `${cycles.length} import cycles -> boot-cycles.json`,
-      );
+      console.log(`bootManifestPlugin: wrote ${rendered.size} boot modules in ${bucket + 1} buckets`);
     },
   };
 }
