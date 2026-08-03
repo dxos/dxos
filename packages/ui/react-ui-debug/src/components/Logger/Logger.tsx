@@ -393,8 +393,12 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                                 id={file}
                                 classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
                               >
-                                <Listbox.ItemLabel classNames='flex flex-col text-xs' title={file}>
-                                  {pkg && <div className='text-subdued'>{pkg}</div>}
+                                {/* One line so the row can honour the compact density; the package
+                                    and full path are carried in the tooltip instead of a second line. */}
+                                <Listbox.ItemLabel
+                                  classNames='truncate text-xs'
+                                  title={pkg ? `${pkg} · ${file}` : file}
+                                >
                                   {basename}
                                 </Listbox.ItemLabel>
                                 <Select.Root
