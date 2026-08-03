@@ -23,7 +23,7 @@
  */
 @import 'tailwindcss' source(none);
 
-/* @theme extensions; also exported as `@dxos/ui-theme/tokens.css` for stylesheets built outside this repo. */
+/* Theme extensions; also exported as tokens.css for stylesheets built outside this repo. */
 @import './tokens.css';
 
 /* @layer dx-base, dx-tokens */
@@ -129,13 +129,16 @@
  * Class-based dark mode.
  * The `.dark` class on an ancestor toggles `dark:` utilities.
  */
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
 /** Mobile */
 @custom-variant pointer-coarse (@media (pointer: coarse));
+
 /** Web */
 @custom-variant pointer-fine (@media (pointer: fine));
+
 /** Supports mouse/trackpad (Web) */
 @custom-variant hover-hover (@media (hover: hover));
+
 /** Active navigation */
 @custom-variant is-current (&[aria-current]:not([aria-current='false']));

@@ -67,8 +67,10 @@ The scale is now three sizes; the old 28px step is gone. `xs` is an alias of `sm
   `input.triggerIcon`.
 - **Menu items were 36px, now 32px** — check dropdown menus don't feel cramped.
 - **PIN input segments** now follow density instead of their own four sizes.
-- **Icon-only buttons are now exact squares** (24/32/40). They previously carried a stray `px-2`
-  that overrode every density — so icon buttons will be slightly narrower.
+- **Icon-only buttons are square by padding symmetry** (24/32/40). They previously carried a stray
+  `px-2` that overrode every density — so icon buttons will be slightly narrower. They deliberately
+  do NOT pin an inline size: a pinned width stops a button stretching to its grid cell, which left
+  the R0 rail's sidebar toggle 4px off-centre from the tab buttons above it (fixed).
 - **Density now cascades by CSS class.** `DensityProvider` renders a `display: contents` wrapper.
   Verify a `Toolbar density='sm'` actually shrinks its children (it never used to), and that no
   layout broke from the extra wrapper element — grid/flex parents are the place to look.

@@ -13,9 +13,11 @@ export type IconButtonStyleProps = ButtonStyleProps & {
 };
 
 // No padding utility here: `utilities` is the last cascade layer, so a `px-*` would override the
-// density-driven `padding-inline` on `.dx-button` at every density.
+// density-driven `padding-inline` on `.dx-button` at every density. An icon-only button is already
+// square by padding symmetry, so it must NOT imply `aspect-square` — that pins an inline size, and
+// a pinned width stops the button stretching to its grid cell (it then sits off-centre in a rail).
 const root: ComponentFunction<IconButtonStyleProps> = ({ iconOnly, square }, ...etc) => {
-  return mx(!iconOnly && 'gap-1.5', (square || iconOnly) && 'aspect-square', ...etc);
+  return mx(!iconOnly && 'gap-1.5', square && 'aspect-square', ...etc);
 };
 
 export const iconButtonTheme: Theme<IconButtonStyleProps> = {
