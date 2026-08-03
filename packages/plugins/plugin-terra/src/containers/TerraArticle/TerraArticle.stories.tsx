@@ -45,13 +45,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+// A bare manager, not `TerraPlugin()`: these stories exercise TerraArticle's fallback cache, which
+// only runs while the PlanetCache capability is unregistered.
+export const Default: Story = {
+  decorators: [withPluginManager()],
+};
 
 export const Hires: Story = {
   args: {
     resolution: 512,
     seed: 'terra-4',
   },
+  decorators: [withPluginManager()],
 };
 
 const ObjectsStory = () => {
@@ -61,6 +66,7 @@ const ObjectsStory = () => {
 
 export const Objects: Story = {
   render: () => <ObjectsStory />,
+  decorators: [withPluginManager()],
 };
 
 const CachedStory = () => {

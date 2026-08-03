@@ -18,7 +18,8 @@ import { type UseAppOptions, useApp } from '../ui';
 import { StorybookErrorFallback } from './StorybookErrorFallback';
 
 /**
- * @internal
+ * Builds a plugin manager for test hosts. Stories go through {@link withPluginManager}; headless
+ * hook tests use this directly to supply the `PluginManagerProvider` value their wrapper needs.
  */
 export const setupPluginManager = ({
   capabilities,
