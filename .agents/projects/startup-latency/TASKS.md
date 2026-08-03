@@ -655,3 +655,35 @@ If revisited, do NOT re-try manual grouping. The levers are (a) an upstream roll
 a size floor in AUTOMATIC splitting (so it optimizes globally with a minimum), or (b) reduce
 the 1,998 dynamic-import boundaries themselves by clustering ACTIVATION EVENTS (modules that
 always activate together need not be separate islands) — attacks the cause, not the symptom.
+
+## Finding 2026-08-03 (PWA install cost is precache SCOPE, not chunk shape) — not implemented
+
+Chasing the "tons of tiny chunks slow the PWA install" hypothesis showed the chunks are not
+the cause. Measured on the shipped bundle:
+
+| precached | files |    size |
+| --------- | ----: | ------: |
+| js        |  4340 | 64.2 MB |
+| wasm      |    10 | 30.5 MB |
+| other     |   210 |  2.1 MB |
+| TOTAL     |  4560 | 96.8 MB |
+
+`globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}']` precaches the ENTIRE app —
+every lazy island plus 30.5MB of wasm — for an app whose boot shell is 4.0MB (15 files).
+That is a ~24x overshoot and is independent of how the code is sliced; consolidating chunks
+cannot touch it.
+
+Proposed (prototyped, then reverted — dependency wiring incomplete): narrow globPatterns to
+`['**/*.{css,html,ico,png,svg,woff2}']` (~2.1MB) and register a CacheFirst runtime route for
+`.js`/`.wasm`. Content-hashed URLs can never be stale, so CacheFirst is safe; the boot graph
+caches during the first page load and each feature caches on first open.
+Expected install payload 96.8MB -> ~2MB.
+
+TRADE-OFF (product decision, not purely technical): offline coverage changes from
+"everything, immediately after install" to "everything you have actually opened". Selected
+assets can be pinned back into globPatterns — the sqlite wasm is a plausible pin, esbuild's
+(the bulk of the 30.5MB, used only by plugin-script) is not.
+
+Blocker when picking this up: `workbox-strategies` / `workbox-expiration` are only transitive
+deps; they need `pnpm add --filter composer-app --save-catalog` (a hand-written "catalog:"
+entry does not resolve and fails the SW build).
