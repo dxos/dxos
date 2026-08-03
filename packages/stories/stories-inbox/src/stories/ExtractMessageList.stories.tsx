@@ -257,9 +257,10 @@ export const Test: Story = {
     const afterFirst = await waitFor((text) => /"runs":\s*1\b/.test(text));
     void expect(afterFirst).toMatch(/"trips":\s*1\b/);
     void expect(afterFirst).toMatch(/"segments":\s*2\b/);
-    // Both travel messages have a visible Message → Trip association on the Mailbox (feed messages
-    // can't be ECHO relation endpoints, so the association is recorded on the Mailbox).
-    void expect(afterFirst).toMatch(/"linked":\s*2\b/);
+    // Every message has a visible Message → extracted-object association on the Mailbox (feed
+    // messages can't be ECHO relation endpoints, so the association is recorded on the Mailbox):
+    // the travel pair to the Trip, the digest to the contact extracted by the on-demand path.
+    void expect(afterFirst).toMatch(/"linked":\s*3\b/);
 
     // Second pass over the same messages must be idempotent — still ONE Trip, TWO Segments
     // (segments updated in place, not duplicated). This is the "extract twice" case.
