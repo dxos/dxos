@@ -1,7 +1,10 @@
 # ECHO-level object merging — feasibility research
 
-- **Status**: implemented through Phase 2 + worker automation (§4.8), hardened after
-  adversarial review (decision log 2026-08-02); backlog in TASKS.md
+- **Status**: core merge + worker automation (§4.8) implemented and twice hardened
+  (decision log 2026-08-02, 2026-08-03). Not yet implemented: relation-endpoint and
+  `meta.tags` rewriting (§4.1 step 5), the doctor diagnostic, property-based
+  determinism tests, mixed-version tests, proto-guard snapshot, creation-side
+  `db.ensure` API — backlog in TASKS.md
 - **Date**: 2026-07-30, revised 2026-08-02
 - **Requested by**: Josiah
 - **Goal**: allow application state to be initialized into a space independently by
@@ -95,6 +98,53 @@
      tagged with it). The query-path filter now keys on the deleted flag rather than
      `mergedInto`, so a restored loser is visible until re-tombstoned instead of
      becoming a live-but-unqueryable zombie.
+- **2026-08-03 (Josiah)** — **Second hardening pass, after a fresh adversarial
+  review of the hardened code.** Every major finding resolved:
+  1. **Worker reads and writes belong to one synchronous block.** The previous
+     code snapshotted entities during the awaited doc loads but took diffs,
+     watermarks, and redirect chains from the current docs — three distinct ways
+     for an edit landing in the load window to fall below `mergedAtHeads` and be
+     permanently stranded (including a deterministic single-pass case: a fold
+     whose winner was redirected moments earlier in the same batch aborted its
+     write yet still advanced the watermark). Now: classification, merge
+     computation, watermark heads, and the winner write share one tick;
+     `_foldRedirected` re-reads everything fresh and advances the watermark
+     **only when the fold write actually applied**; loser callbacks re-verify
+     the natural key (a concurrently re-keyed entity is a new identity, not a
+     loser) and deletion (respected, not converted into a redirect); a winner
+     deleted during the flush stops the tombstones.
+  2. **The trigger is a durable intent log, not a fire-and-forget set.** Natural
+     keys are recorded in `naturalKeyIntents` in the same SQLite transaction as
+     the index rows and cursors, and cleared only after the merge pass services
+     the key; one throwing group is contained per-group and retried on the next
+     pass; a crash between the cursor commit and the merge is recovered at the
+     next pass (one runs at every startup). Previously a fault or crash there
+     silently dropped detection until an unrelated write touched the same key —
+     the actual weakest link in the §4.2 convergence argument.
+  3. **Cross-document durability is ordered.** The winner's folded data is
+     flushed to storage before any loser tombstone is written, so a crash can no
+     longer persist a watermark whose fold never landed.
+  4. **The client executor respects deletion** (a user-deleted duplicate is not
+     a candidate — previously `db.mergeDuplicates()` could crown a deleted twin
+     the winner and vanish every copy, or resurrect deleted data) and skips
+     empty-string keys, matching the worker.
+  5. **`rewriteReferences` never writes to a merged-away referrer** — such a
+     write lands above the tombstone's fold watermark and the worker would carry
+     the mechanical rewrite into the winner as if it were a straggler's edit.
+     `foldLateEdits` also skips a deleted winner, matching the worker.
+  6. **The convergence claim is corrected from canonicity to agreement**
+     (§4.1 step 3, §4.2): once an entity is tombstoned it never re-enters the
+     field-wise merge; reconvergence happens through watermark folds, which make
+     every peer agree but can produce a field value the full-set merge would not
+     have chosen. The false "field-wise recompute remains the fallback when
+     recorded heads are unavailable" claim is deleted — no such fallback exists.
+  7. **Flag story reconciled**: automatic merging runs **unflagged** — the
+     Phase 1/2 flag bullets below are the historical plan, superseded by
+     shipping unflagged with the worker automation (the earlier §4.6/§5.7
+     citations to a dated "no flag" decision pointed at a log entry that did
+     not exist; this entry is now that record).
+  8. **Natural-key mutation semantics documented** (§4.10): treat the key as
+     write-once; what actually happens on re-key/un-key, live and tombstoned.
 
 ---
 
@@ -257,11 +307,16 @@ For objects in the same space sharing an identity key + version:
    lexicographically. This is permutation-independent for a given candidate set.
    Peers with different candidate sets can still transiently write different
    results — Automerge's field-level conflict resolution keeps the winner document
-   convergent in the interim, and the next merge pass (losers are retained as
-   tombstones, so their states stay available — step 4) recomputes the canonical
-   function once views converge. Duplicates never share Automerge ancestry (§3.1),
-   so this function — not an Automerge merge — is the only merge path; lossy at
-   field granularity by design (see risk table).
+   convergent in the interim, and losers are retained as tombstones (step 4) so
+   their states stay reachable. Note the guarantee is **agreement, not
+   canonicity**: once an entity is tombstoned it never re-enters the field-wise
+   merge — later passes reconcile through the watermark fold (§4.2), which carries
+   a tombstone's post-merge state onto the survivor. Every peer converges to the
+   same final state, but a field folded after tombstoning can land on a winner
+   that had defined it, so that final value may differ from what the field-wise
+   function would return over the union of all candidates. Duplicates never share
+   Automerge ancestry (§3.1), so this function — not an Automerge merge — is the
+   only merge path; lossy at field granularity by design (see risk table).
 4. **Redirect, don't erase**: write `system.mergedInto: <winnerId>` (plus
    `system.mergedAtHeads` — the loser's heads at merge time, used by the straggler
    fold in §4.2) on the loser and tombstone it (`system.deleted = true`). The loser keeps replicating (this is
@@ -279,11 +334,16 @@ For objects in the same space sharing an identity key + version:
    (`hypergraph.ts:571-574`), so a redirect on the loser can't be followed from
    another space; they dangle exactly as they would for any deleted object until
    cross-space resolution exists.
-5. **Rewrite inbound references opportunistically**: `Query.referencedBy(loser)` →
-   rewrite data refs and `meta.tags`; `objectMeta.queryRelations` → rewrite relation
-   endpoints (requires exposing the existing `ObjectCore.setSource/setTarget`
-   internally). Rewriting `X→loser` to `X→winner` is idempotent, so concurrent
-   rewriters converge. Refs that can't be rewritten still resolve via the redirect.
+5. **Rewrite inbound references opportunistically** — _partially implemented_:
+   data-ref rewriting (including refs nested in arrays and records) exists in the
+   client executor behind `db.mergeDuplicates()`, and never writes to a
+   merged-away referrer (a tombstone write lands above its fold watermark and
+   would be carried into the winner as a fake straggler edit). Still open:
+   `meta.tags` and relation endpoints (`objectMeta.queryRelations` → the existing
+   `ObjectCore.setSource/setTarget`, to be exposed as a named internal API) — the
+   part the old-client compatibility posture (§5.7) leans on. Rewriting
+   `X→loser` to `X→winner` is idempotent, so concurrent rewriters converge; refs
+   that are never rewritten still resolve via the redirect for new clients.
 
 ### 4.2 Convergence under concurrent merging
 
@@ -294,16 +354,25 @@ The key correctness argument, for peers acting on different views:
   `X.mergedInto = Z`. LWW on `Y.mergedInto` picks either — both terminate at Z by
   transitive redirect, because **every redirect edge points to a smaller id**, so
   chains are finite, acyclic, and end at the global minimum. Re-running the merge
-  (it must be idempotent and cheap when there's nothing to do) collapses chains and
-  re-rewrites refs to the final winner.
-- Merges of data are re-runnable, and **stragglers can keep their edits**: the
-  merge records the loser's heads at merge time (e.g. `system.mergedAtHeads`
-  alongside `mergedInto`). A later pass diffs the loser from those heads
+  (it must be idempotent and cheap when there's nothing to do) collapses chains;
+  a manual `db.mergeDuplicates()` pass additionally re-rewrites refs to the final
+  winner (the worker never rewrites refs — resolution follows the redirect).
+- Merges of data are re-runnable, and **stragglers keep their edits**: the merge
+  records the loser's heads at merge time (`system.mergedAtHeads`, written in the
+  same change as `mergedInto`). A later pass diffs the loser from those heads
   (`A.getHeads`/`A.diff` — precedent in `echo-handler/edit-history.ts:76-77`) and
   folds **exactly the late edits** into the winner as per-property writes, instead
   of re-running the field-wise merge (which would prefer the smallest-id candidate
-  and could discard the straggler's change). Field-wise recompute remains the
-  fallback when recorded heads are unavailable.
+  and could discard the straggler's change). There is **no fallback** when the
+  watermark is missing: the pair is written atomically, so a redirect without a
+  watermark indicates corrupt data, and the fold declines rather than guessing.
+  The fold's own discipline (2026-08-03): value, diff, and watermark are read from
+  one document state in one synchronous block, the redirect chain is resolved over
+  current state (a chain collapsed earlier in the same pass is followed to its
+  live end), and the watermark advances **only when the fold write applied** —
+  otherwise the edits stay above it for a later pass. The winner's folded data is
+  flushed durably before the watermark is written, since the two live in different
+  documents with no cross-document write ordering.
 - **The "later pass" is the worker itself, not an optional cleanup** (2026-08-02):
   a straggler's edit replicates onto the tombstone and re-indexes it, detection
   includes tombstoned rows, and the worker folds the changed fields into the
@@ -311,6 +380,13 @@ The key correctness argument, for peers acting on different views:
   argument above would be vacuous — the original trigger only examined live rows,
   so a tombstoned loser was never revisited and late edits (including data folded
   onto an entity that a concurrent merge then tombstoned) were stranded forever.
+- **Every detected duplicate is eventually serviced** (2026-08-03): the trigger is
+  a durable intent log written in the same transaction as the index cursors, so a
+  crash, a faulted merge pass, or one bad group cannot silently drop detection —
+  unserviced keys are retried on the next indexing pass, and one pass runs at
+  every startup. An unloadable member document is the one deliberate exception:
+  the subset merge is safe, and the document's eventual arrival is itself an
+  indexed write that re-presents the key.
 
 ### 4.3 GC (later)
 
@@ -384,7 +460,7 @@ public key across 17 files, so the collision would be actively misleading.
 Accepted cost: the name carries no hint that stamping it opts the entity into
 merging, so that consequence belongs in the field's doc comment.
 
-Rejected candidates, for the record:
+The candidates weighed, for the record (`naturalKey` is the one chosen):
 
 | Candidate      | Reads as                                                                                                     | Against                                                                                     |
 | -------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
@@ -455,25 +531,40 @@ fires exactly once per device regardless of how many tabs or clients are open.
 
 Mechanism:
 
-1. Each indexing batch reports the natural keys it saw (`IndexingResult.naturalKeys`,
-   extracted from `@meta` during accumulation — almost always empty).
+1. Natural keys seen in an indexing batch are recorded as **durable intents**
+   (`naturalKeyIntents` table) in the same SQLite transaction that commits the
+   index rows and cursors — almost always none. The intent, not an in-memory set,
+   is the trigger: it is cleared only after the merge pass services the key, so a
+   crash or a faulted pass leaves it in place and the next pass (one runs at
+   every startup) retries. One throwing group is contained per-group; the rest of
+   the batch proceeds.
 2. A point lookup on the `objectMeta.naturalKey` column (new, indexed on
-   `(spaceId, naturalKey)`) returns the live rows sharing those keys; a key with more
-   than one row is a duplicate group. Cost is proportional to writes that carry a
-   natural key — nil for everything else.
+   `(spaceId, naturalKey)`) returns the rows sharing the pending keys; a key with
+   more than one row is a duplicate group. Cost is proportional to writes that
+   carry a natural key — nil for everything else.
 3. The merge runs on the **raw automerge documents** (`db-host/natural-key-merge.ts`)
-   via the storage-independent `Merge` core — no live proxies exist host-side. Each
-   group member is re-verified against its document first, since index rows are
-   derived state.
-4. The merge's own writes fire `documentsSaved`, which re-indexes the tombstones and
+   via the storage-independent `Merge` core — no live proxies exist host-side.
+   Documents are loaded first (the only await); then classification, the merge
+   computation, the losers' watermark heads, and the winner write happen **in one
+   synchronous block**, so nothing replicated can interleave between a read and
+   the write derived from it — index rows are derived state and every member is
+   re-verified against its document in that block.
+4. The winner's folded data is **flushed durably before the loser tombstones are
+   written**: winner and losers live in different documents with no cross-document
+   write ordering, and a crash that persisted a watermark without its fold would
+   strand the loser's state below a watermark nothing re-reads. The loser
+   callbacks re-verify after the flush (an existing redirect, a changed key, or a
+   deletion that landed during it wins), and a winner deleted during the flush
+   stops the tombstones entirely.
+5. The merge's own writes fire `documentsSaved`, which re-indexes the tombstones and
    invalidates queries — the indexer is already the sole query-invalidation source,
    so losers leave query results everywhere with no new plumbing.
-5. **Redirected entities are serviced, not ignored** (2026-08-02): detection
+6. **Redirected entities are serviced, not ignored** (2026-08-02): detection
    includes tombstoned rows, and a loser that re-indexes — a straggler's late
    edits, or a `db.add` restore — has its post-watermark data fields folded into
    the resolved winner and its tombstone re-asserted. This is the automatic
    straggler fold of §4.2 and the sticky-tombstone rule of §4.1 step 4, in one
-   mechanism.
+   mechanism; the fold's read/watermark discipline is in §4.2.
 
 The client keeps a **read-only** presentation filter (`query-result.ts`) that drops
 entities the index still reports live — keyed on the **deleted flag** (written in
@@ -513,7 +604,17 @@ Rules the implementation had to learn (each one a bug first):
   per-object, so an unchanged object never repopulates its row — a duplicate whose
   other copy predates the upgrade would be missed forever. The migration resets
   the index cursors once when it detects the column being added to an existing
-  table, forcing a full re-index.
+  table, forcing a full re-index. The reset runs **before** the `ALTER TABLE`:
+  migration statements auto-commit individually, and a crash between them must
+  re-run the wipe on the next startup rather than see the column and skip it.
+- **A snapshot taken across an `await` is a different state than the doc.**
+  Entities read during the doc-load loop went stale by write time — the diff and
+  watermark came from the current doc while the folded values and redirect chain
+  came from the load-time snapshots, which is how straggler edits could fall below
+  the watermark and be permanently stranded (three distinct variants, one of them
+  deterministic within a single batch). The rule: read, compute, and write in one
+  synchronous block, and gate every watermark advance on the fold write actually
+  applying.
 - **Tests that stage a partial-view merge must do it in the same tick as the adds**
   — once the documents save, the worker sees them, and any client-staged
   intermediate state races it. Both engines compute the same pure function, so
@@ -538,18 +639,54 @@ the merge has no watermark to recover from.
 So the sequencing is lazy-first for correctness, proactive-later to shrink the window
 in which divergence can accumulate — not either/or.
 
+### 4.10 Mutating the natural key (decided 2026-08-03: treat as write-once)
+
+The key is an identity assertion, and identity assertions are not meant to be
+revised — the guidance is **set it at creation and never change it**. The engine
+does not hard-enforce this (the field is an ordinary meta property any peer can
+write), so the semantics of a mutation are pinned down here rather than left to
+whatever the code happens to do:
+
+- **Re-keying a live entity declares a new identity.** It leaves its old merge
+  group and joins the new key's group from its next indexed write. A merge in
+  flight aborts against it: both the winner-side and loser-side change callbacks
+  re-verify the key, so a concurrently re-keyed entity is neither folded nor
+  tombstoned (regression-tested).
+- **Redirects are by id, not key** — `system.mergedInto` resolution is unaffected
+  by any key change on any participant. Nothing dangles.
+- **Re-keying a tombstoned loser strands its straggler edits, not its identity.**
+  The tombstone stays sticky (the loser is serviced under whatever key it now
+  carries, and `deleted` is re-asserted), but the fold is key-scoped: the winner
+  is not in the new key's group, so post-watermark edits wait — they fold if the
+  key is restored. **Un-keying** a tombstoned loser removes it from servicing
+  entirely: the redirect still resolves, but a `db.add` restore of it would stick
+  (no re-assert) as a live object that happens to carry a stale `mergedInto`.
+- **Re-keying or un-keying a winner** leaves its tombstones redirecting to it (by
+  id), while their folds decline until a key groups them together again. A new
+  entity claiming the winner's old key coexists with the old winner: the "at most
+  one live entity per key" invariant is over entities _currently carrying_ the
+  key, not over the key's history.
+
+None of these corrupts data or breaks resolution — the failure mode is stranded
+late edits on a tombstone whose group no longer contains its winner. If key
+mutation ever becomes a real workflow, the candidate hard guard is
+`Merge.setNaturalKey` throwing on a merged-away entity (needs `mergedInto`
+visibility at the `Obj` layer — not currently exposed there).
+
 ### 4.6 Principal risks
 
-| Risk                                                                                                                                                                                            | Severity                       | Mitigation                                                                                                                                                                                                                                                                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Redirect-following in the resolver adds a hop to every unresolved load                                                                                                                          | Low                            | Only consulted on miss/tombstone; measured in spike.                                                                                                                                                                                                                                                                |
-| Ref-rewrite misses (markdown, feeds, side maps)                                                                                                                                                 | Medium                         | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                                                                                                                                                                                           |
-| Concurrent merge + user edit on the loser loses the edit (field granularity)                                                                                                                    | Medium                         | Heads-diff straggler fold (§4.2) preserves late edits per-property; per-field writes (§4.1 step 3) protect untouched winner fields; scope early adoption to init-state objects.                                                                                                                                     |
-| Proxy identity: live proxies holding the loser                                                                                                                                                  | Medium                         | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                                                                                                                                                                                 |
-| Merge function semantics disputed per type (arrays: union vs winner)                                                                                                                            | Medium                         | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                                                                                                                                                                                   |
-| **Collaborative text fields are discarded wholesale** — min-id-wins drops the loser's entire text, not just a conflicting edit, and unrelated documents cannot have changes applied across them | **High, once past init-state** | Academic while adoption is limited to seeded init-state objects (§6 Phase 4). Before generalizing to documents, choose: keep the loser's text reachable rather than dropping it; refuse to merge entities whose text diverged and surface them via the doctor diagnostic; or an explicit text-merge policy (§7 Q3). |
-| Mixed client versions: old clients can't follow `mergedInto` redirects                                                                                                                          | Medium — **open, accepted**    | New clients follow redirects in the resolver (2026-08-02). Old clients see losers as deleted and un-rewritten refs dangle; ref rewriting (`db.mergeDuplicates`) is their compat path. Automatic merging shipped unflagged by decision (2026-07-30, "no flag"); mixed-version tests (§5.7) remain to be written.     |
-| Feed-backed objects                                                                                                                                                                             | Out of scope                   | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later.                                                                                                                                                                 |
+| Risk                                                                                                                                                                                            | Severity                       | Mitigation                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Redirect-following in the resolver adds a hop to every unresolved load                                                                                                                          | Low                            | Only consulted on miss/tombstone — but the failed-resolve path is the common dangling-ref path, and the async follow adds a tombstone-inclusive query to it. **Unmeasured** (Phase 0 was skipped); measure before Phase 4 adoption.                                                                                                                                                                            |
+| Natural-key mutation after a merge strands straggler edits (§4.10)                                                                                                                              | Medium                         | Treat the key as write-once (§4.10); redirects keep resolving either way, so nothing dangles — only late edits on a re-keyed tombstone wait until the key is restored.                                                                                                                                                                                                                                         |
+| Crash between the winner fold and the loser tombstone (different documents)                                                                                                                     | Low (was Medium)               | Winner doc flushed durably before any tombstone is written (2026-08-03); a crash before the flush leaves the group live and the intent pending, so the next pass re-merges.                                                                                                                                                                                                                                    |
+| Ref-rewrite misses (markdown, feeds, side maps)                                                                                                                                                 | Medium                         | Redirects make misses non-fatal; doctor diagnostic extended to report them; opportunistic rewrite passes.                                                                                                                                                                                                                                                                                                      |
+| Concurrent merge + user edit on the loser loses the edit (field granularity)                                                                                                                    | Medium                         | Heads-diff straggler fold (§4.2) preserves late edits per-property; per-field writes (§4.1 step 3) protect untouched winner fields; scope early adoption to init-state objects.                                                                                                                                                                                                                                |
+| Proxy identity: live proxies holding the loser                                                                                                                                                  | Medium                         | Loser stays resolvable (tombstone+redirect); optionally rebind cores (`_rebindObjects` precedent) in a later phase.                                                                                                                                                                                                                                                                                            |
+| Merge function semantics disputed per type (arrays: union vs winner)                                                                                                                            | Medium                         | Ship fixed field-wise semantics first; revisit pluggability (open question 3) only with evidence.                                                                                                                                                                                                                                                                                                              |
+| **Collaborative text fields are discarded wholesale** — min-id-wins drops the loser's entire text, not just a conflicting edit, and unrelated documents cannot have changes applied across them | **High, once past init-state** | Academic while adoption is limited to seeded init-state objects (§6 Phase 4). Before generalizing to documents, choose: keep the loser's text reachable rather than dropping it; refuse to merge entities whose text diverged and surface them via the doctor diagnostic; or an explicit text-merge policy (§7 Q3).                                                                                            |
+| Mixed client versions: old clients can't follow `mergedInto` redirects                                                                                                                          | Medium — **open, accepted**    | New clients follow redirects in the resolver (2026-08-02). Old clients see losers as deleted and un-rewritten refs dangle; ref rewriting (`db.mergeDuplicates`) is their compat path — and it is only partially built (data refs yes; relation endpoints and `meta.tags` no, §4.1 step 5). Automatic merging runs unflagged (decision log 2026-08-03 item 7); mixed-version tests (§5.7) remain to be written. |
+| Feed-backed objects                                                                                                                                                                             | Out of scope                   | Feeds already collapse by id at the index (`echo-feed-codec.ts:20-24`); feed-object dedup rides on the same identity-key mechanism if needed later.                                                                                                                                                                                                                                                            |
 
 ---
 
@@ -598,11 +735,12 @@ Determinism and convergence are the product; the tests are the spec.
    ref dangles. New clients follow the redirect in the resolver (2026-08-02), so
    the exposure is old clients only. Reference **rewriting** (not the redirect) is
    the compatibility path they benefit from, so rewrite must not be treated as
-   optional where mixed fleets exist. Automatic merging shipped **unflagged by
-   decision** (2026-07-30) — the earlier plan to gate it on a minimum client
-   version was dropped; the residual risk is recorded in §4.6. Still to test:
-   old/new client pairs replicating the same space (old client reads during and
-   after a merge performed by a new client).
+   optional where mixed fleets exist — note it is only partially built (§4.1
+   step 5: relation endpoints and `meta.tags` are open). Automatic merging runs
+   **unflagged** (decision log 2026-08-03 item 7, superseding the Phase 1/2 flag
+   plan); the residual risk is recorded in §4.6. Still to test: old/new client
+   pairs replicating the same space (old client reads during and after a merge
+   performed by a new client).
 
 ## 6. Phased rollout plan
 
@@ -635,9 +773,10 @@ Exit criteria: convergence demonstrated in tests; go/no-go with chosen shape.
   helper that creates keyed state immediately (no check-then-create) and relies on
   the merge engine to repair races. Keep `db.ensure` generic — it is also the
   migration fan-out primitive, not an app-init special case.
-- Feature flag: config-gated, default off outside tests.
+- ~~Feature flag: config-gated, default off outside tests.~~ **Superseded**:
+  shipped unflagged (decision log 2026-08-03 item 7).
 
-### Phase 2 — Merge engine, flagged
+### Phase 2 — Merge engine (planned "flagged"; shipped unflagged — decision log 2026-08-03 item 7)
 
 - Duplicate detection (query-based post-filter is fine at this scale).
 - Deterministic merge executor: winner selection, set-based deterministic data
@@ -713,9 +852,8 @@ settled, and the derived-key sub-question dissolved with them.
 
 ### Newly open, from the review
 
-6. **Identity field name** (§4.4) — `naturalKey` / `singletonKey` / `mergeKey` /
-   `canonicalKey`. The shape question is settled: a single opaque string. Blocks
-   Phase 1's schema change, not the Phase 0 spike.
+6. ~~**Identity field name**~~ — **settled**: `meta.naturalKey`, ratified
+   2026-07-30 (§4.4), shipped.
 7. **Merging `EntityKind.Type`** — types are entities and are now in scope, but a
    duplicate _type_ is not just a data merge: schema identity feeds the type
    registry and object `system.type` refs. Needs its own phase and probably its own

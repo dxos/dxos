@@ -1,6 +1,6 @@
 # object-merging — Tasks
 
-_Resume: worker-side merging is live and hardened (§4.8 + 2026-08-02 review); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. Last: adversarial-review fixes — automatic straggler fold + sticky tombstone in the worker, resolver follows redirects, objects-only guards, RawString clone, structural write guard, mergedFrom/meta.keys convergence, index backfill + chunking, @meta contained to the meta index; all suites green._
+_Resume: worker-side merging is live and twice hardened (§4.8; 2026-08-02 and 2026-08-03 reviews); next per TASKS backlog — doctor diagnostic, property-based determinism, relation endpoints as rewrite targets, collaborative-text policy, mixed-version tests. Uncommitted: none. Last: second-review fixes — worker reads/writes in one synchronous block with applied-gated watermarks, durable natural-key intent log (crash-proof trigger + per-group retry), winner flushed before tombstones, client executor respects deletion, rewrite pass skips tombstoned referrers, DESIGN reworded canonicity→agreement + §4.10 key-mutation semantics; all suites green._
 
 Design + feasibility research: [`DESIGN.md`](./DESIGN.md)
 (includes the decision log, merge algorithm, convergence argument, test plan, and
@@ -93,6 +93,22 @@ than by a spike.
       deleted flag (no restored-zombie); one-time cursor reset backfills the
       `naturalKey` column; chunked detection lookup; `@meta` stripped from FTS and
       reverse-ref content for document objects.
+- [x] **2026-08-03 hardening** (second adversarial review; DESIGN decision log has
+      the full list): worker reads/computes/writes in one synchronous block —
+      load-time snapshots could put mid-merge edits below the fold watermark,
+      permanently (one variant deterministic in a single pass); watermark advances
+      only when the fold write applied; loser callbacks re-verify the natural key
+      and deletion; winner deleted mid-flush stops the tombstones; **durable
+      natural-key intent log** (`naturalKeyIntents`, written transactionally with
+      the index cursors, cleared per serviced key, per-group error containment) —
+      no detected duplicate is ever silently dropped; winner doc flushed before
+      loser tombstones (cross-document crash ordering); client executor skips
+      user-deleted candidates and empty-string keys; `rewriteReferences` and
+      `foldLateEdits` never write to / fold into tombstoned or deleted parties;
+      migration cursor wipe moved before the ALTER; DESIGN §4.10 (key mutation),
+      canonicity→agreement, flag story, and stale claims reconciled. New unit
+      suite `echo-host/db-host/natural-key-merge.test.ts` drives the group merge
+      against real repo handles with injected mid-load/mid-flush mutations.
 - [ ] `plugin-doctor` duplicates diagnostic + "merge now" repair action; surface
       class-1 (same-id-two-docs) anomalies as an explicit diagnostic.
 - [ ] **Decide the collaborative-text policy before adoption widens** (§4.6 risk).
@@ -166,6 +182,18 @@ Scope decision 2026-07-30: every entity kind that can be stored is in scope, pha
   written before `naturalKey` existed stay NULL until the object itself changes;
   the migration resets index cursors once when it adds the column to an existing
   table.
+- **A snapshot read before an `await` is not the document.** `handle.doc()` returns
+  an immutable value; changes replicating in during a doc load leave old references
+  stale. Mixing a stale snapshot (values, redirect chain) with the current doc
+  (diff, heads) is how edits vanished below the fold watermark. Read, compute, and
+  write in one synchronous block, and gate watermark advances on the write applying.
+- **An index cursor is not a durable trigger.** The cursor commits before the merge
+  runs, so anything derived from the batch in memory dies with a crash or a throw.
+  Intent rows written in the same transaction as the cursor, cleared after
+  servicing, are; `id <= maxId`-bounded deletes keep a concurrent pass's intents.
+- **`new Repo({ network: [] })` in echo-host tests needs `await initSubduction()`**
+  (beforeAll) — the subduction fork constructs a WASM `MemorySigner` in the
+  constructor.
 
 ### References
 
