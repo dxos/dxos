@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { log } from '@dxos/log';
 
 import { ActivationEvents } from '../common';
-import { type PluginManager, ActivationEvent } from '../core';
+import { ActivationEvent, type PluginManager } from '../core';
 
 /**
  * Activates the module set the app converges to: the {@link ActivationEvents.Idle} wave, then
