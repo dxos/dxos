@@ -443,17 +443,14 @@ export const UpdateCompanion = Operation.make({
   meta: {
     key: DXN.make(`${LAYOUT_PLUGIN}.operation.updateCompanion`),
     name: 'Update Companion',
-    description: 'Update the companion plank for a primary plank.',
+    description: 'Show a companion in the complementary sidebar.',
     icon: 'ph--sidebar--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.Union(Schema.String, Schema.Null).annotations({
-      description: 'The companion node id to show, or null to close a companion.',
-    }),
-    anchor: Schema.optional(Schema.String).annotations({
       description:
-        'When closing (subject: null): the plank whose companion to close. Companion state is per plank, so a close from a specific plank must name it; without it the handler falls back to the attended plank.',
+        'The companion node id (`<node>/~<variant>`) to show; only its variant is kept, since the sidebar resolves companions against whatever holds attention. Null collapses the sidebar.',
     }),
   }),
   output: Schema.Void,

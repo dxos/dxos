@@ -17,7 +17,6 @@ export type SetActiveResult = {
   deckUpdates: {
     inactive: string[];
     active: string[];
-    companionPlanks: string[];
   };
   /** ID of the item to attend (scroll into view) if attention changed. */
   toAttend?: string;
@@ -36,7 +35,6 @@ export const computeActiveUpdates = ({ next, deck, attention }: SetActiveOptions
     active: next,
     // Deduped and pruned to open planks: entries survived every close, so a long-lived deck accreted
     // one per plank ever opened (a live profile measured fourteen, with duplicates).
-    companionPlanks: Array.from(new Set(deck.companionPlanks)).filter((id) => next.includes(id)),
   };
 
   let toAttend: string | undefined;

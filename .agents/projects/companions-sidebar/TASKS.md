@@ -1,6 +1,6 @@
 # Companions in the Sidebar — Tasks
 
-_Resume: Phases 1-2 done and browser-verified (PR #12451, draft). Uncommitted: none. Next: decide on Phase 3 — removing the in-deck companion path means deleting the per-plank model from PR #12424, so confirm with burdon first._
+_Resume: Phases 1-3 done and browser-verified (PR #12451, draft). Uncommitted: none. Next: Phase 4 — migrate the ten `makeDeckCompanion` callers onto `makeCompanion({ scope })`, collapse to one `COMPANION_TYPE`, reconcile plugin-simple-layout, and rewrite plugin-deck DESIGN.md §4._
 
 ## Phase 1: Resizable complementary sidebar
 
@@ -63,31 +63,48 @@ existing root-level companions, grouped node → workspace → global.
       `node/alpha, node/beta, ---, storyPanel, storyInfo`; picking `node/beta` and
       attending another item rebinds the same variant to the new node; where the
       variant is absent it falls back to `node/alpha`; returning restores `beta`.
-- [ ] **Plank toolbar button** — `plankHeading.companion` still opens the
-      in-deck companion; repoint it at the sidebar as part of Phase 3.
-
-### Open question for the user
-
-Both paths now coexist: companions render in the sidebar _and_ can still be
-opened in the deck. Good for side-by-side comparison, but not the end state —
-Phase 3 deletes the in-deck path, which means deleting the per-plank companion
-model that shipped in PR #12424. Confirm before doing that.
+- [x] **Plank toolbar button** — removed rather than repointed. The sidebar rail
+      is always visible, so a second per-plank affordance would be a redundant
+      control that opens a panel following attention rather than that plank.
 
 ## Phase 3: Remove the in-deck companion machinery
 
+Confirmed by the user: removal is part of the experiment, and it would not land
+without it.
+
 ### Tasks
 
-- [ ] **Delete in-deck rendering** — `CompanionSplit`, `CompanionPlank`,
-      `useDeckCompanion`, companion branch of `DeckPlank`, reveal-scroll effect,
-      companion sizing constants + `plankSizing['companion']`.
-- [ ] **Delete state + operations** — `companionPlanks`,
-      `DeckOperation.Adjust {type:'companion'}`, `util/companion-anchor.ts`;
-      rework `LayoutOperation.UpdateCompanion` to target the sidebar.
-- [ ] **URL** — replace per-plank `companion/<variant>` chain pairs with a
-      single `companion=<variant>` value; update url-handler tests.
-- [ ] **Fix consumers** — `useShowItem` (app-toolkit) deck branch; e2e tests
-      referencing `plankHeading.companion`.
-- [ ] **Verify**: full plugin-deck suite, e2e where feasible.
+- [x] **Delete in-deck rendering** — `CompanionSplit`, `CompanionPlank`,
+      `useDeckCompanion`, the `DeckPlank` linked-segment branch, the companion
+      reveal-scroll effect, the companion sizing constants and `useSplitSize`
+      (orphaned with the seam). `resolveTileSizes` collapses to `resolveTileSize`:
+      a tile is now just its plank.
+- [x] **Delete state + operations** — `companionPlanks` (schema, defaults,
+      `set-active` pruning, `open`'s level-swap carry, `addCompanionPlank`), the
+      `companion` plank adjustment, and the `anchor` field on
+      `LayoutOperation.UpdateCompanion`. The operation now shows a companion in
+      the sidebar: it keeps only the variant, since the sidebar resolves against
+      whatever holds attention.
+- [x] **Retire the companion view-state aspect** — selection lives solely in
+      `complementarySidebarPanel`, so `companionAspect`,
+      `COMPANION_VIEW_STATE_CONTEXT`, `useSelectedCompanion` and
+      `useSelectedCompanionVariant` are gone. `plugin-assistant`'s chat
+      provisioner reads the sidebar's selection instead (public helpers
+      `getNodeCompanionVariant` / `makeNodeCompanionValue`).
+- [x] **URL** — the companion pair is now driven by the sidebar's selection
+      rather than `companionPlanks` + view state; it still serializes as
+      `companion/<variant>` after the attended plank so a restore lands attention
+      on the object the companion was showing.
+- [x] **Fix consumers** — `useShowItem` docs, the joyride step (retargeted from
+      the removed toolbar button to the rail's `data-joyride` hook), stale
+      translations, and the legacy-state migration now drops `companionPlanks`
+      explicitly.
+- [x] **Stories** — `OnePlankWithCompanion`, `ManyPlanksWithCompanion` and the
+      `CompanionPerPlank` play test removed (they assert in-deck rendering).
+- [x] **Verify** — 80 unit tests (new `useCompanionGroups.test.ts` covers the
+      preference/fallback rule), build, lint, and a browser pass confirming zero
+      companion planks and zero toolbar toggles in the deck while the rail,
+      rebinding and resize all still behave.
 
 ## Phase 4: Migration + cleanup (only if the experiment is kept)
 

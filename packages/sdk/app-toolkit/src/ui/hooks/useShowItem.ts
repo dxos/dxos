@@ -30,7 +30,7 @@ export type ShowItemOptions = {
  * - `'simple'`: expand the complementary sidebar on the given companion segment.
  * - deck modes (`'solo'`/`'multi'`): open the item as a sibling plank beside the master
  *   (`pivotId = contextId`), when a `path` is provided.
- * - otherwise: swap the current plank's companion to the given segment.
+ * - otherwise: show the given companion segment in the complementary sidebar.
  */
 export const useShowItem = () => {
   const { invokePromise } = useOperationInvoker();

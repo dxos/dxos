@@ -18,13 +18,8 @@ import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } from '#types';
 
-import {
-  COMPANION_VIEW_STATE_CONTEXT,
-  companionAspect,
-  getRenderedPlanks,
-  resolveCompanionAnchor,
-  serializeDeckToUrl,
-} from '../util';
+import { getNodeCompanionVariant } from '../hooks/useCompanionGroups';
+import { getRenderedPlanks, resolveCompanionAnchor, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
@@ -301,20 +296,18 @@ export default Capability.makeModule(
         }
       }
 
-      // The companion shares a container with the attended plank, and is serialized as
-      // `companion/<variant>` after that plank's own pair. Attention itself is still never serialized —
-      // it is read here only to place the companion, and a bare attention change does not resync the URL.
+      // The sidebar's node companion is serialized as `companion/<variant>` after the attended plank's
+      // own pair: the variant is what the sidebar stores, and the plank records which object it was
+      // showing so a restore lands attention there. Attention itself is still never serialized.
       let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
-      if (deck.companionPlanks.length > 0 && deck.active.length > 0) {
+      const companionVariant = getNodeCompanionVariant(state.complementarySidebarPanel);
+      if (companionVariant && deck.active.length > 0) {
         // Resolved against the rendered planks, not `deck.active`: under `flatten` only the current plank
-        // is laid out, so anchoring to an earlier one would serialize a companion the deck cannot render.
+        // is laid out, so anchoring to an earlier one would name a plank the deck cannot show.
         const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
-        const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
-        // Only the attended plank's companion is on screen, so only it belongs in the URL.
-        const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
-        const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
-        if (plankId && selection.variant) {
-          const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
+        const plankId = resolveCompanionAnchor(rendered, attention.getCurrent());
+        if (plankId) {
+          const companionNodeId = `${plankId}/${Attention.linkedSegment(companionVariant)}`;
           const represented = PathResolution.representNode(builder, companionNodeId);
           if (Option.isSome(represented)) {
             companion = { plankId, node: represented.value };
@@ -338,9 +331,6 @@ export default Capability.makeModule(
     };
 
     const unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
-    const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
-      syncUrl(),
-    );
     // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
     syncUrl('replace');
 
@@ -351,7 +341,6 @@ export default Capability.makeModule(
           window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
         unsubscribeState();
-        unsubscribeCompanionVariant();
         unlistenDeepLink?.();
       }),
     );

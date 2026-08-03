@@ -63,6 +63,7 @@ const migrateDeck = ({
   companionOrientation: _companionOrientation,
   companionFrameSizing: _companionFrameSizing,
   companionOpen: _companionOpen,
+  companionPlanks: _companionPlanks,
   tilingSizing: _tilingSizing,
   ...deck
 }: LegacyDeckState) => ({

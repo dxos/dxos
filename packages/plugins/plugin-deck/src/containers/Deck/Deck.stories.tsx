@@ -364,8 +364,6 @@ type DefaultStoryProps = {
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
   sidebarState?: StoredDeckState['sidebarState'];
-  /** Which planks open with their companion showing, as 1-based positions. */
-  companionPlanks?: number[];
   /** Open the launcher fixture as the first plank (the mailbox-shaped path). */
   launcher?: boolean;
   /**
@@ -375,16 +373,12 @@ type DefaultStoryProps = {
   settings?: Partial<Pick<Settings.Settings, 'flatten' | 'overscroll'>>;
 };
 
-/** Stable identity, for the same reason as `NO_COMPANIONS`. */
-const NO_SETTINGS: DefaultStoryProps['settings'] = {};
-
 // Stable identity, so the default does not re-fire the seeding effect it is a dependency of on every render.
-const NO_COMPANIONS: number[] = [];
+const NO_SETTINGS: DefaultStoryProps['settings'] = {};
 
 const DefaultStory = ({
   count = 0,
   sidebarState = 'closed',
-  companionPlanks = NO_COMPANIONS,
   launcher = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: DefaultStoryProps) => {
@@ -419,16 +413,15 @@ const DefaultStory = ({
       ...(launcher && launcherNode ? [launcherNode.id] : []),
       ...items.slice(0, count).map((item) => item.id),
     ];
-    const open = companionPlanks.map((position) => active[position - 1]).filter((id): id is string => !!id);
     updateState((current) => ({
       ...current,
       sidebarState,
       decks: {
         ...current.decks,
-        [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
+        [current.activeDeck]: { ...current.decks[current.activeDeck], active },
       },
     }));
-  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState]);
+  }, [items, count, sidebarState, launcher, launcherNode, updateState]);
 
   return (
     <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
@@ -494,81 +487,6 @@ export const ManyPlanksOverscroll: Story = {
   },
 };
 
-// A lone plank stays fullbleed with its companion open; the pair fills the viewport across the seam.
-export const OnePlankWithCompanion: Story = {
-  args: {
-    count: 1,
-    companionPlanks: [1],
-  },
-};
-
-// Each plank remembers whether its own companion is open, and every open companion renders beside its
-// own plank — here planks 1 and 3 start open, planks 2 and 4 closed.
-//
-// Test:
-// 1. Confirm companions sit inside the first and third planks' containers, immediately to their right.
-// 2. Click the second plank; confirm it shows no companion of its own and the deck does not move.
-// 3. Close the companion on the third plank; confirm the first plank's is untouched.
-// 4. Reopen it from the third plank's toolbar; confirm neither plank moves.
-// 5. Drag the seam between a plank and its companion; confirm only those two panes resize, and that
-//    closing the companion afterwards leaves the plank at the width you dragged it to.
-export const ManyPlanksWithCompanion: Story = {
-  args: {
-    count: 4,
-    companionPlanks: [1, 3],
-  },
-};
-
-/** Attends a plank by focusing it — attention is focus-driven, and a click would have to land on a plank that may be folded. */
-const attendPlank = async (canvasElement: HTMLElement, position: number) => {
-  const id = `root/story-item-${position}`;
-  const plank = canvasElement.querySelector<HTMLElement>(`[data-testid="deck.plank"][data-attendable-id="${id}"]`);
-  await expect(plank, `no plank for ${id}`).not.toBeNull();
-  plank?.focus();
-};
-
-/**
- * Titles of the planks whose companion is currently rendered (the story companion surface stamps its
- * own). Deduped: `Companion` keeps every variant's panel mounted, hiding the inactive ones, so a single
- * showing companion contributes one surface per variant.
- */
-const showingCompanionsFor = (canvasElement: HTMLElement): string[] => [
-  ...new Set(
-    Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="story.companion"]'))
-      .map((element) => element.dataset.companionTo)
-      .filter((title): title is string => !!title),
-  ),
-];
-
-// Companions are per-plank state: every plank whose companion is open renders it beside that plank, and
-// attention plays no part in what is laid out. Planks 1 and 3 start open here, plank 2 closed. (This
-// replaces the follows-attention model, whose re-anchoring resized tiles on attention traffic and let
-// the engine silently shift the deck's scroll.)
-export const CompanionPerPlank: Story = {
-  tags: ['test'],
-  args: { count: 3, companionPlanks: [1, 3] },
-  play: async ({ canvasElement }) => {
-    // The plugin manager activates asynchronously, so the deck mounts well after the story's first paint.
-    const canvas = within(canvasElement);
-    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
-
-    // Both open companions render, each beside its own plank, before anything is attended.
-    await waitFor(() => expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']));
-
-    // Attending the companion-less plank must not change what is laid out — under the old model this
-    // re-anchored the companion and emptied the deck of companions entirely. The settle delay is the
-    // regression net: the old behavior re-rendered within a commit, so still-visible after it means
-    // attention no longer drives layout.
-    await attendPlank(canvasElement, 2);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
-
-    await attendPlank(canvasElement, 1);
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await expect(showingCompanionsFor(canvasElement)).toEqual(['Overview', 'Notes']);
-  },
-};
-
 /**
  * The mailbox-shaped path: a launcher plank whose rows level-open a message plank beside it.
  *
@@ -577,8 +495,7 @@ export const CompanionPerPlank: Story = {
  *    deck must not lurch toward the launcher first or bounce back after.
  * 2. Click a different row — the message plank is reused in place (no third plank), no scroll at all if
  *    it is already front.
- * 3. Open the message plank's companion from its toolbar — neither plank moves.
- * 4. Repeat 1–3 quickly — no jitter; the deck never travels twice for one click.
+ * 3. Repeat 1–2 quickly — no jitter; the deck never travels twice for one click.
  */
 export const LauncherManual: Story = {
   args: { launcher: true },

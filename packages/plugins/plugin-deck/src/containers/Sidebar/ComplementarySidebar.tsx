@@ -11,7 +11,7 @@ import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTra
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
-import { type CompanionEntry, isNodeCompanionValue, useBreakpoints, useCompanionGroups, useDeckState } from '#hooks';
+import { type CompanionEntry, resolveActiveCompanion, useBreakpoints, useCompanionGroups, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
 import { layoutAppliesTopbar } from '../../util';
@@ -43,17 +43,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const { groups, anchorId, anchorSubject } = useCompanionGroups();
   const companions = useMemo(() => groups.flatMap((group) => group.companions), [groups]);
 
-  // `current` is the user's preference, not necessarily what is showable: attending a plank that lacks
-  // the chosen variant falls back to that plank's first companion without overwriting the preference,
-  // so returning to a plank that does have it shows it again.
-  const activeId = useMemo(() => {
-    if (current && companions.some((companion) => companion.value === current)) {
-      return current;
-    }
-    return isNodeCompanionValue(current)
-      ? groups.find((group) => group.scope === 'node')?.companions[0]?.value
-      : undefined;
-  }, [current, companions, groups]);
+  // `current` is the user's preference, not necessarily what is showable — see `resolveActiveCompanion`.
+  const activeId = useMemo(() => resolveActiveCompanion(current, groups), [current, groups]);
 
   const activeCompanion = companions.find((companion) => companion.value === activeId);
   const [internalValue, setInternalValue] = useState(activeId);
@@ -130,7 +121,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
+          <Tabs.Tablist
+            data-joyride='complementary-sidebar/companions'
+            classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'
+          >
             {groups.map((group, index) => (
               <Fragment key={group.scope}>
                 {index > 0 && <div role='none' className='mx-1 border-t border-subdued-separator' />}

@@ -44,6 +44,31 @@ export type CompanionGroups = {
 export const isNodeCompanionValue = (value: string | undefined): boolean =>
   value?.startsWith(NODE_VALUE_PREFIX) ?? false;
 
+/** The companion variant a selected node companion names, or undefined for a root-level one. */
+export const getNodeCompanionVariant = (value: string | undefined): string | undefined =>
+  isNodeCompanionValue(value) ? value!.slice(NODE_VALUE_PREFIX.length) : undefined;
+
+/** The value that selects `variant` on whichever node currently holds attention. */
+export const makeNodeCompanionValue = (variant: string): string => `${NODE_VALUE_PREFIX}${variant}`;
+
+/**
+ * Which companion to actually show, given the user's stored preference. A node companion that the
+ * attended node does not offer falls back to that node's first — the preference itself is left alone by
+ * the caller, so returning to a node that does offer it shows it again. A root-level selection never
+ * falls back: it applies everywhere, so its absence means it is genuinely gone.
+ */
+export const resolveActiveCompanion = (
+  preferred: string | undefined,
+  groups: readonly CompanionGroup[],
+): string | undefined => {
+  if (preferred && groups.some((group) => group.companions.some((entry) => entry.value === preferred))) {
+    return preferred;
+  }
+  return isNodeCompanionValue(preferred)
+    ? groups.find((group) => group.scope === 'node')?.companions[0]?.value
+    : undefined;
+};
+
 /**
  * Every companion applicable right now, grouped most-specific-first. Node companions come from the
  * attended plank, so the first group re-resolves as attention moves; workspace and global companions

@@ -46,8 +46,6 @@ export const translations = [
         'show-fullscreen-plank.label': 'Fullscreen',
         'close.label': 'Close',
         'minify.label': 'Minify',
-        'open-companion.label': 'Open companion side-by-side',
-        'close-companion.label': 'Close companion',
         'close-current.label': 'Close current plank',
         'close-others.label': 'Close other planks',
         'close-all.label': 'Close all planks',

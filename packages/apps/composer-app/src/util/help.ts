@@ -64,13 +64,11 @@ export const steps: Tour.Step[] = [
     title: 'Plugins',
     content: 'Enable plugins.',
   },
-  // TODO(burdon): Open companion.
   {
     ...base,
-    before: ensureSidebar,
-    target: '[data-testid="plankHeading.companion"]',
+    target: '[data-joyride="complementary-sidebar/companions"]',
     title: 'Companions',
-    content: 'View companion surfaces.',
+    content: 'View companion surfaces for whatever you are working on.',
   },
   {
     ...base,

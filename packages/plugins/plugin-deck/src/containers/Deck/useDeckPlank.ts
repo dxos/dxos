@@ -11,7 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
-import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
+import { useBreakpoints, useDeckState } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, type ResolvedPart } from '#types';
 
@@ -55,8 +55,7 @@ export type DeckPlank = {
 
 /**
  * Resolves the graph node, capabilities and sigil actions for a deck plank, and exposes the operation
- * dispatchers that mutate deck layout state. Companions are rendered as their own planks
- * ({@link CompanionPlank}), so this hook only handles ordinary content planks.
+ * dispatchers that mutate deck layout state.
  */
 export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPlank => {
   const { graph } = useAppGraph();
@@ -69,7 +68,6 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   // below, and the node atom does not re-emit when action edges arrive, so a one-shot read would
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
-  const companions = useCompanions(id);
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -84,10 +82,8 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
       expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      // Companions are per-plank: offer the toggle on any plank that has one while its own is off.
-      companion: companions.length > 0 && !deck.companionPlanks.includes(id),
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id, active?.length],
+    [breakpoint, part, canIncrementStart, canIncrementEnd, active?.length],
   );
 
   // Load the node's child actions so the sigil menu is populated.

@@ -12,5 +12,3 @@ export * from './useDeckSettings';
 export * from './useDeckState';
 export * from './useMainSize';
 export * from './useNodeActionExpander';
-export * from './useSelectedCompanion';
-export * from './useSelectedCompanionVariant';

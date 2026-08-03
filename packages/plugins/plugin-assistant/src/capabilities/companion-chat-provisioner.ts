@@ -12,13 +12,11 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
-  COMPANION_VIEW_STATE_CONTEXT,
   DeckCapabilities,
   PLANK_COMPANION_TYPE,
   type StoredDeckState,
-  companionAspect,
+  getNodeCompanionVariant,
 } from '@dxos/plugin-deck';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
@@ -38,11 +36,9 @@ export default Capability.makeModule(
     const deckStateAtom = yield* Capability.get(DeckCapabilities.State);
     const cacheAtom = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
     const stateAtom = yield* Capability.get(AssistantCapabilities.State);
-    // The selected companion variant moved off deck state into a global view-state aspect; read and
-    // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
-    // Project just the variant so a companion resize (same aspect) does not re-fire provisioning.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
-    const variantAtom = Atom.make((get) => get(viewState.atom(companionAspect, COMPANION_VIEW_STATE_CONTEXT)).variant);
+    // Companions live in the complementary sidebar, which stores the selected node companion as its
+    // panel. Project just the variant so unrelated deck-state churn does not re-fire provisioning.
+    const variantAtom = Atom.make((get) => getNodeCompanionVariant(get(deckStateAtom).complementarySidebarPanel));
 
     const plankSubs = new Map<string, () => void>();
 
@@ -98,7 +94,7 @@ export default Capability.makeModule(
     const provision = () => {
       const deckState: StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck?.companionPlanks.length) {
+      if (!deck || deckState.complementarySidebarState !== 'expanded') {
         unsubAllPlanks();
         return;
       }
@@ -154,8 +150,8 @@ export default Capability.makeModule(
 );
 
 /**
- * Mirrors useSelectedCompanion fallback logic outside of React.
- * Returns the variant that would actually be rendered for a given plank.
+ * Mirrors the sidebar's fallback outside of React: the variant that would actually be shown for a plank,
+ * falling back to its first companion when the selected one is not among them.
  */
 const resolveEffectiveVariant = (
   graph: Graph.BaseGraph,

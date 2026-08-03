@@ -9,13 +9,11 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
 import { type ResolvedPart } from '#types';
 
-import { CompanionPlank } from './CompanionPlank';
 import { PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
 import { useDeckPlank } from './useDeckPlank';
@@ -27,26 +25,18 @@ export type DeckPlankProps = ThemedClassName<{
   part: ResolvedPart;
   /** Whether this plank is displayed fullscreen (headless, no chrome). */
   fullscreen?: boolean;
-  /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */
+  /** The real active planks, for ordering/close semantics. */
   active?: string[];
   path?: string[];
 }>;
 
 /**
  * Connected deck plank: resolves the node, actions and operation handlers via {@link useDeckPlank} and
- * renders the presentational {@link Plank}. A companion id (a `~<variant>` linked segment) is an ordinary
- * plank too — delegated to {@link CompanionPlank}, which supplies the companion's own header and content —
- * so the deck layout never special-cases companions.
+ * renders the presentational {@link Plank}.
  */
-export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
-  if (Attention.isLinkedSegment(id)) {
-    return <CompanionPlank id={id} classNames={classNames} />;
-  }
-
-  return (
-    <DeckPlankInner id={id} part={part} fullscreen={fullscreen} active={active} path={path} classNames={classNames} />
-  );
-});
+export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => (
+  <DeckPlankInner id={id} part={part} fullscreen={fullscreen} active={active} path={path} classNames={classNames} />
+));
 
 DeckPlank.displayName = 'DeckPlank';
 

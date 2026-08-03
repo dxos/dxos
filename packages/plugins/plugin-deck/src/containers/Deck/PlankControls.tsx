@@ -2,10 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useCallback } from 'react';
+import React, { forwardRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -20,33 +18,6 @@ export type PlankControlHandler = (event: DeckOperation.PartAdjustment) => void;
 //
 
 const plankControlSpacing = 'px-2';
-
-export type PlankCompanionControlsProps = {
-  primary?: string;
-};
-
-export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionControlsProps>(
-  ({ primary }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
-    const { invokePromise } = useOperationInvoker();
-    // `anchor` names the plank this control belongs to: companions are per-plank, and resolving the
-    // target from attention instead would close whichever plank happened to be attended.
-    const handleCloseCompanion = useCallback(() => {
-      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null, anchor: primary });
-    }, [invokePromise, primary]);
-    return (
-      <div ref={forwardedRef} className='contents dx-app-no-drag'>
-        <PlankControl
-          label={t('close-companion.label')}
-          variant='ghost'
-          icon='ph--x--regular'
-          onClick={handleCloseCompanion}
-          classNames={plankControlSpacing}
-        />
-      </div>
-    );
-  },
-);
 
 const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
   return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
@@ -146,15 +117,6 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
           />
         )}
 
-        {capabilities.companion && (
-          <PlankControl
-            label={t('open-companion.label')}
-            classNames={buttonClassNames}
-            data-testid='plankHeading.companion'
-            icon='ph--square-split-horizontal--regular'
-            onClick={() => onClick?.('companion')}
-          />
-        )}
         {children}
       </ButtonGroup>
     );
