@@ -1,11 +1,11 @@
 # Tasks — startup latency (demand-driven activation)
 
-_Resume: navToReady critical path fully attributed (see "Critical path" below). Levers 1–4
-landed (yields, scoped pulls, concurrent enables, bounded waves). Next: (a) SDK `_open()`
-split — the 3.2 s worker/HALO/ECHO block; (b) defer heavy spacesReady-gated modules
-(Repair, BeaconServiceModule, TriggerRuntimeController, thread/calls AppGraphBuilder) to
-idle; (c) streaming start (begin round 1 before the full enable set registers). Uncommitted:
-none. Last: client.initialize marks landed; warm-cold primer document priming parked._
+_Resume: PR #12415 (draft, targets `claude/resume-app-framework-activation-ycp7vv`) is
+feature-complete and gated — drive it to review/land. Uncommitted: none. Last: demand-gated
+plugin start events (surface activation is the signal; graph builders and settings ride the
+feature they belong to), plus both CI budgets — `composer-app:check-boot-budget` (static, 30
+entries / 4.75 MB, today 20 / 4.44 MB) and `composer-app:check-startup-budget` (runtime, median
+modules-at-ready over 5 warm-cold repeats, budget 300, today 291)._
 
 ## Critical path of navToReady (warm-cold, in-container; attributed 2026-07-31)
 
@@ -52,21 +52,21 @@ Instrumentation (build first, keep afterwards):
 
 Questions the instrumentation must answer (exit criteria in DESIGN.md):
 
-- [x] Fan-out concurrency vs per-module weight — **concurrency, decisively** ([MAP.md](./MAP.md)):
+- [x] Fan-out concurrency vs per-module weight — **concurrency, decisively** ([DESIGN.md appendix A](./DESIGN.md#appendix-a--phase-1-map--measured-startup-structure-and-per-module-classification)):
       395-module round-1 fan-out, 81× overlap, per-module durations are a contention plateau;
       weight matters only on the critical chain (Client / ProcessManager / ClientReady)
 - [x] Client/network-init vs module-work split — measured in-container (client init material,
       not dominant; the "client init dominates" container finding was a dev-server artifact);
-      **real-hardware confirmation still owed** (open item in MAP.md)
+      **real-hardware confirmation still owed** (open item in DESIGN.md appendix A)
 
 The map itself — probed live from `manager.getModules()` on the production preview build
-(456 modules); supersedes [`AUDIT-modules.md`](./AUDIT-modules.md):
+(456 modules); supersedes the 2026-07-19 starting inventory (dropped; see git history):
 
 - [x] Classify all 456 modules ([map.json](./map.json)): demand-gated 174 / stay-eager 132
       (value-only) / cluster-with-plugin 96 / startup-essential 43 / existing-event 11;
-      `unknown` = 0 by family-rule construction (spot-check buckets noted in MAP.md)
-- [x] Consumer-kind audit per provided capability → [CONSUMERS.md](./CONSUMERS.md)
-- [x] Seed-hypothesis open questions resolved → [SUBSTRATE.md](./SUBSTRATE.md): surface roles
+      `unknown` = 0 by family-rule construction (spot-check buckets noted in DESIGN.md appendix A)
+- [x] Consumer-kind audit per provided capability → [DESIGN.md appendix C](./DESIGN.md#appendix-c--consumer-kind-audit--multi-arity-capabilities)
+- [x] Seed-hypothesis open questions resolved → [DESIGN.md appendix B](./DESIGN.md#appendix-b--demand-signal-substrate--seed-hypothesis-answers): surface roles
       statically extractable (need `roles` spec field + miss hook); operation→module map needs
       `handles` field + invoker miss hook (the key-embeds-plugin naming convention is
       demonstrably unsound); urlKey table derived-not-static but every key is a literal
@@ -75,7 +75,7 @@ The map itself — probed live from `manager.getModules()` on the production pre
 - [x] Confirm or refute the §12 stay-eager list — **confirmed** (Schema, translations,
       PluginAsset value-only; Settings bound to their plugin cluster by sync-read consumers)
 
-New findings beyond the planned questions (details in [MAP.md](./MAP.md)):
+New findings beyond the planned questions (details in [DESIGN.md appendix A](./DESIGN.md#appendix-a--phase-1-map--measured-startup-structure-and-per-module-classification)):
 
 - Dependency-pass **rounds are barriers** — `observability.ClientReady` (4.2 s in-container)
   gates `deck.UrlHandler` and all of round 4; async-ifying its body is a membership-neutral
@@ -90,13 +90,13 @@ New findings beyond the planned questions (details in [MAP.md](./MAP.md)):
 ## Phase 2 — implementation waves (ordering ratified 2026-07-31)
 
 Target state per family ratified in conversation (translations/schema/pluginAsset/settings stay
-eager; per-family verdicts and measured sizing in MAP.md and the target table). Waves in order:
+eager; per-family verdicts and measured sizing in DESIGN.md appendix A and the target table). Waves in order:
 
 ### Wave 1 — activation-event deferral of the four families (~6.1 MB / 431 chunks off eager boot)
 
 Move `operationHandler`, `reactSurface`, `createObject`, `skillDefinition` off startup
 (131 chunk-bearing modules of 244 total; combined removal measured at 6.1 MB of the 21.5 MB
-boot JS). Substrate per SUBSTRATE.md:
+boot JS). Substrate per DESIGN.md appendix B:
 
 Implementation (2026-07-31, commits 7faebffdab + ebb39a92e3) took a safer shape than the
 pre-authored plan: instead of a per-module declaration field, an app-supplied
@@ -182,7 +182,7 @@ definitions stay runtime-neutral; CLI/workerd unaffected), and handler loading b
       declared via `inlineModule` instead of the makers (e.g. trip.SkillDefinition, value-only)
       keep their own eager behavior. First-interaction-latency probe still owed
 
-### Wave 2 — lightweight operation definitions ([DEFINITIONS-AUDIT.md](./DEFINITIONS-AUDIT.md))
+### Wave 2 — lightweight operation definitions ([DESIGN.md appendix D](./DESIGN.md#appendix-d--operation-definition-weight-audit))
 
 No definition file is lightweight today (~576-file floor; confirmed-shipping leaks ≈ 2–2.5 MB
 wire in the eager core). Fix rules 1–5 in the audit doc:
@@ -417,7 +417,7 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 
 ### Later / standing
 
-- [ ] Critical-chain membership fixes (MAP.md P0): `observability.ClientReady` async body,
+- [ ] Critical-chain membership fixes (DESIGN.md appendix A P0): `observability.ClientReady` async body,
       `ProcessManager` activate audit — can land independently of the waves
 - [ ] appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
 - [ ] Tier-aware per-commit trend line (Phase 1 leftover)

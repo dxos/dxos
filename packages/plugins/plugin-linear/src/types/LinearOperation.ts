@@ -15,6 +15,9 @@ import {
   MaterializeTargetInput,
   MaterializeTargetOutput,
 } from '@dxos/plugin-connector';
+// Referenced only from a JSDoc {@link}, which the rule cannot see; the suppression rode the
+// pre-subpath barrel import too.
+// eslint-disable-next-line unused-imports/no-unused-imports
 import type * as Connection from '@dxos/plugin-connector/Connection';
 
 import { meta } from '#meta';
