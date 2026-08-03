@@ -70,11 +70,15 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     [state.complementarySidebarState, activeId, invokePromise, updateState],
   );
 
+  // Collapse only when there is genuinely nothing to show. Keying this on the resolved selection instead
+  // would collapse on navigation: the node group is read in a commit-phase effect, so it is briefly
+  // empty while the anchor changes.
+  const empty = groups.length === 0;
   useEffect(() => {
-    if (!activeId) {
+    if (empty) {
       void invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, invokePromise]);
+  }, [empty, invokePromise]);
 
   const size = state.complementarySidebarSize ?? DEFAULT_SIZE;
 

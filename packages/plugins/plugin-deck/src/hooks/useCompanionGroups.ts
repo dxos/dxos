@@ -52,10 +52,10 @@ export const getNodeCompanionVariant = (value: string | undefined): string | und
 export const makeNodeCompanionValue = (variant: string): string => `${NODE_VALUE_PREFIX}${variant}`;
 
 /**
- * Which companion to actually show, given the user's stored preference. A node companion that the
- * attended node does not offer falls back to that node's first — the preference itself is left alone by
- * the caller, so returning to a node that does offer it shows it again. A root-level selection never
- * falls back: it applies everywhere, so its absence means it is genuinely gone.
+ * Which companion to actually show, given the user's stored preference. A preference the current node
+ * does not offer falls back to that node's first companion, then to the first of any group — the stored
+ * preference itself is left alone by the caller, so returning to a node that does offer it shows it
+ * again. Undefined only when there is nothing to show at all, which is the one case worth collapsing on.
  */
 export const resolveActiveCompanion = (
   preferred: string | undefined,
@@ -64,9 +64,8 @@ export const resolveActiveCompanion = (
   if (preferred && groups.some((group) => group.companions.some((entry) => entry.value === preferred))) {
     return preferred;
   }
-  return isNodeCompanionValue(preferred)
-    ? groups.find((group) => group.scope === 'node')?.companions[0]?.value
-    : undefined;
+  const nodeGroup = groups.find((group) => group.scope === 'node');
+  return nodeGroup?.companions[0]?.value ?? groups[0]?.companions[0]?.value;
 };
 
 /**

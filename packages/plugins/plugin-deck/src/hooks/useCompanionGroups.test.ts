@@ -47,16 +47,20 @@ describe('resolveActiveCompanion', () => {
     expect(resolveActiveCompanion('node/settings', withoutSettings)).toEqual('node/comments');
   });
 
-  test('falls back to nothing when the attended node has no companions at all', () => {
-    expect(resolveActiveCompanion('node/settings', groups(['global', ['search']]))).toBeUndefined();
+  test('falls back past an empty node group to the next group', () => {
+    expect(resolveActiveCompanion('node/settings', groups(['global', ['search']]))).toEqual('search');
   });
 
-  test('a missing root-level companion does not borrow a node one', () => {
-    // A root companion applies everywhere, so its absence means it is gone rather than out of scope.
-    expect(resolveActiveCompanion('trace', available)).toBeUndefined();
+  test('falls back to the node group when the preferred root companion is gone', () => {
+    expect(resolveActiveCompanion('trace', available)).toEqual('node/comments');
   });
 
-  test('no preference selects nothing, leaving the sidebar to collapse', () => {
-    expect(resolveActiveCompanion(undefined, available)).toBeUndefined();
+  test('no preference shows the most specific companion available', () => {
+    expect(resolveActiveCompanion(undefined, available)).toEqual('node/comments');
+  });
+
+  // Undefined only with nothing to show, which is the sole condition the sidebar collapses on.
+  test('selects nothing when there are no companions at all', () => {
+    expect(resolveActiveCompanion('node/settings', [])).toBeUndefined();
   });
 });
