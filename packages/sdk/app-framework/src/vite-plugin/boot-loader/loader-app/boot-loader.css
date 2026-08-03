@@ -14,7 +14,7 @@ body {
 /*
  * Defaults match `@dxos/ui-theme`'s `--color-base-surface`, which resolves to
  * Tailwind's `neutral-50` / `neutral-950` in light / dark mode respectively
- * (see `packages/ui/ui-theme/src/css/theme/semantic.css`). Hosts can override
+ * (see `packages/ui/ui-theme/src/css/theme/surfaces.css`). Hosts can override
  * with the `--boot-loader-bg-*` / `--boot-loader-fg-*` custom properties on
  * `:root` if they need a different palette. Keeping the boot loader's
  * background identical to the app's `body` eliminates the flash on handoff

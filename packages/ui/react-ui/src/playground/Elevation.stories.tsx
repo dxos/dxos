@@ -35,7 +35,7 @@ random.seed(1);
 /**
  * Kitchen-sink app frame built only from `@dxos/react-ui` primitives at their default props, so
  * every surface shown is the one the app actually paints — the review harness for the elevation
- * ladder (`theme/semantic.css`) and the aspects derived from it.
+ * ladder (`theme/surfaces.css`) and the aspects derived from it.
  *
  * Reading the frame outward: the sidebars and topbar are `chrome` (below the canvas), the content
  * region is `base`, cards are `raised` (above the canvas), the dialog is `overlay`, and the popover
