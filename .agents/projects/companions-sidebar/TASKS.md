@@ -1,6 +1,6 @@
 # Companions in the Sidebar — Tasks
 
-_Resume: Phase 2 — unified companion rail (add `scope` to the companion builders, then the three-group rail). Uncommitted: none. Last: Phase 1 landed — the complementary sidebar is drag-resizable and the width persists._
+_Resume: Phases 1-2 done and browser-verified (PR #12451, draft). Uncommitted: none. Next: decide on Phase 3 — removing the in-deck companion path means deleting the per-plank model from PR #12424, so confirm with burdon first._
 
 ## Phase 1: Resizable complementary sidebar
 
@@ -42,22 +42,36 @@ existing root-level companions, grouped node → workspace → global.
 
 ### Tasks
 
-- [ ] **Add `scope` to the companion builders** (`AppNode.ts`)
-  - Single `makeCompanion({ scope: 'node' | 'workspace' | 'global', ... })`;
-    keep `makeDeckCompanion` temporarily delegating to it with a scope tag.
-  - Single `COMPANION_TYPE`; scope carried in `properties.scope`.
-- [ ] **ComplementarySidebar: three-group rail**
-  - Node group from `useCompanions(attendedPlankId)` (attention-resolved),
-    workspace + global groups from root connections split by scope.
-  - `Position.compare` within groups; separators between groups.
-- [ ] **Selection + attention rebinding**
-  - Node-scoped selection stored by variant; rebind on attention move; fall
-    back to first available node companion when the variant is absent.
-  - Panels render Article surface (node) / deckCompanion surface (workspace,
-    global) as today.
-- [ ] **Plank toolbar button** — repoint `plankHeading.companion` to expand the
-      sidebar (or remove; decide by feel).
-- [ ] **Verify**: DeckLayout + ComplementarySidebar stories, unit tests.
+- [x] **Add `scope` to the companion builders** (`AppNode.CompanionScope`) —
+      `makeCompanion` stamps `node`; `makeDeckCompanion` takes an optional
+      `workspace | global`, defaulting to `global` so existing contributions are
+      unchanged. `search` tagged `workspace`. Node types stay split for now;
+      collapsing to one `COMPANION_TYPE` is Phase 4.
+- [x] **ComplementarySidebar: three-group rail** — `useCompanionGroups` resolves
+      the node group from the attended plank (`resolveCompanionAnchor`) and
+      splits root connections by scope; `Position` orders within a group, a rule
+      separates groups.
+- [x] **Selection + attention rebinding** — tab values are `node/<variant>` for
+      node companions and the bare variant for root ones (back-compatible with
+      persisted `complementarySidebarPanel`). The stored value is a _preference_:
+      a missing variant falls back to the node group's first companion without
+      overwriting it.
+- [x] **Fix `UpdateComplementary` clearing the selection** — it treated an absent
+      `subject` as a change, so every collapse forgot the open panel. Now only an
+      explicitly supplied subject counts.
+- [x] **Verify** (Playwright against `ComplementarySidebarExpanded`): rail reads
+      `node/alpha, node/beta, ---, storyPanel, storyInfo`; picking `node/beta` and
+      attending another item rebinds the same variant to the new node; where the
+      variant is absent it falls back to `node/alpha`; returning restores `beta`.
+- [ ] **Plank toolbar button** — `plankHeading.companion` still opens the
+      in-deck companion; repoint it at the sidebar as part of Phase 3.
+
+### Open question for the user
+
+Both paths now coexist: companions render in the sidebar _and_ can still be
+opened in the deck. Good for side-by-side comparison, but not the end state —
+Phase 3 deletes the in-deck path, which means deleting the per-plank companion
+model that shipped in PR #12424. Confirm before doing that.
 
 ## Phase 3: Remove the in-deck companion machinery
 
