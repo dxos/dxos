@@ -10,7 +10,10 @@ import { invariant } from '@dxos/invariant';
 
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
-import { usePluginManager } from '../components';
+import { useOptionalPluginManager, usePluginManager } from '../components';
+
+/** Stable empty result for capability lookups made outside a plugin manager. */
+const emptyCapabilities = Atom.make(() => [] as const);
 
 /** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
 const emptyAtomValue = Atom.make(() => undefined);
@@ -37,17 +40,19 @@ export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
 };
 
 /**
- * Hook to request capabilities that a plugin may or may not contribute.
- * @returns An array of capabilities, empty when none is registered.
+ * Hook to request capabilities without requiring a plugin manager.
+ * @returns An array of capabilities, or an empty array when rendered outside a {@link PluginManagerProvider}.
  */
 export const useOptionalCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>): readonly T[] => {
-  const manager = usePluginManager();
-  return useAtomValue(manager.capabilities.atom(interfaceDef));
+  const manager = useOptionalPluginManager();
+  return useAtomValue(
+    manager ? manager.capabilities.atom(interfaceDef) : (emptyCapabilities as Atom.Atom<readonly T[]>),
+  );
 };
 
 /**
- * Hook to request a single capability that a plugin may or may not contribute.
- * @returns The first matching capability, or `undefined` when none is registered.
+ * Hook to request a single capability without requiring a plugin manager.
+ * @returns The first matching capability, or `undefined` when none is registered (or there is no plugin manager).
  */
 export const useOptionalCapability = <T>(interfaceDef: Capability.InterfaceDef<T>): T | undefined =>
   useOptionalCapabilities(interfaceDef)[0];
