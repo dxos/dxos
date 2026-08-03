@@ -5,3 +5,4 @@
 export * from './ComplementarySidebar';
 export * from './Sidebar';
 export * from './SidebarButton';
+export * from './SidebarResizeHandle';

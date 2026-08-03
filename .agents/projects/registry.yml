@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/companions-sidebar/TASKS.md
     design: .agents/projects/companions-sidebar/DESIGN.md
     prs: []
-    resume: 'Design ratified (tabs kept, node/workspace/global scopes, attention fallback = first available, one-panel trade-off accepted). Next: Phase 1 — resizable complementary sidebar (drag handle + persisted complementarySidebarSize).'
+    resume: 'Phase 1 DONE and browser-verified — the complementary sidebar is drag-resizable (SidebarResizeHandle), width persists as StoredDeckState.complementarySidebarSize, and data-sidebar-resizing on :root suppresses the width transition so the deck tracks the seam in the same frame. NEXT: Phase 2 — add scope (node/workspace/global) to the companion builders, then render the three-group rail in ComplementarySidebar.'
   - name: lenses
     status: active
     user: josiah

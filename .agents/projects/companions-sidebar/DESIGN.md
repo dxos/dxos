@@ -13,7 +13,7 @@ contract, and chrome, but serve one purpose (auxiliary panels beside the user's
 work):
 
 - **Plank companions** (`AppNode.makeCompanion`, `PLANK_COMPANION_TYPE`):
-  children of an object node, id `<plankId>/~<variant>`, rendered *in the deck*
+  children of an object node, id `<plankId>/~<variant>`, rendered _in the deck_
   as a splitter-paired plank (`CompanionSplit`/`CompanionPlank`). Open state in
   `DeckState.companionPlanks` (per plank), width in `plankSizing['companion']`,
   serialized into the URL plank chain. ~28 contributions across ~20 plugins.
@@ -33,24 +33,27 @@ dual concept forces every plugin author to choose a mechanism.
 
 ```ts
 AppNode.makeCompanion({
-  variant, label, icon, data,
+  variant,
+  label,
+  icon,
+  data,
   scope: 'node' | 'workspace' | 'global',
   position, // ordering within the scope group
-})
+});
 ```
 
 `makeDeckCompanion` is deleted; callers migrate to `scope: 'workspace' | 'global'`.
 
-**Scope taxonomy** (decided: *node*, not *object* — graph nodes need not be
+**Scope taxonomy** (decided: _node_, not _object_ — graph nodes need not be
 ECHO objects):
 
-| Scope       | Graph attachment                  | Resolved against                  |
-| ----------- | --------------------------------- | --------------------------------- |
-| `node`      | child of the node it accompanies  | the attended plank's node         |
-| `workspace` | child of root, tagged `workspace` | the current space                 |
-| `global`    | child of root, tagged `global`    | nothing — always applicable       |
+| Scope       | Graph attachment                  | Resolved against            |
+| ----------- | --------------------------------- | --------------------------- |
+| `node`      | child of the node it accompanies  | the attended plank's node   |
+| `workspace` | child of root, tagged `workspace` | the current space           |
+| `global`    | child of root, tagged `global`    | nothing — always applicable |
 
-**One home.** The complementary sidebar rail lists *all applicable* companions,
+**One home.** The complementary sidebar rail lists _all applicable_ companions,
 grouped most-specific-first: node → workspace → global, `Position.compare`
 within each group, thin separators between groups. Tabs model is kept: one
 panel expanded at a time.
@@ -79,7 +82,7 @@ Replaced/removed:
 Kept/added:
 
 - `complementarySidebarState: 'closed' | 'collapsed' | 'expanded'` (exists).
-- Selection: node-scoped selections are stored by *variant* so they rebind to
+- Selection: node-scoped selections are stored by _variant_ so they rebind to
   the attended plank as attention moves; workspace/global selections by id (as
   today via `complementarySidebarPanel`).
 - `complementarySidebarSize` (new, persisted width).

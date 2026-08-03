@@ -18,8 +18,17 @@ import { meta } from '#meta';
 import { layoutAppliesTopbar } from '../../util';
 import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
+import { SidebarResizeHandle } from './SidebarResizeHandle';
 
 const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
+
+/** The theme property the sidebar's expanded width is read from; `--dx-r1-size` derives from it. */
+const SIZE_PROPERTY = '--dx-complementary-sidebar-size';
+
+/** Mirrors the theme default for {@link SIZE_PROPERTY}, used until the user drags the seam. */
+const DEFAULT_SIZE = 25;
+const MIN_SIZE = 18;
+const MAX_SIZE = 60;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -73,11 +82,39 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     }
   }, [activeId, invokePromise]);
 
+  const size = state.complementarySidebarSize ?? DEFAULT_SIZE;
+
+  // Publish the committed width where the theme declares it, so the sidebar and everything sized
+  // against it (the deck, `--dx-r1-size`) agree. The drag previews the same property directly.
+  useEffect(() => {
+    document.documentElement.style.setProperty(SIZE_PROPERTY, `${size}rem`);
+    return () => {
+      document.documentElement.style.removeProperty(SIZE_PROPERTY);
+    };
+  }, [size]);
+
+  const handleSizeChange = useCallback(
+    (next: number) => updateState((state) => ({ ...state, complementarySidebarSize: next })),
+    [updateState],
+  );
+
   return (
     <Main.ComplementarySidebar
       label={label}
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
+      {state.complementarySidebarState === 'expanded' && (
+        <SidebarResizeHandle
+          classNames='hidden lg:block'
+          property={SIZE_PROPERTY}
+          side='inline-end'
+          size={size}
+          minSize={MIN_SIZE}
+          maxSize={MAX_SIZE}
+          label={t('resize-complementary-sidebar.label')}
+          onSizeChange={handleSizeChange}
+        />
+      )}
       {/* R0 Tabs */}
       <Tabs.Root classNames='contents' orientation='vertical' value={internalValue}>
         <div

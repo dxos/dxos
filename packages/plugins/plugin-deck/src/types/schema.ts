@@ -77,6 +77,8 @@ export const StoredDeckState = Schema.Struct({
   sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarPanel: Schema.optional(Schema.String),
+  /** Expanded width of the complementary sidebar in rem; absent falls back to the theme default. */
+  complementarySidebarSize: Schema.optional(Schema.Number),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
