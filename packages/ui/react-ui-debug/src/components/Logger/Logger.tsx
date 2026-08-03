@@ -382,7 +382,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                     )}
                     {visibleFiles.length > 0 && (
                       <Listbox.Root>
-                        <Listbox.Content>
+                        <Listbox.Content classNames='dx-density-sm'>
                           {visibleFiles.map((file) => {
                             const basename = file.split('/').pop() ?? file;
                             const pkg = packageName(file);
@@ -517,7 +517,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           }
         }}
       >
-        <Listbox.Content classNames={mx(classNames)}>
+        <Listbox.Content classNames={mx('dx-density-sm', classNames)}>
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
