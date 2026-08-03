@@ -177,9 +177,14 @@ describe('ClientPlugin startup', () => {
     await startupDone;
     mark('total startup', totalStart);
 
-    // Verify client is ready.
+    // Verify client is ready. `initialize()` is forked off the startup pass, so Startup completing
+    // no longer implies an initialized client — that is the point of the fork, and reading `halo`
+    // before it settles trips the client's own not-initialized invariant.
     const client = manager.capabilities.get(ClientCapabilities.Client) as Client;
     expect(client).toBeDefined();
+    phaseStart = performance.now();
+    await client.waitUntilInitialized();
+    mark('client initialize (forked off startup)', phaseStart);
     expect(client.halo.identity.get()).toBeDefined();
 
     // Print summary.

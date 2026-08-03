@@ -429,6 +429,24 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 - [ ] appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
 - [ ] Tier-aware per-commit trend line (Phase 1 leftover)
 - [ ] Warm-reload race root-cause — still gates any scheduling change (round barriers)
+- [x] Delete `OWN_PLUGIN_SPECIFIER` / `resolveOwnPlugin` — zero production users (one synthetic
+      test, one comment); removed from the public `ActivationEvent` surface
+- [ ] **Collapse `ActivationSpec` to one mode (own PR, user-directed 2026-08-03).** Dependency
+      mode is a wave with no name: Startup for the no-`requires` modules, "whatever wave my
+      providers landed in" for the rest. Replace with a single `activatesOn` defaulting to
+      `Startup`, and make pull **wave-scoped** — firing E activates E's modules and lets them
+      pull required providers that are in E or an already-fired wave. This subsumes the mode
+      filter in `#pullDependencyProviders` precisely (mutually-exclusive providers gated on
+      different events can no longer collide) and makes wave membership declared, not derived
+      from the capability graph.
+  - Blocker/first step: **count the chain-riders** — modules with no `activatesOn` whose
+    `requires` is satisfied only by an event-mode provider. Those activate inside that event's
+    wave today and would break under a `Startup` default; they need re-homing. 194 explicit
+    `activatesOn` sites vs ~700 dependency modules vs ~300 modules-at-ready — the arithmetic
+    doesn't resolve from static reading, so measure before assuming this is a codemod.
+  - Unlocks the namespace fix: once the scheduler stops special-casing `Startup`, `Startup` and
+    `pluginStart` move from `core/activation-event.ts` to `common/activation-events.ts` and the
+    duplicate `PluginStart` wrapper is deleted.
 
 ## Checkpoint 2026-08-01 (per-plugin start events landed)
 
