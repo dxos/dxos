@@ -65,7 +65,7 @@ export const FormFieldSetContainer = ({
                 active={!collapsed}
                 classNames='px-1 mr-0.5'
                 variant='ghost'
-                density='xs'
+                density='sm'
                 iconOnly
                 icon='ph--caret-right--regular'
                 label={t(collapsed ? 'expand-fields.label' : 'collapse-fields.label')}

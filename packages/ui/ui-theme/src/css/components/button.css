@@ -122,7 +122,6 @@
   }
   /* `data-density` is handled by the shared density rule in theme/spacing.css, which sets
    * --dx-control / --dx-control-pad; only the type-scale tweak is button-specific. */
-  .dx-button[data-density='xs'],
   .dx-button[data-density='sm'] {
     @apply text-xs;
   }

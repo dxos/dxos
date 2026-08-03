@@ -110,7 +110,7 @@ const TaskRow = ({ task, onUpdate, onDelete, onSelect }: TaskRowProps) => {
         {onUpdate ? (
           <IconButton
             variant='ghost'
-            density='xs'
+            density='sm'
             icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
             iconOnly
             label={done ? 'Mark todo' : 'Mark done'}
@@ -135,7 +135,7 @@ const TaskRow = ({ task, onUpdate, onDelete, onSelect }: TaskRowProps) => {
         {onDelete && (
           <IconButton
             variant='ghost'
-            density='xs'
+            density='sm'
             icon='ph--x--regular'
             iconOnly
             label='Delete task'

@@ -115,13 +115,7 @@ const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-c
 const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
-    props.density === 'lg'
-      ? 'text-lg'
-      : props.density === 'sm'
-        ? 'text-sm'
-        : props.density === 'xs'
-          ? 'text-xs'
-          : 'text-base pointer-fine:text-sm',
+    props.density === 'lg' ? 'text-lg' : props.density === 'sm' ? 'text-sm' : 'text-base pointer-fine:text-sm',
     props.disabled && 'cursor-not-allowed',
     ...etc,
   );

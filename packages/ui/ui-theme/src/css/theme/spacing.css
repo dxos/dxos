@@ -41,7 +41,7 @@
    *   sm 1.5rem = 24px fine / 30px coarse
    *   md 2rem   = 32px fine / 40px coarse
    *   lg 2.5rem = 40px fine / 50px coarse
-   * The old 28px step is gone; `xs` is an alias of `sm`.
+   * The old 28px step and the `xs` density are gone; `sm` is the compact step.
    */
   --dx-control-sm: 1.5rem;
   --dx-control-md: 2rem;
@@ -74,11 +74,9 @@
     --spacing-form-padding: var(--spacing-trim-sm);
   }
 
-  /** Density: sm — compact. `xs` is retained as an alias for call-site compatibility. */
+  /** Density: sm — compact. */
   .dx-density-sm,
-  .dx-density-xs,
-  [data-density='sm'],
-  [data-density='xs'] {
+  [data-density='sm'] {
     --dx-control: var(--dx-control-sm);
     --dx-control-pad: var(--spacing-trim-xs);
     --spacing-form-padding: var(--spacing-trim-xs);

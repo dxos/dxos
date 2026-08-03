@@ -8,6 +8,7 @@ import React from 'react';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withLayoutVariants, withTheme } from '../../testing';
+import { IconButton } from '../Button';
 import { Icon } from '../Icon';
 import {
   type CheckboxProps,
@@ -97,10 +98,14 @@ type Story = StoryObj<StoryArgs & Variant>;
 export const Density: Story = {
   render: () => (
     <div className='flex flex-col gap-4'>
-      {(['lg', 'md', 'sm', 'xs'] as const).map((density) => (
+      {(['lg', 'md', 'sm'] as const).map((density) => (
         <Input.Root key={density}>
           <Input.Label>{`density="${density}"`}</Input.Label>
-          <Input.TextInput density={density} placeholder={`This is a density:${density} input`} />
+          <div className='flex items-center gap-2'>
+            <Input.Checkbox size={density === 'lg' ? 5 : 4} />
+            <Input.TextInput density={density} classNames='grow' placeholder={`This is a density:${density} input`} />
+            <IconButton density={density} iconOnly icon='ph--gear--regular' label='Settings' />
+          </div>
         </Input.Root>
       ))}
     </div>

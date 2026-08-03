@@ -554,7 +554,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <IconButton
                   icon='ph--clipboard--regular'
                   iconOnly
-                  density='xs'
+                  density='sm'
                   tabIndex={-1}
                   label={t('copy-entry.label')}
                   variant='ghost'

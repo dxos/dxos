@@ -44,7 +44,7 @@ export const ProgressMeter = composable<HTMLDivElement, ProgressMeterProps>(
             </span>
             {cancellable && (
               <IconButton
-                density='xs'
+                density='sm'
                 variant='ghost'
                 size={3}
                 square
