@@ -1,10 +1,7 @@
 {
   "name": "@dxos/plugin-projects",
   "version": "0.10.0",
-  "publishConfig": {
-    "access": "public"
-  },
-  "description": "Projects \u2014 interactive, long-running processes with instructions, routines, and artifacts",
+  "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
@@ -134,5 +131,8 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

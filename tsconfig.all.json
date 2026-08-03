@@ -784,6 +784,9 @@
       "path": "packages/ui/react-ui-task/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-terminal/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
     },
     {
