@@ -201,7 +201,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
             icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
             iconOnly
             label={done ? 'Mark todo' : 'Mark done'}
-            classNames={mx('justify-self-center', done && 'text-success-text')}
+            classNames={mx('justify-self-center text-subdued', done && 'text-success-text')}
             onClick={handleToggle}
           />
         ) : (

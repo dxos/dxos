@@ -119,9 +119,9 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
           onTaskUpdate={handleUpdate}
           onTaskDelete={handleDelete}
         >
-          <TaskList.Viewport>
-            <TaskList.Content />
-          </TaskList.Viewport>
+          {/* <TaskList.Viewport> */}
+          <TaskList.Content />
+          {/* </TaskList.Viewport> */}
           <TaskList.Create />
         </TaskList.Root>
       </Panel.Content>
