@@ -48,6 +48,35 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 - [x] e2e rewritten as `scripts/e2e-project-task-smoke.mjs`: projectCreate → taskCreate ×2 (root + sub-task) → taskUpdate → taskAssign → taskComplete → taskList → projectList/projectGet
 - [ ] **BLOCKER (live stack, not code): `database.objectCreate` HANGS in the worker** — BISECTED 2026-08-03: NOT caused by the new registrations (removing ProjectOperationHandlerSet + SpaceOperationHandlerSet still hangs) and NOT the missing-live-peer theory (holding a Composer tab open for the space hangs identically). The write itself lands (`begin change`/`end change` on the ObjectCore are logged) and the request then never settles, so the stall is after the mutation — in the flush/replication ack. Remaining suspects in order: the @dxos pin bump f8637f1df3 → f10b1ce757 (yesterday's working runs were on the older pin) and the grown local `.wrangler` state. Next: reinstall at the old pin with the same identity to confirm, then diff the db-service write path across the two pins. Repro: any `createObject` against a space created today ("Workers runtime canceled this request because it detected that your Worker's code had hung"). Reproduced with a bare createObject (no attach), so it is upstream of the project work — it also blocks `CollectionModel.add` (root-collection filing) and therefore `projects.create` via AddObject. Task verbs consequently fail with 'Invalid argument `ids`' (they receive `echo:///undefined` from the failed create). NOT yet bisected: candidates are the @dxos pin bump f8637f1df3 → f10b1ce757, the freshly bootstrapped identity/space (queries return, writes hang), or the newly registered space handler set. Next: bisect by reverting the pin with the same identity, and check the db-service side of the hung write
 
+## Milestone 5 — passkey auth + space management (user-directed 2026-08-03)
+
+Spec: `edge:packages/services/mcp-space-service/DESIGN.md` §4.2–4.6 (audit, hub, passkey design,
+space session, open questions) and §9 (milestones M6–M9).
+
+- [x] Hub identity/access-control audit — KEY FINDING: there is **no server-side passkey
+      verification anywhere today**. The hub's `Identity`/`Passkey` tables are annotated vestigial
+      ("recovery passkeys now live as HALO credentials on the client"); `@simplewebauthn/server`
+      is a dependency nothing calls. Real passkeys are created client-side by
+      `plugin-client/src/operations/create-passkey.ts` with `rp.id = location.hostname` — i.e.
+      bound to Composer's serving origin — and are HALO _recovery_ credentials, not account
+      credentials. Hub access control is admin-key routes plus verifiable-presentation auth
+      (`hub-protocol/src/middleware.ts`, with `allowEphemeralIdentity` for invitation bootstrap)
+- [x] DESIGN.md extended: §4.1 (Composer signed-challenge) marked SUPERSEDED — booting Composer
+      to approve a connection is too slow; identity moves to a hub-hosted server-side endpoint
+- [ ] M6 passkey auth from Claude: hub route + account credentials, MCP `/authorize` delegation +
+      `/authorize/callback`, `DX_AUTH_BASE_URL` config. DECIDED: RP ID `auth.dxos.org`
+      (localhost in dev); build on existing Account tables; hosted inside hub-service; e2e via CDP
+      virtual authenticator **plus one manual Touch ID pass** before the milestone closes
+- [ ] M7 identity through `invokeOperation` (prerequisite for trusting assignee-bearing verbs)
+- [ ] M8 space management: sticky session (KV `session:<grantId>:currentSpace`) then CRUD; needs
+      the `space.create`-in-workerd spike first
+- [ ] M9 Claude connector-directory listing (self-serve custom-connector URL is the interim path)
+- [ ] ASK JOSIAH: (1) RP ID migration — existing passkeys are bound to Composer's origin, so
+      either re-register at the auth origin or adopt WebAuthn Related Origin Requests;
+      (2) ownership of the vestigial `Identity`/`Passkey` tables vs the new account credentials
+- [ ] BLOCKER #12446 (dmaretskyi): `database.objectCreate` hangs after the write lands; blocks M8
+      live acceptance, not M6
+
 ## Milestone 2 — task-planning ⇄ Composer documents (next)
 
 - [x] MCP object CRUD + discovery (edge PR #785 MERGED 2026-08-01 — incl. integration-suite port preserving #758 guards + uuid@14 vitest fix): createObject/getObject/updateObject/deleteObject/queryObjects + listPlugins/listTypes/listOperations; Task+ExternalProject registered; live-verified full Task/ExternalProject lifecycle in user's space
