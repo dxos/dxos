@@ -11,7 +11,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { VoxelArticle, VoxelCard } from '#containers';
-import { Voxel } from '#types';
+
+import * as Voxel from '../types/Voxel';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

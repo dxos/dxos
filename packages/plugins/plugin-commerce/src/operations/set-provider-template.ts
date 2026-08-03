@@ -9,7 +9,8 @@ import type * as Types from 'effect/Types';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 
-import { Provider, SearchOperation } from '../types';
+import * as Provider from '../types/Provider';
+import * as SearchOperation from '../types/SearchOperation';
 
 const decodeSearchSchema = Schema.decodeUnknownSync(JsonSchema.JsonSchema);
 

@@ -11,7 +11,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { meta } from '#meta';
 
 import { type ThemePluginOptions } from './react-context';
-import { ThemeCapabilities } from './types';
+import * as ThemeCapabilities from './types/ThemeCapabilities';
 
 const ReactContext = Capability.lazyModule(
   'ReactContext',

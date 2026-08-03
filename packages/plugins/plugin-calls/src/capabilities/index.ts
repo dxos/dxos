@@ -8,7 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { CallsCapabilities, CallsEvents } from '#types';
+import * as CallsCapabilities from '../types/CallsCapabilities';
+import * as CallsEvents from '../types/CallsEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [CallsCapabilities.Manager],

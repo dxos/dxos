@@ -9,7 +9,7 @@ import { Proxy } from '@dxos/crx-protocol';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
-import { Settings } from '../../types';
+import * as Settings from '../../types/Settings';
 import { CrxSettings } from './CrxSettings';
 
 /**

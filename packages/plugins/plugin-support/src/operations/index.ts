@@ -4,8 +4,8 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SupportOperation } from '#types';
-import { HelpOperation } from '#types';
+import * as HelpOperation from '../types/HelpOperation';
+import * as SupportOperation from '../types/SupportOperation';
 
 export const SupportOperationHandlerSet = OperationHandlerSet.keyed([
   [SupportOperation.CaptureUserFeedback, () => import('./capture-feedback')],

@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { BrainOperation } from '#types';
+import * as BrainOperation from '../types/BrainOperation';
 
 export const SKILL_KEY = 'org.dxos.skill.brain';
 

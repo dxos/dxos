@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { CrxOperation } from '#types';
-
 import { toNote } from '../mapping';
+import * as CrxOperation from '../types/CrxOperation';
 
 const handler: Operation.WithHandler<typeof CrxOperation.AddNoteFromSnapshot> = CrxOperation.AddNoteFromSnapshot.pipe(
   Operation.withHandler(

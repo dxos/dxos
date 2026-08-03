@@ -11,8 +11,9 @@ import { Oscilloscope } from '@dxos/react-ui-audio';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useMixerEngine } from '#hooks';
-import { Dream, Sequence } from '#types';
 
+import * as Dream from '../../types/Dream';
+import * as Sequence from '../../types/Sequence';
 import { Mixer } from './Mixer';
 
 const DefaultStory = () => {

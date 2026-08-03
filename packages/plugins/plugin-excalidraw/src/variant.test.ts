@@ -22,7 +22,7 @@ import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCa
 
 import { ExcalidrawBuilder } from '#model';
 
-import { Excalidraw } from './types';
+import * as Excalidraw from './types/Excalidraw';
 
 EntityId.dangerouslyDisableRandomness();
 

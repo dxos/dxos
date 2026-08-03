@@ -21,10 +21,12 @@ import {
 import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Booking, Segment, Trip } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Booking from './types/Booking';
+import * as Segment from './types/Segment';
+import * as Trip from './types/Trip';
 
 export const TripPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

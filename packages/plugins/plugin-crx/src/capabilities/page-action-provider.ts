@@ -7,7 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
-import { CrxCapabilities, CrxOperation, type PageAction } from '#types';
+
+import * as CrxCapabilities from '../types/CrxCapabilities';
+import * as CrxOperation from '../types/CrxOperation';
+import type * as PageAction from '../types/PageAction';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

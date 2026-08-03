@@ -11,7 +11,8 @@ import { Feed, Obj } from '@dxos/echo';
 import { IBKR_SOURCE } from '../constants';
 import { IbkrConnectionError, IbkrSyncError } from '../errors';
 import { fetchFlexReportXml, parseCash, parsePositions, parseTrades } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
+import * as Ibkr from '../types/Ibkr';
+import * as IbkrOperation from '../types/IbkrOperation';
 import { getOrCreatePortfolioFeed } from './feed';
 
 const getCredential = Effect.gen(function* () {

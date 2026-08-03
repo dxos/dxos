@@ -16,7 +16,7 @@ import { Database } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { trim } from '@dxos/util';
 
-import { TranscriptOperation } from '../types';
+import * as TranscriptOperation from '../types/TranscriptOperation';
 
 /**
  * Summarize a transcript of a meeting.

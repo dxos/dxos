@@ -13,7 +13,9 @@ import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
 
 import { meta } from '#meta';
 import { makeDuffelBookingService } from '#services';
-import { DuffelCapabilities, Settings } from '#types';
+
+import * as DuffelCapabilities from '../types/DuffelCapabilities';
+import * as Settings from '../types/Settings';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -11,7 +11,7 @@ import { createMockPeer } from '@dxos/crx-protocol/testing';
 import { DXN } from '@dxos/keys';
 
 import { handleInvokeEvent, handleListEvent } from './page-actions';
-import { PageAction } from './types';
+import * as PageAction from './types/PageAction';
 
 const TestOp = Operation.make({
   meta: { key: DXN.make('org.dxos.test.operation.pageAction'), name: 'Test' },

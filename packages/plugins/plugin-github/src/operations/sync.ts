@@ -19,7 +19,7 @@ import { meta } from '#meta';
 import { GITHUB_SOURCE } from '../constants';
 import { formatGitHubSyncFailure } from '../errors';
 import { GitHubApi } from '../services';
-import { GitHubOperation } from '../types';
+import * as GitHubOperation from '../types/GitHubOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
 

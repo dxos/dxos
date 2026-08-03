@@ -12,7 +12,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
 import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '../containers';
-import { Provider, Result, Search } from '../types';
+import * as Provider from '../types/Provider';
+import * as Result from '../types/Result';
+import * as Search from '../types/Search';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

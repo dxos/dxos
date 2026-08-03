@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import { StorybookCapabilities } from '../types';
+import * as StorybookCapabilities from '../types/StorybookCapabilities';
 import { updateState } from './update-state';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdatePopover> = LayoutOperation.UpdatePopover.pipe(

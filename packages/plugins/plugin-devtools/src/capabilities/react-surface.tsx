@@ -48,7 +48,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
 import { DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
-import { Devtools } from '#types';
+
+import * as Devtools from '../types/Devtools';
 
 const MCP_SERVER_URL = EDGE_SERVICE_DEFAULTS[EdgeServiceName.Introspect];
 

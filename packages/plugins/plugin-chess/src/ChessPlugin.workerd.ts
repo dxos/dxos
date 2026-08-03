@@ -7,7 +7,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Chess, ChessPositionIndex, PlayerReview } from '#types';
+
+import * as Chess from './types/Chess';
+import * as ChessPositionIndex from './types/ChessPositionIndex';
+import * as PlayerReview from './types/PlayerReview';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

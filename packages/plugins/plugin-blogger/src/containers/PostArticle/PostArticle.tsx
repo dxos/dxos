@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { qualifyId } from '@dxos/plugin-graph';
 
-import { Blog } from '#types';
+import * as Blog from '../../types/Blog';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Blog.Post>;
 

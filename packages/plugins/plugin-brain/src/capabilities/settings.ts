@@ -9,7 +9,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { BrainCapabilities, BrainSettings } from '#types';
+
+import * as BrainCapabilities from '../types/BrainCapabilities';
+import * as BrainSettings from '../types/BrainSettings';
 
 /**
  * Shared KVS-backed atom for the fact-analysis settings (model/provider/strict). Created at module

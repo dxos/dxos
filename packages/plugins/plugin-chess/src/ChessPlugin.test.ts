@@ -11,7 +11,7 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { ChessPlugin } from '#plugin';
 
 import { meta } from './meta';
-import { ChessOperation } from './types';
+import * as ChessOperation from './types/ChessOperation';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

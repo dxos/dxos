@@ -18,7 +18,7 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { VideoOperation } from '../types';
+import * as VideoOperation from '../types/VideoOperation';
 
 const handler: Operation.WithHandler<typeof VideoOperation.Summarize> = VideoOperation.Summarize.pipe(
   Operation.withHandler(

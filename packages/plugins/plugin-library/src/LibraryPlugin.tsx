@@ -8,10 +8,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppGraphBuilder, CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Book } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Book from './types/Book';
 
 export const LibraryPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

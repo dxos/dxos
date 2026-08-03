@@ -9,7 +9,7 @@ import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
-import { type TerraObject } from '../types';
+import type * as TerraObject from '../types/TerraObject';
 
 /** Quarter turn (90°): reorients builders that extrude along +Y onto the +Z or +X axis. */
 const HALF_PI = Math.PI / 2;

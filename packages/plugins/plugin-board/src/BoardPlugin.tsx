@@ -9,10 +9,10 @@ import { translations as boardTranslations } from '@dxos/react-ui-board/translat
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Board } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Board from './types/Board';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

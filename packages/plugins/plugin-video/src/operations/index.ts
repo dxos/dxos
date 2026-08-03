@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { VideoOperation } from '../types';
+import * as VideoOperation from '../types/VideoOperation';
 
 // TODO(burdon): Import from EDGE.
 export * as TranscriptionService from './TranscriptionService';

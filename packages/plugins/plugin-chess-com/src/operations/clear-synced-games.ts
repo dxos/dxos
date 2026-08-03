@@ -9,7 +9,7 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import * as Chess from '@dxos/plugin-chess/Chess';
 import * as Game from '@dxos/plugin-game/Game';
 
-import { ChessComOperation } from '../types';
+import * as ChessComOperation from '../types/ChessComOperation';
 
 export default ChessComOperation.ClearSyncedGames.pipe(
   Operation.withHandler(

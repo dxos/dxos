@@ -14,7 +14,10 @@ import { EntityId } from '@dxos/keys';
 import * as Game from '@dxos/plugin-game/Game';
 
 import * as positionIndexInternal from '../internal/position-index';
-import { Chess, ChessOperation, ChessPositionIndex, PlayerReview } from '../types';
+import * as Chess from '../types/Chess';
+import * as ChessOperation from '../types/ChessOperation';
+import * as ChessPositionIndex from '../types/ChessPositionIndex';
+import * as PlayerReview from '../types/PlayerReview';
 import { ChessOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();

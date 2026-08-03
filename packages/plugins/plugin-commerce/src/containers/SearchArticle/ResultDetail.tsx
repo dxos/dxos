@@ -8,7 +8,7 @@ import { useObject } from '@dxos/echo-react';
 import { Carousel, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
-import { type Result } from '../../types';
+import type * as Result from '../../types/Result';
 
 export type ResultDetailProps = {
   result?: Result.Result;

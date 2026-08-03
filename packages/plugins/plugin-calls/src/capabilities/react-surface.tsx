@@ -12,7 +12,8 @@ import { Surface, useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
-import { CallsCapabilities } from '#types';
+
+import * as CallsCapabilities from '../types/CallsCapabilities';
 
 type CallRoomData = { subject: CallsCapabilities.Call; attendableId: string };
 

@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Board } from '#types';
+import * as Board from '../types/Board';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

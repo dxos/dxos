@@ -9,7 +9,7 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { ExternalProject } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 

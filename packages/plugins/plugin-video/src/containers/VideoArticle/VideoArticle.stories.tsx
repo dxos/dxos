@@ -18,9 +18,9 @@ import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { Video } from '#types';
 
 import { VideoPlugin } from '../../plugin';
+import * as Video from '../../types/Video';
 import { VideoArticle } from './VideoArticle';
 
 const DefaultStory = () => {

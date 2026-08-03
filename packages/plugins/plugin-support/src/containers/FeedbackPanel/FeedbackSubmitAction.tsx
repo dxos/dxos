@@ -10,8 +10,8 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { meta } from '#meta';
-import { SupportOperation } from '#types';
 
+import * as SupportOperation from '../../types/SupportOperation';
 import { formatRequestMessage } from './request';
 
 export type FeedbackSubmitActionProps = {

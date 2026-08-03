@@ -34,7 +34,8 @@ import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { TableOperation } from '#types';
+
+import * as TableOperation from '../../types/TableOperation';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 

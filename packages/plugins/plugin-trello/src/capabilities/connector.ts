@@ -13,7 +13,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
-import { TrelloOperation } from '../types';
+import * as TrelloOperation from '../types/TrelloOperation';
 
 /**
  * Service-specific token-created hook for Trello.

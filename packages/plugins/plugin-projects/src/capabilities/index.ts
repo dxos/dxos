@@ -7,7 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ProjectCapabilities, ProjectsEvents } from '#types';
+import * as ProjectCapabilities from '../types/ProjectCapabilities';
+import * as ProjectsEvents from '../types/ProjectsEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));

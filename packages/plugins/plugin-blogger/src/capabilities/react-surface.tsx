@@ -13,7 +13,8 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { CommentsArticle } from '@dxos/plugin-review';
 
 import { PostArticle, PublicationArticle } from '#containers';
-import { Blog } from '#types';
+
+import * as Blog from '../types/Blog';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

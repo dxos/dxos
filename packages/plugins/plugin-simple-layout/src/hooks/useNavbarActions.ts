@@ -18,8 +18,8 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { SimpleLayoutCapabilities } from '#types';
 
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';
 

@@ -22,7 +22,11 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
-import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
+
+import type * as Artifact from '../../types/Artifact';
+import * as StudioCapabilities from '../../types/StudioCapabilities';
+import * as StudioOperation from '../../types/StudioOperation';
+import * as Variant from '../../types/Variant';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 

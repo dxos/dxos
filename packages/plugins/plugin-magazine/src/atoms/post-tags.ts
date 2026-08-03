@@ -7,7 +7,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { TagIndex } from '@dxos/schema';
 
-import { Subscription } from '../types';
+import * as Subscription from '../types/Subscription';
 
 /** Per-Post tag slice (star/archive membership). */
 export type TagSlice = { starred: boolean; archived: boolean };

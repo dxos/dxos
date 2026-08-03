@@ -11,8 +11,8 @@ import { type ContentMap, Mermaid } from '@dxos/plugin-illustrator/model';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { applyCommands } from '#model';
-import { Excalidraw } from '#types';
 
+import * as Excalidraw from '../../types/Excalidraw';
 import { ExcalidrawArticle } from './ExcalidrawArticle';
 
 const FLOWCHART = `

@@ -11,7 +11,7 @@ import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
-import { BrainCapabilities } from '#types';
+import * as BrainCapabilities from '../types/BrainCapabilities';
 
 export * from './fact-store';
 

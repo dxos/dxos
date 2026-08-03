@@ -11,7 +11,8 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { ChessComAccount, ChessComOperation } from '#types';
+import * as ChessComAccount from '../types/ChessComAccount';
+import * as ChessComOperation from '../types/ChessComOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

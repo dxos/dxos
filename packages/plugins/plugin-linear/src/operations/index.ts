@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 export const LinearOperationHandlerSet = OperationHandlerSet.keyed([
   [LinearOperation.GetLinearTeams, () => import('./get-teams')],

@@ -7,7 +7,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { TableOperation } from '../types';
+import * as TableOperation from '../types/TableOperation';
 
 const handler: Operation.WithHandler<typeof TableOperation.OnTypeAdded> = TableOperation.OnTypeAdded.pipe(
   Operation.withHandler(

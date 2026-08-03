@@ -11,7 +11,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { BoardArticle } from '#containers';
-import { Board } from '#types';
+
+import * as Board from '../types/Board';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

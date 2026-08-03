@@ -12,7 +12,7 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
-import { TableOperation } from '#types';
+import * as TableOperation from '../types/TableOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

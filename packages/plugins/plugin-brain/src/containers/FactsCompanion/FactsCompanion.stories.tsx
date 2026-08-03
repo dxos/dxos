@@ -16,7 +16,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { makeFactStoreRegistry } from '../../capabilities';
-import { BrainCapabilities } from '../../types';
+import * as BrainCapabilities from '../../types/BrainCapabilities';
 import { FactsCompanion } from './FactsCompanion';
 
 // A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's

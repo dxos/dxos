@@ -8,10 +8,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Blog } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Blog from './types/Blog';
 
 export const BloggerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.schema([Blog.Publication, Blog.Post])),

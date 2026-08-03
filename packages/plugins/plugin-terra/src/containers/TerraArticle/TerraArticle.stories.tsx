@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Terra } from '#types';
 
+import * as Terra from '../../types/Terra';
 import { TerraArticle } from './TerraArticle';
 
 type StoryArgs = Partial<Terra.TerraConfig>;

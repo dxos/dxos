@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
 import { TranscriptionService } from '../operations';
-import { VideoOperation } from '../types';
+import * as VideoOperation from '../types/VideoOperation';
 
 const DEFAULT_LANG = 'en';
 

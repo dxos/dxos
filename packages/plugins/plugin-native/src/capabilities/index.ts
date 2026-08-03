@@ -10,7 +10,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AssistantEvents } from '@dxos/plugin-assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 
-import { NativeCapabilities, NativeEvents } from '#types';
+import * as NativeCapabilities from '../types/NativeCapabilities';
+import * as NativeEvents from '../types/NativeEvents';
 
 export const NativeSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,

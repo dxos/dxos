@@ -4,7 +4,10 @@
 
 import * as Tone from 'tone';
 
-import type { Note, Patch, Score, Track } from '../types';
+import type * as Note from '../types/Note';
+import type * as Patch from '../types/Patch';
+import type * as Score from '../types/Score';
+import type * as Track from '../types/Track';
 import { createDrum } from './sounds';
 
 /**

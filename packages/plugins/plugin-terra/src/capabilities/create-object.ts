@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Terra } from '#types';
+import * as Terra from '../types/Terra';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

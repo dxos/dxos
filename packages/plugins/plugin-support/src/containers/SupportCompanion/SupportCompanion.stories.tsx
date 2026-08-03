@@ -12,8 +12,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { Support } from '#types';
 
+import * as Support from '../../types/Support';
 import { SupportCompanion } from './SupportCompanion';
 
 // Minimal plugin that registers Support.Ticket and carries a few screenshot URLs

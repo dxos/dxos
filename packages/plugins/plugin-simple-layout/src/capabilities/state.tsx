@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Node } from '@dxos/plugin-graph';
 
-import { SimpleLayoutCapabilities } from '#types';
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 
 const defaultState: SimpleLayoutCapabilities.SimpleLayoutState = {
   dialogOpen: false,

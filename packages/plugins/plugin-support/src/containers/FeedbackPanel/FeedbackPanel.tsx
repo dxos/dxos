@@ -14,8 +14,8 @@ import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
-import { SupportCapabilities } from '#types';
 
+import * as SupportCapabilities from '../../types/SupportCapabilities';
 import { DiscordAction } from './DiscordAction';
 import { DownloadLogsAction } from './DownloadLogsAction';
 import { FeedbackSubmitAction } from './FeedbackSubmitAction';

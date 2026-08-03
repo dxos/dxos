@@ -13,7 +13,7 @@ import { EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
-import { Blog } from '../types';
+import * as Blog from '../types/Blog';
 import { BloggerOperation, BloggerOperationHandlerSet } from './index';
 
 EntityId.dangerouslyDisableRandomness();

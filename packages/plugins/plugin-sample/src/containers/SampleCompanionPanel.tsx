@@ -20,8 +20,9 @@ import { useQuery } from '@dxos/echo-react';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { RelatedItemsList } from '#components';
-import type { SampleItem } from '#types';
-import { SampleItem as SampleItemSchema } from '#types';
+
+import type * as SampleItem from '../types/SampleItem';
+import * as SampleItemSchema from '../types/SampleItem';
 
 export type SampleCompanionPanelProps = {
   companionTo: SampleItem.SampleItem;

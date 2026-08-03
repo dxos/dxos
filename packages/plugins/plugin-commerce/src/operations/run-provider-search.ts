@@ -9,7 +9,9 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { Provider, Result, SearchOperation } from '../types';
+import * as Provider from '../types/Provider';
+import * as Result from '../types/Result';
+import * as SearchOperation from '../types/SearchOperation';
 import { type ResultData, bindRequest, deriveResultMapping, extractResults, fetchPage } from '../util';
 
 /** Pure: given a fully-configured provider and a response body, produce result data. */

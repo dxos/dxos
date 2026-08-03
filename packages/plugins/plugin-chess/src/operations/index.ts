@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ChessOperation } from '../types';
+import * as ChessOperation from '../types/ChessOperation';
 
 export const ChessOperationHandlerSet = OperationHandlerSet.keyed([
   [ChessOperation.Move, () => import('./move')],

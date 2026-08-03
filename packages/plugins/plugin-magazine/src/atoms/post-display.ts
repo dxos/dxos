@@ -7,7 +7,8 @@ import * as Data from 'effect/Data';
 
 import { Obj } from '@dxos/echo';
 
-import { type Magazine, type Subscription } from '../types';
+import type * as Magazine from '../types/Magazine';
+import type * as Subscription from '../types/Subscription';
 import { getImageUrl, getSnippet } from '../util/post-content';
 import { postCurationAtom } from './post-curation';
 import { postReadAtom } from './post-read';

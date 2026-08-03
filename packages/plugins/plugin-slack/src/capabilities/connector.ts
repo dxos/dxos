@@ -13,7 +13,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
 import { SlackApi } from '../services';
-import { SlackOperation } from '../types';
+import * as SlackOperation from '../types/SlackOperation';
 
 /**
  * Service-specific token-created hook for Slack.

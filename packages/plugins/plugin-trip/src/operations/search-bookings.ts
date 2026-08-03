@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 
-import { BookingOperation, TripCapabilities } from '../types';
+import * as BookingOperation from '../types/BookingOperation';
+import * as TripCapabilities from '../types/TripCapabilities';
 
 const handler: Operation.WithHandler<typeof BookingOperation.SearchBookings> = BookingOperation.SearchBookings.pipe(
   Operation.withHandler(

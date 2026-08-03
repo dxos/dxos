@@ -17,7 +17,8 @@ import {
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
-import { type BookingSearch as BookingSearchType } from '#types';
+
+import type * as BookingSearchType from '../../types/BookingSearch';
 
 export type OfferSelectHandler = (offer: BookingSearchType.FlightOffer) => void;
 

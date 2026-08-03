@@ -15,9 +15,8 @@ import { invariant } from '@dxos/invariant';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
-import { ProjectOperation } from '#types';
-
 import { ARTIFACT_SKILL_KEYS } from '../skills/keys';
+import * as ProjectOperation from '../types/ProjectOperation';
 
 /**
  * Seeds project scope into a routine's owned instructions: `ProjectSkill` (so the headless run can

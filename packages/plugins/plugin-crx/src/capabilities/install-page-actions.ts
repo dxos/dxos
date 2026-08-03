@@ -10,9 +10,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-import { CrxCapabilities, Settings } from '#types';
 
 import { installPageActionListeners } from '../page-actions';
+import * as CrxCapabilities from '../types/CrxCapabilities';
+import * as Settings from '../types/Settings';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

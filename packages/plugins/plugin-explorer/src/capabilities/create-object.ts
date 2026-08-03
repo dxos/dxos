@@ -11,7 +11,8 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { ViewModel } from '@dxos/schema';
 
-import { ExplorerAction, Graph } from '#types';
+import * as ExplorerAction from '../types/ExplorerAction';
+import * as Graph from '../types/Graph';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

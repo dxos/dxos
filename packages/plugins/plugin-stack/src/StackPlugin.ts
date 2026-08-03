@@ -8,10 +8,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Stack } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Stack from './types/Stack';
 
 export const StackPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.schema([Stack.Stack])),

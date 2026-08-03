@@ -15,7 +15,6 @@ import { Filter } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { Artifact } from '#types';
 
 import {
   ARTIFACTS_NODE_DATA,
@@ -25,6 +24,7 @@ import {
   STUDIO_SEGMENT,
   getKindIcon,
 } from '../constants';
+import * as Artifact from '../types/Artifact';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

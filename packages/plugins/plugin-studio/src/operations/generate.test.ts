@@ -16,7 +16,10 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { Artifact, type GenerationService, StudioCapabilities, Variant } from '../types';
+import * as Artifact from '../types/Artifact';
+import type * as GenerationService from '../types/GenerationService';
+import * as StudioCapabilities from '../types/StudioCapabilities';
+import * as Variant from '../types/Variant';
 import generateHandler from './generate';
 
 const IDEOGRAM_SOURCE = 'ideogram.ai';

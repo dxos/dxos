@@ -11,7 +11,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SegmentArticle, TripArticle } from '#containers';
-import { Segment, Trip } from '#types';
+
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

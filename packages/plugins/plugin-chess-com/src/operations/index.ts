@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ChessComOperation } from '../types';
+import * as ChessComOperation from '../types/ChessComOperation';
 
 export const ChessComOperationHandlerSet = OperationHandlerSet.keyed([
   [ChessComOperation.SyncGames, () => import('./sync-games')],

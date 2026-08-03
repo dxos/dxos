@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ScoreOperation } from '../types';
+import * as ScoreOperation from '../types/ScoreOperation';
 
 export const SequencerOperationHandlerSet = OperationHandlerSet.keyed([
   [ScoreOperation.Read, () => import('./read')],

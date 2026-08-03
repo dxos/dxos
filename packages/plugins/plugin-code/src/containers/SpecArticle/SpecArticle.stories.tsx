@@ -10,9 +10,9 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Spec } from '#types';
 
 import CHESS_1_MDL from '../../../../../reflect/deus/lang/examples/chess-1.mdl?raw';
+import * as Spec from '../../types/Spec';
 import { SpecArticle } from './SpecArticle';
 
 const DefaultStory = ({ content }: { content?: string }) => {

@@ -12,7 +12,8 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Settings as SettingsType } from '#types';
+
+import * as SettingsType from '../../types/Settings';
 
 const SERVICE = 'anthropic.com';
 

@@ -9,7 +9,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { NativeCapabilities, Settings } from '#types';
+
+import * as NativeCapabilities from '../types/NativeCapabilities';
+import * as Settings from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

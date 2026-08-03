@@ -11,7 +11,8 @@ import { Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateProjectPanel } from '#components';
-import { ProjectOperation } from '#types';
+
+import * as ProjectOperation from '../types/ProjectOperation';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

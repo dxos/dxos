@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { CodeOperation } from '../types';
+import * as CodeOperation from '../types/CodeOperation';
 
 const handler: Operation.WithHandler<typeof CodeOperation.VerifySpec> = CodeOperation.VerifySpec.pipe(
   Operation.withHandler(

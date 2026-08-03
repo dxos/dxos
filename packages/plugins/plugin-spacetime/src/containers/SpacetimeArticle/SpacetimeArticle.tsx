@@ -8,7 +8,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Flex, Panel } from '@dxos/react-ui';
 
 import { SpacetimeEditor } from '#components';
-import { type Scene } from '#types';
+
+import type * as Scene from '../../types/Scene';
 
 export type SpacetimeArticleProps = AppSurface.ObjectArticleProps<Scene.Scene>;
 

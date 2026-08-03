@@ -10,7 +10,8 @@ import { Oscilloscope } from '@dxos/react-ui-audio';
 
 import { Mixer } from '#components';
 import { useMixerEngine } from '#hooks';
-import { type Dream } from '#types';
+
+import type * as Dream from '../../types/Dream';
 
 export type ZenArticleProps = AppSurface.ObjectArticleProps<Dream.Dream>;
 

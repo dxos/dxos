@@ -13,7 +13,11 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { Generation, GenerationService, StudioCapabilities, StudioOperation, Variant } from '../types';
+import * as Generation from '../types/Generation';
+import * as GenerationService from '../types/GenerationService';
+import * as StudioCapabilities from '../types/StudioCapabilities';
+import * as StudioOperation from '../types/StudioOperation';
+import * as Variant from '../types/Variant';
 
 /** Route a provider rejection to the failure channel, preserving the original Error for name matching. */
 const toError = (error: unknown): Error =>

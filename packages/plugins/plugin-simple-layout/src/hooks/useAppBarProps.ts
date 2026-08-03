@@ -16,7 +16,8 @@ import { type ActionGraphProps } from '@dxos/react-ui-menu';
 
 import { type AppBarProps } from '#components';
 import { meta } from '#meta';
-import { SimpleLayoutCapabilities } from '#types';
+
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 
 /**
  * Hook that computes all AppBar props from the app graph.

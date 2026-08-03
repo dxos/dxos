@@ -16,9 +16,9 @@ import { Attention } from '@dxos/react-ui-attention';
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#types';
-import { Subscription } from '#types';
 
+import * as FeedOperation from '../../types/FeedOperation';
+import * as Subscription from '../../types/Subscription';
 import { PostToolbar } from './PostToolbar';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;

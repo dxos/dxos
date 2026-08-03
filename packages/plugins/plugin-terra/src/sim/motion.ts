@@ -3,7 +3,7 @@
 //
 
 import { type TerraConfigValues, type Vec3, add, makeSampler, normalize, radiusAt, scale, seaRadius } from '../engine';
-import { type TerraObject } from '../types';
+import type * as TerraObject from '../types/TerraObject';
 import { angleBetween, bearingOfTangent, bearingTo, geodesicTangent, toUnit } from './geo';
 
 /** Flight stage of a rocket, derived from flight fraction — never stored across calls. */

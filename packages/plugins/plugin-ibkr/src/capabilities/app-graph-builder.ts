@@ -15,7 +15,7 @@ import { GraphBuilder } from '@dxos/plugin-graph';
 import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '../meta';
-import { Ibkr } from '../types';
+import * as Ibkr from '../types/Ibkr';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

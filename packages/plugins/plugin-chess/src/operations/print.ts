@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { ChessOperation } from '../types';
+import * as ChessOperation from '../types/ChessOperation';
 
 const handler: Operation.WithHandler<typeof ChessOperation.Print> = ChessOperation.Print.pipe(
   Operation.withHandler(

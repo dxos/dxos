@@ -16,9 +16,8 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Type } from '@dxos/echo';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 
-import { ProjectOperation } from '#types';
-
 import { ARTIFACT_SKILL_KEYS } from '../skills/keys';
+import * as ProjectOperation from '../types/ProjectOperation';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.CreateChat> = ProjectOperation.CreateChat.pipe(
   Operation.withHandler(

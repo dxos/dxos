@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SearchOperation } from '../types';
+import * as SearchOperation from '../types/SearchOperation';
 
 export const SearchOperationHandlerSet = OperationHandlerSet.keyed([
   [SearchOperation.RenderPage, () => import('./render-page')],

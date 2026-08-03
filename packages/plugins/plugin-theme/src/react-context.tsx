@@ -12,7 +12,8 @@ import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip 
 import { defaultTx } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Settings, ThemeCapabilities } from './types';
+import * as Settings from './types/Settings';
+import * as ThemeCapabilities from './types/ThemeCapabilities';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;

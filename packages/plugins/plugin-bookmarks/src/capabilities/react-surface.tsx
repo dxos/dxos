@@ -11,7 +11,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { BookmarkArticle, BookmarkCard } from '#containers';
-import { Bookmark } from '#types';
+
+import * as Bookmark from '../types/Bookmark';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

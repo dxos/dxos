@@ -13,8 +13,7 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 
-import { type ProjectCapabilities } from '#types';
-
+import type * as ProjectCapabilities from '../types/ProjectCapabilities';
 import { scaffoldProject } from './scaffold';
 
 /**

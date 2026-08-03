@@ -8,10 +8,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CreateObject, ReactSurface, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Voxel } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Voxel from './types/Voxel';
 
 export const VoxelPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

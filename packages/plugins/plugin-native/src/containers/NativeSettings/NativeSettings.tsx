@@ -14,7 +14,10 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Settings, type Update } from '#types';
+
+import * as NativeCapabilities from '../../types/NativeCapabilities';
+import type * as Settings from '../../types/Settings';
+import type * as Update from '../../types/Update';
 
 export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 

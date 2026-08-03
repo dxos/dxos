@@ -17,7 +17,7 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { TRADINGVIEW_SOURCE } from '../../constants';
-import { Ibkr } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
 import { InstrumentArticle } from './InstrumentArticle';
 
 // Fictional instrument only — this is a public repo (never real holdings). IbkrPlugin is intentionally

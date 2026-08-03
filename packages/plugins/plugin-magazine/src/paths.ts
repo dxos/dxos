@@ -4,7 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-import { Magazine } from '#types';
+import * as Magazine from './types/Magazine';
 
 const { getSectionPath: getMagazinesPath, getObjectPath: getMagazinePath } = GraphPath.createTypeSectionPaths(
   Magazine.Magazine,

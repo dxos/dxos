@@ -21,9 +21,9 @@ import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
 
 import { inboxResearch } from '../templates';
+import * as ProjectOperation from '../types/ProjectOperation';
 
 /**
  * Surfaces all `Project` objects in a space as a sidebar section nested under the assistant (AI) group —

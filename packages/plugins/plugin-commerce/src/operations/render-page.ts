@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { SearchOperation } from '../types';
+import * as SearchOperation from '../types/SearchOperation';
 import { fetchPage, isCrxRenderAvailable } from '../util';
 
 /**

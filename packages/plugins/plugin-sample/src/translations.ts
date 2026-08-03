@@ -12,7 +12,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { SampleItem } from '#types';
+
+import * as SampleItem from './types/SampleItem';
 
 export const translations = [
   {

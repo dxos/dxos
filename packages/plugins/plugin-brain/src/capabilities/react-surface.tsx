@@ -10,7 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 
 import { FactsCompanion } from '#containers';
-import { BrainSurface } from '#types';
+
+import * as BrainSurface from '../types/BrainSurface';
 
 /** React surfaces contributed by plugin-brain — the per-space facts panel. */
 export default Capability.makeModule(() =>

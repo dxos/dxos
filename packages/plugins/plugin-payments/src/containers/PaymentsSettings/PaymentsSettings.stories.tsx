@@ -9,8 +9,8 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type Settings } from '#types';
 
+import type * as Settings from '../../types/Settings';
 import { PaymentsSettings, type PaymentsSettingsProps } from './PaymentsSettings';
 
 const DefaultStory = ({ settings: initialSettings, ...props }: PaymentsSettingsProps) => {

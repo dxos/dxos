@@ -15,9 +15,9 @@ import { Masonry } from '@dxos/react-ui-masonry';
 
 import { ArtifactCard } from '#components';
 import { meta } from '#meta';
-import { Artifact } from '#types';
 
 import { getKindIcon } from '../../constants';
+import * as Artifact from '../../types/Artifact';
 
 type Kind = 'image' | 'video';
 

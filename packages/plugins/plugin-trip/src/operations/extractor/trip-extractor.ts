@@ -20,7 +20,10 @@ import { matchesDomain } from '@dxos/extractor-lib';
 import { type ContentBlock, Message, Organization, type Provider } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Booking, Segment, Trip, TripOperation } from '../../types';
+import * as Booking from '../../types/Booking';
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
+import * as TripOperation from '../../types/TripOperation';
 import { getTripGapDays } from './config';
 import { AIRLINES } from './const';
 

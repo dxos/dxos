@@ -8,10 +8,10 @@ import { AccessToken } from '@dxos/link';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-import { Sandbox } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Sandbox from './types/Sandbox';
 
 export const SandboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

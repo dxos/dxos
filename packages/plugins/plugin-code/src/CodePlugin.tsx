@@ -16,10 +16,12 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { CodeProject, SourceFile, Spec } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as CodeProject from './types/CodeProject';
+import * as SourceFile from './types/SourceFile';
+import * as Spec from './types/Spec';
 
 export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

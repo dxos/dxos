@@ -8,10 +8,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppGraphBuilder, AtprotoConnector, ReactSurface, RepoLayer } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { AtprotoPublication } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as AtprotoPublication from './types/AtprotoPublication';
 
 export const AtprotoPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

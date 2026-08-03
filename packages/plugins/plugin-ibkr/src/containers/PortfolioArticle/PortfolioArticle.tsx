@@ -21,7 +21,8 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { IBKR_CONNECTOR_ID } from '../../constants';
 import { meta } from '../../meta';
 import { parseCash, parsePositions, parseTrades } from '../../services';
-import { Ibkr, IbkrOperation } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
+import * as IbkrOperation from '../../types/IbkrOperation';
 import { PortfolioImportAction } from './PortfolioImportAction';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;

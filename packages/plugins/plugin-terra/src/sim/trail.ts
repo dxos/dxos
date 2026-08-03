@@ -3,7 +3,7 @@
 //
 
 import { type TerraConfigValues, type Vec3, scale } from '../engine';
-import { type TerraObject } from '../types';
+import type * as TerraObject from '../types/TerraObject';
 import { advance } from './geo';
 import { type MotionContext, type ObjectState, evaluate } from './motion';
 

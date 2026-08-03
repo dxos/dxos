@@ -9,9 +9,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Artifact, Lightbox } from '#types';
-
 import { getArtifactsPath } from '../paths';
+import * as Artifact from '../types/Artifact';
+import * as Lightbox from '../types/Lightbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

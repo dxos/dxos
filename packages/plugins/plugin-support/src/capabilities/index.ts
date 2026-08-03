@@ -10,7 +10,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { HelpCapabilities, SupportCapabilities, SupportOperation, type Tour } from '#types';
+import * as HelpCapabilities from '../types/HelpCapabilities';
+import * as SupportCapabilities from '../types/SupportCapabilities';
+import * as SupportOperation from '../types/SupportOperation';
+import type * as Tour from '../types/Tour';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [SupportCapabilities.Settings],

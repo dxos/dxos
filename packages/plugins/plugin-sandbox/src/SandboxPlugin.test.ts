@@ -15,9 +15,9 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SandboxPlugin } from '#plugin';
-import { Sandbox } from '#types';
 
 import { CreateSandbox, Exec } from './skills/functions';
+import * as Sandbox from './types/Sandbox';
 
 /**
  * Prereq: sandbox-service worker at http://localhost:8792 (API at /api/sandbox).

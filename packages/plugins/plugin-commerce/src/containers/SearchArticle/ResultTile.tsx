@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { Obj } from '@dxos/echo';
 import { Focus } from '@dxos/react-ui';
 
-import { type Result } from '../../types';
+import type * as Result from '../../types/Result';
 import { ResultCard } from '../ResultCard';
 
 export type ResultTileProps = {

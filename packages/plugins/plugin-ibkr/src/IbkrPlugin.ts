@@ -18,7 +18,7 @@ import {
 import pluginSpec from '../PLUGIN.mdl?raw';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Ibkr } from './types';
+import * as Ibkr from './types/Ibkr';
 
 export const IbkrPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

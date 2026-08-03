@@ -9,7 +9,7 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { ExternalProject } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants';
-import { GitHubOperation } from '../types';
+import * as GitHubOperation from '../types/GitHubOperation';
 
 const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
 

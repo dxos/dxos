@@ -11,7 +11,9 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SkillDefinition } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Provider, Result, Search } from './types';
+import * as Provider from './types/Provider';
+import * as Result from './types/Result';
+import * as Search from './types/Search';
 
 export const CommercePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

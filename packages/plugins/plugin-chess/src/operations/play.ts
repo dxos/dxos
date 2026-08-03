@@ -9,7 +9,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { loadGame } from '@dxos/plugin-game';
 
-import { Chess, ChessOperation } from '../types';
+import * as Chess from '../types/Chess';
+import * as ChessOperation from '../types/ChessOperation';
 
 const handler: Operation.WithHandler<typeof ChessOperation.Play> = ChessOperation.Play.pipe(
   Operation.withHandler(

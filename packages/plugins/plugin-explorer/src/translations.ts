@@ -7,7 +7,8 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 
 import { meta } from '#meta';
-import { Graph } from '#types';
+
+import * as Graph from './types/Graph';
 
 export const translations = [
   {

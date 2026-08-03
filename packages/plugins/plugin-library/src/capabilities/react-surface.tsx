@@ -12,8 +12,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
 import { BookArticle, BookCard, BookNotesCompanion } from '#containers';
-import { Book } from '#types';
 
+import * as Book from '../types/Book';
 import { NOTES_COMPANION_VARIANT } from './app-graph-builder';
 
 export default Capability.makeModule(() =>

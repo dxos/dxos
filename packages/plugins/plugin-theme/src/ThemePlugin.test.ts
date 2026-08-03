@@ -14,7 +14,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ThemePlugin } from '#plugin';
 
 import { meta } from './meta';
-import { ThemeCapabilities } from './types';
+import * as ThemeCapabilities from './types/ThemeCapabilities';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

@@ -8,9 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { AtprotoCapabilities } from '#types';
-
 import * as AtprotoRepo from '../services/AtprotoRepo';
+import * as AtprotoCapabilities from '../types/AtprotoCapabilities';
 
 /**
  * Default (live) repo-layer factory: resolves credentials + PDS for the connection and talks to the

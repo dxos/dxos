@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Voxel } from '#types';
+import * as Voxel from '../types/Voxel';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

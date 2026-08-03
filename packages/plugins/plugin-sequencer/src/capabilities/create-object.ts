@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Score } from '#types';
+import * as Score from '../types/Score';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -5,7 +5,7 @@
 import { Role } from '@dxos/app-framework';
 import { type Obj, type Ref } from '@dxos/echo';
 
-import { type Generation } from './types';
+import type * as Generation from './types/Generation';
 
 /**
  * The renderable content of a variant, decoupled from the ECHO object (works for both a live object

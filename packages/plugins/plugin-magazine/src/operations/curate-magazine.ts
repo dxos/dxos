@@ -12,7 +12,9 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { FeedOperation, Magazine, Subscription } from '../types';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 import { collectCandidates, partitionByKeepBound } from './util';
 
 export default FeedOperation.CurateMagazine.pipe(

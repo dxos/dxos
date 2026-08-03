@@ -6,7 +6,10 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Chess, ChessPositionIndex, PlayerReview } from '#types';
+
+import * as Chess from './types/Chess';
+import * as ChessPositionIndex from './types/ChessPositionIndex';
+import * as PlayerReview from './types/PlayerReview';
 
 export const translations = [
   {

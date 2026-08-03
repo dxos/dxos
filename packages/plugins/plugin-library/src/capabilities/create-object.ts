@@ -11,11 +11,10 @@ import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
 
-import { Book } from '#types';
-
 import { lookupHiveBook, searchBooks } from '../operations/bookhive';
 import { browserCorsProxy } from '../operations/cors';
 import { getBooksPath } from '../paths';
+import * as Book from '../types/Book';
 
 type CreateBookValues = {
   hiveId?: string;

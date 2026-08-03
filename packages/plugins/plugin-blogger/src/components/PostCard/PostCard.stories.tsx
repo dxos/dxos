@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Blog } from '#types';
 
+import * as Blog from '../../types/Blog';
 import { PostCard } from './PostCard';
 
 // The ECHO `Post` is built inside the render function (never at module scope) so each story

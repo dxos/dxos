@@ -4,9 +4,8 @@
 
 import React from 'react';
 
-import { type Artifact } from '#types';
-
 import { useArtifactCoverSource } from '../../hooks';
+import type * as Artifact from '../../types/Artifact';
 import { GalleryImage } from '../GalleryImage';
 
 export type ArtifactCardProps = {

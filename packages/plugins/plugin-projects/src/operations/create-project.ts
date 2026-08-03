@@ -12,9 +12,9 @@ import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { ProjectCapabilities, ProjectOperation } from '#types';
-
 import { blank } from '../templates';
+import * as ProjectCapabilities from '../types/ProjectCapabilities';
+import * as ProjectOperation from '../types/ProjectOperation';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOperation.Create.pipe(
   Operation.withHandler(

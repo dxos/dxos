@@ -22,9 +22,10 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { MagazineSkill } from '#skills';
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
 import { translations } from '#translations';
-import { Magazine, Subscription } from '#types';
 
 import { MagazinePlugin } from '../../MagazinePlugin';
+import * as Magazine from '../../types/Magazine';
+import * as Subscription from '../../types/Subscription';
 import { MagazineArticle } from './MagazineArticle';
 
 const DefaultStory = () => {

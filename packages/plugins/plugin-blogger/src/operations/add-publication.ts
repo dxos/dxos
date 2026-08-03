@@ -9,8 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { Blog } from '#types';
-
+import * as Blog from '../types/Blog';
 import { AddPublication } from './definitions';
 
 const handler: Operation.WithHandler<typeof AddPublication> = AddPublication.pipe(

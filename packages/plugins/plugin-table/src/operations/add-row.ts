@@ -8,7 +8,7 @@ import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
-import { TableOperation } from '../types';
+import * as TableOperation from '../types/TableOperation';
 
 const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperation.AddRow.pipe(
   Operation.withHandler(

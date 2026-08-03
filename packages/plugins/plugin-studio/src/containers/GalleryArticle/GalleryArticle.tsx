@@ -16,9 +16,9 @@ import { Masonry } from '@dxos/react-ui-masonry';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
-import { Artifact } from '#types';
 
 import { useArtifactCoverSource } from '../../hooks';
+import * as Artifact from '../../types/Artifact';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 

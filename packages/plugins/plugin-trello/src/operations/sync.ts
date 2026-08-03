@@ -24,7 +24,7 @@ import { meta } from '#meta';
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
 import { formatTrelloSyncFailure } from '../errors';
 import { TrelloApi } from '../services';
-import { TrelloOperation } from '../types';
+import * as TrelloOperation from '../types/TrelloOperation';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;

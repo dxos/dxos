@@ -25,9 +25,14 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { translations } from '#translations';
-import { Booking, type Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
+import * as Booking from '../../types/Booking';
+import type * as Place from '../../types/Place';
+import * as Routing from '../../types/Routing';
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
+import * as TripCapabilities from '../../types/TripCapabilities';
 import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
 import { TripArticle } from './TripArticle';
 

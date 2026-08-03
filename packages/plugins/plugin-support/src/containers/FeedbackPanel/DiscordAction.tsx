@@ -13,8 +13,8 @@ import { osTranslations } from '@dxos/ui-theme';
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { useDiscordPresence } from '#hooks';
 import { meta } from '#meta';
-import { SupportOperation } from '#types';
 
+import * as SupportOperation from '../../types/SupportOperation';
 import { formatRequestMessage } from './request';
 
 /** Build a direct PostHog event permalink (±15s search window via timestamp). */

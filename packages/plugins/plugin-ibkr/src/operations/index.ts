@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { IbkrOperation } from '../types';
+import * as IbkrOperation from '../types/IbkrOperation';
 
 /** Combined handler set for all IBKR operations; provided to the Composer operation registry. */
 export const IbkrOperationHandlerSet = OperationHandlerSet.keyed([

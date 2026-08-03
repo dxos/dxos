@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { SimpleLayoutCapabilities } from '../types';
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 
 export const layoutStateAccess = Effect.gen(function* () {
   const registry = yield* Capability.get(Capabilities.AtomRegistry);

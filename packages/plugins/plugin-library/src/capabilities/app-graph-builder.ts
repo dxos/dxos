@@ -17,9 +17,9 @@ import { GraphBuilder, type NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
-import { Book } from '#types';
 
 import { getBooksPath } from '../paths';
+import * as Book from '../types/Book';
 
 /** The companion segment/variant for the notes editor — shared with its surface binding. */
 export const NOTES_COMPANION_VARIANT = 'notes';

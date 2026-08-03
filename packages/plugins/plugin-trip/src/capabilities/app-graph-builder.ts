@@ -20,9 +20,11 @@ import { Selection, ViewState } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Segment, Trip, TripOperation } from '#types';
 
 import { getPlanningWindowDays } from '../operations/extractor/config';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
+import * as TripOperation from '../types/TripOperation';
 
 /**
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed

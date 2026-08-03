@@ -11,7 +11,7 @@ import {
   EdgarFieldAnnotation,
   type EdgarFieldSource,
 } from '../annotations';
-import { type Ibkr } from '../types';
+import type * as Ibkr from '../types/Ibkr';
 
 type EdgarFact = {
   end: string;

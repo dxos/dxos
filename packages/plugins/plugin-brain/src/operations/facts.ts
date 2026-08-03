@@ -4,7 +4,7 @@
 
 import { type RDF } from '@dxos/pipeline-rdf';
 
-import { type BrainOperation } from '#types';
+import type * as BrainOperation from '../types/BrainOperation';
 
 /** Display form of a term: the preserved surface label, else the slug; literals render verbatim. */
 export const formatTerm = (term: RDF.Term): string => ('entity' in term ? (term.label ?? term.entity) : term.literal);

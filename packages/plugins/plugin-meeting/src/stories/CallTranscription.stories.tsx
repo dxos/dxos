@@ -28,7 +28,7 @@ import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
-import { Meeting } from '../types';
+import * as Meeting from '../types/Meeting';
 
 type StoryArgs = {};
 

@@ -16,7 +16,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { StateMap, TagIndex, Text } from '@dxos/schema';
 
 import { MagazineSkill } from '../skills';
-import { FeedOperation, Magazine, Subscription } from '../types';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 import { applyKeep, resolveSelected } from './curate-magazine';
 import { MagazineOperationHandlerSet } from './index';
 

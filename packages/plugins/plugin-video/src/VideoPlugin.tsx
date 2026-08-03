@@ -9,10 +9,10 @@ import { Text } from '@dxos/schema';
 import { AppGraphBuilder, CommentConfig, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Video } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Video from './types/Video';
 
 export const VideoPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

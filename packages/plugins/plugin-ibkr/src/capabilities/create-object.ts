@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Ibkr } from '../types';
+import * as Ibkr from '../types/Ibkr';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

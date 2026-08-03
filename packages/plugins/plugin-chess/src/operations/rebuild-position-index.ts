@@ -12,7 +12,9 @@ import * as Game from '@dxos/plugin-game/Game';
 import { GameVariantMismatchError, loadGame } from '@dxos/plugin-game/types';
 
 import * as positionIndexInternal from '../internal/position-index';
-import { Chess, ChessOperation, ChessPositionIndex } from '../types';
+import * as Chess from '../types/Chess';
+import * as ChessOperation from '../types/ChessOperation';
+import * as ChessPositionIndex from '../types/ChessPositionIndex';
 
 export default ChessOperation.RebuildPositionIndex.pipe(
   Operation.withHandler(

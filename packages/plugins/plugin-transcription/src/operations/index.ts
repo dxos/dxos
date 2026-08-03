@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { TranscriptOperation } from '../types';
+import * as TranscriptOperation from '../types/TranscriptOperation';
 
 export const TranscriptionOperationHandlerSet = OperationHandlerSet.keyed([
   [TranscriptOperation.Create, () => import('./create')],

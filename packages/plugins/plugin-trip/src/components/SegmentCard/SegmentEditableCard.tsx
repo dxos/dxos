@@ -9,8 +9,8 @@ import { Obj } from '@dxos/echo';
 import { Card, Icon, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Segment } from '#types';
 
+import * as Segment from '../../types/Segment';
 import { type SegmentCardActionHandler } from './SegmentCard';
 
 /** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone (the value shape `<input type='datetime-local'>` expects). */

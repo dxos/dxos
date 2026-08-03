@@ -65,10 +65,10 @@ import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInter
 import { isNonNullable, trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { TranscriptionCapabilities } from '#types';
 
 import { enableQueryIndexes } from '../testing';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 const SAMPLE_CONTENT = trim`
   # Test

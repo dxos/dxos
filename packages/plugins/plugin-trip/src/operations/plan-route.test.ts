@@ -13,9 +13,12 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
-import { Booking, Routing, Segment, Trip, TripCapabilities } from '#types';
-
 import { fakeRoutingService } from '../testing/routing';
+import * as Booking from '../types/Booking';
+import * as Routing from '../types/Routing';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
+import * as TripCapabilities from '../types/TripCapabilities';
 import planRouteHandler from './plan-route';
 
 const capabilityService = (service?: Routing.RoutingService) => {

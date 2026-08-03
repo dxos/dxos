@@ -6,7 +6,7 @@ import { Vector3 } from '@babylonjs/core/Maths/math';
 
 import { type Vec3 } from '../engine';
 import { type ObjectState, tangentFrame } from '../sim';
-import { type TerraObject } from '../types';
+import type * as TerraObject from '../types/TerraObject';
 
 const DEG = Math.PI / 180;
 

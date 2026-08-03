@@ -8,8 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { useObject } from '@dxos/echo-react';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Terra } from '#types';
-
+import * as Terra from '../../types/Terra';
 import { TerraForm } from './TerraForm';
 
 const DefaultStory = () => {

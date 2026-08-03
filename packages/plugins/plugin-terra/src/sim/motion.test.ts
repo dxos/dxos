@@ -5,7 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { makeSampler, radiusAt, seaRadius } from '../engine';
-import { Terra, TerraObject } from '../types';
+import * as Terra from '../types/Terra';
+import * as TerraObject from '../types/TerraObject';
 import { angleBetween, bearingTo, toUnit } from './geo';
 import { type ObjectState, evaluate, initialState, walkRoute } from './motion';
 

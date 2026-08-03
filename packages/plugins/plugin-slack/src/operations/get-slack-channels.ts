@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 
 import { SlackApi } from '../services';
-import { SlackOperation } from '../types';
+import * as SlackOperation from '../types/SlackOperation';
 
 /**
  * Friendly label for a Slack conversation, derived from its type:

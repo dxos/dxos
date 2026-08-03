@@ -6,8 +6,9 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { BookingOperation, RoutingOperation, TripOperation } from '#types';
-
+import * as BookingOperation from '../types/BookingOperation';
+import * as RoutingOperation from '../types/RoutingOperation';
+import * as TripOperation from '../types/TripOperation';
 import { TRIP_SKILL_KEY } from './keys';
 
 const operations = [TripOperation.AddSegment, RoutingOperation.PlanRoute, BookingOperation.SearchBookings];

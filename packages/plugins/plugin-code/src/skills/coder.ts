@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { CodeOperation } from '#types';
+import * as CodeOperation from '../types/CodeOperation';
 
 const SKILL_KEY = 'org.dxos.skill.coder';
 

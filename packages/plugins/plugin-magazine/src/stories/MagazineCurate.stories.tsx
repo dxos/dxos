@@ -33,10 +33,11 @@ import { Text } from '@dxos/schema';
 
 import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
-import { Magazine, Subscription } from '#types';
 
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
 import { MagazinePlugin } from '../MagazinePlugin';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 
 // Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and

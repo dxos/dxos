@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { CodeOperation } from '../types';
+import * as CodeOperation from '../types/CodeOperation';
 
 export const CodeOperationHandlerSet = OperationHandlerSet.keyed([
   [CodeOperation.VerifySpec, () => import('./verify-spec')],

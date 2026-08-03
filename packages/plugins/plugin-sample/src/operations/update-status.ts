@@ -11,7 +11,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 
-import { SampleOperation } from '../types';
+import * as SampleOperation from '../types/SampleOperation';
 
 const handler: Operation.WithHandler<typeof SampleOperation.UpdateStatus> = SampleOperation.UpdateStatus.pipe(
   Operation.withHandler(({ item, status }) =>

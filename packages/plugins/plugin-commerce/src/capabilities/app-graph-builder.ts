@@ -16,7 +16,9 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { Position } from '@dxos/util';
 
 import { meta } from '../meta';
-import { Provider, Search, SearchOperation } from '../types';
+import * as Provider from '../types/Provider';
+import * as Search from '../types/Search';
+import * as SearchOperation from '../types/SearchOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

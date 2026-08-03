@@ -8,7 +8,7 @@ import { enrichTranscriptMessage } from '@dxos/assistant/extraction';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { TranscriptOperation } from '../types';
+import * as TranscriptOperation from '../types/TranscriptOperation';
 
 /**
  * Extracts proper nouns from a transcript message and links them to objects in the space via

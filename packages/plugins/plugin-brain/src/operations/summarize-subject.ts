@@ -11,8 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError, normalizeEntityId } from '@dxos/pipeline-rdf';
 import { trim } from '@dxos/util';
 
-import { BrainOperation } from '#types';
-
+import * as BrainOperation from '../types/BrainOperation';
 import { factLine, toCompactFact } from './facts';
 
 export default BrainOperation.SummarizeSubject.pipe(

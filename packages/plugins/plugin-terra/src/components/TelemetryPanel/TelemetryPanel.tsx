@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
 
-import { type TerraObject } from '#types';
+import type * as TerraObject from '../../types/TerraObject';
 
 /**
  * One object's telemetry at the panel's sampling instant. Plain data rather than `SimObject`, so

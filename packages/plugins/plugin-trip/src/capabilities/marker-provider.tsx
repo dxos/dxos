@@ -13,9 +13,12 @@ import { type GeoMarker, LatLngLiteral } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Place, Routing, Segment, Trip } from '#types';
 
 import { AIRPORTS } from '../operations/extractor/const';
+import * as Place from '../types/Place';
+import * as Routing from '../types/Routing';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
 
 // TODO(burdon): Factor out to @dxos/schema.
 

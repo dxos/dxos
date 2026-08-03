@@ -8,7 +8,8 @@ import { useObject } from '@dxos/echo-react';
 import { useSelection } from '@dxos/react-ui-attention';
 
 import { VideoPlayer } from '#components';
-import { type Video } from '#types';
+
+import type * as Video from '../../types/Video';
 
 // TODO(burdon): Use AppSurface.Section.
 export type VideoSectionProps = {

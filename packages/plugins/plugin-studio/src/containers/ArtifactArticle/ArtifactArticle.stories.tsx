@@ -19,9 +19,12 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Artifact, type GenerationService, StudioCapabilities, Variant } from '#types';
 
 import { StudioPlugin } from '../../StudioPlugin';
+import * as Artifact from '../../types/Artifact';
+import type * as GenerationService from '../../types/GenerationService';
+import * as StudioCapabilities from '../../types/StudioCapabilities';
+import * as Variant from '../../types/Variant';
 import { ArtifactArticle } from './ArtifactArticle';
 
 /** The request config the mock provider exposes (drives the schema-driven form). */

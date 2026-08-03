@@ -6,7 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
-import { TableOperation } from '../types';
+import * as TableOperation from '../types/TableOperation';
 
 const handler: Operation.WithHandler<typeof TableOperation.Create> = TableOperation.Create.pipe(
   Operation.withHandler(

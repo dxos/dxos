@@ -15,9 +15,10 @@ import { Collection, Obj } from '@dxos/echo';
 import { ArtifactCard, ImageVariant, VideoVariant } from '#components';
 import { ArtifactArticle, ArtifactsArticle, GalleryArticle, LightboxArticle } from '#containers';
 import { VariantRenderer } from '#surfaces';
-import { Artifact, Lightbox } from '#types';
 
 import { ARTIFACTS_NODE_DATA } from '../constants';
+import * as Artifact from '../types/Artifact';
+import * as Lightbox from '../types/Lightbox';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 

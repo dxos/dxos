@@ -10,8 +10,8 @@ import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
-import { Chess } from '#types';
 
+import * as Chess from '../../types/Chess';
 import { ChessCard } from './ChessCard';
 
 const SAMPLE_PGN =

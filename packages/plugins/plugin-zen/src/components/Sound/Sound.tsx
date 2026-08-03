@@ -7,9 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
 
-import { Sequence } from '#types';
-
 import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
+import * as Sequence from '../../types/Sequence';
 
 export type SoundProps = {
   sequence: Sequence.Sequence;

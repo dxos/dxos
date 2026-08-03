@@ -18,9 +18,10 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Artifact, Variant } from '#types';
 
 import { StudioPlugin } from '../../StudioPlugin';
+import * as Artifact from '../../types/Artifact';
+import * as Variant from '../../types/Variant';
 import { GalleryArticle } from './GalleryArticle';
 
 const DefaultStory = () => {

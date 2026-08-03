@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Ibkr } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
 import { PortfolioReportDetail } from './PortfolioReportDetail';
 
 // Mirrors live Flex output: no levelOfDetail attribute — the aggregate row per instrument has an

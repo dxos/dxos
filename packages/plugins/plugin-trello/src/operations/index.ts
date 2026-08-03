@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { TrelloOperation } from '../types';
+import * as TrelloOperation from '../types/TrelloOperation';
 
 export const TrelloOperationHandlerSet = OperationHandlerSet.keyed([
   [TrelloOperation.GetTrelloBoards, () => import('./get-trello-boards')],

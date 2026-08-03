@@ -7,7 +7,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { ChessComAccount } from '#types';
+
+import * as ChessComAccount from './types/ChessComAccount';
 
 export const ChessComPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Feed, Ref } from '@dxos/echo';
 import { Transcript } from '@dxos/types';
 
-import { TranscriptOperation } from '../types';
+import * as TranscriptOperation from '../types/TranscriptOperation';
 
 const handler: Operation.WithHandler<typeof TranscriptOperation.Create> = TranscriptOperation.Create.pipe(
   Operation.withHandler(

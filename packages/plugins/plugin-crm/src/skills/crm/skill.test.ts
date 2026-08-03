@@ -15,9 +15,8 @@ import { EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { ProfileOf } from '#types';
-
 import { EMAIL_FIXTURES, makeEmailMessage } from '../../testing';
+import * as ProfileOf from '../../types/ProfileOf';
 import CrmSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();

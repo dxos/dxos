@@ -11,7 +11,7 @@ import { type DrawingVariant } from '@dxos/plugin-illustrator/types';
 import { ExcalidrawArticle } from '#containers';
 import { ExcalidrawBuilder } from '#model';
 
-import { Excalidraw } from '../types';
+import * as Excalidraw from '../types/Excalidraw';
 
 // No `canvasType`/`createCanvas`: excalidraw stores its elements in the base `Drawing.Canvas`,
 // discriminated by `schema`.

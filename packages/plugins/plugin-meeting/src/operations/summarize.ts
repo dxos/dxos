@@ -6,7 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as TranscriptOperation from '@dxos/plugin-transcription/TranscriptOperation';
 
-import { MeetingOperation } from '#types';
+import * as MeetingOperation from '../types/MeetingOperation';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.Summarize> = MeetingOperation.Summarize.pipe(
   Operation.withHandler(

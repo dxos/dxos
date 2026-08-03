@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { GitHubApi } from '../services';
-import { GitHubOperation } from '../types';
+import * as GitHubOperation from '../types/GitHubOperation';
 
 /**
  * Discovery only — list GitHub repositories reachable from the connection's

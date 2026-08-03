@@ -12,7 +12,9 @@ import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { CrxCapabilities, PageAction, Settings } from '#types';
+import * as CrxCapabilities from './types/CrxCapabilities';
+import * as PageAction from './types/PageAction';
+import * as Settings from './types/Settings';
 
 /**
  * Dependencies for the invoke handler, injected so the handler can be

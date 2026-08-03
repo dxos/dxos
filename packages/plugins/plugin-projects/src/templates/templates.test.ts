@@ -12,8 +12,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Text } from '@dxos/schema';
 
-import { ProjectCapabilities } from '#types';
-
+import * as ProjectCapabilities from '../types/ProjectCapabilities';
 import { blank, defaultTemplates, scaffoldProject } from './index';
 
 describe('project templates', () => {

@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { TranscriptOperation } from '../types';
+import * as TranscriptOperation from '../types/TranscriptOperation';
 import { renderByline } from '../util';
 
 const handler: Operation.WithHandler<typeof TranscriptOperation.Open> = TranscriptOperation.Open.pipe(

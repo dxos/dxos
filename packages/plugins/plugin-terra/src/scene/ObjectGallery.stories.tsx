@@ -16,8 +16,8 @@ import React, { useEffect, useRef } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type TerraObject } from '#types';
 
+import type * as TerraObject from '../types/TerraObject';
 import { createGizmo } from './gizmo-layer';
 import { createObjectForm } from './object-forms';
 

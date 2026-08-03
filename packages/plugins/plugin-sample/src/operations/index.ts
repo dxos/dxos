@@ -9,7 +9,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SampleOperation } from '../types';
+import * as SampleOperation from '../types/SampleOperation';
 
 export const SampleOperationHandlerSet = OperationHandlerSet.keyed([
   [SampleOperation.CreateSampleItem, () => import('./create-sample-item')],

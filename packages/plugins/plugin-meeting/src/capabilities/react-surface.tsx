@@ -13,7 +13,8 @@ import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
 import { MeetingArticle, MeetingsList } from '#containers';
-import { Meeting } from '#types';
+
+import * as Meeting from '../types/Meeting';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

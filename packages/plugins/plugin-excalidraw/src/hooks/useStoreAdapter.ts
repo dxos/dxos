@@ -9,8 +9,7 @@ import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { Excalidraw } from '#types';
-
+import * as Excalidraw from '../types/Excalidraw';
 import { ExcalidrawStoreAdapter, type ExcalidrawStoreAdapterProps } from './adapter';
 
 /**

@@ -6,7 +6,8 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Chess, ChessOperation } from '#types';
+import * as Chess from '../types/Chess';
+import * as ChessOperation from '../types/ChessOperation';
 
 const operations = [ChessOperation.Move, ChessOperation.Play, ChessOperation.Print];
 

@@ -7,7 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 
-import { Booking, Segment, Trip, TripOperation } from '../types';
+import * as Booking from '../types/Booking';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
+import * as TripOperation from '../types/TripOperation';
 import { getTripGapDays } from './extractor/config';
 
 export default TripOperation.MergeTrip.pipe(

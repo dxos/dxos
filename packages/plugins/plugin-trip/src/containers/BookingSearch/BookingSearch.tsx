@@ -14,8 +14,12 @@ import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
 import { meta } from '#meta';
-import { Booking, BookingOperation, BookingSearch as BookingSearchType, Segment, TripCapabilities } from '#types';
 
+import * as Booking from '../../types/Booking';
+import * as BookingOperation from '../../types/BookingOperation';
+import * as BookingSearchType from '../../types/BookingSearch';
+import * as Segment from '../../types/Segment';
+import * as TripCapabilities from '../../types/TripCapabilities';
 import { offerToBookingProps, offerToFlightDetails } from './offer-to-segment';
 
 /** 2-column form layout for the flight query (parallels SegmentCard's FLIGHT_LAYOUT). */

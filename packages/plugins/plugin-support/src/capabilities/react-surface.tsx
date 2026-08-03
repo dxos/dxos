@@ -33,10 +33,11 @@ import {
   SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
-import { type Settings, Support } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
+import type * as Settings from '../types/Settings';
+import * as Support from '../types/Support';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

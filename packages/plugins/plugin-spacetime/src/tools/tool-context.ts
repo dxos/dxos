@@ -5,9 +5,9 @@
 import { type ArcRotateCamera, type Scene as BabylonScene, type HighlightLayer, type Mesh } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
-import { type Model, type Scene } from '#types';
-
 import { type getManifold } from '../engine';
+import type * as Model from '../types/Model';
+import type * as Scene from '../types/Scene';
 import { type EditorState } from './editor-state';
 
 /** Selection granularity mode. */

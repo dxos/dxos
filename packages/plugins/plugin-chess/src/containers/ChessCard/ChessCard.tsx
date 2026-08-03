@@ -9,7 +9,8 @@ import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
 import { Card } from '@dxos/react-ui';
 
 import { Chessboard } from '#components';
-import { Chess } from '#types';
+
+import * as Chess from '../../types/Chess';
 
 export type ChessCardProps = GameVariantSurfaceProps;
 

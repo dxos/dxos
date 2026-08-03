@@ -5,7 +5,7 @@
 import seedrandom from 'seedrandom';
 
 import { type TerraConfigValues, type Vec3 } from '../engine';
-import { TerraObject } from '../types';
+import * as TerraObject from '../types/TerraObject';
 import { toUnit } from './geo';
 import { type MotionContext, type ObjectState, evaluate, initialState, routeLength } from './motion';
 import { type NavGrid } from './nav-grid';

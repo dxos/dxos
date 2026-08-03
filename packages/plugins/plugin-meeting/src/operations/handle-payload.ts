@@ -8,7 +8,9 @@ import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EID, parseId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+import * as Meeting from '../types/Meeting';
+import * as MeetingCapabilities from '../types/MeetingCapabilities';
+import * as MeetingOperation from '../types/MeetingOperation';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(

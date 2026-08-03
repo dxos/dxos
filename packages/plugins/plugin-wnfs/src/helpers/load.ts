@@ -11,9 +11,8 @@ import { AccessKey, PrivateDirectory, PrivateForest, PrivateNode } from 'wnfs';
 import { Annotation, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
-import { type WnfsCapabilities } from '#types';
-
 import { WnfsStateAnnotation } from '../annotations';
+import type * as WnfsCapabilities from '../types/WnfsCapabilities';
 import { Rng, store } from './common';
 
 //

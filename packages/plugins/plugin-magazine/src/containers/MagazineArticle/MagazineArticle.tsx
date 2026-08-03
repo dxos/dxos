@@ -19,8 +19,10 @@ import { Menu } from '@dxos/react-ui-menu';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
-import { FeedOperation, Magazine, Subscription } from '#types';
 
+import * as FeedOperation from '../../types/FeedOperation';
+import * as Magazine from '../../types/Magazine';
+import * as Subscription from '../../types/Subscription';
 import { MagazineTile } from './MagazineTile';
 import { useToolbar } from './useToolbar';
 

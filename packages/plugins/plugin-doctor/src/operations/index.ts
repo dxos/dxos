@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { DoctorOperation } from '../types';
+import * as DoctorOperation from '../types/DoctorOperation';
 
 export const DoctorOperationHandlerSet = OperationHandlerSet.keyed([
   [DoctorOperation.QueryComposerLogs, () => import('./query-composer-logs')],

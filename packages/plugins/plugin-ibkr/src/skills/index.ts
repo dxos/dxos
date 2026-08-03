@@ -7,7 +7,7 @@ import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
 import { IBKR_SKILL_KEY } from '../constants';
-import { IbkrOperation } from '../types';
+import * as IbkrOperation from '../types/IbkrOperation';
 
 const make = () =>
   Skill.make({

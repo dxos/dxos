@@ -11,7 +11,8 @@ import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import { type GameVariant } from '@dxos/plugin-game/types';
 
 import { ChessArticle, ChessCard } from '#containers';
-import { Chess } from '#types';
+
+import * as Chess from '../types/Chess';
 
 const CreateChessInput = Schema.Struct({
   name: Schema.optional(

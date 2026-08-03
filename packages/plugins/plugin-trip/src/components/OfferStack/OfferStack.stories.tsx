@@ -9,8 +9,8 @@ import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type BookingSearch as BookingSearchType } from '#types';
 
+import type * as BookingSearchType from '../../types/BookingSearch';
 import { OfferStack } from './OfferStack';
 
 const OFFERS: BookingSearchType.FlightOffer[] = [

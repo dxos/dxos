@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { GitHubOperation } from '../types';
+import * as GitHubOperation from '../types/GitHubOperation';
 
 export const GitHubOperationHandlerSet = OperationHandlerSet.keyed([
   [GitHubOperation.GetGitHubRepositories, () => import('./get-repositories')],

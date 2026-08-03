@@ -22,8 +22,8 @@ import { withLayout } from '@dxos/react-ui/testing';
 
 import { BloggerOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
-import { Blog } from '#types';
 
+import * as Blog from '../../types/Blog';
 import { PostArticle } from './PostArticle';
 
 /** Builds a `Post` whose single body document is seeded with recognizable text for the assertion. */

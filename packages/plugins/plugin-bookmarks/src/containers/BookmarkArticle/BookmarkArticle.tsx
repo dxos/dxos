@@ -13,8 +13,9 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
-import { type Bookmark, BookmarkOperation } from '#types';
 
+import type * as Bookmark from '../../types/Bookmark';
+import * as BookmarkOperation from '../../types/BookmarkOperation';
 import { useImageLoads } from '../useImageLoads';
 
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;

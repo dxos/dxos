@@ -19,13 +19,13 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { AtprotoCapabilities } from '#types';
 
 import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection';
 import { getAtprotoUris } from '../../foreign-key';
 import { importRecord } from '../../publish';
 import { getMappedCollections } from '../../schema-map';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
+import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
 
 export type PdsBrowserProps = {
   role?: string;

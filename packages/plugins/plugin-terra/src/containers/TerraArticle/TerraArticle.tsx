@@ -14,11 +14,12 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm } from '#components';
 import { meta } from '#meta';
-import { Terra, TerraObject } from '#types';
 
 import { SceneFpsWidget, SceneManager, type TerraConfigValues, generatePlanet, seaRadius } from '../../engine';
 import { ChaseCamera, GizmoLayer, ObjectLayer, TrailLayer } from '../../scene';
 import { SimEngine, type SimObject, buildNavGrid, toGeo } from '../../sim';
+import * as Terra from '../../types/Terra';
+import * as TerraObject from '../../types/TerraObject';
 
 /** Tracks pause state for the render-loop clock: while paused, `pausedAtMs` freezes the sim time; on resume, the elapsed pause duration is folded into `pausedTotalMs` so the clock continues from where it froze rather than jumping ahead. */
 type SimClock = { pausedTotalMs: number; pausedAtMs: number | null };

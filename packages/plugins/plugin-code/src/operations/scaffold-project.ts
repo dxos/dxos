@@ -8,9 +8,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { SourceFile } from '#types';
-
-import { CodeOperation } from '../types';
+import * as CodeOperation from '../types/CodeOperation';
+import * as SourceFile from '../types/SourceFile';
 
 type ScaffoldFile = { path: string; content: string };
 

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Terra } from '../types';
+import * as Terra from '../types/Terra';
 import { toUnit } from './geo';
 import { buildNavGrid, isPassable } from './nav-grid';
 import { domainCandidates } from './reachable';

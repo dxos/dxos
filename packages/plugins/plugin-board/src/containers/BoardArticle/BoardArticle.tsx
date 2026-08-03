@@ -20,7 +20,7 @@ import { translationKey } from '@dxos/react-ui-board/translations';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
-import { type Board as BoardType } from '#types';
+import type * as BoardType from '../../types/Board';
 
 type Position = { x: number; y: number };
 

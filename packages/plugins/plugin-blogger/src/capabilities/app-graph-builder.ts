@@ -19,9 +19,9 @@ import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-import { Blog } from '#types';
 
 import { getPublicationsSectionId } from '../paths';
+import * as Blog from '../types/Blog';
 
 /** Node type of the "Publications" section under a space's content group. */
 const PUBLICATIONS_SECTION_TYPE = `${meta.profile.key}.publications-section`;

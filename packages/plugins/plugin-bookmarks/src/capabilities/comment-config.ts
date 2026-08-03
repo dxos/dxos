@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { Bookmark } from '#types';
+import * as Bookmark from '../types/Bookmark';
 
 const activate = Effect.fnUntraced(function* () {
   // Unanchored: comments attach to the bookmark as a whole. Anchored (range) comments require the

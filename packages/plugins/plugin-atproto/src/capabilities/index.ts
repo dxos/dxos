@@ -8,7 +8,8 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connector } from '@dxos/plugin-connector';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 
-import { AtprotoCapabilities, AtprotoEvents } from '#types';
+import * as AtprotoCapabilities from '../types/AtprotoCapabilities';
+import * as AtprotoEvents from '../types/AtprotoEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const AtprotoConnector = Capability.lazyModule(

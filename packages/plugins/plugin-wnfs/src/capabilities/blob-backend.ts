@@ -14,9 +14,8 @@ import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 
-import { WnfsCapabilities } from '#types';
-
 import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '../helpers';
+import * as WnfsCapabilities from '../types/WnfsCapabilities';
 
 interface CreateWnfsBlobBackendOptions {
   client: Client;

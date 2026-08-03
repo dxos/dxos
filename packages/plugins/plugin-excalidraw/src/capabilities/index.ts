@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
-import { ExcalidrawCapabilities } from '#types';
+import * as ExcalidrawCapabilities from '../types/ExcalidrawCapabilities';
 
 export const DrawingVariant = Capability.lazyModule(
   'drawing-variant',

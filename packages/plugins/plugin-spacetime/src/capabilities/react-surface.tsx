@@ -11,7 +11,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SpacetimeArticle } from '#containers';
-import { Scene } from '#types';
+
+import * as Scene from '../types/Scene';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

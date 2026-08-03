@@ -21,7 +21,8 @@ import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
+
+import * as ProjectOperation from '../../types/ProjectOperation';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them.
 const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));

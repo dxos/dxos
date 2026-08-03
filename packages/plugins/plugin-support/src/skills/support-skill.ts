@@ -6,7 +6,8 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Support, SupportOperation } from '#types';
+import * as Support from '../types/Support';
+import * as SupportOperation from '../types/SupportOperation';
 
 const operations = [
   SupportOperation.CreateTicket,

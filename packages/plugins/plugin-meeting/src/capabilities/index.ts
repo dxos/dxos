@@ -10,7 +10,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
 
-import { MeetingCapabilities, MeetingEvents } from '#types';
+import * as MeetingCapabilities from '../types/MeetingCapabilities';
+import * as MeetingEvents from '../types/MeetingEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.

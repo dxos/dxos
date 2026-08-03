@@ -10,7 +10,8 @@ import { type Database, EID, Feed, Filter, Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
 import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from './sync';
-import { Ibkr, IbkrOperation } from './types';
+import * as Ibkr from './types/Ibkr';
+import * as IbkrOperation from './types/IbkrOperation';
 
 describe('createDailySyncTrigger', () => {
   let builder: EchoTestBuilder;

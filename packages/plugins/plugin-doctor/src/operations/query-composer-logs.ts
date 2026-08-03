@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { DoctorOperation } from '../types';
+import * as DoctorOperation from '../types/DoctorOperation';
 import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query';
 import { readLogRows } from './internal/log-reader';
 

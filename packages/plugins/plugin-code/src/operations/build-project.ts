@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
 import { type LoadedFile, compileEntry } from '../compiler';
-import { CodeOperation } from '../types';
+import * as CodeOperation from '../types/CodeOperation';
 
 /**
  * F-12a: single-file TypeScript transpile via the @typescript/vfs language

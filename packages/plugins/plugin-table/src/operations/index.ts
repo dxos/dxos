@@ -2,7 +2,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { TableOperation } from '../types';
+import * as TableOperation from '../types/TableOperation';
 
 export const TableOperationHandlerSet = OperationHandlerSet.keyed([
   [TableOperation.AddRow, () => import('./add-row')],

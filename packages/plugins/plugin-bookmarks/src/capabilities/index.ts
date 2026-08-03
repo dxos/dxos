@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
 import * as CrxEvents from '@dxos/plugin-crx/CrxEvents';
 
-import { BookmarksEvents } from '#types';
+import * as BookmarksEvents from '../types/BookmarksEvents';
 
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: BookmarksEvents.Start,

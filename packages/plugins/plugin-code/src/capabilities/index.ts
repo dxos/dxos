@@ -8,7 +8,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { CodeCapabilities, CodeEvents } from '#types';
+import * as CodeCapabilities from '../types/CodeCapabilities';
+import * as CodeEvents from '../types/CodeEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [AppCapabilities.PluginAsset],

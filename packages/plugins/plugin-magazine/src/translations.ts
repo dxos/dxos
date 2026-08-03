@@ -7,7 +7,9 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
-import { Magazine, Subscription } from '#types';
+
+import * as Magazine from './types/Magazine';
+import * as Subscription from './types/Subscription';
 
 export const translations = [
   ...formTranslations,

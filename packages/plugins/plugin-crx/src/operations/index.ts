@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { CrxOperation } from '#types';
+import * as CrxOperation from '../types/CrxOperation';
 
 export const CrxOperationHandlerSet = OperationHandlerSet.keyed([
   [CrxOperation.AddPersonFromSnapshot, () => import('./add-person-from-snapshot')],

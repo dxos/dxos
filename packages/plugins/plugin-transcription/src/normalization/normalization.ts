@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 import { type Message, type Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { TranscriptOperation } from '../types';
+import * as TranscriptOperation from '../types/TranscriptOperation';
 
 type MessageWithRangeIdType = TranscriptOperation.MessageWithRangeIdType;
 type SentenceNormalizationInputType = TranscriptOperation.SentenceNormalizationInputType;

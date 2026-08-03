@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { BookmarkOperation } from '#types';
+import * as BookmarkOperation from '../types/BookmarkOperation';
 
 export const BookmarkOperationHandlerSet = OperationHandlerSet.keyed([
   [BookmarkOperation.AddFromSnapshot, () => import('./add-from-snapshot')],

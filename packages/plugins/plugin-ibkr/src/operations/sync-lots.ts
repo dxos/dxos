@@ -9,7 +9,8 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { IBKR_SOURCE, tickerSource } from '../constants';
 import { parseClosedLots, parseOpenLots } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
+import * as Ibkr from '../types/Ibkr';
+import * as IbkrOperation from '../types/IbkrOperation';
 import { latestReportFromFeed } from './feed';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.SyncLots> = IbkrOperation.SyncLots.pipe(

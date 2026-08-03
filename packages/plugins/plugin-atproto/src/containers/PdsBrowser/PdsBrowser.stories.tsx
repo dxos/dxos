@@ -24,9 +24,10 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import * as AtprotoRepo from '../../services/AtprotoRepo';
+import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
+import * as AtprotoPublication from '../../types/AtprotoPublication';
 import { PdsBrowser } from './PdsBrowser';
 
 // Default the input to a real handle so the story opens on a live repo; `alice.test` still resolves to the

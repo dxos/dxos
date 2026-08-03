@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { MeetingOperation } from '#types';
+import * as MeetingOperation from '../types/MeetingOperation';
 
 export const MeetingOperationHandlerSet = OperationHandlerSet.keyed([
   [MeetingOperation.Create, () => import('./create')],

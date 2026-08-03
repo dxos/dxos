@@ -28,7 +28,7 @@ import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
-import { Meeting } from '../types';
+import * as Meeting from '../types/Meeting';
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */

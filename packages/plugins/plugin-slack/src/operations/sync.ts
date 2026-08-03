@@ -22,7 +22,7 @@ import { meta } from '#meta';
 import { SLACK_SOURCE } from '../constants';
 import { formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
-import { SlackOperation } from '../types';
+import * as SlackOperation from '../types/SlackOperation';
 
 type SlackConversation = SlackApi.SlackConversation;
 type SlackMessage = SlackApi.SlackMessage;

@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type Ibkr } from '../../types';
+import type * as Ibkr from '../../types/Ibkr';
 import { FundamentalsPanel } from './FundamentalsPanel';
 
 const aaplSnapshot = {

@@ -12,8 +12,6 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
 
-import { CreateSubscription, FeedOperation, Magazine, Subscription } from '#types';
-
 import {
   browserCorsProxy,
   fetchRss,
@@ -21,6 +19,10 @@ import {
   searchStandardSiteHandles,
 } from '../operations/sources';
 import { getMagazinesPath } from '../paths';
+import * as CreateSubscription from '../types/CreateSubscription';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 
 const StandardSiteCreate = Schema.Struct({
   ...CreateSubscription.StandardSiteCreateBase.fields,

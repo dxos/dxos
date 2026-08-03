@@ -6,7 +6,10 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { CodeProject, SourceFile, Spec } from '#types';
+
+import * as CodeProject from './types/CodeProject';
+import * as SourceFile from './types/SourceFile';
+import * as Spec from './types/Spec';
 
 export const translations = [
   {

@@ -11,9 +11,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 
-import { SampleItem } from '#types';
-
-import { SampleOperation } from '../types';
+import * as SampleItem from '../types/SampleItem';
+import * as SampleOperation from '../types/SampleOperation';
 
 // `Operation.withHandler` wraps the operation definition with an implementation.
 // The callback receives the validated input fields and must return an Effect

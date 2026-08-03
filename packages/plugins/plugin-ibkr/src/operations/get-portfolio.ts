@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 
 import { parseCash, parsePositions } from '../services';
-import { IbkrOperation } from '../types';
+import * as IbkrOperation from '../types/IbkrOperation';
 import { latestReport } from './feed';
 
 const handler: Operation.WithHandler<typeof IbkrOperation.GetPortfolio> = IbkrOperation.GetPortfolio.pipe(

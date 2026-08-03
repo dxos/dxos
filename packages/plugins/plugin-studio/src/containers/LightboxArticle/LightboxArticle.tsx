@@ -15,7 +15,9 @@ import { Board, type BoardController, type BoardRootProps, type Layout, resizeTo
 
 import { ArtifactCard } from '#components';
 import { meta } from '#meta';
-import { Artifact, type Lightbox } from '#types';
+
+import * as Artifact from '../../types/Artifact';
+import type * as Lightbox from '../../types/Lightbox';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 

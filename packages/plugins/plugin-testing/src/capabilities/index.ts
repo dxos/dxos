@@ -10,7 +10,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { Layout } from '#components';
-import { StorybookCapabilities } from '#types';
+
+import * as StorybookCapabilities from '../types/StorybookCapabilities';
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactContext = Capability.inlineModule('storybook-layout', { provides: [Capabilities.ReactContext] }, () =>

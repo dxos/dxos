@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { CrmOperation } from '../types';
+import * as CrmOperation from '../types/CrmOperation';
 
 export const CrmOperationHandlerSet = OperationHandlerSet.keyed([
   [CrmOperation.AttachImage, () => import('./attach-image')],

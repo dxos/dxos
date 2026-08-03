@@ -9,8 +9,7 @@ import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Excalidraw } from '#types';
-
+import * as Excalidraw from '../../types/Excalidraw';
 import { ExcalidrawArticle } from './ExcalidrawArticle';
 
 const DefaultStory = () => {

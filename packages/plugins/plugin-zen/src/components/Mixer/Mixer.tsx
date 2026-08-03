@@ -11,9 +11,10 @@ import { OrderedList } from '@dxos/react-ui-list';
 
 import { useCountdown } from '#hooks';
 import { meta } from '#meta';
-import { Dream, Sequence } from '#types';
 
 import { MixerEngine } from '../../generator';
+import * as Dream from '../../types/Dream';
+import * as Sequence from '../../types/Sequence';
 import { Sound } from '../Sound';
 
 //

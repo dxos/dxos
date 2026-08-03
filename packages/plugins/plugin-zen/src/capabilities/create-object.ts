@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Dream } from '#types';
+import * as Dream from '../types/Dream';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

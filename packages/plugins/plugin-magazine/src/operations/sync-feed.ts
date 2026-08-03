@@ -8,7 +8,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { FeedOperation, Subscription } from '../types';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Subscription from '../types/Subscription';
 import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources';
 
 /** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, Standard.site uses the record AT-URI). */

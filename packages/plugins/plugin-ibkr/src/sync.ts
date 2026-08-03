@@ -7,7 +7,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, EID, Obj, Ref } from '@dxos/echo';
 
 import { IBKR_SYNC_CRON } from './constants';
-import { type Ibkr, IbkrOperation } from './types';
+import type * as Ibkr from './types/Ibkr';
+import * as IbkrOperation from './types/IbkrOperation';
 
 /** Stable string form of the sync operation's key, used to recognize its serialized record. */
 export const SYNC_OPERATION_KEY = String(IbkrOperation.SyncPortfolioReport.meta.key);

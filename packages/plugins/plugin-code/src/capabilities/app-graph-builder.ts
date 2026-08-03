@@ -16,7 +16,6 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { CodeProject } from '#types';
 
 import {
   CODE_PROJECT_BUILD_TYPE,
@@ -26,6 +25,7 @@ import {
 } from '../constants';
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';
 import { makePluginSpecSubject } from '../plugin-spec';
+import * as CodeProject from '../types/CodeProject';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -11,7 +11,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ScoreArticle } from '#containers';
-import { Score } from '#types';
+
+import * as Score from '../types/Score';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

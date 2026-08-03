@@ -12,7 +12,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
 import { SummarySection, TranscriptSection, VideoArticle, VideoSection } from '#containers';
-import { Video } from '#types';
+
+import * as Video from '../types/Video';
 
 const isVideoPart = (data: unknown, part: string): boolean => {
   if (typeof data !== 'object' || data === null) {

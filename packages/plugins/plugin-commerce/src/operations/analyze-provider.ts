@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { SearchOperation } from '../types';
+import * as SearchOperation from '../types/SearchOperation';
 import { cleanHtml, fetchPage, isCrxRenderAvailable, summarizeStructure } from '../util';
 
 // Bound the cleaned page handed to the LLM (≈ token budget). Rendered SPA pages can be multiple MB

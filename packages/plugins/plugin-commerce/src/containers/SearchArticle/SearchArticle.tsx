@@ -16,7 +16,8 @@ import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
-import { Result, Search } from '../../types';
+import * as Result from '../../types/Result';
+import * as Search from '../../types/Search';
 import { ResultDetail } from './ResultDetail';
 import { ResultTile } from './ResultTile';
 

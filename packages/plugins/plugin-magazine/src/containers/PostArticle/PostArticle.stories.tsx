@@ -19,9 +19,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Subscription } from '#types';
 
 import { MagazinePlugin } from '../../MagazinePlugin';
+import * as Subscription from '../../types/Subscription';
 import { PostArticle } from './PostArticle';
 
 const SAMPLE_MARKDOWN = `# Local-first software

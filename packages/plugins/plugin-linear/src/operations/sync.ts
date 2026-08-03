@@ -21,7 +21,7 @@ import { meta } from '#meta';
 import { LINEAR_SOURCE } from '../constants';
 import { formatLinearSyncFailure } from '../errors';
 import { LinearApi } from '../services';
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.

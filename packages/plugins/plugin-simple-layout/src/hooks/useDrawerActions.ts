@@ -15,8 +15,8 @@ import { type ActionExecutor, type ActionGraphProps, createGapSeparator } from '
 
 import { useMobileLayout } from '#components';
 import { meta } from '#meta';
-import { SimpleLayoutCapabilities } from '#types';
 
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 import { createCompanionActions } from './actions';
 import { useSimpleLayoutState } from './useSimpleLayoutState';
 

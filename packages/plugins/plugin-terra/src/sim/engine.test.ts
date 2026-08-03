@@ -6,7 +6,8 @@ import seedrandom from 'seedrandom';
 import { describe, expect, test } from 'vitest';
 
 import { type Vec3 } from '../engine';
-import { Terra, TerraObject } from '../types';
+import * as Terra from '../types/Terra';
+import * as TerraObject from '../types/TerraObject';
 import { MAX_CATCHUP_LEGS, SimEngine } from './engine';
 import { angleBetween, toGeo, toUnit } from './geo';
 import { buildNavGrid, isPassable } from './nav-grid';

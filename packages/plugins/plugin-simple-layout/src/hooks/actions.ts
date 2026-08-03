@@ -11,7 +11,7 @@ import { Attention } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';
 
-import { SimpleLayoutCapabilities } from '#types';
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 
 // TODO(wittjosiah): Factor out to shared location with plugin-deck.
 export const PLANK_COMPANION_TYPE = 'org.dxos.plugin.deck.plank-companion';

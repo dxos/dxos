@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
 import { Obj } from '@dxos/echo';
 
-import { Subscription } from '../types';
+import * as Subscription from '../types/Subscription';
 
 /** This Post's fetched body (newest {@link Subscription.PostContent} entry), or undefined. */
 export const postContentAtom = Atom.family((post: Subscription.Post) =>

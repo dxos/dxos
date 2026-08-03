@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SlackOperation } from '../types';
+import * as SlackOperation from '../types/SlackOperation';
 
 export const SlackOperationHandlerSet = OperationHandlerSet.keyed([
   [SlackOperation.GetSlackChannels, () => import('./get-slack-channels')],

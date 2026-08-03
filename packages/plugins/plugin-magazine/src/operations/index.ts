@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { FeedOperation } from '../types';
+import * as FeedOperation from '../types/FeedOperation';
 
 export const MagazineOperationHandlerSet = OperationHandlerSet.keyed([
   [FeedOperation.ClearMagazine, () => import('./clear-magazine')],

@@ -10,8 +10,8 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { SamplePlugin } from '#plugin';
 
 import { meta } from './meta';
-import { SampleOperation } from './types';
-import { SampleItem } from './types';
+import * as SampleItem from './types/SampleItem';
+import * as SampleOperation from './types/SampleOperation';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

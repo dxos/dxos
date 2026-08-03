@@ -19,8 +19,8 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Blog } from '#types';
 
+import * as Blog from '../../types/Blog';
 import { PublicationArticle } from './PublicationArticle';
 
 const POST_COUNT = 3;

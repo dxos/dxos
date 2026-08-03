@@ -10,7 +10,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Provider, Search } from '../types';
+import * as Provider from '../types/Provider';
+import * as Search from '../types/Search';
 
 /** Input schema for creating a Search; types the `props` passed to createObject. */
 const CreateSearchSchema = Schema.Struct({

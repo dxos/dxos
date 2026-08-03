@@ -19,7 +19,9 @@ import { Position } from '@dxos/util';
 
 import { SampleStatusIndicator } from '#components';
 import { SampleArticle, SampleCompanionPanel, SampleDeckCompanion, SampleProperties } from '#containers';
-import { SampleCapabilities, SampleItem } from '#types';
+
+import * as SampleCapabilities from '../types/SampleCapabilities';
+import * as SampleItem from '../types/SampleItem';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

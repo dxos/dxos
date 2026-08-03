@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ProjectOperation } from '#types';
+import * as ProjectOperation from '../types/ProjectOperation';
 
 export const ProjectOperationHandlerSet = OperationHandlerSet.keyed([
   [ProjectOperation.CreateChat, () => import('./create-chat')],

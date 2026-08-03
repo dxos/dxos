@@ -6,7 +6,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Meeting } from '#types';
+
+import * as Meeting from './types/Meeting';
 
 export const translations = [
   {

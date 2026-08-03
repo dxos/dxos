@@ -14,7 +14,9 @@ import { fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { Organization } from '@dxos/types';
 
-import { Booking, Segment, Trip } from '../../types';
+import * as Booking from '../../types/Booking';
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
 import gateChangeRaw from './testing/files/gate-change.md?raw';
 import genericConfirmationRaw from './testing/files/generic-booking-confirmation.md?raw';
 import klmConfirmationRaw from './testing/files/klm-confirmation.md?raw';

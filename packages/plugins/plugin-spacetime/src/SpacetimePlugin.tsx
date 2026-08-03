@@ -8,10 +8,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { CreateObject, ReactSurface, SpacetimeSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Model, Scene } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Model from './types/Model';
+import * as Scene from './types/Scene';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

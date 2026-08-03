@@ -8,8 +8,7 @@ import { XMLParser } from 'fast-xml-parser';
 
 import { normalizeText } from '@dxos/markdown';
 
-import { Subscription } from '#types';
-
+import * as Subscription from '../../types/Subscription';
 import { decodeEntities } from '../../util/text';
 import { type FeedFetcher, FeedFetchError, type FetchResult } from './feed-fetcher';
 import { getText } from './http';

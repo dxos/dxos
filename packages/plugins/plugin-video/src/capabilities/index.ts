@@ -6,7 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { VideoEvents } from '#types';
+import * as VideoEvents from '../types/VideoEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {

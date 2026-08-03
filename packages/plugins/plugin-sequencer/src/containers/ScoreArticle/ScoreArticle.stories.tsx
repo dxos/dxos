@@ -10,8 +10,11 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Note, Score, Sequence, Track } from '#types';
 
+import * as Note from '../../types/Note';
+import * as Score from '../../types/Score';
+import * as Sequence from '../../types/Sequence';
+import * as Track from '../../types/Track';
 import { type MutableScore, applyLeadSheetToScore } from '../../util';
 import { parseLeadSheet } from '../../util/lead-sheet';
 import { ScoreArticle } from './ScoreArticle';

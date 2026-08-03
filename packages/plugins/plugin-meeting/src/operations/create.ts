@@ -9,7 +9,8 @@ import * as TranscriptOperation from '@dxos/plugin-transcription/TranscriptOpera
 import { getSpace } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
 
-import { Meeting, MeetingOperation } from '#types';
+import * as Meeting from '../types/Meeting';
+import * as MeetingOperation from '../types/MeetingOperation';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.Create> = MeetingOperation.Create.pipe(
   Operation.withHandler(

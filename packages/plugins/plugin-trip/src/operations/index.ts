@@ -4,10 +4,9 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { RoutingOperation } from '#types';
-
-import { TripOperation } from '../types';
-import { BookingOperation } from '../types';
+import * as BookingOperation from '../types/BookingOperation';
+import * as RoutingOperation from '../types/RoutingOperation';
+import * as TripOperation from '../types/TripOperation';
 
 export * from './extractor';
 

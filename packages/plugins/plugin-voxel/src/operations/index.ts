@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { VoxelOperation } from '../types';
+import * as VoxelOperation from '../types/VoxelOperation';
 
 export const VoxelOperationHandlerSet = OperationHandlerSet.keyed([
   [VoxelOperation.AddVoxels, () => import('./add-voxels')],

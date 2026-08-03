@@ -10,7 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import * as Connection from '@dxos/plugin-connector/Connection';
 
-import { Blog, Publisher } from '../types';
+import * as Blog from '../types/Blog';
+import * as Publisher from '../types/Publisher';
 import { runSyncPosts } from './sync-posts';
 
 const SOURCE = 'stub.test';

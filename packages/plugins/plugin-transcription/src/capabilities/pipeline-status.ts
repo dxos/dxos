@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { TranscriptionCapabilities } from '#types';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 /**
  * Observable live-transcription lifecycle phase, written by the driver and read by UI (toolbar

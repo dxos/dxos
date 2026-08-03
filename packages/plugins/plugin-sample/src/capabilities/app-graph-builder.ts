@@ -21,8 +21,9 @@ import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SampleOperation } from '#types';
-import { SampleItem } from '#types';
+
+import * as SampleItem from '../types/SampleItem';
+import * as SampleOperation from '../types/SampleOperation';
 
 // Section type constant used to identify the "Samples" section node.
 // A second extension matches this type to populate child nodes.
