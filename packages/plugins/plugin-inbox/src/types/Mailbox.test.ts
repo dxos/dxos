@@ -58,6 +58,39 @@ describe('Mailbox tags', () => {
   });
 });
 
+describe('Mailbox extraction provenance', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('recordExtraction persists the first entry on a fresh mailbox and merges idempotently', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Feed.Feed, Mailbox.Mailbox, TagIndex.TagIndex],
+    });
+    const mailbox = db.add(Mailbox.make());
+    await db.flush();
+
+    // Regression: the map is created lazily on first use, and the first recorded entry must not be
+    // lost to a detached-record write.
+    Mailbox.recordExtraction(mailbox, 'message-1', ['object-a']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-1')).toEqual(['object-a']);
+
+    Mailbox.recordExtraction(mailbox, 'message-2', ['object-b']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-1')).toEqual(['object-a']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-2')).toEqual(['object-b']);
+
+    // Idempotent merge: duplicate ids are not appended; new ids for the same message are.
+    Mailbox.recordExtraction(mailbox, 'message-1', ['object-a', 'object-c']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-1')).toEqual(['object-a', 'object-c']);
+  });
+});
+
 describe('replyability (person-only)', () => {
   const msg = (sender: { email?: string; name?: string }, properties: Record<string, unknown> = {}) =>
     Message.make({

@@ -28,22 +28,22 @@ Goals of this change:
 Definitions in `plugin-inbox/src/types/InboxOperation.ts`; handlers under
 `plugin-inbox/src/operations/`.
 
-| Operation | Reads | Writes | Notes |
-| --- | --- | --- | --- |
-| `GoogleMailSync` / `JmapSync` | provider APIs, feed (dedup seed) | **feed append** via `Cursor.commit`; deferred `db.add(Person)`, tags, blobs | The only production writer of messages. Tail stages from `@dxos/pipeline-email` (`EmailStage`): attachments → **extractContacts** → reconcileDrafts → `toCommitUnit`. |
-| `MaterializeGmailTarget` / `MaterializeJmapTarget` | binding | Mailbox | Creates the Mailbox before the sync cursor. |
-| `GmailSend` / `JmapSend` | draft | provider; `sentTag` | |
-| `ReadEmail` | feed | — | Reversed feed, skip/limit, markdown render. |
-| `DraftEmail` / `DraftEmailAndOpen` | — | `DraftMessage` + draft tag | |
-| `ClassifyEmail` | message | Tag application | LLM selects an existing Tag. |
-| `ExtractMessage` | feed message | extracted objects, `ExtractedFrom` relation or `Mailbox.extracted` | Dispatcher over `InboxCapabilities.ObjectExtractor` registry (contact, summarize, trip…). Feed messages are immutable queue items and cannot be relation endpoints — provenance for them goes in the `Mailbox.extracted` map. |
-| `ExtractContactFromMessage` | message | Person (via `@dxos/extractor-lib`) | Registered as `ContactMessageExtractor`. |
-| `ExtractSummaryFromMessage` | message | `Markdown.Document` | AI summary; diverges from pipeline-email's `summarizeStage` (which appends a text block instead) — noted in `pipeline-email/DESIGN.md`. |
-| `ExtractMailbox` *(deprecated)* / `ExtractContact` *(deprecated)* | feed | extracted objects | Fan-out and avatar-button paths. |
-| `AnalyzeMailbox` | feed | `FactStore` (advisory RDF), **feed `Cursor`** | The cursored pipeline precedent: `Cursor.makeFeed` + `runFactPipeline` (§3.2). |
-| `CreateProjectFromMessage` | thread messages | `Project` + `AnchoredTo` | |
-| `UnsubscribeSender` | message | `Mailbox.ignoreSender`, RFC 8058 POST | |
-| `GenerateReply` (handler in plugin-brain) | thread + FactStore | draft reply | |
+| Operation                                                         | Reads                            | Writes                                                                      | Notes                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------- | -------------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GoogleMailSync` / `JmapSync`                                     | provider APIs, feed (dedup seed) | **feed append** via `Cursor.commit`; deferred `db.add(Person)`, tags, blobs | The only production writer of messages. Tail stages from `@dxos/pipeline-email` (`EmailStage`): attachments → **extractContacts** → reconcileDrafts → `toCommitUnit`.                                                         |
+| `MaterializeGmailTarget` / `MaterializeJmapTarget`                | binding                          | Mailbox                                                                     | Creates the Mailbox before the sync cursor.                                                                                                                                                                                   |
+| `GmailSend` / `JmapSend`                                          | draft                            | provider; `sentTag`                                                         |                                                                                                                                                                                                                               |
+| `ReadEmail`                                                       | feed                             | —                                                                           | Reversed feed, skip/limit, markdown render.                                                                                                                                                                                   |
+| `DraftEmail` / `DraftEmailAndOpen`                                | —                                | `DraftMessage` + draft tag                                                  |                                                                                                                                                                                                                               |
+| `ClassifyEmail`                                                   | message                          | Tag application                                                             | LLM selects an existing Tag.                                                                                                                                                                                                  |
+| `ExtractMessage`                                                  | feed message                     | extracted objects, `ExtractedFrom` relation or `Mailbox.extracted`          | Dispatcher over `InboxCapabilities.ObjectExtractor` registry (contact, summarize, trip…). Feed messages are immutable queue items and cannot be relation endpoints — provenance for them goes in the `Mailbox.extracted` map. |
+| `ExtractContactFromMessage`                                       | message                          | Person (via `@dxos/extractor-lib`)                                          | Registered as `ContactMessageExtractor`.                                                                                                                                                                                      |
+| `ExtractSummaryFromMessage`                                       | message                          | `Markdown.Document`                                                         | AI summary; diverges from pipeline-email's `summarizeStage` (which appends a text block instead) — noted in `pipeline-email/DESIGN.md`.                                                                                       |
+| `ExtractMailbox` _(deprecated)_ / `ExtractContact` _(deprecated)_ | feed                             | extracted objects                                                           | Fan-out and avatar-button paths.                                                                                                                                                                                              |
+| `AnalyzeMailbox`                                                  | feed                             | `FactStore` (advisory RDF), **feed `Cursor`**                               | The cursored pipeline precedent: `Cursor.makeFeed` + `runFactPipeline` (§3.2).                                                                                                                                                |
+| `CreateProjectFromMessage`                                        | thread messages                  | `Project` + `AnchoredTo`                                                    |                                                                                                                                                                                                                               |
+| `UnsubscribeSender`                                               | message                          | `Mailbox.ignoreSender`, RFC 8058 POST                                       |                                                                                                                                                                                                                               |
+| `GenerateReply` (handler in plugin-brain)                         | thread + FactStore               | draft reply                                                                 |                                                                                                                                                                                                                               |
 
 ### 2.2 Person/Organization writers
 
@@ -107,11 +107,11 @@ Gap closed by this change: a deterministic, fixture-driven test of the **CRM** p
 
 **Yes.** Three cursor mechanisms exist (they do not share state):
 
-| Cursor | Owner | Key | Persistence |
-| --- | --- | --- | --- |
-| External sync cursor (`spec.kind: 'external'`) | mail sync | provider positions + `token` (historyId/JMAP state) | ECHO `Cursor` object |
-| Feed pipeline cursor (`Cursor.makeFeed`) | `AnalyzeMailbox` → `runFactPipeline` | `message.created` epoch-ms (workaround: ECHO's native `Feed.cursor` is stubbed) | ECHO `Cursor` object |
-| Trigger feed cursor | `TriggerDispatcher` | feed queue position (`KEY_QUEUE_POSITION`), advances only past successful invocations | foreign key on the `Trigger` |
+| Cursor                                         | Owner                                | Key                                                                                   | Persistence                  |
+| ---------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------- | ---------------------------- |
+| External sync cursor (`spec.kind: 'external'`) | mail sync                            | provider positions + `token` (historyId/JMAP state)                                   | ECHO `Cursor` object         |
+| Feed pipeline cursor (`Cursor.makeFeed`)       | `AnalyzeMailbox` → `runFactPipeline` | `message.created` epoch-ms (workaround: ECHO's native `Feed.cursor` is stubbed)       | ECHO `Cursor` object         |
+| Trigger feed cursor                            | `TriggerDispatcher`                  | feed queue position (`KEY_QUEUE_POSITION`), advances only past successful invocations | foreign key on the `Trigger` |
 
 Trigger surfaces: the mailbox toolbar "Analyze" action (plugin-brain `mailbox-action.ts`) invokes
 `AnalyzeMailbox` manually; routines can bind it on a timer (`mailboxFacts` template). Because the
@@ -156,23 +156,23 @@ trigger with a **runnable** spec (§5.4).
 Actions a CRM plugin should manage, mapped to current capability. ✅ = exists, 🟡 = partial /
 agentic-only, ❌ = missing (→ this change or backlog).
 
-| # | Action | Status | Where |
-| --- | --- | --- | --- |
-| 1 | Capture contact from inbound mail (Person + org link) | ✅ | `EmailStage.extractContacts` inline with sync; `ExtractContactFromMessage` on demand |
-| 2 | Create Organization from unknown corporate domain | 🟡 | Agentic only (crm templates). Deterministic creation is deliberately withheld pending the allow-list rework (mailbox-research project) |
-| 3 | Deduplicate / merge contacts & orgs | ✅ | IdentitySpecs + `FindDuplicates`/`MergeDuplicates` + Duplicates tab (plugin-space) |
-| 4 | Research/enrich Person → profile dossier (`ProfileOf`) | 🟡→✅ | Was prose-only; **new `ResearchPerson`** (§5.2) scaffolds deterministically; LLM/web enrichment stays agentic behind the `ResearchSource` seam |
-| 5 | Research/enrich Organization → profile dossier | 🟡→✅ | **new `ResearchOrganization`** (§5.2) |
-| 6 | Process a Mailbox for CRM (cursored, idempotent) | ❌→✅ | **new `ProcessMailbox`** (§5.3) — the CRM sibling of `AnalyzeMailbox` |
-| 7 | Run CRM processing on sync (project + routine) | 🟡→✅ | **new `crmPipeline` project template** (§5.4); agentic `crmResearch` template remains |
-| 8 | Attach avatar / logo | ✅ | `AttachImage` |
-| 9 | Track relationship stage (prospect → commit) | 🟡 | `Organization.status` schema exists; no operation/board wiring (plugin-pipeline research board is a separate concept). Backlog |
-| 10 | Interaction ledger (last-touch, counts per sender) | 🟡 | Agentic `inboxResearch` (sender ledger) template; facts via `AnalyzeMailbox`. Deterministic ledger op = backlog |
-| 11 | Classify / label sender mail | ✅ | `ClassifyEmail`; `tagMessage` stage |
-| 12 | Draft outreach / reply | ✅ | `DraftEmail`, `GenerateReply` |
-| 13 | Suppress / unsubscribe sender | ✅ | `UnsubscribeSender` |
-| 14 | Follow-up tasks / projects from a message | ✅ | `CreateProjectFromMessage`; TaskSet (projects M5) |
-| 15 | Periodic digest of CRM activity | 🟡 | `corpus/digest.ts` exists as a library; not wired to any operation. Backlog |
+| #   | Action                                                 | Status | Where                                                                                                                                          |
+| --- | ------------------------------------------------------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Capture contact from inbound mail (Person + org link)  | ✅     | `EmailStage.extractContacts` inline with sync; `ExtractContactFromMessage` on demand                                                           |
+| 2   | Create Organization from unknown corporate domain      | 🟡     | Agentic only (crm templates). Deterministic creation is deliberately withheld pending the allow-list rework (mailbox-research project)         |
+| 3   | Deduplicate / merge contacts & orgs                    | ✅     | IdentitySpecs + `FindDuplicates`/`MergeDuplicates` + Duplicates tab (plugin-space)                                                             |
+| 4   | Research/enrich Person → profile dossier (`ProfileOf`) | 🟡→✅  | Was prose-only; **new `ResearchPerson`** (§5.2) scaffolds deterministically; LLM/web enrichment stays agentic behind the `ResearchSource` seam |
+| 5   | Research/enrich Organization → profile dossier         | 🟡→✅  | **new `ResearchOrganization`** (§5.2)                                                                                                          |
+| 6   | Process a Mailbox for CRM (cursored, idempotent)       | ❌→✅  | **new `ProcessMailbox`** (§5.3) — the CRM sibling of `AnalyzeMailbox`                                                                          |
+| 7   | Run CRM processing on sync (project + routine)         | 🟡→✅  | **new `crmPipeline` project template** (§5.4); agentic `crmResearch` template remains                                                          |
+| 8   | Attach avatar / logo                                   | ✅     | `AttachImage`                                                                                                                                  |
+| 9   | Track relationship stage (prospect → commit)           | 🟡     | `Organization.status` schema exists; no operation/board wiring (plugin-pipeline research board is a separate concept). Backlog                 |
+| 10  | Interaction ledger (last-touch, counts per sender)     | 🟡     | Agentic `inboxResearch` (sender ledger) template; facts via `AnalyzeMailbox`. Deterministic ledger op = backlog                                |
+| 11  | Classify / label sender mail                           | ✅     | `ClassifyEmail`; `tagMessage` stage                                                                                                            |
+| 12  | Draft outreach / reply                                 | ✅     | `DraftEmail`, `GenerateReply`                                                                                                                  |
+| 13  | Suppress / unsubscribe sender                          | ✅     | `UnsubscribeSender`                                                                                                                            |
+| 14  | Follow-up tasks / projects from a message              | ✅     | `CreateProjectFromMessage`; TaskSet (projects M5)                                                                                              |
+| 15  | Periodic digest of CRM activity                        | 🟡     | `corpus/digest.ts` exists as a library; not wired to any operation. Backlog                                                                    |
 
 ## 5. Design — new plugin-crm operations
 
@@ -194,7 +194,7 @@ schemas; remove `instructions.ts` outright.
 
 - Keys `org.dxos.function.plugin-crm.researchPerson` / `.researchOrganization`.
 - Input `{ subject: Ref<Person|Organization> }`; output `{ profile: Ref<Markdown.Document>,
-  created: boolean }`. Services: `[Database.Service]`.
+created: boolean }`. Services: `[Database.Service]`.
 - Deterministic behaviour: find the existing `ProfileOf` relation for the subject, else create a
   `Markdown.Document` profile skeleton (sections: Overview / Details / Organization|People /
   Key Links / Notes / Sources) pre-filled from known ECHO data (emails, org link, website…),
@@ -211,12 +211,12 @@ The CRM sibling of `AnalyzeMailbox` — the answer to "trigger the pipeline from
 cursor tracking the message Feed".
 
 - Key `org.dxos.function.plugin-crm.processMailbox`. Input `{ mailbox: Ref<Mailbox>, pageSize?,
-  research? }`; output `{ processed, contacts, profiles }`. Services: `[Database.Service]`.
+research? }`; output `{ processed, contacts, profiles }`. Services: `[Database.Service]`.
 - Handler:
   1. Resolve mailbox → feed; find-or-create a **feed `Cursor`** (`spec.source` = the mailbox
      feed). Disambiguated from `AnalyzeMailbox`'s cursor on the same feed by a foreign key on the
      cursor object (`Obj.getMeta(cursor).keys`: `{ source: 'org.dxos.plugin-crm', id:
-     'process-mailbox' }`) — same idiom as the trigger dispatcher's cursor key.
+'process-mailbox' }`) — same idiom as the trigger dispatcher's cursor key.
   2. Query feed messages; coarse-skip `created < cursorKey` (same documented workaround as
      `runFactPipeline` — ECHO's native feed cursor is stubbed).
   3. Per message: `buildContactFromActor(sender, db, { signals, index })` with a run-scoped
@@ -234,8 +234,8 @@ existing `project-templates` capability. Applies to a Mailbox. Scaffolds:
 
 - Project (mailbox as standing context; CRM skills for its chats), via `scaffoldProject`.
 - One routine, **deterministic**: `spec: { kind: 'runnable', runnable:
-  Ref.fromURI(ProcessMailbox key) }`, `trigger: { spec: Trigger.specFeed(mailbox.feed), input:
-  { mailbox: Ref.make(mailbox), research: true }, concurrency: 1, enabled: false }`.
+Ref.fromURI(ProcessMailbox key) }`, `trigger: { spec: Trigger.specFeed(mailbox.feed), input:
+{ mailbox: Ref.make(mailbox), research: true }, concurrency: 1, enabled: false }`.
   Feed trigger = "run on sync" (§3.3); baked `Ref` inputs pass through the input-builder verbatim.
 
 The agentic `crmResearch` template is unchanged — the two are complementary (deterministic
@@ -257,12 +257,12 @@ capture + skeleton vs. model-driven dossier writing).
    `ResearchPerson` creates profile doc with expected sections + `ProfileOf`
    (`lastResearchedAt`, parenting); second run `created: false`, same doc. Organization variant.
 2. `operations/process-mailbox.test.ts` — the **fixture-driven end-to-end test**: `Mailbox.make`
-   + `EMAIL_FIXTURES` (`src/testing/fixtures.ts`) appended to the feed; Organizations seeded for
-   the corporate `.example` domains (allow-list); run `ProcessMailbox`:
-   - corporate senders → Persons created + org-linked; freemail sender skipped (gate);
-   - cursor advanced to max `created`; `Mailbox.extracted` records provenance;
-   - re-run processes 0 / creates nothing (cursor + identity index);
-   - `research: true` → `ProfileOf` + profile docs for new contacts (full chain:
+   - `EMAIL_FIXTURES` (`src/testing/fixtures.ts`) appended to the feed; Organizations seeded for
+     the corporate `.example` domains (allow-list); run `ProcessMailbox`:
+   * corporate senders → Persons created + org-linked; freemail sender skipped (gate);
+   * cursor advanced to max `created`; `Mailbox.extracted` records provenance;
+   * re-run processes 0 / creates nothing (cursor + identity index);
+   * `research: true` → `ProfileOf` + profile docs for new contacts (full chain:
      feed → cursor → contact → research → profile).
 3. `templates/crm-pipeline.test.ts` — scaffold shape, mirroring `mailbox-facts.test.ts`:
    `appliesTo`, runnable spec key, feed trigger, baked input refs, disabled, parenting.
@@ -272,6 +272,14 @@ capture + skeleton vs. model-driven dossier writing).
 Out of scope (recorded, not built): live/eval coverage of the enrichment seam (the
 `crm-mailbox.eval.ts` graded eval already covers the agentic path); Organization creation from
 unknown domains (blocked on the allow-list rework); actions 9/10/15 backlog items.
+
+## 6.1 Found during implementation
+
+The new `process-mailbox` test exposed a real plugin-inbox bug: `Mailbox.recordExtraction` used
+`(mailbox.extracted ??= {})`, which evaluates to the plain right-hand object on first use — a
+detached record whose subsequent mutation is not written through — so the **first** extraction
+recorded on a fresh mailbox was silently dropped. Fixed at the source (assign, then re-read the
+proxy) with a regression test in `plugin-inbox/src/types/Mailbox.test.ts`.
 
 ## 7. Open questions / follow-ups
 

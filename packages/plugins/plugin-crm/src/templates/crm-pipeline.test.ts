@@ -1,0 +1,88 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import { afterEach, beforeEach, describe, test } from 'vitest';
+
+import { Instructions, Project, Routine, Skill, Trigger } from '@dxos/compute';
+import { Collection, Database, Feed, Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import { EffectEx } from '@dxos/effect';
+import { Mailbox } from '@dxos/plugin-inbox';
+import { TagIndex, Text } from '@dxos/schema';
+
+import { CrmOperation } from '../types';
+import { crmPipeline } from './crm-pipeline';
+
+describe('crm pipeline project template', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const setup = async () => {
+    const { db } = await builder.createDatabase({
+      types: [
+        Project.Project,
+        Instructions.Instructions,
+        Routine.Routine,
+        Trigger.Trigger,
+        Collection.Collection,
+        Mailbox.Mailbox,
+        Feed.Feed,
+        TagIndex.TagIndex,
+        Text.Text,
+      ],
+    });
+    const mailbox = db.add(Mailbox.make({ name: 'Clients' }));
+    await db.flush();
+    return { db, mailbox };
+  };
+
+  test('applies only to a Mailbox subject', async ({ expect }) => {
+    const { mailbox } = await setup();
+    expect(crmPipeline.appliesTo?.(undefined)).toBe(false);
+    expect(crmPipeline.appliesTo?.(mailbox)).toBe(true);
+  });
+
+  test('scaffolds a feed-triggered operation-action routine inside the project', async ({ expect }) => {
+    const { db, mailbox } = await setup();
+    const project = await EffectEx.runPromise(
+      crmPipeline
+        .scaffold({ subject: mailbox })
+        .pipe(Effect.provideService(Database.Service, Database.makeService(db))),
+    );
+    db.add(project);
+    await db.flush();
+
+    // Chats: mailbox as context; CRM + research skills.
+    const instructions = await project.instructions?.tryLoad();
+    expect(instructions?.objects?.map((ref) => ref.target?.id)).toEqual([mailbox.id]);
+    const projectSkills = instructions?.skills.map((ref) => ref.uri.toString()) ?? [];
+    expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.crm').toString());
+    expect(projectSkills).toContain(Skill.registryURI('org.dxos.skill.webSearch').toString());
+
+    // Routine: a deterministic operation action (no instructions between trigger and operation).
+    expect(project.routines).toHaveLength(1);
+    const routine = await project.routines[0].tryLoad();
+    expect(routine && Obj.getParent(routine)?.id).toBe(project.id);
+    expect(routine?.spec?.kind).toBe('runnable');
+    expect(routine?.spec?.kind === 'runnable' && routine.spec.runnable.uri.toString()).toBe(
+      CrmOperation.ProcessMailbox.meta.key.toString(),
+    );
+
+    // Feed trigger ("run on sync"), off by default, mailbox ref + research flag baked into the input.
+    const trigger = await routine?.triggers[0].tryLoad();
+    expect(trigger?.enabled).toBe(false);
+    expect(trigger?.spec?.kind).toBe('feed');
+    expect(trigger?.input?.mailbox).toBeDefined();
+    expect(trigger?.input?.research).toBe(true);
+    expect(trigger?.concurrency).toBe(1);
+  });
+});

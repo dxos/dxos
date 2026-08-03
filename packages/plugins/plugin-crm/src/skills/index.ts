@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export { CrmSkill, instructions, makeCrmSkill, makeInstructions } from './crm';
+export { CrmSkill, makeCrmSkill } from './crm';

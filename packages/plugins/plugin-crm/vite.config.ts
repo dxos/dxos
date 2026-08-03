@@ -17,7 +17,6 @@ export default defineConfig({
     testing: 'src/testing/index.ts',
     types: 'src/types/index.ts',
     translations: 'src/translations.ts',
-    util: 'src/util/index.ts',
   },
   jsx: 'react',
   test: { node: true },

@@ -85,8 +85,9 @@ export const EMAIL_FIXTURES: readonly EmailFixture[] = [
   },
 ];
 
-export const makeEmailMessage = (fixture: EmailFixture): Message.Message =>
+export const makeEmailMessage = (fixture: EmailFixture, options: { created?: string } = {}): Message.Message =>
   Message.make({
+    created: options.created,
     sender: { name: fixture.senderName, email: fixture.senderEmail },
     blocks: [{ _tag: 'text', text: fixture.body } satisfies ContentBlock.Text],
     properties: fixture.subject ? { subject: fixture.subject } : undefined,
