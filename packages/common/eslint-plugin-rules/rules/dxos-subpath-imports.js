@@ -18,7 +18,30 @@ const DXOS_SUBPATH_PACKAGES = new Set(['@dxos/app-framework', '@dxos/app-toolkit
  * is a no-op. NOTE: the package must export `./package.json`, or the exports map is unreadable
  * under Node exports encapsulation and the rule silently skips it.
  */
-const isSubpathPackage = (source) => DXOS_SUBPATH_PACKAGES.has(source) || source.startsWith('@dxos/plugin-');
+const isSubpathPackage = (packageName) =>
+  DXOS_SUBPATH_PACKAGES.has(packageName) || packageName.startsWith('@dxos/plugin-');
+
+/**
+ * The legacy aggregate entrypoint. It re-exports exactly the namespaces that now have their own
+ * subpath entries, so one import of it statically drags every sibling namespace of the plugin —
+ * these are Effect/ECHO schemas, runtime values rather than erased types, so the barrel problem
+ * comes back in full. Rewritten like a barrel, resolving against the parent package.
+ */
+const AGGREGATE_SUBPATH = 'types';
+
+/**
+ * Splits an import source into its package and the subpath beneath it. Scoped packages carry
+ * their scope in the first segment, so the package is always the first two segments.
+ * @example '@dxos/plugin-game' -> { packageName: '@dxos/plugin-game', subpath: undefined }
+ * @example '@dxos/plugin-game/types' -> { packageName: '@dxos/plugin-game', subpath: 'types' }
+ */
+const parseSource = (source) => {
+  const parts = source.split('/');
+  if (parts.length <= 2) {
+    return { packageName: source, subpath: undefined };
+  }
+  return { packageName: parts.slice(0, 2).join('/'), subpath: parts.slice(2).join('/') };
+};
 
 /**
  * ESLint rule to transform barrel imports of designated @dxos packages into subpath imports,
@@ -43,7 +66,9 @@ export default {
     schema: [],
   },
   create: (context) => {
-    const requireForFile = createRequire(context.getFilename());
+    // `context.filename` / `context.sourceCode` are the ESLint 9 accessors; the getters are kept
+    // as a fallback so the rule runs under both the flat RuleTester and older config paths.
+    const requireForFile = createRequire(context.filename ?? context.getFilename());
     const exportsCache = new Map(); // packageName -> Set<segment>
 
     const loadExportsForPackage = (pkgName) => {
@@ -79,11 +104,16 @@ export default {
     return {
       ImportDeclaration: (node) => {
         const source = String(node.source.value);
-        // Only rewrite BARREL imports of designated packages; subpath imports are already correct.
-        if (!isSubpathPackage(source)) {
+        const { packageName, subpath } = parseSource(source);
+        if (!isSubpathPackage(packageName)) {
           return;
         }
-        const packageName = source;
+        // The barrel and the aggregate `/types` entry both need rewriting; a per-namespace
+        // subpath is already correct. Names that resolve to neither stay on the original source,
+        // so a partial migration never loses an export.
+        if (subpath !== undefined && subpath !== AGGREGATE_SUBPATH) {
+          return;
+        }
 
         if (!node.specifiers || node.specifiers.length === 0) {
           return;
@@ -129,10 +159,10 @@ export default {
           node,
           message:
             unresolved.length > 0
-              ? `Use subpath imports for ${packageName}; unresolved kept in base import: ${unresolved.join(', ')}`
-              : `Use subpath imports for ${packageName}`,
+              ? `Use subpath imports for ${source}; unresolved kept in base import: ${unresolved.join(', ')}`
+              : `Use subpath imports for ${source}`,
           fix: (fixer) => {
-            const sourceCode = context.getSourceCode();
+            const sourceCode = context.sourceCode ?? context.getSourceCode();
             const imports = [];
 
             const bySegment = new Map(); // segment -> { regular: [...], type: [...] }
@@ -198,7 +228,7 @@ export default {
                 );
               }
               if (specParts.length) {
-                imports.push(`import { ${specParts.join(', ')} } from '${packageName}';`);
+                imports.push(`import { ${specParts.join(', ')} } from '${source}';`);
               }
             }
 
