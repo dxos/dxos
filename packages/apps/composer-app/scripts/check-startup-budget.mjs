@@ -27,7 +27,19 @@
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-/** Median must stay at or under this. Baseline 283 (2026-08-03); headroom covers same-commit jitter. */
+/**
+ * Median must stay at or under this. Calibrated 2026-08-03 in-container: a healthy median of 291
+ * (5 runs: 304, 291, 285, 295, 290) against 306 for the activation regression this branch shipped
+ * and reverted (306, 306, 316) — so the line sits between them, with 9 of headroom above healthy
+ * and 6 below regressed.
+ *
+ * Deliberately gated on the MEDIAN, not any single run: individual samples span 19 here, wide
+ * enough that one run of a healthy commit can exceed this number on its own.
+ *
+ * TODO(startup-latency): one median per condition is thin calibration. Treat the first CI runs as
+ * calibration data — if this flaps on commits that are fine, raise it against the observed spread
+ * rather than nudging it each time.
+ */
 const MAX_MODULES_AT_READY = 300;
 
 /** Below this the median is not meaningful — one sample decides nothing. */

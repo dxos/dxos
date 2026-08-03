@@ -284,10 +284,15 @@ numbers, lever comparisons, and CI thresholds key on warm-cold; its
       index.html; 30 entries / 4.75 MB (today 20 / 4.44 MB). Bytes catch leaks (margin is
       under the smallest leak class we have hit); count catches the chunk partition ceasing
       to apply, and is NOT a bytes proxy — buckets follow the SCC condensation, and the count
-      moved 13 -> 20 on a legitimate change. - `composer-app:check-startup-budget` — runtime. Median modules-at-ready over 5 warm-cold
-      repeats, budget 300 (baseline 283). The only metric whose signal clears in-container
-      noise: same-commit repeats vary <=10 while the activation regression this branch shipped
-      and reverted moved it +17..+27. It is also the only one that can see that class at all —
+      moved 13 -> 20 on a legitimate change.
+      `composer-app:check-startup-budget` is the runtime half — median modules-at-ready over 5
+      warm-cold repeats, budget 300. Calibrated on 5-run medians: healthy 291
+      (304/291/285/295/290) against 306 for the activation regression this branch shipped and
+      reverted (306/306/316), so the line sits between them. Gated on the MEDIAN because single
+      samples span 19 — wide enough that one run of a healthy commit exceeds 300 by itself. The
+      earlier "same-commit jitter <=10" read came from 2-3 samples and was too optimistic; the
+      283 baseline was a single sample. It is still the only metric whose signal clears the
+      in-container noise, and the only one that can see this class of regression at all —
       moving a module onto the startup pass changes nothing statically.
 - [ ] **TODO (blocked: no fixed runner).** Gate on `profilerTotal` / `navToReady` / lab TBT.
       Today they are recorded per run and trended, never failed on: repeats of one unchanged
