@@ -25,6 +25,40 @@ import { type ManagerState } from './manager-state';
 import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
 
 /**
+ * Yields the host's event loop before a module body runs. Effect's scheduler drains its run queue
+ * within one macrotask, so a wave of cache-hit module activations otherwise fuses into one
+ * multi-second long task that blocks paint and input (measured: 2 s max task, ~4.7 s TBT at boot).
+ *
+ * Prefers `scheduler.yield()` (input-priority aware); falls back to a MessageChannel hop, which is
+ * a real macrotask boundary without `setTimeout`'s clamp. The fallback is `Effect.async` rather
+ * than a hand-built promise so an interrupt closes the ports instead of leaking a channel per
+ * yield — this runs between every module activation, so a few hundred times at boot.
+ */
+export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
+  const scheduler = globalThis.scheduler;
+  // Feature-tested, not just presence-checked: Chromium shipped `postTask` before `yield`.
+  if (typeof scheduler?.yield === 'function') {
+    return Effect.promise(() => scheduler.yield());
+  }
+  if (typeof MessageChannel === 'undefined') {
+    return Effect.void;
+  }
+  return Effect.async<void>((resume) => {
+    const { port1, port2 } = new MessageChannel();
+    const close = () => {
+      port1.close();
+      port2.close();
+    };
+    port1.onmessage = () => {
+      close();
+      resume(Effect.void);
+    };
+    port2.postMessage(null);
+    return Effect.sync(close);
+  });
+});
+
+/**
  * Owns the per-module load pipeline and its bookkeeping: memoized loads (id -> Deferred),
  * per-module semaphores, activation scopes, and the contributed-capability index. Every
  * activation path (dependency round, event wave, on-demand pull) converges on {@link load};
@@ -42,15 +76,19 @@ export class ModuleLoader {
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
   readonly #activationTimeout: Duration.DurationInput;
+  readonly #yieldToHost: Effect.Effect<void>;
 
   constructor(
     state: ManagerState,
     capabilities: CapabilityManager.CapabilityManager,
     activationTimeout: Duration.DurationInput,
+    /** Injected so the host yield is explicit at the composition root, and swappable in tests. */
+    yieldToHostEffect: Effect.Effect<void> = yieldToHost,
   ) {
     this.#state = state;
     this.#capabilities = capabilities;
     this.#activationTimeout = activationTimeout;
+    this.#yieldToHost = yieldToHostEffect;
   }
 
   /** Whether the module's load has started (memoized) — settled or not. */
@@ -253,32 +291,6 @@ export class ModuleLoader {
   }
 
   /**
-   * Yields the host's event loop before a module body runs. Effect's scheduler drains its run
-   * queue within one macrotask, so a wave of cache-hit module activations otherwise fuses into
-   * one multi-second long task that blocks paint and input (measured: 2 s max task, ~4.7 s TBT
-   * at boot). `scheduler.yield()` where available (input-priority aware); a MessageChannel hop
-   * otherwise (a real macrotask boundary without the setTimeout clamp).
-   */
-  static yieldToHost(): Promise<void> {
-    const scheduler = (globalThis as { scheduler?: { yield?: () => Promise<void> } }).scheduler;
-    if (scheduler?.yield) {
-      return scheduler.yield();
-    }
-    if (typeof MessageChannel === 'undefined') {
-      return Promise.resolve();
-    }
-    return new Promise((resolve) => {
-      const { port1, port2 } = new MessageChannel();
-      port1.onmessage = () => {
-        port1.close();
-        port2.close();
-        resolve();
-      };
-      port2.postMessage(null);
-    });
-  }
-
-  /**
    * The activation pipeline for one module: settle in-flight multi providers, build the
    * requires context, run the module's activate under the activation timeout, validate the
    * result against the declared provides, and expand it to registry entries. Instrumented
@@ -327,7 +339,7 @@ export class ModuleLoader {
       const requiresContext = yield* this.#resolveRequires(module);
       // One host yield per module keeps activation tasks under the long-task threshold;
       // counted as wait, not run, by the split below.
-      yield* Effect.promise(() => ModuleLoader.yieldToHost());
+      yield* this.#yieldToHost;
       // Wait/run split: `module:<id>` spans the whole pipeline, so scheduling delay (in-flight
       // providers + requires resolution) is indistinguishable from work without these sub-measures.
       performance.mark(`module:${module.id}:run`);
