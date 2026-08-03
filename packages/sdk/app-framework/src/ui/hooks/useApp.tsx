@@ -312,6 +312,32 @@ export const useApp = ({
     };
   }, [manager]);
 
+  // Fire the app-wide idle wave once the shell is up. Owned by the framework rather than each
+  // host: `Idle` is an app-framework event and every host would otherwise re-implement the same
+  // wait, which is what made composer's version a bespoke plugin. Scheduled through
+  // `requestIdleCallback` so the registration contributions gated on it (graph builders,
+  // handler sets, settings) land after the shell has painted rather than competing with it; the
+  // long timeout is a stall backstop, since an aggressive one fires mid-render and floods the
+  // main thread ahead of first paint.
+  useEffect(() => {
+    if (!ready) {
+      return;
+    }
+    const fire = () => {
+      EffectEx.runDetached(
+        manager
+          .activate(ActivationEvents.Idle)
+          .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('idle activation failed', { error })))),
+      );
+    };
+    if (typeof requestIdleCallback !== 'function') {
+      const handle = setTimeout(fire, 0);
+      return () => clearTimeout(handle);
+    }
+    const handle = requestIdleCallback(fire, { timeout: 15_000 });
+    return () => cancelIdleCallback(handle);
+  }, [manager, ready]);
+
   const progressRef = useRef(startupProgress);
   progressRef.current = startupProgress;
 

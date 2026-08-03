@@ -20,6 +20,8 @@ describe('ConductorPlugin', () => {
     });
 
     // Modules expected to be active after a normal startup.
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
+    // ReactSurface is role-gated (SurfacesRequested) and parks until its role renders.
+    expect(harness.manager.getActive()).not.toContain(moduleId('ReactSurface'));
   });
 });

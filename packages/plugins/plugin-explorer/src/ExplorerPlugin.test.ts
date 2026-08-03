@@ -21,6 +21,10 @@ describe('ExplorerPlugin', () => {
       plugins: [ClientPlugin({}), ExplorerPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface')]));
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('schema'), moduleId('AppGraphBuilder')]),
+    );
+    // ReactSurface is role-gated (SurfacesRequested) and parks until its role renders.
+    expect(harness.manager.getActive()).not.toContain(moduleId('ReactSurface'));
   });
 });
