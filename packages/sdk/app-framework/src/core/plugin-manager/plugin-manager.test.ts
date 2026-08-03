@@ -2830,35 +2830,6 @@ describe('PluginManager', () => {
   describe('default demand gates', () => {
     const DemandEvent = ActivationEvent.make('org.dxos.test.demand');
 
-    it.effect('a maker default with the own-plugin specifier resolves to the plugin key', () =>
-      Effect.gen(function* () {
-        const Gated = Capability.lazyModule(
-          'Gated',
-          {
-            provides: [MultiString],
-            activatesOn: ActivationEvent.make('org.dxos.test.family', ActivationEvent.OWN_PLUGIN_SPECIFIER),
-          },
-          () =>
-            Promise.resolve({
-              default: () => Effect.succeed([Capability.contribute(MultiString, { string: 'gated' })]),
-            }),
-        );
-        const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Gated)));
-        const [module] = Test().modules;
-        assert(module.activation.mode === 'event');
-        const [event] = ActivationEvent.getEvents(module.activation.activatesOn);
-        assert.strictEqual(event.specifier, testMeta.profile.key);
-
-        // Firing the plugin-scoped event activates the module.
-        plugins = [Test()];
-        const manager = PluginManager.make({ pluginLoader, plugins, enabled: [testMeta.profile.key] });
-        yield* manager.activate(ActivationEvents.Startup);
-        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
-        yield* manager.activate(ActivationEvent.make('org.dxos.test.family', testMeta.profile.key));
-        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'gated' }]);
-      }),
-    );
-
     it.effect('an event wave awaits a matched module already loading via a concurrent wave', () =>
       Effect.gen(function* () {
         const SlowEvent = ActivationEvent.make('org.dxos.test.slowDemand');

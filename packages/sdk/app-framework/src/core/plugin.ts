@@ -487,15 +487,9 @@ const resolveModule = (
       onSome: (id) => computeModuleId(pluginName, id),
     }),
   );
-  const activation = normalizeActivation(moduleOptions);
   return new PluginModuleImpl({
     id,
-    // Plugin-scoped default events (see {@link ActivationEvent.OWN_PLUGIN_SPECIFIER}) resolve
-    // here — the first point where the module meets its plugin meta.
-    activation:
-      activation.mode === 'event'
-        ? { ...activation, activatesOn: ActivationEvent.resolveOwnPlugin(activation.activatesOn, pluginName) }
-        : activation,
+    activation: normalizeActivation(moduleOptions),
     // Erasure boundary: the authoring layer constrained the effect's environment to the
     // declared requires; the manager supplies exactly those services plus the ambient ones.
     activate: moduleOptions.activate as PluginModule['activate'],
