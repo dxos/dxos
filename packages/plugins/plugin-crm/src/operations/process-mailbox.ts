@@ -36,7 +36,12 @@ const handler: Operation.WithHandler<typeof CrmOperation.ProcessMailbox> = CrmOp
       let cursorKey = Cursor.parseKey(cursor.max);
       const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
       const pending = messages
-        .filter((message) => !(Date.parse(message.created) < cursorKey))
+        .filter((message) => {
+          const key = Date.parse(message.created);
+          // A malformed `created` cannot be ordered against the cursor — skip it rather than
+          // re-scan it on every run.
+          return Number.isFinite(key) && !(key < cursorKey);
+        })
         .sort((a, b) => Date.parse(a.created) - Date.parse(b.created));
 
       let processed = 0;
@@ -68,8 +73,7 @@ const handler: Operation.WithHandler<typeof CrmOperation.ProcessMailbox> = CrmOp
         }
 
         // Advance per page so a crashed run resumes from the last committed page.
-        const keys = page.map((message) => Date.parse(message.created)).filter(Number.isFinite);
-        cursorKey = Math.max(cursorKey, ...keys);
+        cursorKey = Math.max(cursorKey, ...page.map((message) => Date.parse(message.created)));
         Cursor.advance(cursor, Cursor.formatKey(cursorKey));
       }
 

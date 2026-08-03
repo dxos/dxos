@@ -137,7 +137,8 @@ export const ProcessMailbox = Operation.make({
       Processes new messages in a mailbox for CRM: creates Person records for senders that pass
       the extraction gate (linking them to known Organizations by domain) and optionally scaffolds
       a Profile document per new contact. Tracks progress with a durable cursor against the
-      mailbox's message feed, so repeated runs only process new messages.
+      mailbox's message feed: repeated runs re-examine at most the messages at the cursor boundary
+      and never create duplicates.
     `,
   },
   input: Schema.Struct({
