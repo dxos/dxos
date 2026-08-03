@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
@@ -69,7 +69,7 @@ export { useEditorContext };
 type EditorRootProps = PropsWithChildren<
   Pick<EditorContextValue, 'extensions' | 'widgets'> &
     Omit<UseEditorMenuProps, 'viewRef'> &
-    Pick<EditorMenuProviderProps, 'numItems'> & {
+    Pick<EditorMenuProviderProps, 'numItems' | 'searchPlaceholder'> & {
       viewMode?: EditorToolbarState['viewMode'];
     }
 >;
@@ -79,7 +79,10 @@ type EditorRootProps = PropsWithChildren<
  * Provides context for all child components and manages the editor controller state.
  */
 const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
-  ({ children, extensions: extensionsProp, widgets, viewMode, numItems, ...props }, forwardedRef) => {
+  (
+    { children, extensions: extensionsProp, widgets, viewMode, numItems, searchPlaceholder, ...props },
+    forwardedRef,
+  ) => {
     // TODO(wittjosiah): Including initialState in the deps causes reactivity issues.
     const state = useMemo(() => Atom.make<EditorToolbarState>({ viewMode }), [viewMode]);
 
@@ -103,7 +106,13 @@ const EditorRoot = forwardRef<EditorController | null, EditorRootProps>(
         widgets={widgets}
         state={state}
       >
-        <EditorMenuProvider getView={getView} groups={groupsRef.current} numItems={numItems} {...menuProps}>
+        <EditorMenuProvider
+          getView={getView}
+          groups={groupsRef.current}
+          numItems={numItems}
+          searchPlaceholder={searchPlaceholder}
+          {...menuProps}
+        >
           {children}
         </EditorMenuProvider>
       </EditorContextProvider>

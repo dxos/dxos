@@ -5,6 +5,8 @@
 import seedrandom from 'seedrandom';
 import { describe, expect, test } from 'vitest';
 
+import { Obj } from '@dxos/echo';
+
 import { type Vec3 } from '../engine';
 import { Terra, TerraObject } from '../types';
 import { MAX_CATCHUP_LEGS, SimEngine } from './engine';
@@ -135,6 +137,27 @@ describe('SimEngine — determinism (the property that must survive)', () => {
     expect(engine.objects).not.toEqual(initial);
     engine.reset();
     expect(engine.objects).toEqual(initial);
+  });
+
+  test('respawn() re-derives one object and leaves every other untouched', () => {
+    const engine = new SimEngine({ config, definitions, grid });
+    engine.evaluateAt(50_000);
+    const before = engine.objects;
+
+    // Re-placed where it is now, heading somewhere else — what a UI does when the user picks a new
+    // destination for one object.
+    Obj.update(boat, (boat) => {
+      boat.source = { ...toGeo(before[0].state.unit), height: 0 };
+      boat.target = { lat: 0, lng: -60, height: 0 };
+      boat.spawnedAt = 50_000;
+    });
+    engine.respawn(boat.id);
+    engine.evaluateAt(50_000);
+
+    const [retargeted, ...others] = engine.objects;
+    expect(retargeted.state.leg).toBe(0);
+    expect(retargeted.state.route).not.toEqual(before[0].state.route);
+    expect(others.map(({ state }) => state)).toEqual(before.slice(1).map(({ state }) => state));
   });
 
   test('a closed-form kind (satellite) never advances legs', () => {

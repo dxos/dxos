@@ -3,7 +3,16 @@
 //
 
 import type { Identity } from '@dxos/client/halo';
+import { type PasskeyFailure } from '@dxos/plugin-client';
 import { type MaybePromise } from '@dxos/util';
+
+/**
+ * Which failure the screen is currently reporting. Only one login method is on screen at a time, so
+ * one field is enough; the reason selects both the message and the control it renders under.
+ */
+export type WelcomeError = 'email' | 'oauth' | `passkey-${PasskeyFailure}`;
+
+export const passkeyError = (failure: PasskeyFailure): WelcomeError => `passkey-${failure}`;
 
 export enum WelcomeState {
   INIT = 0,
@@ -16,7 +25,8 @@ export enum WelcomeState {
 export type WelcomeScreenProps = {
   state: WelcomeState;
   identity?: Identity | null;
-  error?: boolean;
+  /** Failure from the last login/sign-up attempt; cleared when a new attempt starts. */
+  error?: WelcomeError | null;
 
   // Login tab.
   /** Existing-account email login. Server returns a recovery token inline (dev)

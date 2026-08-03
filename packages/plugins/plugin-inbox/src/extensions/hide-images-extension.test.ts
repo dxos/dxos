@@ -18,14 +18,50 @@ const applyHidden = (text: string): string => {
   return result + text.slice(position);
 };
 
-describe('hideRemoteImages ranges', () => {
+describe('hideImages ranges', () => {
   test('omits remote image markdown', ({ expect }) => {
     expect(applyHidden('before ![alt](https://example.com/a.png) after')).to.equal('before  after');
   });
 
-  test('leaves echo: images untouched', ({ expect }) => {
-    const text = 'see ![alt](echo:/1234) here';
-    expect(applyHidden(text)).to.equal(text);
+  test('leaves local (echo:/dxn:) images untouched — preview() renders them without a fetch', ({ expect }) => {
+    for (const text of ['see ![alt](echo:/1234) here', 'see ![alt](dxn:foo:1234) here']) {
+      expect(applyHidden(text)).to.equal(text);
+    }
+  });
+
+  test('omits non-http images that would otherwise render broken', ({ expect }) => {
+    // `cid:` (inline attachment) and protocol-relative targets: neither resolves in the markdown
+    // view, so both used to show as a broken image while only http(s) was hidden.
+    expect(applyHidden('before ![alt](cid:signature-1) after')).to.equal('before  after');
+    expect(applyHidden('before ![alt](//cdn.example.com/a.png) after')).to.equal('before  after');
+    expect(applyHidden('before ![alt](data:image/png;base64,iVBORw0KGgo=) after')).to.equal('before  after');
+  });
+
+  test('omits an image with an empty target', ({ expect }) => {
+    // `![alt]()` resolves to nothing, so it renders broken; hide it like any other unloadable image.
+    expect(applyHidden('before ![alt]() after')).to.equal('before  after');
+    expect(applyHidden('before ![alt](  ) after')).to.equal('before  after');
+  });
+
+  test('omits an image whose target carries a title', ({ expect }) => {
+    expect(applyHidden('a ![alt](https://e.com/i.png "Title") b')).to.equal('a  b');
+  });
+
+  test('keep predicate overrides which targets survive', ({ expect }) => {
+    const text = 'a ![x](https://e.com/i.png) b ![y](cid:1) c';
+    const hide = (input: string, keep: (url: string) => boolean) => {
+      let result = '';
+      let position = 0;
+      for (const { from, to } of computeHiddenRanges(input, keep)) {
+        result += input.slice(position, from);
+        position = to;
+      }
+      return result + input.slice(position);
+    };
+    // Keep everything.
+    expect(hide(text, () => true)).to.equal(text);
+    // Keep only cid:.
+    expect(hide(text, (url) => url.startsWith('cid:'))).to.equal('a  b ![y](cid:1) c');
   });
 
   test('collapses multiple consecutive blank lines to a single blank line', ({ expect }) => {

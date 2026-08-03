@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -98,7 +98,7 @@ export default Capability.makeModule(
     const provision = () => {
       const deckState: StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck?.companionOpen) {
+      if (!deck?.companionPlanks.length) {
         unsubAllPlanks();
         return;
       }

@@ -9,7 +9,16 @@ import { describe, test } from 'vitest';
 import { join } from '../../../util';
 import { createMarkdownExtensions } from '../../language/markdown';
 import { blockSelectionField, setBlockSelection } from '../blocks';
-import { deleteItem, indentItemLess, indentItemMore, moveItemDown, moveItemUp, toggleTask } from './commands';
+import {
+  deleteItem,
+  getItemText,
+  indentItemLess,
+  indentItemMore,
+  moveItemDown,
+  moveItemUp,
+  replaceItemWithLink,
+  toggleTask,
+} from './commands';
 import { outlinerTree } from './tree';
 
 const LINES = [
@@ -143,5 +152,42 @@ describe('outliner commands', () => {
     );
     // Toggling a task turns it back into a bullet.
     expect(run(DOC, 0, toggleTask)).to.eq(join('- 1', ...LINES.slice(1)));
+  });
+
+  test('item text excludes indentation and the marker', ({ expect }) => {
+    const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
+    try {
+      view.dispatch({ selection: EditorSelection.cursor(lineStart(DOC, 4)) });
+      expect(getItemText(view.state)).to.eq('2.2.1');
+    } finally {
+      view.destroy();
+    }
+  });
+
+  test('replace with link demotes the task marker and preserves indentation', ({ expect }) => {
+    const view = new EditorView({ state: EditorState.create({ doc: DOC, extensions }) });
+    try {
+      view.dispatch({ selection: EditorSelection.cursor(lineStart(DOC, 2)) });
+      replaceItemWithLink(view, { label: '2.1', url: 'dxn:echo:@:01ABC' });
+      expect(view.state.doc.toString()).to.eq(
+        join('- [ ] 1', '- [ ] 2', '  - [2.1](dxn:echo:@:01ABC)', '  - [ ] 2.2', ...LINES.slice(4)),
+      );
+      // The caret lands after the inserted link.
+      expect(view.state.selection.main.head).to.eq(lineStart(view.state.doc.toString(), 3) - 1);
+    } finally {
+      view.destroy();
+    }
+  });
+
+  test('replace with link strips brackets and newlines from the label', ({ expect }) => {
+    const doc = join('- [ ] a [b] c');
+    const view = new EditorView({ state: EditorState.create({ doc, extensions }) });
+    try {
+      view.dispatch({ selection: EditorSelection.cursor(0) });
+      replaceItemWithLink(view, { label: 'a [b]\n  c ', url: 'dxn:echo:@:01ABC' });
+      expect(view.state.doc.toString()).to.eq('- [a b c](dxn:echo:@:01ABC)');
+    } finally {
+      view.destroy();
+    }
   });
 });

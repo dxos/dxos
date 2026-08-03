@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';

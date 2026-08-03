@@ -26,6 +26,6 @@ export default Config2.make({
       same server and identity.
     `,
     icon: { key: 'ph--dog--regular', hue: 'amber' },
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

@@ -122,6 +122,7 @@ export const translations: Resource[] = [
         'toolkit.label': 'Toolkit',
         'stats.label': 'Stats',
         'summary.label': 'Summary',
+        'rewind.label': 'Rewind to here',
         'thinking.label': 'Thinking',
 
         'connect.label': 'Connect',

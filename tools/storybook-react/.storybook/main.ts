@@ -34,10 +34,10 @@ const rootDir = resolve(baseDir, '../../');
 const staticDir = resolve(baseDir, './static');
 const iconsDir = resolve(rootDir, 'node_modules/@phosphor-icons/core/assets');
 const dxosIconsDir = resolve(rootDir, 'packages/ui/brand/assets/icons');
-// tldraw self-hosts its fonts/icons; plugin-sketch points tldraw at `/assets/plugin-sketch` and the
+// tldraw self-hosts its fonts/icons; plugin-tldraw points tldraw at `/assets/plugin-tldraw` and the
 // app serves them via a copy step (see composer-app `copy:assets`). Mirror that here so sketch
 // surfaces render (tldraw blocks the editor behind an asset preload).
-const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-sketch/dist/assets');
+const sketchAssetsDir = resolve(rootDir, 'packages/plugins/plugin-tldraw/dist/assets');
 
 export const packages = resolve(rootDir, 'packages');
 export const storyFiles = '*.{mdx,stories.tsx}';
@@ -191,7 +191,7 @@ export const createConfig = ({
   // Per-package storybooks point `configDir` at their own `.storybook`, so the shared manager config
   // (theme, sidebar labels) is only picked up if it is registered as a manager entry here.
   managerEntries: [resolve(__dirname, './manager.tsx')],
-  staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-sketch' }],
+  staticDirs: [staticDir, { from: sketchAssetsDir, to: '/assets/plugin-tldraw' }],
   typescript: {
     // TODO(thure): react-docgen is failing on something in @dxos/hypercore, invoking a dialog in unrelated stories.
     reactDocgen: false,

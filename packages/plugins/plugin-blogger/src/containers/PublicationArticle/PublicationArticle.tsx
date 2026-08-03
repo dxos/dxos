@@ -11,7 +11,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector/types';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';

@@ -94,6 +94,21 @@ export default defineConfig((env) => ({
           }
         : undefined,
     watch: {
+      // Use the fs.watch backend, not fsevents. chokidar's fsevents handler keeps ONE native stream per
+      // root with a Set of listeners — one per watched path — and routes every event by running
+      // `indexOf` against every listener (lib/fsevents-handler.js, `cont.listeners.forEach`). Resolving
+      // `@dxos/*` from source means a watch per transformed module, so that set runs to thousands and
+      // grows as more of the app is browsed; a write burst then pins the main thread and the server
+      // stops responding (diagnosed via `moon run composer-app:diagnose-serve`: 4062 of 4064 samples in
+      // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
+      // this routing, so the scan happens regardless.
+      useFsEvents: false,
+      // Build output is not source, and the watch root spans the monorepo, so a single
+      // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
+      // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
+      // these in. Trade-off: rebuilding a package whose dist is consumed at runtime no longer triggers
+      // HMR, so that needs a server restart — the honest behaviour for a prebuilt dependency.
+      ignored: ['**/dist/**', '**/.moon/cache/**', '**/temp/**', '**/coverage/**', '**/*.tsbuildinfo'],
       // Coalesce write bursts (codemods, formatters, git checkout/rebase) into
       // a single HMR pass: chokidar holds add/change events until the file size
       // has been stable for `stabilityThreshold` ms, so a hundred-file burst
@@ -287,7 +302,7 @@ export default defineConfig((env) => ({
       isMinimalPluginSet
         ? path.resolve(
             rootDir,
-            'packages/plugins/plugin-{assistant,attention,client,debug,deck,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
+            'packages/plugins/plugin-{assistant,attention,client,connector,debug,deck,devtools,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
           )
         : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
@@ -474,6 +489,11 @@ export default defineConfig((env) => ({
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+        // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
+        // manifest entries alone would add one install-time request per file, slowing every
+        // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
+        // so any icon the app has rendered once stays available offline.
+        globIgnores: ['**/phosphor/**'],
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -565,6 +585,9 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
+      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
+      // into the build output and cached at runtime by sw.ts (excluded from the precache).
+      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
       // verbose: true,
     }),
 

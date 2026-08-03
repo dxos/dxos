@@ -16,9 +16,15 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
+import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } from '#types';
 
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, serializeDeckToUrl } from '../util';
+import {
+  COMPANION_VIEW_STATE_CONTEXT,
+  companionAspect,
+  getRenderedPlanks,
+  resolveCompanionAnchor,
+  serializeDeckToUrl,
+} from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
@@ -48,6 +54,7 @@ export default Capability.makeModule(
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
     const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
     const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
     const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
       effect.pipe(
@@ -86,9 +93,9 @@ export default Capability.makeModule(
       if (pathname === '/reset') {
         updateState((s) => ({
           ...s,
-          activeDeck: 'default',
+          activeDeck: DEFAULT_DECK_ID,
           decks: {
-            default: { ...defaultDeck },
+            [DEFAULT_DECK_ID]: { ...defaultDeck },
           },
         }));
         window.location.pathname = '/';
@@ -115,7 +122,9 @@ export default Capability.makeModule(
       }
 
       const { workspace, pairs } = parsed.value;
-      const workspacePath = GraphPath.getSpacePath(workspace);
+      // `/w/default` was written by builds that serialized the unresolved-workspace sentinel; map it back
+      // to the sentinel rather than to `root/default`, which resolves to no node and so can never heal.
+      const workspacePath = workspace === DEFAULT_DECK_ID ? DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
       const state = getState();
       if (workspacePath !== state.activeDeck) {
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
@@ -164,15 +173,17 @@ export default Capability.makeModule(
         resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
       }
 
-      // Planks resolve in chain order; a `companion/<variant>` pair is the deck's trailing companion,
-      // not a stored plank, so it drives companionOpen + variant rather than being added to `plankIds`.
+      // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
+      // than being a plank of its own, so it drives that plank's companion state and the selected variant.
       const plankIds: string[] = [];
       let companionNodeId: string | null = null;
+      let companionAnchorId: string | undefined;
       pairs.forEach((pair, index) => {
         const nodeId = resolved[index]?.nodeId;
         if (pair.key === UrlPath.COMPANION_KEY) {
           if (nodeId) {
             companionNodeId = nodeId;
+            companionAnchorId = plankIds[plankIds.length - 1];
           }
         } else {
           plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
@@ -183,10 +194,12 @@ export default Capability.makeModule(
       // restore, for one plank or many, with no separate disposition to invent.
       yield* Operation.invoke(LayoutOperation.Set, { subject: plankIds });
 
-      const lastPlankId = plankIds[plankIds.length - 1];
-      if (lastPlankId) {
-        // Attention is never serialized; on load it always defaults to the last plank in the chain.
-        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: lastPlankId });
+      // Attention is never serialized; on load it defaults to the last plank in the chain — except when
+      // the chain carries a companion, whose position *is* serialized and which only renders beside the
+      // plank it is anchored to, so attention has to land there for the URL to restore faithfully.
+      const attendId = companionAnchorId ?? plankIds[plankIds.length - 1];
+      if (attendId) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: attendId });
       }
 
       // The companion is part of the URL-derived deck state too: explicitly close it when the chain
@@ -259,11 +272,22 @@ export default Capability.makeModule(
 
     // Sync URL with layout state changes: deck state (active planks, companion open/closed) and the
     // companion's selected variant. Attention is deliberately absent — it is never serialized.
-    // `method: 'replace'` is used once, right after setup, to correct a stale/bare URL against the
+    // `method: 'replace'` is used for the first write, to correct a stale/bare URL against the
     // already-persisted deck without adding a spurious back-history entry; every later firing (a real
-    // state change) pushes.
+    // state change) pushes. `replace` is deferred rather than fixed to the post-setup call because a
+    // fresh profile starts on the sentinel below, whose first real workspace arrives later.
+    let synced = false;
     const syncUrl = (method: 'push' | 'replace' = 'push') => {
       const state = getState();
+      if (state.activeDeck === DEFAULT_DECK_ID) {
+        // The sentinel is not a workspace: serializing it produces `/w/default`, which on the next load
+        // parses as a workspace that resolves to no node, leaving the app with an unavailable workspace.
+        // Leave the URL alone until a real workspace becomes active.
+        return;
+      }
+
+      const effectiveMethod = synced ? method : 'replace';
+      synced = true;
       const deck = getDeck();
       const workspace = bareWorkspace(state.activeDeck);
 
@@ -277,11 +301,17 @@ export default Capability.makeModule(
         }
       }
 
-      // The companion is the deck's trailing plank, always attached to the last plank (not the attended
-      // one), and serialized as `companion/<variant>` after it.
+      // The companion shares a container with the attended plank, and is serialized as
+      // `companion/<variant>` after that plank's own pair. Attention itself is still never serialized —
+      // it is read here only to place the companion, and a bare attention change does not resync the URL.
       let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
-      if (deck.companionOpen && deck.active.length > 0) {
-        const plankId = deck.active[deck.active.length - 1];
+      if (deck.companionPlanks.length > 0 && deck.active.length > 0) {
+        // Resolved against the rendered planks, not `deck.active`: under `flatten` only the current plank
+        // is laid out, so anchoring to an earlier one would serialize a companion the deck cannot render.
+        const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
+        const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
+        // Only the attended plank's companion is on screen, so only it belongs in the URL.
+        const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
         const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
         if (plankId && selection.variant) {
           const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
@@ -299,7 +329,7 @@ export default Capability.makeModule(
       // Update only when the derived URL actually differs from the current one — the deck state and
       // companion-variant atoms both funnel into this same recompute, so most firings are no-ops.
       if (`${window.location.pathname}${window.location.search}` !== newUrl) {
-        if (method === 'replace') {
+        if (effectiveMethod === 'replace') {
           history.replaceState(null, '', newUrl);
         } else {
           history.pushState(null, '', newUrl);

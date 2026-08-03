@@ -10,7 +10,8 @@ import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
@@ -144,7 +145,6 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
           // handler, which upgrades any disposition to add when shift is held).
           void invokePromise(LayoutOperation.Open, {
             subject: [node.id],
-            key: node.properties.key,
             disposition: 'solo',
             modifiers: { shift },
           });

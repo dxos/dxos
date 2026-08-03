@@ -7,10 +7,14 @@ import { describe, test } from 'vitest';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
+import { meta } from '#meta';
+
 import {
   createDraftMessage,
   dedupeSupersededDrafts,
+  formatAge,
   getMessageBodyText,
+  getMessageLabel,
   getMessageProps,
   messageMatchesQuery,
   orderThreadItems,
@@ -338,6 +342,32 @@ describe('messageMatchesQuery', () => {
   });
 });
 
+describe('getMessageLabel', () => {
+  test('uses the subject when there is one', ({ expect }) => {
+    expect(getMessageLabel(makeRead('2025-01-01T00:00:00.000Z'))).toBe('Topic');
+  });
+
+  test('a compose draft (empty subject) falls back to the draft label, not a blank heading', ({ expect }) => {
+    const draft = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Me' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: '', mailbox: DRAFT_MAILBOX },
+    });
+    expect(getMessageLabel(draft)).toEqual(['draft.label', { ns: meta.profile.key }]);
+  });
+
+  test('a non-draft without a subject falls back to the message label', ({ expect }) => {
+    const message = Obj.make(Message.Message, {
+      created: '2025-01-01T00:00:00.000Z',
+      sender: { name: 'Sender' },
+      blocks: [{ _tag: 'text' as const, text: '' }],
+      properties: { subject: '' },
+    });
+    expect(getMessageLabel(message)).toEqual(['message.label', { ns: meta.profile.key }]);
+  });
+});
+
 const makeRead = (created: string) =>
   Obj.make(Message.Message, {
     created,
@@ -357,3 +387,29 @@ const makeDraft = (created: string, parent?: Message.Message) =>
     blocks: [{ _tag: 'text' as const, text: '' }],
     properties: { subject: 'Re: Topic', mailbox: DRAFT_MAILBOX },
   });
+
+describe('formatAge', () => {
+  const now = new Date('2026-07-31T12:00:00Z');
+  const ago = (ms: number) => new Date(now.getTime() - ms);
+  const MINUTE = 60_000;
+  const HOUR = 60 * MINUTE;
+  const DAY = 24 * HOUR;
+
+  test('picks the largest unit that still reads unambiguously', ({ expect }) => {
+    expect(formatAge(ago(30_000), now)).toBe('now');
+    expect(formatAge(ago(12 * MINUTE), now)).toBe('12m');
+    expect(formatAge(ago(59 * MINUTE), now)).toBe('59m');
+    expect(formatAge(ago(4 * HOUR), now)).toBe('4h');
+    expect(formatAge(ago(23 * HOUR), now)).toBe('23h');
+    expect(formatAge(ago(3 * DAY), now)).toBe('3d');
+    expect(formatAge(ago(6 * DAY), now)).toBe('6d');
+    expect(formatAge(ago(14 * DAY), now)).toBe('2w');
+    expect(formatAge(ago(120 * DAY), now)).toBe('3mo');
+    expect(formatAge(ago(400 * DAY), now)).toBe('1y');
+  });
+
+  test('a message just over a month old reads in months, never `0mo`', ({ expect }) => {
+    // 35d is 5 weeks — past the week cutoff, but `differenceInMonths` rounds down to 1.
+    expect(formatAge(ago(35 * DAY), now)).toBe('1mo');
+  });
+});

@@ -8,5 +8,6 @@ export * from './terrain';
 export * from './biomes';
 export * from './palette';
 export * from './generate-planet';
+export * from './planet-cache';
 export * from './scene-manager';
 export * from './scene-fps';

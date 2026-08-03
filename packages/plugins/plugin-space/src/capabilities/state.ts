@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -37,6 +37,8 @@ export default Capability.makeModule(
       navigableCollections: false,
       viewersByObject: {},
       viewersByIdentity: new ComplexMap<PublicKey, Set<string>>(PublicKey.hash),
+      mergePreview: undefined,
+      lastMergeAt: undefined,
     }).pipe(Atom.keepAlive);
 
     const manager = yield* Capability.get(Capabilities.PluginManager);

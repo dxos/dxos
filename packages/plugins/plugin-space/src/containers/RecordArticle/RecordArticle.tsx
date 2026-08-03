@@ -46,7 +46,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Card.Root classNames='dx-card-max-width'>
+            <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
                   <Icon icon={icon} />

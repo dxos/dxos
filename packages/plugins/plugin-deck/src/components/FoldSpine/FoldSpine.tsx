@@ -41,6 +41,9 @@ export const FoldSpine = ({ icon, label, onClick, classNames }: FoldSpineProps) 
       'border-ie border-separator bg-base-surface',
       'opacity-0 pointer-events-none transition-opacity duration-200 ease-out',
       'group-data-[folded]/tile:pointer-events-auto group-data-[folded]/tile:opacity-100',
+      // Crossing into or out of the exposé refolds the whole deck at once; crossfading that would paint
+      // the planks over the spines they are being replaced by for the length of the transition.
+      'group-data-[fold-instant]/tile:transition-none',
       classNames,
     )}
   >

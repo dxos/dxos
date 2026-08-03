@@ -2,11 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInMonths,
+  differenceInWeeks,
+  differenceInYears,
+  format,
+  formatDistance,
+  isThisWeek,
+  isThisYear,
+  isToday,
+} from 'date-fns';
 
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 
+import { meta } from '#meta';
 import { type Mailbox } from '#types';
 
 export const REPLY_DELIMITER = '\n\n---';
@@ -170,6 +183,17 @@ export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: 
   });
 };
 
+/**
+ * Display label for a message's graph node (the plank heading, and its breadcrumb tail in flat mode).
+ * A compose draft's subject is an empty string rather than absent, so falling back only on `undefined`
+ * would leave the heading blank until the user types one.
+ */
+export const getMessageLabel = (message: Message.Message) =>
+  message.properties?.subject ||
+  (DraftMessage.instanceOf(message)
+    ? (['draft.label', { ns: meta.profile.key }] as const)
+    : (['message.label', { ns: meta.profile.key }] as const));
+
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
   <T, K extends Extract<keyof T, string>>(prop: K, descending = false) =>
@@ -186,6 +210,37 @@ export const formatDateTime = (date: Date, now: Date, options?: FormatDateTimeOp
       : options?.compact
         ? formatShortDate(date)
         : formatDistance(date, now, { addSuffix: true });
+
+/**
+ * Age of a timestamp in the shortest form that still reads unambiguously — `now`, `12m`, `4h`, `3d`,
+ * `2w`, `5mo`, `2y`. Sized for a card row, where a full date would crowd out the subject.
+ */
+export const formatAge = (date: Date, now: Date): string => {
+  const minutes = differenceInMinutes(now, date);
+  if (minutes < 1) {
+    return 'now';
+  }
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = differenceInHours(now, date);
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  const days = differenceInDays(now, date);
+  if (days < 7) {
+    return `${days}d`;
+  }
+  const weeks = differenceInWeeks(now, date);
+  if (weeks < 5) {
+    return `${weeks}w`;
+  }
+  const months = differenceInMonths(now, date);
+  if (months < 12) {
+    return `${Math.max(months, 1)}mo`;
+  }
+  return `${differenceInYears(now, date)}y`;
+};
 
 export const formatShortDate = (date: Date) =>
   isToday(date)

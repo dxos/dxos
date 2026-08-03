@@ -75,6 +75,8 @@ export const translations: Resource[] = [
         'trigger-kind.feed.description': 'Run when a new item arrives in a feed.',
         'trigger-kind.email.label': 'Email',
         'trigger-kind.email.description': 'Run when an email is received.',
+        'trigger-kind.direct.label': 'Direct',
+        'trigger-kind.direct.description': 'Run only when invoked directly.',
         'trigger-kind.clear.label': 'Clear',
         'trigger-kind.query-stub.message': 'Query editing is not yet available.',
         'trigger-kind.email-note.message': 'Runs whenever a new email is received.',

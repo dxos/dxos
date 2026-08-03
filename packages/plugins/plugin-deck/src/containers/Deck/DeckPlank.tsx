@@ -29,11 +29,6 @@ export type DeckPlankProps = ThemedClassName<{
   fullscreen?: boolean;
   /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */
   active?: string[];
-  /**
-   * Whether the deck is in `solo` mode (a single active plank; companions excluded). Gates the
-   * fullscreen toggle and hides the increment/close controls. Defaults to the `active`-based heuristic.
-   */
-  soloLook?: boolean;
   path?: string[];
 }>;
 
@@ -43,45 +38,33 @@ export type DeckPlankProps = ThemedClassName<{
  * plank too — delegated to {@link CompanionPlank}, which supplies the companion's own header and content —
  * so the deck layout never special-cases companions.
  */
-export const DeckPlank = memo(
-  ({ id, part, fullscreen = false, active, soloLook, path, classNames }: DeckPlankProps) => {
-    if (Attention.isLinkedSegment(id)) {
-      return <CompanionPlank id={id} classNames={classNames} />;
-    }
+export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
+  if (Attention.isLinkedSegment(id)) {
+    return <CompanionPlank id={id} classNames={classNames} />;
+  }
 
-    return (
-      <DeckPlankInner
-        id={id}
-        part={part}
-        fullscreen={fullscreen}
-        active={active}
-        soloLook={soloLook}
-        path={path}
-        classNames={classNames}
-      />
-    );
-  },
-);
+  return (
+    <DeckPlankInner id={id} part={part} fullscreen={fullscreen} active={active} path={path} classNames={classNames} />
+  );
+});
 
 DeckPlank.displayName = 'DeckPlank';
 
-const DeckPlankInner = ({
-  id,
-  part,
-  fullscreen = false,
-  active,
-  soloLook: soloLookProp,
-  path,
-  classNames,
-}: DeckPlankProps) => {
+const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
   const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
-  // Solo mode (a single active plank) offers the manual fullscreen toggle and hides the increment/close
-  // controls; falls back to the real-plank heuristic when the parent passes no explicit value.
-  const soloLook = soloLookProp ?? (active === undefined || active.length === 1);
-  const { node, capabilities, sigilActions, popoverAnchorId, scrollIntoView, onAction, onAdjust, onScrollIntoView } =
-    useDeckPlank({ id, part, active });
+  const {
+    node,
+    capabilities,
+    sigilActions,
+    popoverAnchorId,
+    scrollIntoView,
+    expanded,
+    onAction,
+    onAdjust,
+    onScrollIntoView,
+  } = useDeckPlank({ id, part, active });
 
   // In flat mode only the current (last) plank renders; its predecessors in the stack become
   // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
@@ -101,11 +84,13 @@ const DeckPlankInner = ({
     [invokePromise, active],
   );
 
-  // Newly opened/navigated planks are flagged via `scrollIntoView`; focus the pane so it gains
-  // attention, then clear the one-shot flag.
+  // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
+  // `scrollIntoView`; focus the pane so it gains attention, then clear the one-shot flag. Scrolling is
+  // owned by the deck viewport, which positions the plank past the pile of spines, so this focus must
+  // not scroll on its own.
   useEffect(() => {
     if (scrollIntoView === id) {
-      rootRef.current?.focus();
+      rootRef.current?.focus({ preventScroll: true });
       onScrollIntoView(undefined);
     }
   }, [scrollIntoView, id, onScrollIntoView]);
@@ -137,8 +122,8 @@ const DeckPlankInner = ({
   const controls = (
     <PlankControls
       capabilities={capabilities}
-      soloLook={soloLook}
       fullscreen={fullscreen}
+      expanded={expanded}
       close={part === 'complementary' ? 'minify-end' : true}
       onClick={onAdjust}
     />

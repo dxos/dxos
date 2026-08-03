@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
@@ -16,20 +15,35 @@ import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { DynamicTable, type TableRowAction } from '@dxos/react-ui-table';
+import { Tabs } from '@dxos/react-ui-tabs';
 import { CardAnnotation } from '@dxos/schema';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
+import { SpaceOperation } from '../../operations';
+import { useDuplicatesGroup } from './duplicatesGroup';
+import { useDuplicates } from './useDuplicates';
+
 /** Sidebar layout modes for a type article. */
-type Layout = 'masonry' | 'table';
+type Layout = 'masonry' | 'table' | 'duplicates';
 
 const LAYOUTS: { value: Layout; icon: string }[] = [
-  { value: 'masonry', icon: 'ph--squares-four--regular' },
-  { value: 'table', icon: 'ph--table--regular' },
+  {
+    value: 'masonry',
+    icon: 'ph--squares-four--regular',
+  },
+  {
+    value: 'table',
+    icon: 'ph--table--regular',
+  },
+  {
+    value: 'duplicates',
+    icon: 'ph--copy--regular',
+  },
 ];
 
 export type TypeArticleProps = {
@@ -41,17 +55,17 @@ export type TypeArticleProps = {
 
 /**
  * List view rendered when a type node is selected: a toolbar with a Masonry/Table layout switch and a
- * text filter over every object of the type. Selecting an item opens it as a sibling plank. Objects are
- * not enumerated in the nav tree; each navigated object becomes a hidden child of the type node resolved
- * on demand.
+ * text filter over every object of the type. Selecting an item opens it as a sibling plank.
+ *
+ * Objects are not enumerated in the nav tree; each navigated object becomes a hidden child of the
+ * type node resolved on demand.
  */
 export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
-  const currentId = useSelection(attendableId, 'single');
   const [layout, setLayout] = useState<Layout>('masonry');
-
-  const objects = useQuery(space.db, Filter.type(Type.getURI(type)));
+  const typeUri = Type.getURI(type);
+  const objects = useQuery(space.db, Filter.type(typeUri));
 
   // Text filter over the object labels; feeds both the masonry tiles and the table rows.
   const { results, handleSearch } = useSearchListResults<Obj.Unknown>({
@@ -59,40 +73,35 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     extract: (object) => Obj.getLabel(object) ?? '',
   });
 
-  // Layout switch as an idiomatic single-select toggle group; the atom rebuilds when `layout`
-  // changes so the active item reflects state.
-  const actionsAtom = useMemo(
-    () =>
-      Atom.make(() =>
-        MenuBuilder.make()
-          .group(
-            'layout',
-            {
-              variant: 'toggleGroup',
-              selectCardinality: 'single',
-              value: layout,
-              label: ['layout.label', { ns: meta.profile.key }],
-            },
-            (group) => {
-              LAYOUTS.forEach(({ value, icon }) => {
-                group.action(value, { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon }, () =>
-                  setLayout(value),
-                );
-              });
-            },
-          )
-          .build(),
-      ),
-    [layout],
+  // Selection is keyed by the type's own URI — the same id the 'selected-objects' companion resolves
+  // from its `companionTo` (see react-surface.tsx), so cards, table rows and the companion agree.
+  const selectedIds = useSelection(typeUri, 'multi');
+  const { multi: setSelectedObjects, toggle: toggleSelected } = useSelectionActions(typeUri);
+
+  // TODO(burdon): Factor out as an aspect?
+  const duplicates = useDuplicates({ space, type, objects, enabled: layout === 'duplicates' });
+  const duplicatesGroup = useDuplicatesGroup({
+    typeUri,
+    typename: Type.getTypename(type),
+    duplicates,
+  });
+
+  // Duplicates is offered only for types some plugin registered an identity rule for:
+  // there is nothing to scan otherwise.
+  const layouts = useMemo(
+    () => LAYOUTS.filter(({ value }) => value !== 'duplicates' || duplicates.spec),
+    [duplicates.spec],
   );
-  const menuActions = useMenuActions(actionsAtom);
 
   const handleOpen = useCallback(
     (object: Obj.Unknown) => {
       const id = Obj.getURI(object);
       void invokePromise(LayoutOperation.Select, { contextId: attendableId, subject: { mode: 'single', id } });
       void invokePromise(LayoutOperation.Open, {
-        subject: [GraphPath.getObjectPathFromObject(object)],
+        // Open under the node being viewed rather than the object's canonical type path, so an object
+        // reached from a type section opens within that section. Identical for a database type node,
+        // whose object path already is `<typeNode>/<id>`.
+        subject: [GraphPath.getCollectionObjectPath(attendableId, object.id)],
         pivotId: attendableId,
         disposition: 'add',
         navigation: 'immediate',
@@ -105,9 +114,26 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     Obj.getDatabase(object)?.remove(object);
   }, []);
 
-  // Table row selection feeds the 'selected-objects' companion, keyed by the type's own URI — the
-  // same id the companion surface resolves from its `companionTo` (see react-surface.tsx).
-  const { multi: setSelectedObjects } = useSelectionActions(Type.getURI(type));
+  // Undoable removal of every checked row, so a mis-click on a multi-row delete is recoverable.
+  const handleDeleteSelected = useCallback(() => {
+    const selected = objects.filter((object) => selectedIds.includes(object.id));
+    if (selected.length > 0) {
+      void invokePromise(SpaceOperation.RemoveObjects, { objects: selected }, { spaceId: space.id });
+      setSelectedObjects([]);
+    }
+  }, [objects, selectedIds, invokePromise, space.id, setSelectedObjects]);
+
+  // Stable identity: `DynamicTable` rebuilds its model whenever `features` changes, so an inline
+  // literal here would discard and re-seed the table's selection on every render.
+  const tableFeatures = useMemo(
+    () => ({
+      selection: { enabled: true, mode: 'multiple' as const },
+      dataEditable: true,
+      schemaEditable: false,
+      pinColumns: 1,
+    }),
+    [],
+  );
 
   // Table rows are editable, so opening a row is a deliberate row action rather than `onRowClick`
   // (which would fire on every cell click and fight with in-cell editing).
@@ -125,63 +151,136 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
     [handleOpen],
   );
 
+  // One action graph for the whole toolbar: the mode-specific actions first, then the layout toggle.
+  // Composing several `Toolbar.Root`s instead would each need their own roving-focus group and would
+  // fight over the row's width.
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .subgraph(layout === 'duplicates' && duplicatesGroup)
+        .subgraph(
+          layout === 'table' &&
+            selectedIds.length > 0 &&
+            ((builder) => {
+              builder.action(
+                'delete-selected',
+                {
+                  label: ['delete-selected.label', { ns: meta.profile.key, count: selectedIds.length }],
+                  icon: 'ph--trash--regular',
+                },
+                handleDeleteSelected,
+              );
+            }),
+        )
+        .separator()
+        .group(
+          'layout',
+          {
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: layout,
+            label: ['layout.label', { ns: meta.profile.key }],
+          },
+          (group) => {
+            layouts.forEach(({ value, icon }) => {
+              group.action(value, { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon }, () =>
+                setLayout(value),
+              );
+            });
+          },
+        )
+        .build(),
+    [layout, layouts, selectedIds.length, duplicatesGroup, handleDeleteSelected],
+  );
+
+  // The card grid backs two layouts — every object for `masonry`, only the group under review for
+  // `duplicates` — so the items are resolved here and the grid itself is declared once.
+  const tiles = layout === 'duplicates' ? duplicates.current : results;
   const tileItems = useMemo<TileData[]>(
     () =>
-      results.map((object) => ({
+      tiles.map((object) => ({
         object,
-        current: Obj.getURI(object) === currentId,
+        current: selectedIds.includes(object.id),
+        onSelect: toggleSelected,
         onOpen: handleOpen,
         onDelete: Obj.getParent(object) ? undefined : handleDelete,
       })),
-    [results, currentId, handleOpen, handleDelete],
+    [tiles, selectedIds, toggleSelected, handleOpen, handleDelete],
   );
+
+  // A type with no objects at all has nothing for any layout to show; past that each layout says
+  // when it is empty for its own reason.
+  const noObjects = objects.length === 0 ? t('type-collection-empty.message') : undefined;
+  const noResults = noObjects ?? (results.length === 0 ? t('search-no-results.message') : undefined);
+  const noDuplicates =
+    noObjects ??
+    (duplicates.current.length === 0
+      ? duplicates.scanning
+        ? t('duplicates-scanning.message')
+        : t('duplicates-none.message')
+      : undefined);
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root role={role}>
-        <Panel.Toolbar classNames='flex items-center gap-2'>
-          <SearchList.Input placeholder={t('search-placeholder.label')} classNames='grow' />
-          {/* Constrain the menu toolbar to its content so the search input fills the left.
-              `alwaysActive` keeps the layout toggle full-opacity; it needs no attention gating. */}
-          <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-            <Menu.Toolbar classNames='w-auto!' />
-          </Menu.Root>
-        </Panel.Toolbar>
-        <Panel.Content>
-          {objects.length === 0 ? (
-            <Empty classNames='h-full' label={t('type-collection-empty.message')} />
-          ) : results.length === 0 ? (
-            <Empty classNames='h-full' label={t('search-no-results.message')} />
-          ) : layout === 'table' ? (
-            <DynamicTable
-              type={type}
-              rows={results}
-              features={{
-                selection: { enabled: true, mode: 'multiple' },
-                dataEditable: true,
-                schemaEditable: false,
-                pinColumns: 1,
-              }}
-              rowActions={rowActions}
-              onRowAction={handleRowAction}
-              onSelectionChanged={setSelectedObjects}
-            />
-          ) : (
-            <Masonry.Root Tile={TileAdapter}>
-              <Masonry.Content classNames='p-trim-md'>
-                <Masonry.Viewport getId={(data) => Obj.getURI(data.object)} items={tileItems} />
-              </Masonry.Content>
-            </Masonry.Root>
-          )}
-        </Panel.Content>
-      </Panel.Root>
+      <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+        <Panel.Root role={role}>
+          <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
+            {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
+            <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
+              <Menu.Toolbar />
+            </Menu.Root>
+          </Panel.Toolbar>
+          <Panel.Content>
+            <LayoutPanel value='masonry' empty={noResults}>
+              <Masonry.Root Tile={TileAdapter}>
+                <Masonry.Content>
+                  <Masonry.Viewport cacheKey={typeUri} getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                </Masonry.Content>
+              </Masonry.Root>
+            </LayoutPanel>
+            <LayoutPanel value='table' empty={noResults}>
+              <DynamicTable
+                type={type}
+                rows={results}
+                features={tableFeatures}
+                rowActions={rowActions}
+                // Seed from the shared selection so switching card → table keeps what was selected;
+                // the table otherwise starts from its own empty model.
+                selection={selectedIds}
+                onRowAction={handleRowAction}
+                onSelectionChanged={setSelectedObjects}
+              />
+            </LayoutPanel>
+            {duplicates.spec && (
+              <LayoutPanel value='duplicates' empty={noDuplicates}>
+                <Masonry.Root Tile={TileAdapter}>
+                  <Masonry.Content>
+                    <Masonry.Viewport cacheKey={typeUri} getId={(data) => Obj.getURI(data.object)} items={tileItems} />
+                  </Masonry.Content>
+                </Masonry.Root>
+              </LayoutPanel>
+            )}
+          </Panel.Content>
+          <Panel.Statusbar className='flex items-center p-1 border-t border-subdued-separator'>
+            {t('item-count.label', { count: tileItems.length })}
+          </Panel.Statusbar>
+        </Panel.Root>
+      </Tabs.Root>
     </SearchList.Root>
   );
 };
 
+/** One layout's content, or the message standing in for it when the layout has nothing to show. */
+const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
+  <Tabs.Panel value={value} classNames='contents'>
+    {empty ? <Empty classNames='h-full' label={empty} /> : children}
+  </Tabs.Panel>
+);
+
 type TileData = {
   object: Obj.Unknown;
   current: boolean;
+  onSelect: (id: string) => void;
   onOpen: (object: Obj.Unknown) => void;
   onDelete?: (object: Obj.Unknown) => void;
 };
@@ -191,11 +290,11 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
     return null;
   }
 
-  return <TypeTile object={data.object} current={data.current} onOpen={data.onOpen} onDelete={data.onDelete} />;
+  return <ObjectTile {...data} />;
 };
 
 /** Selectable header-only card for a single object. */
-const TypeTile = ({ object, current, onOpen, onDelete }: TileData) => {
+const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
   const { t } = useTranslation(meta.profile.key);
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
@@ -213,14 +312,25 @@ const TypeTile = ({ object, current, onOpen, onDelete }: TileData) => {
   const showCardContent = !!type && Option.getOrElse(CardAnnotation.get(Type.getSchema(type)), () => false);
   const cardData = useMemo<AppSurface.ObjectCardData>(() => ({ subject: object }), [object]);
 
-  // `Focus.Item` calls `onCurrentChange` on click and on Enter.
-  const handleCurrentChange = useCallback(() => onOpen(object), [onOpen, object]);
+  // `Focus.Item` calls `onCurrentChange` on click and on Enter. A card click toggles selection —
+  // the companion follows the selection, so navigating away on every click would fight the review
+  // workflow; opening stays available from the card menu.
+  const handleCurrentChange = useCallback(() => onSelect(object.id), [onSelect, object]);
 
   const menuItems = useMemo(
-    () =>
-      onDelete
+    () => [
+      {
+        icon: 'ph--arrow-square-out--regular',
+        label: t('open-object.label', {
+          ns: typename ?? meta.profile.key,
+          defaultValue: t('open-object.label'),
+        }),
+        onClick: () => onOpen(object),
+      },
+      ...(onDelete
         ? [
             {
+              icon: 'ph--trash--regular',
               label: t('delete-object.label', {
                 ns: typename ?? meta.profile.key,
                 defaultValue: t('delete-object.label'),
@@ -228,8 +338,9 @@ const TypeTile = ({ object, current, onOpen, onDelete }: TileData) => {
               onClick: () => onDelete(object),
             },
           ]
-        : [],
-    [t, typename, onDelete, object],
+        : []),
+    ],
+    [t, typename, onOpen, onDelete, object],
   );
 
   return (

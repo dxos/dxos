@@ -48,18 +48,33 @@ export const CreateAgent = Operation.make({
   services: [Registry.Service, Database.Service],
 });
 
-export const SyncTriggers = Operation.make({
+export const SyncAutomation = Operation.make({
   meta: {
     key: DXN.make('org.dxos.function.agent.syncTriggers'),
-    name: 'Sync triggers',
+    name: 'Sync automation',
     description:
-      'Synchronizes triggers with the agent: subscriptions, cron, filter-events, and enabled (copied to every trigger). Call after editing those fields.',
+      'Compiles the agent automation config (subscriptions, optional cron) into Routines that relay events onto the agent session. Recreates everything, so call with the FULL desired config after any change; enabled is copied from the agent onto every trigger.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotations({
-      description: 'The agent whose triggers should be synced.',
+      description: 'The agent whose automation should be synced.',
     }),
+    subscriptions: Schema.optional(
+      Schema.Array(Ref.Ref(Obj.Unknown)).annotations({
+        description: 'The objects to subscribe to (e.g. mailboxes); each compiles to a feed-triggered routine.',
+      }),
+    ),
+    cron: Schema.optional(
+      Schema.String.annotations({
+        description: 'Cron expression for a scheduled wake routine.',
+      }),
+    ),
+    qualify: Schema.optional(
+      Schema.Boolean.annotations({
+        description: 'Run the cheap-model relevance filter on subscription events (default true).',
+      }),
+    ),
   }),
   output: Schema.Void,
   services: [Database.Service],

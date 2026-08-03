@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useManager } from '@dxos/react-ui-attention';
-import { Message as MessageType } from '@dxos/types';
+import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {
   ConversationStack,
@@ -96,10 +96,18 @@ export const MessageArticle = ({
   const orderedMessages = useMemo(() => orderThreadItems(messages), [messages]);
   const messageIds = useMemo(() => orderedMessages.map(keyOf), [orderedMessages]);
 
+  // Opening a conversation lands on its latest message, so that one auto-expands. Drafts are skipped —
+  // they render as composers regardless, and a new reply draft must not fold the message it answers.
+  const latestMessageId = useMemo(() => {
+    const latest = orderedMessages.findLast((message) => !DraftMessage.instanceOf(message));
+    return latest && keyOf(latest);
+  }, [orderedMessages]);
+
   // Expanded state.
   const { expanded, onExpandedChange, onCollapseAll, onExpandAll } = useMessageExpansion({
     messageIds,
-    subject,
+    latestMessageId,
+    threadId: subject.threadId,
   });
 
   // Settings + view state.
@@ -152,8 +160,9 @@ export const MessageArticle = ({
     [invoker],
   );
 
-  // Generate a grounded reply body (thread + facts), then open the reply draft prefilled; on LLM failure
-  // fall back to an empty reply draft so the action never leaves the user without one.
+  // Generate a grounded reply body (thread + facts), then create the reply draft prefilled — it joins
+  // this thread and renders inline. On LLM failure fall back to an empty reply draft so the action never
+  // leaves the user without one.
   const handleAiReply = useCallback(
     async (message: MessageType.Message) => {
       if (!db || !mailbox) {
@@ -226,29 +235,51 @@ MessageArticle.displayName = 'MessageArticle';
 
 type UseMessageExpansionProps = {
   messageIds: readonly string[];
-  /** The opened plank subject, which is expanded by default. */
-  subject: MessageType.Message;
+  /** The conversation's latest message, expanded until the user says otherwise. */
+  latestMessageId?: string;
+  /** Thread being viewed; a change means the user navigated to another conversation. */
+  threadId?: string;
 };
 
-// Expanded state lives here so the thread toolbar's collapse-all/expand-all can fold or unfold every message.
-const useMessageExpansion = ({ messageIds, subject }: UseMessageExpansionProps) => {
-  // The opened message is worth reading first; expand it by default and leave the rest collapsed.
-  const openId = keyOf(subject);
+/**
+ * Expanded state for the thread. Tracked as per-message overrides on top of "the latest message is
+ * expanded", so the auto-expansion follows the conversation as the thread query resolves (the article
+ * starts from the subject alone) without discarding the user's own toggles. The toolbar's
+ * collapse-all/expand-all set an override for every message at once.
+ */
+const useMessageExpansion = ({ messageIds, latestMessageId, threadId }: UseMessageExpansionProps) => {
+  const [overrides, setOverrides] = useState<ReadonlyMap<string, boolean>>(() => new Map());
 
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set([openId]));
-  const onExpandedChange = useCallback((id: string, isExpanded: boolean) => {
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (isExpanded) {
-        next.add(id);
-      } else {
-        next.delete(id);
-      }
-      return next;
-    });
-  }, []);
-  const onCollapseAll = useCallback(() => setExpanded(new Set()), []);
-  const onExpandAll = useCallback(() => setExpanded(new Set(messageIds)), [messageIds]);
+  // Navigating to another conversation opens it fresh, on its own latest message.
+  const [seededThreadId, setSeededThreadId] = useState(threadId);
+  if (seededThreadId !== threadId) {
+    setSeededThreadId(threadId);
+    setOverrides(new Map());
+  }
 
-  return { expanded, onExpandedChange, onCollapseAll, onExpandAll };
+  // A conversation of one has nothing to summarize against: keep it expanded and withhold the toggles,
+  // so neither the message header nor the thread toolbar offers a fold the user gains nothing from.
+  const collapsible = messageIds.length > 1;
+  const expanded = useMemo(
+    () => new Set(messageIds.filter((id) => (collapsible ? (overrides.get(id) ?? id === latestMessageId) : true))),
+    [messageIds, collapsible, overrides, latestMessageId],
+  );
+
+  const handleExpandedChange = useCallback(
+    (id: string, isExpanded: boolean) => setOverrides((prev) => new Map(prev).set(id, isExpanded)),
+    [],
+  );
+  const setAll = useCallback(
+    (isExpanded: boolean) => setOverrides(new Map(messageIds.map((id) => [id, isExpanded]))),
+    [messageIds],
+  );
+  const handleCollapseAll = useCallback(() => setAll(false), [setAll]);
+  const handleExpandAll = useCallback(() => setAll(true), [setAll]);
+
+  return {
+    expanded,
+    onExpandedChange: collapsible ? handleExpandedChange : undefined,
+    onCollapseAll: collapsible ? handleCollapseAll : undefined,
+    onExpandAll: collapsible ? handleExpandAll : undefined,
+  };
 };

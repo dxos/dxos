@@ -6,7 +6,7 @@ import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 import * as Runtime from 'effect/Runtime';
 
-import { Event, UpdateScheduler } from '@dxos/async';
+import { Event, UpdateScheduler, sleep } from '@dxos/async';
 import { type Struct } from '@dxos/codec-protobuf';
 import { LifecycleState, Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
@@ -20,6 +20,15 @@ import { DocHandleProxy } from './doc-handle-proxy';
 
 const MAX_UPDATE_FREQ = 10; // [updates/sec]
 const RPC_TIMEOUT = 30_000;
+
+/**
+ * Passes {@link RepoProxy.flush} makes before reporting a batch as unsendable. A failed
+ * `_sendUpdates` re-queues its batch, so each pass is a fresh attempt at the same work.
+ */
+const FLUSH_ATTEMPTS = 3;
+
+/** Backoff between {@link FLUSH_ATTEMPTS}, multiplied by the attempt number. */
+const FLUSH_RETRY_DELAY_MS = 50;
 
 /**
  * A proxy (thin client) to the Automerge Repo.
@@ -53,6 +62,14 @@ export class RepoProxy extends Resource {
   private readonly _pendingRemoveIds = new Set<DocumentId>();
 
   private _sendUpdatesJob?: UpdateScheduler = undefined;
+
+  /**
+   * How a failed batch becomes visible to {@link flush} — `_sendUpdates` cannot throw. Each flush
+   * attempt compares the counter before and after, so concurrent flushes cannot mask each other's
+   * failure (a single cleared field would).
+   */
+  private _sendFailureCount = 0;
+  private _lastSendError: Error | undefined = undefined;
 
   /**
    * Flag to indicate reconnection is in progress.
@@ -102,11 +119,32 @@ export class RepoProxy extends Resource {
     return this._createHandle<T>({ initialValue });
   }
 
+  /**
+   * Waits until every pending document creation and update has been handed to the host.
+   *
+   * Throws if a batch could not be sent. `_sendUpdates` re-queues a failed batch for the next pass,
+   * but a short-lived writer (a server-side ECHO client in a worker invocation) is disposed as soon
+   * as `flush()` resolves — so resolving over a re-queued batch loses the write silently.
+   */
   async flush(): Promise<void> {
     // Wait for all creations to be completed.
     await Promise.all([...this._pendingCreations.values()]);
-    // Wait for all updates to be sent.
-    await this._sendUpdatesJob?.runBlocking();
+    // Wait for all updates to be sent, retrying a failed batch before giving up on it.
+    for (let attempt = 1; ; attempt++) {
+      const failuresBefore = this._sendFailureCount;
+      await this._sendUpdatesJob?.runBlocking();
+      if (this._sendFailureCount === failuresBefore) {
+        return;
+      }
+      // Closing makes the remaining work moot.
+      if (this._lifecycleState === LifecycleState.CLOSED) {
+        return;
+      }
+      if (attempt >= FLUSH_ATTEMPTS) {
+        throw this._lastSendError ?? new Error('Failed to send document updates.');
+      }
+      await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+    }
   }
 
   protected override async _open(): Promise<void> {
@@ -407,6 +445,11 @@ export class RepoProxy extends Resource {
     } catch (err) {
       // Don't restore pending updates if generation changed - this task is abandoned.
       const isAbandoned = generation !== this._generation;
+      // Recorded even when the error is not raised below: `flush` still needs to know.
+      if (!isAbandoned) {
+        this._lastSendError = err as Error;
+        this._sendFailureCount++;
+      }
       if (!isAbandoned) {
         // Restore the state of pending updates if the RPC call failed.
         addIds.forEach((id) => this._pendingAddIds.add(id));

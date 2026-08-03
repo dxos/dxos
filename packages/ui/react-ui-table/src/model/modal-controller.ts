@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import { type MutableRefObject, type RefObject } from 'react';
 
 export type ColumnSettingsMode = { type: 'create' } | { type: 'edit'; fieldId: string };

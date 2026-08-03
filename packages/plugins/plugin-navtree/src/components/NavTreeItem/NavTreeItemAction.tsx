@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type Node } from '@dxos/app-graph';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
