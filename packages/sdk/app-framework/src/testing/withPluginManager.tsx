@@ -132,20 +132,38 @@ const WithPluginManagerApp = ({
   setupEvents,
   storyId,
 }: ManagedPluginManagerState) => {
+  // Gates the first render: rendering before the start events land lets a component read a
+  // capability that has not been contributed yet, which strict `useCapability` throws on.
+  const [activated, setActivated] = useState(false);
+
   // Fire deprecated events only after the effect-owned manager for this story exists.
-  useAsyncEffect(async () => {
-    await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-    // In the app plugins start on demand (surface render), but stories render one surface in
-    // isolation — fire every start event so start-gated modules are present regardless of
-    // which plugin's surface the story exercises. A story switch shuts the manager down
-    // mid-trickle, interrupting the activation fiber — expected; real failures still surface.
-    EffectEx.runDetached(activateDemandGatedModules(pluginManager));
-  }, [fireEvents, pluginManager, storyId]);
+  useAsyncEffect(
+    async (controller) => {
+      await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
+      // In the app plugins start on demand (surface render), but stories render one surface in
+      // isolation — fire every start event so start-gated modules are present regardless of
+      // which plugin's surface the story exercises. A story switch shuts the manager down
+      // mid-trickle, interrupting the activation fiber — expected; real failures still surface.
+      EffectEx.runDetached(
+        activateDemandGatedModules(pluginManager).pipe(
+          // Interruption skips this, so a torn-down story never flips the gate.
+          Effect.andThen(
+            Effect.sync(() => {
+              if (!controller.signal.aborted) {
+                setActivated(true);
+              }
+            }),
+          ),
+        ),
+      );
+    },
+    [fireEvents, pluginManager, storyId],
+  );
 
   // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;
   // callers can override via `withPluginManager({ fallback })`.
   const App = useApp({ pluginManager, setupEvents, fallback: fallback ?? StorybookErrorFallback });
-  return <App />;
+  return activated ? <App /> : <></>;
 };
 
 const storyMeta = Plugin.makeMeta({
