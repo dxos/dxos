@@ -1,7 +1,8 @@
 {
   // Cloudflare Workers (Static Assets) config for Composer. Migrated from Pages advanced mode: `_worker.js`
-  // is the Worker entry (main), static assets are served via the ASSETS binding, and /api/* runs the Worker
-  // first (feedback-logs, RSS proxy, OTel -> SigNoz) while every other route is asset-first with SPA fallback.
+  // is the Worker entry (main), static assets are served via the ASSETS binding, and the `run_worker_first`
+  // paths run the Worker first (feedback-logs, RSS proxy, OTel -> SigNoz, the WebAuthn Related Origin
+  // Requests manifest) while every other route is asset-first with SPA fallback.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // `_worker.js` lives in the asset dir (the PR preview deploy — a `versions upload` against `env.main` —
   // also consumes it there), so it is kept out of the asset upload with a generated `.assetsignore`.
@@ -19,7 +20,7 @@
     "binding": "ASSETS",
     // Unmatched routes return index.html (client-side router owns them)...
     "not_found_handling": "single-page-application",
-    // ...except /api/*, which must reach the Worker before the SPA fallback swallows it.
+    // ...except these, which must reach the Worker before the SPA fallback swallows them.
     "run_worker_first": ["/api/*", "/.well-known/webauthn"],
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,

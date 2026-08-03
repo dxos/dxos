@@ -217,7 +217,8 @@ const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.org'];
  */
 const handleWebAuthnWellKnown = (request: Request): Response => {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    return new Response('Method not allowed', { status: 405 });
+    // RFC 9110 §15.5.6 requires a 405 to advertise the methods the resource does support.
+    return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
 
   const body = JSON.stringify({ origins: WEBAUTHN_RELATED_ORIGINS });
