@@ -1,8 +1,8 @@
 # Prisma-authored SQLite schemas
 
 Date: 2026-07-31
-Status: `feed` piloted end to end on `@effect/sql`'s migrator and green (see Pilot below);
-8 packages remain
+Status: `feed` piloted end to end and green (see Pilot below); 8 packages remain.
+Durable Object verification against edge still outstanding — see "Runs inside SqlTransaction".
 
 Replace hand-written SQL DDL embedded in TypeScript template literals with per-package
 Prisma schemas that generate committed `.sql` migrations, imported into the runtime via
@@ -73,24 +73,46 @@ manifest so ids and ordering are reviewable in a diff. Once written they are nev
 are recorded as applied and never re-run, so changing one would diverge from databases that
 already ran it.
 
-Built on `@effect/sql`'s `Migrator`, which was already an unused transitive capability —
-`@dxos/sql-sqlite` has re-exported `SqliteMigrator` all along. Two details make it usable here:
-`Migrator.fromRecord` takes migrations as an in-memory record, so nothing touches a filesystem;
-and `Migrator.make({})`, with `dumpSchema` omitted, requires only `SqlClient`. The
-platform-specific `SqliteMigrator` entry points for node and bun additionally demand
-`FileSystem`, `Path`, and `CommandExecutor`, so they cannot be used in the browser — build on the
-base `Migrator` instead.
+Implemented in `SqlMigrator`, and **not** on `@effect/sql`'s `Migrator`. That library wraps its
+work in `SqlClient.withTransaction`, whose implementation emits literal `BEGIN` / `COMMIT` — which
+workerd forbids. Since `FeedSpace` runs `feedStore.migrate()` inside `blockConcurrencyWhile`, using
+the library would prevent the Durable Object from starting. See "Runs inside SqlTransaction" below.
 
 Prisma's generated DDL is still post-processed to inject `IF NOT EXISTS`, because the initial
 migration has to be safe to stamp onto a database that already has the tables.
 
-Two properties of Effect's migrator to design around:
+Owning the loop also avoids two properties of the library that would otherwise have to be designed
+around, both of which cost correctness:
 
-- It advances a **high-water mark** (`id > MAX(applied)`), rather than diffing the applied set as
-  Prisma does. A migration numbered at or below a shipped id is skipped permanently, so ids must
-  be strictly monotonic and never backfilled.
-- There is **no checksum column**, so editing an already-applied migration is undetectable at
-  runtime. The immutability rule is a convention, not something the tooling enforces.
+- It advances a **high-water mark** (`id > MAX(applied)`) rather than diffing the applied set. A
+  migration numbered at or below a shipped id is skipped permanently. `SqlMigrator` takes a set
+  difference, so an id added below a shipped one is still applied.
+- It stores **no checksum**, so editing an already-applied migration is undetectable. `SqlMigrator`
+  fingerprints each migration's SQL and fails with `checksum-mismatch` on an edit, making
+  immutability enforced rather than conventional. Line endings are normalised so a CRLF checkout is
+  not misread as an edit.
+
+Migrations are applied in **id order regardless of manifest order**, and a manifest with duplicate
+ids is rejected before anything runs.
+
+### Runs inside `SqlTransaction`, never the client's transaction
+
+`@dxos/sql-sqlite/SqlTransaction` exists precisely because `SqlClient.withTransaction` is not
+portable: its own docs say to use the service "instead of SqlClient.withTransaction() or SQL native
+transaction syntaxes". Edge supplies `createDoSqlTransactionLayer`, backed by
+`ctx.storage.transaction()`, and states the reason directly — "required in workerd, where SQL
+`BEGIN` / `COMMIT` is forbidden".
+
+The transaction cannot simply be dropped: recording a migration and executing it must be atomic, or
+a failure part-way leaves a migration marked applied that never ran.
+
+Neither `feed` nor `sql-sqlite` carries `ts-test-workerd`, so **dxos CI cannot catch a regression
+here** — a green Check says nothing about the Durable Object path. `SqlMigrator.test.ts` runs the
+core cases under both the native transaction layer and a pass-through layer standing in for a DO,
+which is the worst case (nothing rolls back, so each statement must succeed unaided). That is a
+stub, not workerd; real coverage needs Durable Object bindings threaded through
+`WorkerdOptions`/`createWorkerdProject` in `vite.base.config.ts`, which currently hardcodes its
+miniflare config, plus `@effect/sql-sqlite-do` in the catalog.
 
 ### Legacy databases are baselined, not migrated
 
@@ -332,15 +354,14 @@ Assertions must derive from the `MIGRATIONS` manifest rather than hard-coding id
 pilot's first draft hard-coded them and four tests broke the moment a second migration was added,
 which would have recurred on every future schema change.
 
-Two CI checks are still worth adding, both catching classes of error the runtime cannot:
+Duplicate ids and edits to applied migrations are now rejected at runtime by `SqlMigrator`. Two
+checks are still worth adding:
 
 - **Stale snapshot** — regenerate and fail on a dirty tree, so a committed `snapshot.sql` cannot
   lag `schema.prisma`.
-- **Manifest integrity** — reject duplicate or non-increasing migration ids, and reject any diff
-  that modifies an already-committed migration `.sql`. The migrations table stores no checksum and
-  advances a high-water mark, so neither an edited applied migration nor a backfilled id is
-  detectable at runtime; the snapshot test does not catch either, because an edited migration and
-  its matching schema still agree. Until this exists, both rules are convention only.
+- **Durable Object coverage** — `sql-sqlite` needs `ts-test-workerd` with a Durable Object binding,
+  so the `BEGIN`-forbidden constraint is enforced by CI rather than by review. This is the gap that
+  let the first implementation ship a migrator that could not start a DO.
 
 ## Spike (run 2026-07-31)
 
