@@ -121,6 +121,34 @@ without it.
 - [ ] **Coordinate with burdon's `deck` project** — this supersedes the
       PR #12424 per-plank companion model.
 
+## Phase 5: Pop-out (clone a companion into the deck)
+
+Design ratified in DESIGN.md §5 — clone semantics, pinned at pop time, node
+scope only in v1, flatten gating, `context` URL key. NOT STARTED — design
+approved, implementation awaiting go-ahead.
+
+### Tasks
+
+- [ ] **Pop button** on node-scoped sidebar panels (toolbar end), hidden while
+      `flatten` is on. Click → `LayoutOperation.Open` with the companion node id
+      (`<anchor>/~<variant>`), pivoted on the attended plank.
+- [ ] **Clone plank rendering** — `DeckPlank` branch for linked-segment ids:
+      ordinary plank chrome, `articleData` carries `companionTo` (source node
+      data) + `variant`; source rendered as a breadcrumb (`useBreadcrumbs`,
+      merging with the flatten trail when both apply).
+- [ ] **Jump to source** — crumb click: source open → `ScrollIntoView`; closed →
+      `Open` pivoted before the clone. Also a sigil-menu action.
+- [ ] **URL** — clones take over `companion` chain pairs with a self-contained
+      composite id (source ref + variant, so an orphaned clone round-trips);
+      sidebar selection moves to a trailing `context` pair
+      (`UrlPath.CONTEXT_KEY`; node preferences as `~<variant>`, root as bare
+      id). Update url-handler serialize + parse and `serialize-deck-url` tests.
+- [ ] **Assistant provisioner** — provision companion chats for popped assistant
+      clones in `deck.active` regardless of sidebar state.
+- [ ] **Verify** — unit tests (URL round-trip incl. orphaned clone), browser
+      pass: pop → pinned clone; attend elsewhere → clone unchanged, sidebar
+      rebinds; attend clone → node group empty; crumb jump; dedup on re-pop.
+
 ### References
 
 - `.agents/projects/companions-sidebar/DESIGN.md` — ratified shape + trade-offs.

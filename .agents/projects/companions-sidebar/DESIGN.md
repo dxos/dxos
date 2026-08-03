@@ -106,13 +106,53 @@ removed — decide during implementation by feel.
 - Companion width no longer participates in deck geometry — the entire class of
   companion-driven scroll/width defects dissolves.
 
-## 5. Out of scope
+## 5. Pop-out (ratified 2026-08-03)
+
+Popping a companion out of the sidebar **clones** it into the deck as a
+first-class plank — the sidebar is untouched (rail keeps its tab, panel keeps
+following attention). The clone is **pinned** to the node that was attended at
+pop time, so multiple clones with different sources can sit side by side
+(several assistants for several messages; comment threads for two documents).
+
+- **Identity is the binding.** The clone's plank id is the companion node id
+  `<sourceNodeId>/~<variant>`, placed into `deck.active` via ordinary
+  `LayoutOperation.Open` pivoted on the attended plank. No new state: dedup,
+  close, width (`plankSizing`) and per-deck persistence are the ordinary plank
+  paths. Closing the source plank does not close the clone; a deleted source
+  sends the clone to the ordinary not-found fallback.
+- **v1 pops node-scoped companions only** — the pop affordance appears on node
+  group panels. Workspace/global panels are always available in the sidebar and
+  have no source to pin, so popping them is deferred until motivated.
+- **Heading reuses the flatten-mode breadcrumbs** (`Plank` already accepts
+  `breadcrumbs` + `onSelectBreadcrumb`): the clone's heading reads
+  `<Source> › <Companion>` — the companion's own icon stays the sigil (it
+  identifies the panel type), the crumb carries the source. Clicking the crumb
+  jumps to the source plank (`ScrollIntoView`) or reopens it (`Open`, pivoted
+  before the clone) if it was closed. In flatten mode the source crumb merges
+  into the existing navigation trail.
+- **Flatten gating**: popping is not offered while `flatten` is on. If flatten
+  turns on with clones open, nothing special happens — a clone is an ordinary
+  active entry, so it collapses into the breadcrumb chain like any plank; only
+  the affordance is gated.
+- **Sidebar while attending a clone**: the node group is simply empty (a
+  companion has no companions), i.e. exactly what any node without companions
+  shows; the existing selection fallback picks the first workspace/global
+  panel. Zero special-casing.
+- **URL**: clone planks take over the `companion` chain key with a
+  self-contained id that encodes source + variant, so a clone survives its
+  source being closed and pairs keep meaning "contents of the deck, in order".
+  The sidebar selection moves to a trailing **`context`** pair (its own key;
+  it is a view preference, not deck content).
+- `activeCall` pops like anything else if/when root popping arrives — it is
+  already a secondary surface over a running call, so a clone is just another
+  view (a `poppable` opt-out was considered and dropped as unmotivated).
+
+## 6. Out of scope
 
 - `plugin-simple-layout` (mobile) keeps its own companion path during the
   experiment; reconcile only if the experiment lands.
 - Surface-contract unification (Article vs deckCompanion roles).
-- Pinning a companion to a specific plank independent of attention (possible
-  later feature).
+- Popping workspace/global companions (see §5).
 
 ## 6. Key reference points
 
