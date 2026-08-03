@@ -33,8 +33,10 @@ const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props
   <div
     {...composableProps(props, {
       role: 'article',
-      classNames:
-        'dx-container flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-lg min-w-0',
+      // No `dx-density-*` here: the class sets `--dx-control` for the whole subtree, so a pane-wide
+      // `lg` reached the content body and rendered form labels and inputs at 40px. The toolbar gets
+      // `lg` from its own `DensityProvider` (see `Pane.Toolbar`); the body keeps the `md` default.
+      classNames: 'dx-container flex flex-col dx-attention-surface relative dx-focus-ring-inset-over-all min-w-0',
     })}
     ref={forwardedRef}
   >

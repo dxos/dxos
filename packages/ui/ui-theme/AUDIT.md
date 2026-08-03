@@ -165,6 +165,28 @@ Meanwhile `FormCard.tsx:118` and `ExpandoCard.tsx:66` ship idiom 1 inside cards 
 misalignment is live. `ArrayField.tsx:186` carries a `// TODO(burdon): Hacky.` `[--dx-col:auto]`
 override — same root cause.
 
+### Unmatched `grid-area` names fabricate tracks, silently
+
+A host places a slotted child by merging a placement class into it: `Panel.Content asChild` sends
+`[grid-area:content]` down, naming an area that exists only in `Panel.Root`'s template. If the
+receiving component puts those forwarded props on an element **inside** a grid of its own, the name
+matches no line there — and CSS does not ignore it. Per the grid spec an unmatched
+`<custom-ident>` makes every implicit line assume that name, so the browser invents a track. The
+element lands in a phantom row, and the real row absorbs the leftover space.
+
+That is what put the Properties companion's form in the middle of its pane: `Form.Viewport`'s
+`scroll` branch forwarded the consumer's props to the inner `ScrollArea.Root` rather than the
+`Column.Root` it renders, so `Column.Root` computed `grid-template-rows: 228px 492px` for a single
+child. Nothing warns — no console message, no type error; it survived tests and CI and was only
+visible as vertical drift.
+
+**Rule: a composable's forwarded `className` / `style` / `data-*` land on its outermost rendered
+element, always.** Placement travels from host to child through that element and must not be
+carried into any grid the component establishes internally. `Dialog.Content` is the correct
+reference shape (props on `DialogPrimitive.Content`, `Column.Root` internal); `Form.Viewport` was
+the only violator in `packages/ui`. Note this is not an argument against named areas — a leaked
+`grid-row: 2` would misplace the child just as silently.
+
 ### Recommendations
 
 1. **Pick one placement mechanism: the `--dx-col` custom property.** It's inheritance-based, so it
@@ -685,6 +707,14 @@ Phases 2–4 are independent of each other after Phase 1.
 > `Column.Root asChild` — which includes `Card.Root`. Cards lost their surface, border and width
 > clamp, and nothing failed: no test, no type error, no console warning, only the pixels. Providers
 > in a slottable part must wrap the `Comp`, never sit between it and its child.
+>
+> Also done: the scrolling branch now forwards the consumer's props to the `Column.Root` it renders
+> rather than the inner `ScrollArea.Root`, which is what bottom-aligned the form in the Properties
+> companion — see "Unmatched `grid-area` names fabricate tracks" in §3 for the mechanism and the
+> resulting rule. Paired with it, `plugin-deck`'s `Pane.Root` no longer carries `dx-density-lg`: the
+> class set `--dx-control` for the whole pane, so a value meant for the toolbar rendered body form
+> labels and inputs at 40px. The toolbar takes `lg` from its own `DensityProvider`; the body keeps
+> the `md` default.
 >
 > Outstanding: items 1, 3 and 4 below — consolidating on the single `--dx-col` placement mechanism,
 > migrating the ~10 hand-rolled 3-track grids, and sourcing `--dx-gutter-*` from the spacing ramp.

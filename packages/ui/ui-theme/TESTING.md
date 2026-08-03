@@ -65,8 +65,8 @@ These derive from the host surface, so they moved everywhere at once.
 
 ## 4. Control sizes and density — 24 / 32 / 40
 
-The scale is now three sizes; the old 28px step is gone. `xs` is an alias of `sm`.
-TODO(burdon): Remove "xs" if it is just an alias.
+The scale is now three sizes; the old 28px step is gone. `xs` has been removed — `Density` is
+`'lg' | 'md' | 'sm'`.
 
 - **Anything that was `sm` (28px) is now 24px** — visibly tighter. Check dense toolbars, the
   `Calendar` (nav buttons and day cells both moved), `Select` scroll buttons, and
@@ -77,9 +77,13 @@ TODO(burdon): Remove "xs" if it is just an alias.
   `px-2` that overrode every density — so icon buttons will be slightly narrower. They deliberately
   do NOT pin an inline size: a pinned width stops a button stretching to its grid cell, which left
   the R0 rail's sidebar toggle 4px off-centre from the tab buttons above it (fixed).
-- **Density now cascades by CSS class.** `DensityProvider` renders a `display: contents` wrapper.
-  Verify a `Toolbar density='sm'` actually shrinks its children (it never used to), and that no
-  layout broke from the extra wrapper element — grid/flex parents are the place to look.
+- **Density is per-control, not per-subtree.** A control reads the density context and emits
+  `data-density`, which overrides `--dx-control` for that element alone. `DensityProvider` renders no
+  DOM. Mid-branch it did emit a `dx-density-*` class, and that was a mistake worth knowing about: the
+  class sets the knob for everything below it, so a provider meant for one region resized unrelated
+  descendants (this is how form labels ended up at 40px). A region that genuinely wants subtree-wide
+  density applies the class itself, at the call site — `Toolbar.Root` does. Verify a
+  `Toolbar density='sm'` still shrinks its children.
 
 ## 5. Grid alignment — forms inside cards and dialogs
 
@@ -96,7 +100,24 @@ gutter grid.
 - Scrolling forms (`Form.Viewport scroll`) deliberately still own a grid, because the gutter hosts
   the scrollbar. Check a long settings panel still scrolls with the scrollbar in the gutter.
 
-## 6. Highest-risk regression to re-check
+## 6. Properties companion — vertical position and control sizes
+
+Two separate bugs you reported in that panel, with different causes; both are fixed, and both are
+worth a look in the running app because each was invisible to tests.
+
+- **Form sat in the middle/bottom of the pane, not the top.** `Form.Viewport scroll` was handing the
+  consumer's props (including the `[grid-area:content]` that `Panel.Content asChild` merges in) to
+  the inner `ScrollArea.Root` instead of the `Column.Root` it renders. Inside `Column.Root`'s grid
+  nothing is named `content`, and CSS answers an unmatched area name by inventing a track rather
+  than ignoring it — so the grid computed `228px 492px` for one child and the form landed in row 2.
+  Check: the form starts at the top of the companion, and any `Panel.Content asChild` host still
+  fills its pane.
+- **Labels and inputs were 40px, not 32px.** `plugin-deck`'s `Pane.Root` carried `dx-density-lg`,
+  which sets `--dx-control` for the whole pane; the value was meant for the toolbar. The toolbar now
+  takes `lg` from its own `DensityProvider` and the body keeps `md`. Check: pane toolbar buttons are
+  still 40px, while form rows in the body are 32px.
+
+## 7. Highest-risk regression to re-check
 
 During development, one change **dropped every class from every `Card.Root`** — cards lost their
 surface, border and width clamp — and it passed the type checker, 119 tests and CI. Only a
@@ -109,7 +130,7 @@ screenshot caught it. It is fixed, but it is the failure mode to watch for:
 Cards appear in: plugin-inbox stacks, plugin-space collections, plugin-preview, masonry grids,
 plugin-tasks, plugin-blogger, plugin-projects, plugin-thread.
 
-## 7. Lower-risk mechanical changes
+## 8. Lower-risk mechanical changes
 
 Quick sanity only:
 
@@ -126,7 +147,7 @@ Quick sanity only:
 - **Rails lost a 1px fudge** (`--dx-rail-size` 49px → 48px). Check the topbar/sidebar rails still
   align with no 1px seam.
 
-## 8. Known gaps — not regressions
+## 9. Known gaps — not regressions
 
 Recorded in `AUDIT.md`; do not report these as bugs:
 
@@ -140,7 +161,7 @@ Recorded in `AUDIT.md`; do not report these as bugs:
 - ~10 hand-rolled 3-track grids (`react-ui-thread`, `react-ui-chat`, `AppBar`, …) are unmigrated;
   they look the same as before.
 
-## 9. If something looks wrong
+## 10. If something looks wrong
 
 The single most useful diagnostic — read the surface chain at the broken element:
 

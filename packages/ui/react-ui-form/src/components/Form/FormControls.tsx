@@ -116,17 +116,19 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
       );
     }
 
+    // Forwarded props land on the OUTERMOST element, never on the inner ScrollArea. A host places
+    // this component by passing placement down (`Panel.Content asChild` merges `[grid-area:content]`
+    // into it); on an inner element that name belongs to no line of the enclosing Column grid, and
+    // CSS answers an unmatched name by fabricating an implicit row rather than ignoring it — which
+    // silently pushed the form into a phantom second row (AUDIT.md §3).
     if (scroll) {
       return (
-        <Column.Root gutter={gutter} classNames={['dx-expander', span]}>
-          <ScrollArea.Root
-            {...composableProps(props, { classNames: styles.viewport() })}
-            orientation='vertical'
-            centered
-            padding
-            thin
-            ref={forwardedRef}
-          >
+        <Column.Root
+          {...composableProps(props, { classNames: ['dx-expander', span, styles.viewport()] })}
+          gutter={gutter}
+          ref={forwardedRef}
+        >
+          <ScrollArea.Root orientation='vertical' centered padding thin>
             <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>
