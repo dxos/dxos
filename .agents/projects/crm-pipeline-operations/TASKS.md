@@ -7,7 +7,7 @@ _Resume: watch PR #12441 Check to green; surface Composer preview URL. Last: imp
 Understand the current surface area: which operations touch Mailbox messages and
 Person/Organization objects, how the email pipeline is triggered, and where the
 test coverage sits. Deliverable: AUDIT + spec in
-`agents/superpowers/specs/2026-08-02-crm-pipeline-operations-spec.md`.
+`packages/plugins/plugin-crm/DESIGN.md`.
 
 ### Tasks
 
@@ -38,4 +38,4 @@ schemas); docs in `agents/superpowers/specs/`; finish with commits + PR.
 
 ### References
 
-- Spec/audit: `agents/superpowers/specs/2026-08-02-crm-pipeline-operations-spec.md`
+- Spec/audit: `packages/plugins/plugin-crm/DESIGN.md`

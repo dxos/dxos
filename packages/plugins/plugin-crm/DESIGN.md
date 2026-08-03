@@ -1,4 +1,4 @@
-# CRM Pipeline Operations — Audit & Spec
+# plugin-crm — CRM Pipeline Operations: Audit & Design
 
 - Date: 2026-08-02
 - Project: `crm-pipeline-operations` (`.agents/projects/crm-pipeline-operations/TASKS.md`)
