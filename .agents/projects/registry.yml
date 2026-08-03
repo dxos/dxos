@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: crm-pipeline-operations
+    status: active
+    user: burdon
+    host: burdon-studio-2022
+    created: 2026-08-02
+    summary: 'CRM pipeline operations: deprecate crm skill instructions, audit Mailbox/Person/Org operations, spec CRM actions, scaffold research operations + deterministic fixture tests.'
+    tasks: .agents/projects/crm-pipeline-operations/TASKS.md
+    design: agents/superpowers/specs/2026-08-02-crm-pipeline-operations-spec.md
+    prs: []
+    resume: 'Exploration phase — review plugin-crm, plugin-projects, plugin-inbox, pipeline-email, stories-inbox.'
+
   - name: lenses
     status: active
     user: josiah
