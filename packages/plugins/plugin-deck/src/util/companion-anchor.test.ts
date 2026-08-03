@@ -4,7 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { findAttendedPlank, getRenderedPlanks, resolveCompanionAnchor } from './companion-anchor';
+import {
+  findAttendedPlank,
+  getRenderedPlanks,
+  resolveCompanionAnchor,
+  resolveCompanionPlank,
+} from './companion-anchor';
 
 describe('getRenderedPlanks', () => {
   test('lays out every active plank by default', ({ expect }) => {
@@ -66,5 +71,34 @@ describe('resolveCompanionAnchor', () => {
 
   test('an empty deck has no anchor', ({ expect }) => {
     expect(resolveCompanionAnchor([], ['a'])).toBeUndefined();
+  });
+});
+
+describe('resolveCompanionPlank', () => {
+  test('a qualified companion id targets its own plank', ({ expect }) => {
+    expect(resolveCompanionPlank({ subject: 'a/~comments', planks: ['a', 'b'], attended: ['b'] })).toBe('a');
+    expect(
+      resolveCompanionPlank({ subject: 'mailbox/message-1/~comments', planks: ['mailbox/message-1'], attended: [] }),
+    ).toBe('mailbox/message-1');
+  });
+
+  test('a bare variant targets the attended plank', ({ expect }) => {
+    // `~comments` is what CommentOperation.Create passes: it knows the variant, not the plank.
+    expect(resolveCompanionPlank({ subject: '~comments', planks: ['a', 'b'], attended: ['a'] })).toBe('a');
+    expect(resolveCompanionPlank({ subject: '~comments', planks: ['a', 'b'], attended: [] })).toBe('b');
+  });
+
+  test('an explicit anchor wins over attention for a bare variant', ({ expect }) => {
+    expect(resolveCompanionPlank({ subject: '~comments', anchor: 'a', planks: ['a', 'b'], attended: ['b'] })).toBe('a');
+  });
+
+  test('an anchor does not override the plank a qualified id names', ({ expect }) => {
+    expect(resolveCompanionPlank({ subject: 'a/~comments', anchor: 'b', planks: ['a', 'b'], attended: ['b'] })).toBe(
+      'a',
+    );
+  });
+
+  test('a bare variant has no target when the deck is empty', ({ expect }) => {
+    expect(resolveCompanionPlank({ subject: '~comments', planks: [], attended: [] })).toBeUndefined();
   });
 });

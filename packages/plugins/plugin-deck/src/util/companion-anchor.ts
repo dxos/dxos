@@ -44,3 +44,27 @@ export const findAttendedPlank = (planks: readonly string[], attended: readonly 
  */
 export const resolveCompanionAnchor = (planks: readonly string[], attended: readonly string[]): string | undefined =>
   findAttendedPlank(planks, attended) ?? planks[planks.length - 1];
+
+export type ResolveCompanionPlankOptions = {
+  /** Qualified companion id (`<plank>/~<variant>`) or a bare `~<variant>`. */
+  subject: string;
+  /** Plank named by the caller, used only when the subject names none. */
+  anchor?: string;
+  planks: readonly string[];
+  attended: readonly string[];
+};
+
+/**
+ * The plank whose companion a subject targets. A qualified companion id carries its plank as the parent
+ * path; a bare `~<variant>` carries none — the form `useShowItem` and the comment/transcript operations
+ * pass — so it anchors to the caller's plank, else the attended one.
+ */
+export const resolveCompanionPlank = ({
+  subject,
+  anchor,
+  planks,
+  attended,
+}: ResolveCompanionPlankOptions): string | undefined => {
+  const separator = subject.lastIndexOf('/');
+  return separator === -1 ? (anchor ?? resolveCompanionAnchor(planks, attended)) : subject.slice(0, separator);
+};

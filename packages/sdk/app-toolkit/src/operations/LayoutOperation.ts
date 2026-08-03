@@ -449,11 +449,12 @@ export const UpdateCompanion = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.Union(Schema.String, Schema.Null).annotations({
-      description: 'The companion node id to show, or null to close a companion.',
+      description:
+        'The companion node id to show — either qualified (`<plank>/~<variant>`) or a bare `~<variant>`, which targets the attended plank. Null closes a companion.',
     }),
     anchor: Schema.optional(Schema.String).annotations({
       description:
-        'When closing (subject: null): the plank whose companion to close. Companion state is per plank, so a close from a specific plank must name it; without it the handler falls back to the attended plank.',
+        'The plank whose companion to open or close, used when the subject names no plank (a close, or a bare `~<variant>`). Companion state is per plank, so a call from a specific plank must name it; without it the handler falls back to the attended plank.',
     }),
   }),
   output: Schema.Void,

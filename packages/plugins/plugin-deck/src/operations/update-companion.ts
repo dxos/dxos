@@ -11,7 +11,7 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { DeckCapabilities } from '../types';
-import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, resolveCompanionAnchor } from '../util';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, resolveCompanionAnchor, resolveCompanionPlank } from '../util';
 import { addCompanionPlank, updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = LayoutOperation.UpdateCompanion.pipe(
@@ -34,8 +34,18 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateCompanion> = L
         const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
         const variant = Attention.getLinkedVariant(input.subject);
         viewState.update(companionAspect, COMPANION_VIEW_STATE_CONTEXT, (prev) => ({ ...prev, variant }));
-        // A companion id is `<plank>/~<variant>`, so the plank it belongs to is the subject's parent.
-        const plankId = input.subject.slice(0, input.subject.lastIndexOf('/'));
+        const deck = yield* DeckCapabilities.getDeck();
+        const attention = yield* Capability.get(AttentionCapabilities.Attention);
+        const plankId = resolveCompanionPlank({
+          subject: input.subject,
+          anchor: input.anchor,
+          planks: deck.active,
+          attended: attention.getCurrent(),
+        });
+        if (!plankId) {
+          return;
+        }
+
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
           updateActiveDeck(state, { companionPlanks: addCompanionPlank(state, plankId) }),
         );
