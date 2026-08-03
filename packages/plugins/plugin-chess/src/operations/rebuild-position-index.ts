@@ -8,7 +8,8 @@ import * as Option from 'effect/Option';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Game, GameVariantMismatchError, loadGame } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
+import { GameVariantMismatchError, loadGame } from '@dxos/plugin-game/types';
 
 import * as positionIndexInternal from '../internal/position-index';
 import { Chess, ChessOperation, ChessPositionIndex } from '../types';
