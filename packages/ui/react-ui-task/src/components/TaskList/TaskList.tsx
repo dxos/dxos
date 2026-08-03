@@ -101,7 +101,11 @@ type TaskRowProps = {
 };
 
 const TaskRow = ({ task, onUpdate, onDelete, onSelect }: TaskRowProps) => {
-  const done = task.status === 'done';
+  // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
+  // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
+  const done = current.status === 'done';
   const handleToggle = useCallback(() => onUpdate?.(task, { status: done ? 'todo' : 'done' }), [onUpdate, task, done]);
 
   return (
@@ -128,10 +132,10 @@ const TaskRow = ({ task, onUpdate, onDelete, onSelect }: TaskRowProps) => {
           className={onSelect ? 'truncate flex-1 cursor-pointer' : 'truncate flex-1'}
           onClick={onSelect ? () => onSelect(task) : undefined}
         >
-          {task.title}
+          {current.title}
         </span>
-        {task.priority && task.priority !== 'none' && <Tag hue='neutral'>{task.priority}</Tag>}
-        {task.assignee && <AssigneeChip assignee={task.assignee} />}
+        {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
+        {current.assignee && <AssigneeChip assignee={current.assignee} />}
         {onDelete && (
           <IconButton
             variant='ghost'

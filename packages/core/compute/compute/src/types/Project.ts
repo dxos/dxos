@@ -34,13 +34,13 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     description: Schema.optional(Schema.String),
 
     /** Owned agent instructions (created + parented at the plugin layer). */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true))),
 
     /** Routines created within the scope of this project. */
     routines: Schema.Array(Ref.Ref(Routine.Routine)),
 
     /** Owned collection of artifacts (documents, outliners, tables, ...) managed by the project. */
-    artifacts: Ref.Ref(Collection.Collection).pipe(Schema.optional),
+    artifacts: Schema.optional(Ref.Ref(Collection.Collection)),
 
     /** What done means for this project. */
     goals: Schema.optional(Schema.Array(Goal)),
