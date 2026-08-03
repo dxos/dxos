@@ -13,6 +13,16 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
+  # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
+  # than a step inside `bundle`: a perf budget must not fail the local build you are running in
+  # order to measure the very thing it is budgeting.
+  check-boot-budget:
+    command: node scripts/check-boot-budget.mjs
+    deps:
+      - bundle
+    inputs:
+      - scripts/check-boot-budget.mjs
+      - out/composer/index.html
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
   # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
   # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
