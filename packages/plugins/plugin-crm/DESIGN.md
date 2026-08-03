@@ -293,3 +293,55 @@ proxy) with a regression test in `plugin-inbox/src/types/Mailbox.test.ts`.
   the sent-mail-recipients fix lives in the `mailbox-research` project.
 - **Edge execution**: `ProcessMailbox` uses only `Database.Service` and is edge-compatible by
   construction; the feed trigger kind is currently local-dispatcher-only.
+
+## 8. Real-mailbox fixtures — capture today, R2 storage design
+
+### 8.1 How real-user mailbox fixtures are captured today
+
+- **Capture UI** — the `MailboxSync` story's `ArchiveModule`
+  (`stories-inbox/src/modules/ArchiveModule.tsx`): the user connects a real account, syncs, then
+  **stars** the messages worth keeping (starring is how a fixture is nominated); "Download
+  starred" exports exactly the starred set as JSON (`exportFeedMessages` → `Obj.toJSON` per
+  message). A single selected message can be saved alone (raw email HTML when it has an HTML body,
+  else JSON). Upload **appends** (`importMessages` re-mints message ids so a file can re-enter the
+  space it came from); Reset returns the mailbox to a disconnected clean slate.
+- **Consumption** — `stories-brain` reads the archive from a **git-ignored local path**
+  (`fixtures/local/mailbox-feed.json`), overridable via the `MAILBOX_FEED_FIXTURE` env var
+  (`stories-brain/src/testing/harness/config.ts`). Tests/benches over the private corpus are
+  effectively single-machine: the fixture lives only where it was downloaded.
+- **Scrubbing** — the repo is public, so anything _committed_ is scrubbed (addresses →
+  `user@example.com`, per-recipient URL tokens → `REDACTED`; see the m1–m3 HtmlViewer fixtures).
+  The local archives are raw and private by convention only.
+- **Gaps**: no sharing between machines/developers, no versioning, no auditable storage boundary
+  for PII, and every consumer wires its own path convention.
+
+### 8.2 Design — save a mailbox archive to a secure R2 bucket
+
+Goal: a user saves their (raw, private) mailbox archive to a bucket once; any of their machines —
+and, with explicit grants, teammates — can run local tests against it. Never in CI, never in git.
+
+- **Bucket**: `dxos-test-fixtures` (private R2 bucket, no public access, default encryption,
+  object versioning + a lifecycle rule expiring non-current versions). Key scheme:
+  `mailbox/<user>/<name>-<yyyy-mm-dd>.json` (the ArchiveModule's existing fixture-name derivation).
+- **Auth**: R2's S3-compatible **scoped API tokens** — a read-only token for consumers
+  (`DX_FIXTURES_R2_TOKEN` + `DX_FIXTURES_R2_ENDPOINT` env), and per-user write tokens scoped to
+  the user's prefix for capture. Tokens live in the developer's shell env / 1Password, never in
+  the repo.
+- **Upload path (phased)**:
+  1. _Phase 1 — CLI_: a small script (`stories-inbox/scripts/fixture-upload.mjs`) that PUTs a
+     downloaded archive via the S3 API (or `wrangler r2 object put` for account holders). The
+     ArchiveModule keeps producing the file; the script moves it.
+  2. _Phase 2 — in-app_: an EDGE endpoint (authenticated by HALO identity) that issues short-lived
+     **presigned PUT URLs** for the caller's own prefix, so ArchiveModule grows a "Save to cloud"
+     button next to "Download starred" and the token never reaches the browser.
+- **Consumption**: extend the fixture resolution so `MAILBOX_FEED_FIXTURE` accepts an `r2://key`
+  (or plain https presigned URL) alongside a file path; a loader fetches with the read token and
+  caches into the git-ignored `fixtures/local/` so subsequent runs are offline. Tests gate on the
+  token's presence (`describe.skipIf(!process.env.DX_FIXTURES_R2_TOKEN)`) exactly like the Enron
+  dataset gate — CI has no token, so CI never sees the corpus.
+- **Privacy stance**: bucket contents are treated as sensitive PII regardless of scrubbing —
+  private bucket + scoped tokens is the boundary, scrubbing remains mandatory only for anything
+  that leaves it (committed fixtures, issue reports). An optional scrub pass (the m1–m3 rules) can
+  run at upload time for archives intended for sharing.
+
+Status: design only — no bucket, script, or loader is implemented in this PR.

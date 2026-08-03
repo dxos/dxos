@@ -36,6 +36,19 @@ schemas); docs in `agents/superpowers/specs/`; finish with commits + PR.
 - [x] **Fixture-driven end-to-end tests for the chosen operations (deterministic)** — `research.test.ts`, `process-mailbox.test.ts` (feed → cursor → contact → profile chain, idempotency, gate), `crm-pipeline.test.ts`. Found + fixed a plugin-inbox bug: `Mailbox.recordExtraction` dropped the first entry on a fresh mailbox (detached-record `??=` write); regression test added in `Mailbox.test.ts`.
 - [x] **Format, lint, test; open PR via submit-pr** — repo lint green, oxfmt clean; PR #12441 opened. CI round 1: plugin-tasks OutlineArticle flake (chip spawned, passed on rerun); stories-inbox ExtractMessageList expected `linked: 2` — calibrated against the recordExtraction first-entry bug — updated to 3 (travel pair → Trip, digest → contact).
 
+## Phase 4: Surface & fixtures
+
+User-directed follow-on (2026-08-03): make the pipeline reachable from the mailbox UI, prove it in
+a cross-plugin story, and design the real-fixture path.
+
+### Tasks
+
+- [x] **Wire AnalyzeMailbox-style toolbar action for ProcessMailbox** — `capabilities/mailbox-action.ts` contributes `InboxCapabilities.MailboxAction` ("Process CRM", `research: true`).
+- [x] **stories-inbox ProcessMailbox story** — seeds the shared demo fixture + gate Organizations, runs the operation via OperationInvoker; play test asserts 3 persons/profiles/linked + cursor + idempotent re-run (12/12 green).
+- [x] **Review fixture capture; design R2 mechanism** — DESIGN.md §8: ArchiveModule star→export→import flow + `MAILBOX_FEED_FIXTURE` consumption reviewed; private `dxos-test-fixtures` R2 bucket design (scoped S3 tokens, phased CLI→presigned-URL upload, token-gated test consumption). Design only.
+- [x] **TESTPLAN** — `packages/plugins/plugin-crm/TESTPLAN.md`: storybook smoke, sync, toolbar path, feed-trigger template path, invariants.
+
 ### References
 
 - Spec/audit: `packages/plugins/plugin-crm/DESIGN.md`
+- Test plan: `packages/plugins/plugin-crm/TESTPLAN.md`

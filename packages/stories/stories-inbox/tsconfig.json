@@ -76,6 +76,9 @@
       "path": "../../plugins/plugin-connector"
     },
     {
+      "path": "../../plugins/plugin-crm"
+    },
+    {
       "path": "../../plugins/plugin-debug"
     },
     {

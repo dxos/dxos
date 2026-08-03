@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/crm-pipeline-operations/TASKS.md
     design: packages/plugins/plugin-crm/DESIGN.md
     prs: [12441]
-    resume: 'PR #12441 OPEN — watch Check to green, surface preview URL. Audit+spec in packages/plugins/plugin-crm/DESIGN.md; ops ProcessMailbox/ResearchPerson/ResearchOrganization + crmPipeline template shipped with deterministic fixture tests; plugin-inbox recordExtraction first-entry bug fixed.'
+    resume: 'PR #12441 OPEN — watch Check to green. Phase 4 shipped: Process CRM mailbox toolbar action, stories-inbox ProcessMailbox story (play test green), R2 fixture design (DESIGN.md §8), TESTPLAN.md. Audit+spec in packages/plugins/plugin-crm/DESIGN.md; plugin-inbox recordExtraction first-entry bug fixed.'
 
   - name: lenses
     status: active

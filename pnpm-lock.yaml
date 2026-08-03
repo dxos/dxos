@@ -21264,6 +21264,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-crm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-crm
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../plugins/plugin-debug
