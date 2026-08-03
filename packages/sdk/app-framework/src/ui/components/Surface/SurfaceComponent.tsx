@@ -27,6 +27,7 @@ import { type PluginManager } from '../../../core';
 import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
+import { type SurfaceManager } from './SurfaceManager';
 import { useSurfaceManager } from './SurfaceManagerContext';
 import { nextDataChurn, surfaceMetrics } from './SurfaceMetrics';
 import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
@@ -36,27 +37,20 @@ const DEBUG = import.meta.env?.VITE_DEBUG;
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
 
-// One demand fire per (manager, role): Surface instances are numerous (every card in a grid
-// mounts one), so the local dedup keeps mount cost flat instead of re-entering the scheduler.
-const requestedRoles = new WeakMap<PluginManager.PluginManager, Set<string>>();
-
 /**
  * Fires the role's surface demand event so modules gated on it load (see the `roles` option of
- * the surface module maker). Safe to call repeatedly; re-fires are deduped per manager.
+ * the surface module maker). Safe to call repeatedly: the surface manager claims the first
+ * demand per role, which keeps mount cost flat where Surface instances are numerous (every card
+ * in a grid mounts one) instead of re-entering the scheduler.
  */
-const requestSurfaces = (manager: PluginManager.PluginManager | undefined, role: string): void => {
-  if (!manager || role === '') {
+const requestSurfaces = (
+  surfaceManager: SurfaceManager,
+  manager: PluginManager.PluginManager | undefined,
+  role: string,
+): void => {
+  if (!manager || !surfaceManager.requestRole(role)) {
     return;
   }
-  let requested = requestedRoles.get(manager);
-  if (!requested) {
-    requested = new Set();
-    requestedRoles.set(manager, requested);
-  }
-  if (requested.has(role)) {
-    return;
-  }
-  requested.add(role);
   EffectEx.runDetached(manager.activate(ActivationEvents.SurfacesRequested(role)));
 };
 
@@ -225,8 +219,8 @@ export const SurfaceComponent = memo(
     // contributions land in the candidates atom and re-render this surface.
     const pluginManager = useOptionalPluginManager();
     useEffect(() => {
-      requestSurfaces(pluginManager, effectiveRole);
-    }, [pluginManager, effectiveRole]);
+      requestSurfaces(surfaceManager, pluginManager, effectiveRole);
+    }, [surfaceManager, pluginManager, effectiveRole]);
 
     // NOTE: The data guard runs per render so the surface re-dispatches on reactive data changes.
     const definitions = matchCandidates(roleCandidates, effectiveRole, data);
@@ -361,7 +355,7 @@ export const useIsSurfaceAvailable = (): IsSurfaceAvailable => {
       if (candidates.length === 0) {
         // A miss may mean the role's modules are gated and not yet loaded: fire the demand
         // event so a later check (or a mounted Surface) sees the loaded contributions.
-        requestSurfaces(pluginManager, effectiveRole);
+        requestSurfaces(surfaceManager, pluginManager, effectiveRole);
       }
 
       return candidates.length > 0;

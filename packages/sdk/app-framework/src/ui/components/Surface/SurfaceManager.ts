@@ -68,6 +68,10 @@ export class SurfaceManager {
   // contribution warns once rather than on every index rebuild.
   #warnedInvalidIds = new Set<string>();
 
+  // Roles whose surface demand event has already been dispatched, so re-renders and
+  // repeated availability checks do not re-activate the role's modules.
+  #requestedRoles = new Set<string>();
+
   constructor(capabilities: CapabilityManager.CapabilityManager) {
     this.#capabilities = capabilities;
   }
@@ -75,6 +79,19 @@ export class SurfaceManager {
   /** Derived atom yielding the (position-sorted) candidates for a single role. */
   candidatesAtom(role: string): Atom.Atom<ReadonlyArray<Definition>> {
     return this.#candidates(role);
+  }
+
+  /**
+   * Claims the first surface demand for a role, returning `true` only to that first caller so
+   * it can fire the activation event. Subsequent calls — re-renders, repeated availability
+   * checks — return `false`.
+   */
+  requestRole(role: string): boolean {
+    if (role === '' || this.#requestedRoles.has(role)) {
+      return false;
+    }
+    this.#requestedRoles.add(role);
+    return true;
   }
 
   /** Drops definitions with an invalid local id, warning once per id. */
