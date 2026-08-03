@@ -5,7 +5,7 @@
  * aspects (bar, well, hover, current, selected) derive from the actual surface and stay visible at
  * any elevation, and surface-matching elements (avatars, gradients) can read it directly.
  *
- * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/semantic.css`.
+ * Enter a zone with `data-surface="<level>"` — the levels are the ladder in `theme/surfaces.css`.
  * The `dx-*-surface` classes are role-named aliases of the same thing, kept because they read well
  * at call sites (`dx-card-surface` says more than `data-surface="raised"`).
  *
@@ -100,7 +100,7 @@
   /*
    * Aspect derivation. Custom-property substitution runs once per scope, so the formulas must be
    * re-evaluated wherever `--surface-bg` changes — these two blocks are that one place
-   * (semantic.css declares the same formulas against the root fallback, for content outside any
+   * (surfaces.css declares the same formulas against the root fallback, for content outside any
    * zone). Keep the offsets in sync with the Aspects block there.
    *
    * States re-derive in EVERY zone, including the aspect zones: a row inside a toolbar should

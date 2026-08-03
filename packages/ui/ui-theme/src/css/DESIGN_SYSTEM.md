@@ -6,11 +6,11 @@ This document describes how color tokens are organized in `ui-theme`, the naming
 
 Three layers, each consuming the one below:
 
-| Tier        | File                                         | Purpose                                                                                                                                                                 | Example                                                                 |
-| ----------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| 1. Scale    | [`theme/palette.css`](./theme/palette.css)   | Raw color values. Extends Tailwind's neutral/blue scales with intermediate stops and aliases the `primary-*` ramp to `blue-*`.                                          | `--color-neutral-150`, `--color-primary-500`                            |
-| 2. Hue role | [`theme/styles.css`](./theme/styles.css)     | Per-hue role tokens for every Tailwind hue plus `neutral`. Six roles each: `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`. Light/dark resolved via `light-dark()`. | `--color-red-surface`, `--color-neutral-border`                         |
-| 3. Semantic | [`theme/semantic.css`](./theme/semantic.css) | Named UI surfaces and states. May reference hue-role tokens (e.g. `error-surface` → `rose-surface`) or compose directly from the scale.                                 | `--color-card-surface`, `--color-current-surface`, `--color-error-text` |
+| Tier        | File                                                                                  | Purpose                                                                                                                                                                 | Example                                                                 |
+| ----------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| 1. Scale    | [`theme/palette.css`](./theme/palette.css)                                            | Raw color values. Extends Tailwind's neutral/blue scales with intermediate stops and aliases the `primary-*` ramp to `blue-*`.                                          | `--color-neutral-150`, `--color-primary-500`                            |
+| 2. Hue role | [`theme/styles.css`](./theme/styles.css)                                              | Per-hue role tokens for every Tailwind hue plus `neutral`. Six roles each: `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`. Light/dark resolved via `light-dark()`. | `--color-red-surface`, `--color-neutral-border`                         |
+| 3. Semantic | [`theme/surfaces.css`](./theme/surfaces.css) + [`theme/roles.css`](./theme/roles.css) | Named UI surfaces/aspects, and the non-surface roles. May reference hue-role tokens (e.g. `error-surface` → `rose-surface`) or compose directly from the scale.         | `--color-card-surface`, `--color-current-surface`, `--color-error-text` |
 
 A consumer should reach for the highest tier that fits. Use `bg-card-surface`, not `bg-neutral-825`. Use `text-error-text`, not `text-rose-700`.
 
@@ -42,7 +42,7 @@ mode; inverted toward white in light mode. Chrome sits **below** the document ca
 surfaces sit **above** it, so the app reads as paper on a desk rather than paper in a well.
 
 There are exactly six **levels**. Every named surface token is an alias of exactly one of them —
-never set a surface to a raw scale value. This table mirrors the assignments in `semantic.css`,
+never set a surface to a raw scale value. This table mirrors the assignments in `surfaces.css`,
 which is the source of truth; update both together.
 
 | Level     | Dark    | Light   | Named surfaces                                             |
@@ -54,7 +54,7 @@ which is the source of truth; update both together.
 | `overlay` | `n-800` | `n-75`  | `modal-surface` (dialogs, sheets, drawers)                 |
 | `popup`   | `n-775` | `n-50`  | `popover-surface` (menus, popovers, toasts, tooltips)      |
 
-The primitive `--dx-surface-{sunken…popup}` is defined in `semantic.css` using `light-dark()`. Raw
+The primitive `--dx-surface-{sunken…popup}` is defined in `surfaces.css` using `light-dark()`. Raw
 scale values (`n-*`) are in `palette.css` — the table above is for human reference only.
 
 ### Aspects — derived, not levels
@@ -100,7 +100,7 @@ Each surface that hosts text declares a matching `*-fg` (defaulting to `n-950 / 
 
 ## Elevation primitive
 
-The `--dx-surface-*` custom properties in `semantic.css` are the single source of truth for the
+The `--dx-surface-*` custom properties in `surfaces.css` are the single source of truth for the
 surface ladder. They are private (`--dx-*` prefix) — never use them directly in component CSS; use the
 named surface tokens (`bg-card-surface`, `dx-modal-surface`, etc.) instead.
 
@@ -108,7 +108,7 @@ When adding a new surface:
 
 1. Decide whether it is a **level** or an **aspect**. If it should shift with whatever hosts it
    (a bar, a well, a state), it is an aspect — add it to the aspect block, not the ladder.
-2. For a level, add `--color-<name>-surface: var(--dx-surface-<level>);` in `semantic.css`.
+2. For a level, add `--color-<name>-surface: var(--dx-surface-<level>);` in `surfaces.css`.
 3. Add a matching `--color-<name>-fg` if text/icons sit on it.
 4. Add the zone to `surface.css` so it publishes `--surface-bg` and re-derives the aspects.
 
@@ -219,7 +219,7 @@ Each provides `bg`, `bg-hover`, `surface`, `fg`, `text`, `border`.
 ## Adding a new token
 
 1. Does an existing semantic token already cover it? For a new named surface, check the elevation ladder first — the new surface probably fits an existing level and should alias `--dx-surface-<level>` rather than a raw scale value.
-2. Does it represent a new named surface, state, or status? Add it to `semantic.css` referencing scale or hue-role tokens — never raw hex.
+2. Does it represent a new named surface, state, or status? Add it to `surfaces.css` (surfaces/aspects) or `roles.css` (everything else), referencing scale or hue-role tokens — never raw hex.
 3. Follow the suffix order: `{name}-{part}[-{state}]`.
 4. If the new token will be used through a Tailwind utility that the source-scan can't see (e.g. CSS file, dynamic class), add it to `@source inline(...)` in [`main.css`](./main.css).
 5. If it ships state variants (`-hover`, `-active`), declare them adjacent to the base in the same block.

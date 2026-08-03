@@ -1,0 +1,84 @@
+/**
+ * Roles — named tokens that are not surfaces: text emphasis, control fills, accent, separators,
+ * scrollbar, and the off-ladder grid "paper" palette.
+ *
+ * The elevation ladder and everything derived from a host surface lives in `surfaces.css`.
+ *
+ * Naming convention: --color-{name}-{part}[-{state}] — see DESIGN_SYSTEM.md.
+ */
+
+@theme {
+  /*
+   * Text emphasis — foregrounds at decreasing emphasis, anchored on --color-base-fg (strongest):
+   *   base-fg → description → subdued → placeholder (weakest).
+   * Tuned for legibility against the surfaces rather than mapped to the elevation ladder (which
+   * governs backgrounds, not text contrast), so these stay explicit neutrals.
+   */
+  --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-600));
+  --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
+
+  /*
+   * Controls — the input/control fill is a deliberate off-ladder token (cf. the grid "paper"
+   * surfaces). It backs text inputs and the default/ghost button (bg-input-bg) and must contrast
+   * whatever surface it sits on: a subtle inset well in light mode, a raised fill in dark mode that
+   * reads lighter than the topmost surface. Do not map it to an elevation level.
+   */
+  --color-input-bg: light-dark(var(--color-neutral-250), var(--color-neutral-700));
+  --color-input-fg: var(--color-base-fg);
+
+  /* Focus indicators are a global affordance, not a per-surface property. */
+  --color-focus-ring: light-dark(var(--color-blue-400), var(--color-blue-600));
+  --color-focus-ring-subtle: light-dark(var(--color-neutral-300), var(--color-neutral-600));
+
+  /* Accent (primary) */
+  --color-accent-bg: light-dark(var(--color-blue-600), var(--color-blue-700));
+  --color-accent-bg-hover: light-dark(var(--color-blue-700), var(--color-blue-800));
+  --color-accent-fg: var(--color-blue-100);
+  --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-400));
+  --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
+
+  /* Unaccented */
+  --color-un-accent: var(--color-neutral-400);
+  --color-un-accent-hover: var(--color-neutral-500);
+
+  /* Separator */
+  --color-primary-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-700));
+  --color-input-separator: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-subdued-separator: light-dark(var(--color-neutral-250), var(--color-neutral-775));
+  --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
+
+  /* Scrollbar */
+  --color-scrollbar-track: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-scrollbar-thumb: light-dark(var(--color-neutral-200), var(--color-neutral-600));
+  --color-scrollbar-thumb-active: light-dark(var(--color-neutral-200), var(--color-neutral-600));
+  --color-scrollbar-thumb-hover: light-dark(var(--color-neutral-200), var(--color-neutral-600));
+
+  /*
+   * Sheet / Grid — intentionally OFF the elevation ladder.
+   * NOTE: Update main.css when changing grid tokens (and restart dev server).
+   *
+   * These are "paper" surfaces for the data grid: maximum-contrast canvases (near-white in light,
+   * near-black in dark) plus saturated selection/comment accents. The elevation ladder is
+   * monotonic (light: lighter = higher), so it cannot express a surface that is simultaneously the
+   * lightest in light mode and the darkest in dark mode. Keep these as explicit neutrals/accents;
+   * do not fold them into --dx-surface-*.
+   */
+  --color-axis-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-axis-text: light-dark(var(--color-neutral-700), var(--color-neutral-300));
+  --color-axis-selected-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-axis-selected-text: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+
+  --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
+  --color-grid-selection-surface: light-dark(var(--color-blue-500), var(--color-blue-400));
+  --color-grid-selection-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
+  --color-grid-comment-active: light-dark(
+    oklch(from var(--color-green-400) l c h / 0.5),
+    oklch(from var(--color-green-600) l c h / 0.5)
+  );
+}
