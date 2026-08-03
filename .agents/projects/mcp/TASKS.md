@@ -56,7 +56,7 @@ Spec: `edge:packages/services/mcp-space-service/DESIGN.md` §4.2–4.6 (audit, h
 space session, open questions) and §9 (milestones M6–M9).
 
 - [x] Hub identity/access-control audit — KEY FINDING: there is **no server-side passkey
-      verification anywhere today**. The hub's `Identity`/`Passkey` tables are annotated vestigial
+      verification in hub-service today** (EDGE does have it — see the correction below). The hub's `Identity`/`Passkey` tables are annotated vestigial
       ("recovery passkeys now live as HALO credentials on the client"); `@simplewebauthn/server`
       is a dependency nothing calls. Real passkeys are created client-side by
       `plugin-client/src/operations/create-passkey.ts` with `rp.id = location.hostname` — i.e.
