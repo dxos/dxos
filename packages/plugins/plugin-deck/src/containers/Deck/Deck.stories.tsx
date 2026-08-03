@@ -487,6 +487,27 @@ export const ManyPlanksOverscroll: Story = {
   },
 };
 
+// `flatten`: only the current plank is laid out, its predecessors becoming breadcrumbs in the heading.
+// Expanding is meaningless there — there is no sliding deck to expand into — so the control is withheld.
+export const ManyPlanksFlattened: Story = {
+  tags: ['test'],
+  args: {
+    count: 3,
+    settings: {
+      flatten: true,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    // One plank renders, its toolbar is up (the close control is there), and it offers no expand.
+    await waitFor(() => expect(canvasElement.querySelectorAll('[data-testid="deck.plank"]')).toHaveLength(1));
+    await expect(canvasElement.querySelectorAll('[data-testid="plankHeading.close"]').length).toBeGreaterThan(0);
+    await expect(canvasElement.querySelectorAll('[data-testid="plankHeading.expand"]')).toHaveLength(0);
+  },
+};
+
 /**
  * The mailbox-shaped path: a launcher plank whose rows level-open a message plank beside it.
  *

@@ -11,7 +11,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
-import { useBreakpoints, useDeckState } from '#hooks';
+import { useBreakpoints, useDeckSettings, useDeckState } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation, type ResolvedPart } from '#types';
 
@@ -26,8 +26,6 @@ export type PlankCapabilities = {
   expandToggle?: boolean;
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  /** Eligible to open the deck companion (offered on any plank that has one, when the companion is off). */
-  companion?: boolean;
 };
 
 export type UseDeckPlankOptions = {
@@ -63,6 +61,7 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const { deck, state } = useDeckState();
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
+  const { flatten } = useDeckSettings();
   const node = useNode(graph, id);
   // Subscribe reactively to the node's actions: they are loaded asynchronously by `Graph.expand`
   // below, and the node atom does not re-emit when action edges arrive, so a one-shot read would
@@ -78,12 +77,13 @@ export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPla
   const capabilities = useMemo<PlankCapabilities>(
     () => ({
       fullscreenToggle: breakpoint !== 'mobile' && part === 'main',
-      // Only worth offering while the deck slides: a lone plank already fills the viewport.
-      expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
+      // Only worth offering while the deck slides: a lone plank already fills the viewport, and under
+      // `flatten` only the current plank is laid out, so there is nothing to expand into.
+      expandToggle: breakpoint !== 'mobile' && part === 'main' && !flatten && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
     }),
-    [breakpoint, part, canIncrementStart, canIncrementEnd, active?.length],
+    [breakpoint, part, flatten, canIncrementStart, canIncrementEnd, active?.length],
   );
 
   // Load the node's child actions so the sigil menu is populated.
