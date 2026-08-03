@@ -12,7 +12,8 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Plugin } from '@dxos/app-framework';
-import { CommandConfig, performRecoveryOAuthFlow, print } from '@dxos/cli-util';
+import { CommandConfig, print } from '@dxos/cli-util';
+import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { Context as DxContext } from '@dxos/context';

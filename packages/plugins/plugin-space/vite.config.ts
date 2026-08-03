@@ -12,6 +12,7 @@ export default defineConfig({
     'SpacePlugin.workerd': 'src/SpacePlugin.workerd.ts',
     'capabilities': 'src/capabilities/index.ts',
     'capabilities/node': 'src/capabilities/node.ts',
+    'commands': 'src/commands/index.ts',
     'components': 'src/components/index.ts',
     'constants': 'src/constants.ts',
     'containers': 'src/containers/index.ts',

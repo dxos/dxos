@@ -12,11 +12,27 @@
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#platform": {
+      "source": {
+        "node": "./src/util/platform.node.ts",
+        "default": "./src/util/platform.browser.ts"
+      },
+      "types": "./dist/types/src/util/platform.node.d.ts",
+      "node": "./dist/lib/util/platform.node.mjs",
+      "default": "./dist/lib/util/platform.browser.mjs"
+    }
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./oauth": {
+      "source": "./src/oauth/index.ts",
+      "types": "./dist/types/src/oauth/index.d.ts",
+      "import": "./dist/lib/oauth.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
