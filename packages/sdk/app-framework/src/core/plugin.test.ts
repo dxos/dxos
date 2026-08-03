@@ -234,7 +234,8 @@ describe('Plugin module authoring', () => {
       );
 
       expect(Capability.getModuleTag(Inline)).toEqual('total');
-      expect(Inline.requires).toEqual([]);
+      // Undeclared requires stay absent until `normalizeActivation` concretes them.
+      expect(Inline.requires).toBeUndefined();
       expect(Inline.provides).toEqual([Total]);
     });
   });
@@ -249,7 +250,7 @@ describe('Plugin module authoring', () => {
     it('bakes in the default name and provides', () => {
       const module = totalModule(loader);
       expect(Capability.getModuleTag(module)).toEqual('Total');
-      expect(module.requires).toEqual([]);
+      expect(module.requires).toBeUndefined();
       expect(module.provides).toEqual([Total]);
     });
 

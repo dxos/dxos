@@ -485,7 +485,9 @@ export type LoadModule<Props, Requires extends readonly AnyTag[], Provides exten
  */
 export interface Module<Options = void> {
   (options: Options): Effect.Effect<any, Error, any>;
-  readonly requires: readonly AnyTag[];
+  // Optional to match the authoring records this flows into: `Plugin.normalizeActivation` is the
+  // single boundary where the spec becomes concrete, so defaulting here would only duplicate it.
+  readonly requires?: readonly AnyTag[];
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
 }
@@ -544,12 +546,9 @@ export const lazyModule = <
       return yield* getModule(props);
     });
 
-  // Correlation cast: when `spec.requires` is absent, `Requires` resolves to its
-  // `readonly []` default, so the fallback empty tuple is the correct value for it.
-  const requires = (spec.requires ?? []) as Requires;
   return Object.assign(lazyFn, {
     [ModuleTag]: name,
-    requires,
+    requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
   });
@@ -573,9 +572,6 @@ export const inlineModule = <
   spec: ModuleSpec<Provides, Requires, Props, Options>,
   activate: (props: Props) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>,
 ): Module<Options> => {
-  // Correlation cast: when `spec.requires` is absent, `Requires` resolves to its
-  // `readonly []` default, so the fallback empty tuple is the correct value for it.
-  const requires = (spec.requires ?? []) as Requires;
   const body = (options: Options): Effect.Effect<any, Error, any> => {
     // Correlation cast: when `spec.props` is absent, `Options` resolves to its `Props`
     // default, so `options` is a valid `Props` value.
@@ -584,7 +580,7 @@ export const inlineModule = <
   };
   return Object.assign(body, {
     [ModuleTag]: name,
-    requires,
+    requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
   });
@@ -632,14 +628,14 @@ export const moduleMaker =
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
     options?: MakerOptions<Requires, Extra, Props, Options>,
   ): Module<Options> => {
-    // Correlation casts: when options are absent, Requires/Extra resolve to their
-    // `readonly []` defaults, so the fallback empty tuples are the correct values.
-    const requires = (options?.requires ?? []) as Requires;
+    // Correlation cast: `provides` is required, so the spread needs a concrete tuple; when
+    // options are absent `Extra` resolves to its `readonly []` default, making it the correct
+    // value. `requires` needs no such fallback — it stays optional all the way to the boundary.
     const extra = (options?.provides ?? []) as Extra;
     return lazyModule(
       options?.name ?? defaultName,
       {
-        requires,
+        requires: options?.requires,
         provides: [capability, ...extra],
         activatesOn: options?.activatesOn ?? defaults?.activatesOn,
         props: options?.props,
