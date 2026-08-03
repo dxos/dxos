@@ -24,9 +24,9 @@
 // `docs`). There is no default app — dev requires one explicitly, remote's default of `all` pushes to
 // every app that defines <env>, matching bundle-env.mjs/deploy-env.mjs's convention.
 //
-// `--config` is an escape hatch for a wrangler.jsonc NOT in apps.mjs's APP_DIRS (e.g. discord-worker,
-// composer-dxos-org, edge — deliberately excluded from the deploy pipeline); it targets that single config
-// directly instead of resolving apps.mjs.
+// `--config` is an escape hatch for a wrangler.jsonc NOT in apps.mjs's APP_DIRS (e.g. discord-worker, edge
+// — deliberately excluded from the deploy pipeline); it targets that single config directly instead of
+// resolving apps.mjs.
 //
 // `--item` defaults to the "dxos app worker secrets" item's UUID — pinned rather than its display name,
 // since the name can be renamed/retitled in 1Password but the UUID never changes.

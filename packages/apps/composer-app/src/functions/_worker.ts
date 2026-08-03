@@ -25,6 +25,16 @@ const ALLOWED_ORIGINS = new Set([
   'https://main.composer.space',
 ]);
 
+// The app's former home, kept as a custom domain on this Worker so existing links and the mobile
+// apps' universal-link verification keep resolving.
+const LEGACY_HOST = 'composer.dxos.org';
+const CANONICAL_ORIGIN = 'https://composer.space';
+
+// Well-known files are served rather than redirected, whether they come from `public/.well-known`
+// (`apple-app-site-association`) or a handler below (`webauthn`): the platforms that read them fetch
+// per-domain and do not follow redirects.
+const WELL_KNOWN_PREFIX = '/.well-known/';
+
 const corsHeaders = (origin: string | null): Record<string, string> => ({
   'Access-Control-Allow-Origin': origin && ALLOWED_ORIGINS.has(origin) ? origin : '',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -329,6 +339,13 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
 const handler: ExportedHandler<Env> = {
   fetch: async (request, env, _context) => {
     const url = new URL(request.url);
+
+    // Legacy domain: serve the well-known files, redirect everything else to the canonical origin
+    // (a different origin means different browser storage, so serving the app here would strand the
+    // user in an empty profile).
+    if (url.hostname === LEGACY_HOST && !url.pathname.startsWith(WELL_KNOWN_PREFIX)) {
+      return Response.redirect(`${CANONICAL_ORIGIN}${url.pathname}${url.search}`, 302);
+    }
 
     // WebAuthn Related Origin Requests manifest (must precede the SPA fallback).
     if (url.pathname === '/.well-known/webauthn') {
