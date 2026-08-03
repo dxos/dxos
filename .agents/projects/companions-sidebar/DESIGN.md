@@ -131,6 +131,12 @@ pop time, so multiple clones with different sources can sit side by side
 - **v1 pops node-scoped companions only** — the pop affordance appears on node
   group panels. Workspace/global panels are always available in the sidebar and
   have no source to pin, so popping them is deferred until motivated.
+- **The pop button sits in the plank-control spot**: the sidebar panel heading
+  adopts the plank-heading anatomy — attention-aware sigil + title, controls
+  cluster at the trailing end (same `PlankControl` ghost-button grammar) — and
+  pop-out is a control in that cluster. The popped clone itself gains no new
+  control: it gets the standard `PlankControls`, and closing the clone is the
+  un-pop.
 - **Heading reuses the flatten-mode breadcrumbs** (`Plank` already accepts
   `breadcrumbs` + `onSelectBreadcrumb`): the clone's heading reads
   `<Source> › <Companion>` — the companion's own icon stays the sigil (it

@@ -129,9 +129,11 @@ approved, implementation awaiting go-ahead.
 
 ### Tasks
 
-- [ ] **Pop button** on node-scoped sidebar panels (toolbar end), hidden while
-      `flatten` is on. Click → `LayoutOperation.Open` with the companion node id
-      (`<anchor>/~<variant>`), pivoted on the attended plank.
+- [ ] **Pop button** in the panel heading's control cluster (trailing end,
+      reusing the `PlankControl` ghost-button grammar), on node-scoped panels,
+      hidden while `flatten` is on. Click → `LayoutOperation.Open` with the
+      companion node id (`<anchor>/~<variant>`), pivoted on the attended plank.
+      The clone gains no new control — standard `PlankControls`; close = un-pop.
 - [ ] **Clone plank rendering** — `DeckPlank` branch for linked-segment ids:
       ordinary plank chrome, `articleData` carries `companionTo` (source node
       data) + `variant`; source rendered as a breadcrumb (`useBreadcrumbs`,
