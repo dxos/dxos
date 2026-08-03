@@ -145,15 +145,20 @@ A sentinel is a **marker typed inside a normal message** that a
 
 | Sentinel                          | Hook                                 | Effect                                                     |
 | --------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
-| `$mode terse` / `$mode natural`   | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (`concise` aliases `terse`)    |
+| `$mode terse` / `$mode normal`    | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
 | `$project VERB [ARGS]`            | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
 
+The two mode values are `terse` and `normal`. `concise` aliases `terse`;
+`natural`, `default` and `off` alias `normal`. The state file is canonicalised on
+read, so a stale or hand-edited value cannot wedge the machine — anything that is
+not `terse` means `normal`.
+
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
 > cannot tell a command from a mention of one. The bare one-token forms are still
-> accepted, so a message containing `` `$natural/$terse` `` as an _example_ will
+> accepted, so a message containing `` `$terse/$normal` `` as an _example_ will
 > set the mode — this happened on 2026-08-03. Prefer the two-token `$mode terse`,
 > which prose is far less likely to hit; dropping the bare forms is tracked in
 > `.agents/projects/agent-directives/TASKS.md`.

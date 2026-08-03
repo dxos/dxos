@@ -24,16 +24,17 @@ surface and are unreviewable without it.
 - [x] **Rename `response-mode` → `mode`** to match the sentinel: both scripts,
       the state file (`.claude/.mode`), the `settings.json` binding, the
       `.gitignore` entry, and the injected banner.
-- [x] **Rename the mode value `concise` → `terse`** — stored state, `set`/`toggle`
-      output, the sentinel regex, and the banner (`MODE: TERSE`). `concise` stays
-      accepted as an input alias, matching the existing `natural|default|off`
-      alias set.
+- [x] **Rename the mode values to `terse` / `normal`** — stored state,
+      `set`/`toggle` output, the sentinel regex, and the banner (`MODE: TERSE`).
+      `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. The
+      state file is canonicalised on read, so a stale or hand-edited value
+      cannot wedge the machine in an unrecognised mode.
 
 ## Phase 2: Make the response directives durable
 
 `UserPromptSubmit` `additionalContext` lands adjacent to the current prompt —
 last position, every turn, immune to dilution. `mode.sh` already owns
-that channel but `context` returns early in `natural`, so the machine is silent
+that channel but `context` returns early in `normal`, so the machine is silent
 in its default state. That single gap is why "be terse" never survives.
 
 ### Tasks
@@ -41,11 +42,11 @@ in its default state. That single gap is why "be terse" never survives.
 - [ ] **Emit in every state** — `scripts/mode.sh context` currently
       `exit 0`s unless the mode is `terse`. Make it always emit: invariants in
       both modes, budget varying by mode.
-- [ ] **Normalize the sentinel to `$mode <MODE>`** — the current regex matches a
-      bare `$natural` / `$concise` anywhere in the message, so prose _about_ the
-      modes flips them. Observed live on 2026-08-03: a message containing
-      "`$natural/$concise/$verbose`" as an example set the mode. A two-token
-      grammar can't be hit by accident.
+- [ ] **Drop the bare one-token sentinel forms** — the regex still matches a bare
+      `$terse` / `$normal` (and the aliases) anywhere in the message, so prose
+      _about_ the modes flips them. Observed live on 2026-08-03: a message
+      containing "`$natural/$concise/$verbose`" as an example set the mode. Only
+      the two-token `$mode <MODE>` should remain — prose can't hit it by accident.
 - [ ] **Add `/mode` as a second entrance** — a slash command cannot write state
       (it expands into a prompt and depends on the agent to act), so keep the
       sentinel as the deterministic path and give `/mode` a

@@ -75,7 +75,7 @@ Two exist here, neither complete:
 
 1. **`mode`** — a genuine machine: 2 states, persisted in
    `.claude/.mode`, transitions via sentinel. But `context` returns
-   early in `natural`, so it **speaks in one state and is silent in the other**.
+   early in `normal`, so it **speaks in one state and is silent in the other**.
 2. **`$project`** — quasi-machine over `registry.yml`. Real states, but
    transitions are _advisory_: the hook emits a directive and depends on the
    agent to perform the write.
@@ -110,10 +110,12 @@ hook that performs the same write.
 
 ### Sentinel grammar
 
-`$mode <MODE>` only. The current regex matches a bare `$natural` / `$concise`
-anywhere in the message, so prose _about_ the modes flips them — observed live
-on 2026-08-03 when a message containing "`$natural/$concise/$verbose`" set the
-mode to natural.
+Target: `$mode <MODE>` only, with the two values `terse` and `normal`. The
+regex still accepts the bare one-token forms (plus the `concise` /
+`natural`/`default`/`off` aliases), so prose _about_ the modes flips them —
+observed live on 2026-08-03 when a message containing
+"`$natural/$concise/$verbose`" set the mode. Dropping the bare forms is the
+remaining half of this item.
 
 ## Open decisions
 

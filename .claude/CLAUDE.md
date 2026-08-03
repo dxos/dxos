@@ -7,9 +7,10 @@
 
 ## Mode
 
-- The response-verbosity mode is toggled by a sentinel in a normal message:
-  type `$mode terse` or `$mode natural` anywhere in a message (bare `$terse` /
-  `$natural` also work; `concise` is accepted as an alias for `terse`).
+- The response-verbosity mode is toggled by a sentinel in an ordinary message:
+  type `$mode terse` or `$mode normal` anywhere in a message. The bare one-token
+  forms still work, and `concise` aliases `terse` while
+  `natural`/`default`/`off` alias `normal`.
 - A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) parses the sentinel, sets
   the mode, and while terse injects a terseness directive into every prompt.
   State lives in the untracked `.claude/.mode`.
