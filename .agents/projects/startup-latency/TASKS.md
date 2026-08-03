@@ -429,6 +429,19 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 - [ ] appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
 - [ ] Tier-aware per-commit trend line (Phase 1 leftover)
 - [ ] Warm-reload race root-cause — still gates any scheduling change (round barriers)
+- [ ] **Move the `Idle` fire out of React into the activation scheduler.** `useApp.tsx:322-339`
+      expresses an activation-lifecycle event as a render-lifecycle effect: startup fiber settles
+      → `setState(ready)` → re-render → `useEffect` → `requestIdleCallback` → fire. The manager
+      already knows when the startup pass settled. Two further problems: the `cancelIdleCallback`
+      cleanup only helps before the callback runs, so the effect looks unmount-safe and is not;
+      and `activateDemandGatedModules` must fire `Idle` independently because a headless harness
+      has no `useApp` — one lifecycle event with two firing sites is the symptom.
+  - Fire it from the scheduler when the startup pass settles. `useApp` then drops the effect
+    entirely and the testing helper drops its `Idle` element, becoming purely "fire the starts".
+  - The reason it landed in React — `requestIdleCallback` is browser-only, the manager also
+    builds for node/workerd — is the same constraint `yieldToHost` solved in `module-loader.ts`:
+    module-level Effect, feature-tested, `MessageChannel`/`setTimeout` fallback, `Effect.void`
+    where neither exists, injected via the constructor with a default. Reuse that shape.
 - [ ] **Storybook cannot catch demand-gating regressions (fidelity gap, recorded 2026-08-03).**
       `withPluginManager` fires every core+enabled plugin's start event unconditionally via
       `activateConvergedModules`, because a story mounts exactly one surface and honouring real
