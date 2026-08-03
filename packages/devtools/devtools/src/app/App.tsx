@@ -33,7 +33,7 @@ export const App = (props: ClientProviderProps) => {
   const themeMode = useThemeWatcher();
 
   return (
-    <ThemeProvider {...{ tx: defaultTx, themeMode }} resourceExtensions={logPanelTranslations} noCache>
+    <ThemeProvider {...{ tx: defaultTx, themeMode }} resourceExtensions={logPanelTranslations}>
       <ErrorBoundary name='devtools.app'>
         <ClientProvider {...props}>
           <Devtools />
