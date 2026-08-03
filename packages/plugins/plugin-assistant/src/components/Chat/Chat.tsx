@@ -4,16 +4,14 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { getSpace } from '@dxos/client/echo';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
+import { log } from '@dxos/log';
 import {
   Button,
   type ThemedClassName,
@@ -26,9 +24,10 @@ import {
 import { Minimap, type MinimapMarker } from '@dxos/react-ui-components';
 import { type DocumentRange, type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
+import { Outline } from '@dxos/types';
 import { Message } from '@dxos/types';
 
-import { useChatKeymapExtensions, useChatToolbarActions, useDebug, useTraceMessages } from '#hooks';
+import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 import { meta } from '#meta';
 
 import { AiUsageQuotaError, type ProcessorRequestContext } from '../../processor';
@@ -38,13 +37,14 @@ import {
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
 import {
-  type MessageRange,
+  type MessageSpan,
   ChatThread as NaturalChatThread,
   type ChatThreadProps as NaturalChatThreadProps,
 } from '../ChatThread';
 import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
+import { projectThread, resolveRewind } from './thread';
 
 //
 // Root
@@ -94,16 +94,16 @@ const ChatRoot = ({
   // The editor controller and per-message ranges are produced by `Chat.Thread` and consumed by
   // `Chat.Minimap`; lifted here so both sub-components share the same instance.
   const [controller, setController] = useState<MarkdownStreamController | null>(null);
-  const [messageRanges, setMessageRanges] = useState<MessageRange[]>([]);
+  const [messageRanges, setMessageRanges] = useState<MessageSpan[]>([]);
 
   const feedMessages = useQuery(
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
   const pendingMessages = useAtomValue(processor.messages);
-  const messages = useMemo(
-    () => Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b),
-    [feedMessages, pendingMessages],
+  const { messages } = useMemo(
+    () => projectThread({ feedMessages, pendingMessages, rewindFrom: feedSnapshot?.rewindFrom }),
+    [feedMessages, pendingMessages, feedSnapshot?.rewindFrom],
   );
 
   const dump = useDebug({ processor });
@@ -143,6 +143,21 @@ const ChatRoot = ({
           break;
         }
 
+        case 'rewind': {
+          // Edit-and-resend: discard the prompt and everything after it, and put its text back in the
+          // composer so it can be revised. Recorded on the feed rather than the chat because the
+          // continuation is appended by the agent's process, which resolves the feed and never sees the
+          // chat. A stale click (message already gone) resolves to nothing and is a no-op.
+          const rewind = feed && resolveRewind(messages, ev.id);
+          if (rewind) {
+            Obj.update(feed, (feed) => {
+              feed.rewindFrom = rewind.rewindFrom;
+            });
+            event.emit({ type: 'update-prompt', text: rewind.text });
+          }
+          break;
+        }
+
         case 'retry': {
           if (!streaming) {
             void processor.retry();
@@ -163,7 +178,9 @@ const ChatRoot = ({
 
       onEvent?.(ev);
     });
-  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext]);
+    // `feed` and `messages` are dependencies because the rewind branch reads and writes them: without
+    // them the handler would keep resolving rewinds against whatever was mounted first.
+  }, [event, dump, processor, streaming, onEvent, onSubmit, getContext, feed, messages]);
 
   return (
     <ChatContextProvider
@@ -281,7 +298,7 @@ const replySnippet = (message: Message.Message): string | undefined => {
  * snippet of the following assistant reply, range = the turn's document span (prompt start →
  * next prompt start). Positions come from the syncer's per-message range table.
  */
-const buildMarkers = (messages: Message.Message[], ranges: MessageRange[]): MinimapMarker[] => {
+const buildMarkers = (messages: Message.Message[], ranges: MessageSpan[]): MinimapMarker[] => {
   const rangeById = new Map(ranges.map((range) => [range.id, range] as const));
   const markers: MinimapMarker[] = [];
   for (let index = 0; index < messages.length; index++) {
@@ -391,6 +408,9 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
   useEffect(() => {
     return event.on((event) => {
       switch (event.type) {
+        case 'rewind':
+          console.log('rewind', event);
+          break;
         case 'submit':
         case 'scroll-to-bottom':
           controllerRef.current?.scrollToBottom();
@@ -404,6 +424,8 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
         case 'error':
           setToastError(event.error);
           break;
+        default:
+          log.info('no handled', event);
       }
     });
   }, [event, navigateToPrompt]);
@@ -430,7 +452,7 @@ const ChatThread = ({ viewType, debug: debugProp, onViewUsage, ...props }: ChatT
         viewType={viewType}
         extensions={extensions}
         onEvent={handleEvent}
-        onRanges={setMessageRanges}
+        onSpans={setMessageRanges}
         ref={handleControllerRef}
       />
 
@@ -526,46 +548,38 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
 
 type ChatTaskListProps = {
-  plan?: Plan.Plan;
+  outline?: Outline.Outline;
 };
 
-const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: planProp, ...props }, forwardedRef) => {
-  const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+// TODO(burdon): Project chats keep their working checklist on the parent project's outline —
+//  resolve via the parent edge (needs a reactive parent lookup), not only `chat.outline`.
+const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
+  ({ outline: outlineProp, ...props }, forwardedRef) => {
+    const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
 
-  const plan = useAtomValue(
-    useMemo(
-      () =>
-        Atom.make(
-          (get) =>
-            planProp ??
-            Option.fromNullable(chat).pipe(
-              Option.map((_) => get(Obj.atom(_))),
-              Option.flatMapNullable((_) => _?.plan?.atom),
-              Option.map(get),
-              Option.getOrUndefined,
-            ),
-        ),
-      [chat, planProp],
-    ),
-  );
-  const space = chat ? getSpace(chat) : undefined;
-  const traceMessages = useTraceMessages(space);
-  const conversationId = chat?.feed?.target?.id;
-  if (!plan || !(plan.tasks?.length ?? 0)) {
-    return null;
-  }
+    const outline = useAtomValue(
+      useMemo(
+        () =>
+          Atom.make(
+            (get) =>
+              outlineProp ??
+              Option.fromNullable(chat).pipe(
+                Option.map((_) => get(Obj.atom(_))),
+                Option.flatMapNullable((_) => _?.outline?.atom),
+                Option.map(get),
+                Option.getOrUndefined,
+              ),
+          ),
+        [chat, outlineProp],
+      ),
+    );
+    if (!outline) {
+      return null;
+    }
 
-  return (
-    <TaskList
-      {...props}
-      plan={plan}
-      space={space}
-      traceMessages={traceMessages}
-      conversationId={conversationId}
-      ref={forwardedRef}
-    />
-  );
-});
+    return <TaskList {...props} outline={outline} ref={forwardedRef} />;
+  },
+);
 
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 

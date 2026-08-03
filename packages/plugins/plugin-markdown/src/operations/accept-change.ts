@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { type DecodedAutomergePrimaryValue, getObjectOnBranch, getRangeFromCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
-import { cherryPickHunk } from '@dxos/ui-editor';
+import { cherryPickHunk } from '@dxos/ui-editor/headless';
 
 import { Markdown } from '../types';
 

@@ -13,6 +13,7 @@ import {
   LayerSpecs,
   Migrations,
   NavigationHandler,
+  NavigationTargetLoader,
   OperationHandler,
   ReactContext,
   ReactSurface,
@@ -28,8 +29,8 @@ import { type ClientPluginOptions } from '#types';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
-    activate: () => NavigationHandler({ invitationProp }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp, invitationUrlHandler }) => ({
+    activate: () => NavigationHandler({ invitationProp, invitationUrlHandler }),
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),
@@ -45,6 +46,10 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
     activate: AccountCache,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.ClientReady,
+    activate: NavigationTargetLoader,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,

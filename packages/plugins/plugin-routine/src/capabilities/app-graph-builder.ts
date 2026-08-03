@@ -5,16 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
+import { Operation, Routine } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
-import { Attention } from '@dxos/react-ui-attention';
+import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 import { getRoutinesPath } from '../paths';
 
@@ -22,7 +21,9 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+        urlKey: 'routine',
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+        groupSegment: GraphPath.GroupSegments.ai,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,
@@ -32,6 +33,7 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',
+        url: { key: 'routines', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
         match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
         connector: () => {
           return Effect.succeed([
@@ -52,7 +54,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: Attention.linkedSegment('automation'),
+              variant: 'automation',
               label: ['automation-companion.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',
@@ -66,7 +68,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'runs',
+              variant: 'runs',
               label: ['routine-runs.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'runs',

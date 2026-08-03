@@ -5,7 +5,7 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { Card, IconButton } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
@@ -78,7 +78,9 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { result, query } = data;
     const label = result.label ?? (result.object && Entity.getLabel(result.object)) ?? '';
-    const menuItems = useObjectMenuItems(result.object);
+    // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
+    const [cardRef, pivotId] = useCardPivot();
+    const menuItems = useObjectMenuItems(result.object, pivotId);
     const { setCurrentId } = useMosaicContainer('SearchResultTile');
     const cardContentData = useMemo(() => ({ subject: result.object }), [result.object]);
 
@@ -97,7 +99,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
         >
           <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
             <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
-              <Card.Header>
+              <Card.Header ref={cardRef}>
                 <Card.Block />
                 <Card.Title>
                   <Highlighted text={label} query={query} />

@@ -1,8 +1,8 @@
 # Document Revisions & Branches — Tasks
 
-_Resume: PR #12315 OPEN for eval. Comment-click bugs FIXED + comments() seam refactored (dedupe extension, posAtCoords hit-test, threads→commentSync port, 2px highlight padding — all pushed). Uncommitted: none. NEXT: address PR #12315 review comments; then user evals + merges. Autonomous-debug note: mcp browser pane has a 0-viewport (no positioned clicks) — use the vitest storybook chromium harness; storybook running on :9009. Then DECIDE §0 (view-mode↔review-mode coupling) and the comment-decoration-as-layer question (recommended NO full rewrite)._
+_Resume: user runs the F1–F6 walkthrough (TEST-PLAN.md) against the worktree storybook on :9010; PR #12339 OPEN, auto-merge OFF (user: no landing until they test). All suites green locally. Uncommitted: none. Last: session fix arc — suggestion doubling (diffHunks minimize), dead automerge binding on mode swap (microtask attach-reconcile), anchor-stable rebase, focus restore after the view-mode menu, widget-carried change bars, atomic markdown delimiter pairs (+ table scenarios), tag-only author chips, DESIGN.md §5 known risks._
 
-Design: [`packages/plugins/plugin-comments/DESIGN.md`](../../../packages/plugins/plugin-comments/DESIGN.md).
+Design: [`packages/plugins/plugin-review/DESIGN.md`](../../../packages/plugins/plugin-review/DESIGN.md) (spec, invariants, §5 known risks).
 Test plan + follow-along script: [`TEST-PLAN.md`](TEST-PLAN.md).
 
 ## OPEN DECISION (2026-07-23) — view-mode ↔ review-mode coupling (reported "buggy")
@@ -465,3 +465,276 @@ label:'view-mode.suggesting.label', reviewMode:'suggesting', order:3 }` — no p
   [`agents/superpowers/specs/2026-07-17-nested-branches-design.md`](../../../agents/superpowers/specs/2026-07-17-nested-branches-design.md).
 - Generalize `@dxos/versioning` record refs over `Ref(Obj.Any)` so non-Text objects (sketches,
   sheets) can be versioned; branch-level access control; subduction fragment compaction alignment.
+
+## 2026-07-24 — selection→assistant, markdown inversion, plugin-review merge (session hydrate)
+
+Workstream folded in from `claude/markdown-selection-assistant-visibility-833995`. Specs:
+`agents/superpowers/specs/2026-07-23-markdown-selection-assistant-context-design.md`,
+`2026-07-24-markdown-versioning-decoupling-design.md`, `2026-07-24-plugin-review-consolidation-design.md`.
+
+- [x] **Selection → assistant context — MERGED (PR #12328, squash `9f7d5ad`).** `AppCapabilities.AnchorResolver`
+      (replaces `CommentConfig.getAnchorLabel`); submit-time synthetic-block context; `get-selection` tool
+      (single-call, doc optional); root-caused empty-selection bug → effect-atom GC swept unsubscribed
+      memory view-state atoms → `Atom.keepAlive` in react-ui-attention backends.
+- [x] **markdown↔versioning inversion (PR #12333, open).** `MarkdownCapabilities.EditorBindingHook` socket
+      (hook-shaped contribution via keyed `BindingBoundary`; hardened: per-fn WeakMap key, >1 warn,
+      app-lifetime contract). Markdown carries zero review vocabulary beyond the neutral binding contract +
+      ExtensionProvider props.
+- [x] **plugin-review merge (same PR, `ecbc823`).** plugin-comments + plugin-versioning → `plugin-review`
+      (key `org.dxos.plugin.review`); `VersioningCapabilities`→`ReviewCapabilities`; SuggestionSourcesProvider
+      bridge → direct import (markdown slot removed); six dependents re-pointed; DocumentVersioning battery
+      green via real provider; serve-min live-verified (Comments companion; Review added to minimal defaults).
+- [x] **Publish prep.** plugin-review publishable (publishConfig public, peers `workspace:^`); stale
+      changesets rewritten (status/version/publish scripts un-broken); `publish-package.mjs` → `pnpm publish`
+      (resolves workspace/catalog specifiers; dry-run verified 0 unresolved). User to run first publish.
+- [ ] **PR #12333 land** (CI deliberately unwatched until confirmed working; re-arm via land skill).
+- [ ] History companion walkthrough in serve-min (story battery covers it; in-app pass pending).
+- [x] PLUGIN.mdl rewrite for merged plugin-review — done (a166743): org.dxos.plugin.review, records the merged surface (binding hook, lifecycle, suggestions, history, comments/agent) + acceptance mapped to the real suites.
+- [x] **Plugin-key settings migration: DECIDED 2026-07-25 — no migration.** Merging plugin-comments and
+      plugin-versioning into `org.dxos.plugin.review` retires both old keys, so an existing user's
+      enabled-plugin list names two plugins that no longer exist and not the one replacing them: comments
+      and history stop appearing until they enable Review from the registry. Accepted as a one-off
+      re-enable rather than rewriting the retired keys on load.
+- [ ] Later arcs (consolidation doc): per-media diff seam in `@dxos/versioning`; sheet/sketch adapters;
+      `react-ui-review` extraction; ExtensionProvider props → review-context facet; `useCapabilityMaybe`
+      (`packages/sdk/app-framework/TASKS.md`).
+- [ ] **Write a skill for storybook test/debug workflows** (`.agents/skills/`): worktree storybook on a
+      free port, driving stories + play tests via the browser pane, live-instrumentation debugging
+      (the keepAlive/selection hunt pattern), automated `test-storybook` battery, and the guided
+      manual walkthrough format used in TEST-PLAN.md §3 (agent drives, user tests).
+
+## Review walkthrough issues (2026-07-24)
+
+Reported by the user during the storybook walkthrough (§3b). **Log only — no fixes until S1–S6 are done.**
+
+### S1 — Suggesting (`DocumentVersioning / Suggesting`)
+
+- [ ] **S1.1 Clicking a suggestion line makes it flicker.** Click on overlaid/tracked suggestion text →
+      visible flicker (decoration rebuild on selection change?).
+- [ ] **S1.2 Suggestion disappears on Markdown → Suggesting → Markdown.** Round-tripping the view mode
+      hides the suggestion instead of restoring it (S1.5 mode-switch matrix: not recoverable).
+- [ ] **S1.3 Suggesting mode: every keystroke loses focus.** Editor drops focus per key — likely a remount
+      per change on the branch binding.
+- [ ] **S1.4 Markdown (Editing) mode: every keystroke renders a strikethrough AND loses focus.** Typing on
+      main is being tracked as a deletion/suggestion; related to S1.3 but on the ambient path, and the
+      regression `EditingTypingTest` claims to guard.
+- [ ] **S1.5 Caret cannot move past a suggestion.** A suggestion at the document end leaves nowhere to go —
+      needs a trailing editable line after the final suggestion block in both modes.
+
+### S2 — AmbientReview (`DocumentVersioning / AmbientReview`)
+
+- [ ] **S2.0 Story fixture: seeded comment highlight never renders** (agent-found). Zero `.cm-comment`
+      marks; `storyCommentsExtension` reads the doc once on `ViewPlugin` construction, which now happens
+      before the content loads, so it never dispatches `setComments`. Blocks the comment click-through step.
+- [ ] **S2.1 Accept/Reject popover flickers and disappears when the pointer moves toward it.** No hover
+      bridge between the decoration and the popover — pointer-leave fires while crossing the gap.
+- [ ] **S2.2 Story should mount the comments/suggestions companion** as the accept/reject surface, not just
+      the inline popover — the companion is the primary mechanism and is currently untested here.
+
+### S4 — CommentsArticle / WithAgentSuggestions (companion accept/reject)
+
+- [ ] **S4.1 Clicking a suggestion card does not reveal it in the document.** Should highlight (and scroll
+      to when off-screen) the matching range, reusing the comment click-reveal mechanism. Also: style each
+      suggestion as its own card, as comment threads are.
+- [x] **S4.2 FIXED — Accept / Reject in the companion had no effect.** Root cause in
+      `@dxos/ui-editor` `diff.ts`: `cherryPickHunk`/`revertHunk` located the hunk with a strict
+      half-open overlap test. A pure insertion is zero-width on the base side AND the companion anchors
+      it at a single offset, so `from < end && to > start` could never match — every add-only suggestion
+      silently no-opped. Both now fall back to containment when either side is empty; unit test added
+      (`diff.test.ts`, insertion accept + revert). Verified in the story: accepting folds the change into
+      main (content 764 → 787 chars, inline suggestion decorations 9 → 8).
+      Correction to the earlier note here: the "route to ops" wording is the **manual** plan row (M3), not
+      a green automated assertion — no automated test covered this path at all, which is the real gap.
+- [ ] **S4.3 Companion card list does not shrink after an accept.** The change folds into main and its
+      inline decoration clears, but the accept/reject card count stays the same — the group list appears
+      not to recompute against the new base.
+
+### S3 / S5 — status
+
+- S3 (EditingTyping) deferred during the walkthrough: with S1.3/S1.4 outstanding it only restates the
+  focus-loss defect.
+- **S5 (CommentsArticle / WithCommentsAndSuggestions): PASS** — comments and suggestions coexist,
+  click-reveal works both directions, author colours consistent across editor/companion/timeline.
+
+### S6 — DocumentVersioning / Default (no-review baseline)
+
+- [x] **S6.1 FIXED — focus lost on the first click and on every keystroke with NO review affordance in use.**
+      Root cause: `useMarkdownEditorBinding` returned `extensionProps` as a fresh object literal each
+      render; `MarkdownArticle` has it in the dep array that builds the editor's extension list, so every
+      render rebuilt the extensions and recreated the editor view. Fixed by memoizing `extensionProps`.
+      Verified headlessly: click + type now keeps focus in `.cm-content` and the keystrokes land.
+      Original report: The
+      control case fails, so the defect is upstream of the review/ambient path (S1.3/S1.4 are very likely
+      the same bug, not three). Prime suspect: the editor subtree remounting per render — this story's
+      `DefaultStory` drives the Surface from `useSpaces`/`useQuery`, so a fresh doc identity per render
+      would rekey `MarkdownEditorProvider` (keyed on `binding.key`).
+
+### Triage order (walkthrough complete)
+
+1. **S6.1 first** — it is the control-case failure and probably subsumes S1.3/S1.4. **CONFIRMED PRODUCT
+   (user bisect, 2026-07-24): in `serve-min` the editor is fine with plugin-review disabled; enabling it
+   loses focus on every keystroke.** So the defect is in the contributed `EditorBindingHook` path, and it
+   fires even with no review affordance in use.
+2. **S4.2** accept/reject inert (core function; A3's assertion stops at op dispatch).
+3. **S1.2** suggestion lost on view-mode round-trip; **S1.5** caret trapped after a trailing suggestion.
+4. **S2.1** popover hover gap; **S1.1** decoration flicker on click.
+5. Story/harness: **S2.0** comment fixture never fires, **S2.2** + **S4.1** companion as the accept/reject
+   surface with comment-style click-reveal and per-suggestion cards.
+
+### Second pass (2026-07-24, agent-driven headless verification)
+
+Driven through the storybook DOM (synthetic pointer/keyboard + decoration counts) rather than by hand.
+
+- [x] **S1.2 FIXED — suggestions vanished when picking "Markdown".** `view-mode.preview.label` is
+      "Markdown" and `source` is "Plain text", but `MarkdownArticle` mapped only `source` to the editing
+      posture, so choosing the default mode set `viewing` → `showSuggestions: false` + editor locked.
+      Only `readonly` is a viewing posture now. Play test: `ReviewChromeTest`.
+- [x] **S1.5 FIXED — caret could not pass a suggestion at the document end.** The inline preview is a
+      widget at `hunk.to`; at `doc.length` it owned the last line. The overlay now keeps an empty line
+      below it (verified: caret lands there and typing goes below the suggestion). Play test asserts the
+      last line never holds the widget.
+- [x] **S1.3 VERIFIED FIXED** (by the S6.1 `extensionProps` fix): typing in Suggesting keeps focus, all
+      keystrokes land, and the text renders as an own tracked change while the foreign overlay stays.
+- [ ] **S1.4 ROOT-CAUSED (strikethrough half; the focus half is fixed).** Typing on main in Editing mode
+      renders your new text struck through ONCE PER foreign suggestion. Cause: the ambient overlay only
+      passes `overlayBase` in Suggesting mode (`useReviewExtensions`), so in Editing each foreign proposal
+      is diffed against the LIVE document — text the proposal does not contain reads as its deletion.
+      Fix needs a stable per-source base (the branch's fork anchor), diffed anchor→proposal and rebased
+      into document coordinates; `SuggestionSource` carries only `content` today.
+- [ ] **S2.1 NOT REPRODUCIBLE HEADLESSLY.** Synthetic hover never opens the accept/reject tooltip over an
+      inserted preview. Suspect `SuggestionWidget.ignoreEvent()` returns `true`, so pointer events inside
+      the widget are ignored by the editor and only the surrounding mark can trigger the hover — which
+      would also explain a popover that flickers as the pointer crosses between mark and widget.
+- [x] **S2.0 FIXED.** Two causes: the fixture still searched for "Hello" after the document became prose,
+      and — the real one — a story-local `comments()` instance is pointless because the plugin's own
+      instance primes the shared comment state from the database and clears anything dispatched into it.
+      The story now seeds a real anchored `Thread` (shared `seedComments` in `testing/`), which also
+      exercises the production path. Verified: the comment mark renders on the anchored phrase.
+- [ ] S1.1, S4.1, S4.3 untouched this pass.
+
+### Third pass (2026-07-24, user walkthrough on the fixed build)
+
+- [ ] **S1.5 STILL BROKEN — cannot move past the last suggestion to the end of the document.** The
+      `side: -1` anchor did not give the caret a reachable position (the blank-line approach did, but it
+      looped in the headless suite and was reverted). Needs a non-mutating mechanism that still leaves a
+      landing spot. ALSO: the gutter change-bar spans the untouched paragraph sitting BETWEEN the two
+      suggestions, so the bar range is computed too wide.
+- [x] **S4.4 FIXED — the reader's own typing appeared as a suggestion card in the companion.** The inline
+      overlay no longer strikes it (fixed via per-source fork anchors) but the companion still builds its
+      groups against the live document, so the same text surfaces as somebody's suggestion. The companion
+      needs the same per-source base the overlay now uses.
+- [ ] **S1.6 NEW (tracked) — noticeable flicker when transitioning between view modes.**
+- [ ] **S1.7 NEW — deletion hunk spans are wrong.** Deleting a few words strikes a span that includes
+      unrelated characters (a stray `t` mid-span pairing with a `t` at the end), i.e. the word-level diff
+      is aligning across unchanged text. Grouping/granularity in `diffHunks`/`groupHunks`.
+- [ ] **S4.1 CONFIRMED — no selection indication.** Clicking a suggestion card highlights nothing in the
+      card or the document, so there is no way to see which change a card refers to.
+- [ ] **S1.8 — timeline lanes are not in the author's colour: NOT A REGRESSION, never implemented.**
+      `Timeline` (`@dxos/react-ui-components`) colours lanes from a fixed palette indexed by lane and has
+      no author input; `ObjectHistory`/`timeline.ts` never reference a hue. The walkthrough step asserting
+      author colours described behaviour that does not exist (my error, inherited from the test plan).
+      Doing it needs a per-branch colour prop on `Timeline` — a design change, not a fix.
+- [ ] **Corruption repaired (agent error).** A bad scripted edit replaced the separator spaces in
+      `suggestionKey` with NUL bytes, which made grep treat `suggest.ts` as binary; keys stayed unique so
+      every test still passed. Repaired, and the other touched packages were swept clean.
+
+### Walkthrough completion (2026-07-25, agent-driven)
+
+S2, S3 and S6 run headlessly by the agent after the main-merge:
+
+- **S6 (Default, no-review baseline): PASS.** 9 keystrokes land, focus held, zero review decorations.
+- **S3 (EditingTyping): PASS.** 24 keystrokes land with focus held, no strikethrough of the reader's own
+  text, the foreign overlay and its cards intact.
+- **S2 (AmbientReview): PASS except the known fixture gap.** Two authors overlay in distinct hues
+  (lime/violet), the hover controls open on the change, stay anchored while the pointer crosses it and
+  survive the pointer moving into them (S2.1 flicker fixed), and Accept from the popover folds the change
+  (decorations 4 → 3, cards 3 → 2). The popover stays open after clicking — the auto-hide was reverted at
+  the user's request. Comment click-through remains untestable (S2.0: the story's `comments()` extension
+  never renders a mark).
+
+### F1 walkthrough (2026-07-25, post-merge build)
+
+- [ ] **F1.1 Decoration/gutter flicker** — likely the change-bar gutter being added/removed with the
+      overlay; reconfigure the extension in place (enable/disable) instead of adding/removing it.
+- [ ] **F1.2 Stale own-edit strike** — Markdown: type "hello" → Suggesting → Markdown: type "world" →
+      Suggesting: "world" renders struck through, and no new card appears. The own-branch content is
+      captured at first bind and not refreshed on re-entry, so later main edits diff as deletions.
+- [x] F1.3 / F1.4 word + mid-word deletion spans: good.
+- [ ] **F1.5 Block deletion renders three fragments** (ok but not ideal): deleting a bullet leaves the
+      previous bullet intact, then the struck span, then the next bullet's text run-on. Better: strike the
+      entire bullet as one unit.
+- [ ] **F1.6 Trailing-suggestion caret access is cumbersome** (tracked for later; lower priority).
+- [ ] **F1.7 Mode-switch round-trips end read-only** — after multiple Suggesting↔Markdown↔Plain-text
+      switches, ending in Suggesting the document is not editable. The bind/rebind + review-mode state
+      machine has order-dependent state.
+
+**Assessment:** the mode-switch/bind lifecycle (F1.2, F1.7, F1.1) is one state machine failing in
+different ways — needs a designed model + headless unit tests, not more per-symptom patches.
+
+### Lifecycle design executed (2026-07-25)
+
+All four steps of `agents/superpowers/specs/2026-07-25-review-mode-lifecycle-design.md` landed:
+fast-forward (F1.2), pure `deriveBinding` + transition table, permanent change-bar gutter (F1.1),
+stale-readonly resolution (F1.7), and the MarkdownArticle event collapse — the dropdown now forwards
+one `ViewModeSelection` to the binding, and `applyViewModeSelection` writes both halves of the
+(review mode, view mode) pair atomically, so the F1.7 class of contradiction cannot be stored.
+Verified live: Suggesting → Read only → Suggesting through the real dropdown ends editable with
+overlays restored. Remaining: F1.5 (bullet-deletion grouping), F1.6 (rebind flicker), S1.8 (timeline
+colours), walkthrough re-run.
+
+### F1 re-run (2026-07-25, post-collapse build) — FAILED on step 1
+
+- [x] **G1 FIXED — same-view branch swap (DESIGN §3.3).** Ambient postures share one editorKey; the automerge source swaps through a live compartment; `SuggestingSwapTest` asserts one DOM node + caret survival.
+- [ ] **G2 Clicking the last line toggles the view back to Markdown** (spurious mode change from a click). UNVERIFIED since the swap rework — retest in F1.
+- [ ] **G3 Comment highlight height changes across a mode round-trip** when a suggestion ends on the line
+      before it (layer geometry recomputed against the remounted editor).
+- [x] **G4 FIXED — I-2 reconciliation folds main IN.** `db.syncBranch` (CRDT merge main→branch) on every
+      Suggesting re-entry with a stale anchor; identity-stable (never re-fork); `branch.test.ts` covers
+      unedited + edited branches.
+- [ ] **G5 Caret jumps UP to the end of the last suggestion** when pressing down on the last line. Partially addressed by anchor-stable rebase (typing at a trailing suggestion lands after it) — retest in F1.
+- [x] **G6 FIXED** — no remount (same-view swap) + `RefocusEditor` hands focus back after a dropdown selection; scenario plays assert editor focus after every mode switch.
+
+## 2026-07-26 — spec reset, same-view swap, scenario harness, defect arc (session hydrate)
+
+Branch `claude/markdown-selection-assistant-visibility-833995`, PR
+[#12339](https://github.com/dxos/dxos/pull/12339) (OPEN; **auto-merge OFF — user lands after testing**).
+Spec: [`plugin-review/DESIGN.md`](../../../packages/plugins/plugin-review/DESIGN.md) (three layers,
+invariants I-1..I-9, §5 known risks); scripts: [`plugin-review/TEST-PLAN.md`](../../../packages/plugins/plugin-review/TEST-PLAN.md).
+
+- [x] **DESIGN.md rewritten** as the living three-layer spec (feature set / infrastructure invariants,
+      each naming its enforcing test / CodeMirror architecture) + standalone TEST-PLAN.md (F1–F6).
+- [x] **I-2 reconciliation** — `syncBranch` (main→branch CRDT fold) replaces archive/re-fork; identity
+      stable; find-or-create serialized per (doc, creator).
+- [x] **Pure lifecycle model** — `deriveBinding` + `applyViewModeSelection` (review-lifecycle.ts), 18
+      table tests; one dropdown gesture writes the (posture, view-mode) pair atomically (I-9).
+- [x] **Same-view branch swap (DESIGN §3.3) proven** — `SuggestingSwapTest` green in CI: one EditorView
+      across Suggesting entry/exit, caret preserved, edits land on the branch, main untouched.
+- [x] **Shared scenarios** — definitions as data (`testing/scenarios.ts`, 8 scenarios) with two
+      executors: headless (`renderHook` + real EditorView) and storybook plays; step kinds incl.
+      expect-count / expect-clean-insert / expect-one-suggestion; focus + gutter invariants asserted on
+      every mode switch. TEST-PLAN documents the mechanism.
+- [x] **Per-author visibility (F2.7)** — `hiddenAuthors` ViewState aspect; source-level filtering
+      (overlay, bars, cards); tag-only toggle chips (`SuggestionAuthors` + story); `AuthorVisibilityTest`.
+- [x] **Defect arc (user repro: Hello/World/ZZZ on Default)** — four root causes, each red-tested at its
+      real tier first:
+      (1) `diffHunks` non-minimal replace → doubled text (minimize; word replaces keep granularity);
+      (2) rAF attach-reconcile never fires in throttled frames → dead binding, input lost/misplaced
+      (microtask; found via live browser forensics — plays type by dispatch and cannot see it);
+      (3) rebase mapped a trailing pure-insert anchor past text typed at it → input "in front"
+      (edge-at-edit-start maps to fromB);
+      (4) menu close returned focus to its trigger → caret stranded (`RefocusEditor`, bounded retry).
+- [x] **Rendering polish** — block-insert suggestions carry their own change bar (gutter no longer
+      tints the host line); widget newline runs unstyled (no stray bar/underline fragments).
+- [x] **Markdown markup** — delimiter pairs (`**`…`**` etc.) coalesce into one atomic suggestion
+      (`pairMarkupHunks`) and `cherryPickHunk`/`revertHunk` merge range-spanning hunks so accept/reject
+      apply the whole pair; scenarios: multi-word bold wrap, suggested table block, table-cell edit.
+- [x] **CodeRabbit round** — all inline threads fixed-or-answered and resolved (compare-view stays
+      editable by design; default binding steps off stale readonly; DESIGN §refs; no-cast identity).
+- [ ] **NEXT: user F1–F6 walkthrough** on the worktree storybook (:9010); fix reports by step number;
+      then land #12339 (user gate).
+- [ ] DESIGN §5 risks queue (post-walkthrough triage): atomic swap transaction (§3.3 endgame);
+      diff-pipeline invariant/property tests; whitespace-residue archiving; Playwright real-typing
+      smoke test; menu-level `onCloseAutoFocus`.
+- [ ] Backlog carried: F1.5 bullet-deletion grouping; F1.6 trailing-caret ergonomics; G2/G5 retest;
+      S1.8 / Decision 3 timeline author colours; suggest-against-draft (Decision 2);
+      `@dxos/plugin-review` first publish (user).

@@ -21,7 +21,7 @@ import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
@@ -228,15 +228,26 @@ export const MailboxArticle = ({
   }, [filterProp, builder]);
 
   const handleNavigate = useCallback(
-    (messageId: string) => {
+    (messageId: string, newPlank = false) => {
       const message = messages.find((m) => m.id === messageId);
       if (!message || !db) {
         return;
       }
-      // Open the message companion; `MessageArticle` renders the selected message's whole conversation.
-      void showItem({ contextId: id, selectionId: message.id, companion: Attention.linkedSegment('message') });
+      // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
+      // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
+      // Ordinarily `level` names the rung in the mailbox's declared chain, so reading down the mailbox
+      // reuses one plank; meta/ctrl click asks for a plank of its own, so it opens without a level and
+      // keeps whatever is already there.
+      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${id}/${message.id}`],
+        ...(newPlank ? {} : { root: id, level: 'message' }),
+        pivotId: id,
+        disposition: 'add',
+        navigation: 'immediate',
+      });
     },
-    [db, id, messages, showItem],
+    [db, id, messages, invokePromise],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: messages, currentId, onSelect: handleNavigate });
@@ -245,14 +256,14 @@ export const MailboxArticle = ({
     (action) => {
       switch (action.type) {
         // A message click ('current') and a conversation click ('current-conversation') both open the
-        // one unified conversation (thread) view — a single message is just a one-message conversation.
-        // Selecting the message opens the message companion, which renders the whole conversation.
+        // one unified conversation (thread) view — a single message is just a one-message conversation —
+        // as a standalone plank beside the mailbox.
         case 'current':
         case 'current-conversation': {
           const message = messages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          void showItem({ contextId: id, selectionId: message.id, companion: Attention.linkedSegment('message') });
+          handleNavigate(message.id, action.type === 'current' && action.newPlank);
           break;
         }
 
@@ -280,14 +291,18 @@ export const MailboxArticle = ({
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
             void invokePromise(
-              InboxOperation.CreateTopicFromMessage,
+              InboxOperation.CreateProjectFromMessage,
               { mailbox: EchoRef.make(mailbox), message },
               { spaceId: db.spaceId },
             )
               .then((result) => {
-                const topicId = result?.data?.topicId;
-                if (topicId) {
-                  void showItem({ contextId: id, selectionId: topicId, companion: Attention.linkedSegment('topic') });
+                const projectId = result?.data?.projectId;
+                if (projectId) {
+                  void showItem({
+                    contextId: id,
+                    selectionId: projectId,
+                    companion: Attention.linkedSegment('topic'),
+                  });
                 }
               })
               // Surface the failure instead of silently swallowing it (AI timeout / DB error).
@@ -322,7 +337,7 @@ export const MailboxArticle = ({
         }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem],
+    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate],
   );
 
   const handleSaveFilter = useCallback(() => {
@@ -534,8 +549,9 @@ const useMailboxActions = (
   const handleCompose = useCallback(() => {
     const db = Obj.getDatabase(mailbox);
     invariant(db);
-    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
-  }, [invoker, mailbox]);
+    // `nodeId` is this view's node, so the draft opens as a plank beside it rather than beside Drafts.
+    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox, contextId: nodeId });
+  }, [invoker, mailbox, nodeId]);
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
   // action hooks — components (and the hooks they call) must not resolve capabilities themselves.

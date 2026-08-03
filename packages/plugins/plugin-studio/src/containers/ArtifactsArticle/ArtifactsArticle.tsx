@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
@@ -49,7 +49,8 @@ export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
   const items = useMemo<TileData[]>(() => artifacts.map((artifact) => ({ artifact })), [artifacts]);
 
   const open = useCallback(
-    (object: Obj.Unknown) => invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] }),
+    (object: Obj.Unknown) =>
+      invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] }),
     [invokePromise],
   );
 
@@ -103,7 +104,7 @@ export const ArtifactsArticle = ({ role, space }: ArtifactsArticleProps) => {
       </Panel.Toolbar>
       <Panel.Content>
         {items.length === 0 ? (
-          <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+          <div role='status' className='flex items-center justify-center h-full text-subdued'>
             {t('empty.message')}
           </div>
         ) : (

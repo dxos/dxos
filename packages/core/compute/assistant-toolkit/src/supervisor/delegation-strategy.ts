@@ -10,10 +10,11 @@ import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
 import { Instructions } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
+import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
+import { Message, Outline, Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { RunInstructions } from '../operations';
@@ -39,26 +40,29 @@ const findChatForFeed = (feed: Feed.Feed): Effect.Effect<Chat.Chat | undefined, 
   });
 
 /**
- * Resolves the agent whose chat is backed by the given conversation feed, if any. Plain (agentless)
- * chats yield `undefined`, so artifact folding is skipped for them.
+ * Resolves the agent whose chat is backed by the given conversation feed, if any.
+ * Plain (agentless) chats yield `undefined`.
  */
 const findAgentForFeed = (feed: Feed.Feed): Effect.Effect<Agent.Agent | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const agents = yield* Database.query(Filter.type(Agent.Agent)).run;
-    for (const agent of agents) {
-      if (!agent.chat) {
-        continue;
-      }
-      const matches = yield* Effect.gen(function* () {
-        const chat = yield* Database.load(agent.chat!);
-        const chatFeed = yield* Database.load(chat.feed);
-        return chatFeed.id === feed.id;
-      }).pipe(Effect.orElseSucceed(() => false));
-      if (matches) {
-        return agent;
-      }
+    const chat = yield* findChatForFeed(feed);
+    return chat ? yield* Agent.loadForChat(chat) : undefined;
+  });
+
+/**
+ * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
+ * fully-qualified ref in the current space. Not resolved here — it resolves lazily when read.
+ */
+const resolveArtifactRef = (id: string): Effect.Effect<Ref.Ref<Obj.Unknown>, Error, Database.Service> =>
+  Effect.gen(function* () {
+    const parsed = EID.tryParse(id);
+    const candidate = (parsed ? EID.getEntityId(parsed) : undefined) ?? id;
+    if (!EntityId.isValid(candidate)) {
+      // Malformed LLM-reported id: fail so the caller's `orElseSucceed` drops it.
+      return yield* Effect.fail(new Error(`Invalid artifact id: ${id}`));
     }
-    return undefined;
+    const { db } = yield* Database.Service;
+    return db.makeRef<Obj.Unknown>(EID.make({ spaceId: db.spaceId, entityId: candidate }));
   });
 
 /**
@@ -85,10 +89,42 @@ const extractArtifactIds = (value: unknown): string[] => {
 };
 
 /**
- * Supervisor behaviour for the conversational agent: after each turn, every in-progress plan task
- * not already delegated is run by a sub-agent (a synthesized minimal `Routine` executed via
- * `RunInstructions`); on completion the task status is updated and a templated message is posted back to
- * the conversation.
+ * The durable agent tasks awaiting a sub-agent for this conversation: in-progress children of the
+ * working outline's task set whose assignee is an agent. Ordinary checklist items (markdown) are
+ * never spawned — delegation happens only through the promotion the delegate-task tool performs.
+ */
+const findPendingTasks = (
+  chat: Chat.Chat,
+  activeIds: ReadonlySet<string>,
+): Effect.Effect<Task.Task[], never, Database.Service> =>
+  Effect.gen(function* () {
+    const outlineRef = Chat.peekOutlineRef(chat);
+    const outline = outlineRef
+      ? yield* Database.load(outlineRef).pipe(Effect.orElseSucceed(() => undefined))
+      : undefined;
+    const taskSet = outline?.taskSet
+      ? yield* Database.load(outline.taskSet).pipe(Effect.orElseSucceed(() => undefined))
+      : undefined;
+    if (!taskSet) {
+      return [];
+    }
+    const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run.pipe(
+      Effect.orElseSucceed(() => []),
+    );
+    return children.filter(
+      (child): child is Task.Task =>
+        Obj.instanceOf(Task.Task, child) &&
+        child.assignee?.role === 'assistant' &&
+        child.status === 'in-progress' &&
+        !activeIds.has(child.id),
+    );
+  });
+
+/**
+ * Supervisor behaviour for the conversational agent: after each turn, every in-progress agent
+ * task not already running is run by a sub-agent (a synthesized minimal `Routine` executed via
+ * `RunInstructions`); on completion the task status is updated, the checklist line is checked
+ * off, and a templated message is posted back to the conversation.
  */
 export const makeDelegationStrategy = (): DelegationStrategy => ({
   reconcile: (feed, activeIds) =>
@@ -97,16 +133,8 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
       if (!chat) {
         return [];
       }
-      const plan = chat.plan ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
-      if (!plan) {
-        return [];
-      }
 
-      // Only delegated tasks are spawned as sub-agents — a task created via ordinary planning
-      // (`update-tasks`) stays in the plan but is not double-delegated.
-      const pending = plan.tasks.filter(
-        (task) => task.delegated === true && task.status === 'in-progress' && !activeIds.has(task.id),
-      );
+      const pending = yield* findPendingTasks(chat, activeIds);
       if (pending.length === 0) {
         return [];
       }
@@ -145,18 +173,13 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
           id: task.id,
           spawn: Effect.gen(function* () {
             const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+            // The task ↔ process mapping lives runtime-side (the supervisor's activeIds keyed by
+            // task id) — nothing is stamped on the durable task.
             const fiber = yield* invoker.invokeFiber(RunInstructions, {
               instructions: Ref.make(instructions),
               input: {},
             });
-            const pid = fiber.pid;
-            Obj.update(plan, (plan) => {
-              const taskRecord = plan.tasks.find((taskRecord) => taskRecord.id === task.id);
-              if (taskRecord) {
-                taskRecord.agentPid = pid;
-              }
-            });
-            return pid;
+            return fiber.pid;
           }),
         });
       }
@@ -166,30 +189,43 @@ export const makeDelegationStrategy = (): DelegationStrategy => ({
   onComplete: (feed, id, exit) =>
     Effect.gen(function* () {
       const chat = yield* findChatForFeed(feed);
-      const agent = yield* findAgentForFeed(feed);
-      const plan =
-        chat?.plan != null ? yield* Database.load(chat.plan).pipe(Effect.orElseSucceed(() => undefined)) : undefined;
+      // Reuse the chat just resolved rather than re-scanning every chat for the same feed.
+      const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
 
+      // Resolve the durable task by its id and record the outcome; on success the checklist line
+      // is checked off so the markdown mirror follows the durable state.
       let title = id;
-      if (plan) {
-        Obj.update(plan, (plan) => {
-          const task = plan.tasks.find((task) => task.id === id);
-          if (task) {
-            task.status = Exit.isSuccess(exit) ? 'done' : 'failed';
-            title = task.title;
-          }
+      const tasks = yield* Database.query(Query.select(Filter.id(id))).run.pipe(Effect.orElseSucceed(() => []));
+      const task = tasks.find((candidate): candidate is Task.Task => Obj.instanceOf(Task.Task, candidate));
+      if (task) {
+        Obj.update(task, (task) => {
+          task.status = Exit.isSuccess(exit) ? 'done' : 'failed';
         });
+        title = task.title;
+
+        if (chat && Exit.isSuccess(exit)) {
+          const outlineRef = Chat.peekOutlineRef(chat);
+          const outline = outlineRef
+            ? yield* Database.load(outlineRef).pipe(Effect.orElseSucceed(() => undefined))
+            : undefined;
+          const text = outline
+            ? yield* Database.load(outline.content).pipe(Effect.orElseSucceed(() => undefined))
+            : undefined;
+          if (text) {
+            Obj.update(text, (text) => {
+              text.content = Outline.upsertChecklistItems(text.content, [{ title: task.title, done: true }]);
+            });
+          }
+        }
       }
 
-      // Fold any artifacts the sub-agent produced into the supervisor agent's context, so follow-up
-      // turns can reference them. The sub-agent runs in its own session but in the same space, so
-      // the artifacts resolve by id. Keep the stored refs to embed as inline reference blocks below.
+      // Surface any artifacts the sub-agent produced as inline reference blocks in the notification
+      // message, so follow-up turns can reference them (durable filing belongs to the project's
+      // collection — the agent stores no artifacts).
       const artifactRefs: Ref.Ref<Obj.Unknown>[] = [];
       if (agent && Exit.isSuccess(exit)) {
         for (const artifactId of extractArtifactIds(exit.value)) {
-          const ref = yield* Agent.addArtifact(agent, { name: title, id: artifactId }).pipe(
-            Effect.orElseSucceed(() => undefined),
-          );
+          const ref = yield* resolveArtifactRef(artifactId).pipe(Effect.orElseSucceed(() => undefined));
           if (ref) {
             artifactRefs.push(ref);
           }

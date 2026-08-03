@@ -4,4 +4,3 @@
 
 export * from './MarkdownEditor';
 export * from './PreviewComponent';
-export * from './VersionBanner';

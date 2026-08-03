@@ -15,4 +15,5 @@ export * from './discord';
 export * from './linear';
 export * from './memory';
 export * from './planning';
+export * from './project';
 export * from './websearch';

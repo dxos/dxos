@@ -257,33 +257,6 @@ export const AddToast = Operation.make({
 });
 
 //
-// Layout Mode Operations
-//
-
-export const SetLayoutMode = Operation.make({
-  meta: {
-    key: DXN.make(`${LAYOUT_PLUGIN}.operation.setLayoutMode`),
-    name: 'Set Layout Mode',
-    description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
-    icon: 'ph--layout--regular',
-  },
-  executionMode: 'sync',
-  services: [Capability.Service],
-  input: Schema.Union(
-    Schema.Struct({
-      subject: Schema.optional(
-        Schema.String.annotations({ description: 'Item which is the subject of the new layout mode.' }),
-      ),
-      mode: Schema.String.annotations({ description: 'The new layout mode.' }),
-    }),
-    Schema.Struct({
-      revert: Schema.Boolean.annotations({ description: 'Revert to the previous layout mode.' }),
-    }),
-  ),
-  output: Schema.Void,
-});
-
-//
 // Workspace Operations
 //
 
@@ -337,11 +310,30 @@ export const Open = Operation.make({
         description: 'Navigation paths of the items to open.',
       }),
     ),
-    state: Schema.optional(Schema.Literal(true).annotations({ description: 'The items are being added.' })),
     variant: Schema.optional(Schema.String.annotations({ description: 'The variant of the item to open.' })),
-    key: Schema.optional(
+    name: Schema.optional(
       Schema.String.annotations({
-        description: 'If provided, will replace item with a matching key (id prefix).',
+        description:
+          'Optional name for the plank, which behaves like a browser tab: opening under a name that ' +
+          'is already taken reuses that plank in place rather than adding another. Callers that open ' +
+          'a stream of one-at-a-time items (a message from a mailbox, say) pass a constant name so the ' +
+          'deck does not grow an entry per item.',
+      }),
+    ),
+    root: Schema.optional(
+      Schema.String.annotations({
+        description:
+          'The deck root this open is relative to, whose type declares the chain of levels (see ' +
+          '`level`). Only meaningful together with `level`.',
+      }),
+    ),
+    level: Schema.optional(
+      Schema.String.annotations({
+        description:
+          "Open at this level of the root's declared chain (e.g. `message` in `mailbox / message / " +
+          "attachment`). The level supplies the plank name, so the level's plank is reused rather " +
+          'than added to, and opening at a level closes every level below it — reading a second ' +
+          "message drops the first one's attachment. Prefer this to hand-building `name`.",
       }),
     ),
     workspace: Schema.optional(Schema.String.annotations({ description: 'The workspace to open the items in.' })),
@@ -355,11 +347,25 @@ export const Open = Operation.make({
     pivotId: Schema.optional(
       Schema.String.annotations({ description: 'The id of the item to place new items next to.' }),
     ),
-    positioning: Schema.optional(
-      Schema.Union(
-        Schema.Literal('start').annotations({ description: 'The items are being added before the pivot item.' }),
-        Schema.Literal('end').annotations({ description: 'The items are being added after the pivot item.' }),
-      ),
+    disposition: Schema.optional(
+      Schema.Literal('solo', 'add', 'auto').annotations({
+        description:
+          'How the deck should place the opened items. `solo` (the default) navigates: the deck becomes ' +
+          'just the opened items, unless they are all already open (the existing plank scrolls into view). ' +
+          '`add` inserts the items as new planks — immediately after `pivotId` when provided (in-plank ' +
+          'navigation anchors at its origin), else at the end of the deck. `auto` follows the deck: ' +
+          'when already sliding (2+ planks) it adds beside its origin (`pivotId`, falling back to the ' +
+          'attended plank); when solo it navigates. Holding shift (via `modifiers`) forces any ' +
+          'disposition into `add`.',
+      }),
+    ),
+    modifiers: Schema.optional(
+      Schema.Struct({
+        shift: Schema.optional(Schema.Boolean),
+      }).annotations({
+        description:
+          'Input modifiers held during the navigation gesture; shift forces the opened items into new planks.',
+      }),
     ),
   }),
   output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),
@@ -442,7 +448,13 @@ export const UpdateCompanion = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    subject: Schema.Union(Schema.String, Schema.Null),
+    subject: Schema.Union(Schema.String, Schema.Null).annotations({
+      description: 'The companion node id to show, or null to close a companion.',
+    }),
+    anchor: Schema.optional(Schema.String).annotations({
+      description:
+        'When closing (subject: null): the plank whose companion to close. Companion state is per plank, so a close from a specific plank must name it; without it the handler falls back to the attended plank.',
+    }),
   }),
   output: Schema.Void,
 });

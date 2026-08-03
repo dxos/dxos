@@ -4,9 +4,10 @@
 
 import { type Plugin, UrlLoader } from '@dxos/app-framework';
 
-import { registryCategoryId } from './meta';
-
 export type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
+
+/** Quality tiers surfaced in `recommended`; an untagged plugin is excluded rather than assumed ready. */
+const RECOMMENDED_TIERS: readonly string[] = ['beta', 'alpha'];
 
 export type CategoryFilterContext = {
   /** Core (bundled-by-default) plugin ids. */
@@ -26,14 +27,16 @@ export const getCategoryPredicate = (
   { core, enabled, remoteIds }: CategoryFilterContext,
 ): PluginPredicate => {
   switch (category) {
-    case registryCategoryId('bundled'):
+    case 'bundled':
       return ({ meta }) => !core.includes(meta.profile.key) && !remoteIds.has(meta.profile.key);
-    case registryCategoryId('installed'):
+    case 'installed':
       return ({ meta }) => !core.includes(meta.profile.key) && enabled.includes(meta.profile.key);
-    case registryCategoryId('recommended'):
+    case 'recommended':
       return ({ meta }) =>
-        !core.includes(meta.profile.key) && !remoteIds.has(meta.profile.key) && !meta.profile.tags?.includes('labs');
-    case registryCategoryId('labs'):
+        !core.includes(meta.profile.key) &&
+        !remoteIds.has(meta.profile.key) &&
+        (meta.profile.tags?.some((tag) => RECOMMENDED_TIERS.includes(tag)) ?? false);
+    case 'labs':
       return ({ meta }) => meta.profile.tags?.includes('labs') ?? false;
     default:
       return () => false;

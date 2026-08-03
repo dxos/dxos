@@ -2,35 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ChromaticPalette } from '@dxos/ui-types';
-
 /**
  * Translation namespace for OS-level translations.
  */
 export const osTranslations = 'org.dxos.i18n.os';
-
-/**
- * Available color hues for UI components.
- */
-export const hues: ChromaticPalette[] = [
-  'red',
-  'orange',
-  'amber',
-  'yellow',
-  'lime',
-  'green',
-  'emerald',
-  'teal',
-  'cyan',
-  'sky',
-  'blue',
-  'indigo',
-  'violet',
-  'purple',
-  'fuchsia',
-  'pink',
-  'rose',
-] as const;
 
 export const hueShades = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 

@@ -4,7 +4,8 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { hoverTooltip } from '@codemirror/view';
+import { type ChangeSpec } from '@codemirror/state';
+import { type EditorView, hoverTooltip } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
 import { mx, surfaceShadow } from '@dxos/ui-theme';
@@ -15,8 +16,11 @@ export type LinkTooltipProps = {
   render: RenderCallback<{ url: string }>;
 };
 
+// Internal object links render their own inline/block preview, so a raw-URI hover tooltip is noise.
+const INTERNAL_SCHEMES = ['dxn:', 'echo:'];
+
 /**
- * Hover tooltip showing a rendered preview for markdown links (skips `dxn:` URLs).
+ * Hover tooltip showing a rendered preview for markdown links (skips internal object URIs).
  */
 export const linkTooltip = ({ render }: LinkTooltipProps) => {
   return hoverTooltip((view, pos, side) => {
@@ -32,7 +36,7 @@ export const linkTooltip = ({ render }: LinkTooltipProps) => {
     }
 
     const urlText = view.state.sliceDoc(url.from, url.to);
-    if (urlText.startsWith('dxn')) {
+    if (INTERNAL_SCHEMES.some((scheme) => urlText.startsWith(scheme))) {
       return null;
     }
 
@@ -48,6 +52,55 @@ export const linkTooltip = ({ render }: LinkTooltipProps) => {
       },
     };
   });
+};
+
+/** Brackets and newlines would terminate the inline link, so they are folded into the label text. */
+export const escapeLinkLabel = (label: string): string => label.replace(/[[\]]/g, '').replace(/\s+/g, ' ').trim();
+
+/**
+ * Rewrites link labels that have drifted from their target's current label.
+ * The document holds the label so that it stays searchable and readable as plain markdown; this
+ * reconciles it whenever the caller can resolve a newer one.
+ *
+ * @param resolve Returns the target's label, or `undefined` when it is unknown (left untouched).
+ * @returns true if the document was changed.
+ */
+export const syncLinkLabels = (view: EditorView, resolve: (url: string) => string | undefined): boolean => {
+  const { state } = view;
+  const changes: ChangeSpec[] = [];
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'Link') {
+        return;
+      }
+
+      const marks = node.node.getChildren('LinkMark');
+      const urlNode = node.node.getChild('URL');
+      if (!urlNode || marks.length < 2) {
+        return;
+      }
+
+      const label = resolve(state.sliceDoc(urlNode.from, urlNode.to));
+      if (label === undefined) {
+        return;
+      }
+
+      const [from, to] = [marks[0].to, marks[1].from];
+      const escaped = escapeLinkLabel(label);
+      // An empty label leaves `[](url)`, which no longer parses as a Link — the node would then be
+      // invisible to this pass, so a later rename could never repair it.
+      if (escaped.length > 0 && state.sliceDoc(from, to) !== escaped) {
+        changes.push({ from, to, insert: escaped });
+      }
+    },
+  });
+
+  if (changes.length === 0) {
+    return false;
+  }
+
+  view.dispatch({ changes, userEvent: 'sync.link' });
+  return true;
 };
 
 const tooltipClassName = mx(

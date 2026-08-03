@@ -5,11 +5,10 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
-import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
+import { Agent, Chat, McpServer, Memory } from '@dxos/assistant-toolkit';
 import { Instructions, Skill } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
-import { ClientEvents } from '@dxos/plugin-client';
 import { DeckEvents } from '@dxos/plugin-deck';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
@@ -29,8 +28,6 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
-  Migrations,
-  NavigationResolver,
   OperationHandler,
   ReactSurface,
   Settings,
@@ -49,7 +46,6 @@ const StateReady = AppActivationEvents.createStateEvent(meta.profile.key);
 export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
   .pipe(
     AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-    AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
     AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
     AppPlugin.addCreateObjectModule({ activate: CreateObject }),
     AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
@@ -65,7 +61,6 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         Instructions.Instructions,
         Agent.Agent,
         McpServer.McpServer,
-        Plan.Plan,
         Sequence.Sequence,
         Memory.Memory,
         Text.Text,
@@ -142,10 +137,6 @@ export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta
         StateReady,
       ),
       activate: CompanionChatProvisioner,
-    }),
-    Plugin.addModule({
-      activatesOn: ClientEvents.SetupMigration,
-      activate: Migrations,
     }),
     Plugin.addModule({
       activatesOn: AppActivationEvents.SetupConnectors,

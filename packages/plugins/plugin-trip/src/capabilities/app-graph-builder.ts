@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -14,7 +14,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
-import { Attention, Selection, ViewState } from '@dxos/react-ui-attention';
+import { Selection, ViewState } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -68,7 +68,7 @@ export default Capability.makeModule(
         }
         return Effect.succeed([
           AppNode.makeCompanion({
-            id: Attention.linkedSegment('segment'),
+            variant: 'segment',
             label: ['segment.companion.label', { ns: meta.profile.key }],
             icon: 'ph--ticket--regular',
             data: segment ?? 'segment',

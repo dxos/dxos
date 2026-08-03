@@ -85,6 +85,12 @@ describe('sync pipeline harness', () => {
     const connection = db.add(Connection.make({ connectorId: 'test', accessToken: Ref.make(accessToken) }));
     // The binding's target is unused by the pipeline; the feed stands in as a convenient local root.
     const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(feed) }));
+    // Contact extraction is an allow-list — an unknown individual is not materialised — so give the
+    // fixture's sender domains an Organization. These tests are about dedup and recovery, not about
+    // the extraction policy (which has its own tests in `@dxos/extractor-lib`).
+    for (const domain of new Set(RAWS.map(({ email }) => email.split('@')[1]))) {
+      db.add(Organization.make({ name: domain, website: domain }));
+    }
     await db.flush({ indexes: true });
     return { db, feed, tagIndex, binding };
   };

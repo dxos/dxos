@@ -27,6 +27,8 @@ import {
   type ExportBundleRequest,
   type ExportBundleResponse,
   type FeedProtocol,
+  type GetAccessTokenRequest,
+  type GetAccessTokenResponseBody,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
@@ -236,6 +238,18 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<CompleteOAuthRegistrationResponse> {
     return this._call(ctx, new URL('/oauth/registration/complete', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  /**
+   * Resolves the live access token behind a `MANAGED_ACCESS_TOKEN` placeholder. Authorized by the
+   * caller's presentation: EDGE serves it only to members of the owning space.
+   */
+  public async getAccessToken(
+    ctx: Context,
+    body: GetAccessTokenRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetAccessTokenResponseBody> {
+    return this._call(ctx, new URL('/oauth/token', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -474,6 +488,16 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
     return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Cancels the current run of a cron trigger on the EDGE dispatcher — its in-flight execution and
+   * `runAgain` continuation chain. The trigger stays enabled, so its schedule keeps firing.
+   */
+  public async cancelTriggerRun(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/cancel`, this.baseUrl), {
       method: 'POST',
     });
   }

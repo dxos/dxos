@@ -11,6 +11,7 @@ import {
   AppSurface,
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
+  useCardPivot,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
@@ -58,7 +59,9 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
 
 const PipelineItem = ({ item, projectionModel }: ItemProps) => {
   const menu = useMenu(PIPELINE_ITEM);
-  const items = useObjectMenuItems(item);
+  // The card menu renders in a portal; resolve the origin plank from the item element instead.
+  const [cardRef, pivotId] = useCardPivot();
+  const items = useObjectMenuItems(item, pivotId);
 
   useEffect(() => {
     menu.addMenuItems({
@@ -73,7 +76,11 @@ const PipelineItem = ({ item, projectionModel }: ItemProps) => {
 
   const data = useMemo(() => ({ subject: item, projection: projectionModel }), [item, projectionModel]);
 
-  return <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />;
+  return (
+    <div ref={cardRef} className='contents'>
+      <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+    </div>
+  );
 };
 
 PipelineArticle.displayName = 'PipelineArticle';

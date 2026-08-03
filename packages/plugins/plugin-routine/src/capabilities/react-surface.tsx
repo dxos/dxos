@@ -8,11 +8,11 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Skill } from '@dxos/compute';
+import { Routine, Skill } from '@dxos/compute';
 
+import { RoutineCard } from '#components';
 import { RoutineArticle, RoutineCompanion, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -35,6 +35,11 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      Surface.create({
+        id: 'routine.card',
+        filter: AppSurface.object(AppSurface.CardContent, Routine.Routine),
+        component: ({ data }) => <RoutineCard subject={data.subject} />,
       }),
       Surface.create({
         id: 'companion.automation',

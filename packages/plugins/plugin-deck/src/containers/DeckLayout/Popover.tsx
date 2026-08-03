@@ -18,6 +18,7 @@ import {
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { Menu } from '@dxos/react-ui-menu';
 
 import { useDeckState } from '#hooks';
@@ -76,7 +77,10 @@ export const PopoverContent = () => {
   const popoverSubject =
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
   const isObjectPopover = Obj.isObject(popoverSubject);
-  const objectMenuItems = useObjectMenuItems(popoverSubject);
+  // The popover is portaled; resolve the origin plank from the anchor element it was opened from.
+  const pivotId =
+    state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
+  const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover ? (Obj.getIcon(popoverSubject)?.icon ?? 'ph--circle-dashed--regular') : undefined;
   const content = state.popoverContent;
@@ -166,7 +170,7 @@ export const PopoverContent = () => {
                 {content && 'subject' in content ? (
                   <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} />
                 ) : (
-                  <Card.Body classNames='min-bs-8'>
+                  <Card.Body classNames='min-h-8'>
                     <Card.Row>
                       <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
                     </Card.Row>

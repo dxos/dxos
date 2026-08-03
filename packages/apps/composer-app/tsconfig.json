@@ -223,6 +223,9 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
+      "path": "../../plugins/plugin-atproto"
+    },
+    {
       "path": "../../plugins/plugin-attention"
     },
     {
@@ -254,9 +257,6 @@
     },
     {
       "path": "../../plugins/plugin-code"
-    },
-    {
-      "path": "../../plugins/plugin-comments"
     },
     {
       "path": "../../plugins/plugin-commerce"
@@ -292,6 +292,9 @@
       "path": "../../plugins/plugin-duffel"
     },
     {
+      "path": "../../plugins/plugin-excalidraw"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
@@ -319,6 +322,9 @@
       "path": "../../plugins/plugin-ideogram"
     },
     {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -326,6 +332,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-library"
     },
     {
       "path": "../../plugins/plugin-linear"
@@ -367,9 +376,6 @@
       "path": "../../plugins/plugin-osrm"
     },
     {
-      "path": "../../plugins/plugin-outliner"
-    },
-    {
       "path": "../../plugins/plugin-payments"
     },
     {
@@ -385,10 +391,16 @@
       "path": "../../plugins/plugin-progress"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
       "path": "../../plugins/plugin-pwa"
     },
     {
       "path": "../../plugins/plugin-registry"
+    },
+    {
+      "path": "../../plugins/plugin-review"
     },
     {
       "path": "../../plugins/plugin-routine"
@@ -421,9 +433,6 @@
       "path": "../../plugins/plugin-simple-layout"
     },
     {
-      "path": "../../plugins/plugin-sketch"
-    },
-    {
       "path": "../../plugins/plugin-slack"
     },
     {
@@ -451,13 +460,19 @@
       "path": "../../plugins/plugin-table"
     },
     {
+      "path": "../../plugins/plugin-tasks"
+    },
+    {
+      "path": "../../plugins/plugin-terra"
+    },
+    {
       "path": "../../plugins/plugin-theme"
     },
     {
       "path": "../../plugins/plugin-thread"
     },
     {
-      "path": "../../plugins/plugin-tictactoe"
+      "path": "../../plugins/plugin-tldraw"
     },
     {
       "path": "../../plugins/plugin-transcription"
@@ -470,9 +485,6 @@
     },
     {
       "path": "../../plugins/plugin-typefully"
-    },
-    {
-      "path": "../../plugins/plugin-versioning"
     },
     {
       "path": "../../plugins/plugin-video"

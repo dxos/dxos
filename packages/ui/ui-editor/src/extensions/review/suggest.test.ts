@@ -70,6 +70,23 @@ const deleteRanges = (view: EditorView): Array<{ from: number; to: number }> => 
   return ranges;
 };
 
+/** The inline proposal previews the overlay currently renders. */
+const insertWidgets = (view: EditorView): number => {
+  let count = 0;
+  for (const source of view.state.facet(EditorView.decorations)) {
+    const set = typeof source === 'function' ? source(view) : source;
+    if (!set) {
+      continue;
+    }
+    for (const range of decorationSetToArray(set)) {
+      if (range.value.spec?.widget) {
+        count++;
+      }
+    }
+  }
+  return count;
+};
+
 describe('suggestions with an explicit base', () => {
   // The accepted base (main). Foreign authors' proposals are computed relative to this.
   const MAIN = 'The quick brown fox jumps over the lazy dog.';
@@ -96,6 +113,22 @@ describe('suggestions with an explicit base', () => {
     view.destroy();
   });
 
+  // The ambient (editing) path has no shared base — the editor IS main — so each source carries the
+  // anchor its branch forked from. Without it, everything the reader types reads as that author's
+  // deletion, once per visible suggestion.
+  test('a per-source base is used when no shared base is given', ({ expect }) => {
+    const view = new EditorView({
+      doc: BRANCH,
+      extensions: [suggestions({ sources: [{ author: 'did:bob', colour: 'x', content: BOB, base: MAIN }] })],
+    });
+
+    const struck = deleteRanges(view).map((range) => BRANCH.slice(range.from, range.to));
+    expect(struck).toEqual(['lazy']);
+    expect(struck.join(' ')).not.toContain('really');
+
+    view.destroy();
+  });
+
   test('without base, the foreign source diffs against the doc and strikes the user text', ({ expect }) => {
     // Diffing BOB against the BRANCH doc reads the user's "really" as text bob would delete — the bug
     // that `base` fixes.
@@ -108,5 +141,30 @@ describe('suggestions with an explicit base', () => {
     expect(struck.join(' ')).toContain('really');
 
     view.destroy();
+  });
+
+  // Accepting a change splices it into the document, but the author's branch still differs from the
+  // revision they wrote on — so diffing against that anchor keeps proposing a change the document
+  // already carries, rendering the text twice (once accepted, once as a live suggestion).
+  test('a change already present in the document is no longer suggested', ({ expect }) => {
+    const anchor = 'alpha\nbravo\n';
+    const proposal = 'alpha\nbravo\ncharlie\n';
+
+    // Before accepting: the addition is pending.
+    const pending = new EditorView({
+      doc: anchor,
+      extensions: [suggestions({ sources: [{ author: 'did:bob', colour: 'x', content: proposal, base: anchor }] })],
+    });
+    expect(deleteRanges(pending).length + insertWidgets(pending)).toBeGreaterThan(0);
+    pending.destroy();
+
+    // After accepting, the document carries it and nothing remains to suggest.
+    const accepted = new EditorView({
+      doc: proposal,
+      extensions: [suggestions({ sources: [{ author: 'did:bob', colour: 'x', content: proposal, base: anchor }] })],
+    });
+    expect(deleteRanges(accepted)).toHaveLength(0);
+    expect(insertWidgets(accepted)).toBe(0);
+    accepted.destroy();
   });
 });

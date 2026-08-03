@@ -3,7 +3,7 @@
 //
 
 import { type Capabilities } from '@dxos/app-framework';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
@@ -91,21 +91,21 @@ export class OnboardingManager {
 
     this._identity = this._client.halo.identity.get();
 
-    this._subscriptions.add(
-      this._client.halo.identity.subscribe((identity) => {
-        if (this._destroyed) {
-          return;
-        }
-        const wasNull = this._identity === null;
-        this._identity = identity;
+    const subscription = this._client.halo.identity.subscribe((identity) => {
+      if (this._destroyed) {
+        return;
+      }
+      const wasNull = this._identity === null;
+      this._identity = identity;
 
-        // The gate is identity-presence: the moment a local identity exists, dismiss
-        // the welcome dialog. Account binding / activation can complete asynchronously.
-        if (identity && wasNull) {
-          void this._closeWelcome();
-        }
-      }).unsubscribe,
-    );
+      // The gate is identity-presence: the moment a local identity exists, dismiss
+      // the welcome dialog. Account binding / activation can complete asynchronously.
+      if (identity && wasNull) {
+        void this._closeWelcome();
+      }
+    });
+    // Bound closure: a detached `subscription.unsubscribe` loses its receiver and throws on dispose.
+    this._subscriptions.add(() => subscription.unsubscribe());
   }
 
   async initialize(): Promise<void> {
@@ -120,6 +120,13 @@ export class OnboardingManager {
     // is checked separately on the profile page (where users without an account see
     // a "no edge access" warning + request-access form).
     if (this._identity) {
+      // A device invitation targets a different identity, so accepting it requires a storage
+      // reset; confirm via the reset dialog rather than dropping the invitation silently. Stop
+      // here — no recovery/agent provisioning for an identity the user may be about to abandon.
+      if (this._deviceInvitationCode !== undefined) {
+        await this._confirmJoinNewIdentity();
+        return;
+      }
       // For users who already have a local identity but a fresh `?email=...`
       // URL param: hand it to the redeem endpoint, which is idempotent (the
       // server may auto-bind, return a login token, or reject -- we swallow
@@ -228,9 +235,9 @@ export class OnboardingManager {
       actionLabel: ['passkey-setup-toast-action.label', { ns: meta.profile.key }],
       actionAlt: ['passkey-setup-toast-action.alt', { ns: meta.profile.key }],
       onAction: async () => {
-        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(Account.id) });
+        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(Account.id) });
         await this._invokePromise(LayoutOperation.Open, {
-          subject: [Paths.getSpacePath(Account.id, Account.Security)],
+          subject: [GraphPath.getSpacePath(Account.id, Account.Security)],
         });
       },
     });
@@ -359,6 +366,11 @@ export class OnboardingManager {
     }
 
     await this._invokePromise(ClientOperation.CreateAgent);
+  }
+
+  /** The invitation code stays in the URL so it survives the reset reload. */
+  private async _confirmJoinNewIdentity(): Promise<void> {
+    await this._invokePromise(ClientOperation.ResetStorage, { mode: 'join-new-identity' });
   }
 
   private async _openJoinIdentity(): Promise<void> {

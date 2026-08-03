@@ -131,22 +131,22 @@ export const Default: Story = {
     // ReactContext stack.
     for (const id of ['a', 'b', 'c', 'host']) {
       await canvas.findByTestId(`count-${id}`);
-      expect((await canvas.findByTestId(`ctx-${id}`)).textContent).toBe('provided');
+      await expect((await canvas.findByTestId(`ctx-${id}`)).textContent).toBe('provided');
     }
 
     // A write from inside one boundary root reaches every other root (shared registry).
     await userEvent.click(await canvas.findByTestId('inc-a'));
-    await waitFor(() => {
+    await waitFor(async () => {
       for (const id of ['a', 'b', 'c', 'host']) {
-        expect(canvas.getByTestId(`count-${id}`).textContent).toBe('1');
+        await expect(canvas.getByTestId(`count-${id}`).textContent).toBe('1');
       }
     });
 
     // And a write from the in-tree surface reaches the boundary roots.
     await userEvent.click(await canvas.findByTestId('inc-host'));
-    await waitFor(() => {
+    await waitFor(async () => {
       for (const id of ['a', 'b', 'c']) {
-        expect(canvas.getByTestId(`count-${id}`).textContent).toBe('2');
+        await expect(canvas.getByTestId(`count-${id}`).textContent).toBe('2');
       }
     });
   },

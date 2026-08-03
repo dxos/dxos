@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { hues } from '@dxos/ui-theme';
+import { hues } from '@dxos/ui-types';
 import { type ChromaticPalette, type MessageValence } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing';

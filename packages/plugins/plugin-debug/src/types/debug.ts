@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import { type Context, createContext } from 'react';
 
 import { Capability } from '@dxos/app-framework';

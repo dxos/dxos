@@ -9,7 +9,9 @@ import { AppAnnotation } from '@dxos/app-toolkit';
 import { Instructions, Skill, Trigger } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 
-import { Routine, type RoutineCapabilities } from '#types';
+import { RoutineCapabilities } from '#types';
+
+import { makeRoutine } from '../util';
 
 /**
  * Blank template: an instructions-action routine draft with an empty trigger; the action kind, schedule, and
@@ -18,12 +20,12 @@ import { Routine, type RoutineCapabilities } from '#types';
  * (no subject) starts with bare instructions.
  */
 export const blank: RoutineCapabilities.Template = {
-  id: 'org.dxos.routine.blank',
+  id: RoutineCapabilities.BlankTemplateId,
   label: 'Blank',
   icon: 'ph--lightning--regular',
   scaffold: ({ name, subject }) =>
     Effect.succeed(
-      Routine.make({
+      makeRoutine({
         name,
         instructions: Instructions.make({
           skills: subject ? skillRefsForObject(subject) : [],

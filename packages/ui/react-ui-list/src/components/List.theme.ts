@@ -26,6 +26,8 @@ const listStyles = tv({
     // content line even when the header spans multiple lines.
     accordionTriggerIcon: 'flex items-center h-6 shrink-0',
     accordionTriggerContent: 'min-w-0 flex-1',
+    // Interactive controls that sit beside the trigger; matches its vertical padding.
+    accordionTrailing: 'flex items-center h-6 shrink-0 my-2 me-2',
     // Slide animations are driven by Radix Accordion's data-state attribute.
     accordionBody: 'overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down',
     accordionBodyContent: 'p-2',
@@ -79,10 +81,10 @@ const listStyles = tv({
     //
     // Grid whose columns/placement come from the `hasIcon` variant: a leading rail-item icon track
     // only when an icon is present, so an icon-less row doesn't reserve (and indent past) empty space.
-    itemContentRoot: 'grid items-center gap-x-2 is-full min-is-0',
+    itemContentRoot: 'grid items-center gap-x-2 w-full min-w-0',
     itemContentIcon: 'col-start-1 row-start-1 place-self-center',
-    itemContentTitle: 'row-start-1 min-is-0 truncate',
-    itemContentDescription: 'row-start-2 min-is-0 truncate text-sm text-description',
+    itemContentTitle: 'row-start-1 min-w-0 truncate',
+    itemContentDescription: 'row-start-2 min-w-0 truncate text-sm text-description',
 
     //
     // Empty

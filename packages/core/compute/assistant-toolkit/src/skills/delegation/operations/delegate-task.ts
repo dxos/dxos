@@ -9,9 +9,10 @@ import { Harness } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { Outline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Chat, Plan } from '../../../types';
+import { Chat } from '../../../types';
 
 export const DelegateTask = Operation.make({
   meta: {
@@ -19,17 +20,14 @@ export const DelegateTask = Operation.make({
     name: 'Delegate task',
     description: trim`
       Delegate a unit of work to a sub-agent.
-      Provide either \`id\` (an existing plan task from update-tasks) or \`title\` (to create a new task).
-      Marks the task in-progress and delegated so the supervisor spawns a background sub-agent.
+      Promotes the titled checklist item to a durable in-progress task assigned to an agent, so
+      the supervisor spawns a background sub-agent. Creates the checklist item if absent.
     `,
     icon: 'ph--share-network--regular',
   },
   input: Schema.Struct({
-    id: Schema.optional(Plan.TaskId).annotations({
-      description: 'Id of an existing plan task to delegate (from update-tasks).',
-    }),
-    title: Schema.optional(Schema.String).annotations({
-      description: 'Title for a new task to create and delegate. Omit when delegating by id.',
+    title: Schema.String.annotations({
+      description: 'Title of the work to delegate (matched against the checklist, created if new).',
     }),
   }),
   output: Schema.Any,
@@ -37,56 +35,41 @@ export const DelegateTask = Operation.make({
 });
 
 /**
- * Records delegated work as an in-progress task on the current session plan.
+ * Delegation is the promotion moment: the scratch checklist item becomes a durable `Task`
+ * (parented to the outline's task set) assigned to an agent (`role: 'assistant'`), which the
+ * supervisor's reconcile loop picks up. The markdown line is checked off only when the sub-agent
+ * completes (see the delegation strategy).
  */
 export default DelegateTask.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ id, title }) {
-      const hasId = id !== undefined;
-      const hasTitle = title !== undefined && title.length > 0;
-      if (hasId === hasTitle) {
-        return yield* Effect.fail(
-          new Error('Provide exactly one of `id` (existing plan task) or `title` (new task to create).'),
-        );
+    Effect.fn(function* ({ title }) {
+      if (title.length === 0) {
+        return yield* Effect.fail(new Error('Provide a non-empty task title.'));
       }
 
       const chat = yield* Chat.getFromContext;
-      const plan = yield* Chat.ensurePlan(chat);
+      const { outline, text } = yield* Chat.ensureOutlineText(chat);
+      const { db } = yield* Database.Service;
 
-      if (hasId) {
-        const existing = plan.tasks.find((task) => task.id === id);
-        if (!existing) {
-          return yield* Effect.fail(new Error(`Plan task not found: ${id}`));
-        }
-        if (existing.status === 'done' || existing.status === 'failed') {
-          return yield* Effect.fail(
-            new Error(`Plan task "${id}" is already ${existing.status} and cannot be delegated.`),
-          );
-        }
+      const task = yield* Effect.promise(() =>
+        Outline.createTask(outline, db, title, {
+          status: 'in-progress',
+          assignee: { role: 'assistant' },
+        }),
+      );
 
-        Obj.update(plan, (plan) => {
-          const task = plan.tasks.find((task) => task.id === id);
-          if (task) {
-            task.delegated = true;
-            task.status = 'in-progress';
-          }
-        });
-      } else {
-        if (title === undefined) {
-          return yield* Effect.fail(
-            new Error('Provide exactly one of `id` (existing plan task) or `title` (new task to create).'),
-          );
-        }
-        Obj.update(plan, (plan) => {
-          Plan.addTasks(plan, [{ title, status: 'in-progress', delegated: true }]);
-        });
-      }
+      // Ensure the checklist carries the item (unchecked until the sub-agent completes).
+      Obj.update(text, (text) => {
+        text.content = Outline.upsertChecklistItems(text.content, [{ title: task.title, done: false }]);
+      });
+      yield* Database.flush();
 
       return trim`
-        Delegated work as an in-progress task. Current plan:
-        <plan>
-          ${Plan.formatPlan(plan)}
-        </plan>
+        Delegated "${task.title}" as an in-progress agent task (id: ${task.id}).
+        Current checklist:
+        <checklist>
+          ${text.content}
+        </checklist>
       `;
     }),
   ),

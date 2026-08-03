@@ -90,6 +90,12 @@ export interface Context {
      */
     functionsService?: EdgeFunctionEnv.FunctionsService;
 
+    /**
+     * Resolves server-custodied access tokens.
+     * Available if the function is invoked in context of a space.
+     */
+    accessTokenService?: EdgeFunctionEnv.AccessTokenService;
+
     traceService?: TraceProtocol.TraceService;
   };
 

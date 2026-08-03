@@ -7,7 +7,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
@@ -67,7 +67,7 @@ export default Capability.makeModule(
         // Check if deck state indicates we should switch to default space.
         const layout = registry.get(layoutAtom);
         if (layout.workspace === 'default') {
-          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
+          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
         }
 
         const queryResults = yield* Effect.promise(() =>
@@ -132,6 +132,8 @@ export default Capability.makeModule(
 
           const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
           if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
+            // Fire any `resolver` extension for the id first; the timeout below is the fallback when
+            // nothing materializes it.
             void Graph.initialize(graph, id);
             const timeout = setTimeout(async () => {
               const node = Graph.getNode(graph, id).pipe(Option.getOrNull);

@@ -7,12 +7,13 @@
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 
 export type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type { Atom } from '@effect-atom/atom-react';
+import type { Atom } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import { CollectionItemAnnotation } from '@dxos/schema';
 import { type Position } from '@dxos/util';
@@ -20,6 +21,7 @@ import { type Position } from '@dxos/util';
 import { NotFound } from '../app';
 import { Translations } from '../app';
 import { AppAnnotation } from '../echo';
+import * as DeckSpec from './DeckSpec';
 
 //
 //
@@ -187,6 +189,7 @@ export const makeObject = ({
   draggable = true,
   droppable = true,
   navigable = false,
+  deck,
   onRearrange,
   canDrop: canDropOverride,
 }: {
@@ -198,6 +201,13 @@ export const makeObject = ({
   draggable?: boolean;
   droppable?: boolean;
   navigable?: boolean;
+  /**
+   * How the deck should behave when this object is its root, for types whose answer depends on the
+   * enabled plugins rather than the type alone (a collection opens its own article when one exists,
+   * else the deck seeded with its contents). Types with a fixed answer use
+   * {@link AppAnnotation.DeckAnnotation} instead.
+   */
+  deck?: DeckSpec.DeckSpec;
   /** Rearrange callback invoked with the next sibling order on drop. */
   onRearrange?: (nextOrder: unknown[]) => void;
   /** Overrides the default {@link CAN_DROP_OBJECT} drop predicate (e.g. to restrict siblings to collection items). */
@@ -234,6 +244,8 @@ export const makeObject = ({
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
+  // The caller wins: it knows the enabled plugins, which the schema annotation cannot.
+  const deckSpec = deck ?? (schema ? Option.getOrUndefined(AppAnnotation.DeckAnnotation.get(schema)) : undefined);
 
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getCollectionGraphNodePartials({ db, collection: object })
@@ -276,6 +288,7 @@ export const makeObject = ({
       onRearrange,
       blockInstruction,
       canDrop,
+      [DeckSpec.DECK_SPEC_PROPERTY]: deckSpec,
       ...partials,
     },
   };
@@ -285,21 +298,26 @@ export const makeObject = ({
 // Companion helpers.
 //
 
-/** Build a plank-level companion panel node. */
+/**
+ * Build a plank-level companion panel node, addressed by its bare `variant` (e.g. `settings`). The id is
+ * always the linked segment `~<variant>`, so the companion shares the plank's attention and is uniformly
+ * addressable as `companion/<variant>` in the URL; the graph builder stamps the `urlSegment` for these
+ * nodes (the declared `linked` tier).
+ */
 export const makeCompanion = <TData = string>({
-  id,
+  variant,
   label,
   icon,
   data,
   position,
 }: {
-  id: string;
+  variant: string;
   label: Translations.Label;
   icon: string;
   data: TData;
   position?: Position.Position;
 }): Node.NodeArg<TData> => ({
-  id,
+  id: Attention.linkedSegment(variant),
   type: PLANK_COMPANION_TYPE,
   data,
   properties: {

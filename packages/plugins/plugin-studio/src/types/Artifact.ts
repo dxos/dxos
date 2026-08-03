@@ -57,7 +57,7 @@ export class Artifact extends Type.makeObject<Artifact>(DXN.make('org.dxos.type.
     derived: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--paint-brush--regular', hue: 'purple' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--paint-brush--regular', hue: 'indigo' }),
     // Offer "Connect" when the artifact's provider needs a credential. The connectorId is resolved
     // per-instance from the artifact's `kind` via the registered `GenerationService` providers.
     ConnectorAuthAnnotation.set({ connectorIds: resolveArtifactConnectorIds }),

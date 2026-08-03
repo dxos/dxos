@@ -103,7 +103,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
           // Plain `List`/`ListItem` (non-select), with the trigger editor's "fatter" two-line row
           // treatment: a name line plus a secondary meta line, on a surface-styled row. Rows are
           // actioned via their trailing buttons (no selection semantics).
-          <List variant='unordered' className='flex flex-col gap-1 grow is-full text-left'>
+          <List variant='unordered' className='flex flex-col gap-1 grow w-full text-left'>
             {state.models.map((model) => {
               const running = loaded.get(model.name);
               const error = state.errors[model.name];
@@ -116,7 +116,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
               return (
                 <ListItem
                   key={model.name}
-                  className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 is-full'
+                  className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 w-full'
                 >
                   <div className='flex items-center gap-2'>
                     <span className='grow truncate font-medium'>{model.name}</span>
@@ -157,7 +157,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 ? t('settings.ollama.pulling.message', { percent: percentOf(progress) })
                 : (progress?.status ?? t('settings.ollama.pulling.label'));
               return (
-                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 is-full'>
+                <ListItem key={name} className='flex flex-col gap-0.5 rounded-sm bg-input-surface px-2 py-1.5 w-full'>
                   <div className='flex items-center gap-2'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
                     <IconButton
@@ -193,7 +193,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
           onValueChange={() => {}}
           placeholder={t('settings.ollama.pull.placeholder')}
         >
-          <Combobox.Trigger classNames='is-full' />
+          <Combobox.Trigger classNames='w-full' />
           <Combobox.Portal>
             <Combobox.Content>
               <Combobox.Input

@@ -2,13 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Routine } from '@dxos/compute';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 export const translations: Resource[] = [
   ...componentsTranslations,
@@ -75,6 +75,8 @@ export const translations: Resource[] = [
         'trigger-kind.feed.description': 'Run when a new item arrives in a feed.',
         'trigger-kind.email.label': 'Email',
         'trigger-kind.email.description': 'Run when an email is received.',
+        'trigger-kind.direct.label': 'Direct',
+        'trigger-kind.direct.description': 'Run only when invoked directly.',
         'trigger-kind.clear.label': 'Clear',
         'trigger-kind.query-stub.message': 'Query editing is not yet available.',
         'trigger-kind.email-note.message': 'Runs whenever a new email is received.',

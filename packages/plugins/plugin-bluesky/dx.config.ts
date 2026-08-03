@@ -39,6 +39,6 @@ export default Config2.make({
       the author feed bypass the proxy and call the Bluesky public API directly.
     `,
     icon: { key: 'ph--butterfly--regular', hue: 'sky' },
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

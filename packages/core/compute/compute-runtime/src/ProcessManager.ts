@@ -21,7 +21,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/compute';
+import { Cancellation, LayerSpec, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Annotation } from '@dxos/echo';
@@ -551,9 +551,13 @@ export class ProcessManagerImpl implements Manager {
         },
       };
 
+      // One controller per run, fired by {@link ProcessHandle.ProcessHandleImpl.terminate} — the
+      // local counterpart of the EDGE-provided Cancellation service.
+      const cancellation = new AbortController();
       let builtinCtx = Context.empty().pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
+        Context.add(Cancellation.Service, { signal: cancellation.signal }),
         Context.add(
           Trace.TraceService,
           createProcessTraceService({
@@ -589,6 +593,7 @@ export class ProcessManagerImpl implements Manager {
         Trace.TraceService.key,
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
+        Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 
@@ -675,6 +680,7 @@ export class ProcessManagerImpl implements Manager {
         false,
         encodeInput,
         undefined,
+        cancellation,
       );
       handleRef = handle;
       this.#handles.set(id, handle);
@@ -759,9 +765,11 @@ export class ProcessManagerImpl implements Manager {
         },
       };
 
+      const cancellation = new AbortController();
       let builtinCtx = Context.empty().pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
+        Context.add(Cancellation.Service, { signal: cancellation.signal }),
         Context.add(
           Trace.TraceService,
           createProcessTraceService({
@@ -795,6 +803,7 @@ export class ProcessManagerImpl implements Manager {
         Trace.TraceService.key,
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
+        Cancellation.Service.key,
       ]);
       const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 
@@ -863,6 +872,7 @@ export class ProcessManagerImpl implements Manager {
         true, // restoring — suppresses onSpawn
         encodeInput,
         record.state, // hydrate the persisted state instead of defaulting to RUNNING
+        cancellation,
       );
       handleRef = handle;
       this.#handles.set(id, handle);

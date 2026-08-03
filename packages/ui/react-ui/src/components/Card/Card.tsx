@@ -11,6 +11,7 @@ import React, {
   MouseEventHandler,
   type ReactNode,
   forwardRef,
+  useCallback,
   useId,
   useMemo,
 } from 'react';
@@ -199,11 +200,17 @@ type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
 function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps<T>) {
   const { t } = useTranslation(translationKey);
+  // A `Card.Root` with an `onClick` is a click target, and this menu sits inside it. React portals
+  // propagate through the React tree rather than the DOM, so without this both the trigger and the
+  // item selection reach the card's handler and activate it on the way past. Radix's `asChild`
+  // composes the trigger handler, so the menu still opens.
+  const stopPropagation = useCallback<MouseEventHandler>((event) => event.stopPropagation(), []);
   return (
     <CardBlock end>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger disabled={!items?.length} asChild>
           <IconButton
+            onClick={stopPropagation}
             iconOnly
             variant='ghost'
             icon='ph--dots-three-vertical--regular'
@@ -212,7 +219,7 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
         </DropdownMenu.Trigger>
         {(items?.length ?? 0) > 0 && (
           <DropdownMenu.Portal>
-            <DropdownMenu.Content>
+            <DropdownMenu.Content onClick={stopPropagation}>
               <DropdownMenu.Viewport>
                 {items?.map(({ label, icon, onClick: onSelect }, index) => (
                   // `context` is the generic payload threaded to each handler; the cast is the
@@ -435,6 +442,12 @@ type CardHtmlProps = { html?: string; variant?: 'default' | 'description' };
 /**
  * Renders sanitized HTML content inside a card text slot.
  * Uses DOMPurify to prevent XSS from untrusted markup (e.g. RSS feed content).
+ *
+ * Sanitization is all this does: the markup renders in the app's own DOM, so the content's CSS reaches
+ * the app, remote images (tracking pixels) load, and nothing adapts to the theme. Prefer
+ * `@dxos/react-ui-components`' `Html`, which isolates content in a shadow root and blocks remote images
+ * by default — it cannot be used from here (that package depends on this one), so a caller that needs
+ * those guarantees should compose `Html` into the card rather than reach for this.
  */
 function CardHtml({ html = '', variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) {
   const { tx } = useThemeContext();
@@ -503,9 +516,16 @@ CardPoster.displayName = CARD_POSTER_NAME;
 
 const CARD_ACTION_NAME = 'Card.Action';
 
-type CardActionProps = { icon?: string; label: string; actionIcon?: string; onClick?: () => void };
+type CardActionProps = {
+  icon?: string;
+  label: string;
+  /** Short trailing text (e.g. an age); kept at full width while the label truncates around it. */
+  annotation?: string;
+  actionIcon?: string;
+  onClick?: () => void;
+};
 
-function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) {
+function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, annotation, onClick }: CardActionProps) {
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
@@ -514,7 +534,10 @@ function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
           <Icon icon={icon} size={4} />
         </CardBlock>
       )}
-      <span className={tx('card.action-label', {})}>{label}</span>
+      <span className={tx('card.action-content', {})}>
+        <span className={tx('card.action-label', {})}>{label}</span>
+        {annotation && <span className={tx('card.action-annotation', {})}>{annotation}</span>}
+      </span>
       {actionIcon && (
         <CardBlock end>
           <Icon icon={actionIcon} size={4} />

@@ -3,7 +3,7 @@
 //
 
 import { type Thread, type TopicDraft, buildThreads, clusterThreads, deriveThreadId } from '@dxos/pipeline-email';
-import { Outline } from '@dxos/plugin-outliner';
+import { Outline } from '@dxos/types';
 import { type Message } from '@dxos/types';
 
 // Active Topics experiment (spec 2026-07-13): score clustered topics for how "active" they are, split
@@ -138,7 +138,7 @@ export const classifyTopics = (
 export const renderTasksMarkdown = (items: readonly string[]): string =>
   items.map((item) => `- [ ] ${item.trim()}`).join('\n');
 
-/** Builds a plugin-outliner `Outline` whose Text content is the checkbox task list. */
+/** Builds an `Outline` whose Text content is the checkbox task list. */
 export const makeTasksOutline = (name: string, items: readonly string[]): Outline.Outline =>
   Outline.make({ name, content: renderTasksMarkdown(items) });
 

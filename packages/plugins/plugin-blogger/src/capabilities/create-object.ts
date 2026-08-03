@@ -11,11 +11,13 @@ import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { Blog } from '#types';
 
+import { getPublicationsPath } from '../paths';
+
 // `BloggerOperation.AddPublication`/`AddPost` persist via `CollectionModel.add` and return a `Ref`
 // for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic
 // "create object" menu needs to navigate to the new object, so both entries below construct the
 // object directly and file it via `SpaceOperation.AddObject` instead, matching every other plugin's
-// `create-object.ts` (e.g. `plugin-gallery`, `plugin-outliner`). The in-publication "+ Post" path
+// `create-object.ts` (e.g. `plugin-gallery`, `plugin-tasks`). The in-publication "+ Post" path
 // (which does use `AddPost`) is wired separately in Tasks 7/9.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -28,7 +30,9 @@ export default Capability.makeModule(
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
-              targetNodeId: options.targetNodeId,
+              // Absent a caller-supplied target (e.g. the space's generic create menu), navigate to
+              // the new Publication under the Publications section rather than the database subtree.
+              targetNodeId: options.targetNodeId ?? getPublicationsPath(options.db.spaceId),
             });
           }),
       }),

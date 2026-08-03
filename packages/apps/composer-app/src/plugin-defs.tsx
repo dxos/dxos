@@ -4,6 +4,7 @@
 
 import { type Plugin } from '@dxos/app-framework';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AtprotoPlugin } from '@dxos/plugin-atproto/plugin';
 import { BloggerPlugin } from '@dxos/plugin-blogger/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
@@ -13,10 +14,8 @@ import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessComPlugin } from '@dxos/plugin-chess-com/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
-import { CommentsPlugin } from '@dxos/plugin-comments/plugin';
 import { CommercePlugin } from '@dxos/plugin-commerce/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
-import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
@@ -24,6 +23,7 @@ import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { DuffelPlugin } from '@dxos/plugin-duffel/plugin';
+import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { FreeqPlugin } from '@dxos/plugin-freeq/plugin';
@@ -32,9 +32,11 @@ import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { HeyGenPlugin } from '@dxos/plugin-heygen/plugin';
 import { IbkrPlugin } from '@dxos/plugin-ibkr/plugin';
 import { IdeogramPlugin } from '@dxos/plugin-ideogram/plugin';
+import { IllustratorPlugin } from '@dxos/plugin-illustrator/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
 import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
+import { LibraryPlugin } from '@dxos/plugin-library/plugin';
 import { LinearPlugin } from '@dxos/plugin-linear/plugin';
 import { MagazinePlugin } from '@dxos/plugin-magazine/plugin';
 import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
@@ -45,13 +47,13 @@ import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
 import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
 import { NativePlugin } from '@dxos/plugin-native/plugin';
 import { OsrmPlugin } from '@dxos/plugin-osrm/plugin';
-import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PaymentsPlugin } from '@dxos/plugin-payments/plugin';
 import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
 import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
-import { ProgressPlugin } from '@dxos/plugin-progress/plugin';
+import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
+import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
@@ -59,20 +61,20 @@ import { SearchPlugin } from '@dxos/plugin-search/plugin';
 import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
 import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
 import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
-import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
 import { SlackPlugin } from '@dxos/plugin-slack/plugin';
 import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
 import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StudioPlugin } from '@dxos/plugin-studio/plugin';
 import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
+import { TasksPlugin } from '@dxos/plugin-tasks/plugin';
+import { TerraPlugin } from '@dxos/plugin-terra/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
-import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
+import { TldrawPlugin } from '@dxos/plugin-tldraw/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
 import { TripPlugin } from '@dxos/plugin-trip/plugin';
 import { TypefullyPlugin } from '@dxos/plugin-typefully/plugin';
-import { VersioningPlugin } from '@dxos/plugin-versioning/plugin';
 import { VideoPlugin } from '@dxos/plugin-video/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
@@ -91,14 +93,15 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
   [
     // Default
     AssistantPlugin.meta.profile.key,
-    CommentsPlugin.meta.profile.key,
+    ReviewPlugin.meta.profile.key,
     FilePlugin.meta.profile.key,
     InboxPlugin.meta.profile.key,
     KanbanPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
-    SearchPlugin.meta.profile.key,
     SheetPlugin.meta.profile.key,
-    SketchPlugin.meta.profile.key,
+    IllustratorPlugin.meta.profile.key,
+    TldrawPlugin.meta.profile.key,
+    ExcalidrawPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
@@ -116,6 +119,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
       DuffelPlugin.meta.profile.key,
+      LibraryPlugin.meta.profile.key,
       MagazinePlugin.meta.profile.key,
       GamePlugin.meta.profile.key,
       IdeogramPlugin.meta.profile.key,
@@ -123,7 +127,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       StudioPlugin.meta.profile.key,
       IrohBeaconPlugin.meta.profile.key,
       OsrmPlugin.meta.profile.key,
-      OutlinerPlugin.meta.profile.key,
+      TasksPlugin.meta.profile.key,
       PaymentsPlugin.meta.profile.key,
       PipelinePlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
@@ -143,20 +147,20 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 /**
  * Full Composer plugin registry: shared core infrastructure plus every content plugin.
  */
-export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
-  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = conf;
+export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
+  const { logStore, isDev, isLocal, isLabs, isPwa, isTauri, isPopover, isMobile } = config;
   return [
-    ...getCorePlugins(conf),
+    ...getCorePlugins(config),
     AssistantPlugin(),
+    AtprotoPlugin(),
     BoardPlugin(),
     BookmarksPlugin(),
     BrainPlugin(),
     CallsPlugin(),
     ChessPlugin(),
     ChessComPlugin(),
-    CommentsPlugin(),
+    ReviewPlugin(),
     ConductorPlugin(),
-    ConnectorPlugin(),
     !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
     DevtoolsPlugin(),
@@ -172,6 +176,7 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     GamePlugin(),
     InboxPlugin(),
     KanbanPlugin(),
+    LibraryPlugin(),
     MapPlugin(),
     isLocal && MapPluginSolid(),
     MarkdownPlugin(),
@@ -180,12 +185,12 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     isTauri && !isMobile && !isPopover && NativePlugin(),
     isTauri && !isMobile && !isPopover && NativeFilesystemPlugin(),
     OsrmPlugin(),
-    OutlinerPlugin(),
+    TasksPlugin(),
     PaymentsPlugin(),
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
-    ProgressPlugin(),
+    ProjectsPlugin(),
     CommercePlugin(),
     CrmPlugin(),
     !isTauri && isPwa && PwaPlugin(),
@@ -195,12 +200,14 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     SearchPlugin(),
     (isDev || isLabs) && SidekickPlugin(),
     SheetPlugin(),
-    SketchPlugin(),
-    VersioningPlugin(),
+    IllustratorPlugin(),
+    TldrawPlugin(),
+    ExcalidrawPlugin(),
     CodePlugin(),
     StackPlugin(),
     SupportPlugin({ helpSteps: steps }),
     TablePlugin(),
+    TerraPlugin(),
     ThreadPlugin(),
     TranscriptionPlugin(),
 
@@ -214,7 +221,6 @@ export const getPlugins = (conf: PluginConfig): Plugin.Plugin[] => {
     SequencerPlugin(),
     SlackPlugin(),
     SpacetimePlugin(),
-    TicTacToePlugin(),
     TrelloPlugin(),
     TripPlugin(),
     TypefullyPlugin(),

@@ -21,8 +21,8 @@ import {
   Organization,
   Person,
   Pipeline,
-  Project,
   Task,
+  TaskSet,
 } from '@dxos/types';
 
 import {
@@ -30,7 +30,7 @@ import {
   CreateObject,
   IdentityCreated,
   NavigationHandler,
-  NavigationResolver,
+  NavigationTargetResolver,
   OperationHandler,
   ReactRoot,
   ReactSurface,
@@ -50,10 +50,9 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
-    activate: () => NavigationHandler({ invitationProp }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp, invitationUrlHandler }) => ({
+    activate: () => NavigationHandler({ invitationProp, invitationUrlHandler }),
   })),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
@@ -68,15 +67,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Organization.Organization,
       Person.Person,
       Pipeline.Pipeline,
-      Project.Project,
       Tag.Tag,
       Task.Task,
+      TaskSet.TaskSet,
     ],
   }),
   AppPlugin.addSettingsModule({ activate: SpaceSettings }),
   AppPlugin.addTranslationsModule({
     translations: [...translations, ...componentsTranslations, ...formTranslations, ...shellTranslations],
   }),
+  Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationTargetResolver }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?

@@ -5,19 +5,19 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent, within } from 'storybook/test';
 
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { SketchSkill } from '@dxos/plugin-sketch';
+import { DrawingSkill } from '@dxos/plugin-illustrator';
 import { type Space } from '@dxos/react-client/echo';
+import { Cell } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
-import { Module, ModuleContainer, config, createDecorators } from '../testing';
-import { storyDecorators, storyParameters } from './meta';
-
+import { StoryRole } from '../modules';
+import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Sketch',
   render: ModuleContainer,
-  decorators: storyDecorators,
   parameters: storyParameters,
 };
 
@@ -29,33 +29,37 @@ type Story = StoryObj<typeof meta>;
 let storySpace: Space | undefined;
 
 const decorators = createDecorators({
-  config: config.remote,
   lazyPlugins: async () => {
-    const [{ Sketch }, { SketchPlugin }] = await Promise.all([
-      import('@dxos/plugin-sketch'),
-      import('@dxos/plugin-sketch/plugin'),
+    const [{ Drawing }, { IllustratorPlugin }, { Tldraw }, { TldrawPlugin }] = await Promise.all([
+      import('@dxos/plugin-illustrator'),
+      import('@dxos/plugin-illustrator/plugin'),
+      import('@dxos/plugin-tldraw'),
+      import('@dxos/plugin-tldraw/plugin'),
     ]);
     return {
-      plugins: [SketchPlugin()],
-      types: [Sketch.Sketch, Sketch.Canvas],
+      plugins: [IllustratorPlugin(), TldrawPlugin()],
+      types: [Drawing.Drawing, Drawing.Canvas],
     };
   },
   onInit: async ({ space }) => {
     storySpace = space;
-    const { Sketch } = await import('@dxos/plugin-sketch');
-    space.db.add(Sketch.make({ name: 'Sketch' }));
+    const [{ Drawing }, { Tldraw }] = await Promise.all([
+      import('@dxos/plugin-illustrator'),
+      import('@dxos/plugin-tldraw'),
+    ]);
+    const drawing = space.db.add(
+      Drawing.make({ name: 'Drawing', canvas: Drawing.makeCanvas({ schema: Tldraw.TLDRAW_SCHEMA }) }),
+    );
+    addToRootCollection(space, [drawing]);
+    return [[StoryRole.Chat], [Cell.article(drawing)], [AppSurface.deckCompanion('trace')]];
   },
   onChatCreated: async ({ space, binder }) => {
-    const { Sketch } = await import('@dxos/plugin-sketch');
-    const objects = await space.db.query(Filter.type(Sketch.Sketch)).run();
+    const { Drawing } = await import('@dxos/plugin-illustrator');
+    const objects = await space.db.query(Filter.type(Drawing.Drawing)).run();
     await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
   },
+  skills: [AssistantSkill.key, DrawingSkill.key],
 });
-
-const sharedArgs = {
-  layout: [[Module.Chat], [Module.Sketch], [Module.Trace]],
-  skills: [AssistantSkill.key, SketchSkill.key],
-};
 
 /**
  * Submit a prompt through the chat's CodeMirror editor. Submission is dropped silently while the
@@ -100,8 +104,8 @@ const countObjectRecords = async (objectId?: string): Promise<number> => {
   if (!storySpace) {
     return 0;
   }
-  const { Sketch } = await import('@dxos/plugin-sketch');
-  const canvases = await storySpace.db.query(Filter.type(Sketch.Canvas)).run();
+  const { Drawing } = await import('@dxos/plugin-illustrator');
+  const canvases = await storySpace.db.query(Filter.type(Drawing.Canvas)).run();
   return canvases.reduce((count, canvas) => {
     const records = Object.values(canvas.content ?? {}) as any[];
     return (
@@ -128,12 +132,20 @@ const waitForObjectRecords = async (objectId: string | undefined, min = 1, timeo
 };
 
 /**
+ * Conversational drawing over a live AI stack: the chat (left) drives the sketch canvas (right)
+ * through the scene DSL (read/edit operations by object id). Try: "Draw a smiley face", then
+ * "Add a hat", then "Make the smile bigger".
+ */
+export const Default: Story = {
+  decorators,
+};
+
+/**
  * First story on purpose. The prompt below is the implementing agent's own (Claude, 2026-07-23):
  * how it feels about this project, drawn live with the DSL it built — open the story and watch.
  */
 export const Reflection: Story = {
   decorators,
-  args: sharedArgs,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     // Single line: typed newlines insert literal line breaks in the prompt editor.
@@ -154,16 +166,6 @@ export const Reflection: Story = {
 };
 
 /**
- * Conversational drawing over a live AI stack: the chat (left) drives the sketch canvas (right)
- * through the scene DSL (read/edit operations by object id). Try: "Draw a smiley face", then
- * "Add a hat", then "Make the smile bigger".
- */
-export const Default: Story = {
-  decorators,
-  args: sharedArgs,
-};
-
-/**
  * End-to-end mental-model test: the agent draws a face, then — from its own read of the scene,
  * not the tldraw records — adds a hat WITHOUT redrawing the face. Asserts that the face's shape
  * records survive the second edit (an agent that rebuilt the canvas would replace them).
@@ -173,7 +175,6 @@ export const Default: Story = {
  */
 export const DrawAndUpdateTest: Story = {
   decorators,
-  args: sharedArgs,
   tags: ['!test'],
   play: async ({ canvasElement }) => {
     await submitPrompt(canvasElement, 'Draw a simple smiley face as a world object with id "face".');

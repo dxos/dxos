@@ -4,11 +4,12 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { type Operation } from '@dxos/compute';
+import { Credential, type Operation, ServiceResolver } from '@dxos/compute';
 import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
@@ -21,6 +22,7 @@ import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
+import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
 import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
@@ -80,17 +82,27 @@ const openConnectorFormDialog = (
 
 const runOnTokenCreated = (
   connector: ConnectorEntry,
+  serviceResolver: ServiceResolver.ServiceResolver,
+  db: Database.Database,
   input: {
     accessToken: AccessToken.AccessToken;
     connection: Connection.Connection;
     existingTarget?: Ref.Ref<Obj.Any>;
   },
 ): Effect.Effect<void, never> => {
-  if (!connector.onTokenCreated) {
+  const onTokenCreated = connector.onTokenCreated;
+  if (!onTokenCreated) {
     return Effect.void;
   }
-  return connector.onTokenCreated(input).pipe(
+  return onTokenCreated(input).pipe(
     Effect.provide(FetchHttpClient.layer),
+    // Resolved through the process manager so the connector reads its credential from the same
+    // space-scoped `CredentialsService` operations use.
+    Effect.provide(
+      ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+        Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+      ),
+    ),
     Effect.catchAll((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
@@ -107,19 +119,19 @@ const navigateToNewConnection = (
 ): Effect.Effect<void, never> =>
   invoker
     .invoke(LayoutOperation.Open, {
-      subject: [connectionDeckSubject(Paths.getSpacePath(db.spaceId), connectionId)],
+      subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
-  getSyncTargets: NonNullable<ConnectorEntry['getSyncTargets']>,
+  getTargets: NonNullable<NonNullable<ConnectorEntry['sync']>['getTargets']>,
   persistedConnection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { targets } = yield* invoker.invoke(getSyncTargets, {
+    const { targets } = yield* invoker.invoke(getTargets, {
       connection: Ref.make(persistedConnection),
     });
     yield* invoker.invoke(LayoutOperation.UpdateDialog, {
@@ -135,20 +147,24 @@ const openSyncTargetsDialogAfterConnectionCreated = (
     Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
-const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
+const finalizePendingEntry = (
+  invoker: Operation.OperationService,
+  serviceResolver: ServiceResolver.ServiceResolver,
+  entry: Pending,
+): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, connection, db, connector, existingTarget } = entry;
     const persistedToken = db.add(token);
     const persistedConnection = db.add(connection);
     Obj.setParent(persistedToken, persistedConnection);
 
-    yield* runOnTokenCreated(connector, {
+    yield* runOnTokenCreated(connector, serviceResolver, db, {
       accessToken: persistedToken,
       connection: persistedConnection,
       existingTarget,
     });
 
-    if (connector.getSyncTargets) {
+    if (connector.sync?.getTargets) {
       // Multi-target: let the user pick which remote targets to bind.
       yield* Effect.all(
         [
@@ -157,7 +173,7 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
           existingTarget ? Effect.void : navigateToNewConnection(invoker, db, persistedConnection.id),
           openSyncTargetsDialogAfterConnectionCreated(
             invoker,
-            connector.getSyncTargets,
+            connector.sync.getTargets,
             persistedConnection,
             existingTarget,
           ),
@@ -170,6 +186,8 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
       if (!existingTarget) {
         yield* navigateToNewConnection(invoker, db, persistedConnection.id);
       }
+      // Ordered after navigation so the user lands on the target while the first sync fills it in.
+      yield* autoSyncConnection(invoker, db, connector, persistedConnection);
     }
   });
 
@@ -177,6 +195,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const serviceResolver = yield* Capability.get(Capabilities.ServiceResolver);
     const pluginContext = yield* Capability.Service;
 
     let cachedEdgeClient: EdgeHttpClient | undefined;
@@ -235,7 +254,7 @@ export default Capability.makeModule(
         if (entry.mode === 'reauth') {
           return;
         }
-        yield* finalizePendingEntry(invoker, entry);
+        yield* finalizePendingEntry(invoker, serviceResolver, entry);
       });
 
     const handleMessage = (event: MessageEvent): void => {
@@ -394,7 +413,7 @@ export default Capability.makeModule(
           if (inMemory.mode === 'reauth') {
             return;
           }
-          yield* finalizePendingEntry(invoker, inMemory);
+          yield* finalizePendingEntry(invoker, serviceResolver, inMemory);
           return;
         }
 
@@ -455,7 +474,7 @@ export default Capability.makeModule(
           ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
           : undefined;
 
-        yield* finalizePendingEntry(invoker, {
+        yield* finalizePendingEntry(invoker, serviceResolver, {
           mode: 'create',
           token,
           connection,
@@ -487,7 +506,7 @@ export default Capability.makeModule(
           accessToken: Ref.make(accessToken),
         });
 
-        yield* finalizePendingEntry(invoker, {
+        yield* finalizePendingEntry(invoker, serviceResolver, {
           mode: 'create',
           token: accessToken,
           connection,
@@ -514,7 +533,7 @@ export default Capability.makeModule(
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
 
         if (result.kind === 'complete') {
-          yield* finalizePendingEntry(invoker, {
+          yield* finalizePendingEntry(invoker, serviceResolver, {
             mode: 'create',
             token: result.accessToken,
             connection: result.connection,
@@ -544,7 +563,20 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const connector = yield* resolveConnector(getConnectorEntries, connection.connectorId ?? '');
-        return yield* reconcileCursors({ invoker, db, connection, connector, selected, existingTarget });
+        const { added, removed, existing } = yield* reconcileCursors({
+          invoker,
+          db,
+          connection,
+          connector,
+          selected,
+          existingTarget,
+        });
+        // Initial setup of a multi-target connector: the connection had no bindings until this
+        // submit, so this is the first-sync moment. A later change of targets is left to the user.
+        if (existing === 0 && added > 0) {
+          yield* autoSyncConnection(invoker, db, connector, connection);
+        }
+        return { added, removed };
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
     return Capability.contributes(

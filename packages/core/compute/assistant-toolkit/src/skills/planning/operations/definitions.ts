@@ -10,13 +10,16 @@ import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Plan } from '../../../types';
 import INSTRUCTIONS from './update-tasks.md?raw';
 
-// Omit `delegated` and `agentPid` from the LLM-facing schema: these are set by the
-// delegation tool / runtime, never by ordinary planning, and keeping them out leaves the tool
-// schema unchanged.
-const SimpleTask = Plan.Task.omit('delegated', 'agentPid');
+/**
+ * LLM-facing checklist entry: items are addressed by title (the checklist is markdown — see
+ * `Outline.upsertChecklistItems`); `in-progress` renders unchecked, nuance lives in conversation.
+ */
+const ChecklistTask = Schema.Struct({
+  title: Schema.String.annotations({ description: 'Task title; also the key for updates.' }),
+  status: Schema.Literal('todo', 'in-progress', 'done'),
+});
 
 export const UpdateTasks = Operation.make({
   meta: {
@@ -26,7 +29,7 @@ export const UpdateTasks = Operation.make({
     icon: 'ph--check-square-offset--regular',
   },
   input: Schema.Struct({
-    tasks: Schema.Array(SimpleTask),
+    tasks: Schema.Array(ChecklistTask),
   }),
   output: Schema.Any,
   services: [Harness.HarnessService, Database.Service],

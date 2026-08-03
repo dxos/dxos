@@ -5,7 +5,7 @@
 import { Chunk, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { diffChars, diffWordsWithSpace } from 'diff';
+import { diffWordsWithSpace } from 'diff';
 
 export type DiffOptions = {
   /**
@@ -69,9 +69,37 @@ export const diffHunks = (before: string, after: string): DiffHunk[] => {
   const hunks: DiffHunk[] = [];
   let position = 0;
   let pending: DiffHunk | undefined;
+  // Word-level diffing treats `WorldHello` -> `WorldHelloWorld` as one changed word, yielding a
+  // replace that claims the unchanged `WorldHello` — struck through and re-inserted, that renders as
+  // doubled text. When one side is contained in the other at an edge, trim it to the pure
+  // insert/delete core; genuine replaces keep word granularity (whole-word strikes read better).
+  const minimize = (hunk: DiffHunk): DiffHunk => {
+    const { removed, inserted } = hunk;
+    let prefix = 0;
+    while (prefix < removed.length && prefix < inserted.length && removed[prefix] === inserted[prefix]) {
+      prefix++;
+    }
+    let suffix = 0;
+    while (
+      suffix < removed.length - prefix &&
+      suffix < inserted.length - prefix &&
+      removed[removed.length - 1 - suffix] === inserted[inserted.length - 1 - suffix]
+    ) {
+      suffix++;
+    }
+    if (prefix + suffix !== removed.length && prefix + suffix !== inserted.length) {
+      return hunk;
+    }
+    return {
+      from: hunk.from + prefix,
+      to: hunk.to - suffix,
+      removed: removed.slice(prefix, removed.length - suffix),
+      inserted: inserted.slice(prefix, inserted.length - suffix),
+    };
+  };
   const flush = () => {
     if (pending) {
-      hunks.push(pending);
+      hunks.push(minimize(pending));
       pending = undefined;
     }
   };
@@ -127,6 +155,45 @@ export const groupHunks = (hunks: DiffHunk[], before: string, policy: GroupPolic
   return groups;
 };
 
+/** Markdown delimiter pairs that must be suggested — and applied — atomically. */
+const MARKUP_DELIMITERS = new Set(['**', '__', '*', '_', '~~', '`']);
+
+/**
+ * Coalesces two pure insertions forming a matched markdown delimiter pair around intervening text
+ * (e.g. `**` before and after a phrase) into ONE replace hunk spanning the wrapped text. Without
+ * this, wrapping MULTIPLE words diffs as two zero-width inserts, and accepting either half alone
+ * leaves broken syntax. Only a tight wrap (same line, non-empty gap) reads as one formatting action.
+ */
+export const pairMarkupHunks = (hunks: DiffHunk[], before: string): DiffHunk[] => {
+  const result: DiffHunk[] = [];
+  for (let index = 0; index < hunks.length; index++) {
+    const open = hunks[index];
+    const close = hunks[index + 1];
+    if (
+      close !== undefined &&
+      open.from === open.to &&
+      close.from === close.to &&
+      close.from > open.from &&
+      MARKUP_DELIMITERS.has(open.inserted) &&
+      close.inserted === open.inserted
+    ) {
+      const gap = before.slice(open.from, close.from);
+      if (gap.length > 0 && !gap.includes('\n')) {
+        result.push({
+          from: open.from,
+          to: close.from,
+          removed: gap,
+          inserted: open.inserted + gap + close.inserted,
+        });
+        index++;
+        continue;
+      }
+    }
+    result.push(open);
+  }
+  return result;
+};
+
 /**
  * Re-anchors {@link DiffHunk}s computed against `base` into `doc` coordinates, so a foreign author's
  * proposal (diffed `base` vs proposal) can be decorated over a `doc` that has itself diverged from
@@ -151,10 +218,11 @@ export const rebaseHunksWith = (charHunks: Hunk[], hunks: DiffHunk[]): DiffHunk[
       if (pos < hunk.fromA) {
         break;
       }
-      // An exclusive upper edge (`side > 0`) sitting exactly at a doc edit's start belongs to the
-      // region BEFORE the edit, so map it to `fromB` — never across the edit (which would absorb the
-      // user's own adjacent text into a foreign hunk).
-      if (pos === hunk.fromA && side > 0) {
+      // Any edge sitting exactly at a doc edit's start belongs to the region BEFORE the edit, so map
+      // it to `fromB` — never across the edit. For an upper edge this keeps a foreign hunk from
+      // absorbing the user's adjacent text; for a pure-insert anchor it keeps the proposal anchored
+      // BEFORE text the user typed at that spot (typing at a trailing suggestion lands after it).
+      if (pos === hunk.fromA) {
         return hunk.fromB;
       }
       if (pos < hunk.toA) {
@@ -238,7 +306,35 @@ export const computeWordHunks = (original: string, modified: string): Hunk[] => 
  * changes (see {@link trackChanges}), where word granularity makes every keystroke read as a struck
  * word rebuilt beside it.
  */
-export const computeCharHunks = (original: string, modified: string): Hunk[] => {
+export const computeCharHunks = (original: string, modified: string): Hunk[] =>
+  joinNearbyHunks(wordHunks(original, modified))
+    .map((hunk) => trimCommonAffixes(original, modified, hunk))
+    .map((hunk) => slideToWordBoundary(original, modified, hunk));
+
+/**
+ * Unchanged text shorter than this between two changed regions does not separate them: a selection
+ * that cuts into the words at each end leaves a word fragment on both sides of a single space, and
+ * reporting those as two changes strikes text the reader never touched.
+ */
+const MIN_COMMON_RUN = 4;
+
+/** Merges hunks separated by less unchanged text than {@link MIN_COMMON_RUN}, absorbing the gap. */
+const joinNearbyHunks = (hunks: Hunk[]): Hunk[] => {
+  const merged: Hunk[] = [];
+  for (const hunk of hunks) {
+    const previous = merged.at(-1);
+    if (previous && hunk.fromA - previous.toA < MIN_COMMON_RUN && hunk.fromB - previous.toB < MIN_COMMON_RUN) {
+      previous.toA = hunk.toA;
+      previous.toB = hunk.toB;
+    } else {
+      merged.push({ ...hunk });
+    }
+  }
+  return merged;
+};
+
+/** Accumulates a diff's changed regions into {@link Hunk}s, given a tokenisation of the two texts. */
+const accumulate = (changes: Array<{ value: string; added?: boolean; removed?: boolean }>): Hunk[] => {
   const hunks: Hunk[] = [];
   let positionA = 0;
   let positionB = 0;
@@ -249,7 +345,7 @@ export const computeCharHunks = (original: string, modified: string): Hunk[] => 
       pending = undefined;
     }
   };
-  for (const change of diffChars(original, modified)) {
+  for (const change of changes) {
     if (change.added) {
       pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
       positionB += change.value.length;
@@ -268,6 +364,89 @@ export const computeCharHunks = (original: string, modified: string): Hunk[] => 
   return hunks;
 };
 
+const wordHunks = (original: string, modified: string): Hunk[] => accumulate(diffWordsWithSpace(original, modified));
+
+/**
+ * Shrinks a word-level hunk to the characters that actually changed, by dropping the prefix and suffix
+ * its two sides share. Word granularity is what keeps one edit from fragmenting into strikes with
+ * untouched letters marooned between them, but on its own it reports whole words: a deletion cutting
+ * into the words at each end fuses the survivors, and the hunk then reads as "delete both words, insert
+ * this fused one". Trimming leaves exactly the range the reader removed (or typed).
+ */
+const trimCommonAffixes = (original: string, modified: string, hunk: Hunk): Hunk => {
+  const removed = original.slice(hunk.fromA, hunk.toA);
+  const inserted = modified.slice(hunk.fromB, hunk.toB);
+  const limit = Math.min(removed.length, inserted.length);
+
+  let prefix = 0;
+  while (prefix < limit && removed[prefix] === inserted[prefix]) {
+    prefix++;
+  }
+  let suffix = 0;
+  while (suffix < limit - prefix && removed[removed.length - 1 - suffix] === inserted[inserted.length - 1 - suffix]) {
+    suffix++;
+  }
+
+  return {
+    fromA: hunk.fromA + prefix,
+    toA: hunk.toA - suffix,
+    fromB: hunk.fromB + prefix,
+    toB: hunk.toB - suffix,
+  };
+};
+
+/**
+ * Slides a one-sided hunk (a pure deletion or insertion) to the word boundary that encloses it. Which
+ * characters a one-sided edit removed is ambiguous whenever text repeats around it: deleting
+ * `suggest change` from `suggest changes` leaves an `s` that is equally the head of the first word or
+ * the tail of the last, and the minimal-edit answer strikes `uggest changes` — keeping a letter of the
+ * word the reader deleted. Rotating the span while it still describes the same edit lets it settle
+ * where a reader would draw it.
+ */
+const slideToWordBoundary = (original: string, modified: string, hunk: Hunk): Hunk => {
+  const deletion = hunk.toB === hunk.fromB;
+  const insertion = hunk.toA === hunk.fromA;
+  if (deletion === insertion) {
+    return hunk;
+  }
+
+  const text = deletion ? original : modified;
+  const from = deletion ? hunk.fromA : hunk.fromB;
+  const to = deletion ? hunk.toA : hunk.toB;
+  const atBoundary = (offset: number) => offset === 0 || /\s/.test(text[offset - 1]);
+  if (atBoundary(from)) {
+    return hunk;
+  }
+
+  for (let shift = 1; shift <= from; shift++) {
+    // Rotating past a character only preserves the edit when it matches the span's last character.
+    if (text[from - shift] !== text[to - shift]) {
+      break;
+    }
+    if (atBoundary(from - shift)) {
+      return {
+        fromA: hunk.fromA - shift,
+        toA: hunk.toA - shift,
+        fromB: hunk.fromB - shift,
+        toB: hunk.toB - shift,
+      };
+    }
+  }
+
+  return hunk;
+};
+
+/**
+ * Does a hunk cover the anchored range? Half-open, so a range touching a neighbouring hunk's
+ * boundary is not on that hunk — except where either side is empty, which is the normal shape of a
+ * pure insertion: the inserted text occupies no span on the other side, and the caller anchors it at
+ * a single offset. Those collapse to a containment test, or accepting an insertion is impossible.
+ */
+const overlaps = (from: number, to: number, range: { start: number; end: number }): boolean =>
+  from === to || range.start === range.end
+    ? from <= range.end && to >= range.start
+    : from < range.end && to > range.start;
+
 /**
  * Resolve a single change to apply when cherry-picking from `compare` (A) into `current` (B): find
  * the hunk overlapping `range` (a character range in `current`) and return the splice that replaces
@@ -280,15 +459,19 @@ export const cherryPickHunk = (
   compare: string,
   range: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
-  // Half-open overlap: a range touching a neighbouring hunk's boundary is not on that hunk.
-  const hunk = computeWordHunks(compare, current).find((h) => h.fromB < range.end && h.toB > range.start);
-  if (!hunk) {
+  // Merge EVERY hunk the range overlaps into one splice: a range spanning a delimiter pair (two
+  // word-hunks wrapping unchanged text) must apply atomically — half an accepted pair is broken
+  // syntax. A cursor-anchored range still resolves a single hunk, unchanged.
+  const matched = computeWordHunks(compare, current).filter((h) => overlaps(h.fromB, h.toB, range));
+  if (matched.length === 0) {
     return undefined;
   }
+  const first = matched[0];
+  const last = matched[matched.length - 1];
   return {
-    from: hunk.fromB,
-    del: Math.min(hunk.toB, current.length) - hunk.fromB,
-    insert: compare.slice(hunk.fromA, Math.min(hunk.toA, compare.length)),
+    from: first.fromB,
+    del: Math.min(last.toB, current.length) - first.fromB,
+    insert: compare.slice(first.fromA, Math.min(last.toA, compare.length)),
   };
 };
 
@@ -303,14 +486,17 @@ export const revertHunk = (
   compare: string,
   baseRange: { start: number; end: number },
 ): { from: number; del: number; insert: string } | undefined => {
-  // A = base, B = compare (branch); locate the hunk by its base-side range.
-  const hunk = computeWordHunks(base, compare).find((h) => h.fromA < baseRange.end && h.toA > baseRange.start);
-  if (!hunk) {
+  // A = base, B = compare (branch); locate the hunks by the base-side range and merge them so a
+  // pair-spanning reject reverts the whole formatting action (mirror of cherryPickHunk).
+  const matched = computeWordHunks(base, compare).filter((h) => overlaps(h.fromA, h.toA, baseRange));
+  if (matched.length === 0) {
     return undefined;
   }
+  const first = matched[0];
+  const last = matched[matched.length - 1];
   return {
-    from: hunk.fromB,
-    del: Math.min(hunk.toB, compare.length) - hunk.fromB,
-    insert: base.slice(hunk.fromA, Math.min(hunk.toA, base.length)),
+    from: first.fromB,
+    del: Math.min(last.toB, compare.length) - first.fromB,
+    insert: base.slice(first.fromA, Math.min(last.toA, base.length)),
   };
 };

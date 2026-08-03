@@ -19,7 +19,9 @@ import { useGmailTags } from '#hooks';
 import { getMessageBodyText, getMessageProps } from '../../util';
 
 export type InboxStackAction =
-  | { type: 'current'; messageId: string }
+  // `newPlank` when the gesture asked for its own plank (meta/ctrl click) rather than reusing the
+  // one the mailbox keeps for whichever message is being read.
+  | { type: 'current'; messageId: string; newPlank?: boolean }
   | { type: 'current-conversation'; conversationId: string; messageId: string }
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
@@ -89,7 +91,7 @@ export type InboxStackProps = {
    * `ignore-sender` action, so other consumers (e.g. drafts) must not render a no-op menu item.
    */
   enableIgnoreSender?: boolean;
-  /** Show the "Create Topic" tile menu item. Off by default (only the mailbox handles `create-topic`). */
+  /** Show the "Create Project" tile menu item. Off by default (only the mailbox handles `create-topic`). */
   enableCreateTopic?: boolean;
   /** Active mailbox search term; when set, tiles render a highlighted best-match snippet instead of the default preview. */
   searchQuery?: string;
@@ -335,7 +337,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     }
     if (enableCreateTopic) {
       items.push({
-        label: 'Create Topic',
+        label: 'Create Project',
         icon: 'ph--stack--regular',
         onClick: () => onAction({ type: 'create-topic', messageId: message.id }),
       });
@@ -444,7 +446,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     const handleMessageClick = useCallback(
       (event: MouseEvent, messageId: string) => {
         event.stopPropagation();
-        onAction?.({ type: 'current', messageId });
+        onAction?.({ type: 'current', messageId, newPlank: event.metaKey || event.ctrlKey });
       },
       [onAction],
     );
@@ -482,7 +484,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
                   ...(enableCreateTopic
                     ? [
                         {
-                          label: 'Create Topic',
+                          label: 'Create Project',
                           icon: 'ph--stack--regular',
                           onClick: () => onAction({ type: 'create-topic', messageId: latest.id }),
                         },

@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
@@ -77,7 +77,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
     Obj.update(collection, (collection) => {
       collection.objects = [...(collection.objects ?? []), Ref.make(artifact)];
     });
-    await invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(artifact)] });
+    await invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(artifact)] });
   }, [db, collection, invokePromise]);
 
   const handleDelete = useCallback(() => {
@@ -125,7 +125,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
       </Panel.Toolbar>
       <Panel.Content>
         {items.length === 0 ? (
-          <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+          <div role='status' className='flex items-center justify-center h-full text-subdued'>
             {t('empty.message')}
           </div>
         ) : (

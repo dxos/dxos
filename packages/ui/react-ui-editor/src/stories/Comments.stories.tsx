@@ -82,7 +82,7 @@ const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
           });
         },
         // A deliberate click selects the thread in the editor (handled internally); reflect it in the
-        // list immediately (mirrors plugin-comments revealing the companion on click).
+        // list immediately (mirrors plugin-review revealing the companion on click).
         onActivate: (id) => setActiveComment(id),
         getComments: () => registry.get(commentsAtom),
         subscribe: (sink) => {
@@ -185,7 +185,7 @@ const CommentsList = ({
   };
 
   return (
-    <div className='border-bs border-subdued-separator overflow-y-auto max-bs-48'>
+    <div className='border-bs border-subdued-separator overflow-y-auto max-h-48'>
       <Listbox.Root value={activeId} onValueChange={handleSelect}>
         <Listbox.Content aria-label='Comments' classNames='p-1'>
           {resolved.map(({ comment, range }) => (

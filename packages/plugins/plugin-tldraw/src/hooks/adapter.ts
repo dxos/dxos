@@ -1,0 +1,83 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { transact } from '@tldraw/state';
+import { type TLRecord, createTLStore, defaultShapeUtils } from '@tldraw/tldraw';
+import { type TLStore } from '@tldraw/tlschema';
+
+import { AbstractStoreAdapter, type Batch, Modified } from '@dxos/echo-doc';
+import { invariant } from '@dxos/invariant';
+
+/**
+ * Ref:
+ * - https://tldraw.dev/docs/persistence#Listening-for-changes
+ * - https://github.com/tldraw/tldraw-yjs-example/blob/main/src/useYjsStore.ts
+ * - https://github.com/LiangrunDa/tldraw-with-automerge/blob/main/src/App.tsx
+ */
+const SAVE_DEBOUNCE = 250;
+
+export class TLDrawStoreAdapter extends AbstractStoreAdapter<TLRecord> {
+  private readonly _modified = new Modified<TLRecord>();
+  private _store?: TLStore;
+  private _saveTimeout?: ReturnType<typeof setTimeout>;
+
+  get store() {
+    return this._store;
+  }
+
+  override getElements(): TLRecord[] {
+    invariant(this._store);
+    return this._store.allRecords();
+  }
+
+  protected override onUpdate({ added = [], updated = [], deleted = [] }: Batch<TLRecord>): void {
+    // Replace the store records with the automerge doc records.
+    transact(() => {
+      invariant(this._store);
+      const elements = [...added, ...updated];
+      this._store.remove(deleted);
+      this._store.put(elements);
+    });
+  }
+
+  protected override onOpen(): () => void {
+    this._store = createTLStore({ shapeUtils: defaultShapeUtils });
+
+    // List for changes to the store.
+    // TODO(burdon): Upload images to WNFS.
+    const subscription = this._store.listen(
+      ({ changes: { added, updated, removed } }) => {
+        Object.values(added).forEach((record) => this._modified.added.set(record.id, record));
+        Object.values(updated).forEach(([_, record]) => this._modified.updated.set(record.id, record));
+        Object.values(removed).forEach((record) => this._modified.deleted.add(record.id));
+        // Debounced auto-save: tldraw batches listener notifications, so a save driven by
+        // pointer events can run before the final gesture is recorded and lose the last stroke.
+        clearTimeout(this._saveTimeout);
+        this._saveTimeout = setTimeout(() => this.save(), SAVE_DEBOUNCE);
+      },
+      // Only listen to local document changes.
+      {
+        scope: 'document',
+        source: 'user',
+      },
+    );
+
+    return () => {
+      clearTimeout(this._saveTimeout);
+      subscription();
+    };
+  }
+
+  protected override onClose(): void {
+    this._store = undefined;
+  }
+
+  save(): void {
+    if (!this.isOpen) {
+      return;
+    }
+    this.updateDatabase(this._modified.batch());
+    this._modified.clear();
+  }
+}
