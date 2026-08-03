@@ -10,6 +10,7 @@ import { OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientService } from '@dxos/client';
@@ -117,7 +118,7 @@ const OpaqueToolkitSpec = LayerSpec.make(
             if (!skillsRequested) {
               skillsRequested = true;
               void EffectEx.runAndForwardErrors(
-                pluginManager.activate(AppCapability.AssistantStart).pipe(Effect.ignore),
+                pluginManager.activate(AppActivationEvents.AssistantStart).pipe(Effect.ignore),
               );
             }
             const toolkits = capabilities.getAll(AppCapabilities.Toolkit);

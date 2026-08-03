@@ -6,6 +6,7 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useActivationSignal, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Routine from '@dxos/compute/Routine';
@@ -32,7 +33,7 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
   const { invokePromise } = useOperationInvoker();
   // The form's pickers list registry-synced skills, so pull the assistant-start-gated skill
   // modules; operation definitions are complete at boot (handler sets register eagerly).
-  useActivationSignal(AppCapability.AssistantStart);
+  useActivationSignal(AppActivationEvents.AssistantStart);
   const registry = useContext(RegistryContext);
   // Subscribe so the run affordance tracks the routine's action (`spec`).
   const [routine] = useObject(subject);
