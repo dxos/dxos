@@ -61,6 +61,12 @@ export const WORKSPACE_KEY = 'w';
  */
 export const COMPANION_KEY = 'companion';
 
+/**
+ * The key for the complementary sidebar's selected panel (`context/<value>`), a trailing view
+ * preference rather than deck content — the deck's own contents are the item pairs before it.
+ */
+export const CONTEXT_KEY = 'context';
+
 // The workspace and companion keys are NOT reserved — they are the grammar's own configured keys.
 const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found']);
 

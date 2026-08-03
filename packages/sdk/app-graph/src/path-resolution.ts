@@ -123,12 +123,16 @@ export const buildUrlKeyTable = (builder: GraphBuilder.GraphBuilder): Map<string
   const table = new Map<string, UrlKeyTableEntry>();
   // The grammar's fixed tiers are configured on the builder, not declared by any extension: the anchor
   // rebases the chain, and the linked key addresses a `~<variant>` child of the preceding item.
-  const { anchorKey, linkedKey } = builder.urlGrammar;
+  const { anchorKey, linkedKey, contextKey } = builder.urlGrammar;
   if (anchorKey) {
     table.set(anchorKey, { key: anchorKey, hasId: true, anchor: true });
   }
   if (linkedKey) {
     table.set(linkedKey, { key: linkedKey, hasId: true, anchor: false });
+  }
+  if (contextKey) {
+    // Tokenized only: its value addresses a panel, not a node, so no extension resolves it.
+    table.set(contextKey, { key: contextKey, hasId: true, anchor: false });
   }
   for (const extension of getKeyedExtensions(builder)) {
     const key = extension.url.key;

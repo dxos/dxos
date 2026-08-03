@@ -157,17 +157,18 @@ browser-verified; URL persistence and one attention defect remain.
       its source is attended. One existing test encoded the old one-way
       behaviour and was updated; a new test covers set + clear. Verified in the
       browser: attending the source lights both its plank and the clone.
-- [ ] **URL** — NOT STARTED, the remaining piece. Clones need a self-contained
-      representation (a clone outlives its source, so the existing positional
-      `companion` pair cannot express it) and the sidebar selection needs to move
-      to a trailing `context` pair. Analysis: `UrlPath.parse` decodes the whole
-      pathname before splitting on `/`, so percent-encoding a composite id will
-      not survive; the composite needs a delimiter that cannot occur in a
-      represented key or id (`+` is the tail separator, `!` and `:` occur in real
-      ids such as `root/!dxos:settings`). Cheapest route is to expand/collapse
-      the composite inside plugin-deck's url-handler around
-      `PathResolution.resolveUrl` (synthesize the source pair on parse, drop it
-      from the plank list) rather than changing the shared linked tier.
+- [x] **URL** — clones serialize as `companion/<sourceKey>~<sourceId>~<variant>`
+      (`util/companion-url.ts`), self-contained so an orphaned clone round-trips;
+      the sidebar selection trails as `context/<value>`, a new grammar tier
+      (`UrlGrammar.contextKey`) that is tokenized but never resolved. Parse
+      expands composites into (source, companion) for the linked tier and drops
+      the synthesized source from the plank list; serialize represents a clone
+      through its source, so `serializeDeckToUrl` treats every plank uniformly and
+      its `companion` special case is gone. 91 unit tests including composite and
+      context round-trips, a compound source id, and expansion with the source
+      absent from the chain.
+      NOT YET verified against the running app — the url-handler is an app
+      capability, so storybook cannot exercise it.
 - [ ] **DEFECT: popping moves attention to the clone.** `scrollIntoView: false`
       keeps focus off it in the simple case, but with three planks the anchor
       resolves to the clone after popping (longest-prefix match in

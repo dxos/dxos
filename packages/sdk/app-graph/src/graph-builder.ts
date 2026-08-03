@@ -117,6 +117,8 @@ export type UrlBinding = { key: string; kind: 'item' | 'singleton'; path: string
 export type UrlGrammar = {
   anchorKey?: string;
   linkedKey?: string;
+  /** Trailing view-preference key; tokenized like any pair but resolved by its owner, not the graph. */
+  contextKey?: string;
   linkedPrefix: string;
   tailSeparator: string;
 };

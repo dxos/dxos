@@ -157,11 +157,17 @@ pop time, so multiple clones with different sources can sit side by side
   The attention tracker already computes companion→parent relatedness for
   linked segments; the source→clone direction may need a small tracker or
   consumer-side extension — attending `<src>` should light `<src>/~<variant>`.
-- **URL**: clone planks take over the `companion` chain key with a
-  self-contained id that encodes source + variant, so a clone survives its
-  source being closed and pairs keep meaning "contents of the deck, in order".
-  The sidebar selection moves to a trailing **`context`** pair (its own key;
-  it is a view preference, not deck content).
+- **URL** (implemented): clone planks take the `companion` chain key with the
+  self-contained id `<sourceKey>~<sourceId>~<variant>` — `~` is the linked-segment
+  marker, so it cannot occur inside a represented key or variant, and the key is
+  read to the first separator / the variant after the last so a compound source id
+  (`contact+01J9`) survives. A clone therefore round-trips with its source closed,
+  and chain pairs mean "contents of the deck, in order". On parse the composite is
+  expanded into (source, companion) so the existing linked tier resolves it, and
+  the synthesized source is dropped from the plank list. The sidebar selection
+  moves to a trailing **`context`** pair — `~<variant>` for a node selection (it
+  rebinds to whatever holds attention), the bare id for a root one — registered as
+  its own grammar tier (`UrlGrammar.contextKey`), tokenized but never resolved.
 - `activeCall` pops like anything else if/when root popping arrives — it is
   already a secondary surface over a running call, so a clone is just another
   view (a `poppable` opt-out was considered and dropped as unmotivated).

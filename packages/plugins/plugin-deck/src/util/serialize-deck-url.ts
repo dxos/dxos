@@ -9,19 +9,16 @@ import { log } from '@dxos/log';
 /** Reverse-mapped `(key, id?, workspace)` representation of every plank id worth serializing. */
 export type Representations = ReadonlyMap<string, PathResolution.RepresentedNode>;
 
-/** The open companion, if any, already reverse-mapped. */
-export type CompanionRepresentation = {
-  /** Id of the plank the companion shares a container with (the attended plank). */
-  plankId: string;
-  node: PathResolution.RepresentedNode;
-};
-
 /**
- * Pure serialization of a deck's `active` plank list (plus its companion, if open) into a pathname
- * under the pair-chain grammar — the reverse of `PathResolution.resolveUrl`. Extracted as a pure
- * function (taking pre-computed representations rather than a live graph builder) so it is testable
- * without an Effect runtime. A plank with no representation (an unmapped node, or the not-found
- * sentinel) is skipped with a `log.warn`, per the design's "unmapped nodes" rule.
+ * Pure serialization of a deck's `active` plank list into a pathname under the pair-chain grammar — the
+ * reverse of `PathResolution.resolveUrl`. Extracted as a pure function (taking pre-computed
+ * representations rather than a live graph builder) so it is testable without an Effect runtime. A plank
+ * with no representation (an unmapped node, or the not-found sentinel) is skipped with a `log.warn`, per
+ * the design's "unmapped nodes" rule.
+ *
+ * Every plank serializes the same way, popped companions included: the caller represents a companion
+ * plank as a self-contained `companion/<source>~<variant>` pair, so the chain reads as the deck's
+ * contents in order. `context` trails the chain — it is the sidebar's selection, not deck content.
  */
 export const serializeDeckToUrl = (params: {
   workspace: string;
@@ -29,9 +26,10 @@ export const serializeDeckToUrl = (params: {
   workspaceKey: string;
   active: readonly string[];
   representations: Representations;
-  companion?: CompanionRepresentation;
+  /** The complementary sidebar's selected panel, already encoded. */
+  context?: string;
 }): string => {
-  const { workspace, workspaceKey, active, representations, companion } = params;
+  const { workspace, workspaceKey, active, representations, context } = params;
 
   const pairs: UrlPath.Pair[] = [];
   for (const id of active) {
@@ -41,10 +39,10 @@ export const serializeDeckToUrl = (params: {
       continue;
     }
     pairs.push({ key: rep.key, id: rep.id, workspace: rep.workspace });
+  }
 
-    if (companion && companion.plankId === id) {
-      pairs.push({ key: companion.node.key, id: companion.node.id, workspace: companion.node.workspace });
-    }
+  if (context) {
+    pairs.push({ key: UrlPath.CONTEXT_KEY, id: context, workspace });
   }
 
   return UrlPath.format({ workspace, workspaceKey, pairs });

@@ -18,8 +18,14 @@ import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } from '#types';
 
-import { getNodeCompanionVariant } from '../hooks/useCompanionGroups';
-import { getRenderedPlanks, resolveCompanionAnchor, serializeDeckToUrl } from '../util';
+import { getNodeCompanionVariant, makeNodeCompanionValue } from '../hooks/useCompanionGroups';
+import {
+  expandCompanionPairs,
+  formatCompanionUrlId,
+  formatContextUrlValue,
+  parseContextUrlValue,
+  serializeDeckToUrl,
+} from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
@@ -116,7 +122,9 @@ export default Capability.makeModule(
         return;
       }
 
-      const { workspace, pairs } = parsed.value;
+      const { workspace, pairs: allPairs } = parsed.value;
+      // The context pair is a view preference, not a node — kept out of resolution entirely.
+      const parsedPairs = allPairs.filter((pair) => pair.key !== UrlPath.CONTEXT_KEY);
       // `/w/default` was written by builds that serialized the unresolved-workspace sentinel; map it back
       // to the sentinel rather than to `root/default`, which resolves to no node and so can never heal.
       const workspacePath = workspace === DEFAULT_DECK_ID ? DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
@@ -125,7 +133,7 @@ export default Capability.makeModule(
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
       }
 
-      if (pairs.length === 0) {
+      if (parsedPairs.length === 0) {
         // Workspace-only URL: SwitchWorkspace above already restored the workspace's persisted deck.
         return;
       }
@@ -137,6 +145,10 @@ export default Capability.makeModule(
       // dependency; absent (e.g. headless), resolution simply falls back to its guided search. The
       // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
       // below so a genuine 404 fails fast instead of waiting out the timeout.
+      // A popped companion addresses its source inside its own id; expanding it lets the linked tier
+      // resolve it against that source, which is a reference rather than a plank of its own.
+      const { pairs, synthetic } = expandCompanionPairs(parsedPairs);
+
       const loaders = yield* Capability.getAll(AppCapabilities.NavigationTargetLoader);
       const confirmed = new Array<boolean>(pairs.length).fill(false);
       if (loaders.length > 0) {
@@ -168,38 +180,39 @@ export default Capability.makeModule(
         resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
       }
 
-      // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
-      // than being a plank of its own, so it drives that plank's companion state and the selected variant.
+      // Planks resolve in chain order. A companion pair is a plank in its own right (a popped clone);
+      // the source pair synthesized for it above is only there to resolve it.
       const plankIds: string[] = [];
-      let companionNodeId: string | null = null;
-      let companionAnchorId: string | undefined;
       pairs.forEach((pair, index) => {
-        const nodeId = resolved[index]?.nodeId;
-        if (pair.key === UrlPath.COMPANION_KEY) {
-          if (nodeId) {
-            companionNodeId = nodeId;
-            companionAnchorId = plankIds[plankIds.length - 1];
-          }
-        } else {
-          plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
+        if (synthetic.has(index)) {
+          return;
         }
+        const nodeId = resolved[index]?.nodeId;
+        if (pair.key === UrlPath.COMPANION_KEY && !nodeId) {
+          // An unresolvable clone (its source is gone) is dropped rather than shown as not-found.
+          return;
+        }
+        plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
       });
 
       // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
       // restore, for one plank or many, with no separate disposition to invent.
       yield* Operation.invoke(LayoutOperation.Set, { subject: plankIds });
 
-      // Attention is never serialized; on load it defaults to the last plank in the chain — except when
-      // the chain carries a companion, whose position *is* serialized and which only renders beside the
-      // plank it is anchored to, so attention has to land there for the URL to restore faithfully.
-      const attendId = companionAnchorId ?? plankIds[plankIds.length - 1];
+      // Attention is never serialized; on load it defaults to the last plank in the chain.
+      const attendId = plankIds[plankIds.length - 1];
       if (attendId) {
         yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: attendId });
       }
 
-      // The companion is part of the URL-derived deck state too: explicitly close it when the chain
-      // carries no companion pair, rather than leaving a stale companion open from before navigation.
-      yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companionNodeId });
+      // The trailing `context` pair restores which panel the sidebar was showing.
+      const contextValue = allPairs.find((pair) => pair.key === UrlPath.CONTEXT_KEY)?.id;
+      if (contextValue) {
+        const { variant, panel } = parseContextUrlValue(contextValue);
+        yield* Operation.invoke(LayoutOperation.UpdateComplementary, {
+          subject: variant ? makeNodeCompanionValue(variant) : panel,
+        });
+      }
     });
 
     const onPopState = () => void EffectEx.runAndForwardErrors(provideServices(handleNavigation()));
@@ -288,6 +301,23 @@ export default Capability.makeModule(
 
       const representations = new Map<string, PathResolution.RepresentedNode>();
       for (const id of deck.active) {
+        // A popped companion is represented through its source, since `representNode` maps a linked node
+        // to a bare `companion/<variant>` — positional, and this plank outlives the plank it came from.
+        if (Attention.isLinkedSegment(id)) {
+          const sourceId = Attention.getParentId(id);
+          const source = sourceId ? PathResolution.representNode(builder, sourceId) : Option.none();
+          if (Option.isSome(source)) {
+            representations.set(id, {
+              key: UrlPath.COMPANION_KEY,
+              id: formatCompanionUrlId(source.value, Attention.getLinkedVariant(id)),
+              workspace: source.value.workspace,
+            });
+          } else {
+            log.warn('popped companion has no URL representation; omitting from URL', { id });
+          }
+          continue;
+        }
+
         const represented = PathResolution.representNode(builder, id);
         if (Option.isSome(represented)) {
           representations.set(id, represented.value);
@@ -296,27 +326,13 @@ export default Capability.makeModule(
         }
       }
 
-      // The sidebar's node companion is serialized as `companion/<variant>` after the attended plank's
-      // own pair: the variant is what the sidebar stores, and the plank records which object it was
-      // showing so a restore lands attention there. Attention itself is still never serialized.
-      let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
-      const companionVariant = getNodeCompanionVariant(state.complementarySidebarPanel);
-      if (companionVariant && deck.active.length > 0) {
-        // Resolved against the rendered planks, not `deck.active`: under `flatten` only the current plank
-        // is laid out, so anchoring to an earlier one would name a plank the deck cannot show.
-        const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
-        const plankId = resolveCompanionAnchor(rendered, attention.getCurrent());
-        if (plankId) {
-          const companionNodeId = `${plankId}/${Attention.linkedSegment(companionVariant)}`;
-          const represented = PathResolution.representNode(builder, companionNodeId);
-          if (Option.isSome(represented)) {
-            companion = { plankId, node: represented.value };
-          }
-        }
-      }
+      // The sidebar's selection trails the chain: a node-scoped one by variant (it rebinds to whatever
+      // holds attention), a root-level one by its own id. Attention itself is still never serialized.
+      const panel = state.complementarySidebarPanel;
+      const context = panel ? formatContextUrlValue(panel, getNodeCompanionVariant(panel)) : undefined;
 
       const workspaceKey = UrlPath.WORKSPACE_KEY;
-      const path = serializeDeckToUrl({ workspace, workspaceKey, active: deck.active, representations, companion });
+      const path = serializeDeckToUrl({ workspace, workspaceKey, active: deck.active, representations, context });
       const newUrl = `${path}${window.location.search}`;
 
       // Update only when the derived URL actually differs from the current one — the deck state and
