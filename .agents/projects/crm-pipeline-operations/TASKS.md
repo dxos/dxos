@@ -1,6 +1,6 @@
 # CRM Pipeline Operations — Tasks
 
-_Resume: open the PR (submit-pr). Last: implementation complete, build/lint/tests green._
+_Resume: watch PR #12441 Check to green; surface Composer preview URL. Last: implementation complete, PR opened._
 
 ## Phase 1: Review & audit
 
@@ -34,7 +34,7 @@ schemas); docs in `agents/superpowers/specs/`; finish with commits + PR.
 - [x] **Remove plugin-crm skill instructions.ts and unwire the skill registration** — skill kept with thin inline instructions; duplicated `src/util/extract-contact.ts` parser removed with it; PLUGIN.mdl + dx.config updated.
 - [x] **Scaffold plugin-crm research operations (schemas + handlers, deterministic logic)** — `ResearchPerson` / `ResearchOrganization` / `ProcessMailbox` (cursored, foreign-key-tagged feed cursor) + `crmPipeline` project template (runnable + feed trigger).
 - [x] **Fixture-driven end-to-end tests for the chosen operations (deterministic)** — `research.test.ts`, `process-mailbox.test.ts` (feed → cursor → contact → profile chain, idempotency, gate), `crm-pipeline.test.ts`. Found + fixed a plugin-inbox bug: `Mailbox.recordExtraction` dropped the first entry on a fresh mailbox (detached-record `??=` write); regression test added in `Mailbox.test.ts`.
-- [ ] **Format, lint, test; open PR via submit-pr** — build/lint/tests green (plugin-crm 11, plugin-inbox 233); PR pending.
+- [x] **Format, lint, test; open PR via submit-pr** — repo lint green, oxfmt clean; PR #12441 opened, Check pending.
 
 ### References
 

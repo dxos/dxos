@@ -14,8 +14,8 @@ projects:
     summary: 'CRM pipeline operations: deprecate crm skill instructions, audit Mailbox/Person/Org operations, spec CRM actions, scaffold research operations + deterministic fixture tests.'
     tasks: .agents/projects/crm-pipeline-operations/TASKS.md
     design: agents/superpowers/specs/2026-08-02-crm-pipeline-operations-spec.md
-    prs: []
-    resume: 'Exploration phase — review plugin-crm, plugin-projects, plugin-inbox, pipeline-email, stories-inbox.'
+    prs: [12441]
+    resume: 'PR #12441 OPEN — watch Check to green, surface preview URL. Audit+spec in agents/superpowers/specs/2026-08-02-crm-pipeline-operations-spec.md; ops ProcessMailbox/ResearchPerson/ResearchOrganization + crmPipeline template shipped with deterministic fixture tests; plugin-inbox recordExtraction first-entry bug fixed.'
 
   - name: lenses
     status: active
