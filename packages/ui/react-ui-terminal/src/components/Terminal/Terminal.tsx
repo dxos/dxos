@@ -16,6 +16,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { XtermBridge, XtermContext, runShell } from '../../cli';
+import { createXtermTheme } from './theme';
 
 export type TerminalProps<Name extends string, R, E, A> = ThemedClassName<{
   /**
@@ -58,23 +59,39 @@ export const Terminal = <Name extends string, R, E, A>({
       return;
     }
 
-    // Inherit the surrounding theme so the terminal tracks light/dark without its own palette.
+    // The face must come from the mono token rather than the container, whose inherited UI face is
+    // proportional and would leave xterm's fixed cells ragged.
     const styles = getComputedStyle(container);
     const xterm = new Xterm({
       fontSize,
-      fontFamily: styles.fontFamily || 'monospace',
-      theme: {
-        background: styles.backgroundColor,
-        foreground: styles.color,
-        cursor: styles.color,
-      },
+      fontFamily: styles.getPropertyValue('--font-mono').trim() || 'monospace',
       cursorBlink: true,
     });
 
     const fitAddon = new FitAddon();
     xterm.loadAddon(fitAddon);
     xterm.open(container);
-    fitAddon.fit();
+
+    // Fitting a zero-sized container pins the terminal to its one-column minimum, and fitting
+    // before xterm's render service exists throws, so the observer's initial callback — which
+    // lands once the element is measurable and the renderer is up — drives the first fit too.
+    const fit = () => {
+      if (container.clientWidth > 0 && container.clientHeight > 0) {
+        fitAddon.fit();
+      }
+    };
+
+    // Drive the palette from the design system tokens so the terminal tracks light/dark without a
+    // scheme of its own. The theme class lands on the document from a provider whose effect runs
+    // after this one, so the palette is applied on the next frame and refreshed on every change.
+    const applyTheme = () => {
+      xterm.options.theme = createXtermTheme(container);
+    };
+
+    const frame = requestAnimationFrame(applyTheme);
+    const themeObserver = new MutationObserver(applyTheme);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] });
+
     xterm.focus();
 
     const bridge = new XtermBridge(xterm);
@@ -84,10 +101,12 @@ export const Terminal = <Name extends string, R, E, A>({
     );
     const fiber = Effect.runFork(Effect.scoped(shell));
 
-    const observer = new ResizeObserver(() => fitAddon.fit());
+    const observer = new ResizeObserver(fit);
     observer.observe(container);
 
     return () => {
+      cancelAnimationFrame(frame);
+      themeObserver.disconnect();
       observer.disconnect();
       Effect.runFork(Fiber.interrupt(fiber));
       bridge.dispose();
@@ -95,5 +114,5 @@ export const Terminal = <Name extends string, R, E, A>({
     };
   }, [command, layer, name, version, prompt, banner, fontSize]);
 
-  return <div ref={containerRef} className={mx('is-full bs-full overflow-hidden bg-base', classNames)} />;
+  return <div ref={containerRef} className={mx('grow w-full h-full overflow-hidden bg-base-surface', classNames)} />;
 };

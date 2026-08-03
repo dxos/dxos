@@ -113,7 +113,7 @@ const DxStory = () => {
       command={cli.command}
       layer={cli.layer}
       name='dx'
-      banner={`${BOLD}DXOS CLI${RESET}\n${DIM}Try: space list · space info · database query · help${RESET}`}
+      banner={`${BOLD}DXOS CLI${RESET}\n${DIM}Try: space list · database query · space --help${RESET}`}
     />
   );
 };

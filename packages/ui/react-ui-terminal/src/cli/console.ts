@@ -84,5 +84,8 @@ export const make = (bridge: XtermBridge): Console.Console => {
   });
 };
 
-export const layer = (bridge: XtermBridge): Layer.Layer<Console.Console> =>
-  Layer.succeed(Console.Console, make(bridge));
+/**
+ * `Console.log` resolves against the `currentServices` fiber ref rather than the layer context, so
+ * this must go through `setConsole` — providing the tag with `Layer.succeed` is silently ignored.
+ */
+export const layer = (bridge: XtermBridge): Layer.Layer<never> => Console.setConsole(make(bridge));
