@@ -69,7 +69,7 @@ import { Tldraw } from '@dxos/plugin-tldraw';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Table } from '@dxos/react-ui-table/types';
 import { Tagging, TagIndex, ViewModel } from '@dxos/schema';
-import { Actor, ContentBlock, Event, ExternalProject, Message, Organization, Person, Task } from '@dxos/types';
+import { Actor, ContentBlock, Event, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -136,7 +136,7 @@ const SCHEMAS: Type.AnyEntity[] = [
   Organization.Organization,
   Message.Message,
   Event.Event,
-  ExternalProject.ExternalProject,
+  TaskSet.TaskSet,
   Task.Task,
   Mailbox.Mailbox,
   Calendar.Calendar,
@@ -222,14 +222,17 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   const { calendar, events } = makeCalendar(people, organizations);
   space.db.add(calendar);
 
-  // Spring Blend Launch project — Project/Task aren't collection-item types,
+  // Spring Blend Launch task set — TaskSet/Task aren't collection-item types,
   // so they live directly in the space DB, same as contacts.
-  const { project, tasks } = makeProject(people);
-  space.db.add(project);
-  tasks.forEach((task) => space.db.add(task));
+  const { taskSet, tasks } = makeTaskSet(people);
+  space.db.add(taskSet);
+  tasks.forEach((task) => {
+    space.db.add(task);
+    Obj.setParent(task, taskSet);
+  });
 
-  // Notes, sketches & sheets — notes reference people/orgs/project via DXN links/embeds.
-  const notes = makeNotes(people, organizations, project);
+  // Notes, sketches & sheets — notes reference people/orgs/task set via DXN links/embeds.
+  const notes = makeNotes(people, organizations, taskSet);
   Object.values(notes).forEach((note) => space.db.add(note));
   const sketches = makeSketches();
   Object.values(sketches).forEach((sketch) => space.db.add(sketch));
@@ -960,70 +963,60 @@ const makeCalendar = (
 };
 
 //
-// Project + tasks
+// Task set + tasks
 //
 
-const makeProject = (
-  people: Record<PersonKey, Person.Person>,
-): { project: ExternalProject.ExternalProject; tasks: Task.Task[] } => {
-  const project = ExternalProject.make({
+const makeTaskSet = (people: Record<PersonKey, Person.Person>): { taskSet: TaskSet.TaskSet; tasks: Task.Task[] } => {
+  const taskSet = TaskSet.make({
     name: 'Spring Blend Launch',
     description: 'New seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.',
   });
-
-  const projectRef = Ref.make(project);
 
   const tasks: Task.Task[] = [
     Task.make({
       title: 'Source green coffee — Esperanza + Guatemalan parcel',
       status: 'done',
       priority: 'high',
-      assigned: Ref.make(people.diego),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.diego) },
       description: 'Lock contracts with Carmen and the importer for the Guatemalan parcel.',
     }),
     Task.make({
       title: 'Finalize roast curve (v3)',
       status: 'in-progress',
       priority: 'high',
-      assigned: Ref.make(people.kai),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.kai) },
       description: 'Currently on v2 with adjusted development time. One more iteration before sign-off.',
     }),
     Task.make({
       title: 'Send v2 samples to wholesalers',
       status: 'in-progress',
       priority: 'medium',
-      assigned: Ref.make(people.sam),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.sam) },
       description: 'North Star, Hatch, Olive & Vine. 2 lb each.',
     }),
     Task.make({
       title: 'Design label — Letterform Press',
       status: 'in-progress',
       priority: 'medium',
-      assigned: Ref.make(people.riley),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.riley) },
       description: 'Final draft due to the printer in 10 days.',
     }),
     Task.make({
       title: 'Schedule launch cuppings (Oakland + remote)',
       status: 'todo',
       priority: 'medium',
-      assigned: Ref.make(people.sam),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.sam) },
     }),
     Task.make({
       title: 'Publish product page + open preorders',
       status: 'todo',
       priority: 'low',
-      assigned: Ref.make(people.riley),
-      project: projectRef,
+      assignee: { contact: Ref.make(people.riley) },
       description: 'Webshop + email blast to subscribers.',
     }),
   ];
 
-  return { project, tasks };
+  return { taskSet, tasks };
 };
 
 //
@@ -1039,7 +1032,7 @@ type NotesBundle = {
 const makeNotes = (
   people: Record<PersonKey, Person.Person>,
   organizations: Record<OrgKey, Organization.Organization>,
-  project: ExternalProject.ExternalProject,
+  taskSet: TaskSet.TaskSet,
 ): NotesBundle => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
   // Use space-relative URIs so links remain valid when the snapshot is imported into a new space.
@@ -1116,7 +1109,7 @@ const makeNotes = (
     content: [
       '# Spring blend — tasting protocol',
       '',
-      `Project: ${emb('Spring Blend Launch', project)}`,
+      `Project: ${emb('Spring Blend Launch', taskSet)}`,
       '',
       '## Setup',
       '',

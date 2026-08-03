@@ -37,6 +37,7 @@
     "packages/common/esbuild-plugins/polyfills/**",
     "packages/common/node-std/**",
     "packages/common/typings/src/streamx.d.ts",
+    "packages/ui/react-ui-components/src/components/HtmlViewer/fixtures/**",
     "packages/ui/react-ui-geo/data/**",
     "packages/ui/solid-ui-geo/data/**",
     "templates/**",

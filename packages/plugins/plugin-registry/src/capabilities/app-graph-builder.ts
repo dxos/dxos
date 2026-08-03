@@ -203,7 +203,9 @@ export default Capability.makeModule(
 
           const registryEntries = get(manager.pluginRegistry.plugins).entries;
           const registryNodes = registryEntries
-            .filter((entry) => !installedIds.has(DXN.make(entry.profile.key)))
+            // `profile.key` is the bare NSID on both sides; comparing against a `dxn:`-prefixed
+            // URI here would never match and would duplicate every installed plugin's node.
+            .filter((entry) => !installedIds.has(entry.profile.key))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
               return Node.make({

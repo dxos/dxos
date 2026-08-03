@@ -7,6 +7,9 @@ import { type Client } from '@dxos/react-client';
 import { type Credential } from '@dxos/react-client/halo';
 
 export const removeQueryParamByValue = (valueToRemove: string) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
   const url = new URL(window.location.href);
   const params = Array.from(url.searchParams.entries());
   const match = params.find(([_, value]) => value === valueToRemove);

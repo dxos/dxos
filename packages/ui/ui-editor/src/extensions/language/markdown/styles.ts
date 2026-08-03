@@ -35,6 +35,9 @@ export const formattingStyles = EditorView.theme({
     display: 'inline-block',
     textAlign: 'right',
     paddingRight: '0.5em',
+    // Being inline-block makes this a block container, so it would otherwise inherit the row's
+    // hanging indent and lay its own glyph out against a shifted line box.
+    textIndent: 0,
     fontVariant: 'tabular-nums',
     // Anchor to the line top (not the baseline) so the inline-block marker — whose height already
     // equals the line-height — fills the line box exactly instead of extending it and making a
@@ -44,6 +47,9 @@ export const formattingStyles = EditorView.theme({
   },
   '& .cm-list-mark-bullet': {
     width: `${bulletListIndentationWidth}px`,
+    // Centered (not right-aligned like an ordered marker, whose digits align on the last column) so
+    // the glyph lands on the same axis as a task checkbox, which fills the same box from its start.
+    textAlign: 'center',
     // The rendered bullet widget sits inside the `ListMark` font-mono highlight span; a direct
     // font-family on the widget overrides that inherited monospace so the bullet uses the body font.
     fontFamily: fontBody,

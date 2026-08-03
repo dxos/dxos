@@ -9,6 +9,8 @@ export default defineConfig({
     'index': 'src/index.ts',
     'app-framework/AppActivationEvents': 'src/app-framework/AppActivationEvents.ts',
     'echo/Query': 'src/echo/Query.ts',
+    'types': 'src/types/index.ts',
+    'testing': 'src/testing/index.ts',
     'ui': 'src/ui/index.ts',
   },
   jsx: 'react',

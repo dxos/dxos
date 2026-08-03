@@ -310,7 +310,7 @@ export default defineConfig((env) => ({
       isMinimalPluginSet
         ? path.resolve(
             rootDir,
-            'packages/plugins/plugin-{assistant,attention,client,debug,deck,devtools,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
+            'packages/plugins/plugin-{assistant,attention,client,connector,debug,deck,devtools,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
           )
         : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
