@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Mailbox from 'effect/Mailbox';
 
-import type { XtermBridge } from './bridge';
+import type { TerminalBridge } from './bridge';
 import { isQuitInput } from './input';
 import { readLine } from './line-editor';
 
@@ -18,7 +18,7 @@ import { readLine } from './line-editor';
  * This is the only service in `CliApp.Environment` without a browser implementation upstream;
  * `Path` is already pure JS and `FileSystem` can be stubbed.
  */
-export const make = (bridge: XtermBridge): Terminal.Terminal =>
+export const make = (bridge: TerminalBridge): Terminal.Terminal =>
   Terminal.Terminal.of({
     columns: Effect.sync(() => bridge.columns),
     rows: Effect.sync(() => bridge.rows),
@@ -39,5 +39,5 @@ export const make = (bridge: XtermBridge): Terminal.Terminal =>
     display: (text) => Effect.sync(() => bridge.write(text)),
   });
 
-export const layer = (bridge: XtermBridge): Layer.Layer<Terminal.Terminal> =>
+export const layer = (bridge: TerminalBridge): Layer.Layer<Terminal.Terminal> =>
   Layer.succeed(Terminal.Terminal, make(bridge));

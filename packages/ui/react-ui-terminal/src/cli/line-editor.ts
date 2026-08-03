@@ -6,7 +6,7 @@ import * as Terminal from '@effect/platform/Terminal';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import type { XtermBridge } from './bridge';
+import type { TerminalBridge } from './bridge';
 
 export type LineResult =
   | { readonly type: 'line'; readonly value: string }
@@ -32,7 +32,7 @@ export type ReadLineOptions = {
  * Distinguishes cancellation (Ctrl-C) from end-of-input (Ctrl-D on an empty buffer) so a shell can
  * abandon the current line without exiting.
  */
-export const readLineResult = (bridge: XtermBridge, options: ReadLineOptions = {}): Effect.Effect<LineResult> =>
+export const readLineResult = (bridge: TerminalBridge, options: ReadLineOptions = {}): Effect.Effect<LineResult> =>
   Effect.async<LineResult>((resume) => {
     const { prompt = '', history = [] } = options;
 
@@ -191,7 +191,7 @@ export const readLineResult = (bridge: XtermBridge, options: ReadLineOptions = {
 /**
  * The `Terminal` service contract: a line, or a `QuitException` for either interrupt.
  */
-export const readLine = (bridge: XtermBridge, options: ReadLineOptions = {}) =>
+export const readLine = (bridge: TerminalBridge, options: ReadLineOptions = {}) =>
   readLineResult(bridge, options).pipe(
     Effect.flatMap((result) =>
       result.type === 'line' ? Effect.succeed(result.value) : Effect.fail(new Terminal.QuitException()),

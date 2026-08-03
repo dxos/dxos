@@ -10,10 +10,23 @@ import { decodeInput } from './input';
 export type InputHandler = (input: Terminal.UserInput) => void;
 
 /**
- * Adapts an xterm instance to the surface the Effect `Terminal` service needs: a write sink and a
- * stack of keypress subscribers.
+ * The surface the shell and the Effect `Terminal` service need from a terminal: a write sink and a
+ * stack of keypress subscribers. Depending on this rather than the xterm class keeps the rest of
+ * this module free of any renderer.
  */
-export class XtermBridge {
+export interface TerminalBridge {
+  readonly columns: number;
+  readonly rows: number;
+  readonly atLineStart: boolean;
+  write(text: string): void;
+  clear(): void;
+  subscribe(handler: InputHandler): () => void;
+}
+
+/**
+ * Adapts an xterm instance to {@link TerminalBridge}.
+ */
+export class XtermBridge implements TerminalBridge {
   #terminal: XtermTerminal;
   #subscribers: InputHandler[] = [];
   #subscription: IDisposable;

@@ -11,7 +11,7 @@ import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import type { XtermBridge } from './bridge';
+import type { TerminalBridge } from './bridge';
 import { readLineResult } from './line-editor';
 import { rewriteHelpAliases, tokenize } from './tokenize';
 
@@ -42,7 +42,7 @@ export type ShellOptions<Name extends string, R, E, A> = {
  * tree and its layer are built once, so every command reuses the already-activated services.
  */
 export const runShell = <Name extends string, R, E, A>(
-  bridge: XtermBridge,
+  bridge: TerminalBridge,
   options: ShellOptions<Name, R, E, A>,
 ): Effect.Effect<void, never, R | CliEnvironment> =>
   Effect.gen(function* () {

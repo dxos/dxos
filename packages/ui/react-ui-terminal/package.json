@@ -44,6 +44,7 @@
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

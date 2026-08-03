@@ -25132,6 +25132,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space

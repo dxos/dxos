@@ -6,7 +6,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import type { XtermBridge } from './bridge';
+import type { TerminalBridge } from './bridge';
 
 const stringify = (value: unknown): string => {
   if (typeof value === 'string') {
@@ -31,7 +31,7 @@ const format = (args: ReadonlyArray<unknown>): string => args.map(stringify).joi
  * `@effect/cli` renders help, usage errors, and wizard output as ANSI text through this service,
  * which xterm interprets natively — so the browser gets the same styled output as a shell.
  */
-export const make = (bridge: XtermBridge): Console.Console => {
+export const make = (bridge: TerminalBridge): Console.Console => {
   const write = (args: ReadonlyArray<unknown>) => bridge.write(format(args) + '\n');
 
   const unsafe: Console.UnsafeConsole = {
@@ -88,4 +88,4 @@ export const make = (bridge: XtermBridge): Console.Console => {
  * `Console.log` resolves against the `currentServices` fiber ref rather than the layer context, so
  * this must go through `setConsole` — providing the tag with `Layer.succeed` is silently ignored.
  */
-export const layer = (bridge: XtermBridge): Layer.Layer<never> => Console.setConsole(make(bridge));
+export const layer = (bridge: TerminalBridge): Layer.Layer<never> => Console.setConsole(make(bridge));
