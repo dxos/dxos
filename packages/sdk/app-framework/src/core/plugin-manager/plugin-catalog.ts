@@ -321,7 +321,7 @@ export class PluginCatalog {
           );
         // Streaming bootstrap: fork so `enable` (and thus `initialized`, which event dispatch
         // awaits) completes on REGISTRATION — awaiting here would serialize the entire startup
-        // fan-out into the enable chain. `start()` waits for loader quiescence before ready.
+        // fan-out into the enable chain. `start()` waits for loads to settle before ready.
         if (yield* Deferred.isDone(this.#state.initialized)) {
           yield* pass;
           // A plugin enabled after boot missed every host fire of its own start event, and the

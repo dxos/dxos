@@ -2,11 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { log } from '@dxos/log';
-
-import { type PluginManager, ActivationEvent as ActivationEvent$ } from '../core';
+import { ActivationEvent as ActivationEvent$ } from '../core';
 
 /**
  * Fired when the app is started.
@@ -38,29 +34,3 @@ export const PluginStart = (pluginKey: string): ActivationEvent$.ActivationEvent
  * is what turned the former `DeferredStartup` into a second startup pass.
  */
 export const Idle = ActivationEvent$.make('org.dxos.app-framework.event.idle');
-
-/**
- * Activates the module set the app CONVERGES to: the {@link Idle} wave, then every core+enabled
- * plugin's start event. Sequential so the work trickles instead of saturating the main thread.
- *
- * Not a host fire site — in the app the idle wave is fired once by the host and each plugin
- * starts on demand when its surface renders (see the module loader). This is for callers with
- * no surfaces to drive that demand: headless test harnesses, and stories, which render one
- * surface in isolation. Per-plugin failures are logged and skipped so one broken feature cannot
- * stall the rest.
- */
-export const activateConvergedModules = (
-  manager: Pick<PluginManager.PluginManager, 'getCore' | 'getEnabled' | 'activate'>,
-): Effect.Effect<void> =>
-  Effect.forEach(
-    [Idle, ...new Set([...manager.getCore(), ...manager.getEnabled()].map(ActivationEvent$.pluginStart))],
-    (event) =>
-      manager
-        .activate(event)
-        .pipe(
-          Effect.catchAll((error) =>
-            Effect.sync(() => log.warn('activation event failed', { event: event.id, error: String(error) })),
-          ),
-        ),
-    { discard: true },
-  );

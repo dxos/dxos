@@ -124,7 +124,7 @@ export class ModuleLoader {
    * enable-chain passes load modules outside `start()`'s own passes, and the ready signal
    * must not publish while any of them are mid-load.
    */
-  awaitQuiescent(): Effect.Effect<boolean> {
+  awaitAllSettled(): Effect.Effect<boolean> {
     return Effect.gen(this, function* () {
       let waited = false;
       for (;;) {

@@ -14,6 +14,7 @@ import { invariant } from '@dxos/invariant';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';
+import { activateConvergedModules } from './converge';
 
 export type TestAppOptions = {
   /**
@@ -138,7 +139,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
       // In the app plugins start on demand (surface render), which a headless harness never
       // triggers — fire every start event synchronously so start-gated modules are present,
       // matching the module set the app converges to.
-      await EffectEx.runAndForwardErrors(ActivationEvents.activateConvergedModules(manager));
+      await EffectEx.runAndForwardErrors(activateConvergedModules(manager));
     } catch (err) {
       await EffectEx.runAndForwardErrors(manager.shutdown()).catch(() => undefined);
       throw err;

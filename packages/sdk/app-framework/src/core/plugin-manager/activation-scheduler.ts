@@ -122,11 +122,11 @@ export class ActivationScheduler {
         ),
       );
 
-      // Streaming quiescence: the enable chain forked its incremental passes, so loads may
-      // still be in flight outside the passes above. Ready must reflect a settled world —
-      // alternate between awaiting in-flight loads and mop-up passes until both are idle.
+      // The enable chain forked its incremental passes, so loads may still be in flight outside
+      // the passes above. Ready must reflect a settled world — alternate between awaiting
+      // in-flight loads and mop-up passes until neither does any work.
       for (;;) {
-        const settledAny = yield* this.#loader.awaitQuiescent();
+        const settledAny = yield* this.#loader.awaitAllSettled();
         const ranAny = yield* this.runDependencyPass().pipe(
           Effect.catchAll((error) =>
             Effect.sync(() => {
