@@ -138,6 +138,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/extractor": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -165,6 +166,7 @@
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/shell": "workspace:*",
     "@dxos/types": "workspace:*",
@@ -178,6 +180,7 @@
     "react-qr-rounded": "catalog:"
   },
   "devDependencies": {
+    "@dxos/extractor-lib": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
@@ -185,6 +188,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

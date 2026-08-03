@@ -215,6 +215,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect/platform": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

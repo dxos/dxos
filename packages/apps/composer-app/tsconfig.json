@@ -256,9 +256,6 @@
       "path": "../../plugins/plugin-osrm"
     },
     {
-      "path": "../../plugins/plugin-outliner"
-    },
-    {
       "path": "../../plugins/plugin-payments"
     },
     {
@@ -343,13 +340,16 @@
       "path": "../../plugins/plugin-table"
     },
     {
+      "path": "../../plugins/plugin-tasks"
+    },
+    {
+      "path": "../../plugins/plugin-terra"
+    },
+    {
       "path": "../../plugins/plugin-theme"
     },
     {
       "path": "../../plugins/plugin-thread"
-    },
-    {
-      "path": "../../plugins/plugin-tictactoe"
     },
     {
       "path": "../../plugins/plugin-tldraw"

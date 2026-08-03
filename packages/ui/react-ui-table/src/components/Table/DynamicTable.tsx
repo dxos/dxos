@@ -24,6 +24,8 @@ export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Theme
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
   features?: Partial<TableFeatures>;
   rowActions?: TableRowAction[];
+  /** Rows selected when the table mounts; see `useTableModel`'s `selection`. */
+  selection?: readonly string[];
   onRowClick?: (row: any) => void;
   onRowAction?: (actionId: string, datum: any) => void;
   onSelectionChanged?: (selection: string[]) => void;
@@ -42,6 +44,7 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   properties,
   jsonSchema: jsonSchemaProp,
   rowActions,
+  selection,
   onRowClick,
   onRowAction,
   onSelectionChanged,
@@ -84,6 +87,7 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
     projection: dynamicTable?.projection,
     features,
     rowActions,
+    selection,
     onCellUpdate: handleCellUpdate,
     onRowOrderChange: handleRowOrderChange,
     onRowAction,

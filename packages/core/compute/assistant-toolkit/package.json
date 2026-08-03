@@ -43,6 +43,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",

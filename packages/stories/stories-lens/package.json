@@ -1,0 +1,46 @@
+{
+  "name": "@dxos/stories-lens",
+  "version": "0.10.0",
+  "private": true,
+  "description": "Storybook demos for ECHO object lenses: two interfaces driving one object.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "exports": {},
+  "dependencies": {
+    "@dxos/echo": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
+    "@dxos/echo-panproto": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-theme": "workspace:*",
+    "@lezer/markdown": "catalog:",
+    "effect": "catalog:",
+    "prosemirror-commands": "catalog:",
+    "prosemirror-keymap": "catalog:",
+    "prosemirror-model": "catalog:",
+    "prosemirror-state": "catalog:",
+    "prosemirror-view": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/react-client": "workspace:*",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:"
+  }
+}

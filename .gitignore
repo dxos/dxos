@@ -7,8 +7,6 @@
 # Response-verbosity toggle state — per-user runtime, not repo policy.
 .claude/.response-mode
 
-.dev.vars
-
 # Logs
 logs/
 npm-debug.log*
@@ -17,12 +15,15 @@ yarn-error.log*
 debug-storybook.log
 .log*
 debug-storybook.log
-# vite-plugin-log dev file sink (default filename is `app.log`).
+# vite-plugin-log dev file sink (default filename is `app.log`), plus rotated captures.
 app.log
-# vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
+app.log.*
+# vite-plugin-log Vitest NDJSON sink (per-package `test.log`), plus rotated captures.
 test.log
-# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`).
+test.log.*
+# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`), plus rotated captures.
 test-browser.log
+test-browser.log.*
 
 # Vitest
 vitest-results.json
@@ -80,7 +81,10 @@ jspm_packages/
 .yarn-integrity
 
 # dotenv environment variables file
+.dev.vars
 .env
+# 1Password injection templates: no secrets, but they map vault/item names (phishing/harvest recon).
+.env.tpl
 !*/gravity/**/.env
 
 # next.js build output

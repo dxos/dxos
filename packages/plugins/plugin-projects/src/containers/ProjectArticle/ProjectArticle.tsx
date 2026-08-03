@@ -5,15 +5,15 @@
 import * as Schema from 'effect/Schema';
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -25,6 +25,9 @@ import { ProjectOperation } from '#types';
 // Pick the editable header fields from the Project schema rather than redeclaring them.
 const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));
 type HeaderValues = Schema.Schema.Type<typeof HeaderValues>;
+
+// The Context section edits only the instructions' standing context objects.
+const CONTEXT_FIELDS: readonly string[] = ['objects'];
 
 export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>;
 
@@ -44,6 +47,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [instructionsSnapshot] = useObject(project.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
   const [artifacts] = useObject(project.artifacts);
+  // The Tasks section embeds plugin-tasks' section surface for the linked TaskSet (never its
+  // components — the boundary is surfaces/operations only).
+  const [taskSetSnapshot] = useObject(project.taskSet);
+  const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -73,8 +80,8 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
     [invokePromise, artifactsCollection],
   );
 
-  // Routines are linked, not owned: the ref is spliced here and `RemoveObjects` (no target) removes the
-  // object from the space's root collection, where the create flow filed it.
+  // Routines are owned by the project but filed in no collection, so `RemoveObjects` needs no target;
+  // the `routines` ref is spliced here since the cascade only follows parent edges.
   const handleDeleteRoutine = useCallback(
     (object: Obj.Unknown) => {
       updateProject((project) => {
@@ -116,6 +123,26 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 
                 {instructions && <InstructionsEditor db={db} instructions={instructions} />}
 
+                {/* Standing context (inputs bound into every project session) — deliberately a
+                    separate labeled section from Artifacts (outputs the project owns). */}
+                {instructions && (
+                  <Form.Section title={t('context.label')}>
+                    <InstructionsEditor db={db} instructions={instructions} fields={CONTEXT_FIELDS} />
+                  </Form.Section>
+                )}
+
+                {(project.goals?.length ?? 0) > 0 && (
+                  <Form.Section title={t('goals.label')}>
+                    <GoalList goals={project.goals ?? []} />
+                  </Form.Section>
+                )}
+
+                {taskSet && (
+                  <Form.Section title={t('tasks.label')}>
+                    <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+                  </Form.Section>
+                )}
+
                 <Form.Section title={t('routines.label')}>
                   <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />
                 </Form.Section>
@@ -133,6 +160,37 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 };
 
 ProjectArticle.displayName = 'ProjectArticle';
+
+/**
+ * Read-only view of the project's goals (what done means). Goals are authored by agents and MCP
+ * verbs; in-article authoring is a follow-up.
+ */
+const GoalList = ({ goals }: { goals: ReadonlyArray<Project.Goal> }) => {
+  return (
+    <div role='list' className='flex flex-col gap-1'>
+      {goals.map((goal) => (
+        <div key={goal.id} role='listitem' className='flex items-center gap-2 min-w-0'>
+          <Icon
+            icon={
+              goal.status === 'met'
+                ? 'ph--check--regular'
+                : goal.status === 'dropped'
+                  ? 'ph--minus--regular'
+                  : 'ph--circle--regular'
+            }
+            classNames={
+              goal.status === 'met' ? 'text-success-text' : goal.status === 'dropped' ? 'text-subdued' : undefined
+            }
+            size={4}
+          />
+          <span className={goal.status === 'dropped' ? 'line-through text-subdued truncate' : 'truncate'}>
+            {goal.text}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 /**
  * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree
@@ -187,17 +245,17 @@ type ObjectGalleryProps = {
  */
 const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   // Resolve reactively: on a cold load the targets are not yet in memory, and reading `.target`
-  // synchronously would leave the gallery permanently empty.
-  // `useObjects` is the resolution trigger; the live entities are re-read from `.target` because the
-  // card needs the object, not a snapshot.
+  // synchronously would leave the gallery permanently empty. The card needs the live entity, so
+  // unwrap each loaded snapshot rather than re-reading `.target` — the refs come off a snapshot of
+  // the project, which carries no resolver, so `.target` is undefined there even once loaded.
   const loaded = useObjects(refs);
   const items = useMemo<ObjectTileData[]>(
     () =>
-      refs
-        .map((ref) => ref.target)
+      loaded
+        .map((snapshot) => Obj.getReactiveOrUndefined(snapshot))
         .filter((object): object is Obj.Unknown => !!object)
         .map((object) => ({ object, onClick: () => onOpen(object), onDelete: () => onDelete(object) })),
-    [refs, loaded, onOpen, onDelete],
+    [loaded, onOpen, onDelete],
   );
 
   if (items.length === 0) {
@@ -205,10 +263,12 @@ const ObjectGallery = ({ refs, onOpen, onDelete }: ObjectGalleryProps) => {
   }
 
   return (
+    // No `Masonry.Content`: it renders a `ScrollArea.Root`, and `Form.Viewport` already scrolls this
+    // surface. Nested, the inner scroll root shrink-wrapped to its scrollbar gutter, so the
+    // viewport's `contentWidth > 0` gate suppressed every tile — the sections rendered their
+    // headings and nothing else.
     <Masonry.Root Tile={ObjectTile} centered={false}>
-      <Masonry.Content centered={false} padding={false}>
-        <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} />
-      </Masonry.Content>
+      <Masonry.Viewport items={items} getId={(data) => Obj.getURI(data.object)} scroll={false} />
     </Masonry.Root>
   );
 };

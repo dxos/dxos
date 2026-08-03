@@ -218,8 +218,10 @@ export const PluginItem = ({
 
 const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
   new: 'rose',
-  beta: 'teal',
-  labs: 'blue',
+  // Tier hues ramp green -> blue -> purple so the ordering reads without knowing the labels.
+  beta: 'green',
+  alpha: 'blue',
+  labs: 'purple',
   popular: 'green',
   featured: 'pink',
   experimental: 'amber',

@@ -43,14 +43,14 @@ export const DeckContent = ({ children }: DeckContentProps) => {
 
   const handleNavigationSidebarStateChange = useCallback(
     (next: typeof sidebarState) => {
-      updateState((s) => ({ ...s, sidebarState: next }));
+      updateState((state) => ({ ...state, sidebarState: next }));
     },
     [updateState],
   );
 
   const handleComplementarySidebarStateChange = useCallback(
     (next: typeof complementarySidebarState) => {
-      updateState((s) => ({ ...s, complementarySidebarState: next }));
+      updateState((state) => ({ ...state, complementarySidebarState: next }));
     },
     [updateState],
   );

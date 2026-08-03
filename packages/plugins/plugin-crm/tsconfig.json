@@ -67,6 +67,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
@@ -83,6 +86,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-projects"
     },
     {
       "path": "../plugin-routine"

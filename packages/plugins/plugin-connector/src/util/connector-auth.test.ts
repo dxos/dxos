@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import { afterEach, beforeEach, describe, test, vi } from 'vitest';
+import * as Schema from 'effect/Schema';
+import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Operation, Routine, Trigger } from '@dxos/compute';
+import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -18,6 +19,17 @@ import { connectorAuthActions } from './connector-auth';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.
 const authFlow: Partial<ConnectorEntry> = { oauth: { provider: OAuthProvider.GOOGLE, scopes: [] } };
+
+const TestSync = Operation.make({
+  meta: { key: DXN.make('org.dxos.test.connectorAuth.sync'), name: 'Test Sync' },
+  input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+  output: Schema.Any,
+});
+
+/** A connector that keeps its bindings on a schedule, so reuse sets a sync Routine up for them. */
+const scheduledSync: Partial<ConnectorEntry> = {
+  sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
+};
 
 const makeConnector = (id: string, extra: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
   id,
@@ -39,7 +51,13 @@ describe('connectorAuthActions', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Connection.Connection, AccessToken.AccessToken, Cursor.Cursor]);
+    graph.registry.add([
+      Connection.Connection,
+      AccessToken.AccessToken,
+      Cursor.Cursor,
+      Trigger.Trigger,
+      Routine.Routine,
+    ]);
     const addConnection = (connectorId: string) => {
       const token = db.add(Obj.make(AccessToken.AccessToken, { source: `${connectorId}.example`, token: 'tok' }));
       return db.add(Obj.make(Connection.Connection, { connectorId, accessToken: Ref.make(token) }));
@@ -96,14 +114,11 @@ describe('connectorAuthActions', () => {
     ]);
   });
 
-  test('reuse binds a cursor to the existing target and fires onCursorCreated', async ({ expect }) => {
+  test('reuse binds a cursor to the existing target and sets its sync routine up', async ({ expect }) => {
     const { db, addConnection } = await setup();
     const connection = addConnection('b');
     const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
-    const onCursorCreated = vi.fn(
-      (_input: Parameters<NonNullable<ConnectorEntry['onCursorCreated']>>[0]) => Effect.void,
-    );
-    const connector: ConnectorEntry = makeConnector('b', { onCursorCreated });
+    const connector: ConnectorEntry = makeConnector('b', scheduledSync);
 
     const actions = connectorAuthActions({
       connectorIds: ['b'],
@@ -121,16 +136,22 @@ describe('connectorAuthActions', () => {
     expect(cursors).toHaveLength(1);
     expect(cursors[0].spec.kind).toBe('external');
 
-    expect(onCursorCreated).toHaveBeenCalledTimes(1);
-    const [input] = onCursorCreated.mock.calls[0];
-    expect(input.connection.id).toBe(connection.id);
-    expect(input.target.id).toBe(target.id);
-    expect(input.cursor.id).toBe(cursors[0].id);
+    // The connector declares a schedule, so the new binding gets a trigger bound to it.
+    const triggers = await db.query(Filter.type(Trigger.Trigger)).run();
+    expect(triggers).toHaveLength(1);
+    expect(triggers[0].input?.binding?.uri).toBe(Ref.make(cursors[0]).uri);
   });
 
   test('reuse renames the existing target after the connection account', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([Connection.Connection, AccessToken.AccessToken, Cursor.Cursor]);
+    graph.registry.add([
+      Connection.Connection,
+      AccessToken.AccessToken,
+      Cursor.Cursor,
+      Trigger.Trigger,
+      Routine.Routine,
+      Operation.PersistentOperation,
+    ]);
     const token = db.add(
       Obj.make(AccessToken.AccessToken, { source: 'b.example', token: 'tok', account: 'me@example.com' }),
     );

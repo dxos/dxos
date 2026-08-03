@@ -136,7 +136,11 @@ export class StubWidget<TProps extends XmlWidgetProps> extends WidgetType {
     if (this.streaming) {
       return false;
     }
-    return this.id === other.id;
+    // Context too, not just the id: props are captured at build time, so an id-only comparison makes
+    // CodeMirror keep the existing widget (and its stale props) when the host publishes the context
+    // after the first build — leaving every widget callback bound to `undefined`.
+    const context = (props: TProps) => (props as XmlWidgetProps).context;
+    return this.id === other.id && context(this.props) === context(other.props);
   }
 
   override ignoreEvent() {

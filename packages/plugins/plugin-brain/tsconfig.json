@@ -49,6 +49,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/schema"
+    },
+    {
       "path": "../../sdk/types"
     },
     {
@@ -62,6 +65,12 @@
     },
     {
       "path": "../plugin-inbox"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-routine"
     },
     {
       "path": "../plugin-testing"

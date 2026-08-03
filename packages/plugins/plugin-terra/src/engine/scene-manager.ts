@@ -95,6 +95,9 @@ export class SceneManager {
   // assigned in the constructor body, after field initializers run.
   readonly #resizeObserver: ResizeObserver;
 
+  // What `render` last built from, so re-rendering a cached planet is a no-op rather than a
+  // dispose-and-rebuild of identical meshes (~350ms at the default resolution).
+  #planet: Planet | null = null;
   #planetMesh: Mesh | null = null;
   #waterMesh: Mesh | null = null;
   #scatterBases: Mesh[] = [];
@@ -169,7 +172,12 @@ export class SceneManager {
   }
 
   render(planet: Planet): void {
+    if (planet === this.#planet) {
+      return;
+    }
+
     this.#disposeMeshes();
+    this.#planet = planet;
     this.#planetMesh = this.#buildTerrain(planet);
     this.#waterMesh = this.#buildWater(planet);
     this.#scatterBases = this.#buildScatter(planet);
@@ -188,6 +196,7 @@ export class SceneManager {
   }
 
   #disposeMeshes(): void {
+    this.#planet = null;
     // Mesh.dispose() defaults to leaving materials alive; each regenerate would
     // otherwise orphan the prior planetMat/waterMat/treeMat*/rockMat* in scene.materials.
     this.#planetMesh?.dispose(false, true);

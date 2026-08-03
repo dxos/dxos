@@ -20,7 +20,7 @@ import { defaultTx } from '../../theme';
  * empty.
  */
 export const withTheme =
-  ({ tx = defaultTx, noCache, platform }: Partial<ThemeContextValue> = {}): Decorator =>
+  ({ tx = defaultTx, platform }: Partial<ThemeContextValue> = {}): Decorator =>
   (Story, context) => {
     const {
       globals: { theme },
@@ -33,7 +33,6 @@ export const withTheme =
           tx={tx}
           themeMode={(theme as ThemeMode) || 'dark'}
           resourceExtensions={translations}
-          noCache={noCache}
           platform={platform}
         >
           <Tooltip.Provider>

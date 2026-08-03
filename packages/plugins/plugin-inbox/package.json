@@ -160,7 +160,6 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
-    "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -185,8 +184,7 @@
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "date-fns": "catalog:",
-    "dompurify": "catalog:"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",

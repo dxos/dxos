@@ -39,6 +39,8 @@ export const translations = [
         'pin-end.label': 'Pin to the right sidebar',
         'increment-start.label': 'Move to the left',
         'increment-end.label': 'Move to the right',
+        'expand-plank.label': 'Expand plank',
+        'collapse-plank.label': 'Collapse plank',
         'exit-fullscreen.label': 'Exit fullscreen',
         'show-fullscreen-plank.label': 'Fullscreen',
         'close.label': 'Close',

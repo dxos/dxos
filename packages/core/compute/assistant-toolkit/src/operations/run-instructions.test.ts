@@ -14,10 +14,9 @@ import { Database, Feed, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { Message, Outline } from '@dxos/types';
 
 import * as Chat from '../types/Chat';
-import * as Plan from '../types/Plan';
 import { RunInstructions } from './definitions';
 import defaultAgentPrompt from './run-instructions';
 
@@ -29,7 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 const layerWithResult = (success: unknown) =>
   AssistantTestLayer({
     operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
-    types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Plan.Plan],
+    types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline],
     aiService: ScriptedLanguageModel.scriptedAiService([
       { parts: [ScriptedLanguageModel.toolCall('completeJob', { success })] },
       // The loop asks again once the tool result is fed back; a text-only turn stops it.

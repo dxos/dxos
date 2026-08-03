@@ -310,7 +310,7 @@ export default defineConfig((env) => ({
       isMinimalPluginSet
         ? path.resolve(
             rootDir,
-            'packages/plugins/plugin-{assistant,attention,client,debug,deck,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
+            'packages/plugins/plugin-{assistant,attention,client,connector,debug,deck,devtools,graph,inbox,markdown,navtree,observability,onboarding,outliner,preview,projects,registry,review,routine,settings,simple-layout,space,spotlight,status-bar,theme,thread}/src/index.{ts,tsx}',
           )
         : path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
     ],
@@ -497,6 +497,11 @@ export default defineConfig((env) => ({
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
+        // The Phosphor catalog (~9,000 SVGs in /phosphor/) is deliberately NOT precached: the
+        // manifest entries alone would add one install-time request per file, slowing every
+        // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
+        // so any icon the app has rendered once stays available offline.
+        globIgnores: ['**/phosphor/**'],
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -588,6 +593,9 @@ export default defineConfig((env) => ({
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
         path.join(rootDir, '/{packages,tools}/**/dx.config.{ts,tsx,js,jsx}'),
       ],
+      // Serves /phosphor/ for the runtime icon resolver in @dxos/react-ui; assets are copied
+      // into the build output and cached at runtime by sw.ts (excluded from the precache).
+      assets: [{ route: '/phosphor', dir: phosphorIconsCore }],
       // verbose: true,
     }),
 

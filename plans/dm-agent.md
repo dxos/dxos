@@ -160,7 +160,7 @@ tokens, in-flight tool calls), not just completed durable lines.
 - `TaskList.tsx` chooses the activity line: `ephemeral` → `inFlight`
   (`deriveInFlightActivityLine`) → filtered `durable`.
 
-### Evidence from storybook repro (`WithSubAgentsTest`, two concurrent sub-agents)
+### Evidence from storybook repro (`WithSubAgentsTest1`, two concurrent sub-agents)
 
 Captured via `[DEBUG H1]`–`[DEBUG H7]` in `tools/storybook-react/app.log`:
 

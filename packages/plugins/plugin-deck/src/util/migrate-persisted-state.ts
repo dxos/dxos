@@ -10,15 +10,19 @@ import { log } from '@dxos/log';
 import { PlankSizing } from '#types';
 
 /**
- * Superset of the current on-disk deck shape that additionally accepts fields absent from the current
- * deck schema (`solo`, `initialized`, `fullscreen`, `companionOrientation`, `companionFrameSizing`), so
- * a pre-migration blob decodes without error and its legacy fields can be detected and stripped.
+ * Superset of the current on-disk deck shape that additionally tolerates fields absent from the current
+ * deck schema, so a pre-migration blob decodes without error and its legacy fields can be detected and
+ * stripped. Tolerating is not migrating: only the fields listed in `hasLegacyFields` trigger a rewrite.
+ * A blob whose deck shape simply predates the current one is left alone and dropped by the KVS decode,
+ * which falls back to the default deck.
  */
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   plankSizing: Schema.mutable(PlankSizing),
-  companionOpen: Schema.Boolean,
+  companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
+  companionOpen: Schema.optional(Schema.Boolean),
+  tilingSizing: Schema.optional(Schema.Number),
   companionFrameSizing: Schema.optional(Schema.mutable(PlankSizing)),
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
@@ -58,6 +62,8 @@ const migrateDeck = ({
   fullscreen: _fullscreen,
   companionOrientation: _companionOrientation,
   companionFrameSizing: _companionFrameSizing,
+  companionOpen: _companionOpen,
+  tilingSizing: _tilingSizing,
   ...deck
 }: LegacyDeckState) => ({
   ...deck,

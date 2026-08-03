@@ -106,6 +106,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-routine"
+    },
+    {
       "path": "../plugin-space"
     },
     {

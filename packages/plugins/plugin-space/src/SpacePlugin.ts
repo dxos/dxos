@@ -15,7 +15,6 @@ import {
   AnchoredTo,
   Employer,
   Event,
-  ExternalProject,
   HasConnection,
   HasRelationship,
   HasSubject,
@@ -23,6 +22,7 @@ import {
   Person,
   Pipeline,
   Task,
+  TaskSet,
 } from '@dxos/types';
 
 import {
@@ -50,8 +50,8 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
-    activate: () => NavigationHandler({ invitationProp }),
+  AppPlugin.addNavigationHandlerModule(({ invitationProp, invitationUrlHandler }) => ({
+    activate: () => NavigationHandler({ invitationProp, invitationUrlHandler }),
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
@@ -61,7 +61,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       AnchoredTo.AnchoredTo,
       Employer.Employer,
       Event.Event,
-      ExternalProject.ExternalProject,
       HasConnection.HasConnection,
       HasRelationship.HasRelationship,
       HasSubject.HasSubject,
@@ -70,6 +69,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
+      TaskSet.TaskSet,
     ],
   }),
   AppPlugin.addSettingsModule({ activate: SpaceSettings }),

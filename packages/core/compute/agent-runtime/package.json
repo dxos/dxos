@@ -56,6 +56,7 @@
   },
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"

@@ -4,6 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+// Narrow subpath: the app-toolkit barrel drags `@dxos/client` (→ protobufjs), which the workerd
+// bundle guard (env-tests) forbids for assistant-toolkit.
+import { CollectionModel } from '@dxos/app-toolkit/types';
 import { Operation } from '@dxos/compute';
 import { Database, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
@@ -14,7 +17,7 @@ import { ObjectCreate } from './definitions';
 
 export default ObjectCreate.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ typename, properties }) {
+    Effect.fn(function* ({ typename, properties, attach }) {
       const { db } = yield* Database.Service;
       const types = yield* Database.query(Query.select(Filter.type(Type.Type)).from(Scope.space(), Scope.registry()))
         .run;
@@ -34,6 +37,14 @@ export default ObjectCreate.pipe(
           }),
         ),
       );
+
+      if (attach) {
+        // Same best-effort attach as `markdown.create`: the object is already persisted, so swallow
+        // only the transient race where concurrent agents materialize the root collection.
+        yield* CollectionModel.add({ object }).pipe(Effect.catchTag('EntityNotFoundError', () => Effect.void));
+        yield* Database.flush();
+      }
+
       return Entity.toJSON(object);
     }),
   ),

@@ -26,6 +26,8 @@ const listStyles = tv({
     // content line even when the header spans multiple lines.
     accordionTriggerIcon: 'flex items-center h-6 shrink-0',
     accordionTriggerContent: 'min-w-0 flex-1',
+    // Interactive controls that sit beside the trigger; matches its vertical padding.
+    accordionTrailing: 'flex items-center h-6 shrink-0 my-2 me-2',
     // Slide animations are driven by Radix Accordion's data-state attribute.
     accordionBody: 'overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down',
     accordionBodyContent: 'p-2',

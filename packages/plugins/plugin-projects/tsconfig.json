@@ -64,6 +64,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -76,6 +79,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-search"
+    },
+    {
       "path": "../plugin-assistant"
     },
     {
@@ -83,6 +89,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-inbox"
     },
     {
       "path": "../plugin-routine"
