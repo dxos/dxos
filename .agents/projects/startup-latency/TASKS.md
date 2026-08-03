@@ -457,16 +457,19 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
   - Unlocks the namespace fix: once the scheduler stops special-casing `Startup`, `Startup` and
     `pluginStart` move from `core/activation-event.ts` to `common/activation-events.ts` and the
     duplicate `PluginStart` wrapper is deleted.
-  - Fold in: **collapse `requires` defaulting to one site.** It currently happens three times —
-    `capability.ts:549` (`lazyModule`), `:578` (`inlineModule`), and again in
-    `normalizeActivation`, because the value re-enters through `ModuleEntry` where it is optional.
-    Delete the two upstream ones, not the normalizer: `addModule` also accepts raw `ModuleEntry`
-    literals that nothing upstream touches, so `resolveModule` is the only funnel every module
-    passes through. Payoff beyond the dedup — both upstream sites carry an `as Requires`
-    "Correlation cast" that exists solely to make premature defaulting fit the generic, so the
-    casts go with them. Check first: `plugin.test.ts:237`/`:252` assert `requires` on the
-    unresolved module (move to `activation.requires`), and whether `moduleMaker`
-    (`capability.ts:637`) collapses too.
+  - Fold in: **make `Capability.Module.requires` optional and the defaulting collapses itself.**
+    The intended invariant is already required-internally / optional-externally —
+    `ActivationSpec.requires` is required, `ModuleEntry.requires` and `ModuleSpec.requires` are
+    optional, and `normalizeActivation` is the adapter between them. `Capability.Module`
+    (`capability.ts:488`) breaks it: it is an authoring-side type that declares `requires`
+    **required**. That one line forces `lazyModule`/`inlineModule` to default early, and because
+    the generic `Requires` does not narrow through `?? []`, each needs an `as Requires`
+    "Correlation cast" (`:549`, `:578`) purely to satisfy it. Widen the field to `requires?` and
+    both the defaults and both casts go, leaving `normalizeActivation` the sole adapter.
+    Keep `provides` required on both — `ModuleSpec:500` already requires it, so only `requires`
+    is genuinely optional at authoring; that asymmetry is correct, do not flatten it.
+    Check first: `plugin.test.ts:237`/`:252` assert `requires` on the unresolved module (move to
+    `activation.requires`), and whether `moduleMaker` (`capability.ts:637`) collapses too.
 
 ## Checkpoint 2026-08-01 (per-plugin start events landed)
 
