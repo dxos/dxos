@@ -285,6 +285,12 @@ describe('merge convergence', () => {
     const third = seed(db2, 'third');
     const partial = mergeDuplicates([second, third]);
     expect(partial.merged).toHaveLength(1);
+    // A straggler edit on the just-tombstoned deepest loser: the workers collapse the rest of
+    // the chain in the same pass, and the fold must follow the redirect written moments earlier
+    // to its live end rather than advancing the watermark past the edit on an aborted write.
+    Obj.update(third, (third) => {
+      third.description = 'straggler on the chain';
+    });
     await db2.flush();
 
     // The workers see the full view and collapse what remains.
@@ -293,12 +299,61 @@ describe('merge convergence', () => {
     await waitForLiveWinner(db2, globalMinimum);
 
     // Every id — including the one merged away twice — reaches the global minimum by following
-    // redirects transitively.
+    // redirects transitively, and the straggler edit survived the chain collapse.
     for (const db of [db1, db2]) {
       const all = await allTasks(db);
       for (const id of [first.id, second.id, third.id]) {
         expect(resolveMerged(id, all)).toBe(globalMinimum);
       }
+      await waitForCondition({
+        condition: async () => {
+          const [live] = await liveTasks(db);
+          return live !== undefined && live.description === 'straggler on the chain';
+        },
+        timeout: 10_000,
+      });
     }
+  });
+
+  test('a user-deleted duplicate is not merged, in either direction', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    await using db = await peer.createDatabase();
+
+    // The smaller-id duplicate is deleted by the user; a live twin with the same key arrives
+    // later (a re-seed). Merging them would either crown the deleted entity the winner —
+    // vanishing every copy at once — or resurrect deleted data into the live one.
+    const deletedTwin = seed(db, 'deleted by the user');
+    db.remove(deletedTwin);
+    const liveTwin = seed(db, 'seeded again');
+
+    // A sentinel pair under a different key that does merge — proof the worker pass ran and
+    // examined this batch, rather than simply not having gotten to it yet.
+    const sentinelFirst = db.add(Obj.make(TestSchema.Task, { title: 'sentinel first' }));
+    Merge.setNaturalKey(sentinelFirst, 'org.example.sentinel');
+    const sentinelSecond = db.add(Obj.make(TestSchema.Task, { title: 'sentinel second' }));
+    Merge.setNaturalKey(sentinelSecond, 'org.example.sentinel');
+    await db.flush();
+
+    // The client pass declines the deleted twin outright.
+    const result = mergeDuplicates([deletedTwin, liveTwin]);
+    expect(result.merged).toHaveLength(0);
+
+    await waitForCondition({
+      condition: async () => {
+        const live = await liveTasks(db);
+        return live.filter((task: Obj.Unknown) => Merge.getNaturalKey(task) === 'org.example.sentinel').length === 1;
+      },
+      timeout: 10_000,
+    });
+
+    // The worker reached the same verdict: nothing under the seed key was redirected, and the
+    // live twin is still the one visible object for it.
+    const live = await liveTasks(db);
+    const seedLive = live.filter((task: Obj.Unknown) => Merge.getNaturalKey(task) === 'org.example.seed');
+    expect(seedLive).toHaveLength(1);
+    expect(seedLive[0].id).toBe(liveTwin.id);
+    const all = await allTasks(db);
+    expect(resolveMerged(deletedTwin.id, all)).toBe(deletedTwin.id);
+    expect(resolveMerged(liveTwin.id, all)).toBe(liveTwin.id);
   });
 });

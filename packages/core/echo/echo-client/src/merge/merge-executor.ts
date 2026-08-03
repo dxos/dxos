@@ -51,7 +51,8 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
   const groups = new Map<string, Obj.Unknown[]>();
   for (const entity of entities) {
     const naturalKey = Merge.getNaturalKey(entity);
-    if (naturalKey === undefined) {
+    // The empty string is not a key — grouping on it would merge unrelated entities.
+    if (naturalKey === undefined || naturalKey.length === 0) {
       continue;
     }
     // Objects only — relations are not merge subjects (their endpoints would not be reconciled).
@@ -59,6 +60,13 @@ export const mergeDuplicates = (entities: readonly Obj.Unknown[]): MergePassResu
     // and an entity already merged away is not a candidate — it keeps its natural key so a late
     // peer can still recognize it, so a query including tombstones would otherwise re-merge it.
     if (!Obj.isObject(entity) || !isEchoObject(entity) || getObjectCore(entity).getMergedInto() !== undefined) {
+      continue;
+    }
+    // A user-deleted entity without a redirect is not a candidate either: deletion is respected,
+    // not merged (matching the worker). Treating it as one could crown a deleted entity the
+    // winner — tombstoning its live duplicate under it makes every copy invisible at once — or
+    // resurrect deleted data into a live winner.
+    if (getObjectCore(entity).isDeleted()) {
       continue;
     }
     const group = groups.get(naturalKey);
@@ -179,6 +187,13 @@ export const rewriteReferences = (referrers: readonly Obj.Unknown[], entities: r
   };
 
   for (const referrer of referrers) {
+    // Never write to a merged-away referrer: its outbound refs resolve through the redirect
+    // anyway, and a write would land after its fold watermark — the worker would then carry the
+    // mechanical rewrite into the winner as if it were a straggler's edit, clobbering the value
+    // the field-wise merge chose there.
+    if (!isEchoObject(referrer) || getObjectCore(referrer).getMergedInto() !== undefined) {
+      continue;
+    }
     Obj.update(referrer, (referrer) => {
       for (const [field, value] of Object.entries(referrer as Record<string, unknown>)) {
         const replacement = rewriteValue(value);
@@ -256,7 +271,9 @@ export const foldLateEdits = (entities: readonly Obj.Unknown[]): number => {
     }
 
     const winner = byId.get(resolveMerged(entity.id, entities));
-    if (!winner || winner.id === entity.id) {
+    // A deleted winner is left alone (matching the worker): the edits stay above the watermark
+    // and fold once it is restored.
+    if (!winner || winner.id === entity.id || !isEchoObject(winner) || getObjectCore(winner).isDeleted()) {
       continue;
     }
 

@@ -257,6 +257,40 @@ describe('Merge', () => {
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
+  test('a merged-away referrer is never written by a rewrite pass', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [TestSchema.Task] });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      // A target pair that merges, and a referrer pair that also merges — the losing referrer
+      // holds a ref to the losing target. Writing that tombstone's ref field would land above
+      // its fold watermark, and the worker would carry the mechanical rewrite into the winning
+      // referrer as if it were a straggler's edit.
+      const targetWinner = Obj.make(TestSchema.Task, { title: 'target winner' });
+      const targetLoser = Obj.make(TestSchema.Task, { title: 'target loser' });
+      for (const task of [targetWinner, targetLoser]) {
+        Merge.setNaturalKey(task, 'org.example.target');
+        yield* Database.add(task);
+      }
+      const referrerWinner = Obj.make(TestSchema.Task, { title: 'referrer winner', previous: Ref.make(targetLoser) });
+      const referrerLoser = Obj.make(TestSchema.Task, { title: 'referrer loser', previous: Ref.make(targetLoser) });
+      for (const task of [referrerWinner, referrerLoser]) {
+        Merge.setNaturalKey(task, 'org.example.referrer');
+        yield* Database.add(task);
+      }
+      mergeDuplicates([targetWinner, targetLoser, referrerWinner, referrerLoser]);
+      yield* Database.flush();
+
+      const before = referrerLoser.previous!.uri;
+      const all = yield* Database.query(Query.select(Filter.type(TestSchema.Task)).options({ deleted: 'include' })).run;
+      // Exactly one rewrite: the live referrer. The tombstoned one is skipped, not repointed.
+      expect(rewriteReferences(all, all)).toBe(1);
+      expect(referrerWinner.previous!.uri).toContain(targetWinner.id);
+      expect(referrerLoser.previous!.uri).toBe(before);
+      expect(rewriteReferences(all, all)).toBe(0);
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+  });
+
   // The database-level entry point: detection, merge, and reference rewriting in one pass.
   test('db.mergeDuplicates collapses duplicates and repoints references', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [TestSchema.Task] });

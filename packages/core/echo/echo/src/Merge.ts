@@ -181,8 +181,12 @@ const compareForeignKeys = (a: ForeignKey, b: ForeignKey): number =>
  * different `a` than `Y` then `X`). Computing over the whole set at once is
  * permutation-independent by construction.
  *
- * Peers holding different candidate sets can still transiently compute different results; they
- * reconverge because losers are retained, so a later pass recomputes over the union.
+ * Peers holding different candidate sets can still transiently compute different results. They
+ * reconverge because losers are retained as redirects: a later pass follows a tombstoned loser's
+ * chain to the live end and folds its remaining state there. That guarantees *agreement* — every
+ * peer ends at the same winner with the same fields — but not that the final value of every field
+ * equals what this function would return over the union: once an entity is tombstoned it never
+ * re-enters the field-wise merge, so a fold can carry a field onto a winner that had defined it.
  *
  * @throws If given no candidates.
  */

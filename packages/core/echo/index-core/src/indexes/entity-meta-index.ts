@@ -135,6 +135,15 @@ export class EntityMetaIndex implements Index {
     // re-index; a fresh database creates the table with the column and skips it.
     const priorColumns = yield* sql<{ name: string }>`SELECT name FROM pragma_table_info('objectMeta')`;
     const needsNaturalKeyBackfill = priorColumns.length > 0 && !priorColumns.some(({ name }) => name === 'naturalKey');
+    if (needsNaturalKeyBackfill) {
+      // The tracker migrates before the indexes, so the cursor table exists here. Dropping every
+      // cursor re-presents all documents to the indexing loop, whose per-index upserts are
+      // idempotent — the one-time cost of a full re-index buys correct duplicate detection over
+      // data indexed before the column existed. The wipe runs BEFORE the ALTER below: migration
+      // statements auto-commit individually, and a crash between them must re-run the wipe on
+      // the next startup, not see the column and skip it.
+      yield* sql`DELETE FROM indexCursor`;
+    }
 
     yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (
       recordId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -176,13 +185,14 @@ export class EntityMetaIndex implements Index {
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
 
-    if (needsNaturalKeyBackfill) {
-      // The tracker migrates before the indexes, so the cursor table exists here. Dropping every
-      // cursor re-presents all documents to the indexing loop, whose per-index upserts are
-      // idempotent — the one-time cost of a full re-index buys correct duplicate detection over
-      // data indexed before the column existed.
-      yield* sql`DELETE FROM indexCursor`;
-    }
+    // Write-ahead intents for natural-key merging: rows are inserted in the same transaction
+    // that commits index rows and cursors, and deleted only after the merge pass services the
+    // key — so a crash or a faulted pass can never leave a detected duplicate unserviced.
+    yield* sql`CREATE TABLE IF NOT EXISTS naturalKeyIntents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      spaceId TEXT NOT NULL,
+      naturalKey TEXT NOT NULL
+    )`;
   });
 
   /**
@@ -214,6 +224,65 @@ export class EntityMetaIndex implements Index {
           results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
         }
         return results;
+      }),
+  );
+
+  /**
+   * Durably queue natural keys for duplicate detection. Runs inside the same transaction that
+   * commits the index rows and cursors (see `IndexEngine.#update`), so a keyed write can never
+   * be indexed-but-forgotten: until the merge pass services the key and clears the intent, every
+   * later pass re-presents it.
+   */
+  recordNaturalKeyIntents = Effect.fn('EntityMetaIndex.recordNaturalKeyIntents')(
+    (
+      intents: readonly { spaceId: SpaceId; naturalKey: string }[],
+    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (intents.length === 0) {
+          return;
+        }
+        const sql = yield* SqlClient.SqlClient;
+        for (const { spaceId, naturalKey } of intents) {
+          yield* sql`INSERT INTO naturalKeyIntents (spaceId, naturalKey) VALUES (${spaceId}, ${naturalKey})`;
+        }
+      }),
+  );
+
+  /**
+   * All pending natural-key intents, deduplicated per space, with the high-water id to pass back
+   * to {@link clearNaturalKeyIntents} — intents recorded after this read have larger ids and
+   * survive the clear, so a concurrent indexing pass cannot have its trigger erased.
+   */
+  takeNaturalKeyIntents = Effect.fn('EntityMetaIndex.takeNaturalKeyIntents')(
+    (): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<{ id: number; spaceId: SpaceId; naturalKey: string }>`
+          SELECT id, spaceId, naturalKey FROM naturalKeyIntents`;
+        let maxId = 0;
+        const intents = new Map<SpaceId, Set<string>>();
+        for (const { id, spaceId, naturalKey } of rows) {
+          maxId = Math.max(maxId, id);
+          const keys = intents.get(spaceId) ?? new Set();
+          keys.add(naturalKey);
+          intents.set(spaceId, keys);
+        }
+        return { maxId, intents };
+      }),
+  );
+
+  /**
+   * Clear a serviced natural-key intent, bounded by the id captured at read time.
+   */
+  clearNaturalKeyIntents = Effect.fn('EntityMetaIndex.clearNaturalKeyIntents')(
+    (
+      spaceId: SpaceId,
+      naturalKey: string,
+      upToId: number,
+    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM naturalKeyIntents WHERE spaceId = ${spaceId} AND naturalKey = ${naturalKey} AND id <= ${upToId}`;
       }),
   );
 

@@ -584,4 +584,29 @@ describe('EntityMetaIndex', () => {
       expect(yield* tracker.queryCursors({ indexName: 'fts5' })).toHaveLength(1);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('natural-key intents survive until cleared, bounded by the id captured at read time', () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      yield* index.recordNaturalKeyIntents([
+        { spaceId, naturalKey: 'example.com/thing/a' },
+        { spaceId, naturalKey: 'example.com/thing/b' },
+        { spaceId, naturalKey: 'example.com/thing/a' }, // Re-recorded — deduplicated on read.
+      ]);
+
+      const { maxId, intents } = yield* index.takeNaturalKeyIntents();
+      expect([...(intents.get(spaceId) ?? [])].sort()).toEqual(['example.com/thing/a', 'example.com/thing/b']);
+
+      // A key recorded after the read (a concurrent indexing pass) must survive the clear.
+      yield* index.recordNaturalKeyIntents([{ spaceId, naturalKey: 'example.com/thing/a' }]);
+      yield* index.clearNaturalKeyIntents(spaceId, 'example.com/thing/a', maxId);
+      yield* index.clearNaturalKeyIntents(spaceId, 'example.com/thing/b', maxId);
+
+      const remaining = yield* index.takeNaturalKeyIntents();
+      expect([...(remaining.intents.get(spaceId) ?? [])]).toEqual(['example.com/thing/a']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });

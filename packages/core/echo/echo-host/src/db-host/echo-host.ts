@@ -488,13 +488,29 @@ export class EchoHost extends Resource {
 
         // Natural-key duplicates are born from replication, and a replicated write is exactly what
         // was just indexed — so this is the earliest a duplicate can be detected on this device.
-        // The merge's own writes land back here via `documentsSaved`, which re-indexes the
-        // tombstones; idempotence is what makes that follow-up pass a no-op.
-        await mergeNaturalKeyDuplicates(this._ctx, result.naturalKeys, {
-          indexEngine: this._indexEngine,
-          runtime: this._runtime,
-          loadDoc: (ctx, documentId) => this._automergeHost.loadDoc(ctx, documentId),
-        });
+        // The trigger is the durable intent log written in the same transaction as the index
+        // cursors: a crash or a faulted merge pass leaves the intents in place, and this pass —
+        // which also runs once at every startup — retries them, so no detected duplicate is ever
+        // silently dropped. The merge's own writes land back here via `documentsSaved`, which
+        // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.
+        const { maxId, intents } = await this._indexEngine
+          .takeNaturalKeyIntents()
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        if (intents.size > 0) {
+          const { serviced } = await mergeNaturalKeyDuplicates(this._ctx, intents, {
+            queryByNaturalKeys: (spaceId, keys) =>
+              this._indexEngine.queryByNaturalKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
+            loadDoc: (ctx, documentId) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId),
+            flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
+          });
+          for (const [spaceId, keys] of serviced) {
+            for (const key of keys) {
+              await this._indexEngine
+                .clearNaturalKeyIntents(spaceId, key, maxId)
+                .pipe(RuntimeProvider.runPromise(this._runtime));
+            }
+          }
+        }
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',
           detail: {
@@ -577,7 +593,6 @@ type MutableIndexingAccumulator = {
   documents: Set<string>;
   types: Set<string>;
   objects: Set<EntityId>;
-  naturalKeys: Map<SpaceId, Set<string>>;
 };
 
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
@@ -588,7 +603,6 @@ const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
   documents: new Set(),
   types: new Set(),
   objects: new Set(),
-  naturalKeys: new Map(),
 });
 
 const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void => {
@@ -608,13 +622,6 @@ const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void =>
   }
   for (const o of r.objects) {
     acc.objects.add(o);
-  }
-  for (const [spaceId, keys] of r.naturalKeys) {
-    const merged = acc.naturalKeys.get(spaceId) ?? new Set();
-    for (const key of keys) {
-      merged.add(key);
-    }
-    acc.naturalKeys.set(spaceId, merged);
   }
 };
 

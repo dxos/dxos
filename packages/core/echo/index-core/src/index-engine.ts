@@ -36,11 +36,6 @@ export type IndexingResult = {
   documents: ReadonlySet<string>;
   types: ReadonlySet<string>;
   objects: ReadonlySet<EntityId>;
-  /**
-   * Natural keys seen on document-backed objects in this batch, per space — the trigger set for
-   * natural-key duplicate merging. Almost always empty.
-   */
-  naturalKeys: ReadonlyMap<SpaceId, ReadonlySet<string>>;
 };
 
 type MutableIndexingResult = {
@@ -51,7 +46,6 @@ type MutableIndexingResult = {
   documents: Set<string>;
   types: Set<string>;
   objects: Set<EntityId>;
-  naturalKeys: Map<SpaceId, Set<string>>;
 };
 
 const makeEmptyIndexingResult = (): MutableIndexingResult => ({
@@ -62,7 +56,6 @@ const makeEmptyIndexingResult = (): MutableIndexingResult => ({
   documents: new Set(),
   types: new Set(),
   objects: new Set(),
-  naturalKeys: new Map(),
 });
 
 const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly IndexerObject[]) => {
@@ -81,17 +74,22 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
     if (obj.data.id) {
       acc.objects.add(obj.data.id as EntityId);
     }
-    // Queue (feed) entities are out of merge scope — they have no automerge document to merge —
-    // and relations are excluded: they are not merge subjects (endpoints would not be reconciled).
-    if (obj.documentId && (obj.data as Record<string, unknown>)[ATTR_RELATION_SOURCE] === undefined) {
-      const naturalKey = (obj.data[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey;
-      if (typeof naturalKey === 'string') {
-        const keys = acc.naturalKeys.get(obj.spaceId) ?? new Set();
-        keys.add(naturalKey);
-        acc.naturalKeys.set(obj.spaceId, keys);
-      }
-    }
   }
+};
+
+/**
+ * The natural key an indexed object contributes to the merge trigger, if any.
+ *
+ * Queue (feed) entities are out of merge scope — they have no automerge document to merge — and
+ * relations are excluded: they are not merge subjects (endpoints would not be reconciled). The
+ * empty string is not a key; grouping on it would merge unrelated entities.
+ */
+const naturalKeyOf = (obj: IndexerObject): string | undefined => {
+  if (!obj.documentId || (obj.data as Record<string, unknown>)[ATTR_RELATION_SOURCE] !== undefined) {
+    return undefined;
+  }
+  const naturalKey = (obj.data[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey;
+  return typeof naturalKey === 'string' && naturalKey.length > 0 ? naturalKey : undefined;
 };
 
 /**
@@ -189,6 +187,28 @@ export class IndexEngine {
     naturalKeys: readonly string[],
   ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryByNaturalKeys(spaceId, naturalKeys);
+  }
+
+  /**
+   * Pending natural-key merge intents (see {@link EntityMetaIndex.recordNaturalKeyIntents}).
+   */
+  takeNaturalKeyIntents(): Effect.Effect<
+    { maxId: number; intents: Map<SpaceId, Set<string>> },
+    SqlError.SqlError,
+    SqlClient.SqlClient
+  > {
+    return this.#objectMetaIndex.takeNaturalKeyIntents();
+  }
+
+  /**
+   * Clear a serviced natural-key intent up to the id returned by {@link takeNaturalKeyIntents}.
+   */
+  clearNaturalKeyIntents(
+    spaceId: SpaceId,
+    naturalKey: string,
+    upToId: number,
+  ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.clearNaturalKeyIntents(spaceId, naturalKey, upToId);
   }
 
   queryType(
@@ -329,6 +349,22 @@ export class IndexEngine {
         return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
       }
 
+      // Natural keys in this batch, deduplicated — recorded as durable merge intents inside the
+      // transaction below, atomically with the cursor advance that would otherwise be the only
+      // record that these writes were ever seen.
+      const intents: { spaceId: SpaceId; naturalKey: string }[] = [];
+      const seenIntents = new Set<string>();
+      for (const obj of objects) {
+        const naturalKey = naturalKeyOf(obj);
+        if (naturalKey !== undefined) {
+          const composite = JSON.stringify([obj.spaceId, naturalKey]);
+          if (!seenIntents.has(composite)) {
+            seenIntents.add(composite);
+            intents.push({ spaceId: obj.spaceId, naturalKey });
+          }
+        }
+      }
+
       // Writes run INSIDE the transaction for atomicity.
       return yield* sqlTransaction.withTransaction(
         Effect.gen(this, function* () {
@@ -337,6 +373,8 @@ export class IndexEngine {
 
           // Look up recordIds for the objects.
           yield* this.#objectMetaIndex.lookupRecordIds(objects);
+
+          yield* this.#objectMetaIndex.recordNaturalKeyIntents(intents);
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(
