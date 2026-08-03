@@ -1,5 +1,7 @@
-// Schema for the feed store's tables. Generates `src/migrations/schema.sql` via
-// `moon run feed:prisma`; no prisma client is generated and none ships to the runtime.
+// Schema for the feed store's tables. `moon run feed:prisma` regenerates
+// `src/migrations/snapshot.sql` and, on a package with no migrations yet, writes
+// `0001_init.sql`; existing migrations are immutable and are never rewritten. No prisma client is
+// generated and none ships to the runtime.
 //
 // Column types, table names, and index names must stay byte-compatible with databases
 // created by earlier releases, so models carry explicit `@@map` / `map:` names and

@@ -76,7 +76,8 @@ export const migrate = (): Effect.Effect<
     table: MIGRATIONS_TABLE,
     migrations: MIGRATIONS,
     baseline: { throughId: 1, when: SqlMigrator.tableExists('feeds') },
-  }).pipe(Effect.orDie);
+    // Mirrors `FeedStore.migrate`, so the tests exercise the same error handling as production.
+  }).pipe(Effect.catchTag('MigrationError', (error) => Effect.die(error)));
 
 /**
  * Reads the physical shape of every user table, so two databases can be compared by what SQLite

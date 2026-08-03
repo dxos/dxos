@@ -145,7 +145,7 @@ schema shape below; 7.9.1 rejects it.
 
 Per-package layout:
 
-```
+```text
 packages/core/echo/feed/
 ├── prisma/schema.prisma            # source of truth for types (hand-authored)
 ├── moon.yml                        # + tags: [prisma]
@@ -209,8 +209,12 @@ with no filesystem access, so the browser path holds.
 
 ### Type mapping
 
-Verified against the real DDL by the spike — the emitted SQL is character-identical to the
-existing hand-written definitions:
+Verified against the real DDL by the spike. The emitted SQL is not character-identical — Prisma
+quotes identifiers, names foreign keys, adds `NOT NULL` to primary keys, and emits all tables
+before all indexes — but the resulting schemas are **equivalent** as compared by the tests: column
+name, type, nullability, primary-key position, default, index name/uniqueness/columns, and foreign
+key target and actions, read back from `PRAGMA table_info` / `index_list` / `foreign_key_list`,
+with primary-key nullability excluded for the reason given below. Column types map as:
 
 | Existing literal                    | Prisma                              | Emitted                                      |
 | ----------------------------------- | ----------------------------------- | -------------------------------------------- |
@@ -249,9 +253,10 @@ Prisma-managed:
 The four `ALTER TABLE objectMeta ADD COLUMN` statements (`parent`, `createdAt`, `updatedAt`,
 `queueNamespace`) **must be retained** as numbered migrations. Because migration 1 is
 `CREATE TABLE IF NOT EXISTS` and is stamped onto an existing profile rather than run, that
-profile keeps whatever columns it was created with. Dropping the ALTERs would silently strip
-those four columns from older profiles — the single highest-risk item in the change, since it
-affects real local-first user data in OPFS and fails silently.
+profile keeps whatever columns it was created with. Dropping the ALTERs would not remove anything —
+`CREATE TABLE IF NOT EXISTS` cannot alter an existing table — but it would **leave those columns
+missing** on older profiles while the code expects them. That is the single highest-risk item in
+the change, since it affects real local-first user data in OPFS and fails silently.
 
 `index-core` is also where baselining stops being mechanical. `feed` baselines at `throughId: 1`
 because its schema never changed, but an old `objectMeta` may or may not already carry each of
@@ -327,8 +332,15 @@ Assertions must derive from the `MIGRATIONS` manifest rather than hard-coding id
 pilot's first draft hard-coded them and four tests broke the moment a second migration was added,
 which would have recurred on every future schema change.
 
-A CI check that regenerates and fails on a dirty tree is still worth adding, to catch a stale
-committed `snapshot.sql`.
+Two CI checks are still worth adding, both catching classes of error the runtime cannot:
+
+- **Stale snapshot** — regenerate and fail on a dirty tree, so a committed `snapshot.sql` cannot
+  lag `schema.prisma`.
+- **Manifest integrity** — reject duplicate or non-increasing migration ids, and reject any diff
+  that modifies an already-committed migration `.sql`. The migrations table stores no checksum and
+  advances a high-water mark, so neither an edited applied migration nor a backfilled id is
+  detectable at runtime; the snapshot test does not catch either, because an edited migration and
+  its matching schema still agree. Until this exists, both rules are convention only.
 
 ## Spike (run 2026-07-31)
 

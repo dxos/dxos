@@ -82,19 +82,20 @@ export const splitStatements = (script: string): string[] => {
 };
 
 /**
- * Applies migration scripts in order, one statement at a time.
+ * Executes SQL scripts in order, one statement at a time.
  *
- * Scripts are expected to be idempotent (`CREATE TABLE IF NOT EXISTS`), since stores run their
- * migration on every open and there is no version table recording what was already applied.
+ * This is the raw executor and tracks nothing: it runs every statement it is given, every time.
+ * Recording what has already been applied is {@link SqlMigrator}'s job — prefer `SqlMigrator.run`
+ * for a store's schema, and reach for `apply` directly only for one-off or already-guarded SQL.
  *
  * DDL is spliced in with `sql.literal`, since an interpolated string would otherwise be sent as
  * a bound parameter rather than as SQL.
  *
  * @example
  * ```typescript
- * import schema from './migrations/schema.sql?raw';
+ * import init from './migrations/0001_init.sql?raw';
  *
- * yield* SqlMigrations.apply(schema);
+ * yield* SqlMigrations.apply(init);
  * ```
  */
 export const apply = (...scripts: ReadonlyArray<string>): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
