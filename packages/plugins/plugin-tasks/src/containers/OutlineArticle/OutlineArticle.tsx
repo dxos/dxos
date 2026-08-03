@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
@@ -54,11 +54,18 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
   const handleConvertCurrent = useCallback(() => outlineRef.current?.convertToTask(), []);
 
   // Task titles are edited independently of the document, so the link text is reconciled from the
-  // live objects rather than trusted as written. A type query re-emits on task edits (a
-  // `children()` query does not re-emit on a child's property change); membership is then the
-  // parent edge, so unrelated tasks in the space are dropped before the map is built.
+  // live objects rather than trusted as written. Membership is the parent edge, so unrelated tasks
+  // in the space are dropped before the map is built.
   const taskSet = outline.taskSet?.target;
   const tasks = useQuery(space?.db, taskSet ? Filter.type(Task.Task) : Filter.nothing());
+  // `useQuery` re-emits only when result membership changes, never on a member's property change,
+  // so renames are observed by subscribing to each task; the bump rebuilds the resolver, whose new
+  // identity re-runs the editor's label sync.
+  const [tick, bump] = useReducer((count: number) => count + 1, 0);
+  useEffect(() => {
+    const unsubscribes = tasks.map((task) => Obj.subscribe(task, bump));
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe());
+  }, [tasks]);
   const resolveLinkLabel = useMemo(() => {
     const labels = new Map(
       tasks
@@ -66,7 +73,7 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
         .map((task) => [Obj.getURI(task).toString(), task.title]),
     );
     return (url: string) => labels.get(url);
-  }, [tasks, taskSet]);
+  }, [tasks, taskSet, tick]);
 
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>
