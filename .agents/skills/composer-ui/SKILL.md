@@ -97,26 +97,9 @@ import { Icon } from '@dxos/react-ui';
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
 See [`packages/ui/react-ui/src/components/Icon/Icon.tsx`](../../../packages/ui/react-ui/src/components/Icon/Icon.tsx).
 
-### How a name becomes a glyph
-
-`ThemeProvider` mounts an `IconRegistry` (one per document, shared by every provider) that fetches the
-build-time sprite `/icons.svg` once and copies its symbols into a hidden `<svg>` in the body. Icons then
-reference that in-page copy — `<use href="#ph--plus--regular">` — via `useIconHref`, or via
-`globalThis.__dxIconRegistry` for non-React renderers like `<dx-icon>`.
-
-A name the sprite doesn't contain is fetched at runtime: the registry parses `ph--plus--regular` into
-set/name/weight, fetches `/phosphor/regular/plus.svg`, injects it as a `<symbol>`, and notifies waiters —
-so the icon renders a beat late rather than never. This is what makes icons work in plugins loaded from
-the registry at runtime, whose names the build-time scanner never saw. Repeat requests are deduped and
-404s are remembered, so a bad name costs one fetch, not one per render.
-
-Two consequences worth knowing:
-
-- Runtime resolution needs the host to serve the catalog — the `assets` option of
-  `@dxos/vite-plugin-icons` (`{ route: '/phosphor', dir: <@phosphor-icons/core assets> }`). Hosts that
-  omit it (composer-crx) are sprite-only, and unscanned names silently stay blank.
-- Only sets with a configured `IconSource` resolve at runtime; `dx--*` brand glyphs and plugin
-  namespaces must be in the static sprite unless a source is passed to `IconRegistryProvider`.
+Nothing needs registering to use a new Phosphor icon — name it and it resolves. `dx--*` brand glyphs are
+`regular`-only. How resolution works (and why an icon might not appear) →
+[`packages/ui/react-ui/docs/icons.md`](../../../packages/ui/react-ui/docs/icons.md).
 
 ## Containers: Panel + ScrollArea
 
