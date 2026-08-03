@@ -252,6 +252,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
         GraphBuilder.createExtension({
           id: 'storyItemCompanions',
           match: NodeMatcher.whenNodeType('story-item'),
+          // Only the first item offers `beta`, so moving attention to any other item exercises the
+          // fallback to the node group's first companion.
           connector: (node) =>
             Effect.succeed([
               AppNode.makeCompanion({
@@ -261,12 +263,16 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 data: { variant: 'alpha', parentId: node.id },
                 position: Position.first,
               }),
-              AppNode.makeCompanion({
-                variant: 'beta',
-                label: 'Companion Beta',
-                icon: 'ph--chat-circle--regular',
-                data: { variant: 'beta', parentId: node.id },
-              }),
+              ...(node.data === STORY_ITEMS[0]
+                ? [
+                    AppNode.makeCompanion({
+                      variant: 'beta',
+                      label: 'Companion Beta',
+                      icon: 'ph--chat-circle--regular',
+                      data: { variant: 'beta', parentId: node.id },
+                    }),
+                  ]
+                : []),
             ]),
         }),
         GraphBuilder.createExtension({

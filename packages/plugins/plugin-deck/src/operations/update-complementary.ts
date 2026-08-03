@@ -15,7 +15,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary>
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
-        const panelChanged = state.complementarySidebarPanel !== input.subject;
+        // Omitting `subject` means "leave the selection alone" — a collapse must not also forget which
+        // panel was open, or reopening the sidebar lands on nothing.
+        const panelChanged = input.subject !== undefined && state.complementarySidebarPanel !== input.subject;
         const next = input.subject ? 'expanded' : (input.state ?? state.complementarySidebarState);
         const stateChanged = next !== state.complementarySidebarState;
 

@@ -4,6 +4,7 @@
 
 export * from './useBreadcrumbs';
 export * from './useBreakpoints';
+export * from './useCompanionGroups';
 export * from './useCompanions';
 export * from './useDeckCompanions';
 export * from './useDeckPresentation';

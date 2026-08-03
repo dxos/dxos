@@ -2,17 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Fragment, type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Attention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
-import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
+import { type CompanionEntry, isNodeCompanionValue, useBreakpoints, useCompanionGroups, useDeckState } from '#hooks';
 import { meta } from '#meta';
 
 import { layoutAppliesTopbar } from '../../util';
@@ -41,9 +40,22 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
 
-  const companions = useDeckCompanions();
-  const activeCompanion = companions.find((companion) => Attention.getLinkedVariant(companion.id) === current);
-  const activeId = activeCompanion && Attention.getLinkedVariant(activeCompanion.id);
+  const { groups, anchorId, anchorSubject } = useCompanionGroups();
+  const companions = useMemo(() => groups.flatMap((group) => group.companions), [groups]);
+
+  // `current` is the user's preference, not necessarily what is showable: attending a plank that lacks
+  // the chosen variant falls back to that plank's first companion without overwriting the preference,
+  // so returning to a plank that does have it shows it again.
+  const activeId = useMemo(() => {
+    if (current && companions.some((companion) => companion.value === current)) {
+      return current;
+    }
+    return isNodeCompanionValue(current)
+      ? groups.find((group) => group.scope === 'node')?.companions[0]?.value
+      : undefined;
+  }, [current, companions, groups]);
+
+  const activeCompanion = companions.find((companion) => companion.value === activeId);
   const [internalValue, setInternalValue] = useState(activeId);
 
   useEffect(() => {
@@ -65,15 +77,6 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       }
     },
     [state.complementarySidebarState, activeId, invokePromise, updateState],
-  );
-
-  const data = useMemo(
-    () =>
-      activeCompanion && {
-        id: activeCompanion.id,
-        subject: activeCompanion.data,
-      },
-    [activeCompanion?.id, activeCompanion?.data],
   );
 
   useEffect(() => {
@@ -115,6 +118,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           onSizeChange={handleSizeChange}
         />
       )}
+
       {/* R0 Tabs */}
       <Tabs.Root classNames='contents' orientation='vertical' value={internalValue}>
         <div
@@ -127,26 +131,29 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           )}
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
-            {companions.map((companion) => (
-              <Tabs.IconButton
-                key={Attention.getLinkedVariant(companion.id)}
-                value={Attention.getLinkedVariant(companion.id)}
-                classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-                label={toLocalizedString(companion.properties.label, t)}
-                icon={companion.properties.icon}
-                iconOnly
-                tooltipSide='left'
-                data-value={Attention.getLinkedVariant(companion.id)}
-                {...(companion.properties.joyride && { 'data-joyride': companion.properties.joyride })}
-                variant={
-                  activeId === Attention.getLinkedVariant(companion.id)
-                    ? state.complementarySidebarState === 'expanded'
-                      ? 'primary'
-                      : 'ghost'
-                    : 'ghost'
-                }
-                onClick={handleTabClick}
-              />
+            {groups.map((group, index) => (
+              <Fragment key={group.scope}>
+                {index > 0 && <div role='none' className='mx-1 border-t border-subdued-separator' />}
+                {group.companions.map((companion) => (
+                  <Tabs.IconButton
+                    key={companion.value}
+                    value={companion.value}
+                    classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
+                    label={toLocalizedString(companion.node.properties.label, t)}
+                    icon={companion.node.properties.icon}
+                    iconOnly
+                    tooltipSide='left'
+                    data-value={companion.value}
+                    {...(companion.node.properties.joyride && { 'data-joyride': companion.node.properties.joyride })}
+                    variant={
+                      activeId === companion.value && state.complementarySidebarState === 'expanded'
+                        ? 'primary'
+                        : 'ghost'
+                    }
+                    onClick={handleTabClick}
+                  />
+                ))}
+              </Fragment>
             ))}
           </Tabs.Tablist>
           <div
@@ -161,40 +168,59 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         </div>
 
         {/* R1 Content. */}
-        {activeId &&
-          companions.map((companion) => (
-            <Tabs.Panel
-              key={Attention.getLinkedVariant(companion.id)}
-              value={Attention.getLinkedVariant(companion.id)}
-              classNames={[
-                'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
-              ]}
-              {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
-            >
-              <ComplementarySidebarPanel companion={companion} activeId={activeId} data={data} />
-            </Tabs.Panel>
-          ))}
+        {activeCompanion && (
+          <Tabs.Panel
+            key={activeCompanion.value}
+            value={activeCompanion.value}
+            classNames={[
+              'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
+              'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
+            ]}
+            {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
+          >
+            <ComplementarySidebarPanel companion={activeCompanion} anchorId={anchorId} anchorSubject={anchorSubject} />
+          </Tabs.Panel>
+        )}
       </Tabs.Root>
     </Main.ComplementarySidebar>
   );
 };
 
 type ComplementarySidebarPanelProps = {
-  companion: DeckCompanion;
-  activeId: string;
-  data?: {
-    id: string;
-    subject: any;
-  };
+  companion: CompanionEntry;
+  anchorId?: string;
+  anchorSubject?: unknown;
 };
 
-const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
+const ComplementarySidebarPanel = ({ companion, anchorId, anchorSubject }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { node, variant, scope } = companion;
 
-  if (Attention.getLinkedVariant(companion.id) !== activeId && !data) {
-    return null;
-  }
+  // Node companions keep the article contract they render under in the deck, so plugins need no change;
+  // root companions keep their per-variant role.
+  const surface =
+    scope === 'node' ? (
+      <Surface.Surface
+        type={AppSurface.Article}
+        data={{
+          attendableId: anchorId,
+          subject: node.data,
+          companionTo: anchorSubject,
+          variant,
+          properties: node.properties,
+        }}
+        limit={1}
+        fallback={PlankErrorFallback}
+        placeholder={<PlankLoading />}
+      />
+    ) : (
+      <Surface.Surface
+        type={AppSurface.deckCompanion(variant)}
+        data={{ id: node.id, subject: node.data }}
+        fallback={PlankErrorFallback}
+        placeholder={<PlankLoading />}
+      />
+    );
 
   return (
     <Panel.Root>
@@ -202,24 +228,17 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
         <Toolbar.Root style={iconSize(5)} classNames='bg-header-surface'>
           <IconButton
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-            label={toLocalizedString(companion.properties.label, t)}
-            icon={companion.properties.icon}
+            label={toLocalizedString(node.properties.label, t)}
+            icon={node.properties.icon}
             iconOnly
             tooltipSide='left'
-            data-value={Attention.getLinkedVariant(companion.id)}
+            data-value={companion.value}
             variant='default'
           />
-          <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
+          <div className='px-1'>{toLocalizedString(node.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='bg-r1-surface'>
-        <Surface.Surface
-          type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
-          data={data}
-          fallback={PlankErrorFallback}
-          placeholder={<PlankLoading />}
-        />
-      </Panel.Content>
+      <Panel.Content classNames='bg-r1-surface'>{surface}</Panel.Content>
     </Panel.Root>
   );
 };

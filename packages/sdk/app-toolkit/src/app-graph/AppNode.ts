@@ -34,6 +34,12 @@ export const PLANK_COMPANION_TYPE = 'org.dxos.plugin.deck.plank-companion';
 /** Deck-level (workspace-wide) companion panel node type. */
 export const DECK_COMPANION_TYPE = 'org.dxos.plugin.deck.deck-companion';
 
+/**
+ * How broadly a companion applies. The sidebar rail groups companions by scope, most specific first, so
+ * a companion for the node you are working in sits above one that applies to the whole app.
+ */
+export type CompanionScope = 'node' | 'workspace' | 'global';
+
 //
 // Caching infrastructure.
 //
@@ -323,17 +329,22 @@ export const makeCompanion = <TData = string>({
   properties: {
     label,
     icon,
+    scope: 'node' satisfies CompanionScope,
     disposition: 'hidden',
     ...(position !== undefined && { position }),
   },
 });
 
-/** Build a deck-level (workspace-wide) companion panel node. */
+/**
+ * Build a root-level companion panel node — one that applies to the whole workspace (`workspace`, e.g.
+ * search over the current space) or to the app regardless of what is open (`global`, the default).
+ */
 export const makeDeckCompanion = <TData = any>({
   id,
   label,
   icon,
   data,
+  scope = 'global',
   position,
   joyride,
 }: {
@@ -341,6 +352,7 @@ export const makeDeckCompanion = <TData = any>({
   label: Translations.Label;
   icon: string;
   data: TData;
+  scope?: Exclude<CompanionScope, 'node'>;
   position?: Position.Position;
   joyride?: string;
 }): Node.NodeArg<TData> => ({
@@ -350,6 +362,7 @@ export const makeDeckCompanion = <TData = any>({
   properties: {
     label,
     icon,
+    scope,
     disposition: 'hidden',
     ...(position !== undefined && { position }),
     ...(joyride !== undefined && { joyride }),
