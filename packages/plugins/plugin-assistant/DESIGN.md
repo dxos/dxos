@@ -208,8 +208,9 @@ skipped with stale fixtures — e.g. `skills/assistant/skill.node.test.ts`).
   (`SERVICES_CONFIG.REMOTE`); the `WithProjectCommands` play test is det (completion popover
   only, no AI call).
 - `stories-assistant` — the integration surface: modules (Chat, Context, Graph, Research,
-  Tasks) composed over real plugins + **live** EDGE AI; `WithSubAgentsTest1` is the only
-  end-to-end delegation exercise and is `tags: ['!test']` (manual, 180 s timeout).
+  Tasks) composed over real plugins + **live** EDGE AI; delegation is exercised end to end by
+  `WithSubAgentsTest1` (live, `tags: ['!test']`, manual, 180 s timeout) and by its scripted
+  counterpart `WithSubAgentsTest2`, the only one of the two that runs in CI.
 - `assistant-evals` — evalite-scored A/B/H evals, live model, out of band.
 
 **Verdict: the development loop lives here — and it is the slowest, least deterministic
@@ -230,7 +231,8 @@ to add more live tests.
    gets two variants:
    - `Foo` — live, `tags: ['!test']`, for model-behavior work;
    - `FooScripted` — same story + a play script, deterministic, runs in `test-storybook` CI
-     (first instance: `WithSubAgentsTest2`, §4.4).
+     (the delegation pair is the exception, numbered instead: `WithSubAgentsTest1` live /
+     `WithSubAgentsTest2` scripted, §4.4).
      This turns the storybook from "manual demo against the network" into a regression suite for
      everything except comprehension/tool-selection (which belong to the evals tier anyway).
 2. **Headless-first iteration at the `AgentService` seam.** The processor's entry point
