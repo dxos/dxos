@@ -93,14 +93,16 @@ const TaskListRoot = ({
     onTaskDelete={onTaskDelete}
     onTaskSelect={onTaskSelect}
   >
-    {children}
+    {/* Both roots are headless, so the pair renders no DOM of its own. */}
+    <Listbox.Root>{children}</Listbox.Root>
   </TaskListProvider>
 );
 
 TaskListRoot.displayName = 'TaskList.Root';
 
 //
-// Viewport — the outer container; owns layout, not scroll (the host panel scrolls).
+// Viewport — the scrolling region (the listbox's own viewport). `Create` sits outside it, so the
+// add row stays pinned while the rows scroll.
 //
 
 type TaskListViewportProps = ComposableProps;
@@ -108,9 +110,9 @@ type TaskListViewportProps = ComposableProps;
 const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   return (
-    <div {...rest} className={mx('flex flex-col min-w-0', className)} ref={forwardedRef}>
+    <Listbox.Viewport {...rest} classNames={mx('min-w-0', className)} ref={forwardedRef}>
       {children}
-    </div>
+    </Listbox.Viewport>
   );
 });
 
@@ -122,7 +124,7 @@ TaskListViewport.displayName = 'TaskList.Viewport';
 
 type TaskListContentProps = ComposableProps;
 
-const TaskListContent = composable<HTMLDivElement>((props, forwardedRef) => {
+const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
   const { tasks, groupByStatus, statusLabel } = useTaskListContext('TaskList.Content');
   const { className, ...rest } = composableProps(props);
   const groups = useMemo(() => {
@@ -137,20 +139,16 @@ const TaskListContent = composable<HTMLDivElement>((props, forwardedRef) => {
   }, [tasks, groupByStatus]);
 
   return (
-    <Listbox.Root>
-      <Listbox.Viewport {...rest} classNames={mx('dx-container', className)} ref={forwardedRef}>
-        <Listbox.Content aria-label='Tasks'>
-          {groups.map(({ status, tasks }) => (
-            <Fragment key={status ?? 'all'}>
-              {status && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
-              {tasks.map((task) => (
-                <TaskListItem key={task.id} task={task} />
-              ))}
-            </Fragment>
+    <Listbox.Content {...rest} aria-label='Tasks' classNames={className} ref={forwardedRef}>
+      {groups.map(({ status, tasks }) => (
+        <Fragment key={status ?? 'all'}>
+          {status && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
+          {tasks.map((task) => (
+            <TaskListItem key={task.id} task={task} />
           ))}
-        </Listbox.Content>
-      </Listbox.Viewport>
-    </Listbox.Root>
+        </Fragment>
+      ))}
+    </Listbox.Content>
   );
 });
 

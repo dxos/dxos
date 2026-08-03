@@ -39,25 +39,23 @@ const DefaultStory = ({ readonly }: { readonly?: boolean }) => {
   }, []);
 
   return (
-    <div className='w-[36rem]'>
-      <TaskList.Root
-        tasks={tasks}
-        onTaskCreate={readonly ? undefined : handleCreate}
-        onTaskUpdate={readonly ? undefined : handleUpdate}
-        onTaskDelete={readonly ? undefined : handleDelete}
-      >
-        <TaskList.Viewport>
-          <TaskList.Content />
-          <TaskList.Create />
-        </TaskList.Viewport>
-      </TaskList.Root>
-    </div>
+    <TaskList.Root
+      tasks={tasks}
+      onTaskCreate={readonly ? undefined : handleCreate}
+      onTaskUpdate={readonly ? undefined : handleUpdate}
+      onTaskDelete={readonly ? undefined : handleDelete}
+    >
+      <TaskList.Viewport>
+        <TaskList.Content />
+      </TaskList.Viewport>
+      <TaskList.Create />
+    </TaskList.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-task/TaskList',
-  render: (args) => <DefaultStory {...args} />,
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;
 

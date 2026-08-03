@@ -121,8 +121,8 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
         >
           <TaskList.Viewport>
             <TaskList.Content />
-            <TaskList.Create />
           </TaskList.Viewport>
+          <TaskList.Create />
         </TaskList.Root>
       </Panel.Content>
     </Panel.Root>

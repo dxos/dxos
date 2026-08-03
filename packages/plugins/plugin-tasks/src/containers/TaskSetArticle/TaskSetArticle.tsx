@@ -62,8 +62,8 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
     >
       <TaskList.Viewport>
         <TaskList.Content />
-        <TaskList.Create placeholder={t('task-create.placeholder')} />
       </TaskList.Viewport>
+      <TaskList.Create placeholder={t('task-create.placeholder')} />
     </TaskList.Root>
   );
 
