@@ -18,6 +18,17 @@ set -euo pipefail
 
 root="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 state="$root/.claude/.mode"
+legacy="$root/.claude/.response-mode"
+
+# Transitional: the state file was renamed alongside the script, so adopt an
+# existing value once and drop the old file — otherwise checkouts that predate
+# the rename silently reset to normal and leave the stale file untracked.
+if [ -e "$legacy" ]; then
+  if [ ! -e "$state" ]; then
+    mv "$legacy" "$state" 2>/dev/null || true
+  fi
+  rm -f "$legacy"
+fi
 
 # Canonicalise on read so a stale or hand-edited state file cannot wedge the
 # machine in an unrecognised mode — anything that is not terse means normal.

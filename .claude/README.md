@@ -21,8 +21,9 @@ what determines whether they survive a long session.
 | **3. Interception**  | hooks (30 events)                                                              | per event, at that event's position  | no — re-fires every time                     |
 | **4. Gating**        | `permissions` allow/deny/ask, permission modes                                 | pre-tool, non-textual                | n/a — mechanical, not persuasive             |
 
-Kinds 1–2 are **persuasion**: the agent may ignore them, and grows likelier to
-as the session fills. Kinds 3–4 are **mechanism**: it cannot.
+Kinds 1–2 are **persuasion**: the agent can ignore them, and grows more likely to
+ignore them as the session fills. Kinds 3–4 are **mechanism**: the agent cannot
+ignore them at all.
 
 > **The load-bearing consequence.** A rule that must hold on _every_ response
 > cannot live only in kind 1. One large skill (`composer-plugins/SKILL.md`,
@@ -32,7 +33,7 @@ as the session fills. Kinds 3–4 are **mechanism**: it cannot.
 
 ## B. Lifecycle
 
-```
+```text
 SESSION   SessionStart → Setup → InstructionsLoaded
              │
 TURN    ┌──► UserPromptSubmit ──► UserPromptExpansion   (if a command/skill expands)

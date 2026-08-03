@@ -6,6 +6,8 @@
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
 .claude/.mode
+# Transitional: pre-rename state file, deleted on first mode.sh run.
+.claude/.response-mode
 
 # Logs
 logs/
