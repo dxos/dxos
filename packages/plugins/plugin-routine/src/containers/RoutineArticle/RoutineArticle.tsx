@@ -7,7 +7,6 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useActivationSignal, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';

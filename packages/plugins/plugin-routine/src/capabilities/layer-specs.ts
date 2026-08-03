@@ -12,7 +12,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientService } from '@dxos/client';
 import {
   FeedTraceSink,
