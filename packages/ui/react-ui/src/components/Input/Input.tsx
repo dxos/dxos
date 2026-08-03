@@ -318,6 +318,9 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
         {...props}
         // TODO(wittjosiah): Factor out autofill properies.
         {...{ 'data-1p-ignore': noAutoFill }}
+        // Sizing comes from the `--dx-control*` knobs; `data-density` is what applies a per-control
+        // override of them (see theme/spacing.css), so a `density` prop still works standalone.
+        data-density={density}
         className={tx(
           'input.input',
           {
@@ -342,6 +345,7 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 
     return (
       <div
+        data-density={density}
         className={tx('input.container', { variant, disabled: props.disabled, density, validationValence }, classNames)}
       >
         {start != null && <span className={tx('input.adornment', { side: 'start' })}>{start}</span>}
@@ -371,6 +375,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
     return (
       <TextAreaPrimitive
         {...props}
+        data-density={density}
         className={tx(
           'input.textArea',
           {

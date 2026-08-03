@@ -13,7 +13,9 @@ export type FormBehavior = { showDescription: boolean };
 const formStyles = tv({
   slots: {
     viewport: '',
-    content: '',
+    // Bottom padding on the body, so the last field never sits flush against its host's edge
+    // (a form in a card, a dialog body, a scrolled panel all need it).
+    content: 'pb-form-padding',
     section: 'flex flex-col py-form-section-gap first:pt-0',
     group: 'flex flex-col gap-trim-md p-trim-md border border-separator rounded-sm',
     sectionHeader: '',

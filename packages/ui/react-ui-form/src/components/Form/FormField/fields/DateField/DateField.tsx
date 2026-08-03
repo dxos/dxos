@@ -71,7 +71,7 @@ export const DateField = ({
         switch (format) {
           case Format.TypeFormat.Date:
             return (
-              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch'>
+              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
                 <Input.Date
                   classNames='min-w-0 overflow-hidden'
                   disabled={readonly}
@@ -82,11 +82,18 @@ export const DateField = ({
               </div>
             );
           case Format.TypeFormat.Time:
-            return <Input.Time disabled={!!readonly} value={value ?? ''} onValueChange={handleSimpleChange} />;
+            return (
+              <Input.Time
+                classNames='tabular-nums'
+                disabled={!!readonly}
+                value={value ?? ''}
+                onValueChange={handleSimpleChange}
+              />
+            );
           case Format.TypeFormat.DateTime:
           default:
             return (
-              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch'>
+              <div className='grid grid-cols-[minmax(0,1fr)_min-content] gap-1 items-stretch tabular-nums'>
                 <Input.DateTime
                   classNames='min-w-0 overflow-hidden'
                   disabled={readonly}

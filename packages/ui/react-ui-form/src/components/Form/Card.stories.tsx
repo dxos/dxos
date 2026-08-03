@@ -34,7 +34,7 @@ const Contact = Schema.Struct({
 const values = { name: 'Ada Lovelace', email: 'ada@example.com', role: 'Engineer' };
 
 const ReferenceCard = () => (
-  <Card.Root>
+  <Card.Root fullWidth>
     <Card.Header>
       <Card.Block>
         <Icon icon='ph--user--regular' />
@@ -53,7 +53,7 @@ const ReferenceCard = () => (
 );
 
 const FormCard = () => (
-  <Card.Root>
+  <Card.Root fullWidth>
     <Card.Header>
       <Card.Block>
         <Icon icon='ph--pencil--regular' />
@@ -80,7 +80,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'ui/react-ui-form/FormInCard',
+  title: 'ui/react-ui-form/Card',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered' })],
   parameters: { translations },
