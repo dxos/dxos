@@ -158,7 +158,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  test('selecting comment highlights thread and vice versa', async ({ browserName }) => {
+  test('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -188,14 +188,6 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThread(host.page, firstMessage)).toHaveAttribute('aria-current', 'location');
 
     // Selecting a thread should highlight the comment.
-    // TODO(wittjosiah): Chromium-only. On firefox the thread does become current (its heading accents
-    //   and `aria-current` is set) but the editor keeps the previously selected comment marked
-    //   `data-current="1"`, so the new current never reaches the editor's decorations. The reverse
-    //   direction above passes on every browser, so it is asserted unconditionally.
-    if (browserName !== 'chromium') {
-      return;
-    }
-
     await Thread.getThread(host.page, secondMessage).click();
     await expect(Thread.getComment(host.page, secondMessage)).toHaveAttribute('data-current', '1');
     await expect(Thread.getThread(host.page, secondMessage)).toHaveAttribute('aria-current', 'location');
