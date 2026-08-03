@@ -103,6 +103,7 @@
     "@effect-atom/atom": "catalog:",
     "hastscript": "catalog:",
     "highlight.js": "catalog:",
+    "marked": "catalog:",
     "react-markdown": "catalog:",
     "react-resize-detector": "catalog:",
     "rehype-add-classes": "catalog:",

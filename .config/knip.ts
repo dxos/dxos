@@ -313,6 +313,21 @@ for (const manifest of globSync(['packages/**/package.json', 'tools/**/package.j
   }
 }
 
+/**
+ * Packages that a dependency imports from its own shipped files without declaring them anywhere.
+ * The bundler resolves those against the workspace that declares the dependency, so it has to carry
+ * them even though no source file in the repo imports them. `reveal.js` ships a markdown plugin
+ * that imports `marked` and declares no dependencies at all, so unlike `--bundlePackage` this
+ * cannot be read off a manifest — only an app bundle surfaces it.
+ */
+const BUNDLER_RESOLVED: Record<string, string[]> = {
+  'packages/plugins/plugin-presenter': ['marked'],
+  // edge-compute generates a function entrypoint containing
+  // `await import('@dxos/functions-runtime-cloudflare')` and gives esbuild a `resolveDir` of its
+  // own source directory, so the import resolves from here rather than from any importing file.
+  'packages/core/compute/edge-compute': ['@dxos/functions-runtime-cloudflare'],
+};
+
 const workspaces: KnipConfig['workspaces'] = {
   '.': {
     entry: ['*.{ts,mts}', 'scripts/**/*.{ts,mjs}', 'vitest/**/*.{ts,mjs}'],
@@ -392,6 +407,7 @@ for (const manifest of globSync(
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...typeOnlyDependencies(dir, Object.keys(dependencies)),
       ...bundledDependencies(dir),
+      ...(BUNDLER_RESOLVED[dir] ?? []),
     ],
   };
 }
