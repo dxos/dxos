@@ -5,7 +5,7 @@
 .claude/scheduled_tasks.lock
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
-.claude/.response-mode
+.claude/.mode
 
 # Logs
 logs/

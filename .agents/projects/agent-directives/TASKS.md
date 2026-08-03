@@ -19,19 +19,22 @@ surface and are unreviewable without it.
       always-loaded instruction across 4 files; response directives are 6 lines
       of it (~1.3%), never repeated. `composer-plugins/SKILL.md` is 42KB (~4x
       `AGENTS.md`) and loads _later_, so it outranks them positionally.
-- [ ] **Write `.claude/README.md`** — control points (generic / lifecycle /
+- [x] **Write `.claude/README.md`** — control points (generic / lifecycle /
       ours) plus a NOTES section explaining hooks, sentinels and commands.
+- [x] **Rename `response-mode` → `mode`** to match the sentinel: both scripts,
+      the state file (`.claude/.mode`), the `settings.json` binding, the
+      `.gitignore` entry, and the injected banner (`MODE: CONCISE`).
 
 ## Phase 2: Make the response directives durable
 
 `UserPromptSubmit` `additionalContext` lands adjacent to the current prompt —
-last position, every turn, immune to dilution. `response-mode.sh` already owns
+last position, every turn, immune to dilution. `mode.sh` already owns
 that channel but `context` returns early in `natural`, so the machine is silent
 in its default state. That single gap is why "be terse" never survives.
 
 ### Tasks
 
-- [ ] **Emit in every state** — `scripts/response-mode.sh context` currently
+- [ ] **Emit in every state** — `scripts/mode.sh context` currently
       `exit 0`s unless the mode is `concise`. Make it always emit: invariants in
       both modes, budget varying by mode.
 - [ ] **Normalize the sentinel to `$mode <MODE>`** — the current regex matches a
@@ -60,28 +63,29 @@ in its default state. That single gap is why "be terse" never survives.
 - [ ] Does `normal` mode carry a budget at all, or invariants only?
 - [ ] Edit `~/.claude/CLAUDE.md` (global, affects every project) or leave it and
       let the repo hook override?
-- [ ] Default mode when `.claude/.response-mode` is absent: `normal` or `terse`?
+- [ ] Default mode when `.claude/.mode` is absent: `normal` or `terse`?
 
 ## Phase 3: Cleanups found on the way
 
 ### Tasks
 
-- [ ] **Delete the orphaned `.agent/` (singular) directory** — 7 tracked files
+- [x] **Delete the orphaned `.agent/` (singular) directory** — done 2026-08-03
+      (by the user, in this worktree). 7 tracked files
       (`workflows/make-pr-ready.md` + 6 `workflows/types/*.ts`) from PR #10381.
-      Verified 2026-08-03: zero runtime references — no code, config or glob
-      loads it; only mechanical repo-wide refactors keep it current. Distinct
+      Verified before removal: zero runtime references — no code, config or glob
+      loaded it; only mechanical repo-wide refactors kept it current. Distinct
       from `.agents/` (plural), which is load-bearing: `.claude/skills` is a
       symlink into `.agents/skills` (26 skills) and `.agents/projects/registry.yml`
-      is live task-planning state. Own PR. Also tracked at
+      is live task-planning state. Still open at
       `.agents/projects/ai-testing-strategy/TASKS.md:411` — close that entry
       when this lands.
-- [ ] **Collapse the two `response-mode.sh` files, or document the split** —
-      `.claude/hooks/response-mode.sh` is the `UserPromptSubmit` adapter,
-      `.claude/scripts/response-mode.sh` the state backend (`get|set|toggle|context`).
+- [ ] **Collapse the two `mode.sh` files, or document the split** —
+      `.claude/hooks/mode.sh` is the `UserPromptSubmit` adapter,
+      `.claude/scripts/mode.sh` the state backend (`get|set|toggle|context`).
       Defensible in principle, unearned as built: one caller, and the
       hand-runnable path is documented nowhere.
-- [ ] **Fix the stale claim that desktop has no slash commands** —
-      `.claude/CLAUDE.md:10` and `task-planning/SKILL.md` both assert it;
+- [ ] **Fix the stale claim that desktop has no slash commands** — removed from
+      `.claude/CLAUDE.md`; `task-planning/SKILL.md` still asserts it.
       `.claude/commands/commit.md` registers and resolves as `/commit`.
 - [ ] **Surface guard-hook output to the user** — `branch-beacon.sh` writes plain
       stdout on `UserPromptSubmit`, which only the agent sees. Adding

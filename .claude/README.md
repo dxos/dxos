@@ -14,12 +14,12 @@ rules** — it explains the machinery those rules ride on.
 Four kinds, distinguished by **when they enter the context window** — which is
 what determines whether they survive a long session.
 
-| Kind                 | Mechanism                                                                     | Enters context                       | Decays?                                      |
-| -------------------- | ----------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------------- |
+| Kind                 | Mechanism                                                                      | Enters context                       | Decays?                                      |
+| -------------------- | ------------------------------------------------------------------------------ | ------------------------------------ | -------------------------------------------- |
 | **1. Static text**   | `AGENTS.md` / `CLAUDE.md` chain, `MEMORY.md`, MCP server instructions          | once, at session start, near the top | **yes** — fixed position, never repeated     |
 | **2. Deferred text** | skills, subagents (`.claude/agents/`), slash commands (`.claude/commands/`)    | on demand, mid-conversation          | no — but it _displaces_ kind 1               |
-| **3. Interception**  | hooks (30 events)                                                             | per event, at that event's position  | no — re-fires every time                     |
-| **4. Gating**        | `permissions` allow/deny/ask, permission modes                                | pre-tool, non-textual                | n/a — mechanical, not persuasive             |
+| **3. Interception**  | hooks (30 events)                                                              | per event, at that event's position  | no — re-fires every time                     |
+| **4. Gating**        | `permissions` allow/deny/ask, permission modes                                 | pre-tool, non-textual                | n/a — mechanical, not persuasive             |
 
 Kinds 1–2 are **persuasion**: the agent may ignore them, and grows likelier to
 as the session fills. Kinds 3–4 are **mechanism**: it cannot.
@@ -42,8 +42,8 @@ TURN    ┌──► UserPromptSubmit ──► UserPromptExpansion   (if a comm
         │        │            (or allow)
         │        ▼
         │    PostToolUse / PostToolUseFailure / PostToolBatch ──┐
-        │        │                                             │
-        │        └──── loop while tools are called ◄───────────┘
+        │        │                                              │
+        │        └──── loop while tools are called ◄────────────┘
         │        ▼
         │    Stop ──(decision:block)──┐   StopFailure  (API error; output ignored)
         │        │                    │
@@ -62,17 +62,17 @@ stdout as context the agent reads. Every other event needs
 
 ## C. Control points (ours)
 
-| Control point                                                       | Event                     | Output goes to | State                                |
-| ------------------------------------------------------------------- | ------------------------- | -------------- | ------------------------------------ |
-| `~/.claude/hooks/session-context.sh`                                 | `SessionStart`            | agent          | derived (branch / cwd / verdict)     |
-| `~/.claude/hooks/branch-beacon.sh`                                   | `UserPromptSubmit`        | agent          | derived, recomputed each turn        |
-| `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`        | `PreToolUse(Bash)`        | deny           | derived                              |
-| `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh) | `PreToolUse(Edit\|Write)` | deny           | derived                              |
-| [`hooks/response-mode.sh`](./hooks/response-mode.sh) → [`scripts/response-mode.sh`](./scripts/response-mode.sh) | `UserPromptSubmit` | agent | **persisted** `.claude/.response-mode` |
-| [`hooks/track.sh`](./hooks/track.sh)                                 | `UserPromptSubmit`        | agent          | persisted `.agents/projects/registry.yml` |
-| [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md) | —       | agent          | static                               |
-| `skills/` → `../.agents/skills/` (26)                                | —                         | agent          | on demand                            |
-| [`agents/`](./agents) (2), [`commands/`](./commands) (1)             | —                         | agent          | on demand                            |
+| Control point                                                                                                     | Event                     | Output goes to | State                                     |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------- | -------------- | ----------------------------------------- |
+| `~/.claude/hooks/session-context.sh`                                                                              | `SessionStart`            | agent          | derived (branch / cwd / verdict)          |
+| `~/.claude/hooks/branch-beacon.sh`                                                                                | `UserPromptSubmit`        | agent          | derived, recomputed each turn             |
+| `~/.claude/hooks/guard-branch.sh`, `deny-git-worktree-add.sh`                                                     | `PreToolUse(Bash)`        | deny           | derived                                   |
+| `~/.claude/hooks/guard-worktree.sh` + [repo copy](./hooks/guard-worktree.sh)                                      | `PreToolUse(Edit\|Write)` | deny           | derived                                   |
+| [`hooks/mode.sh`](./hooks/mode.sh) → [`scripts/mode.sh`](./scripts/mode.sh)   | `UserPromptSubmit`        | agent          | **persisted** `.claude/.mode`    |
+| [`hooks/track.sh`](./hooks/track.sh)                                                                              | `UserPromptSubmit`        | agent          | persisted `.agents/projects/registry.yml` |
+| [`AGENTS.md`](../AGENTS.md) (+ `CLAUDE.md` / `GEMINI.md` symlinks), [`CLAUDE.md`](./CLAUDE.md)                    | —                         | agent          | static                                    |
+| `skills/` → `../.agents/skills/` (26)                                                                             | —                         | agent          | on demand                                 |
+| [`agents/`](./agents) (2), [`commands/`](./commands) (1)                                                          | —                         | agent          | on demand                                 |
 
 The guards exist as **both** a global `~/.claude/` copy and a repo copy. That is
 deliberate, not duplication-by-accident: the harness sometimes instantiates the
@@ -100,7 +100,7 @@ else.** Not the filename, not the directory:
 {
   "hooks": {
     "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "bash .../response-mode.sh" }] }
+      { "hooks": [{ "type": "command", "command": "bash .../mode.sh" }] }
     ],
     "PreToolUse": [
       { "matcher": "Edit|Write", "hooks": [{ "type": "command", "command": "bash .../guard-worktree.sh" }] }
@@ -109,7 +109,7 @@ else.** Not the filename, not the directory:
 }
 ```
 
-`hooks/response-mode.sh` is named for its _purpose_; it fires on
+`hooks/mode.sh` is named for its _purpose_; it fires on
 `UserPromptSubmit` purely because it sits under that key. The same script bound
 under two keys would fire on both events — it can tell them apart via the
 `hook_event_name` field in its stdin JSON. `matcher` narrows tool-scoped events
@@ -118,9 +118,9 @@ matcher fire every time.
 
 **Who sees the output** — the field decides, and this trips people up:
 
-| Output                                | Read by                                                                                    |
-| ------------------------------------- | ------------------------------------------------------------------------------------------ |
-| plain stdout                          | the **agent** — but only on `UserPromptSubmit`, `UserPromptExpansion`, `SessionStart`. Elsewhere it goes to the debug log and nobody reads it. |
+| Output                                 | Read by                                                                                    |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| plain stdout                           | the **agent** — but only on `UserPromptSubmit`, `UserPromptExpansion`, `SessionStart`. Elsewhere it goes to the debug log and nobody reads it. |
 | `hookSpecificOutput.additionalContext` | the **agent**. Injected as a system-reminder; never rendered as a chat message.             |
 | `systemMessage`                        | the **user**, printed in the terminal. The model does not see it.                           |
 
@@ -134,7 +134,7 @@ ending and feeds `reason` back to the model. `{"continue": false}` ends the
 session outright.
 
 **There is no state machine.** The harness gives an event bus over a context
-assembler. `response-mode` is a hand-rolled machine (two states, one state file,
+assembler. `mode` is a hand-rolled machine (two states, one state file,
 sentinel transitions); the guards are stateless and derive branch/cwd afresh on
 every event.
 
@@ -145,7 +145,7 @@ A sentinel is a **marker typed inside a normal message** that a
 
 | Sentinel                | Hook                                       | Effect                                     |
 | ----------------------- | ------------------------------------------ | ------------------------------------------ |
-| `$concise` / `$natural` | [`hooks/response-mode.sh`](./hooks/response-mode.sh) | sets response verbosity mode      |
+| `$concise` / `$natural` | [`hooks/mode.sh`](./hooks/mode.sh) | sets response verbosity mode      |
 | `$project VERB [ARGS]`  | [`hooks/track.sh`](./hooks/track.sh)       | task-planning: list / new / end / track / hydrate / resume |
 
 They exist because a hook can act on them **before the model runs**, which makes

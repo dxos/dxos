@@ -27,7 +27,7 @@ positionally stronger.
 
 Direct evidence, this session: `~/.claude/CLAUDE.md:9` ("Be as terse as
 possible") was active on every turn and ignored on every turn, while the
-numbering rule survived. Mode was `natural`, so `response-mode.sh` emitted
+numbering rule survived. Mode was `natural`, so `mode.sh` emitted
 nothing — the only length directive in play was that one diluted line.
 
 ### 2. Post-hoc review cannot fix verbosity
@@ -73,8 +73,8 @@ build by writing a file that a later hook reads.
 
 Two exist here, neither complete:
 
-1. **`response-mode`** — a genuine machine: 2 states, persisted in
-   `.claude/.response-mode`, transitions via sentinel. But `context` returns
+1. **`mode`** — a genuine machine: 2 states, persisted in
+   `.claude/.mode`, transitions via sentinel. But `context` returns
    early in `natural`, so it **speaks in one state and is silent in the other**.
 2. **`$project`** — quasi-machine over `registry.yml`. Real states, but
    transitions are _advisory_: the hook emits a directive and depends on the
@@ -92,7 +92,7 @@ A durable directive needs all three of:
 2. re-injection every turn via `UserPromptSubmit`,
 3. **a defined output in every state, including the default.**
 
-`response-mode` has (1) and (2) and is missing (3). Closing that gap is the
+`mode` has (1) and (2) and is missing (3). Closing that gap is the
 whole fix, and it gives the state-independent invariants — numbered options,
 worktree reporting — a place to live as unconditional rows of the same block.
 
