@@ -14,9 +14,9 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { addSubjectsToActiveDeck, updatePlankNames } from '../layout';
+import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
 import { DeckCapabilities } from '../types';
-import { computeActiveUpdates } from '../util';
+import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
@@ -137,8 +137,37 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const anchorToOrigin = disposition === 'auto';
         const addBesideOrigin = shift || disposition === 'add' || (anchorToOrigin && sliding);
 
+        // A type may declare what its deck opens (`AppAnnotation.DeckAnnotation`); a Collection opens
+        // the documents it contains rather than a plank showing the collection itself.
+        const seeded = resolveSeededPlanks({
+          initial: resolveDeckSpec(
+            input.subject[0] ? Option.getOrUndefined(Graph.getNode(graph, input.subject[0])) : undefined,
+          )?.initial,
+          addBesideOrigin,
+          children: input.subject.length === 1 && input.subject[0] ? openableChildren(graph, input.subject[0]) : [],
+        });
+
+        // An open at a declared level: the level supplies the plank name and closes the levels below
+        // it, so a chain like `mailbox / message / attachment` stays consistent without the caller
+        // tracking any of it.
+        const levelOpen =
+          input.root && input.level && input.subject[0]
+            ? resolveLevelOpen({
+                active: deck.active,
+                plankNames: deck.plankNames,
+                spec: resolveDeckSpec(Option.getOrUndefined(Graph.getNode(graph, input.root))),
+                root: input.root,
+                level: input.level,
+                subjectId: input.subject[0],
+              })
+            : undefined;
+
         let next: string[];
-        if (addBesideOrigin) {
+        if (levelOpen) {
+          next = levelOpen.next;
+        } else if (seeded) {
+          next = seeded;
+        } else if (addBesideOrigin) {
           const [attendedId] = anchorToOrigin ? attention.getCurrent() : [];
           const pivotId = input.pivotId ?? (attendedId && deck.active.includes(attendedId) ? attendedId : undefined);
           // A named open reuses the plank already holding that name, the way a browser tab is reused.
@@ -151,13 +180,22 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
         // Rebound after the fact so the name follows whichever plank actually ended up holding it, and
         // so names whose plank this open closed are dropped rather than left dangling.
+        // A level open binds the name the level owns; an ordinary open binds whatever the caller passed.
+        const boundName = levelOpen?.name ?? input.name;
         const plankNames = updatePlankNames(
           deck.plankNames,
           next,
-          input.name && input.subject[0] ? { name: input.name, plankId: input.subject[0] } : undefined,
+          boundName && input.subject[0] ? { name: boundName, plankId: input.subject[0] } : undefined,
         );
+        // The companion follows a level swap: the new plank stands in for the replaced one, and closing
+        // it mid-read would also narrow the deck, which the browser answers by clamping the scroll — a
+        // one-frame snap measured at exactly the lost width.
+        const companionPlanks =
+          levelOpen?.replacedId && input.subject[0] && deck.companionPlanks.includes(levelOpen.replacedId)
+            ? [...deckUpdates.companionPlanks, input.subject[0]]
+            : deckUpdates.companionPlanks;
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, { ...deckUpdates, plankNames }),
+          updateActiveDeck(state, { ...deckUpdates, companionPlanks, plankNames }),
         );
       }
 

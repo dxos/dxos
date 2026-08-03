@@ -4,7 +4,13 @@
 
 import { describe, test } from 'vitest';
 
-import { addSubjectsToActiveDeck, updatePlankNames } from './layout';
+import {
+  MAX_SEEDED_PLANKS,
+  addSubjectsToActiveDeck,
+  resolveLevelOpen,
+  resolveSeededPlanks,
+  updatePlankNames,
+} from './layout';
 
 describe('addSubjectsToActiveDeck', () => {
   test('appends to the end without a pivot', ({ expect }) => {
@@ -77,5 +83,87 @@ describe('updatePlankNames', () => {
 
   test('ignores a binding to a plank that did not end up open', ({ expect }) => {
     expect(updatePlankNames({}, ['a'], { name: 'message', plankId: 'gone' })).toEqual({});
+  });
+});
+
+describe('resolveSeededPlanks', () => {
+  const children = ['doc-1', 'doc-2', 'doc-3'];
+
+  test('seeds a navigation with the node children', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children })).toEqual(children);
+  });
+
+  test('does not seed when the type declares nothing', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: undefined, addBesideOrigin: false, children })).toBeUndefined();
+    expect(resolveSeededPlanks({ initial: 'none', addBesideOrigin: false, children })).toBeUndefined();
+  });
+
+  // An add is a request to put this node beside what is already open; replacing the deck there would
+  // discard the planks the user was working in.
+  test('does not seed an add', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: true, children })).toBeUndefined();
+  });
+
+  test('falls through for an empty collection rather than emptying the deck', ({ expect }) => {
+    expect(resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children: [] })).toBeUndefined();
+  });
+
+  // Every plank mounts an article surface, so a large collection must not instantiate an editor per
+  // document on one navtree click.
+  test('caps how many planks a single navigation opens', ({ expect }) => {
+    const many = Array.from({ length: 40 }, (_, index) => `doc-${index}`);
+    const seeded = resolveSeededPlanks({ initial: 'children', addBesideOrigin: false, children: many });
+    expect(seeded).toHaveLength(MAX_SEEDED_PLANKS);
+    expect(seeded?.[0]).toBe('doc-0');
+  });
+});
+
+describe('resolveLevelOpen', () => {
+  const root = 'inbox';
+  const spec = {
+    levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
+  };
+  const open = (args: Partial<Parameters<typeof resolveLevelOpen>[0]> = {}) =>
+    resolveLevelOpen({ active: [root], plankNames: {}, spec, root, level: 'message', subjectId: 'msg-1', ...args });
+
+  test('opens the level beside the level above it', ({ expect }) => {
+    expect(open()).toEqual({ next: [root, 'msg-1'], name: 'inbox/message' });
+  });
+
+  test('reuses the level plank rather than growing the deck, and names the replaced plank', ({ expect }) => {
+    const result = open({ active: [root, 'msg-1'], plankNames: { 'inbox/message': 'msg-1' }, subjectId: 'msg-2' });
+    expect(result).toEqual({ next: [root, 'msg-2'], name: 'inbox/message', replacedId: 'msg-1' });
+  });
+
+  // The point of levels over a bare name: a second message must not leave the first one's attachment
+  // stranded beside it.
+  test('closes the levels below the one opened', ({ expect }) => {
+    const result = open({
+      active: [root, 'msg-1', 'att-1'],
+      plankNames: { 'inbox/message': 'msg-1', 'inbox/attachment': 'att-1' },
+      subjectId: 'msg-2',
+    });
+    expect(result?.next).toEqual([root, 'msg-2']);
+  });
+
+  test('opening a deeper level leaves the shallower ones alone', ({ expect }) => {
+    const result = open({
+      active: [root, 'msg-1'],
+      plankNames: { 'inbox/message': 'msg-1' },
+      level: 'attachment',
+      subjectId: 'att-1',
+    });
+    expect(result).toEqual({ next: [root, 'msg-1', 'att-1'], name: 'inbox/attachment' });
+  });
+
+  test('anchors to the level above, not the end of the deck', ({ expect }) => {
+    const result = open({ active: [root, 'unrelated'], subjectId: 'msg-1' });
+    expect(result?.next).toEqual([root, 'msg-1', 'unrelated']);
+  });
+
+  test('returns undefined for a level the chain does not declare', ({ expect }) => {
+    expect(open({ level: 'draft' })).toBeUndefined();
+    expect(open({ spec: undefined })).toBeUndefined();
+    expect(open({ spec: { levels: [] } })).toBeUndefined();
   });
 });
