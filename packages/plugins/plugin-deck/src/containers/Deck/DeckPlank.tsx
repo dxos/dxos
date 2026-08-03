@@ -7,11 +7,13 @@ import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRe
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { useNode } from '@dxos/plugin-graph/hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
-import { useBreadcrumbs, useDeckSettings } from '#hooks';
+import { useBreadcrumbs, useCompanions, useDeckSettings } from '#hooks';
 import { type ResolvedPart } from '#types';
 
 import { PlankControls } from './PlankControls';
@@ -43,6 +45,7 @@ DeckPlank.displayName = 'DeckPlank';
 const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
   const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
+  const { graph } = useAppGraph();
   const rootRef = useRef<HTMLDivElement>(null);
   const {
     node,
@@ -56,22 +59,47 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     onScrollIntoView,
   } = useDeckPlank({ id, part, active });
 
+  // A companion popped out of the sidebar is an ordinary plank whose id names its source
+  // (`<source>/~<variant>`). It stays pinned to that source, so the source is shown as a leading
+  // breadcrumb — the only way to tell two clones of the same companion apart.
+  const sourceId = useMemo(() => (Attention.isLinkedSegment(id) ? id.slice(0, id.lastIndexOf('/')) : undefined), [id]);
+  // Reading the source's companions materializes them: on a cold restore the clone's own node does not
+  // exist until its source's child connections have been computed.
+  useCompanions(sourceId);
+
   // In flat mode only the current (last) plank renders; its predecessors in the stack become
   // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
   const { flatten } = useDeckSettings();
-  const breadcrumbIds = useMemo(
-    () => (flatten && part === 'main' && active ? active.slice(0, active.indexOf(id)) : []),
-    [flatten, part, active, id],
-  );
+  const breadcrumbIds = useMemo(() => {
+    const trail = flatten && part === 'main' && active ? active.slice(0, active.indexOf(id)) : [];
+    // The source crumb sits closest to the title; a flat-mode trail reads before it.
+    return sourceId && !trail.includes(sourceId) ? [...trail, sourceId] : trail;
+  }, [flatten, part, active, id, sourceId]);
   const breadcrumbs = useBreadcrumbs(breadcrumbIds);
   const onSelectBreadcrumb = useCallback(
     (crumbId: string) => {
+      // The source crumb navigates to the source rather than going back: it may not be open at all,
+      // since a clone outlives the plank it was popped from.
+      if (crumbId === sourceId) {
+        if (active?.includes(crumbId)) {
+          void invokePromise(LayoutOperation.ScrollIntoView, { subject: crumbId });
+        } else {
+          void invokePromise(LayoutOperation.Open, {
+            subject: [crumbId],
+            pivotId: id,
+            disposition: 'add',
+            navigation: 'immediate',
+          });
+        }
+        return;
+      }
+
       const index = active?.indexOf(crumbId) ?? -1;
       if (active && index >= 0 && index < active.length - 1) {
         void invokePromise(LayoutOperation.Close, { subject: active.slice(index + 1) });
       }
     },
-    [invokePromise, active],
+    [invokePromise, active, sourceId, id],
   );
 
   // Newly opened/navigated planks (and a folded plank returned to view by its spine) are flagged via
@@ -102,8 +130,13 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     [findFirstFocusable],
   );
 
-  // Stable reference so Plank's useMemo on articleData doesn't bust every render.
-  const articleData = useMemo(() => ({ path }), [path]);
+  // A clone renders through the same article contract as its sidebar panel, so plugins serve one
+  // surface for both: `companionTo` is the source subject, `variant` the companion it is.
+  const sourceNode = useNode(graph, sourceId);
+  const articleData = useMemo(
+    () => (sourceId ? { path, companionTo: sourceNode?.data, variant: Attention.getLinkedVariant(id) } : { path }),
+    [path, sourceId, sourceNode?.data, id],
+  );
 
   if (!node) {
     return PLANK_LOADING;
@@ -136,7 +169,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       ref={rootRef}
       node={node}
       attendableId={id}
-      related={part === 'complementary'}
+      related={part === 'complementary' || !!sourceId}
       actions={sigilActions}
       onAction={onAction}
       breadcrumbs={breadcrumbs}

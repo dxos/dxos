@@ -96,8 +96,10 @@ export class AttentionManager {
    * Takes the array of qualified IDs collected from the DOM; the first element is the primary attended item.
    * Ancestry is derived from the progressive prefixes of the primary ID.
    * Relatedness is derived from the segment ID: any tracked key whose last `/` segment matches the
-   * attended ID's segment ID is marked `isRelated`. Additionally, if the primary ID is a linked segment
-   * (starts with `~`), its immediate parent gets `isRelated` alongside `isAncestor`.
+   * attended ID's segment ID is marked `isRelated`. Linked segments relate in both directions: if the
+   * primary ID is one (starts with `~`), its immediate parent gets `isRelated` alongside `isAncestor`;
+   * conversely a tracked linked child of the primary ID is `isRelated`, so a companion pinned to a node
+   * reads as attended while that node is.
    *
    * @internal
    */
@@ -117,7 +119,7 @@ export class AttentionManager {
       }
       const prevSegmentId = getSegmentId(prevPrimaryId);
       for (const key of this.keys()) {
-        if (getSegmentId(key) === prevSegmentId) {
+        if (getSegmentId(key) === prevSegmentId || isLinkedChildOf(key, prevPrimaryId)) {
           this._set(key, {});
         }
       }
@@ -140,10 +142,10 @@ export class AttentionManager {
       }
     }
 
-    // Set related keys: any tracked key sharing the same segment ID.
+    // Set related keys: any tracked key sharing the same segment ID, plus this node's linked children.
     const segmentId = getSegmentId(primaryId);
     for (const key of this.keys()) {
-      if (!prefixSet.has(key) && getSegmentId(key) === segmentId) {
+      if (!prefixSet.has(key) && (getSegmentId(key) === segmentId || isLinkedChildOf(key, primaryId))) {
         this._set(key, { isRelated: true });
       }
     }
@@ -243,6 +245,10 @@ export const getLinkedVariant = (qualifiedId: string): string => {
   const lastSegment = qualifiedId.split('/').pop() ?? '';
   return lastSegment.startsWith(LINKED_PREFIX) ? lastSegment.slice(LINKED_PREFIX.length) : lastSegment;
 };
+
+/** Whether `id` is an immediate linked (`~`) child of `parentId` — e.g. a companion of that node. */
+const isLinkedChildOf = (id: string, parentId: string | undefined): boolean =>
+  !!parentId && isLinkedSegment(id) && getParentId(id) === parentId;
 
 /**
  * Get the parent qualified ID (everything before the last `/` segment).

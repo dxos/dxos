@@ -19,7 +19,11 @@ export type PlankControlHandler = (event: DeckOperation.PartAdjustment) => void;
 
 const plankControlSpacing = 'px-2';
 
-const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
+export const PlankControl = ({
+  icon,
+  label,
+  ...props
+}: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
   return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
 };
 

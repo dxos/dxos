@@ -124,36 +124,61 @@ without it.
 ## Phase 5: Pop-out (clone a companion into the deck)
 
 Design ratified in DESIGN.md §5 — clone semantics, pinned at pop time, node
-scope only in v1, flatten gating, `context` URL key. NOT STARTED — design
-approved, implementation awaiting go-ahead.
+scope only in v1, flatten gating, `context` URL key. Core BUILT and
+browser-verified; URL persistence and one attention defect remain.
 
 ### Tasks
 
-- [ ] **Pop button** in the panel heading's control cluster (trailing end,
-      reusing the `PlankControl` ghost-button grammar), on node-scoped panels,
-      hidden while `flatten` is on. Click → `LayoutOperation.Open` with the
-      companion node id (`<anchor>/~<variant>`), pivoted on the attended plank.
-      The clone gains no new control — standard `PlankControls`; close = un-pop.
-- [ ] **Clone plank rendering** — `DeckPlank` branch for linked-segment ids:
-      ordinary plank chrome, `articleData` carries `companionTo` (source node
-      data) + `variant`; source rendered as a breadcrumb (`useBreadcrumbs`,
-      merging with the flatten trail when both apply).
-- [ ] **Jump to source** — crumb click: source open → `ScrollIntoView`; closed →
-      `Open` pivoted before the clone. Also a sigil-menu action.
+- [x] **Pop button** in the panel heading's control cluster (`PlankControl`,
+      now exported), node-scoped panels only, hidden while `flatten` is on.
+      Opens the companion node id pivoted on the attended plank with
+      `scrollIntoView: false`. The panel heading also adopted the plank anatomy:
+      attention-aware `Pane.Sigil` + `Pane.Title` bound to the anchor (accent
+      while the anchor is attended), neutral for workspace/global panels.
+- [x] **Clone plank rendering** — `DeckPlank` derives `sourceId` from a
+      linked-segment id, passes `companionTo`/`variant` through `articleData`
+      (same article contract as the sidebar panel), renders the source as a
+      breadcrumb merged with any flatten trail, and calls `useCompanions(source)`
+      so the clone's node materializes on a cold restore.
+- [x] **Jump to source** — crumb click: source open → `ScrollIntoView`; closed →
+      `Open` pivoted on the clone. (Sigil-menu action not added; the crumb is
+      the affordance.)
 - [ ] **URL** — clones take over `companion` chain pairs with a self-contained
       composite id (source ref + variant, so an orphaned clone round-trips);
       sidebar selection moves to a trailing `context` pair
       (`UrlPath.CONTEXT_KEY`; node preferences as `~<variant>`, root as bare
       id). Update url-handler serialize + parse and `serialize-deck-url` tests.
-- [ ] **Assistant provisioner** — provision companion chats for popped assistant
-      clones in `deck.active` regardless of sidebar state.
-- [ ] **Attention linkage** — node-scoped sidebar panel headings become
-      attention-aware (accent when the anchor is attended; workspace/global stay
-      neutral); a clone's heading shows `related` when its source is attended
-      (may need the source→clone direction added to the attention tracker).
-- [ ] **Verify** — unit tests (URL round-trip incl. orphaned clone), browser
-      pass: pop → pinned clone; attend elsewhere → clone unchanged, sidebar
-      rebinds; attend clone → node group empty; crumb jump; dedup on re-pop.
+- [x] **Assistant provisioner** — builds a target map: every active plank while
+      the sidebar shows the assistant, plus the source of any popped assistant
+      clone regardless of sidebar state.
+- [x] **Attention linkage** — `AttentionManager` relatedness is now symmetric:
+      a tracked linked child of the attended id is `isRelated` (previously only
+      the parent-of-attended-child direction existed), so a clone lights up while
+      its source is attended. One existing test encoded the old one-way
+      behaviour and was updated; a new test covers set + clear. Verified in the
+      browser: attending the source lights both its plank and the clone.
+- [ ] **URL** — NOT STARTED, the remaining piece. Clones need a self-contained
+      representation (a clone outlives its source, so the existing positional
+      `companion` pair cannot express it) and the sidebar selection needs to move
+      to a trailing `context` pair. Analysis: `UrlPath.parse` decodes the whole
+      pathname before splitting on `/`, so percent-encoding a composite id will
+      not survive; the composite needs a delimiter that cannot occur in a
+      represented key or id (`+` is the tail separator, `!` and `:` occur in real
+      ids such as `root/!dxos:settings`). Cheapest route is to expand/collapse
+      the composite inside plugin-deck's url-handler around
+      `PathResolution.resolveUrl` (synthesize the source pair on parse, drop it
+      from the plank list) rather than changing the shared linked tier.
+- [ ] **DEFECT: popping moves attention to the clone.** `scrollIntoView: false`
+      keeps focus off it in the simple case, but with three planks the anchor
+      resolves to the clone after popping (longest-prefix match in
+      `findAttendedPlank`), so the node group empties and the sidebar falls back
+      to a global panel until attention moves again. Fix by keeping attention on
+      the source through the pop.
+- [x] **Verify (partial)** — browser: pop creates the clone pivoted after its
+      source; the clone stays pinned while attention moves between planks; the
+      `node/<variant>` preference is restored on returning to the source; the
+      pop button is offered only for node-scoped panels. 81 plugin-deck +
+      52 react-ui-attention tests, build and lint green.
 
 ### References
 

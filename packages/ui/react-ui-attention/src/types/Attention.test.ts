@@ -116,11 +116,28 @@ describe('AttentionManager', () => {
       isAncestor: false,
       isRelated: false,
     });
+    // Relatedness is symmetric: the node's own linked children stay related while it is attended, so a
+    // companion pinned to it reads as attended too.
     expect(attention.get('root/space/obj/~settings')).to.deep.equal({
       hasAttention: false,
       isAncestor: false,
-      isRelated: false,
+      isRelated: true,
     });
+  });
+
+  test('a linked child is related while its parent is attended, and clears when attention leaves', ({ expect }) => {
+    const registry = Registry.make();
+    const attention = new AttentionManager(registry);
+
+    // Pre-register the companion so the manager tracks it.
+    attention.get('root/space/obj/~comments');
+
+    attention.update(['root/space/obj']);
+    expect(attention.get('root/space/obj/~comments').isRelated).to.be.true;
+
+    // A sibling node's attention must not leave the companion lit.
+    attention.update(['root/space/other']);
+    expect(attention.get('root/space/obj/~comments').isRelated).to.be.false;
   });
 
   test('keys sharing the same segment id are marked isRelated', ({ expect }) => {

@@ -326,7 +326,15 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
               key={node.id}
               id={node.id}
               classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
-              onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
+              // Adds rather than replaces, so multi-plank flows (and popped companions beside their
+              // source) are reachable from the nav.
+              onClick={() =>
+                void invokePromise(LayoutOperation.Open, {
+                  subject: [node.id],
+                  disposition: 'add',
+                  navigation: 'immediate',
+                })
+              }
             >
               <Listbox.ItemContent
                 icon={node.properties.icon}
@@ -416,6 +424,27 @@ export const ManyPlanks: Story = {
         subject: [STORY_ITEMS[1].id],
         disposition: 'add',
         navigation: 'immediate',
+      });
+    });
+
+    return <DeckLayout />;
+  },
+};
+
+/** Two planks with the sidebar expanded — the fixture for popping a companion out and pinning it. */
+export const ComplementarySidebarTwoPlanks: Story = {
+  render: () => {
+    const { invokePromise } = useOperationInvoker();
+    useAsyncEffect(async () => {
+      await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
+      await invokePromise(LayoutOperation.Open, {
+        subject: [STORY_ITEMS[1].id],
+        disposition: 'add',
+        navigation: 'immediate',
+      });
+      await invokePromise(LayoutOperation.UpdateComplementary, {
+        subject: STORY_DECK_COMPANIONS[0],
+        state: 'expanded',
       });
     });
 

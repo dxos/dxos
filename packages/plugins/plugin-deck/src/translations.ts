@@ -19,6 +19,8 @@ export const translations = [
         'sidebar.title': 'Navigation sidebar',
         'complementary-sidebar.title': 'Context sidebar',
         'resize-complementary-sidebar.label': 'Resize context sidebar',
+        'pop-companion.label': 'Open in deck',
+        'companion-source.label': 'Go to source',
         'plugin-error.message': 'Content failed to render.',
         'content-fallback.message': 'Unsupported',
         'content-fallback.description':

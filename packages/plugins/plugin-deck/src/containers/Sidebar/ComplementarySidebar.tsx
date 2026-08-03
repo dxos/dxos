@@ -7,14 +7,23 @@ import React, { Fragment, type MouseEvent, useCallback, useEffect, useMemo, useS
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Icon, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
-import { type CompanionEntry, resolveActiveCompanion, useBreakpoints, useCompanionGroups, useDeckState } from '#hooks';
+import { Pane } from '#components';
+import {
+  type CompanionEntry,
+  resolveActiveCompanion,
+  useBreakpoints,
+  useCompanionGroups,
+  useDeckSettings,
+  useDeckState,
+} from '#hooks';
 import { meta } from '#meta';
 
 import { layoutAppliesTopbar } from '../../util';
+import { PlankControl } from '../Deck/PlankControls';
 import { PlankErrorFallback, PlankLoading } from '../Deck/PlankFallback';
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 import { SidebarResizeHandle } from './SidebarResizeHandle';
@@ -194,7 +203,28 @@ type ComplementarySidebarPanelProps = {
 
 const ComplementarySidebarPanel = ({ companion, anchorId, anchorSubject }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { invokePromise } = useOperationInvoker();
+  const { flatten } = useDeckSettings();
   const { node, variant, scope } = companion;
+
+  // A node companion is *about* the attended node, so its heading tracks that node's attention; a
+  // workspace or global panel relates to nothing in particular and stays neutral.
+  const attendableId = scope === 'node' ? anchorId : undefined;
+
+  // Popping clones this panel into the deck, pinned to the node it is currently showing. Flat mode
+  // renders one plank at a time, so a pinned clone has nowhere to sit beside its source.
+  const canPop = scope === 'node' && !!anchorId && !flatten;
+  const handlePop = useCallback(() => {
+    void invokePromise(LayoutOperation.Open, {
+      subject: [node.id],
+      pivotId: anchorId,
+      disposition: 'add',
+      navigation: 'immediate',
+      // Attention stays on the source: the clone is a reference pinned beside what you are working in,
+      // and taking attention would also swap the sidebar out from under the panel just popped.
+      scrollIntoView: false,
+    });
+  }, [invokePromise, node.id, anchorId]);
 
   // Node companions keep the article contract they render under in the deck, so plugins need no change;
   // root companions keep their per-variant role.
@@ -225,17 +255,21 @@ const ComplementarySidebarPanel = ({ companion, anchorId, anchorSubject }: Compl
   return (
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
+        {/* Same anatomy as a plank heading: sigil, title, then the controls cluster. */}
         <Toolbar.Root style={iconSize(5)} classNames='bg-header-surface'>
-          <IconButton
-            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-            label={toLocalizedString(node.properties.label, t)}
-            icon={node.properties.icon}
-            iconOnly
-            tooltipSide='left'
-            data-value={companion.value}
-            variant='default'
-          />
-          <div className='px-1'>{toLocalizedString(node.properties.label, t)}</div>
+          <Pane.Sigil attendableId={attendableId} isMenu={false} data-value={companion.value}>
+            <span className='sr-only'>{toLocalizedString(node.properties.label, t)}</span>
+            <Icon icon={node.properties.icon} />
+          </Pane.Sigil>
+          <Pane.Title attendableId={attendableId}>{toLocalizedString(node.properties.label, t)}</Pane.Title>
+          {canPop && (
+            <PlankControl
+              label={t('pop-companion.label')}
+              icon='ph--arrow-square-out--regular'
+              data-testid='complementarySidebar.pop'
+              onClick={handlePop}
+            />
+          )}
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='bg-r1-surface'>{surface}</Panel.Content>

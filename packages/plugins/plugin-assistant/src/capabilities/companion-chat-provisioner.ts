@@ -94,13 +94,35 @@ export default Capability.makeModule(
     const provision = () => {
       const deckState: StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck || deckState.complementarySidebarState !== 'expanded') {
+      if (!deck) {
         unsubAllPlanks();
         return;
       }
 
-      const companionVariant = registry.get(variantAtom);
-      const plankIds = new Set(deck.active);
+      // Which planks need a companion chat: every active plank while the sidebar is showing the
+      // assistant, plus the source of any popped assistant clone — a clone is pinned to its source and
+      // stays live whatever the sidebar is doing.
+      const targets = new Map<string, string | undefined>();
+      if (deckState.complementarySidebarState === 'expanded') {
+        const sidebarVariant = registry.get(variantAtom);
+        for (const plankId of deck.active) {
+          targets.set(plankId, sidebarVariant);
+        }
+      }
+      for (const plankId of deck.active) {
+        if (Attention.isLinkedSegment(plankId) && Attention.getLinkedVariant(plankId) === ASSISTANT_COMPANION_VARIANT) {
+          const sourceId = Attention.getParentId(plankId);
+          if (sourceId) {
+            targets.set(sourceId, ASSISTANT_COMPANION_VARIANT);
+          }
+        }
+      }
+
+      const plankIds = new Set(targets.keys());
+      if (plankIds.size === 0) {
+        unsubAllPlanks();
+        return;
+      }
 
       // Remove subscriptions for planks that are no longer active.
       for (const trackedId of plankSubs.keys()) {
@@ -110,6 +132,7 @@ export default Capability.makeModule(
       }
 
       for (const plankId of plankIds) {
+        const companionVariant = targets.get(plankId);
         const resolved = provisionForPlank(plankId, companionVariant);
 
         if (resolved) {
@@ -123,7 +146,7 @@ export default Capability.makeModule(
           plankSubs.set(
             plankId,
             registry.subscribe(graph.connections(plankId, 'child'), () => {
-              if (provisionForPlank(plankId, registry.get(variantAtom))) {
+              if (provisionForPlank(plankId, targets.get(plankId) ?? registry.get(variantAtom))) {
                 unsubPlank(plankId);
               }
             }),
