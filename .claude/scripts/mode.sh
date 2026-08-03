@@ -22,12 +22,15 @@ legacy="$root/.claude/.response-mode"
 
 # Transitional: the state file was renamed alongside the script, so adopt an
 # existing value once and drop the old file — otherwise checkouts that predate
-# the rename silently reset to normal and leave the stale file untracked.
+# the rename silently reset to normal and leave the stale file untracked. The
+# legacy file is unlinked only once its value is safely in the new one; a failed
+# move must not destroy the mode it was carrying.
 if [ -e "$legacy" ]; then
-  if [ ! -e "$state" ]; then
-    mv "$legacy" "$state" 2>/dev/null || true
+  if [ -e "$state" ]; then
+    rm -f "$legacy" 2>/dev/null || true
+  elif ! mv "$legacy" "$state" 2>/dev/null; then
+    printf 'WARNING: could not migrate %s to %s; leaving it in place.\n' "$legacy" "$state" >&2
   fi
-  rm -f "$legacy"
 fi
 
 # Canonicalise on read so a stale or hand-edited state file cannot wedge the
