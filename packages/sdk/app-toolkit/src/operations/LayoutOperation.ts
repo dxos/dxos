@@ -450,7 +450,7 @@ export const UpdateCompanion = Operation.make({
   input: Schema.Struct({
     subject: Schema.Union(Schema.String, Schema.Null).annotations({
       description:
-        'The companion node id to show — either qualified (`<plank>/~<variant>`) or a bare `~<variant>`, which targets the attended plank. Null closes a companion.',
+        'The companion node id to show — either qualified (`<plank>/~<variant>`) or a bare `~<variant>`, which targets the given anchor, else the attended plank. Null closes a companion.',
     }),
     anchor: Schema.optional(Schema.String).annotations({
       description:
