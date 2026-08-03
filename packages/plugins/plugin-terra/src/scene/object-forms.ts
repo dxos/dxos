@@ -80,7 +80,9 @@ const makeRocket = (scene: Scene): Mesh => {
     return fin;
   });
 
-  return mergeParts('rocket', [body, nose, ...fins], scene, new Color3(0.8, 0.15, 0.12));
+  // Bare metal, like the plane: red read as a toy against terrain, and the orange plume is what
+  // should carry the eye anyway.
+  return mergeParts('rocket', [body, nose, ...fins], scene, new Color3(0.78, 0.79, 0.82));
 };
 
 const makeBoat = (scene: Scene): Mesh => {

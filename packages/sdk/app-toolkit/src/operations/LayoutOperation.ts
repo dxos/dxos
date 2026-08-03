@@ -311,9 +311,29 @@ export const Open = Operation.make({
       }),
     ),
     variant: Schema.optional(Schema.String.annotations({ description: 'The variant of the item to open.' })),
-    key: Schema.optional(
+    name: Schema.optional(
       Schema.String.annotations({
-        description: 'If provided, will replace item with a matching key (id prefix).',
+        description:
+          'Optional name for the plank, which behaves like a browser tab: opening under a name that ' +
+          'is already taken reuses that plank in place rather than adding another. Callers that open ' +
+          'a stream of one-at-a-time items (a message from a mailbox, say) pass a constant name so the ' +
+          'deck does not grow an entry per item.',
+      }),
+    ),
+    root: Schema.optional(
+      Schema.String.annotations({
+        description:
+          'The deck root this open is relative to, whose type declares the chain of levels (see ' +
+          '`level`). Only meaningful together with `level`.',
+      }),
+    ),
+    level: Schema.optional(
+      Schema.String.annotations({
+        description:
+          "Open at this level of the root's declared chain (e.g. `message` in `mailbox / message / " +
+          "attachment`). The level supplies the plank name, so the level's plank is reused rather " +
+          'than added to, and opening at a level closes every level below it — reading a second ' +
+          "message drops the first one's attachment. Prefer this to hand-building `name`.",
       }),
     ),
     workspace: Schema.optional(Schema.String.annotations({ description: 'The workspace to open the items in.' })),
@@ -428,7 +448,13 @@ export const UpdateCompanion = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    subject: Schema.Union(Schema.String, Schema.Null),
+    subject: Schema.Union(Schema.String, Schema.Null).annotations({
+      description: 'The companion node id to show, or null to close a companion.',
+    }),
+    anchor: Schema.optional(Schema.String).annotations({
+      description:
+        'When closing (subject: null): the plank whose companion to close. Companion state is per plank, so a close from a specific plank must name it; without it the handler falls back to the attended plank.',
+    }),
   }),
   output: Schema.Void,
 });

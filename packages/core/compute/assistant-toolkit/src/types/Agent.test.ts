@@ -11,15 +11,16 @@ import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
+import { Outline } from '@dxos/types';
 
-import { Agent, Chat, Plan } from '../types';
+import { Agent, Chat } from '../types';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   types: [
     Agent.Agent,
-    Plan.Plan,
+    Outline.Outline,
     Chat.Chat,
     Chat.CompanionTo,
     Skill.Skill,

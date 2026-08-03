@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-projects",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.10.0",
   "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,8 +39,12 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/ProjectsPlugin.tsx",
+      "source": {
+        "workerd": "./src/ProjectsPlugin.workerd.ts",
+        "default": "./src/ProjectsPlugin.tsx"
+      },
       "types": "./dist/types/src/ProjectsPlugin.d.ts",
+      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
       "default": "./dist/lib/ProjectsPlugin.mjs"
     },
     "#translations": {
@@ -110,6 +113,7 @@
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
@@ -127,5 +131,8 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

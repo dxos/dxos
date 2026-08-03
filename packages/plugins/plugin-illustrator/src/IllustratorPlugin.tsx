@@ -25,7 +25,7 @@ export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CommentConfig),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([Drawing.Drawing])),
+  Plugin.addModule(AppCapability.schema([Drawing.Drawing, Drawing.Canvas])),
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),

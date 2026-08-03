@@ -18,6 +18,9 @@ const PartAdjustmentSchema = Schema.Union(
   Schema.Literal('close').annotations({ description: 'Close the plank.' }),
   Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
   Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
+  Schema.Literal('expand').annotations({
+    description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
+  }),
   Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
   Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
 );
@@ -54,17 +57,34 @@ export const UpdatePlankSize = Operation.make({
   output: Schema.Void,
 });
 
-export const UpdateTilingSize = Operation.make({
+export const ToggleExpose = Operation.make({
   meta: {
-    key: makeKey('updateTilingSize'),
-    name: 'Update Tiling Size',
-    description: 'Update the split point of the tiling deck.',
-    icon: 'ph--columns--regular',
+    key: makeKey('toggleExpose'),
+    name: 'Toggle Exposé',
+    description: 'Show every plank at once as shrunk-to-fit tiles, or return to the deck.',
+    icon: 'ph--squares-four--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    size: Schema.Number.annotations({
-      description: 'Width of the tiling deck start pane in rem.',
+    /** Explicit state; toggles when absent. */
+    expose: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Void,
+});
+
+export const UpdatePlankSizes = Operation.make({
+  meta: {
+    key: makeKey('updatePlankSizes'),
+    name: 'Update Plank Sizes',
+    description: 'Update the sizes of several planks at once.',
+    icon: 'ph--arrows-out--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    // Applied in one update, so a split whose panes trade width never renders a frame with one pane
+    // resized and the other not.
+    sizes: Schema.Record({ key: Schema.String, value: Schema.Number }).annotations({
+      description: 'New sizes, keyed by plank id.',
     }),
   }),
   output: Schema.Void,

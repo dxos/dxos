@@ -13,7 +13,7 @@ import { defaultTx } from '@dxos/react-ui';
 import { meta } from './meta';
 import { Settings, ThemeCapabilities } from './types';
 
-export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
+export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'resourceExtensions'>> & {
   appName?: string;
   platform?: 'mobile' | 'desktop';
 };
@@ -36,7 +36,7 @@ const parseAppearance = (value: string | null): Settings.Appearance => {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, noCache, platform }: ThemePluginOptions = {}) {
+  Effect.fnUntraced(function* ({ tx: propsTx = defaultTx, platform }: ThemePluginOptions = {}) {
     const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
     const settingsAtom = yield* ThemeCapabilities.Settings;
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
@@ -81,7 +81,7 @@ export default Capability.makeModule(
           // Translations are registered in the shared i18next instance by the Translator module; the
           // theme provider only exposes that instance to React.
           return (
-            <ThemeProvider {...{ tx: propsTx, themeMode, platform, noCache }}>
+            <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
               <Toast.Provider>
                 <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                   {children}

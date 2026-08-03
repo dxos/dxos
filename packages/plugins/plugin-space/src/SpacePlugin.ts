@@ -13,7 +13,6 @@ import {
   AnchoredTo,
   Employer,
   Event,
-  ExternalProject,
   HasConnection,
   HasRelationship,
   HasSubject,
@@ -21,6 +20,7 @@ import {
   Person,
   Pipeline,
   Task,
+  TaskSet,
 } from '@dxos/types';
 
 import {
@@ -57,7 +57,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       AnchoredTo.AnchoredTo,
       Employer.Employer,
       Event.Event,
-      ExternalProject.ExternalProject,
       HasConnection.HasConnection,
       HasRelationship.HasRelationship,
       HasSubject.HasSubject,
@@ -66,6 +65,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
+      TaskSet.TaskSet,
     ]),
   ),
   Plugin.addModule(SpaceSettings),

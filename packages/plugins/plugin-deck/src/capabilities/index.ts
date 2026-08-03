@@ -58,6 +58,7 @@ export const UrlHandler = Capability.lazyModule(
       DeckCapabilities.Settings,
       AppCapabilities.AppGraph,
       AttentionCapabilities.ViewState,
+      AttentionCapabilities.Attention,
     ],
     provides: [],
   },

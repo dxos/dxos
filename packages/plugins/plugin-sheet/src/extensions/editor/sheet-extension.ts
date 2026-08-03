@@ -161,16 +161,20 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
     }),
 
     syntaxHighlighting(highlightStyles),
+    anchorCompletionTooltip,
     autocompletion({
       aboveCursor: false,
       defaultKeymap: true,
       activateOnTyping: true,
       closeOnBlur: !debug,
       icons: false,
+      // Cosmetics only. The tooltip is `position: fixed` and CodeMirror computes its coordinates from
+      // the cursor, so overriding `left`/`top` here measures them against the viewport instead of the
+      // cell — which pinned the completion list to the top-left corner of the window.
       tooltipClass: () =>
         mx(
-          '!-left-[1px] !top-[33px] !-m-0 border border-h-0! [&>ul]:!min-w-[198px]',
-          '[&>ul>li[aria-selected]]:!bg-accent-bg',
+          '-m-0! border border-h-0! [&>ul]:min-w-[198px]!',
+          '[&>ul>li[aria-selected]]:bg-accent-bg!',
           'border-separator',
         ),
     }),
@@ -311,3 +315,58 @@ const visitTree = (node: SyntaxNode, callback: (node: SyntaxNode) => boolean): b
 
   return false;
 };
+
+/**
+ * Pins the completion tooltip to the editing cell rather than to the cursor.
+ *
+ * CodeMirror anchors it at the completion's start offset — a few pixels in from the cell's edge, and
+ * further in the longer the expression before the function name — overlapping the cell's lower
+ * border. In a grid the cell is the meaningful anchor.
+ *
+ * Driven by a DOM observer rather than the plugin's `update`: CodeMirror creates and positions the
+ * tooltip in its measure phase, which runs *after* the update, so an update-time correction either
+ * finds no tooltip or is immediately overwritten. Which side it opens on is still CodeMirror's call,
+ * so a tooltip near the bottom of the window still flips above the cell.
+ */
+const anchorCompletionTooltip = ViewPlugin.fromClass(
+  class {
+    private readonly _observer = new MutationObserver(() => this._pin());
+
+    constructor(private readonly _view: EditorView) {
+      this._observer.observe(_view.dom, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+      });
+    }
+
+    destroy(): void {
+      this._observer.disconnect();
+    }
+
+    /** Idempotent: writing values it already holds would retrigger the observer. */
+    private _pin(): void {
+      const tooltip = this._view.dom.querySelector<HTMLElement>('.cm-tooltip-autocomplete');
+      if (!tooltip) {
+        return;
+      }
+
+      // The cell editor's own box, not `view.dom` — the editor sits inset within it.
+      const cell = (this._view.dom.closest('.dx-grid__cell-editor') ?? this._view.dom).getBoundingClientRect();
+      const left = cell.left;
+      const top = tooltip.classList.contains('cm-tooltip-below')
+        ? cell.bottom
+        : cell.top - tooltip.getBoundingClientRect().height;
+      if (
+        Math.abs(Number.parseFloat(tooltip.style.left || '0') - left) < 0.5 &&
+        Math.abs(Number.parseFloat(tooltip.style.top || '0') - top) < 0.5
+      ) {
+        return;
+      }
+
+      tooltip.style.left = `${left}px`;
+      tooltip.style.top = `${top}px`;
+    }
+  },
+);

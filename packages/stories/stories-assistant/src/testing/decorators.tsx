@@ -19,7 +19,6 @@ import {
   AgentSkill,
   DelegationHandlers,
   DelegationSkill,
-  Plan,
   PlanningHandlers,
   PlanningSkill,
 } from '@dxos/assistant-toolkit';
@@ -50,7 +49,9 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
 import { type ModuleLayout, StoryLayout } from '@dxos/storybook-testing';
+import { Outline, Task, TaskSet } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import { moduleSurfaces } from '../modules';
@@ -149,7 +150,10 @@ const buildPluginManagerOptions = ({
           AccessToken.AccessToken,
           Assistant.Chat,
           Collection.Collection,
-          Plan.Plan,
+          Outline.Outline,
+          Task.Task,
+          TaskSet.TaskSet,
+          Text.Text,
           Skill.Skill,
           Operation.PersistentOperation,
           Markdown.Document,

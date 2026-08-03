@@ -113,7 +113,7 @@ const HostStory = () => {
           A persistent, EDGE-dev space seeded with a mailbox. Connect the CLI to this identity, then read the mailbox
           over EDGE replication:
         </p>
-        <pre className='text-xs rounded bg-modalSurface p-2 whitespace-pre-wrap'>
+        <pre className='text-xs rounded bg-modal-surface p-2 whitespace-pre-wrap'>
           {'dx account login --method recovery-code "<recovery code>"\ndx mailbox subscriptions'}
         </pre>
       </div>
@@ -161,7 +161,7 @@ const HostStory = () => {
       <div className='flex flex-col gap-2 rounded border border-separator p-3'>
         <div className='flex items-center justify-between'>
           <span className='text-sm font-medium'>Device invitation (browser / Composer only)</span>
-          <button className='rounded bg-neutralSurface px-3 py-1' onClick={onShare} data-testid='share-button'>
+          <button className='rounded bg-neutral-surface px-3 py-1' onClick={onShare} data-testid='share-button'>
             Create device invitation
           </button>
         </div>

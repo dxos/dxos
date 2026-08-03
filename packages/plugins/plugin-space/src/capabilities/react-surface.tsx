@@ -30,6 +30,7 @@ import {
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
+  MergePreview,
   ObjectCardStack,
   RecordArticle,
   RelatedArticle,
@@ -218,10 +219,18 @@ export default Capability.makeModule(
           const viewTypeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
           const resolvedViewType = useType(viewDb, viewTypeUri);
 
+          // A staged merge takes over the companion: the panel's job is to show what the user is
+          // about to select, and during a review that is the proposed merged object, not the inputs.
+          const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+
           // Type/schema companion (e.g. a TypeArticle plank): the type IS the subject, no view lookup needed.
           if (isTypeCompanion) {
             if (!activeSpace) {
               return null;
+            }
+
+            if (mergePreview?.typeUri === Type.getURI(companionTo)) {
+              return <MergePreview type={companionTo} spaceId={activeSpace.id} preview={mergePreview} ref={ref} />;
             }
 
             return (

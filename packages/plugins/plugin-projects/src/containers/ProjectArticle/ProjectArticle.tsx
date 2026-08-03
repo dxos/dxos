@@ -5,15 +5,15 @@
 import * as Schema from 'effect/Schema';
 import React, { memo, useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Project } from '@dxos/compute';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { Panel, useTranslation } from '@dxos/react-ui';
+import { Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -47,6 +47,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [instructionsSnapshot] = useObject(project.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
   const [artifacts] = useObject(project.artifacts);
+  // The Tasks section embeds plugin-tasks' section surface for the linked TaskSet (never its
+  // components — the boundary is surfaces/operations only).
+  const [taskSetSnapshot] = useObject(project.taskSet);
+  const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -127,6 +131,18 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
+                {(project.goals?.length ?? 0) > 0 && (
+                  <Form.Section title={t('goals.label')}>
+                    <GoalList goals={project.goals ?? []} />
+                  </Form.Section>
+                )}
+
+                {taskSet && (
+                  <Form.Section title={t('tasks.label')}>
+                    <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
+                  </Form.Section>
+                )}
+
                 <Form.Section title={t('routines.label')}>
                   <ObjectGallery refs={project.routines} onOpen={handleOpen} onDelete={handleDeleteRoutine} />
                 </Form.Section>
@@ -144,6 +160,37 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
 };
 
 ProjectArticle.displayName = 'ProjectArticle';
+
+/**
+ * Read-only view of the project's goals (what done means). Goals are authored by agents and MCP
+ * verbs; in-article authoring is a follow-up.
+ */
+const GoalList = ({ goals }: { goals: ReadonlyArray<Project.Goal> }) => {
+  return (
+    <div role='list' className='flex flex-col gap-1'>
+      {goals.map((goal) => (
+        <div key={goal.id} role='listitem' className='flex items-center gap-2 min-w-0'>
+          <Icon
+            icon={
+              goal.status === 'met'
+                ? 'ph--check--regular'
+                : goal.status === 'dropped'
+                  ? 'ph--minus--regular'
+                  : 'ph--circle--regular'
+            }
+            classNames={
+              goal.status === 'met' ? 'text-success-text' : goal.status === 'dropped' ? 'text-subdued' : undefined
+            }
+            size={4}
+          />
+          <span className={goal.status === 'dropped' ? 'line-through text-subdued truncate' : 'truncate'}>
+            {goal.text}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 /**
  * The toolbar's own actions. Deliberately not spliced from the app graph: toolbar and navtree

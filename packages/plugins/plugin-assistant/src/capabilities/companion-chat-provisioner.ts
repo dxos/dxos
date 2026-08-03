@@ -106,7 +106,7 @@ export default Capability.makeModule(
     const provision = () => {
       const deckState: StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
-      if (!deck?.companionOpen) {
+      if (!deck?.companionPlanks.length) {
         unsubAllPlanks();
         return;
       }

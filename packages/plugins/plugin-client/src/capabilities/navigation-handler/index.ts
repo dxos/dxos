@@ -11,5 +11,5 @@ export type { NavigationHandlerOptions } from './navigation-handler';
 
 export const NavigationHandler = AppCapability.navigationHandler(() => import('./navigation-handler'), {
   requires: [Capabilities.OperationInvoker],
-  props: ({ invitationProp }: ClientPluginOptions) => ({ invitationProp }),
+  props: ({ invitationProp, invitationUrlHandler }: ClientPluginOptions) => ({ invitationProp, invitationUrlHandler }),
 });

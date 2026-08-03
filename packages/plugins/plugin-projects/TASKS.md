@@ -1,6 +1,8 @@
 # plugin-projects — Tasks
 
-_Resume: Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
+_Resume: M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
+
+_Superseded pointer (2026-07-29): Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
 PR #12383 carries: (1) `Chat.agent` removed and the chat↔agent linkage
 restored to the `CompanionTo` relation — that field was the edge closing the
@@ -309,6 +311,106 @@ summaries), and the `stories-projects` storybook strategy.
       `RoutineCapabilities.Template.scaffold` both expose bare `Error`; convert BOTH to a tagged
       Effect error in one change (review follow-up from #12389 — the contracts must stay parallel).
 
+## Milestone 5: project model unification — Tasks, Plan, Milestones, MCP surface
+
+Design: [`MILESTONE-5.md`](./MILESTONE-5.md) (2026-08-01, v3 — Phase 0 DECIDED). Project
+optionally composes Goals / Outline / Tasks / Plan (Milestones DEFERRED);
+**ExternalProject → `TaskSet`** (lightweight, possibly externally synced task container;
+`Project.taskSet: Ref<TaskSet>` (single ref); `Task` membership by parent edge); plugin-outliner is taken over
+as `plugin-tasks`; `Task.assignee` becomes `Actor`; Plan⇄Task promotion path; Linear-shaped
+camelCase MCP verbs layered over the generic object API (the §2.7 "fourth channel"). Type
+inventory table added to DESIGN.md § Types. Stage is dogfooded over MCP
+(Claude ⇔ EDGE ⇔ Composer). Intersects the `mcp` registry project (milestone 3, task 4) — the
+task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
+
+### Tasks
+
+- [x] **Phase 0 — decisions** (user, 2026-08-01) — ALL DECIDED: `TaskSet` naming
+      (`Project.tasks` owns it; Project keeps name/DXN/package); plugin-outliner takeover (no
+      new plugin); milestones DEFERRED (lean `Ref<Milestone>` object — may need metadata — over
+      label); DID-based agent assignment (no Ref<Agent> variant); Project stays in
+      @dxos/compute (TaskSet dissolved the placement question); kanban adopts the task surface;
+      taskList paginates Linear-style from day one.
+- [x] **Phase 1 — schema + call-site sweep** — DONE 2026-08-01 (branch
+      `claude/competent-curie-20057f`): `TaskSet` (org.dxos.type.taskSet@0.2.0) replaces
+      ExternalProject; Task 0.2.0 (assignee: Actor, +failed/cancelled);
+      Project 0.3.0 (goals/outline/taskSet); Outline → @dxos/types 0.2.0; linear push maps
+      failed/cancelled → Linear `canceled`. Sweep: outliner, github/linear sync +
+      materialize-target, assistant-toolkit, plugin-space, plugin-assistant, onboarding
+      exemplar, stories-brain/assistant, translations.
+      **NO MIGRATIONS by user direction 2026-08-01 (nothing deployed yet)** — the plan's
+      migration items are dropped, not deferred.
+- [x] **Phase 3 (pulled forward) — Plan REMOVED; two-forms model** — DONE 2026-08-01, same
+      branch (user redesign session; see DESIGN.md § Product model + MILESTONE-5.md §6):
+      markdown checklists = fluid form, Task/TaskSet = durable form, promotion links them.
+      `Plan` type deleted (`Chat.plan`, `Project.plan`, PlanArticle, plan surface);
+      containment + hierarchy via **ECHO parent edge** (Task.taskSet field dropped;
+      `Query.children()`); `Chat.outline` scratch surface (project chats resolve the project's
+      outline via the parent edge); checklist markdown helpers + promotion helpers on
+      `@dxos/types` Outline; planning skill edits checklist markdown (title-keyed
+      update-tasks); plan-reminder reads unchecked items; **delegation = promotion**
+      (delegate-task creates a durable in-progress Task, assignee role `assistant`; supervisor
+      reconciles over task-set children; onComplete marks the Task and checks off the
+      checklist line; no `agentPid` on tasks — mapping is runtime-side); TaskList renders the
+      checklist; legacy linear skill drops per-issue container mapping. Full repo build green;
+      tests: types 21, compute 46, toolkit 68, space 42, outliner 9, github 9, linear 13,
+      assistant 165, projects 16.
+      FOLLOW-UPS: re-correlate live sub-agent trace activity in TaskList via a Process
+      annotation carrying the task ref; reactive parent-project outline resolution in
+      ChatTaskList; promotion eval (agent promotes, human completes, reconcile observes).
+- [ ] **Phase 2 — plugin-outliner → plugin-tasks takeover** — CORE DONE 2026-08-01:
+      plugin renamed (`@dxos/plugin-tasks`, `org.dxos.plugin.tasks`, `TasksPlugin`, all
+      dependents + lockfile + vite entry); `TaskOperation` verbs
+      (taskCreate/taskUpdate/taskComplete/taskAssign — parent-edge filing, sub-task support,
+      4/4 handler tests); `TaskSetArticle` (Linear-order status groups, Actor-aware assignee
+      chips, role-aware: bare list as Section embed, surface-registered, story);
+      ProjectArticle **Goals** (read-only GoalList) + **Tasks** (per-TaskSet Section surface
+      embed — composition via surfaces, no cross-imports) sections.
+      `@dxos/react-ui-task` (private): reusable `TaskList` with CRUD callbacks (create row,
+      done toggle, delete, select; status grouping; AssigneeChip) — TaskSetArticle consumes it
+      with CRUD wired to TaskOperation verbs; storybook smoke 2/2 in Chromium. Candidate second
+      consumers: plugin-assistant chat task list (currently checklist-form), kanban adoption.
+      REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
+      goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
+- [~] **Phase 4 — MCP verbs** — DXOS SIDE MERGED 2026-08-03 as PR #12440 (edge side pending). Ownership
+  RATIFIED (MILESTONE-5 §7.3): **dxos defines, edge projects**; an edge-only tool is a
+  contract defect. Contract in §7.4.
+  SHIPPED HERE: `McpToolAnnotation` in @dxos/compute/Operation — the pipeable
+  `Operation.mcpTool(...)` combinator plus `getMcpTool`, carrying name/description/safety/aspect.
+  **Verified that the annotation survives `Operation.serialize`**, which is what lets edge read
+  the tool list off the operation registry instead of a curated table; `taskList` (filters taskSet/project/status/assignee/
+  includeSubtasks, opaque `after` cursor + `limit`) — closes the edge-only exception;
+  `projectList`/`projectGet`/`projectUpdate`; `outlineGet`/`outlineUpdate` (item-wise upsert
+  preserves prose); all 12 verbs annotated; serialize guards in both plugins assert the
+  annotation round-trips. Tests: plugin-tasks 21, plugin-projects 21, compute 46.
+  FINDINGS: (1) `projectCreate`/`createChat`/`createRoutine` are **NOT projectable** — they
+  resolve `Capability.Service` (templates/plugin registry), app-only; remote project creation
+  would need a capability-free path, not a projection. (2) The projected project definitions
+  live in a **worker-safe leaf module** (`ProjectMcpOperation`, imports compute/echo/keys
+  only) so loading them on the edge does not drag `@dxos/app-framework` /
+  `@dxos/assistant-toolkit` via the creation verbs.
+  EDGE SIDE (peer agent): switch projection to the annotation, delete local taskList, land
+  identity-through-invokeOperation. Already green there: task write verbs verified over OAuth
+  2026-08-02 (`e2e-task-smoke.mjs`, 52/52 workerd tests, branch `mcp-task-tools`).
+
+- [x] **Checklist-loop play coverage** — 2026-08-03, PRs #12440/#12442/#12444. CI-runnable
+      proof that the two-forms model closes: `WithPlanningScripted` drives `update-tasks`
+      twice and asserts the title-keyed upsert rewrites items in place rather than appending
+      duplicates; `WithSubAgentsTest2` asserts delegation adds an **unchecked** checklist item
+      and that `onComplete` **checks it off** after the sub-agent finishes. Both read the real
+      objects (space query → `Outline.parseChecklist`) via an `onInit` space capture and a
+      polling helper, because no surface in those layouts renders the outline. Live
+      counterparts `WithPlanning`/`WithSubAgentsTest1` stay `tags: ['!test']`. Teeth-checked by
+      disabling the `onComplete` upsert in `delegation-strategy.ts` — the story failed, then
+      passed on restore. Scripted stories must leave **no open checklist items** at the end, or
+      the end-of-request plan reminder consumes an extra scripted turn and the story flakes.
+      NOT DONE: no `promote-task` verb, so outside delegation the agent still cannot create a
+      durable Task — the TaskList column fills only via delegation or a human convert-to-task.
+
+- [ ] **Phase 5 — MCP-first dogfood** (alongside 2–4) — this milestone as a Project in the
+      shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync
+      spec lands; Claude Desktop demo over the tunnel.
+
 ## Milestone 4 (scoping): what comes after this PR
 
 - [ ] **Write the post-PR milestone doc** — the through-line across `Chat`, `Plan`, the delegation
@@ -324,6 +426,8 @@ summaries), and the `stories-projects` storybook strategy.
       instructions) and where they should stay distinct; whether either becomes a project template.
 
 ## Follow-ups / deferred (design reviews)
+
+- [ ] **Knowledge base for memory** — tracked 2026-08-01 (user), scope TBD.
 
 - [x] **`Chat.agent` removed; linkage is the `CompanionTo` relation** — the field (phase B) was the
       edge that closed the Agent↔Chat import cycle and forced both types into one module behind

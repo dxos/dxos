@@ -164,7 +164,7 @@ type IframePlayerProps = ThemedClassName<{
 const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
   const [loaded, setLoaded] = useState(false);
   return (
-    <div className={mx('relative bg-baseSurface', classNames)}>
+    <div className={mx('relative bg-base-surface', classNames)}>
       <iframe
         src={src}
         title={alt ?? 'Embedded media'}

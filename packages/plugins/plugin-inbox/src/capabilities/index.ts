@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapability } from '@dxos/app-toolkit';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
-import { SpaceCapability } from '@dxos/plugin-space';
+import { SpaceCapabilities, SpaceCapability } from '@dxos/plugin-space';
 
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
 import { InboxCapabilities } from '#types';
@@ -16,6 +16,11 @@ import { InboxCapabilities } from '#types';
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const IdentitySpecs = Capability.lazyModule(
+  'IdentitySpecs',
+  { provides: [SpaceCapabilities.IdentitySpec] },
+  () => import('./identity-specs'),
+);
 export const Connector = Capability.lazyModule(
   'Connector',
   { provides: [ConnectorCapability] },

@@ -27,6 +27,8 @@ export const translations = [
         'projects.label': 'Projects',
         'instructions.label': 'Instructions',
         'context.label': 'Context',
+        'goals.label': 'Goals',
+        'tasks.label': 'Tasks',
         'routines.label': 'Routines',
         'artifacts.label': 'Artifacts',
         'create-panel.name.placeholder': 'Project name (optional)',
