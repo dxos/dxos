@@ -172,10 +172,17 @@ describe('object lens over a database-backed object', () => {
     invariant(rootUrl, 'root url');
     await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
-    await db2.updateIndexes();
+
+    // Replicated documents are indexed asynchronously: heads arriving does not mean the index has
+    // caught up, so a single `updateIndexes` + one-shot query races the indexer. Poll instead.
+    await expect
+      .poll(async () => {
+        await db2.updateIndexes();
+        return (await db2.query(Query.select(Filter.type(Task.Task))).run()).length;
+      })
+      .toBeGreaterThan(0);
 
     const [task2] = await db2.query(Query.select(Filter.type(Task.Task))).run();
-    expect(task2).to.exist;
     expect(task2.id).to.eq(task1.id);
 
     // Peer 2 drives the object through the lens; peer 1 stays on the canonical type.

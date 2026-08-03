@@ -2,12 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
+import { createContext } from '@radix-ui/react-context';
+import React, { Fragment, type KeyboardEvent, type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Icon, IconButton, Input, Tag, type ThemedClassName } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Tag, composable, composableProps } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { type Actor, type Task } from '@dxos/types';
+import { mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
+
+const TASK_LIST_NAME = 'TaskList.Root';
 
 export type TaskStatus = NonNullable<Task.Task['status']>;
 
@@ -24,29 +29,53 @@ const DEFAULT_STATUS_LABELS: Record<TaskStatus, string> = {
 
 export type TaskPatch = Partial<Pick<Task.Task, 'title' | 'status' | 'priority' | 'estimate' | 'assignee'>>;
 
-export type TaskListProps = ThemedClassName<{
+/**
+ * One row geometry shared by `Item` and `Create` so their affordances land in the same columns:
+ * a fixed icon gutter (the status toggle above the add `+`), the flexible label, then trailing
+ * chips/actions pinned to the far edge. `w-full` is load-bearing — the listbox item is a flex
+ * container, so without it the grid shrinks to its content and the trailing actions float
+ * mid-row. `px-3` matches the listbox item's own inset, which `Create` does not inherit.
+ */
+const ROW_GRID = 'grid grid-cols-[1.5rem_1fr_auto] items-center gap-2 w-full min-w-0 px-3 h-8';
+
+//
+// Context — plain Radix context (un-scoped); nesting task lists has no meaning today.
+//
+
+type TaskListContextValue = {
+  tasks: readonly Task.Task[];
+  groupByStatus: boolean;
+  statusLabel: (status: TaskStatus) => string;
+  onTaskCreate?: (title: string) => void;
+  onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
+  onTaskDelete?: (task: Task.Task) => void;
+  onTaskSelect?: (task: Task.Task) => void;
+};
+
+const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);
+
+//
+// Root — headless context provider. Renders no DOM.
+//
+
+type TaskListRootProps = PropsWithChildren<{
   tasks: readonly Task.Task[];
   /** Group rows into status sections (Linear order); flat list otherwise. */
   groupByStatus?: boolean;
   /** i18n hook for group headings; defaults to English labels. */
   statusLabel?: (status: TaskStatus) => string;
-  /** Renders an add row; called with the trimmed title on Enter. */
+  /** Enables `Create`; called with the trimmed title. */
   onTaskCreate?: (title: string) => void;
-  /** Enables the done toggle (status patch) and any future field affordances. */
+  /** Enables the done toggle. Every mutation is delegated — the list never writes. */
   onTaskUpdate?: (task: Task.Task, patch: TaskPatch) => void;
-  /** Renders a per-row delete affordance. */
+  /** Enables the per-row delete affordance. */
   onTaskDelete?: (task: Task.Task) => void;
   /** Row click. */
   onTaskSelect?: (task: Task.Task) => void;
-  createPlaceholder?: string;
 }>;
 
-/**
- * List of durable {@link Task} objects with optional CRUD affordances — every mutation is
- * delegated to a callback (typically a `TaskOperation` invocation), never performed here.
- */
-export const TaskList = ({
-  classNames,
+const TaskListRoot = ({
+  children,
   tasks,
   groupByStatus = true,
   statusLabel = (status) => DEFAULT_STATUS_LABELS[status],
@@ -54,12 +83,55 @@ export const TaskList = ({
   onTaskUpdate,
   onTaskDelete,
   onTaskSelect,
-  createPlaceholder = 'Add task',
-}: TaskListProps) => {
+}: TaskListRootProps) => (
+  <TaskListProvider
+    tasks={tasks}
+    groupByStatus={groupByStatus}
+    statusLabel={statusLabel}
+    onTaskCreate={onTaskCreate}
+    onTaskUpdate={onTaskUpdate}
+    onTaskDelete={onTaskDelete}
+    onTaskSelect={onTaskSelect}
+  >
+    {/* Both roots are headless, so the pair renders no DOM of its own. */}
+    <Listbox.Root>{children}</Listbox.Root>
+  </TaskListProvider>
+);
+
+TaskListRoot.displayName = 'TaskList.Root';
+
+//
+// Viewport — the scrolling region (the listbox's own viewport). `Create` sits outside it, so the
+// add row stays pinned while the rows scroll.
+//
+
+type TaskListViewportProps = ComposableProps;
+
+const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  return (
+    <Listbox.Viewport {...rest} classNames={mx('min-w-0', className)} ref={forwardedRef}>
+      {children}
+    </Listbox.Viewport>
+  );
+});
+
+TaskListViewport.displayName = 'TaskList.Viewport';
+
+//
+// Content — the rows, grouped by status when the root says so.
+//
+
+type TaskListContentProps = ComposableProps;
+
+const TaskListContent = composable<HTMLUListElement>((props, forwardedRef) => {
+  const { tasks, groupByStatus, statusLabel } = useTaskListContext('TaskList.Content');
+  const { className, ...rest } = composableProps(props);
   const groups = useMemo(() => {
     if (!groupByStatus) {
       return tasks.length > 0 ? [{ status: undefined, tasks }] : [];
     }
+
     return STATUS_ORDER.map((status) => ({
       status,
       tasks: tasks.filter((task) => (task.status ?? 'todo') === status),
@@ -67,126 +139,159 @@ export const TaskList = ({
   }, [tasks, groupByStatus]);
 
   return (
-    <div className='flex flex-col min-w-0'>
-      <Listbox.Root>
-        <Listbox.Viewport classNames={['dx-container', classNames]}>
-          <Listbox.Content aria-label='Tasks'>
-            {groups.map(({ status, tasks }) => (
-              <React.Fragment key={status ?? 'all'}>
-                {status && <div className='px-2 pt-3 pb-1 text-xs text-subdued uppercase'>{statusLabel(status)}</div>}
-                {tasks.map((task) => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    onUpdate={onTaskUpdate}
-                    onDelete={onTaskDelete}
-                    onSelect={onTaskSelect}
-                  />
-                ))}
-              </React.Fragment>
-            ))}
-          </Listbox.Content>
-        </Listbox.Viewport>
-      </Listbox.Root>
-      {onTaskCreate && <TaskCreateRow placeholder={createPlaceholder} onCreate={onTaskCreate} />}
+    <Listbox.Content {...rest} aria-label='Tasks' classNames={className} ref={forwardedRef}>
+      {groups.map(({ status, tasks }) => (
+        <Fragment key={status ?? 'all'}>
+          {status && <TaskListGroupLabel>{statusLabel(status)}</TaskListGroupLabel>}
+          {tasks.map((task) => (
+            <TaskListItem key={task.id} task={task} />
+          ))}
+        </Fragment>
+      ))}
+    </Listbox.Content>
+  );
+});
+
+TaskListContent.displayName = 'TaskList.Content';
+
+//
+// GroupLabel
+//
+
+type TaskListGroupLabelProps = ComposableProps;
+
+const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  return (
+    <div {...rest} className={mx('px-2 pt-3 pb-1 text-xs text-subdued uppercase', className)} ref={forwardedRef}>
+      {children}
     </div>
   );
-};
+});
 
-type TaskRowProps = {
-  task: Task.Task;
-  onUpdate?: TaskListProps['onTaskUpdate'];
-  onDelete?: TaskListProps['onTaskDelete'];
-  onSelect?: TaskListProps['onTaskSelect'];
-};
+TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 
-const TaskRow = ({ task, onUpdate, onDelete, onSelect }: TaskRowProps) => {
-  const done = task.status === 'done';
-  const handleToggle = useCallback(() => onUpdate?.(task, { status: done ? 'todo' : 'done' }), [onUpdate, task, done]);
+//
+// Item — one row. Exported so a host can render its own selection of tasks.
+//
+
+type TaskListItemProps = ComposableProps<{ task: Task.Task }>;
+
+const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...props }, forwardedRef) => {
+  const { onTaskUpdate, onTaskDelete, onTaskSelect } = useTaskListContext('TaskList.Item');
+  const { className, ...rest } = composableProps(props);
+  // Subscribe per row: a query re-emits when membership changes, not when a task's own fields do,
+  // so a rename elsewhere (task form, agent, sync) would otherwise leave the row stale.
+  const [snapshot] = useObject(task);
+  const current = snapshot ?? task;
+  const done = current.status === 'done';
+  const handleToggle = useCallback(
+    () => onTaskUpdate?.(task, { status: done ? 'todo' : 'done' }),
+    [onTaskUpdate, task, done],
+  );
 
   return (
-    <Listbox.Item id={task.id} classNames='py-0 group'>
-      <div className='flex items-center gap-2 min-w-0'>
-        {onUpdate ? (
+    // `px-0` hands the horizontal inset to `ROW_GRID`, so the row shares the create row's columns.
+    <Listbox.Item {...rest} id={task.id} classNames={mx('px-0 py-0 group', className)} ref={forwardedRef}>
+      <div role='none' data-testid='taskList.item' className={ROW_GRID}>
+        {onTaskUpdate ? (
           <IconButton
             variant='ghost'
             density='sm'
             icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
             iconOnly
             label={done ? 'Mark todo' : 'Mark done'}
-            classNames={done ? 'text-success-text' : undefined}
+            classNames={mx('justify-self-center text-subdued', done && 'text-success-text')}
             onClick={handleToggle}
           />
         ) : (
           <Icon
             icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
-            classNames={done ? 'text-success-text' : undefined}
+            classNames={mx('justify-self-center', done && 'text-success-text')}
             size={4}
           />
         )}
         <span
-          className={onSelect ? 'truncate flex-1 cursor-pointer' : 'truncate flex-1'}
-          onClick={onSelect ? () => onSelect(task) : undefined}
+          className={onTaskSelect ? 'truncate cursor-pointer' : 'truncate'}
+          onClick={onTaskSelect ? () => onTaskSelect(task) : undefined}
         >
-          {task.title}
+          {current.title}
         </span>
-        {task.priority && task.priority !== 'none' && <Tag hue='neutral'>{task.priority}</Tag>}
-        {task.assignee && <AssigneeChip assignee={task.assignee} />}
-        {onDelete && (
-          <IconButton
-            variant='ghost'
-            density='sm'
-            icon='ph--x--regular'
-            iconOnly
-            label='Delete task'
-            classNames='invisible group-hover:visible'
-            onClick={() => onDelete(task)}
-          />
-        )}
+        <div className='flex items-center gap-1'>
+          {current.priority && current.priority !== 'none' && <Tag hue='neutral'>{current.priority}</Tag>}
+          {current.assignee && <TaskListAssignee assignee={current.assignee} />}
+          {onTaskDelete && (
+            <IconButton
+              variant='ghost'
+              density='sm'
+              icon='ph--x--regular'
+              iconOnly
+              label='Delete task'
+              classNames='invisible group-hover:visible'
+              onClick={() => onTaskDelete(task)}
+            />
+          )}
+        </div>
       </div>
     </Listbox.Item>
   );
-};
+});
 
-type TaskCreateRowProps = {
-  placeholder: string;
-  onCreate: (title: string) => void;
-};
+TaskListItem.displayName = 'TaskList.Item';
 
-const TaskCreateRow = ({ placeholder, onCreate }: TaskCreateRowProps) => {
-  const [title, setTitle] = useState('');
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      const trimmed = title.trim();
-      if (event.key === 'Enter' && trimmed.length > 0) {
-        onCreate(trimmed);
-        setTitle('');
-      }
-    },
-    [title, onCreate],
-  );
+//
+// Create — the add row; renders nothing unless the root supplies `onTaskCreate`.
+//
 
-  return (
-    <div className='flex items-center gap-2 px-2 py-1'>
-      <Icon icon='ph--plus--regular' size={4} classNames='text-subdued' />
-      <Input.Root>
-        <Input.TextInput
-          variant='subdued'
-          placeholder={placeholder}
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          onKeyDown={handleKeyDown}
-        />
-      </Input.Root>
-    </div>
-  );
-};
+type TaskListCreateProps = ComposableProps<{ placeholder?: string }>;
 
-/**
- * Actor-aware assignee chip: a Person ref resolves to the contact's name; otherwise fall back to
- * name, email, or a shortened DID; agents (`role: 'assistant'`) are marked with a sparkle.
- */
-export const AssigneeChip = ({ assignee }: { assignee: Actor.Actor }) => {
+const TaskListCreate = composable<HTMLDivElement, { placeholder?: string }>(
+  ({ placeholder = 'Add task', ...props }, forwardedRef) => {
+    const { onTaskCreate } = useTaskListContext('TaskList.Create');
+    const { className, ...rest } = composableProps(props);
+    const [title, setTitle] = useState('');
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLInputElement>) => {
+        const trimmed = title.trim();
+        if (event.key === 'Enter' && trimmed.length > 0) {
+          onTaskCreate?.(trimmed);
+          setTitle('');
+        }
+      },
+      [title, onTaskCreate],
+    );
+
+    if (!onTaskCreate) {
+      return null;
+    }
+
+    return (
+      <div {...rest} data-testid='taskList.create' className={mx(ROW_GRID, className)} ref={forwardedRef}>
+        <Icon icon='ph--plus--regular' size={4} classNames='justify-self-center text-subdued' />
+        <Input.Root>
+          <Input.TextInput
+            variant='subdued'
+            placeholder={placeholder}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+        </Input.Root>
+      </div>
+    );
+  },
+);
+
+TaskListCreate.displayName = 'TaskList.Create';
+
+//
+// Assignee — actor-aware chip: a Person ref resolves to the contact's name; otherwise fall back to
+// name, email, or a shortened DID; agents (`role: 'assistant'`) are marked with a sparkle.
+//
+
+type TaskListAssigneeProps = { assignee: Actor.Actor };
+
+const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee }, _forwardedRef) => {
   const [contact] = useObject(assignee.contact);
   const label =
     contact?.fullName ??
@@ -204,6 +309,32 @@ export const AssigneeChip = ({ assignee }: { assignee: Actor.Actor }) => {
       {label ?? 'agent'}
     </Tag>
   );
-};
+});
+
+TaskListAssignee.displayName = 'TaskList.Assignee';
 
 const shortDid = (did: string): string => `${did.slice(0, 12)}…`;
+
+//
+// TaskList
+//
+
+export const TaskList = {
+  Root: TaskListRoot,
+  Viewport: TaskListViewport,
+  Content: TaskListContent,
+  GroupLabel: TaskListGroupLabel,
+  Item: TaskListItem,
+  Create: TaskListCreate,
+  Assignee: TaskListAssignee,
+};
+
+export type {
+  TaskListAssigneeProps,
+  TaskListContentProps,
+  TaskListCreateProps,
+  TaskListGroupLabelProps,
+  TaskListItemProps,
+  TaskListRootProps,
+  TaskListViewportProps,
+};

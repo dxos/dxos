@@ -71,7 +71,15 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
   const taskActions = useMenuBuilder(
     (): ActionGraphProps =>
       MenuBuilder.make()
-        .action('back', { label: t('back.label'), icon: 'ph--arrow-left--regular', disposition: 'toolbar' }, handleBack)
+        .action(
+          'back',
+          {
+            label: t('back.label'),
+            icon: 'ph--arrow-left--regular',
+            disposition: 'toolbar',
+          },
+          handleBack,
+        )
         .build(),
     [t, handleBack],
   );
@@ -81,7 +89,11 @@ export const OutlineArticle = ({ role, attendableId, subject: outline }: Outline
       MenuBuilder.make()
         .action(
           'convert-to-task',
-          { label: t('convert-to-task.menu'), icon: 'ph--check-circle--regular', disposition: 'toolbar' },
+          {
+            label: t('convert-to-task.menu'),
+            icon: 'ph--check-circle--regular',
+            disposition: 'toolbar',
+          },
           handleConvertCurrent,
         )
         .build(),

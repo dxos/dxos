@@ -34,13 +34,13 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     description: Schema.optional(Schema.String),
 
     /** Owned agent instructions (created + parented at the plugin layer). */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true))),
 
     /** Routines created within the scope of this project. */
     routines: Schema.Array(Ref.Ref(Routine.Routine)),
 
     /** Owned collection of artifacts (documents, outliners, tables, ...) managed by the project. */
-    artifacts: Ref.Ref(Collection.Collection).pipe(Schema.optional),
+    artifacts: Schema.optional(Ref.Ref(Collection.Collection)),
 
     /** What done means for this project. */
     goals: Schema.optional(Schema.Array(Goal)),
@@ -48,8 +48,8 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
     /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
     outline: Schema.optional(Ref.Ref(Outline.Outline)),
 
-    /** Owned (or adopted synced) task containers; membership is the ECHO parent edge. */
-    taskSets: Schema.Array(Ref.Ref(TaskSet.TaskSet)),
+    /** Owned (or adopted synced) task container; membership is the ECHO parent edge. */
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),
@@ -59,11 +59,10 @@ export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.pr
 
 /** Factory wrapper around `Obj.make` for {@link Project}. */
 export const make = (
-  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines' | 'taskSets'> & {
+  props: Omit<Partial<Obj.MakeProps<typeof Project>>, 'routines'> & {
     routines?: ReadonlyArray<Ref.Ref<Routine.Routine>>;
-    taskSets?: ReadonlyArray<Ref.Ref<TaskSet.TaskSet>>;
   } = {},
-): Project => Obj.make(Project, { ...props, routines: props.routines ?? [], taskSets: props.taskSets ?? [] });
+): Project => Obj.make(Project, { ...props, routines: props.routines ?? [] });
 
 /** Bindings a chat session should receive when running in a project's context. */
 export type ContextBindings = {
