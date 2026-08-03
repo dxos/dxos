@@ -10,15 +10,15 @@ import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-import { type DrawingVariant, IllustratorCapabilities } from '#types';
+import { IllustratorCapabilities } from '#types';
 
 export type CreateDrawingPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to IllustratorCapabilities.VariantProvider. */
-  variants?: DrawingVariant[];
+  variants?: IllustratorCapabilities.DrawingVariant[];
 };
 
 /**
- * Variant picker for drawings (SearchList over contributed `DrawingVariant[]`).
+ * Variant picker for drawings (SearchList over contributed `IllustratorCapabilities.DrawingVariant[]`).
  * On select, calls `onCreateObject({ variantId })`; plugin-illustrator's
  * CreateObjectEntry.createObject resolves the variantId, builds the canvas via
  * variant.createCanvas, then wraps it in a Drawing.
