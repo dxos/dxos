@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { type DrawingVariant } from '@dxos/plugin-illustrator/types';
 
 import { TldrawArticle, TldrawCard } from '#containers';
 import { TldrawBuilder } from '#model';
@@ -15,7 +14,7 @@ import { Tldraw } from '../types';
 
 // No `canvasType`/`createCanvas`: tldraw stores its records in the base `Drawing.Canvas`,
 // discriminated by `schema`.
-const variant: DrawingVariant = {
+const variant: IllustratorCapabilities.DrawingVariant = {
   id: Tldraw.TLDRAW_SCHEMA,
   label: 'tldraw',
   icon: 'ph--compass-tool--regular',

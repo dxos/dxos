@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
-import { type DrawingVariant } from '@dxos/plugin-illustrator/types';
 
 import { ExcalidrawArticle } from '#containers';
 import { ExcalidrawBuilder } from '#model';
@@ -15,7 +14,7 @@ import * as Excalidraw from '../types/Excalidraw';
 
 // No `canvasType`/`createCanvas`: excalidraw stores its elements in the base `Drawing.Canvas`,
 // discriminated by `schema`.
-const variant: DrawingVariant = {
+const variant: IllustratorCapabilities.DrawingVariant = {
   id: Excalidraw.EXCALIDRAW_SCHEMA,
   label: 'Excalidraw',
   icon: 'ph--compass-tool--regular',
