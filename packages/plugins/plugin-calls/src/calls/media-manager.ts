@@ -69,6 +69,7 @@ export class MediaManager extends Resource {
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
+  private _placeholderTracksReady = false;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
 
@@ -86,30 +87,6 @@ export class MediaManager extends Resource {
   protected override async _open(): Promise<void> {
     this._state.videoStream = new MediaStream();
 
-    // The black-canvas and inaudible-audio placeholder tracks are only consumed once a call is
-    // active (they stand in for a disabled camera/mic). They rely on `canvas.captureStream()` and
-    // `AudioContext`, which are absent or non-functional in some headless browsers (notably the
-    // Playwright Linux WebKit build). Their creation must therefore not be able to fail activation:
-    // otherwise a browser that merely can't do calls would take down every plugin that shares the
-    // activation chain (surfacing as the app's fatal error dialog). Degrade to no placeholders.
-    try {
-      this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
-        ctx: this._ctx,
-        width: VIDEO_WIDTH,
-        height: VIDEO_HEIGHT,
-      });
-
-      this._state.videoTrack = this._blackCanvasStreamTrack;
-      this._state.videoStream.addTrack(this._state.videoTrack);
-
-      if (USE_INAUDIBLE_AUDIO) {
-        this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
-        this._state.audioTrack = this._inaudibleAudioStreamTrack;
-      }
-    } catch (err) {
-      log.warn('failed to create placeholder media tracks; calls will be unavailable', { err });
-    }
-
     this._pushTracksTask = new DeferredTask(this._ctx, async () => {
       await this._pushTracks();
     });
@@ -118,18 +95,66 @@ export class MediaManager extends Resource {
     });
   }
 
+  /**
+   * Builds the black-canvas and inaudible-audio tracks that stand in for a disabled camera/mic.
+   * Deferred out of `_open` and memoized: `canvas.captureStream()` and `new AudioContext()` cost
+   * hundreds of ms of main thread, and this resource opens during the client-initialized
+   * activation wave — i.e. app startup — for a call the user may never make. Every consumer
+   * (join, and the camera/mic toggles the lobby exposes before joining) awaits this first, so
+   * the cost lands on the first media interaction instead.
+   *
+   * The APIs are absent or non-functional in some headless browsers (notably the Playwright
+   * Linux WebKit build), so failure degrades to no placeholders rather than propagating: a
+   * browser that merely cannot do calls must not take down the activation chain it shares.
+   */
+  private async _ensurePlaceholderTracks(): Promise<void> {
+    if (this._placeholderTracksReady) {
+      return;
+    }
+    // Set before awaiting: concurrent callers must not both enter the (expensive) build.
+    this._placeholderTracksReady = true;
+    try {
+      this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
+        ctx: this._ctx,
+        width: VIDEO_WIDTH,
+        height: VIDEO_HEIGHT,
+      });
+      // Only adopt the placeholder while the real device is off, so a toggle that raced the
+      // build keeps its live track.
+      if (!this._state.videoEnabled) {
+        this._state.videoTrack = this._blackCanvasStreamTrack;
+        this._state.videoStream!.addTrack(this._state.videoTrack);
+      }
+
+      if (USE_INAUDIBLE_AUDIO) {
+        this._inaudibleAudioStreamTrack = await createInaudibleAudioStreamTrack({ ctx: this._ctx });
+        if (!this._state.audioEnabled) {
+          this._state.audioTrack = this._inaudibleAudioStreamTrack;
+        }
+      }
+      this.stateUpdated.emit(this._state);
+    } catch (err) {
+      log.warn('failed to create placeholder media tracks; calls will be unavailable', { err });
+    }
+  }
+
   protected override async _close(): Promise<void> {
     void this._speakingMonitor?.close();
     this._state.videoTrack && this._state.videoStream?.removeTrack(this._state.videoTrack);
     this._state.audioTrack?.stop();
     this._state.videoTrack?.stop();
     this._state.screenshareTrack?.stop();
+    // The placeholders were built against the now-disposed context; a reopen must rebuild them.
+    this._blackCanvasStreamTrack = undefined;
+    this._inaudibleAudioStreamTrack = undefined;
+    this._placeholderTracksReady = false;
     this._pushTracksTask = undefined;
     this._pullTracksTask = undefined;
   }
 
   @synchronized
   async join(serviceConfig: CallsServiceConfig): Promise<void> {
+    await this._ensurePlaceholderTracks();
     this._state.peer = new CallsServicePeer(serviceConfig);
     await this._state.peer!.open();
     this._pushTracksTask!.schedule();
@@ -150,7 +175,11 @@ export class MediaManager extends Resource {
   }
 
   async turnVideoOn(): Promise<void> {
-    this._state.videoStream!.removeTrack(this._state.videoTrack!);
+    // Guarded: the placeholder is built lazily and its creation is allowed to fail, so there is
+    // not always an outgoing track to swap out.
+    if (this._state.videoTrack) {
+      this._state.videoStream!.removeTrack(this._state.videoTrack);
+    }
     this._state.videoTrack = await getUserMediaTrack('videoinput', { width: VIDEO_WIDTH, height: VIDEO_HEIGHT });
     this._state.videoStream!.addTrack(this._state.videoTrack);
 
@@ -160,11 +189,12 @@ export class MediaManager extends Resource {
   }
 
   async turnVideoOff(): Promise<void> {
+    await this._ensurePlaceholderTracks();
     if (this._state.videoTrack !== this._blackCanvasStreamTrack) {
-      this._state.videoStream!.removeTrack(this._state.videoTrack!);
+      this._state.videoTrack && this._state.videoStream!.removeTrack(this._state.videoTrack);
       this._state.videoTrack?.stop();
       this._state.videoTrack = this._blackCanvasStreamTrack;
-      this._state.videoStream!.addTrack(this._state.videoTrack!);
+      this._state.videoTrack && this._state.videoStream!.addTrack(this._state.videoTrack);
     }
 
     this._state.videoEnabled = false;
@@ -190,6 +220,7 @@ export class MediaManager extends Resource {
   }
 
   async turnAudioOff(): Promise<void> {
+    await this._ensurePlaceholderTracks();
     void this._speakingMonitor?.close();
     this._speakingMonitor = undefined;
     this._state.audioEnabled = false;

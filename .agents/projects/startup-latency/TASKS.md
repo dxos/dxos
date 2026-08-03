@@ -745,3 +745,38 @@ Taxonomy ratified in discussion, then measured into its final shape:
 
 Verified: composer-app build green, app-framework 220 + app-toolkit 119 tests green, lint
 clean on all touched packages (remaining warnings pre-existing on branch).
+
+## Checkpoint 2026-08-03 (levers adopted from PR #12438 review)
+
+Reviewed dxos/dxos#12438 (richburdon, base `main`) against this branch. Most of it overlaps
+what we shipped (eager-graph de-bloat, ResetDialog lazy, edge-client/bip39/crypto evictions,
+stub-must-not-reach-implementations); its `?defer=1` two-wave startup is superseded by our
+surface-demand gating. Four items were genuinely new; three are now landed:
+
+1. **plugin-calls placeholder media tracks** — `canvas.captureStream()` + `new AudioContext()`
+   ran in `MediaManager._open()`, reached via `CallManager` on `ClientEvents.Initialized`, i.e.
+   the startup path, for a call that may never happen. Now a memoized
+   `_ensurePlaceholderTracks()`. NOTE: #12438 awaits it only in `join()` — that breaks the
+   lobby, which renders the toolbar pre-join, because `_open()` is what guaranteed
+   `videoTrack` was defined for `turnVideoOn`'s `removeTrack(videoTrack!)` and
+   `turnVideoOff`'s `addTrack(videoTrack!)`. We also await it in `turnVideoOff`/`turnAudioOff`
+   and guard the add/remove — which additionally fixes a latent crash when placeholder
+   creation fails (headless WebKit) that the existing try/catch had introduced.
+2. **`boot:html-parsed` was read but never written** — three read sites (`main.tsx:271`,
+   `harness-helpers.ts:159,232`), no writer anywhere; `AUDIT.md` claimed an inline
+   `index.html` script emitted it, but that script vanished when the loader moved into
+   `bootLoaderPlugin`. So `bootLoaderVisibleMs` was always undefined in telemetry and the
+   waterfall silently dropped its first segment — the very segment our chunk work targets.
+   Now emitted from the loader IIFE (`body-prepend`, classic script, so it runs before the
+   deferred module script despite appearing later in document order). Verified at runtime:
+   mark 175.1ms, first-paint 180ms, main:start 1081ms.
+3. **Profiler off by default in dev** — `isTrue(param, Boolean(DEV))` passed a default into
+   `isTrue(str, strict = true)`'s STRICTNESS flag, so dev required `?profiler=1` despite the
+   comment promising otherwise. Absent-parameter case now handled explicitly.
+4. **Preload-budget CI guardrail** (`check-preload-budget.mjs`) — NOT taken; folded into the
+   broader "CI check for performance metrics" discussion. This is the regression-prevention
+   piece, and we have the most to protect (520 -> 19 preload requests).
+
+Also noted for review, not changed: `plugin-spotlight` is the one handler set still using
+`OperationHandlerSet.make(...)` with inline bodies rather than `keyed`/`async` (Tauri spotlight
+window entry, not composer boot). #12438 fixes it via `OperationHandlerSet.async`.

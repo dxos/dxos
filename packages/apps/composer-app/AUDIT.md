@@ -123,9 +123,10 @@ Two very different concurrency stories live inside this:
   (`profiler.ts`). `dump()` also persists the snapshot to
   `localStorage['org.dxos.composer.startup-profile']` so a second tab or a
   Playwright run can read it without scraping `console`.
-- `performance.mark('boot:html-parsed')` is written from an inline script in
-  `index.html` _before_ the JS bundle is even fetched. This is the new "lower
-  bound" of how fast the app could possibly feel.
+- `performance.mark('boot:html-parsed')` is written by the boot-loader IIFE that
+  `bootLoaderPlugin` injects at `body-prepend`, so it runs _before_ the app's
+  deferred module script. This is the "lower bound" of how fast the app could
+  possibly feel.
 - `src/playwright/startup.spec.ts` provides three tests:
   - `cold start (cleared storage)` — fresh context, navigate, wait for the user-
     account testid, pull `composer.profiler.snapshot()`, network bytes, paint
