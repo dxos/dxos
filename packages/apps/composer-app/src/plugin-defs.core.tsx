@@ -60,7 +60,6 @@ export const getCorePlugins = ({
   services,
   observability,
   logStore,
-  isDev,
   isLocal,
   isTauri,
   isPopover,
@@ -122,7 +121,6 @@ export const getCorePlugins = ({
     StatusBarPlugin(),
     ThemePlugin({
       appName: 'Composer',
-      noCache: isDev,
       platform: isMobile ? 'mobile' : 'desktop',
     }),
   ];
