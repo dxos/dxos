@@ -311,13 +311,27 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
 };
 
 /**
- * Predicate for property to be in the provided array.
- * @param values - Values to check against.
+ * Predicate for property to be in the provided array, or in the set of values projected
+ * from a subquery's results (an uncorrelated `col IN (SELECT property FROM ...)` semi-join —
+ * see `Query.project`). The subquery may target a different scope than the parent query; it
+ * is resolved once at execution time.
+ * @param values - Values to check against, or a single subquery projection.
  */
-const in$ = <T>(...values: T[]): Filter<T> => {
+const in$: {
+  <T>(projection: internal.Projection<T>): Filter<T>;
+  <T>(...values: T[]): Filter<T>;
+} = <T>(...args: [internal.Projection<T>] | T[]): Filter<T> => {
+  if (args.length === 1 && internal.isProjection(args[0])) {
+    const projection = args[0];
+    return new FilterClass({
+      type: 'in-query',
+      subquery: projection.query,
+      property: projection.property,
+    });
+  }
   return new FilterClass({
     type: 'in',
-    values,
+    values: args,
   });
 };
 export { in$ as in };

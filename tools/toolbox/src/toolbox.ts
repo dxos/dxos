@@ -125,7 +125,7 @@ export class Toolbox {
    * - Create package list.
    */
   async init(): Promise<void> {
-    const configPath = join(this.rootDir, 'toolbox.json');
+    const configPath = join(this.rootDir, '.config', 'toolbox.json');
     this.config = await loadJson<ToolboxConfig>(configPath);
     console.log(`Config: ${configPath}`);
 
@@ -255,7 +255,8 @@ export class Toolbox {
 
     const config = {
       $schema: 'https://unpkg.com/@changesets/config@3.1.4/schema.json',
-      changelog: ['@changesets/changelog-github', { repo: 'dxos/dxos' }],
+      // git-based, not GitHub API-based — see .github/RELEASE-SPEC.md for why.
+      changelog: '@changesets/changelog-git',
       commit: false,
       access: 'public',
       baseBranch: 'main',

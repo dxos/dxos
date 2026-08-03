@@ -3,7 +3,7 @@
 //
 
 import { type Database, Filter, type Obj, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 
 import { ExtractedFrom, Mailbox } from '../types';
 

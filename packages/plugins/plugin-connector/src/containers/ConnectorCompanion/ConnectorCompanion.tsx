@@ -7,12 +7,12 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -65,7 +65,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [connectionDeckSubject(Paths.getSpacePath(db.spaceId), connection.id)],
+      subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connection.id)],
       navigation: 'immediate',
     });
   }, [invokePromise, connection, db]);
@@ -126,9 +126,9 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                         <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
                       ) : undefined}
 
-                      {connector?.optionsSchema && !targetMissing && !sourceMissing && (
+                      {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
                         <Form.Root
-                          schema={connector.optionsSchema}
+                          schema={connector.sync.optionsSchema}
                           defaultValues={optionsDefaultValues}
                           onValuesChanged={handleOptionsChanged}
                         >

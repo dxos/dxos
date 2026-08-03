@@ -9,9 +9,28 @@ tags:
   - pack
   - storybook
 tasks:
+  # Fail when the ./plugin export pulls in React. The node/workerd plugin variant must stay
+  # loadable outside a DOM, and `Capability.lazy` does not stop a bundler walking into a React
+  # surface — only a node-conditioned `#capabilities` barrel does.
+  check-module-structure:
+    command: >-
+      pnpm exec dx-trace-imports
+      --export ./plugin
+      --to "{react,react-dom}"
+      --conditions workerd,worker,node
+      --fail-on present
+    deps:
+      - dx-trace-imports:build
+      - build
+    inputs:
+      - tsconfig.json
+      - '@group(production)'
+      - /pnpm-lock.yaml
+    options:
+      timeout: 60
   test-browser:
     deps:
-      - ~:compile
+      - ~:build
   e2e:
     inputs:
       - .storybook/*

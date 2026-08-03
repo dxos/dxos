@@ -12,8 +12,6 @@ import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
 import { type Mailbox } from '@dxos/plugin-inbox';
 import { Message } from '@dxos/types';
 
-import { MailboxTriggerRelation } from './sync-trigger';
-
 /**
  * Feed export/import for the MailboxSync story's `ArchiveModule`. The exported JSON is for local
  * development testing only and is never committed. Import replaces the mailbox's backing feed with a
@@ -21,12 +19,20 @@ import { MailboxTriggerRelation } from './sync-trigger';
  * into the space it came from without id collisions.
  */
 
-/** Serializes every message in the feed to plain JSON (the download payload). */
-export const exportFeedMessages = async (feed: Feed.Feed, db: Database.Database): Promise<Obj.JSON[]> => {
+/**
+ * Serializes the feed's messages to plain JSON (the download payload). `filter` narrows the export to a
+ * curated subset — the story passes the starred predicate so an archive holds only the messages the user
+ * deliberately marked as fixtures.
+ */
+export const exportFeedMessages = async (
+  feed: Feed.Feed,
+  db: Database.Database,
+  filter?: (message: Message.Message) => boolean,
+): Promise<Obj.JSON[]> => {
   const messages = await EffectEx.runPromise(
     Feed.query(feed, Filter.type(Message.Message)).run.pipe(Effect.provide(Database.layer(db))),
   );
-  return messages.map((message) => Obj.toJSON(message));
+  return messages.filter((message) => filter?.(message) ?? true).map((message) => Obj.toJSON(message));
 };
 
 // Data fields lifted from a serialized message. Identity/system fields (`id`, `@type`, `@meta`) and
@@ -42,8 +48,35 @@ const reconstructMessage = (json: any): Message.Message =>
   });
 
 /**
+ * Appends serialized messages to the mailbox's existing feed. Returns the number imported.
+ *
+ * Import merges rather than replaces because an export is now a *curated* subset (the starred set), and
+ * replacing the feed with one would silently delete every unstarred message. Reset is the deliberate
+ * way to empty a mailbox.
+ */
+export const importMessages = async (
+  mailbox: Mailbox.Mailbox,
+  serialized: unknown[],
+  db: Database.Database,
+): Promise<number> => {
+  // Throws rather than returning 0: a mailbox whose feed has not resolved is a failed import, and
+  // reporting it as "uploaded 0" would look like an empty archive.
+  const feed = await mailbox.feed?.tryLoad();
+  if (!feed) {
+    throw new Error('Mailbox has no resolved feed; cannot import.');
+  }
+
+  const messages = serialized.map(reconstructMessage);
+  await EffectEx.runPromise(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
+  await db.flush({ indexes: true });
+
+  return messages.length;
+};
+
+/**
  * Replaces the mailbox's backing feed with a fresh one seeded from serialized messages, then deletes
- * the previous feed. Returns the number of messages imported.
+ * the previous feed. Returns the number of messages imported. Destructive — see {@link importMessages}
+ * for the import path.
  */
 export const replaceFeed = async (
   mailbox: Mailbox.Mailbox,
@@ -74,24 +107,20 @@ export const replaceFeed = async (
 };
 
 /**
- * Returns the mailbox to a clean slate: removes the sync binding(s) targeting it, deletes the linked
- * Gmail sync trigger(s) (and their {@link MailboxTriggerRelation}), deletes every saved
- * {@link Connection} (and its {@link AccessToken}), and empties the feed. Used by the story's Reset
- * control — the binding removal alone leaves Connection accounts behind, so they otherwise accumulate
- * in the Connect menu across reconnects.
+ * Returns the mailbox to a clean slate: removes the sync binding(s) targeting it, deletes the sync
+ * trigger(s) wired up by the connector integration, deletes every saved {@link Connection} (and its
+ * {@link AccessToken}), and empties the feed. Used by the story's Reset control — the binding removal
+ * alone leaves Connection accounts behind, so they otherwise accumulate in the Connect menu across
+ * reconnects.
  */
 export const resetMailbox = async (mailbox: Mailbox.Mailbox, db: Database.Database): Promise<void> => {
   const cursors = await db.query(Filter.type(Cursor.Cursor)).run();
   cursors.filter((cursor) => isCursorForTarget(cursor, mailbox)).forEach((cursor) => db.remove(cursor));
 
-  // Delete every sync trigger and its linking relation so a reset clears the scheduled sync wired up
-  // for routine stories. Triggers are parented to the mailbox but survive a reset otherwise; delete by
-  // type (rather than by relation) so triggers left over from earlier sessions — whose relation may be
-  // missing — are cleared too.
+  // Delete every sync trigger so a reset clears the scheduled sync. Delete by type so triggers left
+  // over from earlier sessions are cleared too.
   const triggers = await db.query(Filter.type(Trigger.Trigger)).run();
   triggers.forEach((trigger) => db.remove(trigger));
-  const triggerRelations = await db.query(Filter.type(MailboxTriggerRelation)).run();
-  triggerRelations.forEach((relation) => db.remove(relation));
 
   const connections = await db.query(Filter.type(Connection.Connection)).run();
   for (const connection of connections) {

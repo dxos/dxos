@@ -67,6 +67,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -103,6 +106,9 @@
       "path": "../../ui/react-ui-canvas-editor"
     },
     {
+      "path": "../../ui/react-ui-debug"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
@@ -115,6 +121,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-illustrator"
+    },
+    {
       "path": "../plugin-inbox"
     },
     {
@@ -124,9 +133,6 @@
       "path": "../plugin-sheet"
     },
     {
-      "path": "../plugin-sketch"
-    },
-    {
       "path": "../plugin-space"
     },
     {
@@ -134,6 +140,9 @@
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

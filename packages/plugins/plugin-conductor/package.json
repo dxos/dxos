@@ -76,6 +76,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

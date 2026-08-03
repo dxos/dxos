@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -92,6 +92,24 @@ export const atomByModule = <T>(
  */
 export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I, T>): Layer.Layer<I, never, Service> =>
   Layer.effect(tag, get(interfaceDef).pipe(Effect.orDie));
+
+/**
+ * Constructs a layer from a capability by resolving it from the capability manager and passing the
+ * value to `build`. Lets a consumer depend on a canonical service (e.g. `Identity.Service`) and
+ * have it provided from a capability without the consumer referencing the capability system:
+ *
+ * ```ts
+ * effect.pipe(
+ *   Effect.provide(Capability.layerWith(ClientCapabilities.IdentityService, (service) =>
+ *     Layer.succeed(Identity.Service, service),
+ *   )),
+ * );
+ * ```
+ */
+export const layerWith = <T, A, E, R>(
+  interfaceDef: InterfaceDef<T>,
+  build: (value: T) => Layer.Layer<A, E, R>,
+): Layer.Layer<A, E, R | Service> => Layer.unwrapEffect(get(interfaceDef).pipe(Effect.orDie, Effect.map(build)));
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 

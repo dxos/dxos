@@ -7,9 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
+import { log } from '@dxos/log';
 
 import { GoogleCredentials, GoogleMailApi } from '../../../../services';
 import { InboxOperation } from '../../../../types';
@@ -19,8 +20,14 @@ import { googleMailSyncProvider } from './sync-provider';
 const handler = InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(({ binding: bindingRef, userId = 'me', label = 'all' }) =>
     Effect.gen(function* () {
-      const bindingObj = bindingRef.target;
+      const bindingObj = yield* Database.load(bindingRef);
       if (!bindingObj || !Obj.getDatabase(bindingObj) || !Cursor.isExternal(bindingObj)) {
+        log.warn('google sync skipped: binding is not external', {
+          binding: bindingRef.uri,
+          hasObj: !!bindingObj,
+          hasDatabase: !!Obj.getDatabase(bindingObj),
+          isExternal: Cursor.isExternal(bindingObj),
+        });
         return { newMessages: 0 };
       }
 

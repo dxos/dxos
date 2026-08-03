@@ -12,3 +12,9 @@ Cross-plugin capability contracts: where one plugin defines a capability interfa
 | `plugin-transcription` | `TranscriptionCapabilities` | `TranscriptionManagerProvider` |
 | `plugin-trip`          | `TripCapabilities`          | `BookingService`               |
 | `plugin-trip`          | `TripCapabilities`          | `RoutingService`               |
+
+## Notes
+
+- `plugin-sidekick` is obviated by `plugin-projects` (see
+  `packages/plugins/plugin-projects/DESIGN.md`); removal is
+  tracked separately.

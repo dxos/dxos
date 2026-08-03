@@ -3,6 +3,4 @@
 //
 
 export * from './MarkdownEditor';
-export * from './NamePopover';
 export * from './PreviewComponent';
-export * from './VersionBanner';

@@ -28,5 +28,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-stack',
     icon: { key: 'ph--stack-simple--regular' },
     spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
   },
 });

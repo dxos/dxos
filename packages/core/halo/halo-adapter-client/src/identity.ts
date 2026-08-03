@@ -17,18 +17,27 @@ import {
   type Identity as ClientIdentity,
   DeviceKind,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { makeFlow, streamFromObservable, toShareOptions } from './util';
 
 const toInfo = (identity: ClientIdentity): HaloIdentity.Info => ({
   did: IdentityDid.make(identity.did),
+  identityKey: identity.identityKey?.toHex(),
   displayName: identity.profile?.displayName,
+  data: identity.profile?.data,
 });
 
 const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
   key: device.deviceKey.toHex(),
   label: device.profile?.label,
   current: device.kind === DeviceKind.CURRENT,
+});
+
+const toCredential = (credential: Credential): HaloIdentity.Credential => ({
+  id: credential.id?.toHex(),
+  type: credential.subject.assertion['@type'],
+  issuanceDate: credential.issuanceDate,
 });
 
 /**
@@ -38,6 +47,18 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
   identity: streamFromObservable(client.halo.identity).pipe(
     Stream.map((identity) => (identity ? Option.some(toInfo(identity)) : Option.none())),
   ),
+
+  getSnapshot: () => {
+    const identity = client.halo.identity.get();
+    return identity ? Option.some(toInfo(identity)) : Option.none();
+  },
+
+  subscribe: (callback) => {
+    const subscription = client.halo.identity.subscribe((identity) =>
+      callback(identity ? Option.some(toInfo(identity)) : Option.none()),
+    );
+    return () => subscription.unsubscribe();
+  },
 
   create: (options) =>
     Effect.tryPromise({
@@ -64,6 +85,39 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
     }),
 
   devices: streamFromObservable(client.halo.devices).pipe(Stream.map((devices) => devices.map(toDeviceInfo))),
+
+  getDevicesSnapshot: () => client.halo.devices.get().map(toDeviceInfo),
+
+  credentials: streamFromObservable(client.halo.credentials).pipe(
+    Stream.map((credentials) => credentials.map(toCredential)),
+  ),
+
+  grantServiceAccess: (options) =>
+    Effect.tryPromise({
+      try: async () => {
+        const identityKey = client.halo.identity.get()?.identityKey;
+        if (!identityKey) {
+          throw new Error('No identity.');
+        }
+        await client.halo.writeCredentials([
+          {
+            issuer: identityKey,
+            issuanceDate: new Date(),
+            subject: {
+              id: identityKey,
+              assertion: {
+                '@type': 'dxos.halo.credentials.ServiceAccess',
+                'serverName': options.serverName,
+                'serverKey': identityKey,
+                identityKey,
+                'capabilities': [...options.capabilities],
+              },
+            },
+          },
+        ]);
+      },
+      catch: (error) => new IdentityError({ context: { error } }),
+    }),
 
   share: (options) =>
     Effect.try({

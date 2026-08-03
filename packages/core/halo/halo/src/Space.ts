@@ -51,6 +51,11 @@ export type EdgeReplication = typeof EdgeReplication.Type;
 export const Member = Schema.Struct({
   /** DID of the member identity, when known. */
   did: Schema.optional(IdentityDid),
+  /** Hex-encoded identity key of the member, for avatar/presence keying. */
+  identityKey: Schema.optional(Schema.String),
+  displayName: Schema.optional(Schema.String),
+  /** Arbitrary profile metadata (e.g. avatar emoji, hue). */
+  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   role: Access,
   /** Whether the member is currently online. */
   online: Schema.Boolean,

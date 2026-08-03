@@ -25,7 +25,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import { Credential, McpServer, Operation, Trace } from '@dxos/compute';
+import { Credential, Instructions, McpServer, Operation, Trace } from '@dxos/compute';
 import { Process } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as StorageService from '@dxos/compute/StorageService';
@@ -39,23 +39,23 @@ import { trim } from '@dxos/util';
 import { type DelegationStrategy } from './delegation-strategy';
 
 interface AgentProcessOptions {
+  // TODO(burdon): Instructions?
   systemPrompt?: string;
+
+  /** Model identifier. */
   model?: DXN.DXN;
-  // The catalog's shared model ids are served by several providers, so resolution needs the provider
-  // alongside the id; without it a local model id cannot be claimed by any resolver.
-  provider?: DXN.DXN;
 
   /**
-   * Provider for space-level MCP server configs, called on each turn.
+   * The catalog's shared model ids are served by several providers, so resolution needs the provider
+   * alongside the id; without it a local model id cannot be claimed by any resolver.
    */
-  getMcpServers?: () => McpServer.McpServer[];
+  provider?: DXN.DXN;
 
   /**
    * If true, long-running tool calls are moved to the background after `backgroundThreshold`
    * and the agent is notified asynchronously when they complete.
    *
    * Currently unstable — disabled by default.
-   *
    * @default false
    */
   enableToolBackgrounding?: boolean;
@@ -66,6 +66,11 @@ interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * Provider for space-level MCP server configs, called on each turn.
+   */
+  getMcpServers?: () => McpServer.McpServer[];
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -78,7 +83,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
       key: AGENT_PROCESS_KEY,
-      input: Schema.String,
+      // String member keeps queue entries persisted before the block-array widening decodable.
+      input: Schema.Union(Schema.String, Schema.Array(ContentBlock.Any)),
       output: Schema.Void,
       services: [
         Database.Service,
@@ -102,8 +108,20 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const feed = yield* Database.resolve(feedDxn, Feed.Feed).pipe(Effect.orDie);
+        // Steering instructions travel as a spawn annotation (the session is feed-centric and cannot
+        // reach its Chat); a broken ref degrades to an unsteered session rather than failing the process.
+        const instructionsDxn = Annotation.getDictionary(ctx.params.annotations, Process.InstructionsAnnotation).pipe(
+          Option.getOrUndefined,
+        );
+        const instructions = instructionsDxn
+          ? yield* Database.resolve(instructionsDxn, Instructions.Instructions).pipe(
+              Effect.orElseSucceed(() => undefined),
+            )
+          : undefined;
         const runtime = yield* Effect.runtime<Database.Service>();
-        const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
+        const session = yield* EffectEx.acquireReleaseResource(
+          () => new AiSession.Session({ feed, runtime, instructions: instructions ? [instructions] : [] }),
+        );
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsCell.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);
@@ -195,9 +213,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               alarmManager.reconcile(true);
             }),
           }),
-          onInput: Effect.fnUntraced(function* (prompt: string) {
-            log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
-            inputQueue.push({ _tag: 'prompt', content: [ContentBlock.Text.make({ text: prompt })] });
+          onInput: Effect.fnUntraced(function* (prompt: string | readonly ContentBlock.Any[]) {
+            log('agent onInput received', { backlog: inputQueue.length });
+            const content = typeof prompt === 'string' ? [ContentBlock.Text.make({ text: prompt })] : [...prompt];
+            inputQueue.push({ _tag: 'prompt', content });
             log('agent onInput persisting queue', { depth: inputQueue.length });
             yield* AgentEventsCell.set(inputQueue);
             log('agent onInput persisted', { depth: inputQueue.length });

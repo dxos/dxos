@@ -10,8 +10,10 @@ import type * as Stream from 'effect/Stream';
 
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import type { ContentBlock } from '@dxos/types';
 
 import type * as Trace from './Trace';
+import { Instructions } from './types';
 
 /**
  * Service interface for the agent session manager.
@@ -52,9 +54,9 @@ export interface Session {
   addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, Database.Service>;
 
   /**
-   * Submits a prompt to the agent.
+   * Submit a turn: a plain user prompt, or pre-built content blocks (e.g. synthetic context + prompt).
    */
-  submitPrompt: (prompt: string) => Effect.Effect<void>;
+  submitPrompt: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>;
 
   /**
    * Wait until agent has completed its work.
@@ -87,4 +89,10 @@ export interface GetSessionOptions {
   // the model into the agent process — the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
+  /**
+   * Instructions steering the conversation (typically the Chat's `instructions` ref), persisted as a
+   * spawn annotation so a re-hydrated process recovers it. Read at spawn only: repointing requires a
+   * process restart (same staleness model as `model`/`provider`).
+   */
+  readonly instructions?: Ref.Ref<Instructions.Instructions>;
 }

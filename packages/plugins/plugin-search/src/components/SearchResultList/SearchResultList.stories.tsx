@@ -11,10 +11,11 @@ import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { type SearchResult, buildSnippet } from '@dxos/react-ui-search';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
@@ -66,7 +67,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div role='none' className='flex flex-col gap-2 p-2 max-w-[32rem]'>
+    <div className='flex flex-col gap-2 p-2 max-w-[32rem]'>
       <input
         type='text'
         placeholder='Search…'

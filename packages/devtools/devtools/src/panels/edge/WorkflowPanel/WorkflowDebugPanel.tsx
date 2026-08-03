@@ -3,14 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Layer from 'effect/Layer';
+import * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type RuntimeServices, ServiceContainer } from '@dxos/compute-runtime';
+import { AiService } from '@dxos/ai';
+import { Credential, Operation, Trace } from '@dxos/compute';
+import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
-import { Database } from '@dxos/echo';
+import { Database, Registry } from '@dxos/echo';
+import { makeRegistry } from '@dxos/echo-client';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -229,19 +232,35 @@ const RobotAvatar = () => (
   </Avatar.Root>
 );
 
-const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices> => {
-  return new ServiceContainer()
-    .setServices({
-      trace: {
-        write: (event, payload) => {
-          log.info(event.key, payload as object);
-        },
+const createLocalExecutionContext = (
+  space: Space,
+): Layer.Layer<
+  | AiService.AiService
+  | Credential.CredentialsService
+  | Database.Service
+  | Trace.TraceService
+  | Operation.Service
+  | Registry.Service
+> => {
+  return Layer.mergeAll(
+    AiService.notAvailable,
+    Layer.succeed(Credential.CredentialsService, new ConfiguredCredentialsService()),
+    Database.layer(space.db),
+    Layer.succeed(Trace.TraceService, {
+      write: (event, payload) => {
+        log.info(event.key, payload as object);
       },
-      database: Database.makeService(space.db),
-      // Local execution context: remote invocation should not occur.
-      functionCallService: { invoke: () => Effect.die('No remote operation invoker configured') },
-    })
-    .createLayer();
+    }),
+    // Local execution context: operations are not invoked; any call dies loudly.
+    Layer.succeed(Operation.Service, {
+      invoke: () => Effect.die('Operation.Service not available in local workflow execution.'),
+      schedule: () => Effect.die('Operation.Service not available in local workflow execution.'),
+      invokePromise: async () => ({
+        error: new Error('Operation.Service not available in local workflow execution.'),
+      }),
+    } satisfies Operation.OperationService),
+    Layer.succeed(Registry.Service, makeRegistry()),
+  );
 };
 
 const inputTemplateFromAst = (ast: SchemaAST.AST): string => {

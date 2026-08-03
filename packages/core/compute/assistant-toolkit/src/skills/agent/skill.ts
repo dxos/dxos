@@ -5,8 +5,6 @@
 import { Skill, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { AddArtifact } from './operations/definitions';
-
 const SKILL_KEY = 'org.dxos.skill.agent';
 
 /**
@@ -21,10 +19,9 @@ const make = () =>
       source: trim`
         You work on an agent. Each agent has instructions - the goal of the agent.
         The agent plan shows the current progress of the agent.
-        Agent has a number of associated artifacts you can read/write.
-        You can edit them if necessary.
-
-        IMPORTANT: When creating a new artifact, always add it to the agent using the add-artifact function.
+        Durable work products belong to the agent's project: when you create an object the agent
+        should keep, file it into the project's artifacts (the add-artifact tool of the Project
+        skill) rather than leaving it loose in the space.
 
         {{#with agent}}
         <agent id="{{id}}" name="{{name}}">
@@ -34,14 +31,6 @@ const make = () =>
           <plan>
             {{plan}}
           </plan>
-
-          <artifacts>
-          {{#each artifacts}}
-            <artifact type="{{type}}" dxn="{{dxn}}">
-              {{name}}
-            </artifact>
-          {{/each}}
-          </artifacts>
         </agent>
         {{/with}}
       `,
@@ -53,7 +42,6 @@ const make = () =>
         },
       ],
     }),
-    tools: Skill.toolDefinitions({ operations: [AddArtifact] }),
   });
 
 const skill: Skill.Definition = {

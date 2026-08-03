@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Card, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';

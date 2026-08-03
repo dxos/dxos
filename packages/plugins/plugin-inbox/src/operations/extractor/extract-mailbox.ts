@@ -14,6 +14,7 @@ import { InboxOperation } from '../../types';
 
 const DEFAULT_CONCURRENCY = InboxOperation.DEFAULT_EXTRACT_MAILBOX_CONCURRENCY;
 
+/** @deprecated Use batch dispatchers like on-arrival extractors or direct ExtractMessage invocations instead. */
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractMailbox> = InboxOperation.ExtractMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox: mailboxRef, extractorId, concurrency = DEFAULT_CONCURRENCY }) {

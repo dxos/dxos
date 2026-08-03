@@ -66,6 +66,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -73,6 +74,7 @@
     "@dxos/plugin-thread": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/platform": "catalog:",
     "effect": "catalog:"
   },

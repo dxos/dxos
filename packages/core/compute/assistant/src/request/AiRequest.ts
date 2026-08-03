@@ -26,7 +26,7 @@ import {
   callTool,
   withoutToolCallParising,
 } from '@dxos/ai';
-import { Operation, type Skill, Trace } from '@dxos/compute';
+import { type Instructions, Operation, type Skill, Trace } from '@dxos/compute';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
@@ -76,6 +76,8 @@ export type RunProps<R = never> = {
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
+  /** Rendered inline into the system prompt; passed explicitly rather than inferred from `objects`. */
+  instructions?: readonly Instructions.Instructions[];
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
 };
 
@@ -85,6 +87,7 @@ export type BeginProps = {
   history?: Message.Message[];
   objects?: Obj.Unknown[];
   skills?: readonly Skill.Skill[];
+  instructions?: readonly Instructions.Instructions[];
 };
 
 export type TurnProps<R = never> = {
@@ -191,13 +194,14 @@ export class Request {
     history = [],
     skills = [],
     objects = [],
+    instructions = [],
   }: BeginProps): Effect.Effect<void, RunError, RunRequirements> =>
     Effect.gen(this, function* () {
       this._started = Date.now();
       this._history = [...history];
       this._pending = [];
 
-      const systemPrompt = yield* formatSystemPrompt({ system, skills, objects }).pipe(Effect.orDie);
+      const systemPrompt = yield* formatSystemPrompt({ system, skills, objects, instructions }).pipe(Effect.orDie);
 
       if (this._options.summarizationThreshold !== undefined) {
         const tokenCount = yield* AiPreprocessor.estimateTokens(
@@ -345,12 +349,15 @@ export class Request {
     history = [],
     objects = [],
     skills = [],
+    instructions = [],
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen(this, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills });
+      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills, instructions });
 
-      const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects }).pipe(Effect.orDie);
+      const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(
+        Effect.orDie,
+      );
 
       do {
         const { done, finishReason } = yield* this.runAgentTurn({ system, toolkit });

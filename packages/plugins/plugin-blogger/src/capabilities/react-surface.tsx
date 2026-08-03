@@ -8,8 +8,8 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { CommentsArticle } from '@dxos/plugin-comments';
 import { Markdown } from '@dxos/plugin-markdown';
+import { CommentsArticle } from '@dxos/plugin-review';
 
 import { PostArticle, PublicationArticle } from '#containers';
 import { Blog } from '#types';

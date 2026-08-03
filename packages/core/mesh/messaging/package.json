@@ -50,7 +50,6 @@
   },
   "devDependencies": {
     "@dxos/keyring": "workspace:*",
-    "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*"
   },
   "publishConfig": {

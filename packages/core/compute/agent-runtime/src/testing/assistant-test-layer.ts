@@ -32,6 +32,7 @@ import {
   ProcessManager,
   ProcessMonitor,
   RemoteProcessManager,
+  RemoteTraceMonitor,
   TriggerDispatcher,
   TriggerStateStore,
   configuredCredentialsLayer,
@@ -100,6 +101,7 @@ export type AssistantTestServices =
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
+  | ProcessManager.ProcessOperationInvoker.Service
   | Process.ProcessMonitorService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider
@@ -132,11 +134,15 @@ export const AssistantTestLayer = (
   // sharing a late-bound holder: the resolver reads the manager lazily (only at resolution time,
   // when the manager exists), and a downstream layer fills the holder once it is built.
   const processManagerHolder: ProcessManagerHolder = {};
+  const agentServiceHolder: AgentServiceHolder = {};
 
   return Layer.empty.pipe(
+    // Captures must sit above the layers they read (a provideMerge chain feeds upward).
+    Layer.provideMerge(captureAgentService(agentServiceHolder)),
     Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
     Layer.provideMerge(ProcessMonitor.layer),
     Layer.provideMerge(RemoteProcessManager.layerNoop),
+    Layer.provideMerge(RemoteTraceMonitor.layerNoop),
     Layer.provideMerge(AgentServiceRuntime.layer(agentOptions)),
     Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     // Order matters: in a `provideMerge` chain each layer's *requirements* are satisfied only by
@@ -145,7 +151,7 @@ export const AssistantTestLayer = (
     // the holder), so they must appear in exactly this order.
     Layer.provideMerge(captureProcessManager(processManagerHolder)),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
-    Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder)),
+    Layer.provideMerge(AssistantTestServiceResolverLayer(options, processManagerHolder, agentServiceHolder)),
     Layer.provideMerge(AiService.model(DXN.getName(resolvedModel), { provider: resolvedProvider })),
     Layer.provideMerge(AssistantTestTracingLayer(options.tracing ?? 'noop')),
     Layer.provideMerge(
@@ -166,6 +172,19 @@ interface ProcessManagerHolder {
   current?: Context.Tag.Service<ProcessManager.Service>;
 }
 
+/** Late-bound reference to the {@link AgentService.AgentService}, filled once the service is built. */
+interface AgentServiceHolder {
+  current?: Context.Tag.Service<AgentService.AgentService>;
+}
+
+/** Fills the {@link AgentServiceHolder}, letting the resolver serve operations that relay into agent sessions. */
+const captureAgentService = (holder: AgentServiceHolder): Layer.Layer<never, never, AgentService.AgentService> =>
+  Layer.effectDiscard(
+    Effect.gen(function* () {
+      holder.current = yield* AgentService.AgentService;
+    }),
+  );
+
 /** Fills the {@link ProcessManagerHolder} once the manager is available, breaking the build cycle. */
 const captureProcessManager = (holder: ProcessManagerHolder): Layer.Layer<never, never, ProcessManager.Service> =>
   Layer.effectDiscard(
@@ -180,6 +199,7 @@ const captureProcessManager = (holder: ProcessManagerHolder): Layer.Layer<never,
 export const AssistantTestServiceResolverLayer = (
   { extraServices = Layer.empty }: Pick<TestLayerOptions, 'extraServices'>,
   processManagerHolder: ProcessManagerHolder,
+  agentServiceHolder: AgentServiceHolder = {},
 ) =>
   Layer.scoped(
     ServiceResolver.ServiceResolver,
@@ -206,6 +226,17 @@ export const AssistantTestServiceResolverLayer = (
             const runtime = yield* Effect.runtime<Database.Service>();
             return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
           }).pipe(Effect.provide(services)),
+        ),
+        ServiceResolver.succeed(AgentService.AgentService, () =>
+          Effect.gen(function* () {
+            // Read lazily (like the process manager): filled by `captureAgentService` before any
+            // operation resolution runs.
+            const agentService = agentServiceHolder.current;
+            if (!agentService) {
+              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.AgentService.key));
+            }
+            return agentService;
+          }),
         ),
         yield* ServiceResolver.fromRequirements(
           Database.Service,

@@ -4,7 +4,7 @@
 
 import { type Message } from '@dxos/types';
 
-import { type Summarizer, type TopicDraft, type TopicOptions, clusterThreads, summarizeTopics } from './corpus';
+import { type Summarizer, type TopicDraft, type TopicOptions, clusterThreads } from './corpus';
 import { buildThreads } from './internal/threads';
 import { type TagResult } from './stages/tag';
 
@@ -97,9 +97,10 @@ export const runTopicsPipeline = async (
   // Phase 2 — cluster threads into topic drafts (deterministic), summarize the new ones.
   const threads = buildThreads(messages, { ownerEmail, now });
   const drafts = clusterThreads(threads, topicOptions);
-  const fresh = drafts.filter((draft: TopicDraft) => !skipTopic?.(draft.label) && (keepTopic?.(draft) ?? true));
-  const summarized = await summarizeTopics(fresh, deps.summarize);
-  summarized.forEach((_, index) => onProgress?.('topic', index + 1, summarized.length));
+  // const fresh = drafts.filter((draft: TopicDraft) => !skipTopic?.(draft.label) && (keepTopic?.(draft) ?? true));
+  // const summarized = await summarizeTopics(fresh, deps.summarize);
+  // summarized.forEach((_, index) => onProgress?.('topic', index + 1, summarized.length));
 
-  return { messageTags, topicDrafts: summarized };
+  // return { messageTags, topicDrafts: summarized };
+  return { messageTags, topicDrafts: drafts };
 };

@@ -103,6 +103,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
@@ -129,7 +130,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:"
   },

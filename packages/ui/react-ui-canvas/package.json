@@ -28,6 +28,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "bind-event-listener": "catalog:",

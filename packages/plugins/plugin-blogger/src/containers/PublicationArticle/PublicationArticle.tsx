@@ -5,13 +5,13 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector/types';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
@@ -52,7 +52,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   const handleOpenPost = useCallback(
     (post: Blog.Post) => {
       void invokePromise(LayoutOperation.Open, {
-        subject: [Paths.getObjectPathFromObject(post)],
+        subject: [GraphPath.getObjectPathFromObject(post)],
         pivotId: attendableId,
         navigation: 'immediate',
       });

@@ -23,12 +23,17 @@ export const DeviceKind = Schema.Literal('unknown', 'browser', 'native', 'mobile
 export type DeviceKind = typeof DeviceKind.Type;
 
 /**
- * Public view of the local identity. Replaces the legacy `Identity` proxy type; `identityKey`
- * and `spaceKey` (credential plumbing) are dropped in favor of the DID.
+ * Public view of the local identity. Keyed by the DID; `identityKey` (hex) is retained for
+ * consumers that seed deterministic UI (avatar/hue) or address the legacy credential key.
+ * `data` carries arbitrary profile metadata (e.g. avatar emoji, hue).
  */
 export const Info = Schema.Struct({
   did: IdentityDid,
+  /** Hex-encoded identity (credential) key, when known. */
+  identityKey: Schema.optional(Schema.String),
   displayName: Schema.optional(Schema.String),
+  /** Arbitrary profile metadata. */
+  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 });
 export type Info = typeof Info.Type;
 
@@ -45,6 +50,30 @@ export const DeviceInfo = Schema.Struct({
   current: Schema.Boolean,
 });
 export type DeviceInfo = typeof DeviceInfo.Type;
+
+/**
+ * Public view of a HALO credential. Replaces direct consumption of the protobuf `Credential`:
+ * `type` is the subject assertion's `@type`, `id` its hex-encoded credential id.
+ */
+export const Credential = Schema.Struct({
+  /** Hex-encoded credential id, when assigned. */
+  id: Schema.optional(Schema.String),
+  /** The subject assertion's `@type` (e.g. `dxos.halo.credentials.IdentityRecovery`). */
+  type: Schema.String,
+  issuanceDate: Schema.optional(Schema.DateFromSelf),
+});
+export type Credential = typeof Credential.Type;
+
+/**
+ * Options for a self-issued `ServiceAccess` credential granting the identity access to an
+ * EDGE/Hub service.
+ */
+export type ServiceAccessOptions = {
+  /** Target server name (e.g. `hub.dxos.network`). */
+  readonly serverName: string;
+  /** Capabilities to grant (e.g. `['composer:beta']`). */
+  readonly capabilities: readonly string[];
+};
 
 /**
  * Recovery credential presented to re-admit a device to an existing identity.
@@ -68,14 +97,36 @@ export class Service extends Context.Tag('@dxos/halo/Identity')<
      * for updates.
      */
     readonly identity: Stream.Stream<Option.Option<Info>>;
+    /**
+     * Synchronous snapshot of the local identity (`Option.none` when none exists). For imperative
+     * callers (non-React, non-Effect) that need the current value without subscribing.
+     */
+    readonly getSnapshot: () => Option.Option<Info>;
+    /**
+     * Subscribe to local-identity changes (imperative). Invokes `callback` immediately with the
+     * current value, then on each change. Returns an unsubscribe function.
+     */
+    readonly subscribe: (callback: (identity: Option.Option<Info>) => void) => () => void;
     /** Create the local identity (and its first device). */
     readonly create: (options?: { displayName?: string; deviceLabel?: string }) => Effect.Effect<Info, IdentityError>;
     /** Re-admit this device to an existing identity via a recovery credential. */
     readonly recover: (args: RecoverArgs) => Effect.Effect<Info, IdentityError>;
     /** Update the identity profile. */
-    readonly updateProfile: (profile: { displayName?: string }) => Effect.Effect<Info, IdentityError>;
+    readonly updateProfile: (profile: {
+      displayName?: string;
+      data?: Record<string, unknown>;
+    }) => Effect.Effect<Info, IdentityError>;
     /** Devices belonging to the local identity; emits the current set immediately. */
     readonly devices: Stream.Stream<readonly DeviceInfo[]>;
+    /** Synchronous snapshot of the local identity's devices, for imperative callers. */
+    readonly getDevicesSnapshot: () => readonly DeviceInfo[];
+    /** HALO credentials of the local identity; emits the current set immediately. */
+    readonly credentials: Stream.Stream<readonly Credential[]>;
+    /**
+     * Grant this identity access to an EDGE/Hub service by writing a `ServiceAccess` credential
+     * (self-issued). Replaces hand-constructing the protobuf credential at the call site.
+     */
+    readonly grantServiceAccess: (options: ServiceAccessOptions) => Effect.Effect<void, IdentityError>;
     /** Initiate a device invitation (host side). */
     readonly share: (options?: Invitation.ShareOptions) => Effect.Effect<Invitation.Flow, IdentityError>;
     /** Redeem a device-invitation code on a new device (guest side). */
@@ -90,6 +141,11 @@ export const identity: Stream.Stream<Option.Option<Info>, never, Service> = Stre
   Effect.map(Service, (service) => service.identity),
 );
 
+/** Synchronous snapshot of the local identity (requires {@link Service}). */
+export const getSnapshot: Effect.Effect<Option.Option<Info>, never, Service> = Effect.map(Service, (service) =>
+  service.getSnapshot(),
+);
+
 /** Create the local identity (requires {@link Service}). */
 export const create = (options?: {
   displayName?: string;
@@ -101,13 +157,29 @@ export const recover = (args: RecoverArgs): Effect.Effect<Info, IdentityError, S
   Effect.flatMap(Service, (service) => service.recover(args));
 
 /** Update the identity profile (requires {@link Service}). */
-export const updateProfile = (profile: { displayName?: string }): Effect.Effect<Info, IdentityError, Service> =>
-  Effect.flatMap(Service, (service) => service.updateProfile(profile));
+export const updateProfile = (profile: {
+  displayName?: string;
+  data?: Record<string, unknown>;
+}): Effect.Effect<Info, IdentityError, Service> => Effect.flatMap(Service, (service) => service.updateProfile(profile));
 
 /** Devices belonging to the local identity as a current-value stream (requires {@link Service}). */
 export const devices: Stream.Stream<readonly DeviceInfo[], never, Service> = Stream.unwrap(
   Effect.map(Service, (service) => service.devices),
 );
+
+/** Synchronous snapshot of the local identity's devices (requires {@link Service}). */
+export const getDevicesSnapshot: Effect.Effect<readonly DeviceInfo[], never, Service> = Effect.map(Service, (service) =>
+  service.getDevicesSnapshot(),
+);
+
+/** HALO credentials as a current-value stream (requires {@link Service}). */
+export const credentials: Stream.Stream<readonly Credential[], never, Service> = Stream.unwrap(
+  Effect.map(Service, (service) => service.credentials),
+);
+
+/** Grant the identity access to an EDGE/Hub service (requires {@link Service}). */
+export const grantServiceAccess = (options: ServiceAccessOptions): Effect.Effect<void, IdentityError, Service> =>
+  Effect.flatMap(Service, (service) => service.grantServiceAccess(options));
 
 /** Initiate a device invitation (requires {@link Service}). */
 export const share = (options?: Invitation.ShareOptions): Effect.Effect<Invitation.Flow, IdentityError, Service> =>

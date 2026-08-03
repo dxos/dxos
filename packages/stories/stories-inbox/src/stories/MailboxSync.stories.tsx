@@ -13,6 +13,7 @@ import { Operation, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Connection } from '@dxos/plugin-connector';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
@@ -29,10 +30,12 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TagIndex } from '@dxos/schema';
-import { ModuleContainer } from '@dxos/story-modules';
+import { ModuleContainer } from '@dxos/storybook-testing';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { MailboxTriggerRelation, Module, StoryModulesPlugin, StorySyncPlugin } from '../testing';
+import { StoryRole } from '../modules';
+import { StorySyncPlugin } from '../testing';
+import { StoryModulesPlugin } from '../testing/modules';
 
 const TYPES = [
   AccessToken.AccessToken,
@@ -40,7 +43,6 @@ const TYPES = [
   Cursor.Cursor,
   Feed.Feed,
   Mailbox.Mailbox,
-  MailboxTriggerRelation,
   Message.Message,
   Operation.PersistentOperation,
   Organization.Organization,
@@ -52,13 +54,13 @@ const TYPES = [
 
 // Computed once at module scope (not inside the `withPluginManager` initializer, which re-runs on
 // every render) so the story doesn't spawn a fresh dedicated worker/coordinator on each re-render.
-const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'dev' }));
+const CLIENT_SERVICES = persistentClientServices(configPreset({ edge: 'main' }));
 
 const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSettings],
+    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
@@ -79,6 +81,7 @@ const DECORATORS = [
       InboxPlugin(),
       ConnectorPlugin(),
       DebugPlugin({}),
+      AssistantPlugin(),
       PreviewPlugin(),
       ProgressPlugin(),
       RoutinePlugin(),
@@ -92,9 +95,10 @@ const DECORATORS = [
 const DefaultStory = () => (
   <ModuleContainer
     layout={[
-      [Module.Mailbox, Module.Message],
-      [Module.Archive, Module.Stats],
-      [Module.Connector, Module.Triggers],
+      [StoryRole.Mailbox, StoryRole.Message],
+      [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
+      [StoryRole.Connector, StoryRole.Triggers],
+      [StoryRole.Trace, StoryRole.SwarmTrace],
     ]}
     compact
   />

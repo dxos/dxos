@@ -5,8 +5,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { type Database, Filter, Obj, type Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { useQuery } from '@dxos/react-client/echo';
 
 import { SHADOW_KEY_SOURCE, findShadowObject } from './shadow';
 

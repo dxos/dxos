@@ -7,11 +7,12 @@ import { useEffect, useMemo } from 'react';
 import { Operation, Script } from '@dxos/compute';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
 import { Obj, Query, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
-import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
+import { type Space, getSpace } from '@dxos/react-client/echo';
 import { type TFunction } from '@dxos/react-ui';
-import { createMenuAction } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import { messageValence } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -39,7 +40,15 @@ export type CreateDeployOptions = {
   t: TFunction;
 };
 
-export const createDeploy = ({ state, script, space, fn, client, existingFunctionId, t }: CreateDeployOptions) => {
+export const createDeploy = ({
+  state,
+  script,
+  space,
+  fn,
+  client,
+  existingFunctionId,
+  t,
+}: CreateDeployOptions): ActionGraphProps => {
   const { value } = state;
 
   // TODO(wittjosiah): Should this be an action?

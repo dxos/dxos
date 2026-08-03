@@ -7,7 +7,7 @@ tasks:
   build-exemplar:
     script: pnpm run --silent build-exemplar
     deps:
-      - ^:compile
+      - ^:build
     inputs:
       - scripts/build-exemplar-space.ts
       - src/content/space-tour.md

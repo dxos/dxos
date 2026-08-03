@@ -3,7 +3,7 @@
 //
 
 import { EditorSelection, type Extension, Transaction } from '@codemirror/state';
-import { type EditorView } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
@@ -59,16 +59,36 @@ import { isTruthy } from '@dxos/util';
 import { footer, setFooterVisibleEffect } from './footer';
 import { type StreamerOptions, createStreamer } from './stream';
 
+/** Document offset range (CodeMirror positions). */
+export type DocumentRange = { from: number; to: number };
+
 export interface MarkdownStreamController extends XmlWidgetStateManager {
   get length(): number | undefined;
   focus: () => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
+  /** Scroll the given document position into view. */
+  scrollTo: (pos: number, options?: { y?: 'start' | 'center' | 'end' | 'nearest' }) => void;
+  /** The document range currently visible in the viewport, or `undefined` if not mounted. */
+  getVisibleRange: () => DocumentRange | undefined;
+  /** Subscribe to visible-range changes (fires immediately with the current range). Returns an unsubscribe fn. */
+  onVisibleRangeChange: (cb: (range: DocumentRange) => void) => () => void;
   navigateNext: () => void;
   navigatePrevious: () => void;
   setContext: (context: any) => void;
+  /** Re-applies the last context set. Idempotent; a no-op when none was set or the view is absent. */
+  flushContext: () => void;
   setContent: (text: string) => Promise<void>;
   append: (text: string) => Promise<void>;
 }
+
+/** Map the scroll container's top/bottom edges to document positions. */
+const computeVisibleRange = (view: EditorView): DocumentRange => {
+  const rect = view.scrollDOM.getBoundingClientRect();
+  // `posAtCoords(_, false)` clamps to the nearest position rather than returning null.
+  const from = view.posAtCoords({ x: rect.left + 1, y: rect.top + 1 }, false);
+  const to = view.posAtCoords({ x: rect.left + 1, y: rect.bottom - 1 }, false);
+  return { from, to };
+};
 
 export type MarkdownStreamEvent = {
   type: 'submit';
@@ -141,6 +161,9 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     // DOM node for the footer block widget — populated when its decoration mounts.
     const [footerRoot, setFooterRoot] = useState<HTMLElement | null>(null);
 
+    // Survives a context set before the view exists; flushed once it does (see `flushContext`).
+    const pendingContextRef = useRef<{ value: any } | undefined>(undefined);
+
     // Codemirror editor.
     const { parentRef, view, viewRef, widgets } = useMarkdownStreamTextEditor(contentRef, {
       slots,
@@ -168,9 +191,11 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
           return;
         }
 
-        // Set content and scroll to bottom.
+        // Set content and scroll to bottom. Re-assert the host context rather than clearing it: it
+        // belongs to the host, not the document, so nulling it here would strand every widget in the
+        // replacement document with `context: undefined`.
         viewRef.current.dispatch({
-          effects: [xmlTagContextEffect.of(null), xmlTagResetEffect.of(null)],
+          effects: [xmlTagContextEffect.of(pendingContextRef.current?.value ?? null), xmlTagResetEffect.of(null)],
           changes: [{ from: 0, to: viewRef.current.state.doc.length, insert: text }],
           annotations: typewriterBypass.of(true),
           selection: EditorSelection.cursor(text.length),
@@ -179,15 +204,24 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         // New queue.
         setQueue(Effect.runSync(Queue.unbounded<string>()));
       },
-      [contentRef, viewRef, setQueue],
+      [contentRef, viewRef, setQueue, pendingContextRef],
     );
 
     // Controller API.
     useImperativeHandle(
       forwardedRef,
-      () => createMarkdownStreamController({ contentRef, viewRef, queueRef, onReset }),
+      () => createMarkdownStreamController({ contentRef, viewRef, queueRef, onReset, pendingContextRef }),
       [onReset],
     );
+
+    // Apply a context that was set before the view existed — the dispatch in `setContext` is a no-op
+    // until then, and a host mounting the controller has no way to know.
+    useEffect(() => {
+      const pending = pendingContextRef.current;
+      if (view && pending) {
+        view.dispatch({ effects: xmlTagContextEffect.of(pending.value) });
+      }
+    }, [view]);
 
     // Widget events.
     useEffect(() => {
@@ -299,6 +333,7 @@ const useMarkdownStreamTextEditor = (
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
+            // TODO(burdon): Folding gets progressively off due to some widgets?
             turnFolding({ source: turnSource }),
             scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
@@ -379,16 +414,25 @@ type MarkdownStreamControllerDeps = {
   viewRef: RefObject<EditorView | null>;
   queueRef: RefObject<Queue.Queue<string>>;
   onReset: (text: string) => Promise<void>;
+  /**
+   * Holds a context set before the view existed, for {@link flushContext} to apply once it does.
+   * Also re-applied after a document reset, which rebuilds decorations from a state without it.
+   */
+  pendingContextRef: RefObject<{ value: any } | undefined>;
 };
 
 /**
  * External controller API.
+ *
+ * @internal Exported for tests via `@dxos/react-ui-markdown/testing`; hosts get this through the
+ * component's ref.
  */
-const createMarkdownStreamController = ({
+export const createMarkdownStreamController = ({
   contentRef,
   viewRef,
   queueRef,
   onReset,
+  pendingContextRef,
 }: MarkdownStreamControllerDeps): MarkdownStreamController => {
   return {
     get length() {
@@ -407,6 +451,33 @@ const createMarkdownStreamController = ({
       });
     },
 
+    /** Scroll the given document position into view. */
+    scrollTo: (pos: number, options?: { y?: 'start' | 'center' | 'end' | 'nearest' }) => {
+      const view = viewRef.current;
+      if (!view) {
+        return;
+      }
+      const clamped = Math.max(0, Math.min(pos, view.state.doc.length));
+      view.dispatch({ effects: EditorView.scrollIntoView(clamped, { y: options?.y ?? 'start' }) });
+    },
+
+    /** The document range currently visible in the viewport. */
+    getVisibleRange: () => {
+      const view = viewRef.current;
+      return view ? computeVisibleRange(view) : undefined;
+    },
+
+    /** Subscribe to visible-range changes (scroll). Fires immediately with the current range. */
+    onVisibleRangeChange: (cb: (range: DocumentRange) => void) => {
+      const view = viewRef.current;
+      if (!view) {
+        return () => {};
+      }
+      const handler = () => cb(computeVisibleRange(view));
+      handler();
+      return addEventListener(view.scrollDOM, 'scroll', handler, { passive: true });
+    },
+
     /** Navigate previous prompt. */
     navigatePrevious: () => {
       viewRef.current?.dispatch({
@@ -421,11 +492,28 @@ const createMarkdownStreamController = ({
       });
     },
 
-    /** Set the context for widgets (XML tags). */
+    /**
+     * Set the context for widgets (XML tags).
+     *
+     * Remembered as well as dispatched: a host has no signal for when the view exists, and the
+     * dispatch is a no-op before it does — so without this a context set on mount is silently lost and
+     * every widget callback through it dies on an optional call. {@link flushContext} re-applies it.
+     */
     setContext: (context: any) => {
+      pendingContextRef.current = { value: context };
       viewRef.current?.dispatch({
         effects: xmlTagContextEffect.of(context),
       });
+    },
+
+    /** Re-applies the last context set, if any. Called once the view exists and after a reset. */
+    flushContext: () => {
+      const pending = pendingContextRef.current;
+      if (pending && viewRef.current) {
+        viewRef.current.dispatch({
+          effects: xmlTagContextEffect.of(pending.value),
+        });
+      }
     },
 
     /** Reset document. */

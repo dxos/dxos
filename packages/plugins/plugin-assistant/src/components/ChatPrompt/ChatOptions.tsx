@@ -7,7 +7,7 @@ import React, { type JSX, useCallback, useMemo, useState } from 'react';
 import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Database, Filter, Obj, type Registry, Type, URI } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -79,14 +79,14 @@ export const ChatOptions = ({ chat, db, context, registry, presets, preset, onPr
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Panel>
                   <Tabs.Tablist classNames={[styles.toolbar]}>
-                    <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                    <Tabs.IconTab value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                    <Tabs.IconTab
+                    <Tabs.IconButton value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+                    <Tabs.IconButton value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
+                    <Tabs.IconButton
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
                       label={t('options.mcp.title')}
                     />
-                    <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
+                    <Tabs.IconButton value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
                   </Tabs.Tablist>
                 </Tabs.Viewport>
               </Tabs.Root>

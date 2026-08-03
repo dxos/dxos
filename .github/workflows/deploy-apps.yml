@@ -36,7 +36,7 @@ on:
         # (GitHub requires a choice default to be a listed option, hence `all` is the first entry.)
         description: App to deploy (default `all` = the whole environment)
         type: choice
-        options: [all, composer, docs, storybook, todomvc, tasks, testbench]
+        options: [all, composer, docs, storybook-react, todomvc, tasks, testbench]
         default: all
       bump:
         # Only used by the production `release` job (the Composer version bump); ignored otherwise.
@@ -51,7 +51,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write # Commit the Composer version bump to main + push version / deploy pointer tags.
+  contents: read # Only `deploy` writes (its pointer tags); the version bump to main uses dxos-bot's PAT.
 
 jobs:
   # Resolve the run into named booleans so downstream `if:` conditions stay readable. Outputs:
@@ -125,6 +125,9 @@ jobs:
         with:
           fetch-depth: 0
           ref: main # A production release always cuts from main.
+          # Leave no credential in the workspace: persisted, it would be readable by the repo-controlled
+          # bump/sync scripts below, turning "can land a commit on main" into "can read dxos-bot's PAT".
+          persist-credentials: false
 
       # composer-app + composer-crx share the desktop/extension version line; bump-composer-version.mjs bumps
       # both in lockstep and prints the new version. sync-versions.mjs then stamps the derived files.
@@ -136,15 +139,36 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Composer -> $version"
 
+      # dxos-bot's PAT reaches only this step: main requires the merge queue and its push allow-list is
+      # empty, so only an admin identity (dxos-bot, with enforce_admins off) can land the bump.
       - name: Commit + tag on main
         id: commit
+        env:
+          GH_TOKEN: ${{ secrets.GH_DXOS_BOT_PAT }}
         run: |
           git config user.name 'dxos-bot'
           git config user.email 'bot@dxos.org'
+          remote="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}"
           git add -A
-          git commit -m "chore(composer): release v${{ steps.bump.outputs.version }}"
+          # `[skip ci]` because a PAT push (unlike GITHUB_TOKEN) triggers workflows, and a Check + `main`
+          # deploy of a version-bump-only commit would race this run's production deploy.
+          git commit -m "composer: release v${{ steps.bump.outputs.version }} [skip ci]"
+
+          # Rebase onto anything the merge queue landed while this run was bumping, rather than losing the
+          # release to a non-fast-forward rejection.
+          attempt=1
+          while ! git push "$remote" HEAD:main; do
+            if [ "$attempt" -ge 3 ]; then
+              echo "::error::main moved under the release commit 3 times — rerun the workflow"
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+            git pull --rebase "$remote" main
+          done
+
+          # Tagged after the push so the tag names the commit that actually landed (a rebase rewrites it).
           git tag "composer-v${{ steps.bump.outputs.version }}"
-          git push --follow-tags origin HEAD:main
+          git push "$remote" "refs/tags/composer-v${{ steps.bump.outputs.version }}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   # Build Composer's web bundle ONCE and share it as an artifact so the web deploy + native (Tauri) jobs
@@ -208,6 +232,8 @@ jobs:
     needs: [plan, release, build-bundle]
     # Run once the prep jobs succeeded or were skipped (main / static-only); skip only on a failure.
     if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' }}
+    permissions:
+      contents: write # Force-updates the per-app `<app>/<env>` deploy pointer tags.
     runs-on: depot-ubuntu-24.04-4
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -226,6 +252,24 @@ jobs:
           fetch-depth: 0
           lfs: true
           ref: ${{ needs.release.outputs.sha || github.sha }}
+
+      # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # Catches e.g. `app=storybook-react` on an environment it doesn't define (no env.staging/labs) —
+      # before this existed, bundle-env.mjs/deploy-env.mjs silently no-op'd and the job still went green
+      # with a false "deploying"/"succeeded" Discord ping despite deploying nothing. Runs before the
+      # "started" notification so an invalid combo never posts to Discord at all.
+      - name: Check app targets this environment
+        id: validate
+        run: |
+          resolved=$(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" "$DEPLOY_APP")
+          if [ -z "$resolved" ]; then
+            valid=$(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" all | paste -sd, - | sed 's/,/, /g')
+            echo "::error::\"$DEPLOY_APP\" has no env.$DEPLOY_ENV — nothing would be deployed. Apps with that env: ${valid:-(none)}"
+            exit 1
+          fi
 
       - name: Notify Discord — deploy started
         if: env.DEPLOY_ENV != 'main'
@@ -256,9 +300,6 @@ jobs:
           DX_POSTHOG_API_HOST: ${{ secrets.DX_POSTHOG_API_HOST }}
           IPDATA_API_KEY: ${{ secrets.IPDATA_API_KEY }}
           IPFS_API_SECRET: ${{ secrets.IPFS_API_SECRET }}
-
-      - name: Setup
-        uses: ./.github/actions/setup
 
       # Reuse the prebuilt Composer bundle when the prep job produced one — populating out/composer means
       # bundle-env.mjs reuses it instead of rebuilding.
@@ -305,7 +346,9 @@ jobs:
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
       - name: Notify Discord — deploy failed
-        if: failure() && env.DEPLOY_ENV != 'main'
+        # Skip when it was the "app targets this environment" check that failed — that's an invalid
+        # app/environment combo caught before any deploy was attempted, not a real deploy failure.
+        if: failure() && env.DEPLOY_ENV != 'main' && steps.validate.conclusion == 'success'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}

@@ -4,8 +4,8 @@
 
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Identity } from '@dxos/halo';
 import { PublicKey } from '@dxos/keys';
-import { type Identity } from '@dxos/react-client/halo';
 import { type ThemedClassName, setRef } from '@dxos/react-ui';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
 import { type Message } from '@dxos/types';
@@ -14,7 +14,7 @@ import { keyToFallback } from '@dxos/util';
 import { type Assistant } from '../../types';
 import { type ChatEvent } from '../Chat';
 import { componentRegistry, createBlockRenderer } from './registry';
-import { MessageSyncer } from './sync';
+import { type MessageSpan, MessageSyncer } from './sync';
 
 const defaultOptions: MarkdownStreamProps['options'] = {
   autoScroll: true,
@@ -25,11 +25,13 @@ const defaultOptions: MarkdownStreamProps['options'] = {
 
 export type ChatThreadProps = ThemedClassName<
   {
-    identity?: Identity;
+    identity?: Identity.Info;
     messages?: Message.Message[];
     error?: Error;
     viewType?: Assistant.ChatView;
     onEvent?: (event: ChatEvent) => void;
+    /** Publishes the syncer's per-message document spans after each update (minimap, prompt nav). */
+    onSpans?: (spans: MessageSpan[]) => void;
   } & Pick<MarkdownStreamProps, 'options' | 'debug' | 'extensions' | 'footer'>
 >;
 
@@ -46,6 +48,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       extensions,
       viewType,
       onEvent,
+      onSpans,
     },
     forwardedRef,
   ) => {
@@ -59,7 +62,9 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     const userHue = useMemo(
-      () => identity?.profile?.data?.hue || keyToFallback(identity?.identityKey ?? PublicKey.random()).hue,
+      () =>
+        identity?.data?.hue ||
+        keyToFallback(identity?.identityKey ? PublicKey.fromHex(identity.identityKey) : PublicKey.random()).hue,
       [identity],
     );
 
@@ -77,18 +82,41 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
       initializedRef.current = true;
     }, [controller, error]);
 
+    // Widget callbacks are routed through the syncer's context, so they must be referentially stable
+    // — rebuilding the syncer replaces the document.
+    const onEventRef = useRef(onEvent);
+    useEffect(() => {
+      onEventRef.current = onEvent;
+    }, [onEvent]);
+    const handleRewind = useCallback((id: string) => onEventRef.current?.({ type: 'rewind', id }), []);
+
     // Update document.
     const renderer = useMemo(() => createBlockRenderer(viewType), [viewType]);
-    const syncer = useMemo(() => controller && new MessageSyncer(controller, renderer), [controller, renderer]);
+    const syncer = useMemo(
+      () => controller && new MessageSyncer(controller, renderer, { onRewind: handleRewind }),
+      [controller, renderer, handleRewind],
+    );
     useEffect(() => {
       if (!syncer) {
         return;
       }
 
+      // Publish the context every pass: widget props read it from a CodeMirror state field, and
+      // `setContext` dispatches through `viewRef.current?` — a no-op before the view exists, so doing this
+      // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
+      controller?.setContext(syncer.context);
+
+      // Publish the context every pass: widget props read it from a CodeMirror state field, and
+      // `setContext` dispatches through `viewRef.current?` — a no-op before the view exists, so doing this
+      // once on mount silently loses it and every widget callback (e.g. rewind) dies on the optional call.
+      controller?.setContext(syncer.context);
+
       if (syncer.update(messages)) {
         controller?.scrollToBottom('instant');
       }
-    }, [controller, syncer, messages]);
+      // Spans are valid synchronously after `update` (offsets are computed during the walk).
+      onSpans?.(syncer.getSpans());
+    }, [controller, syncer, messages, onSpans]);
 
     // Event adapter.
     const handleEvent = useCallback<NonNullable<MarkdownStreamProps['onEvent']>>(

@@ -53,6 +53,28 @@ const filterContainsChildOf = (filter: QueryAST.Filter): boolean => {
 };
 
 /**
+ * Whether the filter is a subquery-membership predicate (`Filter.in(query.project(...))`, AST
+ * type `in-query`) or composes one via `and` / `or` / `not` / a nested `object` prop. Unlike
+ * `child-of`, which is only ever a root filter, `in-query` is always nested inside an `object`
+ * filter's `props` — so unlike `filterContainsChildOf` above, this must also recurse into `props`.
+ */
+const filterContainsInQuery = (filter: QueryAST.Filter): boolean => {
+  if (filter.type === 'in-query') {
+    return true;
+  }
+  if (filter.type === 'object') {
+    return Object.values(filter.props).some(filterContainsInQuery);
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsInQuery);
+  }
+  if (filter.type === 'not') {
+    return filterContainsInQuery(filter.filter);
+  }
+  return false;
+};
+
+/**
  * Whether the query carries an `order`/`skip`/`limit` clause anywhere in its AST.
  *
  * These clauses impose windowing semantics (a specific ordering, or a slice of a larger result
@@ -111,7 +133,11 @@ export const isSimpleSelectionQuery = (
       };
     }
     case 'select': {
-      if (filterContainsTimestamp(query.filter) || filterContainsChildOf(query.filter)) {
+      if (
+        filterContainsTimestamp(query.filter) ||
+        filterContainsChildOf(query.filter) ||
+        filterContainsInQuery(query.filter)
+      ) {
         return null;
       }
       return { filter: query.filter, options: undefined };

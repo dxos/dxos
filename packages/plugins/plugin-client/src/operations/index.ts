@@ -5,6 +5,7 @@
 import { OperationHandlerSet } from '@dxos/compute';
 
 export * as ClientOperation from './definitions';
+export * from './errors';
 
 export const ClientOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-agent'),
@@ -17,5 +18,7 @@ export const ClientOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./redeem-passkey'),
   () => import('./redeem-token'),
   () => import('./reset-storage'),
+  () => import('./resolve-navigation-targets'),
   () => import('./share-identity'),
+  () => import('./update-profile'),
 );

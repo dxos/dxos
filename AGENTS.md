@@ -8,9 +8,22 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 
 ## Start of session
 
-- Confirm you understand these instructions and list the guidance files you are
-  aware of (this file, `.claude/CLAUDE.md`, relevant `.agents/skills/*`).
-- State the worktree you are operating in.
+- On the Claude harness, a global `SessionStart` hook injects a `SESSION CONTEXT`
+  block (cwd, toplevel, branch, verdict) — trust it and follow its directive. If
+  no such block is present (other harnesses), run this before any file op:
+  ```
+  git rev-parse --show-toplevel && git branch --show-current
+  ```
+- **The branch, not the directory, decides whether editing is safe:**
+  - Non-`main` branch (normally `claude/…`) → proceed — even if the toplevel is
+    the primary checkout instead of the assigned worktree (a known harness
+    mis-instantiation; say so once — it affects only Desktop UI pairing, never
+    data safety). Never run `git worktree add` to "fix" it.
+  - `main` → STOP, write nothing, tell the user. Never create a worktree or
+    branch to escape — the harness owns those.
+- First reply: confirm these instructions, state the branch + toplevel path, and
+  list the guidance files in play (this file, `.claude/CLAUDE.md`, relevant
+  `.agents/skills/*`).
 - When asking a question, make it yes/no or give numbered options — never an
   unnumbered a-or-b.
 - If unsure how to implement something, ask rather than guess.
@@ -29,6 +42,8 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   checkpoint — interrupt immediately only when fully blocked.
 - **Automate the user's role where you can.** If their step is mechanical
   (running a command, checking output), do it yourself rather than asking.
+- **Name.** When the user's name is known, refer to them by it in commentary;
+  otherwise use a neutral form of address.
 
 ## Non-negotiables
 
@@ -49,6 +64,12 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   widened `any` signatures, and non-null `!` are not fixes — fix the type at its
   source. `as const` is fine. See the `code-style` skill for the full rule and
   the pre-commit audit command.
+- **Never suppress unhandled errors to go green.** Do not set
+  `dangerouslyIgnoreUnhandledErrors` in any vitest config, and do not swallow
+  unhandled rejections — surface them and fix the root cause (a suppressed
+  teardown race hides real failures). Tolerate a specific known signature only
+  via a narrowly-scoped `onUnhandledError`, never a blanket ignore. Full rule →
+  `code-style` skill.
 - **New packages are private.** Every new package MUST set `"private": true` in
   `package.json`; it is removed manually only after a trusted publisher exists.
 - **Workspace deps use `workspace:*`.** Any in-repo `@dxos` package is added with
@@ -58,12 +79,21 @@ Treat the user as an expensive, intermittent resource — minimize round-trips.
   out-of-range on any bump and would cascade the fixed publish group to a
   spurious major. Do not "simplify" it to `*`. Why it matters:
   `.github/RELEASE-SPEC.md`.
-- **Never edit the main checkout.** All file edits target the assigned worktree
-  path, never the bare repo root or another worktree (the `guard-worktree.sh`
-  hook denies these).
+- **Never edit while on the `main` branch.** The safety signal is the branch, not
+  the directory: run `git branch --show-current` before your first edit. If it is
+  `main`, stop — edits pollute the shared branch. Editing the primary checkout
+  directory is fine when HEAD is your assigned `claude/…` branch (the ~10%
+  mis-instantiation case in Start-of-session); the bare-root path does **not**
+  imply `main`. `guard-worktree.sh` fences edits whose target working tree is on
+  `main`, but treat it as a backstop, not a guarantee — self-verify the branch.
 - **Commit nothing silently.** Before any commit/push, `git status` and account
   for every modified/untracked file — including the user's own edits in the
   shared worktree. Commit them or explicitly confirm exclusion.
+- **Format before every commit and PR.** Run `pnpm format` (oxfmt) and stage the
+  result before committing — do NOT rely on formatting files one at a time as you
+  edit. CI's `check` job runs `oxfmt --check` and a **single** unformatted file
+  fails the entire workflow (build/test/storybook included via the shared graph),
+  wasting a full CI cycle. Never push a branch you have not formatted.
 
 ## Build, test, lint
 
@@ -90,9 +120,11 @@ Universal rules. Deeper conventions live in skills — see the pointers below.
 - Prefer named exports; avoid default exports. Use barrel imports.
 - **Never leave compatibility re-exports or shims when moving code.** Update
   every call site to the new location in the same change.
-- Comments state _why_ the code is necessary (the constraint it satisfies), end
-  with a period, and never narrate history or this conversation. JSDoc public
-  functions.
+- Comments state _why_ the code is necessary (the constraint it satisfies) in
+  **one load-bearing clause** — not a multi-sentence essay — end with a period,
+  and never narrate history or this conversation. Delete a comment the code
+  already makes obvious. Audit added comments in your diff before every commit,
+  same as casts. JSDoc public functions. Full rule → `code-style` skill.
 - Prefer ES `#private` over the TypeScript `private` keyword in new code
   (`_private` is fine to keep).
 - No single-letter variable names. Remove/update TODOs as you touch them.
@@ -101,13 +133,14 @@ Universal rules. Deeper conventions live in skills — see the pointers below.
 
 Deeper conventions:
 
-- No-cast rule, namespace-export packages, internal-module imports, class-member
-  ordering, options-bag types, overload syntax, and test structure →
-  `code-style` skill.
+- No-cast rule, comment rule (say why, once), namespace-export packages,
+  internal-module imports, class-member ordering, options-bag types, overload
+  syntax, and test structure → `code-style` skill.
 - ECHO objects, queries, schema, Ref/DXN → `echo` skill.
 - Effect-TS services, layers, and typed domain errors → `effect` skill.
 - React components, theme tokens, and Composer UI primitives → `composer-ui`
   skill.
+- Do not use deprecated functions if an alternative is available.
 
 ## Git & PR workflow
 
@@ -138,6 +171,10 @@ Deeper conventions:
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, land, …).
+- **Flaky test quarantining** — investigating a flaky/red CI run or setting up
+  Trunk test uploads → `trunk-quarantine` skill
+  (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
+  `REPOSITORY_GUIDE.md`.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

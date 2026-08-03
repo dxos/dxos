@@ -51,7 +51,8 @@ export type EmailBodyPart = Schema.Schema.Type<typeof EmailBodyPart>;
 export const Email = Schema.Struct({
   id: Schema.String,
   blobId: Schema.optional(Schema.String),
-  threadId: Schema.optional(Schema.String),
+  // Server-set and always present on a fetched Email (RFC 8621 §4.1.1); `EMAIL_PROPERTIES` requests it.
+  threadId: Schema.String,
   mailboxIds: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Boolean })),
   keywords: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Boolean })),
   from: Schema.optional(Schema.NullOr(Schema.Array(EmailAddress))),

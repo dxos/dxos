@@ -59,7 +59,7 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
               </div>
             </Input.Root>
           )}
-          <div role='none' className='grow' />
+          <div className='grow' />
           <IconButton
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly

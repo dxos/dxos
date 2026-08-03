@@ -9,11 +9,10 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
-import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Board, type BoardController, type BoardRootProps, type Layout, resizeToFit } from '@dxos/react-ui-board';
@@ -213,6 +212,8 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                   })}
                 </Board.Content>
               </Board.Viewport>
+              {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
+              <Board.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
             </Board.Container>
           </Panel.Content>
         </Panel.Root>

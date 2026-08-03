@@ -5,100 +5,83 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Database, Filter, Query, Type } from '@dxos/echo';
-import { Resolver } from '@dxos/extractor';
-import { Organization, Person } from '@dxos/types';
+import { Database } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
+import {
+  type IdentityIndex,
+  Resolver,
+  buildIdentityIndex,
+  makeIdentityIndex,
+  seedIdentityIndex,
+} from '@dxos/extractor';
+import { type Organization, type Person } from '@dxos/types';
 
-import { extractDomain, matchesDomain } from './domain';
+import { identitySpecs } from './identity';
 
 export type HasEmail = { email: string };
 
-export type ResolverFunction<T> = (input: HasEmail) => Effect.Effect<T | undefined>;
-
-export type ResolverMap = Record<string, ResolverFunction<any>>;
+/** In-flight or resolved index per database; see {@link getIdentityIndex}. */
+const indexes = new WeakMap<Database.Database, Promise<IdentityIndex>>();
 
 /**
- * Resolves an existing Organization from a sender email by matching its domain against known
- * Organization websites. Queries the space once and caches the result.
+ * The space's single identity index, built once per database and shared by every caller.
+ *
+ * Sharing is the point: each create-vs-merge site used to hold its own snapshot, so two mailboxes
+ * syncing at once both missed the other's contacts and both created one. One index means a Person
+ * built by either run is immediately visible to the other.
+ *
+ * `refresh` re-seeds from the space into the same instance — do this at the start of a run so it
+ * picks up what other writers (or an earlier run) committed. Registrations are first-writer-wins,
+ * so re-seeding never displaces an uncommitted object a caller has already registered.
  */
-export const createOrganizationResolver = Effect.gen(function* () {
-  const organizations = yield* Database.query(Query.select(Filter.type(Organization.Organization))).run;
-  const resolver: ResolverFunction<Organization.Organization> = ({ email }: HasEmail) => {
-    const domain = extractDomain(email);
-    return Effect.succeed(
-      domain
-        ? organizations.find((organization) => organization.website && matchesDomain(organization.website, domain))
-        : undefined,
-    );
-  };
+export const getIdentityIndex = (
+  db: Database.Database,
+  options: { refresh?: boolean } = {},
+): Effect.Effect<IdentityIndex> =>
+  Effect.gen(function* () {
+    let pending = indexes.get(db);
+    if (!pending) {
+      // Cache the in-flight build, not just its result: two runs starting together would otherwise
+      // both miss, both build, and end up with separate indexes — the split this exists to close.
+      pending = EffectEx.runPromise(buildIdentityIndex(db, identitySpecs));
+      // Drop a failed build so the next caller retries. Caching the rejection would disable identity
+      // resolution for this database permanently after one transient query failure.
+      void pending.catch(() => indexes.delete(db));
+      indexes.set(db, pending);
+    }
 
-  return resolver;
-});
+    const index = yield* Effect.promise(() => pending);
+    if (options.refresh) {
+      yield* seedIdentityIndex(db, identitySpecs, index);
+    }
 
-/**
- * Resolves an existing Person from a sender email by matching one of its email addresses. Queries
- * the space once and caches the result.
- */
-export const createPersonResolver = Effect.gen(function* () {
-  const contacts = yield* Database.query(Query.select(Filter.type(Person.Person))).run;
-  const resolver: ResolverFunction<Person.Person> = ({ email }: HasEmail) => {
-    // Case-insensitive, to match the domain-based Organization resolver (which lower-cases).
-    const normalizedEmail = email.toLowerCase();
-    return Effect.succeed(
-      contacts.find((contact) => contact.emails?.some(({ value }) => value?.toLowerCase() === normalizedEmail)),
-    );
-  };
-
-  return resolver;
-});
+    return index;
+  });
 
 /**
- * Live resolver backed by the space database: resolves Person by email and Organization by
- * email domain.
+ * Live resolver backed by the space's shared identity index. Identity comes from the
+ * {@link IdentitySpec}s (Person by email, Organization by website domain, either by foreign key), so
+ * a resolver lookup, an extractor's create-vs-merge decision and the duplicate scan cannot disagree.
  */
 export const Live = Layer.effect(
   Resolver,
   Effect.gen(function* () {
-    const personResolver = yield* createPersonResolver;
-    const organizationResolver = yield* createOrganizationResolver;
-    const resolvers: ResolverMap = {
-      [Type.getTypename(Person.Person)]: personResolver,
-      [Type.getTypename(Organization.Organization)]: organizationResolver,
-    };
-
+    const { db } = yield* Database.Service;
+    const index = yield* getIdentityIndex(db, { refresh: true });
     return Resolver.of({
-      resolve: (schema, input: any) => {
-        const typename = Type.getTypename(schema);
-        const resolver = resolvers[typename];
-        if (resolver) {
-          return resolver(input);
-        }
-
-        return Effect.succeed(undefined);
-      },
+      resolve: (type, input: unknown) => Effect.succeed(index.lookup(type, input)),
     });
   }),
 );
 
-/** In-memory resolver over fixed Person/Organization lists (Person by email, Organization by domain). */
-export const Mock = (data: { people?: Person.Person[]; organizations?: Organization.Organization[] } = {}) =>
-  Layer.succeed(
+/** In-memory resolver over fixed Person/Organization lists, for tests and stories. */
+export const Mock = (data: { people?: Person.Person[]; organizations?: Organization.Organization[] } = {}) => {
+  const index = makeIdentityIndex(identitySpecs);
+  [...(data.people ?? []), ...(data.organizations ?? [])].forEach((object) => index.register(object));
+  return Layer.succeed(
     Resolver,
     Resolver.of({
-      resolve: (schema, input: any) => {
-        const typename = Type.getTypename(schema);
-        if (typename === Type.getTypename(Person.Person)) {
-          const person = data.people?.find((p) => p.emails?.some((e) => e.value === input.email || e.value === input));
-          return Effect.succeed(person as any);
-        } else if (typename === Type.getTypename(Organization.Organization)) {
-          const domain = extractDomain(input.email);
-          if (domain) {
-            const org = data.organizations?.find((o) => o.website && matchesDomain(o.website, domain));
-            return Effect.succeed(org as any);
-          }
-        }
-
-        return Effect.succeed(undefined);
-      },
+      resolve: (type, input: unknown) => Effect.succeed(index.lookup(type, input)),
     }),
   );
+};

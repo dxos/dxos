@@ -23,11 +23,6 @@ export class ReferenceWidget extends WidgetType {
   override toDOM() {
     return Domino.of('div')
       .classNames(styles.padding)
-      .append(
-        Domino.of('dx-anchor' as any)
-          .classNames('dx-tag--anchor')
-          .attributes({ dxn: this.dxn })
-          .text(this.text),
-      ).root;
+      .append(Domino.of('dx-anchor').classNames('dx-tag--anchor').attributes({ dxn: this.dxn }).text(this.text)).root;
   }
 }

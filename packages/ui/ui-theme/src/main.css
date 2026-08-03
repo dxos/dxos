@@ -23,14 +23,8 @@
  */
 @import 'tailwindcss' source(none);
 
-/* @theme extensions */
-@import './css/theme/animation.css';
-@import './css/theme/border.css';
-@import './css/theme/palette.css';
-@import './css/theme/semantic.css';
-@import './css/theme/spacing.css';
-@import './css/theme/styles.css';
-@import './css/theme/text.css';
+/* @theme extensions; also exported as `@dxos/ui-theme/tokens.css` for stylesheets built outside this repo. */
+@import './tokens.css';
 
 /* @layer dx-base, dx-tokens */
 @import './css/base/base.css';
@@ -43,6 +37,7 @@
 @import './css/components/dialog.css';
 @import './css/components/focus.css';
 @import './css/components/icon.css';
+@import './css/components/input.css';
 @import './css/components/panel.css';
 @import './css/components/link.css';
 @import './css/components/scrollbar.css';

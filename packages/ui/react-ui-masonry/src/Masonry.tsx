@@ -11,8 +11,10 @@ import React, {
   type MouseEvent,
   type PropsWithChildren,
   type Ref,
+  useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
@@ -20,8 +22,14 @@ import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/r
 import { composable, composableProps } from '@dxos/react-ui';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
-import { useFlip } from './useFlip';
+import { prefersReducedMotion, useFlip } from './useFlip';
 import { useMasonryLayout } from './useMasonryLayout';
+
+/** Reveal the grid once the layout has been stable for this long (the initial reflow has settled). */
+const REVEAL_SETTLE_MS = 80;
+
+/** Reveal the grid no later than this after mount, so churning content never hides it indefinitely. */
+const REVEAL_DEADLINE_MS = 1200;
 
 //
 // Context
@@ -40,6 +48,18 @@ type MasonryContextValue = {
   maxColumnWidth: number;
   /** Space applied uniformly between tiles and around the grid perimeter, in rem. */
   gap: number;
+  /**
+   * Animate reflow when a small number of tiles are added or removed. Disabled, or on a
+   * bulk change (initial render, data swap) or resize, tiles snap to position instead.
+   */
+  animate: boolean;
+  /**
+   * Centre the columns when `maxColumnWidth` caps them narrower than the container. Off aligns them
+   * to the start instead, which reads better when the grid sits in a form or list flow whose other
+   * rows are start-aligned. Distinct from `Masonry.Content`'s `centered`, which is ScrollArea's
+   * scrollbar-padding balance and says nothing about column alignment.
+   */
+  centered: boolean;
 };
 
 const MASONRY_NAME = 'Masonry';
@@ -60,6 +80,8 @@ const MasonryRoot = ({
   minColumnWidth = cardMinInlineSize,
   maxColumnWidth = cardMaxInlineSize,
   gap = 0.75,
+  animate = true,
+  centered = true,
 }: MasonryRootProps) => (
   <MasonryProvider
     Tile={Tile!}
@@ -68,6 +90,8 @@ const MasonryRoot = ({
     minColumnWidth={minColumnWidth}
     maxColumnWidth={maxColumnWidth}
     gap={gap}
+    animate={animate}
+    centered={centered}
   >
     {children}
   </MasonryProvider>
@@ -134,6 +158,12 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
   /**
+   * Scope for remembering tile heights across mounts, e.g. the collection's URI. With one, a
+   * remount renders on the first frame instead of waiting for the layout to settle. Omit it when
+   * `getId` is omitted: the default index ids are not unique across grids.
+   */
+  cacheKey?: string;
+  /**
    * Ids of the currently-selected tiles. When `onSelect` is also provided the grid becomes
    * selectable: selected tiles render an outline + `aria-selected`, and clicking a tile emits
    * {@link onSelect}. Selection STATE (single/multi semantics) is owned by the consumer — pair this
@@ -142,11 +172,21 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   selectedIds?: ReadonlySet<string>;
   /** Emitted when a tile is clicked while selectable. The consumer toggles its own selection state. */
   onSelect?: (id: string, event: MouseEvent) => void;
+  /**
+   * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
+   * viewport) to render the grid in a plain block instead of a nested scroll container — the grid is
+   * then sized by `dx-column` rather than by a `ScrollArea.Root`, which `Masonry.Content` provides
+   * and which is therefore not needed. Nesting scroll containers also risks collapsing the measured
+   * width to the scrollbar gutter, which would suppress the grid entirely (see the width gate below).
+   * @default true
+   */
+  scroll?: boolean;
 }>;
 
 const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, selectedIds, onSelect, ...props }, forwardedRef) => {
-    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap } = useMasonryContext('Masonry.Viewport');
+  ({ items, getId, cacheKey, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
+    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
+      useMasonryContext('Masonry.Viewport');
     const remInPx = usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
     // than deriving it from the root width, so the grid tracks the actual available
@@ -166,14 +206,52 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // `maxColumnWidth` and centres them, so no scrollbar/padding math is duplicated here.
     const gapPx = gap * remInPx;
     const ids = useMemo(() => items.map((item, index) => getId?.(item) ?? String(index)), [items, getId]);
-    const { rects, columnWidth, height, getTileRef, nodes } = useMasonryLayout({
+    const { rects, columnWidth, height, getTileRef, nodes, measured, knownIds } = useMasonryLayout({
       ids,
       columnCount,
       containerWidth: contentWidth,
       gapPx,
       maxColumnWidthPx: maxColumnWidth * remInPx,
+      centered,
+      cacheKey,
     });
-    useFlip({ nodes, ids, rects, enabled: true });
+    useFlip({ nodes, ids, rects, columnCount, containerWidth: contentWidth, enabled: animate });
+
+    // Hide the grid until the layout stops changing, then fade in; latch on so later edits never
+    // re-hide it. Revealing on the first measurement is not enough: tiles mount collapsed (their
+    // poster reserves height a frame later), so the first pass stacks them bunched at the top and
+    // only settles over the next few reflows. Debounce on `rects` identity — which changes on every
+    // relayout — and reveal once it has been stable for a beat, with a hard deadline as a backstop.
+    //
+    // None of that applies when every tile's height was already known on the first pass (the height
+    // cache is warm from an earlier mount): the layout is final before paint, so waiting for it to
+    // settle would just be a delay. That is the common case after the first visit.
+    const [revealed, setRevealed] = useState(false);
+    const firstPass = useRef(true);
+    useEffect(() => {
+      if (revealed) {
+        return;
+      }
+      // Nothing has been laid out until the viewport reports a width, so this does not count as the
+      // first pass — consuming it here would forfeit the fast path on every mount.
+      if (contentWidth <= 0) {
+        return;
+      }
+      if (!measured) {
+        firstPass.current = false;
+        return;
+      }
+      if (firstPass.current) {
+        setRevealed(true);
+        return;
+      }
+      const timer = setTimeout(() => setRevealed(true), REVEAL_SETTLE_MS);
+      return () => clearTimeout(timer);
+    }, [revealed, measured, rects, contentWidth]);
+    useEffect(() => {
+      const deadline = setTimeout(() => setRevealed(true), REVEAL_DEADLINE_MS);
+      return () => clearTimeout(deadline);
+    }, []);
 
     // Arrow-key navigation across tiles. Uses Tabster's `both` axis so all four
     // arrows move focus through the items as flat next/previous-focusable, giving
@@ -189,13 +267,21 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     // gutters. The grid fills the content box and the layout centres capped columns,
     // so nothing overflows and left/right spacing matches the gap. The viewport always
     // renders so it can be measured; tiles render once a width is known.
-    return (
-      <ScrollArea.Viewport ref={viewportRef}>
+    const grid = (
+      <>
         {contentWidth > 0 && (
           <div
             {...composableProps(props, {
               classNames: 'relative',
-              style: { width: `${contentWidth}px`, height: `${height}px` },
+              style: {
+                width: `${contentWidth}px`,
+                height: `${height}px`,
+                opacity: revealed ? 1 : 0,
+                // Hidden (not just transparent) before reveal so the settling tiles are neither
+                // focusable nor hit-testable; the opacity fade only runs when motion is allowed.
+                visibility: revealed ? 'visible' : 'hidden',
+                transition: animate && !prefersReducedMotion() ? 'opacity 200ms cubic-bezier(0.2, 0, 0, 1)' : undefined,
+              },
             })}
             {...arrowNavigationAttrs}
             role='list'
@@ -206,6 +292,12 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
               const rect = rects[index];
               const selectable = !!onSelect;
               const selected = selectedIds?.has(id) ?? false;
+              // A tile with no height at all — never measured, nothing remembered — is positioned by
+              // a guess. Painting that guess is what flashed a tile hundreds of pixels out of place
+              // when the item set was swapped wholesale. A remembered height from another width is
+              // close enough to paint, so a resize reflows in place instead of blanking.
+              // `visibility` rather than `display`, so the ResizeObserver can still measure it.
+              const estimated = !knownIds.has(id);
               return (
                 <div
                   key={id}
@@ -229,6 +321,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
                     insetInlineStart: 0,
                     width: `${columnWidth}px`,
                     transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
+                    visibility: estimated ? 'hidden' : undefined,
                   }}
                 >
                   <Tile index={index} data={item} selected={selected} />
@@ -237,7 +330,18 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
             })}
           </div>
         )}
-      </ScrollArea.Viewport>
+      </>
+    );
+
+    // `dx-column` (not `dx-expander`) in the non-scrolling case: it gives the definite inline size
+    // the width gate needs (`w-full min-w-0`) without claiming the block axis, which would fight the
+    // surrounding flow — the grid's height comes from the computed layout.
+    return scroll ? (
+      <ScrollArea.Viewport ref={viewportRef}>{grid}</ScrollArea.Viewport>
+    ) : (
+      <div className='dx-column' ref={viewportRef}>
+        {grid}
+      </div>
     );
   },
 );

@@ -7,12 +7,13 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { MarkdownOperation } from '../types';
+import { Markdown, MarkdownOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.GetHistory> = MarkdownOperation.GetHistory.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc }) {
-      const document = yield* Database.load(doc);
+      // LLM-provided ref (may decode without a resolver): resolve through the db, not `ref.tryLoad`.
+      const document = yield* Database.resolve(doc, Markdown.Document);
       const history = document.history;
       return {
         versions: (history?.versions ?? []).map(({ id, name, createdAt }) => ({ id, name, createdAt })),

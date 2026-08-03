@@ -104,13 +104,9 @@ export const getFallbackName = (content = ''): string => {
 };
 
 // TODO(burdon): Option to strip Markdown.
-export const getContentSnippet = (content = '', maxLines = 3) => {
-  const abstract = content
-    .split('\n')
-    .filter((line) => !line.startsWith('!'))
-    .filter((line) => line.trim() !== '');
-
-  return abstract.slice(0, maxLines).join('\n') ?? '';
+export const getContentSnippet = (content = '', maxLines = 3): string => {
+  const abstract = content.split('\n').filter((line) => !line.startsWith('!'));
+  return abstract.slice(0, maxLines).join('\n');
 };
 
 export const setFallbackName = debounce((doc: Markdown.Document, content = '') => {

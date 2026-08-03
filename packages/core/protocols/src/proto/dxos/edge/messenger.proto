@@ -87,6 +87,13 @@ message Message {
 
   optional TraceContext trace_context = 21;
 
+  /**
+   * Broadcast tags (DX-1125). When set on a message with no resolvable `target` peer, the message is
+   * published to the swarm named by `source.swarm_key` and fanned out to every subscriber whose tag
+   * subscription intersects this set (logical OR). Empty => not a broadcast.
+   */
+  repeated string tags = 22;
+
   optional google.protobuf.Any payload = 100;
 }
 
@@ -106,10 +113,18 @@ message SwarmRequest {
     INFO = 0;
     JOIN = 1;
     LEAVE = 2;
+    // Set/replace this peer's broadcast tag subscription on the swarm (DX-1125).
+    SUBSCRIBE = 3;
   }
 
   optional Action action = 1;
   repeated string swarmKeys = 2; // TODO(burdon): Rename topic?
+
+  /**
+   * Tag set for the SUBSCRIBE action (DX-1125). The peer receives any broadcast message on the swarm
+   * whose `tags` intersect this set. Replaces any previous subscription; cleared on leave/disconnect.
+   */
+  repeated string subscribe_tags = 3;
 }
 
 message SwarmResponse {

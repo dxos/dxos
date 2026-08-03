@@ -13,14 +13,20 @@ export const LayerSpecs = Capability.lazy<void, Capability.Any[]>('LayerSpecs', 
 export const Migrations = Capability.lazy('Migrations', () => import('./migrations'));
 export { NavigationHandler } from './navigation-handler';
 export type { NavigationHandlerOptions } from './navigation-handler';
+export const NavigationTargetLoader = Capability.lazy(
+  'NavigationTargetLoader',
+  () => import('./navigation-target-loader'),
+);
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),
 );
 export const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
+export const RemoteTraceMonitor = Capability.lazy('RemoteTraceMonitor', () => import('./remote-trace-monitor'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const SchemaDefs = Capability.lazy('SchemaDefs', () => import('./schema-defs'));
 export const SpaceReplicationProgress = Capability.lazy(
   'SpaceReplicationProgress',
   () => import('./space-replication-progress'),
 );
+export const TraceProgress = Capability.lazy('TraceProgress', () => import('./trace-progress'));

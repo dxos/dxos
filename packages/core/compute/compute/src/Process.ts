@@ -13,6 +13,7 @@ import type * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
 
 import { Annotation } from '@dxos/echo';
@@ -170,6 +171,15 @@ export const TargetAnnotation = Annotation.make({
 export const NotifyAnnotation = Annotation.make({
   id: 'org.dxos.process.notify',
   schema: Operation.NotifyOptions,
+});
+
+/**
+ * URI of the Instructions object steering the process's conversation. Persisted at spawn (like
+ * {@link TargetAnnotation}) so a re-hydrated process recovers its steering without reaching the Chat.
+ */
+export const InstructionsAnnotation = Annotation.make({
+  id: 'org.dxos.process.instructions',
+  schema: URI.Schema,
 });
 
 /**
@@ -463,6 +473,12 @@ export interface Monitor {
    * Atom for the process tree.
    */
   processTreeAtom: Atom.Atom<readonly Info[]>;
+
+  /**
+   * Stream ephemeral trace messages matching `filter` (DX-1125), sourced from local in-process
+   * runtimes and remote runtimes broadcasting over the space swarm. Used to drive live progress UI.
+   */
+  subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
 }
 
 export class ProcessMonitorService extends Context.Tag('@dxos/functions/ProcessMonitorService')<

@@ -154,7 +154,7 @@ export const makeFeed = (props: MakeFeedProps): Cursor =>
  * Records a successful run: advances `max` (when provided), stamps `lastTick`, clears `lastError`. The
  * single-directional write seam; a range-tracking consumer uses {@link extendRange} instead.
  */
-export const advance = (cursor: Cursor, max?: string): void =>
+export const advance = (cursor: Cursor, max?: string): void => {
   Obj.update(cursor, (cursor) => {
     if (max !== undefined) {
       cursor.max = max;
@@ -162,12 +162,14 @@ export const advance = (cursor: Cursor, max?: string): void =>
     cursor.lastTick = new Date().toISOString();
     cursor.lastError = undefined;
   });
+};
 
 /** Records a failed run: stamps `lastError`, leaving `max`/`min`/`lastTick` untouched. */
-export const recordError = (cursor: Cursor, message: string): void =>
+export const recordError = (cursor: Cursor, message: string): void => {
   Obj.update(cursor, (cursor) => {
     cursor.lastError = message;
   });
+};
 
 /**
  * Reads `cursor.spec.snapshots[foreignId]` typed as `T` — the last-seen remote fields an external
@@ -322,7 +324,7 @@ export const extendRange = (
   cursor: Cursor,
   extent: { readonly maxKey: number; readonly minKey: number },
   format: (key: number) => string = formatKey,
-): void =>
+): void => {
   Obj.update(cursor, (cursor) => {
     const maxKey = parseKey(cursor.max);
     if (extent.maxKey > maxKey) {
@@ -337,6 +339,7 @@ export const extendRange = (
     cursor.lastTick = new Date().toISOString();
     cursor.lastError = undefined;
   });
+};
 
 /**
  * Records that a run's backward half exhausted to the horizon: clamps `min` down to `horizonKey`, never

@@ -7,22 +7,25 @@ import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppSurface, useCardPivot } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages } from '#components';
 import { Calendar, Mailbox } from '#types';
 
+import { getCalendarEventPath, getMailboxMessagePath } from '../../paths';
+
 export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
 
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
   const { invokePromise } = useOperationInvoker();
+  const [cardRef, pivotId] = useCardPivot();
   const db = Obj.getDatabase(contact);
-  const workspace = db ? Paths.getSpacePath(db.spaceId) : undefined;
+  const workspace = db ? GraphPath.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
 
@@ -70,42 +73,50 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
     .toSorted((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
     .slice(0, 3);
 
+  // Open the message directly as its own (standalone) plank, not the mailbox with the message selected.
   const handleMessageClick = useCallback(
     async (message: Message.Message) => {
-      if (!mailbox) {
+      if (!db || !mailbox) {
         return;
       }
-
-      const mailboxPath = Paths.getObjectPathFromObject(mailbox);
+      // A message is a feed object under its mailbox; address it via the `message` key, not the generic
+      // database path (which does not resolve for feed objects).
+      const messagePath = getMailboxMessagePath(db.spaceId, mailbox.id, message.id);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      await invokePromise(LayoutOperation.Open, { subject: [mailboxPath], workspace });
-      await invokePromise(LayoutOperation.Select, {
-        contextId: mailboxPath,
-        subject: { mode: 'single', id: message.id },
+      await invokePromise(LayoutOperation.Open, {
+        subject: [messagePath],
+        pivotId,
+        disposition: 'add',
+        navigation: 'immediate',
+        workspace,
       });
     },
-    [invokePromise, db, mailbox],
+    [invokePromise, workspace, pivotId, db, mailbox],
   );
 
+  // Open the event directly as its own (standalone) plank, not the calendar with the event selected.
   const handleEventClick = useCallback(
     async (event: Event.Event) => {
-      if (!calendar) {
+      if (!db || !calendar) {
         return;
       }
-
-      const calendarPath = Paths.getObjectPathFromObject(calendar);
+      // An event is a feed object under its calendar; address it via the `event` key, not the generic
+      // database path (which does not resolve for feed objects).
+      const eventPath = getCalendarEventPath(db.spaceId, calendar.id, event.id);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
-      await invokePromise(LayoutOperation.Open, { subject: [calendarPath], workspace });
-      await invokePromise(LayoutOperation.Select, {
-        contextId: calendarPath,
-        subject: { mode: 'single', id: event.id },
+      await invokePromise(LayoutOperation.Open, {
+        subject: [eventPath],
+        pivotId,
+        disposition: 'add',
+        navigation: 'immediate',
+        workspace,
       });
     },
-    [invokePromise, db, calendar],
+    [invokePromise, workspace, pivotId, db, calendar],
   );
 
   return (
-    <Card.Body>
+    <Card.Body ref={cardRef}>
       <RelatedMessages messages={relatedMessages} onMessageClick={handleMessageClick} />
       <RelatedEvents recent={sortedRecentEvents} upcoming={sortedUpcomingEvents} onEventClick={handleEventClick} />
     </Card.Body>

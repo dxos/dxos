@@ -25,6 +25,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/echo-react": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",

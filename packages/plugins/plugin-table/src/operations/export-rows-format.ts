@@ -5,7 +5,7 @@
 import { Format, Obj } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
-import { formatForDisplay } from '@dxos/react-ui-form';
+import { formatForDisplay } from '@dxos/schema';
 
 export type ExportFormat = 'csv' | 'json' | 'xml';
 

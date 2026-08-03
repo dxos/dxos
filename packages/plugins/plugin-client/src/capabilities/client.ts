@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Client, ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
+import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
 
 import { ClientEvents } from '#types';
@@ -48,9 +49,21 @@ export default Capability.makeModule(
     // previous leader tab closes), its proxies are left in a broken state. Force a full reload to
     // re-establish a clean session until the reconnect flow can recover in place.
     // TODO(dmaretskyi): Remove once guest tabs recover from a leader handover without reloading.
+    //
+    // `client.reset()` also fires this event (its teardown reconnects this tab to a fresh worker),
+    // and reset must reload too, but to a different URL. `reload()` re-requests the *current* URL
+    // (path included); after a reset the current route (e.g. the Devices settings panel where reset
+    // was triggered) points at now-deleted data, so reopening it shows stale/broken UI. Navigating
+    // to `origin` instead drops the path and boots the app fresh — which is also what the app's own
+    // post-reset flow targets. The two branches differ only when the path isn't already `/`; a
+    // normal reconnect keeps the user where they were, a reset returns them to the root.
     client.services.reconnected?.on(() => {
       log.info('client reconnected, reloading to re-establish session');
-      window.location.reload();
+      if (client.resetting) {
+        window.location.href = window.location.origin;
+      } else {
+        window.location.reload();
+      }
     });
 
     let spacesReadyFired = false;
@@ -84,6 +97,10 @@ export default Capability.makeModule(
         }),
       ),
       Capability.contributes(Capabilities.Layer, ClientService.fromClient(client)),
+      // HALO service instances for imperative consumers (so plugins read identity/spaces
+      // through @dxos/halo instead of the client directly).
+      Capability.contributes(ClientCapabilities.IdentityService, makeIdentityService(client)),
+      Capability.contributes(ClientCapabilities.SpaceService, makeSpaceService(client)),
     ];
   }),
 );

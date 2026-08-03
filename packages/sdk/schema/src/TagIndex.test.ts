@@ -3,7 +3,7 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Database, DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder, getObjectCore } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { EntityId } from '@dxos/keys';
+import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import * as TagIndex from './TagIndex';
 
@@ -64,6 +64,29 @@ describe('TagIndex', () => {
     expect(tags.tagIds()).toEqual([later]);
   });
 
+  test('matches tag membership across absolute and relative key forms (import round-trips)', ({ expect }) => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const entityId = EntityId.random();
+    const item = EntityId.random();
+    const absolute = EID.make({ spaceId: SpaceId.random(), entityId }); // How live data stores a tag id.
+    const relative = EID.make({ entityId }); // How a portable snapshot stores it (no space id).
+
+    // A tag stored under its absolute uri is found by the relative query and vice versa: membership
+    // ignores the space id, so a space import (which mints a new space id) keeps tags resolvable.
+    tags.setTag(absolute, item);
+    expect([...tags.objects(relative)]).toEqual([item]);
+    expect([...tags.objects(absolute)]).toEqual([item]);
+    // Same entity id under a different space also matches (the post-import resolution case).
+    expect([...tags.objects(EID.make({ spaceId: SpaceId.random(), entityId }))]).toEqual([item]);
+
+    // Non-EID tag ids are still compared verbatim.
+    tags.setTag('dxn:tag:urgent', item);
+    expect([...tags.objects('dxn:tag:urgent')]).toEqual([item]);
+    expect([...tags.objects('dxn:tag:other')]).toEqual([]);
+  });
+
   test('atom family returns tag uris for one object', () => {
     const tagIndex = TagIndex.make();
     const tags = TagIndex.bind(tagIndex);
@@ -84,6 +107,28 @@ describe('TagIndex', () => {
 
     tags.unsetTag(later, first);
     expect(registry.get(tagsForObject(first))).toEqual([urgent]);
+  });
+
+  test('taggedIdsAtom returns object ids for one tag', ({ expect }) => {
+    const tagIndex = TagIndex.make();
+    const tags = TagIndex.bind(tagIndex);
+
+    const first = EntityId.random();
+    const second = EntityId.random();
+    const urgent = 'dxn:tag:urgent';
+    const later = 'dxn:tag:later';
+
+    tags.setTag(urgent, first);
+    tags.setTag(urgent, second);
+    tags.setTag(later, first);
+
+    const registry = Registry.make();
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([first, second]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, later))).toEqual([first]);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, 'dxn:tag:missing'))).toEqual([]);
+
+    tags.unsetTag(urgent, first);
+    expect(registry.get(TagIndex.taggedIdsAtom(tagIndex, urgent))).toEqual([second]);
   });
 });
 

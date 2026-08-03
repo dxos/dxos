@@ -5,11 +5,9 @@ tasks:
     args:
       - --config=src/playwright/playwright.config.ts
     deps:
-      - test-utils:compile
-      - vite-plugin-icons:compile
+      - test-utils:build
+      - vite-plugin-icons:build
       - target: ^:build
-        optional: true
-      - target: ^:compile
         optional: true
       - target: bundle
         optional: true

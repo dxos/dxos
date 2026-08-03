@@ -18,5 +18,5 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
   },
   jsx: 'react',
-  test: { node: true },
+  test: { node: true, storybook: true },
 });

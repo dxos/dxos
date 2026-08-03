@@ -53,7 +53,7 @@ export const Query = Operation.make({
 
       <example description="Emails from specific mailboxes">
         {
-          "in": [{"/" : "echo:/YYYYYY"}, {"/" : "echo:/XXXXXXX"}],
+          "in": [{"/" : "echo:///YYYYYY"}, {"/" : "echo:///XXXXXXX"}],
           "typename": "org.dxos.type.email",
           "includeContent": true,
           "limit": 20
@@ -132,10 +132,12 @@ export const ObjectCreate = Operation.make({
     name: 'Create object',
     icon: 'ph--plus--regular',
     description: trim`
-      Creates a new object and adds it to the current space.
+      Creates a new object of any type and adds it to the current space.
+      When a type has its own create tool (e.g. the markdown skill creates documents), prefer that
+      tool — it builds the object's owned parts correctly. Use this one for types that have none.
       Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
       References are provided in the following format: { "/": "echo:..." }.
-      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({
@@ -144,6 +146,12 @@ export const ObjectCreate = Operation.make({
       examples: ['dxn:org.dxos.type.person'],
     }),
     properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    attach: Schema.optional(Schema.Boolean).annotations({
+      description: trim`
+        Attach the object to the space root collection so it appears in the navigation tree.
+        Set for top-level objects; leave unset for subordinate objects referenced by others.
+      `,
+    }),
   }),
   output: Schema.Unknown,
   services: [Database.Service],
@@ -157,7 +165,7 @@ export const ObjectUpdate = Operation.make({
     description: trim`
       Updates the object properties.
       References are provided in the following format: { "/": "echo:..." }.
-      Reference examples: { "/": "echo:/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
+      Reference examples: { "/": "echo:///01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }, { "/": "echo://<space id>/01KG7R1ZXWFMWQ4DA1Q6TN1DG4" }
     `,
   },
   input: Schema.Struct({

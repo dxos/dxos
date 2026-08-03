@@ -84,17 +84,19 @@ The authoritative references live under [`packages/reflect/deus/`](../../../pack
 - [`src/extension/mdl.grammar`](../../../packages/reflect/deus/src/extension/mdl.grammar) — Lezer grammar (use only when chasing syntax questions).
 
 Use the template as the starting structure and `packages/plugins/plugin-chess/PLUGIN.mdl`
-as a reference. Once it exists (i.e. in every session AFTER the initial build),
-`PLUGIN.mdl` is the source of truth for what the plugin does. It must be:
+as a reference. `PLUGIN.mdl` is a **record of what has been built — not a
+working document**. Design exploration for new features (in any session) happens
+in a design doc under `agents/superpowers/specs/`; `PLUGIN.mdl` is updated only
+after the design AND implementation have settled. It must be:
 
 - **Present before a new plugin's first PR merges** — created at the close of
   Phase 1 as described above; never omitted.
-- **Kept up-to-date** — when features are discussed, added, or changed in a later
-  session, update `PLUGIN.mdl` first, before implementing.
+- **Updated after the work settles** — when features are added or changed,
+  brainstorm and implement against a design doc, then bring `PLUGIN.mdl` in
+  line with the as-built plugin before the PR (never edit it speculatively
+  up front).
 - **Used for testing** — derive user feature tests and acceptance criteria from
   the spec's `feat`, `req`, and `test` blocks.
-- **Reviewed before implementation** — for changes to an existing plugin, the
-  user approves the updated `PLUGIN.mdl` before code is written.
 
 ## Workflow
 
@@ -108,35 +110,67 @@ Specification above), then start with a minimal skeleton before adding features.
 Phase 1, before the PR. The skeleton should include:
 
 1. `README.md` — brief description of the plugin's purpose.
-2. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
-3. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
-4. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
-5. `src/translations.ts` — initial translation resources.
-6. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
-7. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
-8. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
-9. `src/types/` — one schema type with `make()` factory.
-10. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
-11. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
-12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
-13. `src/components/` — empty barrel, ready for primitives.
+2. `dx.config.ts` — `Config2.make({ plugin: { … } })` with key, name, author, description, icon, and a **quality tier tag** (see below).
+3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
+4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
+5. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
+6. `src/translations.ts` — initial translation resources.
+7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
+8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
+9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
+10. `src/types/` — one schema type with `make()` factory.
+11. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
+12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
+13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
+14. `src/components/` — empty barrel, ready for primitives.
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
 Register the plugin with `composer-app`.
 
+Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
+
+### Quality tiers
+
+Every plugin MUST declare exactly one quality tier as the FIRST entry of
+`plugin.tags` in `dx.config.ts`. A new plugin defaults to `labs` — promotion is a
+deliberate, separate decision, never the scaffold's default.
+
+| Tier     | Meaning                                                                                                                                                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `system` | Core infrastructure. Force-enabled and not user-toggleable; derived in `plugin-manager.ts` from `tags.includes('system')`. Also omit the key from `getDefaults` in `composer-app/src/plugin-defs.tsx` — redundant once core. |
+| `beta`   | Stable enough to lead with. Shown in the registry's Recommended category.                                                                                                                                                    |
+| `alpha`  | A real feature, still moving. Also shown in Recommended.                                                                                                                                                                     |
+| `labs`   | Experimental, thin, dev-only, or platform-gated. **The default for a new plugin.**                                                                                                                                           |
+
+```ts
+tags: ['labs'],
+```
+
+Secondary tags (`connector`, `game`, `assistant`, `travel`) follow the tier:
+`tags: ['labs', 'connector']`. Add `alpha`/`beta`/`labs`/`system` to
+`RegistryTagType` in `plugin-registry/src/types.ts` — a new secondary tag needs
+no change there, but an unlisted tag renders without a hue.
+
+Do NOT leave a plugin untagged. `getCategoryPredicate` in
+`plugin-registry/src/categories.ts` selects Recommended by an explicit
+`beta`/`alpha` allowlist, so an untagged plugin silently appears in no category
+but `bundled`.
+
 ## Directory Structure
 
-```
+```text
 plugin-foo/
   package.json
   moon.yml
+  dx.config.ts             # Plugin manifest; carries the quality tier in `plugin.tags`.
   PLUGIN.mdl
   src/
     index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.
     plugin.ts               # Plugin.lazy() wrapper; consumed via @dxos/plugin-foo/plugin.
     meta.ts                 # Plugin.Meta (id, name, description, icon, iconHue).
     translations.ts         # i18n resources keyed by typename and meta.id.
+    paths.ts                # Canonical qualified graph paths (only if the plugin owns navtree nodes).
     FooPlugin.tsx           # Plugin definition via Plugin.define(meta).pipe().
     skills/             # AI skill definitions.
       index.ts
@@ -145,6 +179,8 @@ plugin-foo/
       react-surface.tsx
       operation-handler.ts
       skill-definition.ts
+      app-graph-builder.ts  # Navtree sections, child nodes, actions.
+      create-object.ts      # SpaceCapabilities.CreateObjectEntry per type.
     components/             # Primitive UI components (no app-framework deps).
       index.ts
       MyComponent/
@@ -169,7 +205,7 @@ plugin-foo/
 
 ### Component (`src/components/`)
 
-Low-level UI. Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
+Low-level UI (plugin/src/components, react-ui-\*). Must NOT depend on `@dxos/app-framework` or `@dxos/app-toolkit`.
 Each component lives in its own subdirectory with an `index.ts` barrel.
 Use named exports; no default exports. Create a basic storybook for each.
 
@@ -377,6 +413,24 @@ Handler file shape (mirror `plugin-trip/src/operations/add-segment.ts`):
 
 See: `plugin-chess/src/operations/`, `plugin-trip/src/operations/add-segment.ts`, `plugin-chess-com/src/operations/sync-games.ts`
 
+### App graph (`src/capabilities/app-graph-builder.ts`)
+
+Extensions contribute navtree sections, their child nodes, and actions on any node. Assemble with `const extensions = yield* Effect.all([...])` then `Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)` — the raw array fails the `BuilderExtensions` typecheck. Wire with `AppPlugin.addAppGraphModule`.
+
+Section hub: one extension matching `AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.<group>)` → `AppNode.makeSection({...})`, a second matching `node.type === SECTION_TYPE && isSpace(node.properties.space)` → the child nodes. Use `TypeSection.createTypeSectionExtension` when the section is keyed by typename.
+
+**Gate the section on content** — the connector queries the objects it lists and returns `Effect.succeed([])` while there are none, so the section is absent from spaces that don't use the plugin. Its `+` action goes with it, so the type also needs a `SpaceCapabilities.CreateObjectEntry` (`src/capabilities/create-object.ts`) for the first create.
+
+**Create where the objects are listed, not in the database** — `SpaceOperation.AddObject` navigates to `targetNodeId`, falling back to the database subtree when absent, so forwarding a bare `options.targetNodeId` strands the user under Database. Point it at the node whose children are the objects: the section, or its object-listing child when the hub nests one (plugin-studio's Artifacts hang off a virtual `Artifacts` node, not the Studio section):
+
+```ts
+targetNodeId: options.targetNodeId ?? getPublicationsPath(options.db.spaceId),
+```
+
+Declare paths once in `src/paths.ts` — `GraphPath.getSpacePath(spaceId, GroupSegments.<group>, <segment>)`, or `GraphPath.createTypeSectionPaths(Type, { groupId })` — and import them from both the graph builder and the create-object entries.
+
+See: `plugin-inbox/src/capabilities/app-graph-builder.ts`, `plugin-inbox/src/paths.ts`
+
 ## Plugin Definition
 
 The main plugin file wires everything together using `Plugin.define(meta).pipe()` with `AppPlugin` helper methods:
@@ -423,6 +477,69 @@ Canonical example (idiom `org.dxos.app-framework.moduleActivationOrdering`):
 `ClientEvents.ClientReady` after activating; `SchemaDefs`/`Migrations` listen on
 it and use `firesBeforeActivation` to sequence setup ahead of themselves.
 
+## Non-Browser Variants
+
+A plugin that must load outside a DOM (the `dx` CLI, workerd) ships one variant per environment,
+selected by the `#plugin` conditions: `src/FooPlugin.tsx` (browser default), `src/FooPlugin.node.ts`,
+`src/FooPlugin.workerd.ts`. **Only add a variant the plugin genuinely supports** — a front-end-only
+plugin has none, and its `#plugin` collapses to a single resolution (`plugin-deck`, `plugin-navtree`).
+
+**`lazy` defers evaluation, not bundling.** `Capability.lazy`, `OperationHandlerSet.lazy` and
+`React.lazy` all postpone the import at runtime while a bundler still walks it, so a barrel that
+merely _lists_ a React surface pulls React — and the `react-ui` graph behind it — into every
+consumer. Runtime laziness never keeps UI out of a node build; a node-conditioned barrel does.
+
+Each variant therefore needs its own barrels, conditioned in `package.json` `imports`:
+
+| Barrel          | Node file                  | Holds                                            |
+| --------------- | -------------------------- | ------------------------------------------------ |
+| `#capabilities` | `src/capabilities/node.ts` | Only the capabilities `FooPlugin.node` activates |
+| `#operations`   | `src/operations/node.ts`   | Only the operations a node host can serve        |
+
+**Re-export through the alias, not a relative path** — `src/plugin.ts` must use
+`export { FooOperationHandlerSet } from '#operations';`. A relative `'./operations'` bypasses the
+import map, so the node condition never applies and `./plugin` drags the browser set in anyway.
+
+What makes a contribution browser-only:
+
+- A `SpaceCapabilities.CreateObjectEntry` with a `customPanel` — the entry bundles the headless
+  object factory with a React component, so `CreateObject` is omitted from the node barrel.
+- An operation driving a live editor view or Surface (`scroll-to-anchor`).
+
+TypeScript resolves the `types` condition for every environment, so it always sees the full barrel —
+derive the node barrel from what `FooPlugin.node.ts` actually imports so the two agree.
+
+### Headless values in UI packages
+
+Much of what an operation handler needs is headless but lives behind a UI package's root barrel.
+Import the UI-free entrypoint instead of relocating the code:
+
+| Need                                               | Import from                      | Not                       |
+| -------------------------------------------------- | -------------------------------- | ------------------------- |
+| `Attention` / `Selection` / `ViewState`            | `@dxos/react-ui-attention/types` | the package root          |
+| `Cursor`, `cherryPickHunk`, `createComment`        | `@dxos/ui-editor/headless`       | the package root          |
+| `hues`, `Hue`, `toHue`                             | `@dxos/ui-theme/headless`        | the package root          |
+| The `Table` schema                                 | `@dxos/react-ui-table/types`     | the package root          |
+| `getSpace`, `ConnectionState`, `InvitationEncoder` | `@dxos/client/*`                 | `@dxos/react-client/*`    |
+| `Atom`, `Registry`, `Result`                       | `@effect-atom/atom`              | `@effect-atom/atom-react` |
+
+A package that reads its own files at runtime needs a bundler-friendly entry too: paths computed from
+`import.meta.url` land inside the compiled binary's embedded filesystem, where its siblings do not exist.
+
+### Guarding it
+
+`check-module-structure` traces the export and fails if React is reachable. Every plugin with a node
+variant has this task, and CI runs `moon run :check-module-structure`. Diagnose a failure by printing
+the chain:
+
+```bash
+pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
+  --conditions workerd,worker,node --max-chains 2
+```
+
+See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
+`plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
+
 ## React Surface
 
 Surfaces are contributed via `Capability.contributes(Capabilities.ReactSurface, [...])` with `Surface.create()`.
@@ -448,13 +565,19 @@ See: `plugin-chess/src/translations.ts`
 - New packages MUST have `"private": true`.
 - Define `#imports` aliases for internal barrels (`#capabilities`, `#components`, `#containers`, `#meta`, `#operations`, `#types`).
 - Define `exports` subpaths for anything other plugins need (`./types`, `./operations`).
+- A plugin with a node or workerd variant gives `#plugin`, `#capabilities` and (when needed)
+  `#operations` a per-condition map — `source` for the TS paths plus the built `node`/`workerd`
+  entries. See **Non-Browser Variants**.
 - Internal `@dxos` deps use `workspace:*`; external deps use `catalog:`.
 
 See: `plugin-chess/package.json`
 
 ## moon.yml
 
-Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args.
+Each `package.json` export subpath needs a matching `--entryPoint` in the `compile` task args
+(vite-built plugins: a matching `entry` in `vite.config.ts`, including `capabilities/node`).
+A plugin with a node variant also carries a `check-module-structure` task — see
+**Non-Browser Variants**.
 
 See: `plugin-chess/moon.yml`
 
@@ -484,4 +607,6 @@ moon run plugin-foo:test-storybook
 - `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
+- Never rely on `Capability.lazy` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency
+  out of a bundle — they defer evaluation, not bundling. See **Non-Browser Variants**.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.

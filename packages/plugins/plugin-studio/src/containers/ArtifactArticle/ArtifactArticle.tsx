@@ -9,12 +9,11 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useObjects } from '@dxos/echo-react';
+import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { Connection } from '@dxos/plugin-connector';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
@@ -439,7 +438,7 @@ export const ArtifactArticle = ({ role, subject: artifact, attendableId }: Artif
           ) : (
             selectedVariant &&
             (selectedVariant.jobId ? (
-              <div role='status' className='flex items-center justify-center bs-full text-subdued'>
+              <div role='status' className='flex items-center justify-center h-full text-subdued'>
                 {t('generating.label')}
               </div>
             ) : (

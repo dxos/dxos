@@ -8,74 +8,60 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Graph, Node, useActionRunner, useActions, useNode } from '@dxos/plugin-graph';
-import { getLinkedVariant, useAttention } from '@dxos/react-ui-attention';
+import { Graph, Node } from '@dxos/plugin-graph';
+import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
-import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion, useSelectedCompanionVariant } from '#hooks';
+import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
+import { DeckOperation, type ResolvedPart } from '#types';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
 
 /** Capability flags that gate the plank toolbar controls. */
 export type PlankCapabilities = {
-  deck?: boolean;
-  solo?: boolean;
+  /** Eligible for the fullscreen toggle (a main, non-mobile plank). */
+  fullscreenToggle?: boolean;
+  /** Eligible for the expand toggle (a main, non-mobile plank in a deck with something to expand into). */
+  expandToggle?: boolean;
   incrementStart?: boolean;
   incrementEnd?: boolean;
-  fullscreen?: boolean;
+  /** Eligible to open the deck companion (offered on any plank that has one, when the companion is off). */
   companion?: boolean;
 };
 
 export type UseDeckPlankOptions = {
   id: string;
-  /** Resolved part for the primary plank (`solo` | `multi` | `complementary`). */
+  /** Resolved part for the primary plank (`main` | `complementary`). */
   part: ResolvedPart;
-  layoutMode: LayoutMode;
-  /** Ordered active planks (multi mode); enables increment/close-range semantics. */
+  /** Ordered active planks (multi mode); enables the increment affordances. */
   active?: string[];
-  /** Whether the companion pane should be shown for this plank (gated further by attention in multi-mode). */
-  companionShown?: boolean;
-  deckEnabled?: boolean;
 };
 
 export type DeckPlank = {
   node: Node.Node | undefined;
-  companions: Node.Node[];
-  resolvedCompanionId: string | undefined;
-  currentCompanion: Node.Node | undefined;
-  hasCompanion: boolean;
-  /** Splitter orientation for the companion pane (defaults to `horizontal`). */
-  companionOrientation: 'horizontal' | 'vertical';
   capabilities: PlankCapabilities;
   /** Grouped sigil-menu actions, or `undefined` when the node is unresolved. */
   sigilActions: AttentionSigilAction[][] | undefined;
   popoverAnchorId?: string;
   scrollIntoView?: string;
+  /** Whether this plank is the one currently expanded to fill the deck. */
+  expanded: boolean;
   onAction: (action: AttentionSigilAction) => void;
   onAdjust: (type: DeckOperation.PartAdjustment) => void;
   onResize: (size: number) => void;
   onScrollIntoView: (subject?: string) => void;
-  onUpdateCompanion: (companion: string | null) => void;
 };
 
 /**
- * Resolves the graph node, companions, capabilities and sigil actions for a deck plank, and exposes the
- * operation dispatchers that mutate deck layout state. This re-homes the framework wiring that the legacy
- * `PlankContainer`/`PlankHeading` bundled, so the presentational components stay free of capabilities.
+ * Resolves the graph node, capabilities and sigil actions for a deck plank, and exposes the operation
+ * dispatchers that mutate deck layout state. Companions are rendered as their own planks
+ * ({@link CompanionPlank}), so this hook only handles ordinary content planks.
  */
-export const useDeckPlank = ({
-  id,
-  part,
-  layoutMode,
-  active,
-  companionShown,
-  deckEnabled,
-}: UseDeckPlankOptions): DeckPlank => {
+export const useDeckPlank = ({ id, part, active }: UseDeckPlankOptions): DeckPlank => {
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
-  const { state, deck } = useDeckState();
+  const { deck, state } = useDeckState();
   const runAction = useActionRunner();
   const breakpoint = useBreakpoints();
   const node = useNode(graph, id);
@@ -84,18 +70,6 @@ export const useDeckPlank = ({
   // leave a freshly-created plank's sigil menu empty until an unrelated re-render.
   const actions = useActions(graph, node?.id);
   const companions = useCompanions(id);
-  const { hasAttention } = useAttention(id);
-  const selectedVariant = useSelectedCompanionVariant();
-
-  // The companion is shown when open; in multi mode it attaches only to the attended plank (hidden until
-  // a plank gains attention). Which companion shows follows the globally-selected variant (view state),
-  // falling back to the first when none is stored.
-  const showCompanion = !!companionShown && (layoutMode !== 'multi' || hasAttention);
-  const { companionId } = useSelectedCompanion(companions, showCompanion ? selectedVariant : undefined);
-  const resolvedCompanionId = showCompanion ? companionId : undefined;
-  const currentCompanion = companions.find((companion) => companion.id === resolvedCompanionId);
-  const hasCompanion = !!(resolvedCompanionId && currentCompanion);
-  const companionOrientation = deck.companionOrientation ?? 'horizontal';
 
   // Ordering within the active stack drives the increment-start/end affordances.
   const index = active ? active.findIndex((entryId) => entryId === id) : -1;
@@ -103,29 +77,17 @@ export const useDeckPlank = ({
   const canIncrementStart = isOrdered && index > 0;
   const canIncrementEnd = isOrdered && index < (active?.length ?? 1) - 1;
 
-  const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
   const capabilities = useMemo<PlankCapabilities>(
     () => ({
-      deck: deckEnabled ?? true,
-      solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'multi'),
+      fullscreenToggle: breakpoint !== 'mobile' && part === 'main',
+      // Only worth offering while the deck slides: a lone plank already fills the viewport.
+      expandToggle: breakpoint !== 'mobile' && part === 'main' && (active?.length ?? 0) > 1,
       incrementStart: canIncrementStart,
       incrementEnd: canIncrementEnd,
-      fullscreen: !isCompanionNode,
-      // Offer to open the companion (solo, or the attended plank in multi) when one exists and isn't shown.
-      companion: !isCompanionNode && companions.length > 0 && !hasCompanion && (layoutMode !== 'multi' || hasAttention),
+      // Companions are per-plank: offer the toggle on any plank that has one while its own is off.
+      companion: companions.length > 0 && !deck.companionPlanks.includes(id),
     }),
-    [
-      deckEnabled,
-      breakpoint,
-      part,
-      canIncrementStart,
-      canIncrementEnd,
-      isCompanionNode,
-      layoutMode,
-      companions.length,
-      hasCompanion,
-      hasAttention,
-    ],
+    [breakpoint, part, canIncrementStart, canIncrementEnd, companions.length, deck.companionPlanks, id, active?.length],
   );
 
   // Load the node's child actions so the sigil menu is populated.
@@ -139,19 +101,15 @@ export const useDeckPlank = ({
     return () => cancelAnimationFrame(frame);
   }, [graph, node]);
 
-  const variant = isCompanionNode ? getLinkedVariant(id) : undefined;
   const sigilActions = useMemo<AttentionSigilAction[][] | undefined>(() => {
     if (!node) {
       return undefined;
-    }
-    if (variant) {
-      return [];
     }
 
     return [actions.filter((action) => Node.hasDisposition(action, PLANK_ACTION_DISPOSITIONS))].filter(
       (group) => group.length > 0,
     );
-  }, [actions, node, variant]);
+  }, [actions, node]);
 
   const onAction = useCallback(
     (action: AttentionSigilAction) => {
@@ -170,18 +128,13 @@ export const useDeckPlank = ({
         if (part === 'complementary') {
           return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         }
-        if (active) {
-          // Close the plank and everything to its right (stack pop).
-          const closeIndex = active.indexOf(id);
-          const toClose = closeIndex !== -1 ? active.slice(closeIndex) : [id];
-          return invokePromise(LayoutOperation.Close, { subject: toClose });
-        }
+        // Close only this plank — desktop decks are not dependency chains, so no cascade.
         return invokePromise(LayoutOperation.Close, { subject: [id] });
       }
 
       return invokePromise(DeckOperation.Adjust, { type, id });
     },
-    [invokePromise, part, active, id],
+    [invokePromise, part, id],
   );
 
   const onResize = useCallback(
@@ -194,26 +147,16 @@ export const useDeckPlank = ({
     [invokePromise],
   );
 
-  const onUpdateCompanion = useCallback(
-    (companion: string | null) => invokePromise(LayoutOperation.UpdateCompanion, { subject: companion }),
-    [invokePromise],
-  );
-
   return {
     node,
-    companions,
-    resolvedCompanionId,
-    currentCompanion,
-    hasCompanion,
-    companionOrientation,
     capabilities,
     sigilActions,
     popoverAnchorId: state.popoverAnchorId,
     scrollIntoView: state.scrollIntoView,
+    expanded: state.expanded === id,
     onAction,
     onAdjust,
     onResize,
     onScrollIntoView,
-    onUpdateCompanion,
   };
 };

@@ -11,12 +11,14 @@ tasks:
     deps:
       # Ensure that all packages are built to run storybook.
       - '#ts-build:build'
-      - '#ts-compile:compile'
+      - '#ts-compile:build'
       # Vendor bundles (e.g. `@dxos/vendor-hyperformula`) use the `vendor` tag, not `ts-build`/
       # `ts-compile`, so they are not covered above; without their dist Vite's dep-scan aborts.
-      - '#vendor:compile'
-      # See `serve` — plugin-sketch static assets must exist before storybook builds.
-      - plugin-sketch:prebuild
+      - '#vendor:build'
+      # Storybook resolves packages straight from source, so anything *generated* — assets, sprites,
+      # compiled shaders — is missing until its producer runs. Each such package exposes it as `prebuild`;
+      # depending on their `build` instead would drag in ts-vite-build's recursive `^:build`.
+      - '#storybook:prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -30,19 +32,18 @@ tasks:
       - --port=9009
       - --no-open
     deps:
-      # Build the full package closure the stories need, mirroring `bundle`. `^:compile` alone only
+      # Build the full package closure the stories need, mirroring `bundle`. `^:build` alone only
       # covers storybook-react's own project deps, so on a fresh worktree it omits artifacts that
       # stories import transitively — e.g. `@dxos/vendor-hyperformula`'s bundle (Vite's dep-scan then
       # aborts and no story loads).
       - '#ts-build:build'
-      - '#ts-compile:compile'
+      - '#ts-compile:build'
       # Vendor bundles (e.g. `@dxos/vendor-hyperformula`) use the `vendor` tag, not `ts-build`/
       # `ts-compile`; their dist is what the dep-scan above needs.
-      - '#vendor:compile'
-      # `.storybook/main.ts` serves `plugin-sketch/dist/assets` as a staticDir; storybook aborts if it
-      # is missing. It hangs off plugin-sketch's `build`, which the tag deps above do not run, so a
-      # fresh worktree has no assets. Generate them explicitly.
-      - plugin-sketch:prebuild
+      - '#vendor:build'
+      # See `bundle` — generated sources and static assets, which hang off each package's `build` and so
+      # are absent in a fresh worktree.
+      - '#storybook:prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
@@ -61,9 +62,10 @@ tasks:
     deps:
       # See `serve` — build the full closure so a fresh worktree has every artifact stories import.
       - '#ts-build:build'
-      - '#ts-compile:compile'
-      - '#vendor:compile'
-      - plugin-sketch:prebuild
+      - '#ts-compile:build'
+      - '#vendor:build'
+      # See `bundle` — generated sources and static assets the tag deps above never produce.
+      - '#storybook:prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts

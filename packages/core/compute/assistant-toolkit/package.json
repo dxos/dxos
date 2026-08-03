@@ -44,6 +44,7 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "effect": "catalog:",

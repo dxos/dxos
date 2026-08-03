@@ -36,7 +36,7 @@ Two fixed/lockstep groups plus deploy-only apps:
 - **`privatePackages: { version: true, tag: false }`** — version private group members (storybook, Composer) but never tag or publish them; deploy-only apps get no changeset, so never bump.
 - **`snapshot`** — the `@next` template (calculated base version + commit suffix, e.g. `0.10.0-next-<commit>`).
 - **`bumpVersionsWithWorkspaceProtocolOnly`** and **`onlyUpdatePeerDependentsWhenOutOfRange`** — part of the semver-cascade fix (below).
-- Otherwise standard: `@changesets/changelog-github`, `access: public`, `baseBranch: main`, `updateInternalDependencies: patch`.
+- Otherwise standard: `@changesets/changelog-git` (git-based, not GitHub API-based — `changelog-github` batches a GraphQL lookup across every unreleased changeset's commit in one query, which reliably timed out once the backlog grew past a few dozen changesets), `access: public`, `baseBranch: main`, `updateInternalDependencies: patch`.
 
 **Standard semver at every version.** At `0.x`, breaking rides the **minor** (`0.9.0 → 0.10.0`) and `major` is reserved for the deliberate `1.0.0` cut. A `minor` does **not** cascade the group to `1.0.0`. Bump-level rules live in the [authoring guide](../agents/instructions/changesets.md); the mechanism below is kept out of it.
 
@@ -123,13 +123,13 @@ Only after the cross-repo contract is proven on `edge`. The history extraction i
 
 The `sdk/app-*` packages + `shell` are the plugin-SDK layer (not storybook back-edges) — moving them collapses most of the cut. Genuine back-edges to clean first:
 
-| Back-edge                                                                                             | Fix                                                   |
-| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `@dxos/schema`, `@dxos/types` — react-ui _devDep_ for demo stories                                    | Delete/inline the story; drop the devDep              |
-| `@dxos/react-client` — react-ui `ErrorBoundary` in a test decorator                                   | Swap to `@dxos/react-error-boundary` (Repo-A common)  |
-| `@dxos/keyboard` — story-only                                                                         | Move story to Repo B `stories-ui`                     |
-| `@dxos/storybook-utils` — react-ui _peerDep_                                                          | Move to Repo B                                        |
-| `assistant-e2e`/`assistant-evals` (private); `assistant-toolkit` (plugin imports in `*.test.ts` only) | Move e2e/evals + the toolkit's plugin tests to Repo B |
-| `@dxos/blade-runner` — `@dxos/plugin-script`                                                          | Default to Repo B (or sever the dep)                  |
+| Back-edge                                                                                                                  | Fix                                                               |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `@dxos/schema`, `@dxos/types` — react-ui _devDep_ for demo stories                                                         | Delete/inline the story; drop the devDep                          |
+| `@dxos/react-client` — react-ui `ErrorBoundary` in a test decorator                                                        | Swap to `@dxos/react-error-boundary` (Repo-A common)              |
+| `@dxos/keyboard` — story-only                                                                                              | Move story to Repo B `stories-ui`                                 |
+| `@dxos/storybook-utils` — react-ui _peerDep_                                                                               | Move to Repo B                                                    |
+| `assistant-e2e` (private, deprecated — legacy gated agent tests); `assistant-toolkit` (plugin imports in `*.test.ts` only) | Remove `assistant-e2e`; move the toolkit's plugin tests to Repo B |
+| `@dxos/blade-runner` — `@dxos/plugin-script`                                                                               | Default to Repo B (or sever the dep)                              |
 
 Sequence (CI green throughout): (1) cleanup PR in Repo A removing back-edges; (2) `check-cycles.mjs` + `check-package-cycles.mjs` confirm acyclic; (3) tag `pre-split`; (4) `git filter-repo` the Repo-B path set into the new repo + bootstrap its workspace / catalog subset / `.moon` / CI / Changesets / `link-packages.mjs`; (5) delete moved dirs from Repo A (globs, tsconfig paths, the `app-framework` `DEFAULT_PACKAGES` allowlist); (6) publish Repo A `0.10.0`; Repo B switches its catalog floor from a pkg.pr.new SHA to an npm range. No compat shims. Also resolve the duplicate `reflect/introspect*` vs `core/compute/introspect*`.

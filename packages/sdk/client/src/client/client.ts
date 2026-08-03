@@ -202,6 +202,16 @@ export class Client {
   }
 
   /**
+   * True while an in-progress {@link reset} is tearing down services. Consumers that react to
+   * service disconnect/reconnect (e.g. to force a reload) should check this before choosing a
+   * reload target — mid-reset, the current route is stale and reloading to it would reopen
+   * now-cleared UI, so navigate to the origin instead.
+   */
+  get resetting(): boolean {
+    return this._resetting;
+  }
+
+  /**
    * ECHO Spaces.
    */
   get spaces(): Echo {

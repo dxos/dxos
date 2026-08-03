@@ -2,10 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './access-token-resolver';
 export * from './credentials';
-export * from './function-invocation-service';
-export * from './function-invocation-router';
-export * from './local-function-execution';
-export * from './service-container';
 export * from './service-registry';
 export { MESSAGE_PROPERTY_TOOL_CALL_ID } from './tracing';

@@ -92,9 +92,6 @@
       "path": "../../core/protocols"
     },
     {
-      "path": "../../devtools/devtools"
-    },
-    {
       "path": "../../plugins/plugin-assistant"
     },
     {
@@ -108,9 +105,6 @@
     },
     {
       "path": "../../plugins/plugin-client"
-    },
-    {
-      "path": "../../plugins/plugin-comments"
     },
     {
       "path": "../../plugins/plugin-connector"
@@ -131,6 +125,9 @@
       "path": "../../plugins/plugin-graph"
     },
     {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
       "path": "../../plugins/plugin-inbox"
     },
     {
@@ -146,13 +143,16 @@
       "path": "../../plugins/plugin-preview"
     },
     {
+      "path": "../../plugins/plugin-projects"
+    },
+    {
+      "path": "../../plugins/plugin-review"
+    },
+    {
       "path": "../../plugins/plugin-routine"
     },
     {
       "path": "../../plugins/plugin-script"
-    },
-    {
-      "path": "../../plugins/plugin-sketch"
     },
     {
       "path": "../../plugins/plugin-space"
@@ -168,6 +168,9 @@
     },
     {
       "path": "../../plugins/plugin-thread"
+    },
+    {
+      "path": "../../plugins/plugin-tldraw"
     },
     {
       "path": "../../plugins/plugin-transcription"
@@ -221,6 +224,9 @@
       "path": "../../ui/react-ui-components"
     },
     {
+      "path": "../../ui/react-ui-debug"
+    },
+    {
       "path": "../../ui/react-ui-editor"
     },
     {
@@ -260,7 +266,7 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../story-modules"
+      "path": "../storybook-testing"
     }
   ]
 }

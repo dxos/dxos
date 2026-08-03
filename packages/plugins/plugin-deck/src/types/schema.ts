@@ -5,51 +5,56 @@
 import * as Schema from 'effect/Schema';
 
 import { AppNode, LayoutOperation, Translations } from '@dxos/app-toolkit';
-import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '#meta';
 
 export const PLANK_COMPANION_TYPE = AppNode.PLANK_COMPANION_TYPE;
 export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 
-export type Part = 'solo' | 'multi' | 'complementary';
-export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
+export type Part = 'main' | 'complementary';
+export type ResolvedPart = Part;
 
 export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Number });
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 export const DeckState = Schema.Struct({
-  /** If false, the deck has not yet left solo mode and new planks should be soloed. */
-  initialized: Schema.Boolean,
-  /** Item IDs of planks currently displayed in multi-mode. */
+  /** Item IDs of planks currently active. A singleton list renders fullbleed; 2+ render as a sliding deck. */
   active: Schema.mutable(Schema.Array(Schema.String)),
   /** Item IDs of planks that have been closed; used for state persistence and reopening. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  /** Item ID of the single plank displayed in solo or fullscreen mode. */
-  solo: Schema.optional(Schema.String),
-  /** Whether the solo plank is displayed in fullscreen mode (no heading or sidebars). */
-  fullscreen: Schema.Boolean,
-  /** Persisted plank widths in rem, keyed by item ID. */
+  /**
+   * Absolute widths in rem, keyed by item id — a plank keeps its width wherever it sits. The companion's
+   * own width is held here too, under a key that is not a valid item id (see `DeckViewport`).
+   */
   plankSizing: Schema.mutable(PlankSizing),
-  /** Whether the companion pane is visible alongside the active plank(s). */
-  companionOpen: Schema.Boolean,
-  /** Orientation of the companion splitter: `horizontal` (side-by-side) or `vertical` (stacked). */
-  companionOrientation: Schema.optional(Schema.Literal('horizontal', 'vertical')),
-  /** Persisted companion frame widths in rem, keyed by frame ID. */
-  companionFrameSizing: Schema.mutable(PlankSizing),
+  /**
+   * Planks showing their companion, by id. Per plank rather than per deck so moving between planks
+   * restores what each was left in — a plank you closed the companion on stays closed when you come
+   * back to it, while the one you left it open on reopens it.
+   */
+  companionPlanks: Schema.mutable(Schema.Array(Schema.String)),
+  /**
+   * Named planks, as name → the plank id currently occupying that name. A name makes a plank behave
+   * like a browser tab: opening under a name that is already taken replaces its occupant in place.
+   * Entries are pruned as their plank closes.
+   */
+  plankNames: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String })),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
+/**
+ * Deck key for the "no workspace resolved yet" sentinel — the initial `activeDeck` of a fresh profile,
+ * held until the plugin that owns spaces switches to a real workspace. Not a graph node id, so it is
+ * never serialized into the URL (see the deck's url-handler).
+ */
+export const DEFAULT_DECK_ID = 'default';
+
 export const defaultDeck: DeckState = {
-  initialized: false,
   active: [],
   inactive: [],
-  solo: undefined,
-  fullscreen: false,
   plankSizing: {},
-  companionOpen: false,
-  companionOrientation: 'horizontal',
-  companionFrameSizing: {},
+  companionPlanks: [],
+  plankNames: {},
 };
 
 //
@@ -59,13 +64,13 @@ export const defaultDeck: DeckState = {
 const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
-export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode => {
-  if (deck.solo) {
-    return deck.fullscreen ? 'solo--fullscreen' : 'solo';
-  }
 
-  return 'multi';
-};
+/**
+ * The `Layout` capability's mode: a fullscreen plank renders alone and headless, so it reports as
+ * `solo--fullscreen`; otherwise the mode follows the active plank count (companions excluded).
+ */
+export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean): LayoutMode =>
+  fullscreen ? 'solo--fullscreen' : deck.active.length > 1 ? 'multi' : 'solo';
 
 // Persisted plugin state (stored in KVS/localStorage).
 export const StoredDeckState = Schema.Struct({
@@ -75,12 +80,20 @@ export const StoredDeckState = Schema.Struct({
   activeDeck: Schema.String,
   previousDeck: Schema.String,
   decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
-  previousMode: Schema.mutable(Schema.Record({ key: Schema.String, value: LayoutMode })),
 }).pipe(Schema.mutable);
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
 // Transient/ephemeral plugin state (not persisted).
 export const EphemeralDeckState = Schema.Struct({
+  /** Item ID of the plank currently displayed fullscreen (headless); transient, never in the URL. */
+  fullscreen: Schema.optional(Schema.String),
+  /**
+   * Item ID of the plank currently expanded to fill the deck, leaving only the other planks' spines
+   * beside it. Transient, and separate from `plankSizing` so collapsing restores the plank's own width.
+   */
+  expanded: Schema.optional(Schema.String),
+  /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
+  expose: Schema.optional(Schema.Boolean),
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
@@ -117,9 +130,10 @@ export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(
     Schema.Literal('close').annotations({ description: 'Close the plank.' }),
     Schema.Literal('companion').annotations({ description: 'Open the companion plank side-by-side.' }),
-    Schema.Literal('companion-vertical').annotations({ description: 'Open the companion plank stacked vertically.' }),
-    Schema.Literal('solo').annotations({ description: 'Solo the plank.' }),
-    Schema.Literal('solo--fullscreen').annotations({ description: 'Fullscreen the plank.' }),
+    Schema.Literal('fullscreen').annotations({ description: 'Toggle fullscreen display of the plank.' }),
+    Schema.Literal('expand').annotations({
+      description: "Toggle the plank filling the deck, leaving only the other planks' spines beside it.",
+    }),
     Schema.Literal('increment-start').annotations({ description: 'Move the plank towards the start of the deck.' }),
     Schema.Literal('increment-end').annotations({ description: 'Move the plank towards the end of the deck.' }),
   );

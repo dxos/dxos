@@ -7,7 +7,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
@@ -45,6 +45,7 @@ export default Capability.makeModule(
     const stateAtom = yield* Capability.get(SpaceCapabilities.State);
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
+    const haloIdentity = yield* Capability.get(ClientCapabilities.IdentityService);
 
     //
     // Personal space initialization — deferred until found.
@@ -66,7 +67,7 @@ export default Capability.makeModule(
         // Check if deck state indicates we should switch to default space.
         const layout = registry.get(layoutAtom);
         if (layout.workspace === 'default') {
-          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
+          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
         }
 
         const queryResults = yield* Effect.promise(() =>
@@ -131,6 +132,8 @@ export default Capability.makeModule(
 
           const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
           if (!node && (isEchoRef(id) || id.length === SPACE_ID_LENGTH)) {
+            // Fire any `resolver` extension for the id first; the timeout below is the fallback when
+            // nothing materializes it.
             void Graph.initialize(graph, id);
             const timeout = setTimeout(async () => {
               const node = Graph.getNode(graph, id).pipe(Option.getOrNull);
@@ -211,7 +214,7 @@ export default Capability.makeModule(
 
       const send = () => {
         const spaces = client.spaces.get();
-        const identity = client.halo.identity.get();
+        const identity = Option.getOrUndefined(haloIdentity.getSnapshot());
         if (identity) {
           // Group parts by space for efficient messaging.
           const idsBySpace = reduceGroupBy(active, (id: string) => {
@@ -248,7 +251,7 @@ export default Capability.makeModule(
 
             void space
               .postMessage('viewing', {
-                identityKey: identity.identityKey.toHex(),
+                identityKey: identity.identityKey,
                 attended: current,
                 added,
                 removed,
@@ -287,10 +290,10 @@ export default Capability.makeModule(
             const { added, removed, attended } = message.payload;
 
             const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-            const currentIdentity = client.halo.identity.get();
+            const currentIdentity = Option.getOrUndefined(haloIdentity.getSnapshot());
             if (
               identityKey &&
-              !currentIdentity?.identityKey.equals(identityKey) &&
+              currentIdentity?.identityKey !== identityKey.toHex() &&
               Array.isArray(added) &&
               Array.isArray(removed)
             ) {

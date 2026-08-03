@@ -5,15 +5,23 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/story-modules';
 
 import { ResearchInputQueue } from '../testing/schema';
 
-export const ResearchOutputModule = ({ space }: ModuleProps) => {
+export const ResearchOutputModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+
+  return <ResearchOutputModuleContainer space={space} />;
+};
+
+const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const feed = researchInput?.feed.target;
   const objects = useQuery(

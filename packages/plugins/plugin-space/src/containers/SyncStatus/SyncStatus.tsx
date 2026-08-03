@@ -4,56 +4,52 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { log } from '@dxos/log';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
-import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
-import { createClientSaveTracker, getIcon, getStatus } from '#components';
+import { createClientSaveTracker, getIcon, getStatus, getStatusStyle } from '#components';
+import { useEdgeStatus, useStalled } from '#hooks';
 import { meta } from '#meta';
-
-const SYNC_STALLED_TIMEOUT = 5_000;
 
 export const SyncStatus = () => {
   const client = useClient();
   const state = useSyncState();
+  const edgeStatus = useEdgeStatus();
   const [saved, setSaved] = useState(true);
   useEffect(() => createClientSaveTracker(client, (state) => setSaved(state === 'saved')), []);
 
-  return <SyncStatusIndicator state={state} saved={saved} />;
+  return <SyncStatusIndicator state={state} saved={saved} edgeStatus={edgeStatus} />;
 };
 
-export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap; saved: boolean }) => {
+export const SyncStatusIndicator = ({
+  state,
+  saved,
+  edgeStatus,
+}: {
+  state: SpaceSyncStateMap;
+  saved: boolean;
+  edgeStatus: EdgeStatus;
+}) => {
   const { t } = useTranslation(meta.profile.key);
   const summary = getSyncSummary(state);
-  const offline = Object.values(state).length === 0;
+  // Absent peer sync state is indistinguishable from having no connection.
+  const offline = edgeStatus.state !== EdgeStatus.ConnectionState.CONNECTED || Object.values(state).length === 0;
   const needsToUpload = summary.differentDocuments > 0 || summary.missingOnRemote > 0;
   const needsToDownload = summary.differentDocuments > 0 || summary.missingOnLocal > 0;
-  const status = getStatus({ offline, saved, needsToUpload, needsToDownload });
 
-  const [classNames, setClassNames] = useState<string>();
-  useEffect(() => {
-    setClassNames(undefined);
-    if (offline || (!needsToUpload && !needsToDownload)) {
-      return;
-    }
+  // Documents left to reconcile; a change means replication advanced, so the stall timer restarts.
+  const outstanding = summary.differentDocuments + summary.missingOnLocal + summary.missingOnRemote;
+  // Bytes on the wire prove liveness while the document counts hold steady (e.g. one large document).
+  const transferring = edgeStatus.rateBytesUp + edgeStatus.rateBytesDown > 0;
+  const stalled = useStalled({ active: !offline && outstanding > 0 && !transferring, progress: outstanding });
 
-    const t = setTimeout(() => {
-      log.warn('sync stalled', { state });
-      setClassNames('text-error-text');
-    }, SYNC_STALLED_TIMEOUT);
-
-    return () => {
-      clearTimeout(t);
-      setClassNames(undefined);
-    };
-  }, [offline, needsToUpload, needsToDownload]);
+  const status = getStatus({ offline, saved, stalled, needsToUpload, needsToDownload });
+  const icon = getIcon(status);
 
   return (
     <Popover.Root>
@@ -61,16 +57,16 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
         <StatusBar.Item>
           <IconButton
             variant='ghost'
-            icon={getIcon(status)}
+            icon={icon}
             iconOnly
             label={t(`${status}.label`)}
-            classNames={classNames}
+            classNames={getStatusStyle(status)}
           />
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content side='left' classNames=''>
-          <EdgeConnectionPopover />
+        <Popover.Content side='left'>
+          <EdgeConnectionPopover status={edgeStatus} />
           <Popover.Arrow />
         </Popover.Content>
       </Popover.Portal>
@@ -78,15 +74,12 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
   );
 };
 
-const EdgeConnectionPopover = () => {
+const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
   const { t } = useTranslation(meta.profile.key);
   const client = useClient();
-  const { status } = useStream(
-    () => client.services.services.EdgeAgentService!.queryEdgeStatus(),
-    {} as QueryEdgeStatusResponse,
-  );
 
-  const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
+  const isConnected = status.state === EdgeStatus.ConnectionState.CONNECTED;
+  const edgeUrl = client.config.get('runtime.services.edge.url');
 
   return (
     <div className='flex flex-col gap-2 w-[240px] p-2' style={iconSize(4)}>
@@ -96,20 +89,20 @@ const EdgeConnectionPopover = () => {
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
           classNames={mx(isConnected ? 'text-success-text' : 'text-error-text animate-pulse')}
         />
-        <span className='font-medium text-sm'>
-          {isConnected ? t('sync-edge-connected.label') : t('sync-edge-disconnected.label')}
+        <span className='font-medium text-sm truncate' title={edgeUrl}>
+          {isConnected ? (edgeUrl ?? t('sync-edge-connected.label')) : t('sync-edge-disconnected.label')}
         </span>
       </div>
 
       {/* Connection Details */}
-      {status?.state === EdgeStatus.ConnectionState.NOT_CONNECTED && (
+      {!isConnected && (
         <div className='grid grid-cols-[min-content_1fr_min-content_min-content] gap-2'>
           <Icon icon='ph--cloud-x--regular' />
           <span className='text-description'>{t('sync-no-connection.label')}</span>
         </div>
       )}
 
-      {status?.state === EdgeStatus.ConnectionState.CONNECTED && (
+      {isConnected && (
         <div className='grid grid-cols-[min-content_1fr_min-content_min-content] gap-2 gap-y-1'>
           {/* Latency */}
           <div className='col-span-full grid grid-cols-subgrid gap-2 items-center text-sm'>

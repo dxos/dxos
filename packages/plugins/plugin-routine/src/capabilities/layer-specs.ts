@@ -15,13 +15,14 @@ import {
   FeedTraceSink,
   ProcessManager,
   RemoteOperationInvoker,
+  RemoteProcessManager,
   RemoteTriggerManager,
   TriggerDispatcher,
   TriggerMonitor,
   TriggerStateStore,
 } from '@dxos/compute-runtime';
 import { Database, Registry } from '@dxos/echo';
-import { EdgeOperationInvoker, EdgeTriggerManager } from '@dxos/edge-compute';
+import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
 import { invariant } from '@dxos/invariant';
 
 //
@@ -171,8 +172,9 @@ const RemoteOperationInvokerSpec = LayerSpec.make(
 
 /**
  * Space-scoped remote (EDGE) trigger manager, consumed by the aggregate
- * {@link TriggerMonitor}. Uses the EDGE implementation when edge agents are
- * enabled, otherwise a no-op.
+ * {@link TriggerMonitor}. Uses the EDGE implementation whenever an edge service
+ * is configured (a trigger is routed here by its own `remote` flag, so the
+ * manager should exist wherever edge is reachable), otherwise a no-op.
  */
 const RemoteTriggerManagerSpec = LayerSpec.make(
   {
@@ -185,8 +187,30 @@ const RemoteTriggerManagerSpec = LayerSpec.make(
       Effect.gen(function* () {
         invariant(context.space, 'space context required for RemoteTriggerManager');
         const client = yield* ClientService;
-        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
-        return edgeAgents ? EdgeTriggerManager.fromClient(client, context.space) : RemoteTriggerManager.layerNoop;
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeTriggerManager.fromClient(client, context.space) : RemoteTriggerManager.layerNoop;
+      }),
+    ),
+);
+
+/**
+ * Application-scoped remote (EDGE) process manager, providing the progress meter's cancel control.
+ * Uses the EDGE implementation whenever an edge service is configured — cancel is addressed by trigger
+ * id + space, so it is not space-scoped — otherwise a read-only no-op. Resolved by the progress trace
+ * sink to route an edge-run trigger's cancel; the aggregate {@link TriggerMonitor} view is unaffected.
+ */
+const RemoteProcessManagerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService, AtomRegistry.AtomRegistry],
+    provides: [RemoteProcessManager.Service],
+  },
+  () =>
+    Layer.unwrapEffect(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeProcessManager.fromClient(client) : RemoteProcessManager.layerNoop;
       }),
     ),
 );
@@ -226,6 +250,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.LayerSpec, RemoteTriggerManagerSpec),
     Capability.contributes(Capabilities.LayerSpec, TriggerMonitorSpec),
     Capability.contributes(Capabilities.LayerSpec, RemoteOperationInvokerSpec),
+    Capability.contributes(Capabilities.LayerSpec, RemoteProcessManagerSpec),
     Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
   ]),
 );

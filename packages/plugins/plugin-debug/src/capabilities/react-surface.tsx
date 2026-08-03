@@ -9,7 +9,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppAnnotation, AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppAnnotation, AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
@@ -17,6 +17,8 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
+import { Logger } from '@dxos/react-ui-debug';
 import { Position } from '@dxos/util';
 
 import {
@@ -24,6 +26,7 @@ import {
   DebugSettings,
   DebugSpaceObjectsPanel,
   DebugStatus,
+  LogStatus,
   SpaceGenerator,
   StatsPanel,
   Wireframe,
@@ -59,7 +62,7 @@ const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoke
 
   const onOpen = useCallback(
     (object: Obj.Unknown) => {
-      void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(object)] });
+      void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(object)] });
     },
     [invokePromise],
   );
@@ -188,6 +191,32 @@ export default Capability.makeModule(
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: Position.first,
         component: () => <DebugStatus />,
+      }),
+      Surface.create({
+        id: 'logs',
+        filter: Surface.makeFilter(AppSurface.deckCompanion('logs')),
+        component: () => (
+          <Logger.Root>
+            <Panel.Root>
+              <Panel.Toolbar asChild>
+                <Logger.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <Logger.Content>
+                  <Logger.List />
+                </Logger.Content>
+              </Panel.Content>
+              <Panel.Statusbar asChild>
+                <Logger.Filter />
+              </Panel.Statusbar>
+            </Panel.Root>
+          </Logger.Root>
+        ),
+      }),
+      Surface.create({
+        id: 'logStatus',
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        component: () => <LogStatus />,
       }),
       Surface.create({
         id: 'statsPanel',

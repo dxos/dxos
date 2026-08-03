@@ -6,11 +6,12 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { HomeSection, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
-import { type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space } from '@dxos/react-client/echo';
 import { Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { getStyles } from '@dxos/ui-theme';
@@ -84,7 +85,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
 
   const handleClick = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(data)] });
+    void invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(data)] });
   }, [invokePromise, data]);
 
   return (

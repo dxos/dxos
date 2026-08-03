@@ -17,8 +17,8 @@ tasks:
       - '--outputPath=dist/plugin'
       - '--platform=node'
     deps:
-      - ^:compile
-      - dx-compile:compile
+      - ^:build
+      - dx-compile:build
     inputs:
       - '@group(production)'
     outputs:

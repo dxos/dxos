@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { Operation, Skill } from '@dxos/compute';
-import { Database, Feed, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
+import { Text } from '@dxos/schema';
+import { Outline, Task, TaskSet } from '@dxos/types';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import DelegationSkill from '../skill';
 import { DelegateTask } from './delegate-task';
 import { DelegationHandlers } from './index';
@@ -21,19 +23,29 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DelegationHandlers,
-  types: [Agent.Agent, Plan.Plan, Chat.Chat, Chat.CompanionTo, Skill.Skill, Feed.Feed],
+  types: [
+    Agent.Agent,
+    Outline.Outline,
+    Task.Task,
+    TaskSet.TaskSet,
+    Text.Text,
+    Chat.Chat,
+    Chat.CompanionTo,
+    Skill.Skill,
+    Feed.Feed,
+  ],
   skills: [DelegationSkill.make()],
   disableLlmMemoization: true,
 });
 
-const invokeDelegateTask = (input: { id?: Plan.TaskId; title?: string }, chatFeed: Feed.Feed) =>
+const invokeDelegateTask = (input: { title: string }, chatFeed: Feed.Feed) =>
   Operation.invoke(DelegateTask, input).pipe(
     Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })),
   );
 
 describe('DelegateTask', () => {
   it.scoped(
-    'adds an in-progress task to the agent plan for delegated work',
+    'promotes delegated work to a durable in-progress agent task',
     Effect.fnUntraced(
       function* ({ expect }) {
         const agent = yield* Agent.makeInitialized(
@@ -42,19 +54,29 @@ describe('DelegateTask', () => {
         );
         yield* Database.flush();
 
-        const chatFeed = agent.chat?.target?.feed?.target;
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
         yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
 
-        const chat = yield* Database.load(agent.chat!);
-        const plan = yield* Database.load(chat.plan!);
-        expect(plan.tasks).toHaveLength(1);
-        expect(plan.tasks[0]).toMatchObject({
+        // The durable task is parented to the outline's task set with an agent assignee.
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const outline = yield* Database.load(chat.outline!);
+        const taskSet = yield* Database.load(outline.taskSet!);
+        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run;
+        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+        expect(tasks).toHaveLength(1);
+        expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
           status: 'in-progress',
-          delegated: true,
+          assignee: { role: 'assistant' },
         });
+
+        // The checklist mirrors the item, unchecked until the sub-agent completes.
+        const text = yield* Database.load(outline.content);
+        expect(Outline.parseChecklist(text.content)).toEqual([{ title: 'Research widgets', done: false }]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -62,43 +84,7 @@ describe('DelegateTask', () => {
   );
 
   it.scoped(
-    'delegates an existing plan task by id without duplicating',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const agent = yield* Agent.makeInitialized(
-          { name: 'Supervisor', instructions: 'Test.' },
-          DelegationSkill.make(),
-        );
-        const chat = yield* Database.load(agent.chat!);
-        const plan = yield* Chat.ensurePlan(chat);
-        const taskId = Plan.TaskId.make('1-ab');
-        Obj.update(plan, (plan) => {
-          plan.tasks.push({ id: taskId, title: 'Research widgets', status: 'todo' });
-        });
-        yield* Database.flush();
-
-        const chatFeed = agent.chat?.target?.feed?.target;
-        invariant(chatFeed, 'Agent chat feed not found.');
-
-        yield* invokeDelegateTask({ id: taskId }, chatFeed);
-
-        const updatedChat = yield* Database.load(agent.chat!);
-        const updated = yield* Database.load(updatedChat.plan!);
-        expect(updated.tasks).toHaveLength(1);
-        expect(updated.tasks[0]).toMatchObject({
-          id: taskId,
-          title: 'Research widgets',
-          status: 'in-progress',
-          delegated: true,
-        });
-      },
-      Effect.provide(TestLayer),
-      TestHelpers.provideTestContext,
-    ),
-  );
-
-  it.scoped(
-    'fails when both id and title are provided',
+    'reuses the outline task set across delegations',
     Effect.fnUntraced(
       function* ({ expect }) {
         const agent = yield* Agent.makeInitialized(
@@ -107,12 +93,41 @@ describe('DelegateTask', () => {
         );
         yield* Database.flush();
 
-        const chatFeed = agent.chat?.target?.feed?.target;
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
         invariant(chatFeed, 'Agent chat feed not found.');
 
-        const exit = yield* invokeDelegateTask({ id: Plan.TaskId.make('1-ab'), title: 'New task' }, chatFeed).pipe(
-          Effect.exit,
+        yield* invokeDelegateTask({ title: 'Research widgets' }, chatFeed);
+        yield* invokeDelegateTask({ title: 'Summarize findings' }, chatFeed);
+
+        const chat = yield* Agent.loadChat(agent);
+        invariant(chat, 'Agent chat not found.');
+        const outline = yield* Database.load(chat.outline!);
+        const taskSet = yield* Database.load(outline.taskSet!);
+        const children = yield* Database.query(Query.select(Filter.id(taskSet.id)).children()).run;
+        const tasks = children.filter((child): child is Task.Task => Obj.instanceOf(Task.Task, child));
+        expect(tasks).toHaveLength(2);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.scoped(
+    'fails on an empty title',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const agent = yield* Agent.makeInitialized(
+          { name: 'Supervisor', instructions: 'Test.' },
+          DelegationSkill.make(),
         );
+        yield* Database.flush();
+
+        const agentChat = yield* Agent.loadChat(agent);
+        const chatFeed = agentChat?.feed?.target;
+        invariant(chatFeed, 'Agent chat feed not found.');
+
+        const exit = yield* invokeDelegateTask({ title: '' }, chatFeed).pipe(Effect.exit);
         expect(exit._tag).toBe('Failure');
       },
       Effect.provide(TestLayer),

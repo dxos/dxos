@@ -21,10 +21,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./workerd": {
-      "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/browser/index.mjs"
-    },
     "./events": {
       "source": "./src/app-framework/AppActivationEvents.ts",
       "types": "./dist/types/src/app-framework/AppActivationEvents.d.ts",
@@ -34,6 +30,16 @@
       "source": "./src/echo/Query.ts",
       "types": "./dist/types/src/echo/Query.d.ts",
       "import": "./dist/lib/echo/Query.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
+      "import": "./dist/lib/testing.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
     },
     "./ui": {
       "source": "./src/ui/index.ts",
@@ -72,6 +78,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
     "@tauri-apps/api": "catalog:"
   },

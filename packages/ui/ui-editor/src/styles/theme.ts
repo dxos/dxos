@@ -194,6 +194,8 @@ export const baseTheme = EditorView.baseTheme({
 
   /**
    * Selection (layer).
+   * NOTE: A browser dark-mode/reader extension can override `::selection` and reveal a second
+   * (native) selection over this layer; that is an extension artifact, not an editor bug.
    */
   '.cm-selectionBackground': {
     background: 'var(--color-cm-selection)',

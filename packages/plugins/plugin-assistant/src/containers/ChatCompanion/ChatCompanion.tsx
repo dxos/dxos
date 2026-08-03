@@ -3,17 +3,18 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppAnnotation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Skill } from '@dxos/compute';
+import { Project, Skill } from '@dxos/compute';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
+import { useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useContextBinder } from '#hooks';
@@ -26,22 +27,22 @@ export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unkn
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
-    const space = getSpace(companionTo);
+    const db = Obj.getDatabase(companionTo);
     useSkills({ subject: chat, companionTo });
 
     // Persist (and flush) a transient chat before the first request so the agent can resolve
     // the now-durable conversation feed; subsequent submits are a no-op once persisted.
     const handleSubmit = useCallback(async () => {
-      if (!space || !chat || Obj.getDatabase(chat)) {
+      if (!db || !chat || Obj.getDatabase(chat)) {
         return;
       }
 
       await invokePromise(SpaceOperation.AddObject, {
         object: chat,
-        target: space.db,
+        target: db,
       });
       await invokePromise(SpaceOperation.AddRelation, {
-        db: space.db,
+        db,
         schema: Chat.CompanionTo,
         source: chat,
         target: companionTo,
@@ -50,8 +51,8 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         companionTo,
         chat,
       });
-      await space.db.flush();
-    }, [space, chat, companionTo, invokePromise]);
+      await db.flush();
+    }, [db, chat, companionTo, invokePromise]);
 
     return (
       <ChatArticle
@@ -96,6 +97,26 @@ const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'sub
     [existingSkills, skillKeys],
   );
 
+  // Subscribe so a project's instructions ref resolving after the project object itself (e.g. loading
+  // over the wire) re-triggers the effects below, mirroring the `feedSnapshot` subscription above.
+  const [instructionsSnapshot] = useObject(
+    Obj.instanceOf(Project.Project, companionTo) ? companionTo.instructions : undefined,
+  );
+
+  // Steer the chat with the project's instructions BY REFERENCE (chat.instructions → system prompt at
+  // request time). Also the lazy backfill: pre-existing project chats without the field pick it up here.
+  useEffect(() => {
+    if (!chat || chat.instructions || !Obj.instanceOf(Project.Project, companionTo)) {
+      return;
+    }
+    const instructionsRef = companionTo.instructions;
+    if (instructionsRef) {
+      Obj.update(chat, (chat) => {
+        chat.instructions = instructionsRef;
+      });
+    }
+  }, [chat, companionTo, instructionsSnapshot]);
+
   useAsyncEffect(async () => {
     if (!binder?.isOpen) {
       return;
@@ -123,7 +144,19 @@ const useSkills = ({ subject: chat, companionTo }: Pick<ChatCompanionProps, 'sub
     } else {
       await binder.bind({ objects: [Ref.make(companionTo)] });
     }
-  }, [binder, skillKeys, pluginSkills, companionTo]);
+
+    // Bind the project's skills and context objects into the session (instructions text travels
+    // via chat.instructions, set above).
+    if (Obj.instanceOf(Project.Project, companionTo)) {
+      const bindings = Project.contextBindings(companionTo);
+      if (bindings.skills.length > 0) {
+        await binder.bind({ skills: bindings.skills });
+      }
+      if (bindings.objects.length > 0) {
+        await binder.bind({ objects: bindings.objects });
+      }
+    }
+  }, [binder, skillKeys, pluginSkills, companionTo, instructionsSnapshot]);
 };
 
 ChatCompanion.displayName = 'ChatCompanion';

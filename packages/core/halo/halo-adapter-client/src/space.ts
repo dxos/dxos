@@ -45,6 +45,9 @@ const toMembers = (members: readonly SpaceMember[]): HaloSpace.Member[] =>
     return [
       {
         did: member.identity?.did !== undefined ? IdentityDid.make(member.identity.did) : undefined,
+        identityKey: member.identity?.identityKey?.toHex(),
+        displayName: member.identity?.profile?.displayName,
+        data: member.identity?.profile?.data,
         role,
         online: isOnline(member),
       },

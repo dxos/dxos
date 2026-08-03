@@ -7,8 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { Collection, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
-import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';

@@ -9,7 +9,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
-import { closeEntry } from '../layout';
+import { closeEntry, updatePlankNames } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
@@ -20,10 +20,11 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const deck = yield* DeckCapabilities.getDeck();
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
-      const active = deck.solo ? [deck.solo] : deck.active;
-      const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
+      const next = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
       const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention });
-      yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
+      yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
+        updateActiveDeck(state, { ...deckUpdates, plankNames: updatePlankNames(deck.plankNames, deckUpdates.active) }),
+      );
 
       if (toAttend) {
         yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: toAttend });

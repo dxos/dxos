@@ -136,7 +136,7 @@ const ProviderHarness = () => {
   };
 
   return (
-    <div className='dx-container flex flex-col gap-4 p-4 max-is-[40rem]'>
+    <div className='dx-container flex flex-col gap-4 p-4 max-w-[40rem]'>
       <Input.Root>
         <Input.Label>HeyGen API key</Input.Label>
         <Input.TextInput

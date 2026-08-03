@@ -2,12 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
-import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInMonths,
+  differenceInWeeks,
+  differenceInYears,
+  format,
+  formatDistance,
+  isThisWeek,
+  isThisYear,
+  isToday,
+} from 'date-fns';
 
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
-import { toHue } from '@dxos/util';
 
+import { meta } from '#meta';
 import { type Mailbox } from '#types';
 
 export const REPLY_DELIMITER = '\n\n---';
@@ -149,14 +161,38 @@ export const orderThreadItems = (messages: Message.Message[]): Message.Message[]
 };
 
 /**
- * Hashes a string into a number
- * @param str String to hash
- * @returns A non-negative number hash
+ * Drops a draft superseded by its already-synced sent copy (`properties.sentMessageId` matched against
+ * the synced messages' foreign-key ids). Synced messages and this mailbox's still-unsent drafts always
+ * pass; a draft from a different mailbox is dropped. Used by the `mailboxMessage` companion connector,
+ * which can briefly see both a draft and its just-synced copy in the same thread.
  */
-// TODO(burdon): Factor out.
-export const hashString = (str?: string): number => {
-  return str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
+export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
 };
+
+/**
+ * Display label for a message's graph node (the plank heading, and its breadcrumb tail in flat mode).
+ * A compose draft's subject is an empty string rather than absent, so falling back only on `undefined`
+ * would leave the heading blank until the user types one.
+ */
+export const getMessageLabel = (message: Message.Message) =>
+  message.properties?.subject ||
+  (DraftMessage.instanceOf(message)
+    ? (['draft.label', { ns: meta.profile.key }] as const)
+    : (['message.label', { ns: meta.profile.key }] as const));
 
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
@@ -175,6 +211,37 @@ export const formatDateTime = (date: Date, now: Date, options?: FormatDateTimeOp
         ? formatShortDate(date)
         : formatDistance(date, now, { addSuffix: true });
 
+/**
+ * Age of a timestamp in the shortest form that still reads unambiguously — `now`, `12m`, `4h`, `3d`,
+ * `2w`, `5mo`, `2y`. Sized for a card row, where a full date would crowd out the subject.
+ */
+export const formatAge = (date: Date, now: Date): string => {
+  const minutes = differenceInMinutes(now, date);
+  if (minutes < 1) {
+    return 'now';
+  }
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = differenceInHours(now, date);
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  const days = differenceInDays(now, date);
+  if (days < 7) {
+    return `${days}d`;
+  }
+  const weeks = differenceInWeeks(now, date);
+  if (weeks < 5) {
+    return `${weeks}w`;
+  }
+  const months = differenceInMonths(now, date);
+  if (months < 12) {
+    return `${Math.max(months, 1)}mo`;
+  }
+  return `${differenceInYears(now, date)}y`;
+};
+
 export const formatShortDate = (date: Date) =>
   isToday(date)
     ? format(date, 'hh:mm aaa')
@@ -189,10 +256,10 @@ type MessageProps = {
   text: string;
   date: string;
   from?: string;
+  to?: string;
   email?: string;
   subject: string;
   snippet: string;
-  hue: string;
 };
 
 /**
@@ -244,11 +311,11 @@ export const getMessageProps = (
   const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
-  const hue = toHue(hashString(from));
-  return { id, text, date, from, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet };
 };
 
 /**

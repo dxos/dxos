@@ -3,19 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Avatar } from '@dxos/react-ui';
 import { Card, Icon } from '@dxos/react-ui';
+import { Attention } from '@dxos/react-ui-attention';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
   const { invoke } = useOperationInvoker();
+  // Card.Action's onClick carries no event, so resolve the origin plank from the card element itself.
+  const cardRef = useRef<HTMLDivElement>(null);
   const { image, organization: { target: organization } = {}, emails = [] } = subject;
 
   const handleOrganizationClick = useCallback(() => {
@@ -23,19 +26,22 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       return;
     }
 
+    const pivotId = cardRef.current ? Attention.getRootAttendableId(cardRef.current) : undefined;
     return Effect.gen(function* () {
-      const organizationPath = Paths.getObjectPathFromObject(organization);
+      const organizationPath = GraphPath.getObjectPathFromObject(organization);
       const db = Obj.getDatabase(organization);
       yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       yield* invoke(LayoutOperation.Open, {
         subject: [organizationPath],
-        workspace: db ? Paths.getSpacePath(db.spaceId) : undefined,
+        pivotId,
+        disposition: 'add',
+        workspace: db ? GraphPath.getSpacePath(db.spaceId) : undefined,
       });
     }).pipe(EffectEx.runAndForwardErrors);
   }, [invoke, organization]);
 
   return (
-    <Card.Body>
+    <Card.Body ref={cardRef}>
       {image && (
         <Card.Row>
           <Avatar.Root>

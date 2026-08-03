@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
@@ -162,8 +162,8 @@ const TranscriptTabs = ({
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
-              <Tabs.Tab value='transcript'>{t('transcript.tab.label')}</Tabs.Tab>
-              <Tabs.Tab value='summary'>{t('summary.tab.label')}</Tabs.Tab>
+              <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
+              <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>
             </Tabs.Tablist>
             {tab === 'summary' && (
               <IconButton

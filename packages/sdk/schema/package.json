@@ -33,6 +33,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/echo-panproto": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -40,7 +41,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
+    "date-fns": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

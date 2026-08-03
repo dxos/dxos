@@ -5,18 +5,26 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Agent } from '@dxos/assistant-toolkit';
+import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Project } from '@dxos/compute';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { type ModuleProps } from '@dxos/story-modules';
 
-export const ContextModule = ({ space }: ModuleProps) => {
+export const ContextModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+
+  return <ContextModuleContainer space={space} />;
+};
+
+const ContextModuleContainer = ({ space }: { space: Space }) => {
   // Objects bound to the feed (the agent-independent context: `session.addContext` → `binder.bind`).
   // TODO(burdon): Reconcile objects vs. artifacts.
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
@@ -24,18 +32,12 @@ export const ContextModule = ({ space }: ModuleProps) => {
   const binder = useContextBinder(space, feedTarget);
   const objects = useBoundObjects(binder);
 
-  // The agent's artifacts (added via the add-artifact tool) are tracked on the agent, not in the
-  // bound context objects above, so surface them separately. Subscribe via `useObject` so a
-  // newly-pushed artifact re-renders (useQuery alone only tracks the result set), but read the
-  // artifacts from the LIVE `agent` — useObject returns a detached snapshot whose refs don't resolve.
-  const [agent] = useQuery(space.db, Filter.type(Agent.Agent));
-  // `useObject(agent)` returns a reactive snapshot that changes identity on any (incl. nested)
-  // mutation — e.g. an artifact pushed by the agent process. We read artifact refs from the LIVE
-  // `agent` (snapshot refs don't resolve), but key the memo on the snapshot so a newly-pushed
-  // artifact re-renders. `agent.artifacts` is mutated in place, so depending on it directly would
-  // NOT recompute (same array reference) — that was why a new doc only appeared after a force-update.
-  const [agentSnapshot] = useObject(agent);
-  const artifacts = agent?.artifacts ?? [];
+  // Durable artifacts live on a Project's collection (the agent stores none): surface the first
+  // project's collection alongside the bound context objects, resolving refs reactively.
+  const [project] = useQuery(space.db, Filter.type(Project.Project));
+  const [collectionSnapshot] = useObject(project?.artifacts);
+  const collection = Obj.getReactiveOrUndefined(collectionSnapshot);
+  const artifacts = collection?.objects ?? [];
 
   const items = useMemo<ContextItem[]>(
     () => [
@@ -44,15 +46,15 @@ export const ContextModule = ({ space }: ModuleProps) => {
         id: `object:${object.id}`,
         object,
       })),
-      ...artifacts.map((artifact, index) => ({
+      ...artifacts.map((ref, index) => ({
         kind: 'artifact' as const,
         // Stable id that does not change when the ref resolves (avoids Masonry remount churn).
         id: `artifact:${index}`,
-        name: artifact.name,
-        data: artifact.data,
+        name: undefined,
+        data: ref,
       })),
     ],
-    [objects, artifacts, agentSnapshot],
+    [objects, artifacts, collectionSnapshot],
   );
 
   return (
@@ -95,7 +97,7 @@ const useBoundObjects = (binder: ReturnType<typeof useContextBinder>): Obj.Unkno
 
 type ContextItem =
   | { kind: 'object'; id: string; object: Obj.Unknown }
-  | { kind: 'artifact'; id: string; name: string; data: Ref.Ref<Obj.Unknown> };
+  | { kind: 'artifact'; id: string; name: string | undefined; data: Ref.Ref<Obj.Unknown> };
 
 const Tile = ({ data }: { data: ContextItem }) => {
   // Masonry may render a tile with no data transiently (e.g. during HMR remount); guard against it.

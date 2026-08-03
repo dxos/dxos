@@ -80,6 +80,15 @@
       "path": "../../core/echo/echo-query"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
+    },
+    {
       "path": "../../core/mesh/rpc"
     },
     {

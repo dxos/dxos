@@ -4,13 +4,11 @@
 
 import { useMemo } from 'react';
 
-import { Trace } from '@dxos/compute';
+import { type Routine, Trace } from '@dxos/compute';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import { type Database, Filter, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { useQuery } from '@dxos/react-client/echo';
-
-import { type Routine } from '#types';
 
 import { type RoutineRun, groupIntoRuns } from './runs';
 

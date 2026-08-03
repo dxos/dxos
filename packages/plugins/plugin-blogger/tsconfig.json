@@ -88,9 +88,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-comments"
-    },
-    {
       "path": "../plugin-connector"
     },
     {
@@ -101,6 +98,9 @@
     },
     {
       "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-review"
     },
     {
       "path": "../plugin-space"

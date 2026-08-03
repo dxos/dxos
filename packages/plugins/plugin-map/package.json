@@ -19,8 +19,12 @@
       "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -117,6 +121,7 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -128,7 +133,8 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-geo": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

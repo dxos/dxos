@@ -68,6 +68,7 @@ import {
   EventId,
   type JsonSchemaType,
   MetaId,
+  ObjectBranchId,
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectJSON,
@@ -349,10 +350,12 @@ export const getVersion = (target: ProxyTarget): Obj.Version => {
 /** The meta sub-proxy for the object. `self` is the proxy (its handler backs the meta proxy). */
 const getMeta = (self: ProxyTarget): EntityMeta => {
   const target = rawTarget(self);
-  // Reuse the root target's event so subscribers of the meta proxy are notified: the central
-  // `core.updates` subscription emits on the root's event only (see the nested-record path).
+  // Reuse the root target's events so subscribers of the meta proxy are notified: the central
+  // core subscriptions emit on the root's events only (see the nested-record path).
   const metaTarget = createRecordTarget(
-    createInstanceState(target[symbolInternals], META_NAMESPACE, [], { event: target[EventId] }),
+    createInstanceState(target[symbolInternals], META_NAMESPACE, [], {
+      event: target[EventId],
+    }),
   );
   return createProxy(metaTarget, getProxyHandler(self)) as any;
 };
@@ -603,6 +606,10 @@ export class EchoRoot extends EchoRecord {
 
   get [ObjectDatabaseId](): EchoDatabase | undefined {
     return getEchoDatabase(this[symbolInternals]);
+  }
+
+  get [ObjectBranchId](): string {
+    return this[symbolInternals].branch;
   }
 
   get [SchemaKindId](): EntityKind | undefined {

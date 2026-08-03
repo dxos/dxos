@@ -17,8 +17,8 @@ tasks:
       --conditions workerd,worker,node
       --fail-on present
     deps:
-      - dx-trace-imports:compile
-      - compile
+      - dx-trace-imports:build
+      - build
     inputs:
       - tsconfig.json
       - '@group(production)'

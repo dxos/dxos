@@ -35,6 +35,6 @@ export default Config2.make({
     team does not prevent other teams from syncing.
   `,
     icon: { key: 'ph--list-checks--regular', hue: 'green' },
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

@@ -7,19 +7,21 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Agent, Plan } from '@dxos/assistant-toolkit';
+import { Agent } from '@dxos/assistant-toolkit';
+import { Instructions } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { TypeSpec, createObjectFactory } from '@dxos/schema/testing';
-import { Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Outline, Person } from '@dxos/types';
 
 import { createMessage } from '#testing';
 import { translations } from '#translations';
@@ -65,8 +67,9 @@ const meta = {
             Agent.Agent,
             Feed.Feed,
             Message.Message,
-            Plan.Plan,
+            Outline.Outline,
             Text.Text,
+            Instructions.Instructions,
             Organization.Organization,
             Person.Person,
           ],
@@ -94,13 +97,9 @@ const meta = {
 
               space.db.add(
                 Obj.make(Agent.Agent, {
-                  instructions: Ref.make(Text.make()),
-                  artifacts: artifacts.map((obj) => ({
-                    name: Obj.getLabel(obj) ?? 'Artifact',
-                    data: Ref.make(obj),
-                  })),
-                  feed: Ref.make(inputFeed),
-                  subscriptions: [],
+                  instructions: Ref.make(
+                    Instructions.make({ text: 'You are a helpful agent working on the sample data set.' }),
+                  ),
                 }),
               );
             }),

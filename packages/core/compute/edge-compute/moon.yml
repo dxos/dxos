@@ -9,7 +9,7 @@ tasks:
   build-runtime:
     command: node ./scripts/build-modules.mjs
     deps:
-      - ^:compile
+      - ^:build
 
   # Executed manually: moon edge-compute:upload-runtime -- --env dev
   upload-runtime:

@@ -2,27 +2,29 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   useAtomCapability,
   useAtomCapabilityState,
+  useCapabilities,
   useOperationInvoker,
   useOptionalCapability,
 } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, ProgressMeter, useAppGraph, useProgress, useShowItem } from '@dxos/app-toolkit/ui';
-import { Aggregate, type Database, Ref as EchoRef, Filter, Obj, Order, Query, Tag } from '@dxos/echo';
+import { Aggregate, Database, Ref as EchoRef, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { usePagination, useQuery, useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, Icon, Panel } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { ElevationProvider, Panel } from '@dxos/react-ui';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type EditorController } from '@dxos/react-ui-editor';
 import {
   Menu,
@@ -33,28 +35,25 @@ import {
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
 import { TagIndex } from '@dxos/schema';
-import { Message } from '@dxos/types';
+import { DraftMessage, Message } from '@dxos/types';
 
 import {
-  MessageStack,
-  type MessageStackActionHandler,
-  type MessageStackItem,
+  InboxStack,
+  type InboxStackActionHandler,
+  type InboxStackItem,
   type MessageTagsFamily,
   isMessageGroup,
-  useInjectedMailboxActions,
-  useMailboxExtractorActions,
 } from '#components';
-import { useDebouncedValue } from '#hooks';
+import { useDebouncedValue, useInjectedMailboxActions, useMailboxExtractorActions } from '#hooks';
 import { meta } from '#meta';
 import { InboxOperation } from '#types';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
-import { createTopicsProgressKey } from '../../operations/analyze/analyze-topics';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import { messageMatchesQuery } from '../../util';
 import { InitializeMailbox } from './InitializeMailbox';
-import { buildMailboxSelection, getSearchText } from './mailbox-search';
+import { buildMailboxSelection, buildSystemTagSelection, buildThreadSemiJoin, getSearchText } from './mailbox-search';
 import { MailboxFilter } from './MailboxFilter';
 
 /** Messages per page for the lazily-loaded message window. */
@@ -67,10 +66,21 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
   {
     filter?: string;
+    /**
+     * Canonical system tag (Inbox/Sent/Draft) this view resolves by id, not by parsing `filter` as tag
+     * text — stays correct regardless of label/provider. `filter` seeds the editable box; once edited
+     * away from that seed, normal text/tag parsing takes over (Drafts hides the box — see `hideFilterEditor`).
+     */
+    systemTag?: SystemTags.SystemTagId;
   }
 >;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({
+  subject: mailbox,
+  filter: filterProp,
+  systemTag,
+  attendableId,
+}: MailboxArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
   const id = attendableId ?? Obj.getURI(mailbox);
@@ -79,12 +89,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const showItem = useShowItem();
   const runAction = useActionRunner();
 
-  // Mailbox-scoped operations register a monitor keyed by the mailbox URI (`#sync` for Gmail sync,
-  // `#topics` for topic analysis); subscribe to both and show whichever run is active in the statusbar.
-  const syncProgress = useProgress(createSyncProgressKey(mailbox));
-  const topicsProgress = useProgress(createTopicsProgressKey(mailbox));
-  const progress =
-    topicsProgress?.status === 'running' || topicsProgress?.status === 'error' ? topicsProgress : syncProgress;
+  // Gmail sync registers a monitor keyed by the mailbox URI (`#sync`); show it in the statusbar.
+  const progress = useProgress(createSyncProgressKey(mailbox));
   // Registry (present when plugin-progress is loaded) lets the meter cancel a cancellable run.
   const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
 
@@ -101,9 +107,12 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const tagsAtom = useMessageTagsAtomFamily(tagIndex, tagMap);
 
   // Starred messages drive the per-tile star toggle; starred state also lives under the tag index.
-  const starredTag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey('starred')]))[0];
-  const starredUri = starredTag && Obj.getURI(starredTag).toString();
+  const starredUri = useSystemTagUri(db, 'starred');
   const starredAtom = useMemo(() => SystemTags.tagAtom(tagIndex, starredUri), [tagIndex, starredUri]);
+
+  // This view's canonical system tag, resolved by id (`undefined` until sync/first draft creates it).
+  const systemTagUri = useSystemTagUri(db, systemTag);
+  const systemTagIds = useTaggedIds(tagIndex, systemTagUri);
 
   // Filter.
   const builder = useMemo(() => new QueryBuilder(tagMap), [tagMap]);
@@ -131,23 +140,54 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // date order. The mailbox reads and sorts/groups the whole feed client-side; `usePagination` and
   // the virtualizer bound only what's rendered, not what's fetched. Bounded-memory windowing isn't
   // possible here — ordering threads by a `max(created)` aggregate needs the full set to rank them.
+
+  // True while the filter box still shows its seeded text (`'#inbox'` etc.) unedited, so the tag-id
+  // selection applies; editing away falls back to normal text/tag parsing (Drafts hides the box).
+  const isUnmodifiedSystemTagView = systemTag !== undefined && debouncedFilterText === (filterProp ?? '');
+  const systemTagIdsKey = systemTagIds.join(',');
   const selection = useMemo(
-    () => buildMailboxSelection(debouncedFilterText, debouncedFilter),
-    [debouncedFilterText, debouncedFilter],
+    () =>
+      isUnmodifiedSystemTagView
+        ? buildSystemTagSelection(systemTagIds)
+        : buildMailboxSelection(debouncedFilterText, debouncedFilter),
+    // systemTagIds is a fresh array each render; key on its membership (systemTagIdsKey) instead.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isUnmodifiedSystemTagView, systemTagIdsKey, debouncedFilterText, debouncedFilter],
   );
   const searchQuery = useMemo(() => getSearchText(debouncedFilter), [debouncedFilter]);
-  const source = feed && Query.select(selection).from(feed);
+
+  // A thread qualifies if any of its messages match `selection`, and `buildThreadSemiJoin` then
+  // selects every message sharing that thread's `threadId` — across the feed and this space
+  // (drafts) — so `count`/`items` reflect the whole thread rather than only its filter-matching
+  // members. Inbox/Sent/Drafts ids may resolve on either side, so that view's own matches scope is
+  // the same feed+space scope as the outer query; free text stays feed-only for matching (too
+  // complex to scope across the whole space — see `hideFilterEditor`), even though the outer,
+  // thread-pulling scope still spans both. The space side can surface another mailbox's draft that
+  // happens to share a `threadId` (thread ids are effectively globally unique, so this is rare) —
+  // `reconcileDrafts` below re-scopes drafts to this mailbox and drops ones already superseded by
+  // their synced copy. Either view degrades to space-only while `feed` is still resolving; free
+  // text has nothing to match yet without a feed.
+  const feedUri = feed && Obj.getURI(feed, { prefer: 'absolute' });
+  const scopes = feedUri
+    ? [Scope.feed(feedUri), Scope.space()]
+    : isUnmodifiedSystemTagView
+      ? [Scope.space()]
+      : undefined;
+  const matchesScope = isUnmodifiedSystemTagView ? scopes : feedUri ? [Scope.feed(feedUri)] : undefined;
+  const source = scopes && matchesScope ? buildThreadSemiJoin(selection, matchesScope).from(scopes) : undefined;
   const pagination = usePagination(
     db,
     source
       ? conversations
         ? source
-            .orderBy(Order.property('created', 'desc'))
             .aggregate({
               threadId: Aggregate.group('threadId'),
               lastMessageAt: Aggregate.max('created'),
               count: Aggregate.count(),
-              items: Aggregate.items({ limit: MAILBOX_THREAD_PREVIEW_COUNT }),
+              items: Aggregate.items({
+                limit: MAILBOX_THREAD_PREVIEW_COUNT,
+                order: [Order.property('created', 'desc')],
+              }),
             })
             .orderBy(Order.property('lastMessageAt', direction))
             .limit(MAILBOX_PAGE_SIZE)
@@ -159,8 +199,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   // so entries map straight to stack items. Messages without a `threadId` share the aggregate's
   // single `null`-key group; split them back into singleton conversations at that group's position.
   // A thread's preview is capped at `MAILBOX_THREAD_PREVIEW_COUNT`; `count` carries the full size.
-  const items = useMemo<MessageStackItem[]>(() => {
-    const result: MessageStackItem[] = [];
+  const items = useMemo<InboxStackItem[]>(() => {
+    const result: InboxStackItem[] = [];
     for (const entry of pagination.items) {
       if (!isThreadGroup(entry)) {
         result.push(entry);
@@ -170,26 +210,17 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         result.push({ id: entry.threadId, messages: entry.items, total: entry.count });
       }
     }
-    // Drop messages excluded by the mailbox's filters (e.g. "Ignore sender"); collapse now-empty groups.
-    // During an active search, also drop messages that don't match in their plain/markdown body or
-    // subject — ECHO's full-text index covers the whole object (including raw HTML blocks), so a
-    // message can match the index yet have no matching (or any) plain/markdown text to display.
-    return result.flatMap((item): MessageStackItem[] => {
-      const matches = (message: Message.Message) =>
-        !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
-      if (isMessageGroup(item)) {
-        const messages = item.messages.filter(matches);
-        return messages.length > 0 ? [{ ...item, messages }] : [];
-      }
-      return matches(item) ? [item] : [];
-    });
+    return applyPostFilters(result, mailbox, searchQuery);
   }, [pagination.items, mailbox, mailbox.messageFilters, searchQuery]);
 
   // Flat message list backing keyboard navigation and message-id lookups in action handlers.
   const messages = useMemo(() => items.flatMap((item) => (isMessageGroup(item) ? item.messages : [item])), [items]);
 
-  // Gates on the query settling, not on `messages.length`, so the empty-mailbox panel never renders mid-load.
-  const loading = !feed || pagination.isLoading;
+  // Drives an in-flow spinner in the list, never a full-panel fallback — a page fetch or a
+  // background refresh must not blank the list. `source` is undefined until a free-text feed resolves.
+  const loading = !source || pagination.isLoading;
+  // Show the empty-mailbox panel only once the query has settled with nothing, never mid-load.
+  const showEmptyState = !loading && messages.length === 0;
 
   const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
@@ -197,38 +228,51 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [filterProp, builder]);
 
   const handleNavigate = useCallback(
-    (messageId: string) => {
+    (messageId: string, newPlank = false) => {
       const message = messages.find((m) => m.id === messageId);
       if (!message || !db) {
         return;
       }
-      // Open the message companion; `MessageArticle` renders the selected message's whole conversation.
-      void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
+      // Open the message's conversation as its own plank beside the mailbox (add), never a companion.
+      // The conversation node lives under this mailbox view; `MessageArticle` renders the whole thread.
+      // Ordinarily `level` names the rung in the mailbox's declared chain, so reading down the mailbox
+      // reuses one plank; meta/ctrl click asks for a plank of its own, so it opens without a level and
+      // keeps whatever is already there.
+      void invokePromise(LayoutOperation.Select, { contextId: id, subject: { mode: 'single', id: message.id } });
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${id}/${message.id}`],
+        ...(newPlank ? {} : { root: id, level: 'message' }),
+        pivotId: id,
+        disposition: 'add',
+        navigation: 'immediate',
+      });
     },
-    [db, id, messages, showItem],
+    [db, id, messages, invokePromise],
   );
 
   useArticleKeyboardNavigation({ articleId: id, items: messages, currentId, onSelect: handleNavigate });
 
-  const handleAction = useCallback<MessageStackActionHandler>(
+  const handleAction = useCallback<InboxStackActionHandler>(
     (action) => {
       switch (action.type) {
         // A message click ('current') and a conversation click ('current-conversation') both open the
-        // one unified conversation (thread) view — a single message is just a one-message conversation.
-        // Selecting the message opens the message companion, which renders the whole conversation.
+        // one unified conversation (thread) view — a single message is just a one-message conversation —
+        // as a standalone plank beside the mailbox.
         case 'current':
         case 'current-conversation': {
           const message = messages.find((message) => message.id === action.messageId);
           invariant(message);
           invariant(db);
-          void showItem({ contextId: id, selectionId: message.id, companion: linkedSegment('message') });
+          handleNavigate(message.id, action.type === 'current' && action.newPlank);
           break;
         }
 
         case 'star': {
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
-            void SystemTags.toggleTag(mailbox, message, db, 'starred');
+            void Effect.runFork(
+              SystemTags.toggleTag(mailbox, message, 'starred').pipe(Effect.provide(Database.layer(db))),
+            );
           }
           break;
         }
@@ -247,14 +291,18 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           const message = messages.find((message) => message.id === action.messageId);
           if (message && db) {
             void invokePromise(
-              InboxOperation.CreateTopicFromMessage,
+              InboxOperation.CreateProjectFromMessage,
               { mailbox: EchoRef.make(mailbox), message },
               { spaceId: db.spaceId },
             )
               .then((result) => {
-                const topicId = result?.data?.topicId;
-                if (topicId) {
-                  void showItem({ contextId: id, selectionId: topicId, companion: linkedSegment('topic') });
+                const projectId = result?.data?.projectId;
+                if (projectId) {
+                  void showItem({
+                    contextId: id,
+                    selectionId: projectId,
+                    companion: Attention.linkedSegment('topic'),
+                  });
                 }
               })
               // Surface the failure instead of silently swallowing it (AI timeout / DB error).
@@ -289,7 +337,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         }
       }
     },
-    [db, id, mailbox, messages, invokePromise, showItem],
+    [db, id, mailbox, messages, invokePromise, showItem, handleNavigate],
   );
 
   const handleSaveFilter = useCallback(() => {
@@ -317,10 +365,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [db, tagMap, filterText, filter, setFilterText, handleSaveFilter, handleClear],
   );
 
-  const menuActions = useMailboxActions(mailbox, { sortDescending, nodeId: id, filterElement });
+  const menuActions = useMailboxActions(mailbox, {
+    sortDescending,
+    nodeId: id,
+    filterElement,
+    hideFilterEditor: systemTag === 'draft',
+  });
 
   return (
-    <Panel.Root>
+    <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>
@@ -329,30 +382,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         </Menu.Root>
       </ElevationProvider>
       <Panel.Content asChild>
-        {loading ? (
-          // Fade-in delayed 1s so a fast load never flashes the spinner.
-          <div className='grid place-items-center bs-full is-full'>
-            <Icon
-              icon='ph--spinner-gap--regular'
-              size={6}
-              classNames='text-subdued [animation:spin_1s_linear_infinite,fade-in_200ms_ease-out_1s_backwards]'
-            />
-          </div>
-        ) : messages.length > 0 ? (
-          <MessageStack
+        {showEmptyState ? (
+          <InitializeMailbox mailbox={mailbox} />
+        ) : (
+          // Always keep the list mounted (even with no items yet); `loading` renders an in-flow
+          // spinner at the end of the list rather than replacing the whole panel — so a page fetch
+          // or a mid-sync refresh never blanks what's already shown.
+          <InboxStack
             id={id}
             items={items}
             currentId={currentId}
             tagsAtom={tagsAtom}
             starredAtom={starredAtom}
-            pagination={feed ? pagination : undefined}
+            pagination={pagination}
+            loading={loading}
             enableIgnoreSender
             enableCreateTopic
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        ) : (
-          <InitializeMailbox mailbox={mailbox} />
         )}
       </Panel.Content>
       {progress && (progress.status === 'running' || progress.status === 'error') && (
@@ -384,6 +432,52 @@ type ThreadGroup = {
 const isThreadGroup = (entry: Message.Message | ThreadGroup): entry is ThreadGroup =>
   !Obj.instanceOf(Message.Message, entry);
 
+/**
+ * Synced messages (no `properties.mailbox`) always pass; drafts pass only when they belong to this
+ * mailbox and aren't yet superseded by their sent copy (matched on the provider id set at send
+ * time). Mirrors the reconciliation in `app-graph-builder.ts`'s `mailboxMessage` connector — the
+ * whole-thread semi-join's space scope can pull in another mailbox's draft sharing a `threadId`, or
+ * a draft whose sent copy has already synced into the feed.
+ */
+const reconcileDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
+};
+
+/**
+ * For each thread group, first reconciles its drafts (see {@link reconcileDrafts}), then drops
+ * individually-filtered messages (e.g. "Ignore sender") and, during an active search, messages
+ * whose visible body/subject don't match; collapses a group to nothing if every message is dropped.
+ */
+const applyPostFilters = (
+  items: InboxStackItem[],
+  mailbox: Mailbox.Mailbox,
+  searchQuery: string | undefined,
+): InboxStackItem[] => {
+  const mailboxUri = Obj.getURI(mailbox).toString();
+  const matches = (message: Message.Message) =>
+    !Mailbox.isFiltered(mailbox, message) && (!searchQuery || messageMatchesQuery(message, searchQuery));
+  return items.flatMap((item): InboxStackItem[] => {
+    if (isMessageGroup(item)) {
+      const messages = reconcileDrafts(item.messages, mailboxUri).filter(matches);
+      return messages.length > 0 ? [{ ...item, messages }] : [];
+    }
+    return matches(item) ? [item] : [];
+  });
+};
+
 const EMPTY_MESSAGE_TAGS_ATOM = Atom.make((): { id: string; label: string; hue?: string }[] => []);
 
 /**
@@ -407,31 +501,64 @@ const useMessageTagsAtomFamily = (tagIndex: TagIndex.TagIndex | undefined, tagMa
     );
   }, [tagIndex, tagMap]);
 
+/** A system tag's canonical object uri (its stable foreign key), or `undefined` before sync/creation. */
+const useSystemTagUri = (
+  db: Database.Database | undefined,
+  tagId: SystemTags.SystemTagId | undefined,
+): string | undefined => {
+  const tagObj = useQuery(
+    db,
+    tagId ? Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(tagId)]) : Filter.nothing(),
+  )[0];
+  return tagObj && Obj.getURI(tagObj).toString();
+};
+
+const EMPTY_IDS_ATOM = Atom.make((): readonly EntityId[] => []);
+
+/**
+ * Reactive ids carrying `tagUri` in `tagIndex`. Feed/space messages have no `meta.tags` of their own —
+ * membership lives in the mailbox's `TagIndex` sibling object instead, so a bare `Filter.tag` can't see it.
+ */
+const useTaggedIds = (tagIndex: TagIndex.TagIndex | undefined, tagUri: string | undefined): readonly EntityId[] => {
+  const atom = useMemo(
+    () => (tagIndex && tagUri ? TagIndex.taggedIdsAtom(tagIndex, tagUri) : EMPTY_IDS_ATOM),
+    [tagIndex, tagUri],
+  );
+  return useAtomValue(atom);
+};
+
 type MailboxActionsOptions = {
   sortDescending: AtomState<boolean>;
   /** The mailbox's graph node id (the article's `attendableId`); contributed actions hang off it. */
   nodeId: string;
   /** Search box, custom-rendered as a toolbar item so the connect group can sit to its right. */
   filterElement: ReactNode;
+  /** Hides the search box (Drafts): free text can't be safely scoped to just this mailbox's drafts. */
+  hideFilterEditor: boolean;
 };
 
 const useMailboxActions = (
   mailbox: Mailbox.Mailbox,
-  { sortDescending, nodeId, filterElement }: MailboxActionsOptions,
+  { sortDescending, nodeId, filterElement, hideFilterEditor }: MailboxActionsOptions,
 ) => {
   const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
+  const invoker = useOperationInvoker();
   const [settings, setSettings] = useAtomCapabilityState(InboxCapabilities.Settings);
   const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   const handleCompose = useCallback(() => {
     const db = Obj.getDatabase(mailbox);
     invariant(db);
-    void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox });
-  }, [invokePromise, mailbox]);
+    // `nodeId` is this view's node, so the draft opens as a plank beside it rather than beside Drafts.
+    void invoker.invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox, contextId: nodeId });
+  }, [invoker, mailbox, nodeId]);
 
-  const mailboxExtractorActions = useMailboxExtractorActions(mailbox);
-  const mailboxActions = useInjectedMailboxActions(mailbox);
+  // Resolve capabilities here (in the container) and thread them into the presentation-only mailbox
+  // action hooks — components (and the hooks they call) must not resolve capabilities themselves.
+  const extractors = useCapabilities(InboxCapabilities.ObjectExtractor);
+  const injectedActions = useCapabilities(InboxCapabilities.MailboxAction);
+  const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
+  const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
   const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
@@ -449,9 +576,9 @@ const useMailboxActions = (
           () => sortDescending.set((value) => !value),
         )
         .action(
-          'loadImages',
+          'loadRemoteImages',
           {
-            type: 'loadImages',
+            type: 'loadRemoteImages',
             icon: loadRemoteImages ? 'ph--image--regular' : 'ph--image-broken--regular',
             label: ['message-toolbar-load-images.menu', { ns: meta.profile.key }],
             checked: loadRemoteImages,
@@ -487,12 +614,19 @@ const useMailboxActions = (
         );
 
       // The search box, custom-rendered as a toolbar item so the connect group can sit to its right.
-      // Always present (even for an empty mailbox — filtering an empty list is harmless).
-      builder.action(
-        'filter',
-        { variant: 'custom', label: ['mailbox-toolbar.title', { ns: meta.profile.key }], render: () => filterElement },
-        () => {},
-      );
+      // Always present (even for an empty mailbox — filtering an empty list is harmless) except in the
+      // Drafts view (see `hideFilterEditor`'s docstring).
+      if (!hideFilterEditor) {
+        builder.action(
+          'filter',
+          {
+            variant: 'custom',
+            label: ['mailbox-toolbar.title', { ns: meta.profile.key }],
+            render: () => filterElement,
+          },
+          () => {},
+        );
+      }
 
       return builder
         .separator('gap')
@@ -503,6 +637,7 @@ const useMailboxActions = (
       graph,
       nodeId,
       filterElement,
+      hideFilterEditor,
       sortDescending,
       loadRemoteImages,
       setSettings,

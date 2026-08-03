@@ -9,7 +9,7 @@ import * as Stream from 'effect/Stream';
 
 import { Capability } from '@dxos/app-framework';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
-import { Operation, Trace } from '@dxos/compute';
+import { Cancellation, Operation, Trace } from '@dxos/compute';
 import { Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Err';
 import { Cursor } from '@dxos/link';
@@ -208,8 +208,20 @@ export const runMailSync = (
     const now = options.now ?? new Date();
     const maxMessages = options.maxMessages ?? provider.config.maxItemsPerRun ?? Number.POSITIVE_INFINITY;
 
+    log.info('mail sync starting', {
+      provider: provider.name,
+      binding: options.binding.uri,
+      maxMessages,
+      now: now.toISOString(),
+    });
+
     const binding = yield* Database.load(options.binding);
     if (!Cursor.isExternal(binding)) {
+      log.info('mail sync skipped: binding is not external', {
+        provider: provider.name,
+        typename: Obj.getTypename(binding),
+        kind: binding.spec?.kind,
+      });
       return { newMessages: 0 };
     }
     const mailbox = yield* Database.load(binding.spec.target);
@@ -222,6 +234,7 @@ export const runMailSync = (
     }
     const db = Obj.getDatabase(mailbox);
     if (!db) {
+      log.warn('mail sync skipped: no database');
       return { newMessages: 0 };
     }
 
@@ -238,9 +251,26 @@ export const runMailSync = (
       mailbox: Obj.getURI(mailbox),
       maxKey,
       minKey,
+      horizon: horizon.toISOString(),
+      syncBackDays: targetOptions.syncBackDays,
+      filter: targetOptions.filter,
+      maxMessages,
       forward: formatWindow(windows.forward),
       backward: formatWindow(windows.backward),
     });
+
+    // A run with neither window resolves to no enumeration at all: the cursor already spans the full
+    // horizon (nothing older to backfill) and there is nothing newer than `maxKey`. On edge this is the
+    // most common cause of a `{ newMessages: 0 }` despite mail existing — surface it explicitly.
+    if (!windows.forward && !windows.backward) {
+      log.warn('mail sync: no windows to scan — cursor already covers the full range', {
+        provider: provider.name,
+        mailbox: Obj.getURI(mailbox),
+        maxKey,
+        minKey,
+        horizon: horizon.toISOString(),
+      });
+    }
 
     const feed = yield* Database.load(mailbox.feed);
 
@@ -258,14 +288,15 @@ export const runMailSync = (
     // Session/target discovery + the provider's label/folder→tag map; undefined skips the run.
     const source = yield* provider.prepare({ db, binding, mailbox, now, token, maxMessages });
     if (!source) {
+      log.warn('mail sync skipped: no source', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
       return { newMessages: 0 };
     }
+    log.info('mail sync source prepared', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
 
     const stats: Cursor.Stats = { newMessages: 0 };
 
-    // Cooperative cancellation: the progress trace sink wires the meter's cancel control to
-    // `ProcessManager.terminate()`; the pipeline also observes this signal for in-process abort.
-    const controller = new AbortController();
+    // Fires on run cancellation (local terminate or EDGE cancel) — the pipeline observes it below.
+    const signal = yield* Cancellation.signal;
 
     // Live sync status via trace `status.update` events. The progress trace sink projects these into
     // the runtime `ProgressRegistry` for `MailboxArticle` and the R0 popover.
@@ -306,6 +337,7 @@ export const runMailSync = (
     const addToTotal = (count: number) => {
       totalToRetrieve += count;
       reportStatus({ total: totalToRetrieve });
+      log('mail sync enumerated page', { provider: provider.name, page: count, totalToRetrieve });
     };
 
     const threads = new Set<string>();
@@ -456,10 +488,12 @@ export const runMailSync = (
         }),
       ),
       Pipeline.abortWith(
-        controller.signal,
-        // TODO(wittjosiah): Could this note+remove pairing be upstreamed into abortWith itself?
+        signal,
+        // `abortWith` interrupts, so nothing below the pipeline runs — the terminal status must be
+        // emitted here or the meter's key stays suppressed for every later run.
         Effect.sync(() => {
           log('mail sync cancelled', { provider: provider.name, mailbox: Obj.getURI(mailbox) });
+          reportStatus({ message: PROGRESS_STATUS_CANCELLED });
         }),
       ),
       Effect.tapError((error) =>
@@ -476,59 +510,74 @@ export const runMailSync = (
     // (per-page commits no longer flush — see `Cursor.commit`).
     yield* Database.flush({ indexes: true });
 
+    // Full funnel, each stage narrower than the last, so a zero result on a completed run can be
+    // attributed: `enumerated` 0 → empty windows / provider returned no ids; `taken` 0
+    // with `enumerated` > 0 → everything dedup-dropped (cursor already has these); `processed` 0 with
+    // `taken` > 0 → every candidate dropped in decode/map (no body, filtered sender, unmappable);
+    // `newMessages` 0 with `processed` > 0 → commit dropped them (e.g. draft reconciliation).
+    log.info('mail sync funnel', {
+      provider: provider.name,
+      mailbox: Obj.getURI(mailbox),
+      enumerated: totalToRetrieve,
+      retrieved: progressCurrent,
+      taken,
+      processed,
+      newMessages: stats.newMessages,
+      maxMessages,
+      coverage,
+      threads: threads.size,
+      senders: senders.size,
+      attachments: attachmentCount,
+      extent,
+    });
+
     // Final stats publish (disabled — see the TODO above) recorded the committed `newMessages` count and
     // the run's end time / duration after the last mid-stream snapshot.
     // finishedMs = Date.now();
     // finishedAt = new Date(finishedMs).toISOString();
     // publishStats();
 
-    // On cancel, only the status event differs; the completed path also has cursor post-run work.
-    if (controller.signal.aborted) {
-      reportStatus({ message: PROGRESS_STATUS_CANCELLED });
-    } else {
-      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+    reportStatus({ message: PROGRESS_STATUS_COMPLETE });
 
-      // Fold the run's observed key extent so the window advances even if every scanned message was
-      // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
-      Cursor.extendRange(binding, extent);
+    // Fold the run's observed key extent so the window advances even if every scanned message was
+    // dedup-dropped (e.g. a crash orphaned feed appends) — prevents an identical re-scan / infinite re-run.
+    Cursor.extendRange(binding, extent);
 
-      const capped = taken >= maxMessages;
-      // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
-      // and more remain. Both signals mean "re-run", but only `!capped` advances state.
-      const hasMoreDelta = source.hasMoreDelta?.() ?? false;
-      log('mail sync run finished', {
-        provider: provider.name,
-        mailbox: Obj.getURI(mailbox),
-        taken,
-        maxMessages,
-        capped,
-        hasMoreDelta,
-        newMessages: stats.newMessages,
-        action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
-      });
-      if (!capped) {
-        // Additions weren't truncated, so this run's chunk fully drained: mark backfill done (the backward
-        // half reached the horizon) and advance the delta token LAST, only after the merged stream
-        // committed. A crash/cap leaves the token unadvanced, so the next run re-fetches the same chunk
-        // (additions dedup-drop, tag ops re-apply idempotently).
-        Cursor.completeBackfill(binding, horizon.getTime());
-        const nextToken = source.nextToken?.();
-        if (nextToken !== undefined) {
-          Cursor.writeToken(binding, nextToken);
-        }
+    const capped = taken >= maxMessages;
+    // The provider drains the delta in bounded chunks; `hasMoreDelta` means this run consumed one chunk
+    // and more remain. Both signals mean "re-run", but only `!capped` advances state.
+    const hasMoreDelta = source.hasMoreDelta?.() ?? false;
+    log('mail sync run finished', {
+      provider: provider.name,
+      mailbox: Obj.getURI(mailbox),
+      taken,
+      maxMessages,
+      capped,
+      hasMoreDelta,
+      newMessages: stats.newMessages,
+      action: capped || hasMoreDelta ? 'runAgain' : 'completeBackfill',
+    });
+    if (!capped) {
+      // Additions weren't truncated, so this run's chunk fully drained: mark backfill done (the backward
+      // half reached the horizon) and advance the delta token LAST, only after the merged stream
+      // committed. A crash/cap leaves the token unadvanced, so the next run re-fetches the same chunk
+      // (additions dedup-drop, tag ops re-apply idempotently).
+      Cursor.completeBackfill(binding, horizon.getTime());
+      const nextToken = source.nextToken?.();
+      if (nextToken !== undefined) {
+        Cursor.writeToken(binding, nextToken);
       }
-      if (capped || hasMoreDelta) {
-        // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
-        // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
-        // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
-        yield* Operation.runAgain().pipe(Effect.orDie);
-      }
+    }
+    if (capped || hasMoreDelta) {
+      // More to sync — either additions capped, or the delta had more chunks. A durable re-run (rather
+      // than an in-process loop) keeps this invocation bounded and lets the runtime schedule the
+      // continuation; committed progress + the advanced token/cursor mean the next run resumes forward.
+      yield* Operation.runAgain().pipe(Effect.orDie);
     }
 
     log('sync complete', {
       provider: provider.name,
       newMessages: stats.newMessages,
-      cancelled: controller.signal.aborted,
       taken,
     });
     return { newMessages: stats.newMessages };

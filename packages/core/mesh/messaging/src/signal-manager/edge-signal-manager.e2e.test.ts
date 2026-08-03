@@ -9,7 +9,8 @@ import { EdgeClient, createEphemeralEdgeIdentity } from '@dxos/edge-client';
 import { PublicKey } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
-import { createMessage, expectPeerAvailable, expectPeerLeft, expectReceivedMessage } from '../testing';
+import { type Message } from '../signal-methods';
+import { createMessage, expectPeerAvailable, expectPeerLeft } from '../testing';
 import { EdgeSignalManager } from './edge-signal-manager';
 
 // Live end-to-end checks against a real edge server (`wrangler dev`), exercising
@@ -58,7 +59,12 @@ describe.skipIf(!EDGE_URL)('EdgeSignalManager (live)', { tags: ['sync-e2e'], tim
     const peerB = await createConnectedSignalManager();
 
     const message = createMessage(peerA.peer, peerB.peer);
-    const received = expectReceivedMessage(peerB.signalManager.onMessage, message);
+
+    let resolveReceived!: (message: Message) => void;
+    const received = new Promise<Message>((resolve) => {
+      resolveReceived = resolve;
+    });
+    await peerB.signalManager.subscribeMessages({ peer: peerB.peer, onMessage: resolveReceived });
 
     await peerA.signalManager.sendMessage(Context.default(), message);
 

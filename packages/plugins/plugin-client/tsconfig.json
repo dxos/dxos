@@ -28,6 +28,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -59,6 +62,15 @@
     },
     {
       "path": "../../core/halo/credentials"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-adapter-client"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/mesh/edge-client"

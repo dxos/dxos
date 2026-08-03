@@ -10,11 +10,8 @@ export * from './util';
 export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),
   () => import('./analyze/analyze-mailbox'),
-  () => import('./analyze/analyze-topics'),
-  () => import('./analyze/create-topic-from-message'),
+  () => import('./analyze/create-project-from-message'),
   () => import('./classify-email'),
-  () => import('./delete-email'),
-  () => import('./delete-event'),
   () => import('./draft-email-and-open'),
   () => import('./draft-email'),
   () => import('./extractor/contact-extractor'),
@@ -36,7 +33,5 @@ export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./mail/jmap/sync'),
   () => import('./read-email'),
   () => import('./rename-filter'),
-  () => import('./sync-contacts'),
   () => import('./unsubscribe-sender'),
-  () => import('./sync-draft-events'),
 );

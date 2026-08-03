@@ -3,11 +3,11 @@
 //
 
 import type * as Context from 'effect/Context';
+import * as Layer from 'effect/Layer';
 
 import type { Space } from '@dxos/client/echo';
-import { type Credential, type Trace } from '@dxos/compute';
+import { Credential, Trace } from '@dxos/compute';
 import { ConfiguredCredentialsService } from '@dxos/compute-runtime';
-import { ServiceContainer } from '@dxos/compute-runtime';
 import { Database } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { assertArgument } from '@dxos/invariant';
@@ -63,23 +63,29 @@ export type TestServiceOptions = {
 };
 
 /**
- * @deprecated
+ * Composes the foundational Effect layers available to compute nodes and operations in tests:
+ * credentials, database (from a space or standalone database), and trace. Callers layer AI,
+ * `Operation.Service`, and registry on top as needed for the code under test.
  */
-export const createTestServices = ({
-  ai,
-  credentials,
-  db,
-  logging,
-  space,
-}: TestServiceOptions = {}): ServiceContainer => {
+export const createTestServices = ({ credentials, db, logging, space }: TestServiceOptions = {}): Layer.Layer<
+  Credential.CredentialsService | Database.Service | Trace.TraceService
+> => {
   assertArgument(!(!!space && !!db), 'space', 'space can be provided only if db is not');
 
-  return new ServiceContainer().setServices({
-    // ai: createAiService(ai),
-    credentials: createCredentialsService(credentials),
-    database: space || db ? Database.makeService(space?.db || db!) : undefined,
-    trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
-  });
+  const credentialsLayer = Layer.succeed(
+    Credential.CredentialsService,
+    createCredentialsService(credentials) ?? new ConfiguredCredentialsService(),
+  );
+
+  const database = space?.db ?? db;
+  const databaseLayer = database ? Database.layer(database) : Database.notAvailable;
+
+  const traceLayer = Layer.succeed(
+    Trace.TraceService,
+    logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
+  );
+
+  return Layer.mergeAll(credentialsLayer, databaseLayer, traceLayer);
 };
 
 const createCredentialsService = (

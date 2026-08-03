@@ -18,8 +18,12 @@
       "default": "./dist/lib/skills.mjs"
     },
     "#capabilities": {
-      "source": "./src/capabilities/index.ts",
+      "source": {
+        "node": "./src/capabilities/node.ts",
+        "default": "./src/capabilities/index.ts"
+      },
       "types": "./dist/types/src/capabilities/index.d.ts",
+      "node": "./dist/lib/capabilities/node.mjs",
       "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
@@ -124,7 +128,10 @@
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/halo": "workspace:*",
+    "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -145,7 +152,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "@radix-ui/react-primitive": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "effect": "catalog:"
@@ -164,6 +171,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@types/dom-speech-recognition": "catalog:",

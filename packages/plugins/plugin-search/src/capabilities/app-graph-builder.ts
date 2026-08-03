@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, GraphPath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { SearchOperation } from '#types';
@@ -25,12 +25,12 @@ export default Capability.makeModule(
             const client = yield* Capability.get(ClientCapabilities.Client);
             const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
             const layout = layoutAtom ? get(layoutAtom) : undefined;
-            const spaceId = layout?.workspace ? Paths.getSpaceIdFromPath(layout.workspace) : undefined;
+            const spaceId = layout?.workspace ? GraphPath.getSpaceIdFromPath(layout.workspace) : undefined;
             const space = spaceId ? client.spaces.get(spaceId) : null;
 
             return [
               AppNode.makeDeckCompanion({
-                id: linkedSegment('search'),
+                id: Attention.linkedSegment('search'),
                 label: ['search.label', { ns: meta.profile.key }],
                 icon: 'ph--magnifying-glass--regular',
                 data: space,

@@ -31,7 +31,10 @@ export class Post extends Type.makeObject<Post>(DXN.make('org.dxos.type.blogger.
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown))
       .annotations({ description: 'Post outline and/or instructions.' }),
     content: Ref.Ref(Markdown.Document).pipe(FormInputAnnotation.set(false)),
-  }).pipe(LabelAnnotation.set(['name']), Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'amber' })),
+  }).pipe(
+    LabelAnnotation.set(['name']),
+    Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'indigo' }),
+  ),
 ) {}
 
 /**
@@ -66,7 +69,7 @@ export class Publication extends Type.makeObject<Publication>(DXN.make('org.dxos
     posts: Schema.Array(Ref.Ref(Post)).pipe(FormInputAnnotation.set(false), Schema.optional),
   }).pipe(
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--books--regular', hue: 'amber' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--books--regular', hue: 'indigo' }),
     // Offer "Connect <publisher>" (via plugin-connector's `connectorAuth` extension) until a
     // Connection for the registered publisher exists — associating a publisher connection with the
     // Publication, mirroring plugin-studio's Artifact.

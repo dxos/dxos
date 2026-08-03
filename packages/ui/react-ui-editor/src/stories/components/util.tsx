@@ -13,17 +13,55 @@ import {
   folding,
   formattingKeymap,
   image,
+  join,
   linkTooltip,
   table,
 } from '@dxos/ui-editor';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 import { safeUrl } from '@dxos/util';
 
+random.seed(1);
+
 import { str } from '../../util';
 
 export const num = () => random.number.int({ min: 0, max: 9999 }).toLocaleString();
 
 export const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
+
+export type GenerateListOptions = {
+  /** Maximum nesting depth. */
+  depth?: number;
+  /** Children per node — a fixed count or an inclusive `[min, max]` range. */
+  children?: number | [number, number];
+  /** Emit task markers (`- [ ]`) rather than plain bullets (`- `). */
+  task?: boolean;
+  /** Spaces of indentation per level. */
+  indent?: number;
+  /** Content generator for each item (default: a lorem sentence). */
+  content?: () => string;
+};
+
+/**
+ * Generates a hierarchical markdown list for the outliner stories. Deterministic under `random.seed`.
+ */
+export const generateList = ({
+  depth = 3,
+  children = [1, 3],
+  task = true,
+  indent = 2,
+  content = () => random.lorem.sentence(),
+}: GenerateListOptions = {}): string => {
+  const count = (value: number | [number, number]): number =>
+    Array.isArray(value) ? random.number.int({ min: value[0], max: value[1] }) : value;
+
+  const build = (level: number): string[] =>
+    Array.from({ length: count(children) }).flatMap(() => {
+      const line = ' '.repeat(indent * level) + (task ? '- [ ] ' : '- ') + content();
+      return level + 1 < depth ? [line, ...build(level + 1)] : [line];
+    });
+
+  return join(...build(0));
+};
 
 export const code = str(
   // prettier-ignore

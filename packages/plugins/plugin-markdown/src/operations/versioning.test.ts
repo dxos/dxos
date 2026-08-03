@@ -6,15 +6,14 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Feed, Obj, Ref, URI } from '@dxos/echo';
+import { Collection, Database, Feed, Ref, URI } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
-
-import { WithProperties } from '#testing';
 
 import { Markdown, MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';
@@ -44,11 +43,19 @@ describe('versioning operations', () => {
           name: 'draft',
         });
         expect(branchId).toBeDefined();
+        // Core branches share the parent Text's object; the returned content id is the canonical text.
+        const canonicalText = yield* Database.resolve(URI.make(contentId), Text.Text);
+        const rootText = yield* Database.load(doc.content);
+        expect(canonicalText.id).toBe(rootText.id);
 
-        const branchText = yield* Database.resolve(URI.make(contentId), Text.Text);
-        Obj.update(branchText, (branchText) => {
-          branchText.content = 'alpha\nbravo\ncharlie\n';
+        // The agent flow: edit the BRANCH via the update operation's branchId; main is untouched.
+        const { newContent: branchContent } = yield* Operation.invoke(MarkdownOperation.Update, {
+          doc: Ref.make(doc),
+          edits: [{ oldString: 'bravo\n', newString: 'bravo\ncharlie\n' }],
+          branchId,
         });
+        expect(branchContent).toBe('alpha\nbravo\ncharlie\n');
+        expect(rootText.content).toBe('alpha\nbravo\n');
 
         const { conflicts, newContent } = yield* Operation.invoke(MarkdownOperation.MergeBranch, {
           doc: Ref.make(doc),
@@ -56,8 +63,6 @@ describe('versioning operations', () => {
         });
         expect(conflicts).toBe(0);
         expect(newContent).toBe('alpha\nbravo\ncharlie\n');
-
-        const rootText = yield* Database.load(doc.content);
         expect(rootText.content).toBe('alpha\nbravo\ncharlie\n');
 
         const history = yield* Operation.invoke(MarkdownOperation.GetHistory, { doc: Ref.make(doc) });

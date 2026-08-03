@@ -5,8 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { type Space, useMembers } from '@dxos/react-client/echo';
-import { useIdentity } from '@dxos/react-client/halo';
+import { useIdentity, useMembers } from '@dxos/halo-react';
+import { type Space } from '@dxos/react-client/echo';
 import { Panel, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';

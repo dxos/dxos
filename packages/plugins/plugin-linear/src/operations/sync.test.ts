@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Cursor } from '@dxos/link';
 import { Connection } from '@dxos/plugin-connector';
-import { Project, Task } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearApi } from '../services';
@@ -51,13 +51,13 @@ describe('plugin-linear sync', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    graph.registry.add([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Project.Project, Task.Task]);
+    graph.registry.add([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, TaskSet.TaskSet, Task.Task]);
     const token = db.add(Obj.make(AccessToken.AccessToken, { source: LINEAR_SOURCE, token: 'tok' }));
     const connection = db.add(
       Obj.make(Connection.Connection, { name: 'Linear', connectorId: 'linear', accessToken: Ref.make(token) }),
     );
     // The binding's target is the team's local root Project.
-    const teamRoot = db.add(Project.make({ name: 'TEAM · Example' }));
+    const teamRoot = db.add(TaskSet.make({ name: 'TEAM · Example' }));
     const binding = db.add(
       Cursor.makeExternal({
         source: connection.accessToken,

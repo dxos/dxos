@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
+import { Atom, Registry as AtomRegistry } from '@effect-atom/atom';
 import * as EArray from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';

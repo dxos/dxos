@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
-import { REGISTRY_ID, REGISTRY_KEY, meta, registryCategoryId } from '#meta';
+import { REGISTRY_ID, meta } from '#meta';
 
 import { getCategoryPredicate, getRemotePluginIds } from '../categories';
 import { LOAD_PLUGIN_DIALOG } from '../containers';
@@ -63,6 +63,27 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'registry',
         match: NodeMatcher.whenRoot,
+        // REGISTRY_ID is a pinned workspace (the URL's workspace anchor), so it carries no key of its
+        // own; its category and plugin children are the addressable planks (see `categories`/`plugins`).
+        connector: () =>
+          Effect.succeed([
+            Node.make({
+              id: REGISTRY_ID,
+              type: meta.profile.key,
+              properties: {
+                label: ['plugin-registry.label', { ns: meta.profile.key }],
+                icon: 'ph--squares-four--regular',
+                disposition: 'pin-end',
+                position: Position.first,
+                testId: 'treeView.pluginRegistry',
+              },
+            }),
+          ]),
+      }),
+      GraphBuilder.createExtension({
+        id: 'categories',
+        url: { key: 'category', kind: 'item', path: [] },
+        match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
           const plugins = get(manager.plugins);
@@ -77,82 +98,64 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             Node.make({
-              id: REGISTRY_ID,
-              type: meta.profile.key,
+              id: 'bundled',
+              type: 'category',
+              data: 'bundled',
               properties: {
-                label: ['plugin-registry.label', { ns: meta.profile.key }],
+                label: ['bundled-plugins.label', { ns: meta.profile.key }],
                 icon: 'ph--squares-four--regular',
-                disposition: 'pin-end',
-                position: Position.first,
-                testId: 'treeView.pluginRegistry',
+                testId: 'pluginRegistry.bundled',
+                count: categoryCount('bundled'),
               },
-              nodes: [
-                Node.make({
-                  id: registryCategoryId('bundled'),
-                  type: 'category',
-                  data: registryCategoryId('bundled'),
-                  properties: {
-                    label: ['bundled-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--squares-four--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.bundled',
-                    count: categoryCount(registryCategoryId('bundled')),
-                  },
-                }),
-                Node.make({
-                  id: registryCategoryId('installed'),
-                  type: 'category',
-                  data: registryCategoryId('installed'),
-                  properties: {
-                    label: ['installed-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--check--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.installed',
-                    count: categoryCount(registryCategoryId('installed')),
-                  },
-                }),
-                Node.make({
-                  id: registryCategoryId('recommended'),
-                  type: 'category',
-                  data: registryCategoryId('recommended'),
-                  properties: {
-                    label: ['recommended-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--star--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.recommended',
-                    count: categoryCount(registryCategoryId('recommended')),
-                  },
-                }),
-                Node.make({
-                  id: registryCategoryId('labs'),
-                  type: 'category',
-                  data: registryCategoryId('labs'),
-                  properties: {
-                    label: ['labs-plugins.label', { ns: meta.profile.key }],
-                    icon: 'ph--flask--regular',
-                    key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.labs',
-                    count: categoryCount(registryCategoryId('labs')),
-                  },
-                }),
-                ...(registryCount > 0
-                  ? [
-                      Node.make({
-                        id: registryCategoryId('registry'),
-                        type: 'category',
-                        data: registryCategoryId('registry'),
-                        properties: {
-                          label: ['registry-plugins.label', { ns: meta.profile.key }],
-                          icon: 'ph--users-three--regular',
-                          key: REGISTRY_KEY,
-                          testId: 'pluginRegistry.registry',
-                          count: registryCount,
-                        },
-                      }),
-                    ]
-                  : []),
-              ],
             }),
+            Node.make({
+              id: 'installed',
+              type: 'category',
+              data: 'installed',
+              properties: {
+                label: ['installed-plugins.label', { ns: meta.profile.key }],
+                icon: 'ph--check--regular',
+                testId: 'pluginRegistry.installed',
+                count: categoryCount('installed'),
+              },
+            }),
+            Node.make({
+              id: 'recommended',
+              type: 'category',
+              data: 'recommended',
+              properties: {
+                label: ['recommended-plugins.label', { ns: meta.profile.key }],
+                icon: 'ph--star--regular',
+                testId: 'pluginRegistry.recommended',
+                count: categoryCount('recommended'),
+              },
+            }),
+            Node.make({
+              id: 'labs',
+              type: 'category',
+              data: 'labs',
+              properties: {
+                label: ['labs-plugins.label', { ns: meta.profile.key }],
+                icon: 'ph--flask--regular',
+                testId: 'pluginRegistry.labs',
+                count: categoryCount('labs'),
+              },
+            }),
+            ...(registryCount > 0
+              ? [
+                  Node.make({
+                    id: 'registry',
+                    type: 'category',
+                    data: 'registry',
+                    properties: {
+                      label: ['registry-plugins.label', { ns: meta.profile.key }],
+                      icon: 'ph--users-three--regular',
+                      testId: 'pluginRegistry.registry',
+                      count: registryCount,
+                    },
+                  }),
+                ]
+              : []),
           ]);
         },
       }),
@@ -179,6 +182,7 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
+        url: { key: 'registry', kind: 'item', path: [] },
         match: NodeMatcher.whenId(`root/${REGISTRY_ID}`),
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
@@ -199,7 +203,9 @@ export default Capability.makeModule(
 
           const registryEntries = get(manager.pluginRegistry.plugins).entries;
           const registryNodes = registryEntries
-            .filter((entry) => !installedIds.has(DXN.make(entry.profile.key)))
+            // `profile.key` is the bare NSID on both sides; comparing against a `dxn:`-prefixed
+            // URI here would never match and would duplicate every installed plugin's node.
+            .filter((entry) => !installedIds.has(entry.profile.key))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
               return Node.make({

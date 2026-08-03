@@ -11,7 +11,7 @@ import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { Trigger } from '@dxos/compute';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/compute-runtime';
 import { type Database, Filter, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
 
 interface TriggerRuntimeControls {
   triggers: Trigger.Trigger[];

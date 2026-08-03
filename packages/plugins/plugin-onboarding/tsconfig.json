@@ -48,6 +48,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/halo/credentials"
     },
     {
@@ -111,6 +114,9 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-illustrator"
+    },
+    {
       "path": "../plugin-inbox"
     },
     {
@@ -126,9 +132,6 @@
       "path": "../plugin-sheet"
     },
     {
-      "path": "../plugin-sketch"
-    },
-    {
       "path": "../plugin-space"
     },
     {
@@ -136,6 +139,9 @@
     },
     {
       "path": "../plugin-testing"
+    },
+    {
+      "path": "../plugin-tldraw"
     }
   ]
 }

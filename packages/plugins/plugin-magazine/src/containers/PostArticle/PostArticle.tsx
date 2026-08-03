@@ -8,10 +8,10 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'reac
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { getParentId, isLinkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { usePostContentAtom } from '#atoms';
 import { PostContent } from '#components';
@@ -26,7 +26,8 @@ export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) => {
   // When shown as a companion the `attendableId` is a linked segment, but attention lives on the
   // parent plank — resolve to the parent so the toolbar reads as attended (active).
-  const toolbarAttendableId = attendableId && isLinkedSegment(attendableId) ? getParentId(attendableId) : attendableId;
+  const toolbarAttendableId =
+    attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
   const { invokePromise } = useOperationInvoker();
   const registry = useContext(RegistryContext);
   const [post] = useObject(subject);

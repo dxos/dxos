@@ -27,6 +27,8 @@ import {
   type ExportBundleRequest,
   type ExportBundleResponse,
   type FeedProtocol,
+  type GetAccessTokenRequest,
+  type GetAccessTokenResponseBody,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
   type GetPluginsResponseBody,
@@ -39,6 +41,7 @@ import {
   type PostNotarizationRequestBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
+  type SerializedError,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
 } from '@dxos/protocols';
@@ -80,6 +83,45 @@ export type TriggersDispatcherStatus = {
 
 export type GetCronTriggersResponse = {
   cronIds: string[];
+};
+
+/**
+ * Per-trigger runtime status reported by the EDGE dispatcher, keyed to the
+ * trigger's ECHO object id so a client can correlate it with the replicated
+ * `Trigger` object in its local database.
+ *
+ * TODO(edge): The backing endpoint (`GET /triggers/{spaceId}`, see
+ * {@link EdgeHttpClient.getSpaceTriggers}) is a proposal and is not yet
+ * implemented server-side.
+ */
+export type EdgeTriggerStatus = {
+  /** ECHO object id of the trigger. */
+  triggerId: ObjectId;
+  /** Whether the EDGE dispatcher currently has this trigger registered. */
+  registered: boolean;
+  kind: 'timer' | 'subscription' | 'email' | 'webhook' | 'feed' | 'direct';
+  /** Next scheduled cron execution (epoch ms). Set only for `timer` triggers. */
+  nextExecutionTimestamp?: number;
+  /** Cooldown expiry after a failure (epoch ms). */
+  cooldownUntilTimestamp?: number;
+  /** Outcome of the most recent invocation on the edge. */
+  lastResult?: {
+    status: 'success' | 'failure';
+    /** Completion time (epoch ms). */
+    timestamp: number;
+    error?: SerializedError;
+  };
+};
+
+/**
+ * Response of the proposed `GET /triggers/{spaceId}` endpoint: the full list of
+ * triggers registered on a space's EDGE dispatcher, with runtime status. Polled
+ * by the remote trigger monitor to surface edge trigger state.
+ */
+export type GetSpaceTriggersResponse = {
+  /** Whether the space's edge dispatcher is active. */
+  isActive: boolean;
+  triggers: EdgeTriggerStatus[];
 };
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
@@ -196,6 +238,18 @@ export class EdgeHttpClient extends BaseHttpClient {
     args?: EdgeHttpCallArgs,
   ): Promise<CompleteOAuthRegistrationResponse> {
     return this._call(ctx, new URL('/oauth/registration/complete', this.baseUrl), { ...args, body, method: 'POST' });
+  }
+
+  /**
+   * Resolves the live access token behind a `MANAGED_ACCESS_TOKEN` placeholder. Authorized by the
+   * caller's presentation: EDGE serves it only to members of the owning space.
+   */
+  public async getAccessToken(
+    ctx: Context,
+    body: GetAccessTokenRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetAccessTokenResponseBody> {
+    return this._call(ctx, new URL('/oauth/token', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -435,6 +489,34 @@ export class EdgeHttpClient extends BaseHttpClient {
   public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
     return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
+    });
+  }
+
+  /**
+   * Cancels the current run of a cron trigger on the EDGE dispatcher — its in-flight execution and
+   * `runAgain` continuation chain. The trigger stays enabled, so its schedule keeps firing.
+   */
+  public async cancelTriggerRun(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call(ctx, new URL(`/functions/${spaceId}/triggers/crons/${triggerId}/cancel`, this.baseUrl), {
+      method: 'POST',
+    });
+  }
+
+  /**
+   * Returns the full list of triggers registered on a space's EDGE dispatcher, with per-trigger
+   * runtime status. Polled by the remote trigger monitor to surface edge trigger state.
+   *
+   * TODO(edge): Proposed endpoint; not yet implemented server-side.
+   */
+  public async getSpaceTriggers(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetSpaceTriggersResponse> {
+    return this._call<GetSpaceTriggersResponse>(ctx, new URL(`/triggers/${spaceId}`, this.baseUrl), {
+      ...args,
+      method: 'GET',
+      auth: true,
     });
   }
 

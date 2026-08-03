@@ -5,3 +5,4 @@
 export * from './types';
 
 export * from './EditorToolbar';
+export * from './view-mode';

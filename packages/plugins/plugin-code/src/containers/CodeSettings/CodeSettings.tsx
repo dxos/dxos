@@ -5,8 +5,9 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 

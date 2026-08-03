@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { getLinkedVariant } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 
 import { layoutStateAccess } from './state-access';
 
@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary>
             companionVariant: undefined,
           }));
         } else if (input.subject) {
-          const variant = getLinkedVariant(input.subject);
+          const variant = Attention.getLinkedVariant(input.subject);
           updateState((state) => ({
             ...state,
             companionVariant: variant,

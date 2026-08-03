@@ -1,9 +1,12 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
-  compile:
+  # Single-pass type-and-JS build via `dx-build` (used by workspace tools and a handful of
+  # packages). The tag is named `ts-compile` for historical reasons; the task it contributes
+  # is `build`, like every other build tag.
+  build:
     command: pnpm exec dx-build
     deps:
-      - dx-build:compile
+      - dx-build:build
       - ^:build
     inputs:
       - /tsconfig.base.json

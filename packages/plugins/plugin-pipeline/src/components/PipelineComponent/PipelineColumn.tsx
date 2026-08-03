@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';

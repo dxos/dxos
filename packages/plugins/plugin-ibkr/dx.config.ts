@@ -19,6 +19,6 @@ export default Config2.make({
       so the rate-limited IBKR API is touched only once a day, never on each query.
     `,
     icon: { key: 'ph--chart-line-up--regular', hue: 'green' },
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath } from '@dxos/app-toolkit';
 import { Annotation, Filter, Type } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { type Space } from '@dxos/react-client/echo';
@@ -27,13 +27,13 @@ export default Capability.makeModule(
       // CRM section group — created here so it only appears when the CRM plugin is active and
       // hides when it has no children (i.e. the space has no organizations or people).
       GraphBuilder.createExtension({
-        id: Paths.GroupSegments.crm,
+        id: GraphPath.GroupSegments.crm,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
           Effect.succeed([
             AppNode.makeGroup({
-              id: Paths.GroupSegments.crm,
-              type: Paths.GroupTypes.crm,
+              id: GraphPath.GroupSegments.crm,
+              type: GraphPath.GroupTypes.crm,
               label: ['nav-tree-group-crm.label', { ns: meta.profile.key }],
               space,
               position: 500,
@@ -46,7 +46,8 @@ export default Capability.makeModule(
       // natural type folders under the Database section.
       GraphBuilder.createExtension({
         id: 'crmTypes',
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.crm),
+        url: { key: 'crm', kind: 'item', path: [GraphPath.GroupSegments.crm] },
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.crm),
         connector: (space, get) => {
           // Index the registry once per rebuild so each type resolves its registered schema in O(1).
           const registered = new Map(
@@ -91,7 +92,7 @@ const createTypeNode = ({
   const annotation = Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(entity)));
 
   return Node.make({
-    id: Paths.getTypeSlug(entity),
+    id: GraphPath.getTypeSlug(entity),
     type: CRM_TYPE_NODE,
     data: entity,
     properties: {

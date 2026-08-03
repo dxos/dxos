@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom-react';
+import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
@@ -154,7 +154,9 @@ const setupNativeFilesystemGraphBuilder = ({
   const stateCapabilitiesAtom = Atom.make([stateAtom]);
   const filesystemManagerCapabilitiesAtom = Atom.make([new MockFilesystemManager(initialState)]);
   const entryExtensions = Effect.runSync(
-    createFilesystemEntryExtensions(stateCapabilitiesAtom, filesystemManagerCapabilitiesAtom),
+    createFilesystemEntryExtensions(stateCapabilitiesAtom, filesystemManagerCapabilitiesAtom, () =>
+      registry.get(stateAtom),
+    ),
   );
 
   return setupGraphBuilder({

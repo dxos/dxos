@@ -6,9 +6,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useQuery } from '@dxos/react-client/echo';
 import { type FormFieldMap, type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import { HEYGEN_SOURCE } from '../../constants';

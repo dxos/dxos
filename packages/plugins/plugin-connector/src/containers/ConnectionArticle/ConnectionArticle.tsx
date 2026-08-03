@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 
 import { ConnectionView } from '#components';
 import { useConnector, useReauthenticate, useSyncConnection, useSyncTargetsChecklist, useTestConnection } from '#hooks';
@@ -68,9 +68,9 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       source={source}
       hasConnector={!!connector}
       bindings={bindings}
-      optionsSchema={connector?.optionsSchema}
+      optionsSchema={connector?.sync?.optionsSchema}
       canSync={!!connector?.sync && syncAvailable}
-      canChangeTargets={!!connector?.getSyncTargets}
+      canChangeTargets={!!connector?.sync?.getTargets}
       syncing={syncing}
       loadingTargets={loading}
       syncTargetsAvailable={syncTargetsAvailable}
