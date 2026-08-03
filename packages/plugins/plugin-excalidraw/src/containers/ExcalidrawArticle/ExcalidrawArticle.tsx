@@ -15,8 +15,8 @@ import React, { PropsWithChildren, useEffect, useRef, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type DrawingVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
-import { Drawing } from '@dxos/plugin-illustrator/types';
 import { Flex, Panel, composable, composableProps, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '#hooks';

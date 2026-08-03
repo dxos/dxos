@@ -8,7 +8,7 @@ import React from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { Mic } from '#components';
 import { meta } from '#meta';

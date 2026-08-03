@@ -4,7 +4,8 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { FileCapabilities, FileEvents } from '@dxos/plugin-file/types';
+import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
+import * as FileEvents from '@dxos/plugin-file/FileEvents';
 
 import { WnfsCapabilities } from '#types';
 

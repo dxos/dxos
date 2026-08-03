@@ -17,7 +17,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';

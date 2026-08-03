@@ -15,7 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';

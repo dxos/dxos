@@ -8,7 +8,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
-import { type BookingSearch, TripCapabilities } from '@dxos/plugin-trip/types';
+import type * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
+import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
 
 import { meta } from '#meta';
 import { makeDuffelBookingService } from '#services';

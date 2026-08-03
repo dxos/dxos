@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { Connection } from '@dxos/plugin-connector/types';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { meta } from '#meta';
 import { Blog } from '#types';

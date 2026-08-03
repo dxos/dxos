@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector/types';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { Blog, Publisher } from '../types';
 import { runSyncPosts } from './sync-posts';

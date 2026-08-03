@@ -3,7 +3,8 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { BloggerCapabilities, BloggerEvents } from '@dxos/plugin-blogger/types';
+import * as BloggerCapabilities from '@dxos/plugin-blogger/BloggerCapabilities';
+import * as BloggerEvents from '@dxos/plugin-blogger/BloggerEvents';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 

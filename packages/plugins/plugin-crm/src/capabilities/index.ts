@@ -5,7 +5,8 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ProjectCapabilities, ProjectsEvents } from '@dxos/plugin-projects/types';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 

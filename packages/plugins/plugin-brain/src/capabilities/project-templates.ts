@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { ProjectCapabilities } from '@dxos/plugin-projects/types';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 
 import { mailboxFacts } from '../templates/mailbox-facts';
 

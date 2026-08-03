@@ -10,7 +10,7 @@ import { type expect as Expect } from 'vitest';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';

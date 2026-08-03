@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';

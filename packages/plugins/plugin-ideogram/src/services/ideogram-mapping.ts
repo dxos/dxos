@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type GenerationService } from '@dxos/plugin-studio/types';
+import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
 import { type IdeogramRequestConfig } from './ideogram-request';
 

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { BloggerCapabilities, type Publisher } from '@dxos/plugin-blogger/types';
+import * as BloggerCapabilities from '@dxos/plugin-blogger/BloggerCapabilities';
+import type * as Publisher from '@dxos/plugin-blogger/Publisher';
 
 import { TypefullyApi } from '#services';
 

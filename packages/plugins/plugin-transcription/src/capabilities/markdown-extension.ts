@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { pendingText } from '@dxos/ui-editor';
 
 export default Capability.makeModule(

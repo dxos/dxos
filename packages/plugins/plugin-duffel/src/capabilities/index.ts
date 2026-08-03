@@ -4,7 +4,8 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { TripCapabilities, TripEvents } from '@dxos/plugin-trip/types';
+import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
+import * as TripEvents from '@dxos/plugin-trip/TripEvents';
 
 import { DuffelCapabilities } from '#types';
 

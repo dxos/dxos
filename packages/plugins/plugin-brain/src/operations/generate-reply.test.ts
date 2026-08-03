@@ -14,7 +14,7 @@ import { Feed } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { FactStore, FactStoreLive, type RDF } from '@dxos/pipeline-rdf';
-import { Mailbox } from '@dxos/plugin-inbox/types';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
 import { generateReply, replySubject } from './generate-reply';

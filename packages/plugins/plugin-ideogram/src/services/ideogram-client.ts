@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { GenerationService } from '@dxos/plugin-studio/types';
+import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
 import { IDEOGRAM_GENERATE_URL, IDEOGRAM_SOURCE, IDEOGRAM_TIMEOUT_MS } from '../constants';
 import { type IdeogramGenerateResponse, mapIdeogramResponse } from './ideogram-mapping';

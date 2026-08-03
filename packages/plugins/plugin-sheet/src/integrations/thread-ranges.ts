@@ -10,7 +10,7 @@ import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { CommentOperation } from '@dxos/plugin-review/types';
+import * as CommentOperation from '@dxos/plugin-review/CommentOperation';
 import { Attention } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 

@@ -9,7 +9,7 @@ import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framewo
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';

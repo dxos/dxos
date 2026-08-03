@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { useClient } from '@dxos/react-client';

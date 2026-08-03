@@ -13,7 +13,7 @@ import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { type Identity } from '@dxos/halo';
 import { useMembers } from '@dxos/halo-react';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { getSpace } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';

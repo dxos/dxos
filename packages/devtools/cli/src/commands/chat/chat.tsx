@@ -21,7 +21,7 @@ import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';

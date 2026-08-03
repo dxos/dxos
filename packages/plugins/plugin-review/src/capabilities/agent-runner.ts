@@ -17,7 +17,7 @@ import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { AnchoredTo, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

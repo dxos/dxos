@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { MapInline } from '@dxos/plugin-map';
-import { MapCapabilities } from '@dxos/plugin-map/types';
+import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';

@@ -5,7 +5,8 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { CrxCapabilities, CrxEvents } from '@dxos/plugin-crx/types';
+import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
+import * as CrxEvents from '@dxos/plugin-crx/CrxEvents';
 
 import { BookmarksEvents } from '#types';
 

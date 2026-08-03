@@ -7,7 +7,8 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { CallsCapabilities, CallsEvents } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
 
 import { MeetingCapabilities, MeetingEvents } from '#types';
 

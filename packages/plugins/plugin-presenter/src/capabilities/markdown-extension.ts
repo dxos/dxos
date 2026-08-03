@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { keymap } from '@dxos/ui-editor';
 
 import { PresenterOperation } from '#types';

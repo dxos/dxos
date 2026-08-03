@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { TranscriptOperation } from '@dxos/plugin-transcription/types';
+import * as TranscriptOperation from '@dxos/plugin-transcription/TranscriptOperation';
 
 import { MeetingOperation } from '#types';
 

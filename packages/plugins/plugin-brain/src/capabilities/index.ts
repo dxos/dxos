@@ -6,8 +6,10 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { InboxCapabilities, InboxEvents } from '@dxos/plugin-inbox/types';
-import { ProjectCapabilities, ProjectsEvents } from '@dxos/plugin-projects/types';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
 import { BrainCapabilities } from '#types';
 

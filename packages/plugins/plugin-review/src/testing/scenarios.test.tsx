@@ -11,7 +11,7 @@ import { Space as HaloSpace, Identity } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { HaloProvider } from '@dxos/halo-react';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Client, ClientProvider, fromHost } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';

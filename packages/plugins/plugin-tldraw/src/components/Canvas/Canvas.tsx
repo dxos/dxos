@@ -13,7 +13,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import { Obj } from '@dxos/echo';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useMergeRefs } from '@dxos/react-hooks';
 import { composable, composableProps } from '@dxos/react-ui';
 

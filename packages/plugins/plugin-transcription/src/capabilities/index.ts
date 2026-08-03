@@ -6,7 +6,8 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
 import { TranscriptionCapabilities, TranscriptionEvents } from '#types';
 

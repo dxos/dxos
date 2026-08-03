@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { useOptionalCapabilities } from '@dxos/app-framework/ui';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
-import { type Markdown } from '@dxos/plugin-markdown/types';
+import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';

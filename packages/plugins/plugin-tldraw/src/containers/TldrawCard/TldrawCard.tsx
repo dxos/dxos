@@ -6,8 +6,8 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { type DrawingVariantSurfaceProps } from '@dxos/plugin-illustrator/types';
-import { Drawing } from '@dxos/plugin-illustrator/types';
 import { Card } from '@dxos/react-ui';
 
 import { CanvasComponent } from '#components';

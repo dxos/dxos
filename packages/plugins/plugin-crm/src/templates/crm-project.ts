@@ -10,8 +10,8 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { scaffoldProject } from '@dxos/plugin-projects/templates';
-import { type ProjectCapabilities } from '@dxos/plugin-projects/types';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 

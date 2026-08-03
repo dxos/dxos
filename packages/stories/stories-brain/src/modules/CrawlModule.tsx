@@ -13,7 +13,7 @@ import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { FactPipeline } from '@dxos/pipeline-rdf';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { discordSourceLayer } from '@dxos/plugin-discord';
 import { type Space } from '@dxos/react-client/echo';
 

@@ -8,7 +8,7 @@ import { type CapabilityManager } from '@dxos/app-framework';
 import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { ConnectorAuthAnnotation } from '@dxos/plugin-connector/types';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
 import { PublisherService } from './BloggerCapabilities';

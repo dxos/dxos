@@ -10,7 +10,7 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { ProjectOperation } from '@dxos/plugin-projects/types';
+import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Loading } from '@dxos/react-ui/testing';

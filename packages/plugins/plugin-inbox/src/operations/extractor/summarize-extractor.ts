@@ -16,7 +16,7 @@ import {
   type MatchResult,
   type ObjectExtractor,
 } from '@dxos/extractor';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { InboxOperation } from '../../types';

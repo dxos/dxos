@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 

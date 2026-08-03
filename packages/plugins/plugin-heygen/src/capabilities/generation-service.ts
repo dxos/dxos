@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type GenerationService, StudioCapabilities } from '@dxos/plugin-studio/types';
+import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
+import * as StudioCapabilities from '@dxos/plugin-studio/StudioCapabilities';
 
 import { heyGenFieldMap } from '#components';
 import { makeHeyGenGenerationService } from '#services';

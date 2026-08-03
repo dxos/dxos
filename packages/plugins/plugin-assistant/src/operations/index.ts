@@ -3,7 +3,7 @@
 //
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
 import { AssistantOperation } from '#types';
 

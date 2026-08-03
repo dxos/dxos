@@ -11,7 +11,7 @@ import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector/types';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';

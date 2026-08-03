@@ -12,7 +12,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';

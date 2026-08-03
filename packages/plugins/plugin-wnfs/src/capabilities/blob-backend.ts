@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { FileCapabilities } from '@dxos/plugin-file/types';
+import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 
 import { WnfsCapabilities } from '#types';
 

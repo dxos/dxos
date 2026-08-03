@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { MapCapabilities } from '@dxos/plugin-map/types';
+import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import { type GeoMarker, LatLngLiteral } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 

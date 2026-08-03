@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
 import { promptRunExtension } from '../extensions';
 

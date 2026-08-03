@@ -11,7 +11,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Client, ClientProvider, fromHost } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';

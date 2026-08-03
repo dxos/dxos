@@ -4,7 +4,7 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 
 import { DrawingVariant, ExcalidrawSettings, ReactSurface } from '#capabilities';
 import { meta } from '#meta';

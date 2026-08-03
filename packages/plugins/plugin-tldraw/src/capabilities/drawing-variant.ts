@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { type DrawingVariant, IllustratorCapabilities } from '@dxos/plugin-illustrator/types';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import { type DrawingVariant } from '@dxos/plugin-illustrator/types';
 
 import { TldrawArticle, TldrawCard } from '#containers';
 import { TldrawBuilder } from '#model';

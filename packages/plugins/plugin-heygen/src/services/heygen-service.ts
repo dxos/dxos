@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { type GenerationService } from '@dxos/plugin-studio/types';
+import type * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
 import { HEYGEN_CONNECTOR_ID, HEYGEN_ID, HEYGEN_SOURCE } from '../constants';
 import { HeyGenProvider } from './heygen-provider';

@@ -9,8 +9,8 @@ import * as Predicate from 'effect/Predicate';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
+import * as Chess from '@dxos/plugin-chess/Chess';
+import * as Game from '@dxos/plugin-game/Game';
 
 import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services';
 import { ChessComAccount, ChessComOperation } from '../types';

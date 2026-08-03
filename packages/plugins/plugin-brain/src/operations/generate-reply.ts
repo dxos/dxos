@@ -11,7 +11,8 @@ import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { FactStore, type RDF, normalizeEntityId } from '@dxos/pipeline-rdf';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox/types';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { DraftMessage, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 

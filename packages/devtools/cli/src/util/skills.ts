@@ -18,20 +18,21 @@ import { makeRegistry } from '@dxos/echo-client';
 // whose `source` export condition advertises a TS file that isn't shipped in
 // its dist, causing Bun resolution to fail).
 import { AssistantSkill } from '@dxos/plugin-assistant/skills';
+import * as Chess from '@dxos/plugin-chess/Chess';
 import { ChessOperationHandlerSet } from '@dxos/plugin-chess/operations';
 import { ChessSkill } from '@dxos/plugin-chess/skills';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { CalendarSkill, InboxSendSkill, InboxSkill } from '@dxos/plugin-inbox/skills';
-import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/operations';
 import { KanbanSkill } from '@dxos/plugin-kanban/skills';
 import { MapOperationHandlerSet } from '@dxos/plugin-map/operations';
 import { MapSkill } from '@dxos/plugin-map/skills';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { MarkdownSkill } from '@dxos/plugin-markdown/skills';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { CommentOperationHandlerSet } from '@dxos/plugin-review/operations';
 import { CommentSkill } from '@dxos/plugin-review/skills';
 import { ScriptOperationHandlerSet } from '@dxos/plugin-script/operations';

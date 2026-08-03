@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { listener } from '@dxos/ui-editor';
 
 import { type FilesystemWorkspace, NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';

@@ -48,8 +48,8 @@ import {
   TranscriptionPipeline,
   makeDatabaseLookup,
 } from '@dxos/pipeline-transcription';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { BrainPlugin } from '@dxos/plugin-brain/plugin';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';

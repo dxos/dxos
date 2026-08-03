@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Type } from '@dxos/echo';
-import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { ReviewCapabilities } from '#types';
 

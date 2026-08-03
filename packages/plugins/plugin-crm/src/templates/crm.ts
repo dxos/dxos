@@ -11,7 +11,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { makeRoutine } from '@dxos/plugin-routine';
-import { type RoutineCapabilities } from '@dxos/plugin-routine/types';
+import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import { trim } from '@dxos/util';
 
 /**

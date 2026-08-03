@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { type PageAction } from '@dxos/plugin-crx/types';
+import type * as PageAction from '@dxos/plugin-crx/PageAction';
 import { Text } from '@dxos/schema';
 
 const EXCERPT_LENGTH = 280;

@@ -10,7 +10,7 @@ import { Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Thread } from '@dxos/pipeline-email';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 

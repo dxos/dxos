@@ -3,7 +3,7 @@
 //
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { InboxOperation } from '@dxos/plugin-inbox/types';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 
 import { BrainOperation } from '#types';
 

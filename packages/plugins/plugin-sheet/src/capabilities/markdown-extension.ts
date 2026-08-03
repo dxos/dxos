@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { getSpace } from '@dxos/client/echo';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { SheetCapabilities } from '#types';
 

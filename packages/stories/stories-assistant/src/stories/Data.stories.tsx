@@ -15,7 +15,7 @@ import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo
 import { AccessToken } from '@dxos/link';
 import { AssistantSkill } from '@dxos/plugin-assistant';
 import { CrmSkill } from '@dxos/plugin-crm';
-import { ProfileOf } from '@dxos/plugin-crm/types';
+import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import { InboxSkill } from '@dxos/plugin-inbox';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
