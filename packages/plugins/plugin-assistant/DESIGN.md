@@ -208,7 +208,7 @@ skipped with stale fixtures — e.g. `skills/assistant/skill.node.test.ts`).
   (`SERVICES_CONFIG.REMOTE`); the `WithProjectCommands` play test is det (completion popover
   only, no AI call).
 - `stories-assistant` — the integration surface: modules (Chat, Context, Graph, Research,
-  Tasks) composed over real plugins + **live** EDGE AI; `WithSubAgentsTest` is the only
+  Tasks) composed over real plugins + **live** EDGE AI; `WithSubAgentsTest1` is the only
   end-to-end delegation exercise and is `tags: ['!test']` (manual, 180 s timeout).
 - `assistant-evals` — evalite-scored A/B/H evals, live model, out of band.
 
@@ -230,7 +230,7 @@ to add more live tests.
    gets two variants:
    - `Foo` — live, `tags: ['!test']`, for model-behavior work;
    - `FooScripted` — same story + a play script, deterministic, runs in `test-storybook` CI
-     (first instance: `WithSubAgentsScripted`, §4.4).
+     (first instance: `WithSubAgentsTest2`, §4.4).
      This turns the storybook from "manual demo against the network" into a regression suite for
      everything except comprehension/tool-selection (which belong to the evals tier anyway).
 2. **Headless-first iteration at the `AgentService` seam.** The processor's entry point
@@ -272,7 +272,7 @@ artifact references) appended to the conversation feed.
 | `DelegateTask` op unit test                  | det (`delegate-task.test.ts`).                                                                                                                                                             |
 | Delegation lifecycle test                    | Stub strategy, **memo-gated** (`AgentService.test.ts`).                                                                                                                                    |
 | `makeDelegationStrategy`                     | det headless end-to-end test (`supervisor/delegation-strategy.test.ts`, see 4.3).                                                                                                          |
-| End-to-end UI                                | Live (`WithSubAgentsTest`, `!test`) + scripted CI play story (`WithSubAgentsScripted`, 4.4).                                                                                               |
+| End-to-end UI                                | Live (`WithSubAgentsTest1`, `!test`) + scripted CI play story (`WithSubAgentsTest2`, 4.4).                                                                                                 |
 
 `run-instructions.test.ts` drives the sub-agent side (`RunInstructions` + `completeJob`) with a
 scripted model; the pieces below complete the harness for **two cooperating sessions**
@@ -353,8 +353,8 @@ with zero model calls, in ~0.5 s.
 
 ### 4.4 The storybook analog
 
-**Done** — `WithSubAgentsTest` (live) stays as the model-behavior check;
-`WithSubAgentsScripted` is the same `WithSubAgents` story wired to the decorators' `scripted`
+**Done** — `WithSubAgentsTest1` (live) stays as the model-behavior check;
+`WithSubAgentsTest2` is the same `WithSubAgents` story wired to the decorators' `scripted`
 option (§3.1) with the **same routed turn script** as the headless test, plus a `chat-name`
 route for the first-message rename turn (`UpdateChatName` also consumes the model — an
 unrouted script would lose turns to it). Its play function types the prompt, asserts the
@@ -371,6 +371,6 @@ remains the only place a real model is consulted.
    scripted port of the stub lifecycle test (`agent-service/delegation-scripted.test.ts`); the
    memo-gated original stays until its file's fixtures are next regenerated (removing it would
    shift the shared deterministic ID stream).
-4. ~~`scripted` decorator support in `stories-assistant`; `WithSubAgentsScripted` play
+4. ~~`scripted` decorator support in `stories-assistant`; `WithSubAgentsTest2` play
    story (4.4).~~ **Done.**
 5. ~~Processor streaming harness (§3.3).~~ **Done** (`processor/streaming.node.test.ts`).
