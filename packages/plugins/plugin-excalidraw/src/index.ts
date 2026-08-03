@@ -3,4 +3,7 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as Excalidraw from './types/Excalidraw';
+export * as ExcalidrawCapabilities from './types/ExcalidrawCapabilities';
+export * as ExcalidrawEvents from './types/ExcalidrawEvents';
+export * as Settings from './types/Settings';

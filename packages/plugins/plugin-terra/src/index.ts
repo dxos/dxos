@@ -3,4 +3,5 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as Terra from './types/Terra';
+export * as TerraObject from './types/TerraObject';

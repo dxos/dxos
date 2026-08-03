@@ -3,4 +3,6 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as ChessComAccount from './types/ChessComAccount';
+export * as ChessComEvents from './types/ChessComEvents';
+export * as ChessComOperation from './types/ChessComOperation';

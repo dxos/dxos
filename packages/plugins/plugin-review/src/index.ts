@@ -12,3 +12,8 @@ export * from './meta';
 
 // Additive: lets other plugins embed the comments panel in their own companion surfaces.
 export { CommentsArticle } from '#containers';
+export * as CommentCapabilities from './types/CommentCapabilities';
+export * as CommentOperation from './types/CommentOperation';
+export * as ReviewEvents from './types/ReviewEvents';
+export * from './types';
+export * as Settings from './types/Settings';

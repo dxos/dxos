@@ -7,4 +7,7 @@
 export * from './hooks';
 export * from './meta';
 export * from './paths';
+export * as ThreadCapabilities from './types/ThreadCapabilities';
+export * as ThreadEvents from './types/ThreadEvents';
 export * from './types';
+export * as ThreadOperation from './types/ThreadOperation';

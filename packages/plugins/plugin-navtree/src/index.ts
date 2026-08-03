@@ -3,5 +3,6 @@
 //
 
 export * from './meta';
-export * from './types';
 export * from './util';
+export * from './types';
+export * as NavTreeCapabilities from './types/NavTreeCapabilities';

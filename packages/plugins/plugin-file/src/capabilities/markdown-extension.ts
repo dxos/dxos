@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
-import { type MarkdownExtensionProvider } from '@dxos/plugin-markdown/types';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { image } from '../extensions';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    const provider: MarkdownExtensionProvider = ({ document, viewMode }) => {
+    const provider: MarkdownCapabilities.MarkdownExtensionProvider = ({ document, viewMode }) => {
       if (viewMode === 'source') {
         return undefined;
       }
