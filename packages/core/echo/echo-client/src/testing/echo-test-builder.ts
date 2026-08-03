@@ -13,7 +13,6 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import isEqual from 'fast-deep-equal';
 
-import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-host';
@@ -394,15 +393,6 @@ export const createDataAssertion = ({
         db.add(Obj.make(TestSchema.Expando, { type: 'task', title: 'A', idx })),
       );
       await db.flush();
-    },
-    waitForReplication: (db: EchoDatabase) => {
-      return waitForCondition({
-        breakOnError: true,
-        condition: async () => {
-          const { received } = await findSeedObject(db);
-          return received.every((obj) => obj != null);
-        },
-      });
     },
     verify: async (db: EchoDatabase) => {
       const { objects } = await findSeedObject(db);
