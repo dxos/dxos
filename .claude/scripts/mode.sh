@@ -3,11 +3,11 @@
 # Copyright 2026 DXOS.org
 #
 # Backs the UserPromptSubmit hook that toggles response verbosity via
-# `$concise` / `$natural` sentinels in normal messages.
+# "$mode <terse | natural>".
 #
-#   mode.sh get      -> print current mode (concise|natural)
+#   mode.sh get      -> print current mode (terse|natural)
 #   mode.sh toggle   -> flip the mode, print the new mode
-#   mode.sh context  -> when concise, print the directive injected into each
+#   mode.sh context  -> when terse, print the directive injected into each
 #                       prompt; prints nothing in natural mode
 #
 # State is per-user runtime, not repo policy: it lives in an untracked file and
@@ -25,25 +25,25 @@ case "${1:-get}" in
     current; printf '\n'
     ;;
   toggle)
-    if [ "$(current)" = 'concise' ]; then
+    if [ "$(current)" = 'terse' ]; then
       printf 'natural' > "$state"; printf 'Mode: NATURAL\n'
     else
-      printf 'concise' > "$state"; printf 'Mode: CONCISE\n'
+      printf 'terse' > "$state"; printf 'Mode: TERSE\n'
     fi
     ;;
   set)
     case "${2:-}" in
-      concise) printf 'concise' > "$state"; printf 'Mode: CONCISE\n' ;;
+      terse|concise) printf 'terse' > "$state"; printf 'Mode: TERSE\n' ;;
       natural|default|off) printf 'natural' > "$state"; printf 'Mode: NATURAL\n' ;;
-      *) printf 'usage: mode.sh set {concise|natural}\n' >&2; exit 2 ;;
+      *) printf 'usage: mode.sh set {terse|natural}\n' >&2; exit 2 ;;
     esac
     ;;
   context)
-    [ "$(current)" = 'concise' ] || exit 0
+    [ "$(current)" = 'terse' ] || exit 0
     cat <<'EOF'
-MODE: CONCISE is ON.
-- Answer in the fewest words that fully address the request. Lead with the direct
-  answer or result; drop preamble, restatement, and filler.
+MODE: TERSE is ON.
+- Answer in the fewest words that fully address the request.
+  Lead with the direct answer or result; drop preamble, restatement, and filler.
 - Minimal markdown. Prefer one sentence or a short list over prose.
 - If material detail exists beyond the terse answer, end with a single line:
   `(say "more" for detail)`.

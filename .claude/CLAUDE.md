@@ -8,11 +8,12 @@
 ## Mode
 
 - The response-verbosity mode is toggled by a sentinel in a normal message:
-  type `$concise` or `$natural` (also `$mode concise`) anywhere in a message.
+  type `$mode terse` or `$mode natural` anywhere in a message (bare `$terse` /
+  `$natural` also work; `concise` is accepted as an alias for `terse`).
 - A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) parses the sentinel, sets
-  the mode, and while concise injects a terseness directive into every prompt.
+  the mode, and while terse injects a terseness directive into every prompt.
   State lives in the untracked `.claude/.mode`.
-- When the injected `MODE: CONCISE` directive is present, follow it.
+- When the injected `MODE: TERSE` directive is present, follow it.
 
 ## Task planning
 

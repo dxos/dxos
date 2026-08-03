@@ -143,18 +143,19 @@ every event.
 A sentinel is a **marker typed inside a normal message** that a
 `UserPromptSubmit` hook greps for, acts on, and translates into a directive.
 
-| Sentinel                | Hook                                       | Effect                                     |
-| ----------------------- | ------------------------------------------ | ------------------------------------------ |
-| `$concise` / `$natural` | [`hooks/mode.sh`](./hooks/mode.sh) | sets response verbosity mode      |
-| `$project VERB [ARGS]`  | [`hooks/track.sh`](./hooks/track.sh)       | task-planning: list / new / end / track / hydrate / resume |
+| Sentinel                          | Hook                                 | Effect                                                     |
+| --------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `$mode terse` / `$mode natural`   | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (`concise` aliases `terse`)    |
+| `$project VERB [ARGS]`            | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
 
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
-> cannot tell a command from a mention of one: a message containing
-> `` `$natural/$concise/$verbose` `` as an _example_ will set the mode. A
-> two-token form (`$mode terse`) is much harder to hit by accident. Tracked in
+> cannot tell a command from a mention of one. The bare one-token forms are still
+> accepted, so a message containing `` `$natural/$terse` `` as an _example_ will
+> set the mode — this happened on 2026-08-03. Prefer the two-token `$mode terse`,
+> which prose is far less likely to hit; dropping the bare forms is tracked in
 > `.agents/projects/agent-directives/TASKS.md`.
 
 ### Commands

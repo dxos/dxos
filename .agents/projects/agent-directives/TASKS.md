@@ -23,7 +23,11 @@ surface and are unreviewable without it.
       ours) plus a NOTES section explaining hooks, sentinels and commands.
 - [x] **Rename `response-mode` → `mode`** to match the sentinel: both scripts,
       the state file (`.claude/.mode`), the `settings.json` binding, the
-      `.gitignore` entry, and the injected banner (`MODE: CONCISE`).
+      `.gitignore` entry, and the injected banner.
+- [x] **Rename the mode value `concise` → `terse`** — stored state, `set`/`toggle`
+      output, the sentinel regex, and the banner (`MODE: TERSE`). `concise` stays
+      accepted as an input alias, matching the existing `natural|default|off`
+      alias set.
 
 ## Phase 2: Make the response directives durable
 
@@ -35,7 +39,7 @@ in its default state. That single gap is why "be terse" never survives.
 ### Tasks
 
 - [ ] **Emit in every state** — `scripts/mode.sh context` currently
-      `exit 0`s unless the mode is `concise`. Make it always emit: invariants in
+      `exit 0`s unless the mode is `terse`. Make it always emit: invariants in
       both modes, budget varying by mode.
 - [ ] **Normalize the sentinel to `$mode <MODE>`** — the current regex matches a
       bare `$natural` / `$concise` anywhere in the message, so prose _about_ the
