@@ -210,18 +210,14 @@ export class ManagerState {
   }
 
   getActiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this.getActiveModules().filter(
-      (module) =>
-        module.activation.mode !== 'dependency' &&
-        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    return this.getActiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
     );
   }
 
   getInactiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this.getInactiveModules().filter(
-      (module) =>
-        module.activation.mode !== 'dependency' &&
-        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    return this.getInactiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
     );
   }
 
@@ -261,11 +257,6 @@ export class ManagerState {
   }
 
   markPendingResetFor(module: Plugin.PluginModule): void {
-    // Dependency-mode modules do not participate in event-keyed resets.
-    if (module.activation.mode === 'dependency') {
-      return;
-    }
-
     const activationEvents = ActivationEvent.getEvents(module.activation.activatesOn)
       .map(ActivationEvent.eventKey)
       .filter((key) => this.eventFired(key));

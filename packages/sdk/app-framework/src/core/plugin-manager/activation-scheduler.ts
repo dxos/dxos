@@ -13,27 +13,29 @@ import * as Ref from 'effect/Ref';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import { ActivationEvents } from '../../common';
 import * as ActivationEvent from '../activation-event';
 import type * as Capability from '../capability';
 import type * as CapabilityManager from '../capability-manager';
 import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from '../errors';
 import type * as Plugin from '../plugin';
 import * as ActivationGraph from './activation-graph';
+import { whenIdle } from './idle';
 import { type ManagerState } from './manager-state';
 import { type ModuleLoader, together } from './module-loader';
 
 /**
  * The activation lifecycle engine: owns {@link start} / {@link activate} /
  * {@link deactivatePlugin} / {@link resetEvent} and decides when each module's `activate`
- * runs. Two coexisting activation paths:
+ * runs. Every module names a wave via `activatesOn` (defaulting to Startup), and two paths
+ * drive them:
  *
- * - {@link runDependencyPass}: dependency-mode modules activate in rounds over the capability
- *   graph (vocabulary and ordering logic in `activation-graph.ts`), repeated until nothing new
- *   is runnable — each round's contributions (or a concurrent event wave's) can unlock modules
- *   that were waiting.
- * - Event dispatch: event-mode modules park until their `activatesOn` fires, then run as an
- *   event wave; inactive dependency-mode providers of their requires are pulled on demand
- *   first.
+ * - {@link runDependencyPass}: rounds over the capability graph (vocabulary and ordering logic
+ *   in `activation-graph.ts`), repeated until nothing new is runnable — each round's
+ *   contributions (or a concurrent event wave's) can unlock modules that were waiting. A fired
+ *   event stays fired, so a module whose wave has passed stays eligible in later rounds.
+ * - Event dispatch: a module parks until its `activatesOn` fires, then runs as an event wave;
+ *   providers of its requires are pulled on demand first, scoped to waves that have fired.
  *
  * Structural problems (cycles, duplicate or missing singleton providers) put the offending
  * plugins into an error state and exclude their modules; everything independent proceeds.
@@ -49,11 +51,18 @@ export class ActivationScheduler {
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
   readonly #loader: ModuleLoader;
+  readonly #whenIdle: Effect.Effect<void>;
 
-  constructor(state: ManagerState, capabilities: CapabilityManager.CapabilityManager, loader: ModuleLoader) {
+  constructor(
+    state: ManagerState,
+    capabilities: CapabilityManager.CapabilityManager,
+    loader: ModuleLoader,
+    whenIdleEffect: Effect.Effect<void> = whenIdle,
+  ) {
     this.#state = state;
     this.#capabilities = capabilities;
     this.#loader = loader;
+    this.#whenIdle = whenIdleEffect;
   }
 
   /**
@@ -69,11 +78,21 @@ export class ActivationScheduler {
    * The ready signal below still waits for the complete set.
    */
   start(): Effect.Effect<boolean, Error, Plugin.Service> {
+    return Effect.withFiberRuntime<boolean, Error, Plugin.Service>((fiber) =>
+      this.#start(fiber).pipe(Effect.ensuring(this.#state.fibers.untrack(fiber))),
+    );
+  }
+
+  #start(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<boolean, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       if (yield* this.#state.isShuttingDown()) {
         log('skipping start during shutdown');
         return false;
       }
+
+      // Tracked for the whole call: the startup wave runs in the early streaming pass as well as
+      // the complete one, so shutdown must be able to interrupt either.
+      yield* this.#state.fibers.track(fiber);
 
       // With streaming, activation work is spread across this call's passes AND the enable
       // chain's incremental passes — the return value reports whether anything activated.
@@ -99,26 +118,19 @@ export class ActivationScheduler {
       // the cycle members simply never activate; everything else proceeds.
       yield* this.#reportGlobalCycle();
 
-      // The dependency pass and the event dispatch (for any module explicitly targeting
-      // Startup) run concurrently — both observe each other through the shared capability
-      // manager, and sequencing them would delay whichever pass runs second.
-      const results = yield* Effect.withFiberRuntime<[boolean, boolean], Error, Plugin.Service>((fiber) =>
-        Effect.all(
-          [
-            // Graph-level failures (missing provider, duplicate provider, cycle) fail the
-            // start call; publish them so boot UIs surface the root cause instead of a
-            // silent hang behind their own watchdog.
-            this.runDependencyPass().pipe(
-              Effect.tapError((error) =>
-                Effect.gen(this, function* () {
-                  log.error('dependency activation failed', { error: String(error) });
-                  yield* PubSub.publish(this.#state.activation, { event: key, state: 'error', error });
-                }),
-              ),
-            ),
-            this.#activateEvent(key, undefined, fiber, { suppressEventMessage: true }),
-          ],
-          { concurrency: 'unbounded' },
+      // The startup wave and the dependency pass are the same thing now that an undeclared
+      // `activatesOn` normalizes to Startup: the pass already admits every module whose wave is
+      // firing, so dispatching the event alongside it would claim the same modules twice.
+      this.#state.clearPendingReset(key);
+      // Graph-level failures (missing provider, duplicate provider, cycle) fail the start call;
+      // publish them so boot UIs surface the root cause instead of a silent hang behind their
+      // own watchdog.
+      const ranAny = yield* this.runDependencyPass().pipe(
+        Effect.tapError((error) =>
+          Effect.gen(this, function* () {
+            log.error('dependency activation failed', { error: String(error) });
+            yield* PubSub.publish(this.#state.activation, { event: key, state: 'error', error });
+          }),
         ),
       );
 
@@ -141,11 +153,31 @@ export class ActivationScheduler {
       }
 
       // The event-level Startup `activated` message (no `module` field) is the app-ready
-      // signal (see useApp); it must not publish before dependency-mode modules finish.
+      // signal (see useApp); it must not publish before the startup wave finishes.
       this.#state.markEventFired(key);
       yield* PubSub.publish(this.#state.activation, { event: key, state: 'activated' });
 
-      return this.#state.getActiveIds().length > activeBefore || results.some(Boolean);
+      // The idle wave belongs to the manager rather than to each host: it is an app-framework
+      // event, and a host that owned the wait would re-implement it (and could forget to).
+      // Forked so `start` returns at ready, and deferred to host idle so the registration
+      // contributions gated on it land after first paint instead of competing with it.
+      yield* this.#activateWhenIdle().pipe(Effect.forkDaemon);
+
+      return this.#state.getActiveIds().length > activeBefore || ranAny;
+    });
+  }
+
+  /**
+   * Fires the idle wave once the host goes idle. Failures are logged rather than propagated:
+   * the wave carries registration contributions, so one broken plugin must not take down an
+   * app that is already interactive.
+   */
+  #activateWhenIdle(): Effect.Effect<void, never, Plugin.Service> {
+    return Effect.gen(this, function* () {
+      yield* this.#whenIdle;
+      yield* this.activate(ActivationEvents.Idle).pipe(
+        Effect.catchAll((error) => Effect.sync(() => log.warn('idle activation failed', { error: String(error) }))),
+      );
     });
   }
 
@@ -283,12 +315,9 @@ export class ActivationScheduler {
         return false;
       }
 
-      // Event-mode modules resolve their requires on demand: inactive dependency-mode
-      // providers of unsatisfied singleton requires are activated first (transitively).
-      const eventModules = modules.filter((module) => module.activation.mode === 'event');
-      if (eventModules.length > 0) {
-        yield* this.#pullDependencyProviders(eventModules);
-      }
+      // Modules resolve their requires on demand: inactive providers of unsatisfied singleton
+      // requires are activated first (transitively).
+      yield* this.#pullDependencyProviders(modules, key);
 
       const activated = yield* this.#activateModulesForEvent(key, modules, opts);
 
@@ -473,9 +502,6 @@ export class ActivationScheduler {
   ): Plugin.PluginModule[] {
     return this.#state.getInactiveModulesByEvent(key).filter((module) => {
       const spec = module.activation;
-      if (spec.mode === 'dependency') {
-        return false;
-      }
       const allOf = ActivationEvent.isAllOf(spec.activatesOn);
       if (!allOf) {
         return true;
@@ -520,6 +546,42 @@ export class ActivationScheduler {
   }
 
   /**
+   * Whether a module's wave has fired: every event for an `all-of` declaration, any one for a
+   * plain or `one-of` declaration. A fired event stays fired, so this stays true for the rest of
+   * the session once the module's wave has passed.
+   *
+   * `activating` is the wave currently being dispatched, counted as fired: an event is marked
+   * fired only once its modules have settled, so without this the wave's own modules would be
+   * excluded from the very round activating them.
+   */
+  #waveFired(module: Plugin.PluginModule, activating?: string): boolean {
+    const { activatesOn } = module.activation;
+    const events = ActivationEvent.getEvents(activatesOn).map(ActivationEvent.eventKey);
+    const fired = (event: string) => event === activating || this.#state.eventFired(event);
+    return ActivationEvent.isAllOf(activatesOn) ? events.every(fired) : events.some(fired);
+  }
+
+  /**
+   * Whether a module can activate now: its wave has already fired, or it sits in the baseline
+   * wave and so declared no gate. The catalog uses this to pick which of a newly enabled
+   * plugin's modules join an incremental pass; the rest wait for their event.
+   */
+  isEligible(module: Plugin.PluginModule): boolean {
+    return this.#waveFired(module) || this.#isBaselineWave(module);
+  }
+
+  /**
+   * Whether a module sits in the baseline (startup) wave — which is what omitting `activatesOn`
+   * normalizes to. A module there has declared no demand gate, so any wave may pull it as a
+   * provider, whether or not startup has run. Explicitly gated providers stay wave-scoped, which
+   * is what keeps two mutually-exclusive providers of one capability from both being candidates.
+   */
+  #isBaselineWave(module: Plugin.PluginModule): boolean {
+    const startup = ActivationEvent.eventKey(ActivationEvent.Startup);
+    return ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(startup);
+  }
+
+  /**
    * One topological activation round. Returns `undefined` when nothing is runnable.
    */
   #runRound(
@@ -530,22 +592,10 @@ export class ActivationScheduler {
       const active = this.#state.getActiveIds();
       const allModules = this.#state.getModules();
 
-      // Event-mode modules join a round once their activation events have fired.
-      const eventSatisfied = (module: Plugin.PluginModule): boolean => {
-        const spec = module.activation;
-        if (spec.mode !== 'event') {
-          return false;
-        }
-        const events = ActivationEvent.getEvents(spec.activatesOn).map(ActivationEvent.eventKey);
-        return ActivationEvent.isAllOf(spec.activatesOn)
-          ? events.every((event) => this.#state.eventFired(event))
-          : events.some((event) => this.#state.eventFired(event));
-      };
-
       const reactivations = allModules.filter((module) => this.#state.reactivateOnNextPass.has(module.id));
       // Explicitly passed candidates are trusted to be triggered (an event wave passes its
-      // matched modules before the event is marked fired); pooled candidates must be
-      // dependency-mode or have their events already fired.
+      // matched modules before the event is marked fired); pooled candidates must have their
+      // events already fired.
       const explicit = new Set((candidateModules ?? []).map((module) => module.id));
       const pool = candidateModules ? [...candidateModules, ...reactivations] : allModules;
       const seen = new Set<string>();
@@ -560,7 +610,7 @@ export class ActivationScheduler {
         ) {
           return false;
         }
-        if (!explicit.has(module.id) && module.activation.mode === 'event' && !eventSatisfied(module)) {
+        if (!explicit.has(module.id) && !this.#waveFired(module, key)) {
           return false;
         }
         seen.add(module.id);
@@ -774,14 +824,20 @@ export class ActivationScheduler {
    * narrow pull (this provider alone) skips that ordering entirely and the snapshot can be
    * taken before sibling providers have contributed.
    */
-  #pullDependencyProviders(modules: Plugin.PluginModule[]): Effect.Effect<void, Error, Plugin.Service> {
+  #pullDependencyProviders(
+    modules: Plugin.PluginModule[],
+    activating?: string,
+  ): Effect.Effect<void, Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       const active = this.#state.getActiveIds();
       const allModules = this.#state.getModules();
       const providerIndex = new Map<string, Plugin.PluginModule>();
       const multiProviderIndex = new Map<string, Plugin.PluginModule[]>();
       for (const module of allModules) {
-        if (module.activation.mode !== 'dependency' || active.includes(module.id)) {
+        // Wave-scoped, with the baseline wave always in scope: an explicitly gated provider is
+        // pullable only once its own wave has fired, so two providers of the same singleton
+        // capability gated on mutually exclusive events are never both candidates.
+        if ((!this.#waveFired(module, activating) && !this.#isBaselineWave(module)) || active.includes(module.id)) {
           continue;
         }
         for (const capability of module.activation.provides) {
@@ -818,9 +874,7 @@ export class ActivationScheduler {
           const provider = providerIndex.get(capability.identifier);
           if (provider && !needed.has(provider.id)) {
             needed.set(provider.id, provider);
-            if (provider.activation.mode === 'dependency') {
-              visit(provider.activation.requires);
-            }
+            visit(provider.activation.requires);
           }
         }
       };

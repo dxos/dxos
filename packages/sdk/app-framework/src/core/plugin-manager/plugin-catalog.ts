@@ -302,14 +302,14 @@ export class PluginCatalog {
         { concurrency: 'unbounded' },
       );
 
-      // After startup, newly enabled dependency-mode modules activate incrementally against
-      // the already-contributed capability set. Failures are scoped to this plugin. Event-mode
-      // modules are excluded: they wait for their events, and the pending-reset dispatch above
-      // re-fires any of their events that already fired.
+      // After startup, a newly enabled module whose wave has already passed activates
+      // incrementally against the already-contributed capability set. Failures are scoped to
+      // this plugin. Modules still waiting on an unfired event are excluded — they activate
+      // when it fires, and the pending-reset dispatch above replays the ones that already did.
       if (yield* this.#state.isStarted()) {
         const pass = this.#scheduler
           .runDependencyPass({
-            candidateModules: plugin.modules.filter((module) => module.activation.mode === 'dependency'),
+            candidateModules: plugin.modules.filter((module) => this.#scheduler.isEligible(module)),
           })
           .pipe(
             Effect.either,

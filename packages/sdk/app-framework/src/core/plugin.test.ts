@@ -29,7 +29,7 @@ const makeManager = () =>
   });
 
 describe('Plugin module authoring', () => {
-  describe('dependency mode', () => {
+  describe('default (startup) wave', () => {
     it('normalizes provides/requires declarations', () => {
       const Test = Plugin.make(
         Plugin.define(testMeta).pipe(
@@ -47,7 +47,7 @@ describe('Plugin module authoring', () => {
       );
 
       const [module] = Test().modules;
-      assert(module.activation.mode === 'dependency');
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
       expect(module.activation.requires).toEqual([String, Number]);
       expect(module.activation.provides).toEqual([Total]);
       expect(module.id).toEqual('org.dxos.plugin.test.module.total');
@@ -103,12 +103,12 @@ describe('Plugin module authoring', () => {
         ),
       );
       const [module] = Test().modules;
-      assert(module.activation.mode === 'dependency');
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
       expect(module.activation.provides).toEqual([]);
     });
   });
 
-  describe('event mode', () => {
+  describe('declared wave', () => {
     it('normalizes activatesOn with requires', () => {
       const Test = Plugin.make(
         Plugin.define(testMeta).pipe(
@@ -125,7 +125,6 @@ describe('Plugin module authoring', () => {
         ),
       );
       const [module] = Test().modules;
-      assert(module.activation.mode === 'event');
       expect(module.activation.activatesOn).toEqual(CountEvent);
       expect(module.activation.requires).toEqual([String]);
     });
@@ -146,7 +145,7 @@ describe('Plugin module authoring', () => {
         }),
       );
       const [chainMember] = Plugin.make(builder)().modules;
-      assert(chainMember.activation.mode === 'dependency');
+      expect(chainMember.activation.activatesOn).toEqual(ActivationEvent.Startup);
       expect(chainMember.activation.requires).toEqual([String]);
       expect(chainMember.activation.provides).toEqual([]);
     });
@@ -279,7 +278,7 @@ describe('Plugin module authoring', () => {
       const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
       expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
-      assert(module.activation.mode === 'dependency');
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
       expect(module.activation.provides).toEqual([Total]);
     });
 
@@ -302,7 +301,7 @@ describe('Plugin module authoring', () => {
 
         const [module] = Test({ offset: 41 }).modules;
         expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
-        assert(module.activation.mode === 'dependency');
+        expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
         expect(module.activation.provides).toEqual([Total]);
 
         const result = yield* module
@@ -344,7 +343,6 @@ describe('Plugin module authoring', () => {
       );
       const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
-      assert(module.activation.mode === 'event');
       expect(module.activation.activatesOn).toEqual(CountEvent);
       expect(module.activation.requires).toEqual([String]);
     });

@@ -79,25 +79,21 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
 };
 
 /**
- * Normalized activation specification of a module — how and when it activates.
+ * Normalized activation specification of a module — which wave it belongs to and what it
+ * exchanges with the capability graph.
  *
- * - `dependency`: activates during the startup dependency-resolution pass, topologically
- *   ordered by the capability graph (providers of `requires` activate first). A module
- *   with no `requires` is a root, triggered at startup.
- * - `event`: activates when a runtime event fires; `requires` are resolved on demand.
+ * Every module names a wave: `activatesOn` defaults to {@link ActivationEvent.Startup} when the
+ * authoring record omits it. Within a wave, modules are ordered topologically (providers of
+ * `requires` activate first) and a module may pull a provider whose own wave has already fired.
+ * Because a fired event stays fired, a module gated on an event that has already passed remains
+ * eligible in every later round — which is what lets a consumer activate once a provider from
+ * some other wave finally lands.
  */
-export type ActivationSpec =
-  | {
-      readonly mode: 'dependency';
-      readonly requires: readonly Capability.AnyTag[];
-      readonly provides: readonly Capability.AnyTag[];
-    }
-  | {
-      readonly mode: 'event';
-      readonly activatesOn: ActivationEvent.Events;
-      readonly requires: readonly Capability.AnyTag[];
-      readonly provides: readonly Capability.AnyTag[];
-    };
+export type ActivationSpec = {
+  readonly activatesOn: ActivationEvent.Events;
+  readonly requires: readonly Capability.AnyTag[];
+  readonly provides: readonly Capability.AnyTag[];
+};
 
 /**
  * What a module's activate may produce at runtime: raw capability entries (see
@@ -443,29 +439,15 @@ export type PluginFactory<T = void> = ({} extends T ? (options?: T) => Plugin : 
 };
 
 /**
- * Normalizes an authoring record to an {@link ActivationSpec}. `activatesOn` selects event
- * mode; otherwise the module is a dependency-mode chain member (a root — activating at
- * startup — when `requires` is empty).
+ * Normalizes an authoring record to an {@link ActivationSpec} — the single boundary where the
+ * optional authoring shape becomes the concrete runtime shape. Omitting `activatesOn` means the
+ * module belongs to the startup wave.
  */
-const normalizeActivation = (options: ModuleEntry): ActivationSpec => {
-  if (options.activatesOn !== undefined) {
-    return {
-      mode: 'event',
-      activatesOn: options.activatesOn,
-      requires: options.requires ?? [],
-      provides: options.provides ?? [],
-    };
-  }
-
-  // A chain member without `activatesOn`: roots (no requires) activate at startup; modules
-  // with requires activate whenever their providers have contributed, whichever event's
-  // chain produced them.
-  return {
-    mode: 'dependency',
-    requires: options.requires ?? [],
-    provides: options.provides ?? [],
-  };
-};
+const normalizeActivation = (options: ModuleEntry): ActivationSpec => ({
+  activatesOn: options.activatesOn ?? ActivationEvent.Startup,
+  requires: options.requires ?? [],
+  provides: options.provides ?? [],
+});
 
 /**
  * Resolves a module from either a module entry or a function that returns one.
