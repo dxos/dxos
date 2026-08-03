@@ -687,3 +687,28 @@ assets can be pinned back into globPatterns — the sqlite wasm is a plausible p
 Blocker when picking this up: `workbox-strategies` / `workbox-expiration` are only transitive
 deps; they need `pnpm add --filter composer-app --save-catalog` (a hand-written "catalog:"
 entry does not resolve and fails the SW build).
+
+## Checkpoint 2026-08-03 (single-pass boot chunking — manifest DELETED)
+
+Per the agreed plan (single pass + import cleanup, not "manifest until divergence is zero"):
+the partition is now computed from the module graph during chunking. `boot-manifest.json`,
+`DX_BOOT_MANIFEST_REGEN` and the two-mode build are gone; the config carries one function.
+
+| metric         | manifest | single-pass |
+| -------------- | -------: | ----------: |
+| boot chunks    |        5 |          11 |
+| preloads       |       13 |          19 |
+| boot bytes     |  3.69 MB |     4.67 MB |
+| partition cost |    build |      149 ms |
+
+The +0.98MB is the parse-vs-treeshake gap: the closure follows barrel re-exports treeshaking
+later drops, so modules only lazy code uses are still grouped into boot. That gap IS the
+import-cleanup work-list and shrinks with every subpath fix — it was 5.22MB before the
+bip39/edge-client/crypto/date-fns evictions, so those four bought 0.55MB.
+
+Only ONE forbidden package remains statically reachable: react-aria, via react-ui's core
+`Input` -> `SegmentedInput` -> `DatePicker` -> `Calendar`. That is category 3 (a real static
+dependency, not a barrel re-export) so it needs a component refactor — lazy-load the picker
+inside SegmentedInput, or split the date-specific parts out of Input. Next boot-size lever.
+
+Warm-cold e2e green (profilerTotal 4054, navToReady 8036 in-container).

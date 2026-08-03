@@ -188,16 +188,11 @@ export default defineConfig((env) => ({
       external: ['playwright', 'playwright-core', /^chromium-bidi(\/|$)/, '@vitest/browser-playwright'],
       output: {
         chunkFileNames,
-        // Chunk grouping. Rolldown's default share-set splitting yields ~4,800 chunks
-        // (median 1.5KB) — ~520 of them on main's boot path, whose per-request overhead
-        // dominates boot. Inference-based grouping is unsafe here (measured 2026-08:
-        // per-package groups welded each package's eager/lazy halves, boot 4.03->10.07MB;
-        // `$initial` tags span all five HTML entries plus recursive deps, boot ->19MB), so
-        // the `boot` group instead tests membership in a generated manifest of main's
-        // statically reachable modules (boot-manifest.json, rewritten on every bundle by
-        // bootManifestPlugin — the module set is invariant under re-chunking, so it is a
-        // stable fixpoint). Modules outside the manifest keep default splitting; a new
-        // eager module simply gets its own chunk until the next build regenerates the file.
+        // Chunk grouping: React pinned, and the boot path collapsed from ~520 default-split
+        // chunks into a handful via computeBootPartition. Coarser inference was measured and
+        // rejected (2026-08): per-package groups welded each package's eager and lazy halves
+        // (boot 4.03->10.07MB), and `$initial` tags span all five HTML entries plus their
+        // recursive dependencies (boot ->19MB).
         codeSplitting: {
           groups: [
             { name: 'react', test: /node_modules[\\/]react(-dom)?[\\/]/, priority: 10 },
@@ -489,7 +484,7 @@ export default defineConfig((env) => ({
     // on the plugin definition (it raced with Vite's optimize-deps and produced
     // a chunk-content drift + partial-batch crash cascade).
     importMapPlugin(),
-    bootManifestPlugin(),
+    bootChunkingPlugin(),
 
     // Hand the boot loader the Composer brand mark so the visual identity
     // is established before any JS bundle parses. The SVG carries its own
@@ -629,220 +624,201 @@ export default defineConfig((env) => ({
   ...createTestConfig({ dirname, node: true, storybook: true }),
 }));
 
-const BOOT_MANIFEST_PATH = path.join(dirname, 'boot-manifest.json');
+/** The page entry whose static closure defines the boot set. */
+const BOOT_ENTRY = path.resolve(dirname, 'src/main.tsx');
 
-/**
- * Normalize a rolldown module id to its manifest form: repo-relative, query stripped.
- * Returns `null` for ids that must never be grouped (virtual modules, and app-own source —
- * capturing an entry module dissolves its facade chunk and degrades the HTML output).
- */
-function toManifestId(moduleId: string): string | null {
-  if (moduleId.includes('\0') || moduleId.includes('/packages/apps/')) {
-    return null;
-  }
-  const cleaned = moduleId.split('?')[0];
-  return cleaned.startsWith(rootDir) ? cleaned.slice(rootDir.length + 1) : cleaned;
-}
-
-// Regeneration is an explicit mode: it disables the boot group (so the build's chunk graph
-// is the pure ungrouped one) and rewrites the manifest from it. Normal builds only consume.
-// This split exists because a manifest written from a *grouped* build ratchets: grouping a
-// module into a boot chunk makes it chunk-reachable, so any contamination self-perpetuates.
-const isManifestRegen = isTrue(process.env.DX_BOOT_MANIFEST_REGEN);
-
-// Manifest v2: modules pre-partitioned into chunks along cycle-safe boundaries. Buckets are
-// contiguous ranges of a dependency-first topological order of the module graph's SCC
-// condensation, so every cross-chunk import points to an earlier chunk — the chunk DAG is
-// acyclic by construction and native ESM evaluation order stays correct without
-// strictExecutionOrder (whose module wrapping costs ~+1.8MB of inhibited treeshaking here).
-const bootPartition: Map<string, number> = (() => {
-  if (isManifestRegen) {
-    return new Map();
-  }
-  try {
-    const manifest = JSON.parse(readFileSync(BOOT_MANIFEST_PATH, 'utf-8'));
-    return new Map(Object.entries(manifest.partition as Record<string, number>));
-  } catch {
-    return new Map();
-  }
-})();
-
-function bootGroupName(moduleId: string): string | null {
-  const id = toManifestId(moduleId);
-  if (id === null) {
-    return null;
-  }
-  const group = bootPartition.get(id);
-  return group === undefined ? null : `boot-${group}`;
-}
-
-/** Target rendered (pre-minify) bytes per boot chunk; ~1.5MB rendered ≈ 400-500KB minified. */
+/** Target source bytes per boot chunk; ~1.5MB of source is roughly 400-500KB minified. */
 const BOOT_CHUNK_TARGET_BYTES = 1.5 * 1024 * 1024;
 
 /**
- * In regen mode (DX_BOOT_MANIFEST_REGEN=1), rewrites boot-manifest.json: the modules of the
- * chunks statically reachable from the `main` entry, partitioned into cycle-safe buckets.
- * Chunk-level inclusion is the post-treeshake truth (the parse-level module graph
- * over-approximates — it reaches every barrel sibling treeshaking prunes); regen mode
- * guarantees the walked graph is ungrouped, which is what makes the chunk walk sound.
- * Ordering edges come from the parse-level graph — a superset of the true edges, which only
- * over-constrains the order (safe).
+ * Normalize a rolldown module id: query stripped. Returns `null` for ids that must never be
+ * grouped — virtual modules, and app-own source, since capturing an entry module dissolves
+ * its facade chunk and degrades the HTML to ordered <script> tags with no preload list.
  */
-function bootManifestPlugin(): PluginOption {
+function toBootModuleId(moduleId: string): string | null {
+  if (moduleId.includes('\0') || moduleId.includes('/packages/apps/')) {
+    return null;
+  }
+  return moduleId.split('?')[0];
+}
+
+/**
+ * Assign boot modules to cycle-safe chunks, computed from the module graph during chunking.
+ *
+ * Rolldown's default splitting shards the boot path into ~520 chunks whose per-request
+ * overhead dominates startup. Grouping them needs care: rolldown's own `maxSize` cuts by
+ * accumulated size with no regard for dependency order, which makes chunks import each other
+ * circularly — and a cyclic chunk graph has no correct ESM evaluation order (it surfaces as
+ * `Tag is not a function` at boot). Its remedy, `strictExecutionOrder`, wraps every module
+ * body and cost +1.8MB of inhibited treeshaking here. So the partition is computed instead:
+ * collapse the graph into strongly connected components (Tarjan — any real cycle becomes one
+ * indivisible unit), which emits them dependency-first, then fill buckets with CONTIGUOUS
+ * runs of that order. Every cross-chunk edge then points to an earlier chunk, so the chunk
+ * graph is a DAG by construction and plain ESM ordering is correct.
+ *
+ * The boot set is the entry's closure over STATIC imports only, stopping at every dynamic
+ * boundary. Note this is the PARSE graph: it follows barrel re-exports that treeshaking later
+ * drops, so modules reachable only through a barrel are grouped into boot even when only lazy
+ * code uses them. Narrowing those imports to per-namespace subpaths is what shrinks the boot
+ * chunks; the `dxos-subpath-imports` lint drives that cleanup.
+ */
+function computeBootPartition(ctx: any): Map<string, number> {
+  const started = Date.now();
+  // Each getModuleInfo crosses the Rust<->JS boundary and the algorithm revisits modules, so
+  // memoize or the call volume dominates the build.
+  const infoCache = new Map<string, any>();
+  const infoOf = (moduleId: string) => {
+    if (!infoCache.has(moduleId)) {
+      infoCache.set(moduleId, ctx.getModuleInfo(moduleId));
+    }
+    return infoCache.get(moduleId);
+  };
+  if (!infoOf(BOOT_ENTRY)) {
+    console.warn(`boot chunking: entry ${BOOT_ENTRY} is not in the module graph; grouping disabled.`);
+    return new Map();
+  }
+
+  const bootModules = new Set<string>();
+  const visited = new Set<string>([BOOT_ENTRY]);
+  const walk = [BOOT_ENTRY];
+  while (walk.length > 0) {
+    for (const dep of infoOf(walk.pop()!)?.importedIds ?? []) {
+      if (!visited.has(dep)) {
+        visited.add(dep);
+        walk.push(dep);
+      }
+    }
+  }
+  for (const moduleId of visited) {
+    if (toBootModuleId(moduleId) !== null) {
+      bootModules.add(moduleId);
+    }
+  }
+  if (bootModules.size === 0) {
+    return new Map();
+  }
+
+  // Ordering edges, with paths THROUGH non-captured modules (virtuals, app source) collapsed
+  // into direct edges: a boot module reaching another via an intermediary still constrains
+  // evaluation order, and dropping those edges lets the partition manufacture chunk cycles
+  // through the intermediary's chunk.
+  const edgeCache = new Map<string, string[]>();
+  const edgesOf = (start: string): string[] => {
+    const cached = edgeCache.get(start);
+    if (cached) {
+      return cached;
+    }
+    const targets = new Set<string>();
+    const seen = new Set<string>([start]);
+    const stack = [...(infoOf(start)?.importedIds ?? [])];
+    while (stack.length > 0) {
+      const dep = stack.pop()!;
+      if (seen.has(dep)) {
+        continue;
+      }
+      seen.add(dep);
+      if (bootModules.has(dep)) {
+        targets.add(dep);
+      } else {
+        stack.push(...(infoOf(dep)?.importedIds ?? []));
+      }
+    }
+    const result = [...targets];
+    edgeCache.set(start, result);
+    return result;
+  };
+
+  // Iterative Tarjan; components pop only after everything they depend on.
+  const order: string[][] = [];
+  const index = new Map<string, number>();
+  const lowlink = new Map<string, number>();
+  const onStack = new Set<string>();
+  const stack: string[] = [];
+  let counter = 0;
+  for (const root of bootModules) {
+    if (index.has(root)) {
+      continue;
+    }
+    const work: [string, number][] = [[root, 0]];
+    while (work.length > 0) {
+      const frame = work[work.length - 1];
+      const [node, edgeIndex] = frame;
+      if (edgeIndex === 0) {
+        index.set(node, counter);
+        lowlink.set(node, counter);
+        counter++;
+        stack.push(node);
+        onStack.add(node);
+      }
+      const deps = edgesOf(node);
+      if (edgeIndex < deps.length) {
+        frame[1]++;
+        const dep = deps[edgeIndex];
+        if (!index.has(dep)) {
+          work.push([dep, 0]);
+        } else if (onStack.has(dep)) {
+          lowlink.set(node, Math.min(lowlink.get(node)!, index.get(dep)!));
+        }
+      } else {
+        if (lowlink.get(node) === index.get(node)) {
+          const component: string[] = [];
+          for (;;) {
+            const popped = stack.pop()!;
+            onStack.delete(popped);
+            component.push(popped);
+            if (popped === node) {
+              break;
+            }
+          }
+          order.push(component);
+        }
+        work.pop();
+        if (work.length > 0) {
+          const parent = work[work.length - 1][0];
+          lowlink.set(parent, Math.min(lowlink.get(parent)!, lowlink.get(node)!));
+        }
+      }
+    }
+  }
+
+  const partition = new Map<string, number>();
+  let bucket = 0;
+  let bucketBytes = 0;
+  for (const component of order) {
+    const componentBytes = component.reduce((sum, id) => sum + (infoOf(id)?.code?.length ?? 0), 0);
+    if (bucketBytes > 0 && bucketBytes + componentBytes > BOOT_CHUNK_TARGET_BYTES) {
+      bucket++;
+      bucketBytes = 0;
+    }
+    bucketBytes += componentBytes;
+    for (const id of component) {
+      partition.set(toBootModuleId(id)!, bucket);
+    }
+  }
+  console.log(`boot chunking: ${partition.size} modules -> ${bucket + 1} chunks (${Date.now() - started}ms)`);
+  return partition;
+}
+
+// Computed once per build: the callback fires per module but the partition is a property of
+// the whole graph. NOT keyed on the callback's `ctx` — rolldown passes a fresh context wrapper
+// per call, so a WeakMap on it never hits and every module triggers a full recompute.
+// `bootChunkingPlugin` clears it at buildStart so watch rebuilds recompute.
+let bootPartition: Map<string, number> | undefined;
+
+function bootGroupName(moduleId: string, ctx: any): string | null {
+  const partition = (bootPartition ??= computeBootPartition(ctx));
+  const id = toBootModuleId(moduleId);
+  const bucket = id === null ? undefined : partition.get(id);
+  return bucket === undefined ? null : `boot-${bucket}`;
+}
+
+/** Drops the memoized partition so each build (including watch rebuilds) recomputes it. */
+function bootChunkingPlugin(): PluginOption {
   return {
-    name: 'dxos-boot-manifest',
+    name: 'dxos-boot-chunking',
     apply: 'build',
-    generateBundle(this: any, _options: unknown, bundle: Record<string, any>) {
-      if (!isManifestRegen) {
-        return;
-      }
-      const byFileName = new Map(Object.values(bundle).map((output: any) => [output.fileName, output]));
-      const entry = Object.values(bundle).find(
-        (output: any) => output.type === 'chunk' && output.isEntry && output.name === 'main',
-      );
-      // Worker sub-builds and non-page outputs have no `main` entry — leave the manifest alone.
-      if (!entry) {
-        return;
-      }
-      const seenChunks = new Set<string>([entry.fileName]);
-      const chunkQueue = [entry.fileName];
-      while (chunkQueue.length > 0) {
-        const chunk = byFileName.get(chunkQueue.shift()!);
-        if (!chunk || chunk.type !== 'chunk') {
-          continue;
-        }
-        for (const dep of chunk.imports ?? []) {
-          if (!seenChunks.has(dep)) {
-            seenChunks.add(dep);
-            chunkQueue.push(dep);
-          }
-        }
-      }
-
-      // Boot module set with rendered sizes, keyed by raw id (edges need raw ids).
-      const rendered = new Map<string, number>();
-      for (const fileName of seenChunks) {
-        const chunk = byFileName.get(fileName);
-        if (chunk?.type !== 'chunk') {
-          continue;
-        }
-        for (const [moduleId, moduleInfo] of Object.entries<any>(chunk.modules ?? {})) {
-          if (toManifestId(moduleId) !== null) {
-            rendered.set(moduleId, moduleInfo?.renderedLength ?? 0);
-          }
-        }
-      }
-
-      // Ordering edges between boot modules, with paths THROUGH non-boot modules (virtuals,
-      // react, app source) collapsed into direct edges — a boot module that imports a boot
-      // module via an intermediary still constrains evaluation order, and dropping such
-      // edges let the partition manufacture chunk cycles through the intermediary's chunk.
-      const reachableBoot = new Map<string, string[]>();
-      const bootTargetsOf = (start: string): string[] => {
-        const cached = reachableBoot.get(start);
-        if (cached) {
-          return cached;
-        }
-        const targets = new Set<string>();
-        const visited = new Set<string>([start]);
-        const walk = [...(this.getModuleInfo(start)?.importedIds ?? [])];
-        while (walk.length > 0) {
-          const dep = walk.pop()!;
-          if (visited.has(dep)) {
-            continue;
-          }
-          visited.add(dep);
-          if (rendered.has(dep)) {
-            targets.add(dep);
-            continue;
-          }
-          walk.push(...(this.getModuleInfo(dep)?.importedIds ?? []));
-        }
-        const result = [...targets];
-        reachableBoot.set(start, result);
-        return result;
-      };
-
-      // Iterative Tarjan SCC over the boot subgraph. Emission order is dependency-first
-      // (an SCC pops only after every SCC it depends on), so contiguous buckets over that
-      // order can only import from earlier buckets — the chunk DAG stays acyclic.
-      const edges = new Map<string, string[]>();
-      for (const moduleId of rendered.keys()) {
-        edges.set(moduleId, bootTargetsOf(moduleId));
-      }
-      const sccOrder: string[][] = [];
-      const index = new Map<string, number>();
-      const lowlink = new Map<string, number>();
-      const onStack = new Set<string>();
-      const stack: string[] = [];
-      let counter = 0;
-      const strongconnect = (root: string) => {
-        const work: [string, number][] = [[root, 0]];
-        while (work.length > 0) {
-          const frame = work[work.length - 1];
-          const [node, edgeIdx] = frame;
-          if (edgeIdx === 0) {
-            index.set(node, counter);
-            lowlink.set(node, counter);
-            counter++;
-            stack.push(node);
-            onStack.add(node);
-          }
-          const deps = edges.get(node) ?? [];
-          if (edgeIdx < deps.length) {
-            frame[1]++;
-            const dep = deps[edgeIdx];
-            if (!index.has(dep)) {
-              work.push([dep, 0]);
-            } else if (onStack.has(dep)) {
-              lowlink.set(node, Math.min(lowlink.get(node)!, index.get(dep)!));
-            }
-          } else {
-            if (lowlink.get(node) === index.get(node)) {
-              const component: string[] = [];
-              for (;;) {
-                const popped = stack.pop()!;
-                onStack.delete(popped);
-                component.push(popped);
-                if (popped === node) {
-                  break;
-                }
-              }
-              sccOrder.push(component);
-            }
-            work.pop();
-            if (work.length > 0) {
-              const [parent] = work[work.length - 1];
-              lowlink.set(parent, Math.min(lowlink.get(parent)!, lowlink.get(node)!));
-            }
-          }
-        }
-      };
-      for (const moduleId of rendered.keys()) {
-        if (!index.has(moduleId)) {
-          strongconnect(moduleId);
-        }
-      }
-
-      // Contiguous size-balanced buckets over the SCC order (an SCC is never split).
-      const partition: Record<string, number> = {};
-      let bucket = 0;
-      let bucketBytes = 0;
-      for (const component of sccOrder) {
-        const componentBytes = component.reduce((sum, moduleId) => sum + (rendered.get(moduleId) ?? 0), 0);
-        if (bucketBytes > 0 && bucketBytes + componentBytes > BOOT_CHUNK_TARGET_BYTES) {
-          bucket++;
-          bucketBytes = 0;
-        }
-        bucketBytes += componentBytes;
-        for (const moduleId of component) {
-          partition[toManifestId(moduleId)!] = bucket;
-        }
-      }
-
-      writeFileSync(BOOT_MANIFEST_PATH, JSON.stringify({ version: 2, partition }, null, 2) + '\n');
-
-      console.log(`bootManifestPlugin: wrote ${rendered.size} boot modules in ${bucket + 1} buckets`);
+    buildStart: () => {
+      bootPartition = undefined;
     },
   };
 }
