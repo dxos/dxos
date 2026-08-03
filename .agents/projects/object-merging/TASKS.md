@@ -114,9 +114,9 @@ than by a spike.
       `mergedInto` redirects — relations and children anchored at a merge loser
       stay visible, judged at the survivor (was: silent permanent disappearance
       on new clients, `@parent` included and previously undeclared);
-      prototype-safe field accumulation in `Merge.merge`/`candidateOf` (`field in
-    data` dropped `toString`/`constructor`/… fields; `__proto__` polluted the
-      accumulator); loser documents flushed before a group reports serviced — the
+      prototype-safe field accumulation in `Merge.merge`/`candidateOf` — the `in`
+      check dropped `toString`/`constructor`/… fields and `__proto__` polluted
+      the accumulator; loser documents flushed before a group reports serviced — the
       durability rule's dual, since the orchestrator clears the durable intent on
       that report; fold watermark read as the union of the stored register and
       its automerge conflicts in both engines, so a concurrent merge's stale
