@@ -616,3 +616,42 @@ which used to fire late (520 serialized chunk requests resolved first), so eval 
 OUTSIDE the window; at 13 requests main:start fires almost immediately and that work is now
 inside it. Time outside the window collapsed ~6.3s -> ~2.1s. Use navToReady as the headline;
 profilerTotal is only comparable at constant boot-request count.
+
+## Checkpoint 2026-08-03 (lazy-tail consolidation: NEGATIVE RESULT, reverted)
+
+Goal: merge the lazy graph's ~3,430 chunks (median 1.2KB, 2,929 under 2KB) to cut
+per-interaction requests and speed PWA install. Two implementations, both measured
+strictly worse than doing nothing; the config is reverted to react + boot groups only.
+
+| variant                     | lazy chunks | markdown island  |
+| --------------------------- | ----------: | ---------------- |
+| baseline (rolldown default) |        3430 | 44 req / 1.13 MB |
+| module-level clustering     |        5344 | 90 req / 5.37 MB |
+| signature-group clustering  |        5229 | 68 req / 4.88 MB |
+
+WHY it fails, and why boot succeeded where this does not:
+
+- A chunk's effective signature is the UNION of its members' signatures, so a cluster is
+  pulled into the closure of EVERY island needing ANY member. Merging by "two lowest
+  islands" still unions wildly different full signatures -> per-island bytes explode.
+- Claiming modules into manual groups removes them from rolldown's own global optimization,
+  and the UNCLAIMED remainder then fragments further — total chunk count went UP both times.
+- Boot works because boot modules are always fetched together: unioning their signatures
+  costs nothing because the union is the truth. The lazy graph has no such coherent subset;
+  the varied signatures ARE the information and the fine-grained split is a global optimum.
+  Those 1KB chunks are the bundler being right, not sloppy.
+
+Supporting measurements (offline, on the shipped bundle):
+
+- 3,430 lazy chunks carry 3,239 distinct signatures — only 191 chunks (5%) are mergeable at
+  ZERO over-fetch. Everything else buys requests with bytes.
+- Coarser ideas are far worse: per-package grouping costs markdown 14.3MB, a tiered
+  shared-pool 18.5MB (vs 1.13MB today).
+- The offline simulation that predicted a good trade (~15 req / +20% bytes) modelled merging
+  CHUNKS (signature-homogeneous). Implementing over modules/groups does not reproduce it —
+  the simulation's unit was the thing that made it look safe.
+
+If revisited, do NOT re-try manual grouping. The levers are (a) an upstream rolldown knob for
+a size floor in AUTOMATIC splitting (so it optimizes globally with a minimum), or (b) reduce
+the 1,998 dynamic-import boundaries themselves by clustering ACTIVATION EVENTS (modules that
+always activate together need not be separate islands) — attacks the cause, not the symptom.
