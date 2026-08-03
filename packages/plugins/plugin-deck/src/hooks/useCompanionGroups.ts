@@ -52,6 +52,15 @@ export const getNodeCompanionVariant = (value: string | undefined): string | und
 export const makeNodeCompanionValue = (variant: string): string => `${NODE_VALUE_PREFIX}${variant}`;
 
 /**
+ * The node whose companions populate the node group, given the attended plank. A companion is not a
+ * context for further companions, so attending one (a popped clone) yields no node group at all — not
+ * its source's companions minus the one in view. Stated here rather than left to fall out of a companion
+ * having no children, so the anchor can never borrow a source's companions.
+ */
+export const resolveNodeGroupAnchor = (anchorId: string | undefined): string | undefined =>
+  anchorId && !Attention.isLinkedSegment(anchorId) ? anchorId : undefined;
+
+/**
  * Which companion to actually show, given the user's stored preference. A preference the current node
  * does not offer falls back to that node's first companion, then to the first of any group — the stored
  * preference itself is left alone by the caller, so returning to a node that does offer it shows it
@@ -72,7 +81,8 @@ export const resolveActiveCompanion = (
  * Every companion applicable right now, grouped most-specific-first. Node companions come from the
  * attended plank, so the first group re-resolves as attention moves; workspace and global companions
  * hang off the graph root and are split by their declared scope. Workspace companions are dropped
- * outside a space — a panel over the space's database has nothing to show in a workspace without one.
+ * outside a space — a panel over the space's database has nothing to show in a workspace without one —
+ * and the node group is dropped entirely while a companion itself is attended.
  */
 export const useCompanionGroups = (): CompanionGroups => {
   const { graph } = useAppGraph();
@@ -83,7 +93,7 @@ export const useCompanionGroups = (): CompanionGroups => {
 
   const anchorId = useMemo(() => resolveCompanionAnchor(deck.active, attended), [deck.active, attended]);
   const anchorNode = useNode(graph, anchorId);
-  const nodeCompanions = useCompanions(anchorId);
+  const nodeCompanions = useCompanions(resolveNodeGroupAnchor(anchorId));
   const rootCompanions = useDeckCompanions();
 
   const groups = useMemo(() => {

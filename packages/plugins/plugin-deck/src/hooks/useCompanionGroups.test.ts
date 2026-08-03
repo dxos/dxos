@@ -10,6 +10,7 @@ import {
   isNodeCompanionValue,
   makeNodeCompanionValue,
   resolveActiveCompanion,
+  resolveNodeGroupAnchor,
 } from './useCompanionGroups';
 
 const entry = (value: string, scope: CompanionGroup['scope']) => ({
@@ -62,5 +63,21 @@ describe('resolveActiveCompanion', () => {
   // Undefined only with nothing to show, which is the sole condition the sidebar collapses on.
   test('selects nothing when there are no companions at all', () => {
     expect(resolveActiveCompanion('node/settings', [])).toBeUndefined();
+  });
+});
+
+describe('resolveNodeGroupAnchor', () => {
+  test('an ordinary plank anchors the node group', () => {
+    expect(resolveNodeGroupAnchor('root/docA')).toEqual('root/docA');
+  });
+
+  test('a companion anchors nothing — the sidebar shows workspace and global only', () => {
+    // Not "the source's companions minus the one in view": a companion has no companions, so attending
+    // a popped clone drops the node group entirely.
+    expect(resolveNodeGroupAnchor('root/docA/~comments')).toBeUndefined();
+  });
+
+  test('no anchor at all yields no node group', () => {
+    expect(resolveNodeGroupAnchor(undefined)).toBeUndefined();
   });
 });

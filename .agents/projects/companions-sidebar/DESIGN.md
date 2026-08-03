@@ -148,10 +148,13 @@ pop time, so multiple clones with different sources can sit side by side
   turns on with clones open, nothing special happens — a clone is an ordinary
   active entry, so it collapses into the breadcrumb chain like any plank; only
   the affordance is gated.
-- **Sidebar while attending a clone**: the node group is simply empty (a
-  companion has no companions), i.e. exactly what any node without companions
-  shows; the existing selection fallback picks the first workspace/global
-  panel. Zero special-casing.
+- **Sidebar while attending a clone**: **no node group at all** — not the
+  source's companions minus the one in view. A companion is not a context for
+  further companions, so the rail shows only workspace and global, exactly what
+  any node without companions shows, and the selection fallback picks the first
+  of those. Enforced by `resolveNodeGroupAnchor` (a linked-segment anchor
+  resolves to no node) rather than left to emerge from a companion having no
+  children, so the anchor can never borrow a source's companions.
 - **Attention linkage**: a clone's heading shows the `related` accent when its
   _source_ node is attended (and ordinary attention when the clone itself is).
   The attention tracker already computes companion→parent relatedness for
