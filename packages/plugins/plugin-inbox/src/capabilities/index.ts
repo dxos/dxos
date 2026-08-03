@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -36,9 +37,11 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(() => i
   // Graph start, not the inbox's own: a deep link is resolved before any inbox surface exists,
   // so gating this on the surface that the resolution leads to would never resolve.
   requires: [ClientCapabilities.Client],
-  activatesOn: AppCapability.GraphStart,
+  activatesOn: ActivationEvents.Idle,
 });
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.role.article',
@@ -50,5 +53,6 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
   ],
 });
 export const InboxSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [InboxCapabilities.Settings],
 });

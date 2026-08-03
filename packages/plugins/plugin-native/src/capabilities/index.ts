@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -12,6 +13,7 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import { NativeCapabilities, NativeEvents } from '#types';
 
 export const NativeSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [NativeCapabilities.Settings],
 });
 export const Ollama = Capability.lazyModule(

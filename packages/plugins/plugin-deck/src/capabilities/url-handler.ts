@@ -117,11 +117,11 @@ export default Capability.makeModule(
 
       let parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
       if (Option.isNone(parsed)) {
-        // An unknown key may belong to a start-gated plugin whose graph builder has not
-        // registered its URL keys yet — the URL itself is the demand signal. The key's owner is
-        // unknowable before parsing, so fire every plugin's start event, then re-parse
-        // (bounded: contributions land reactively as the waves resolve).
-        yield* ActivationEvents.activateAllPluginStartEvents(manager);
+        // A deep link can be restored before the idle wave has landed the graph builders that
+        // register URL keys — the URL itself is the demand signal, so pull that wave forward and
+        // re-parse (bounded: contributions land reactively as it resolves). Idle, not every
+        // plugin's start: URL keys come from graph builders, which all ride this one event.
+        yield* manager.activate(ActivationEvents.Idle);
         for (let attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && Option.isNone(parsed); attempt++) {
           yield* Effect.sleep(RESOLVE_RETRY_INTERVAL);
           parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));

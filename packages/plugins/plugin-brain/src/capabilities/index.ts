@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
@@ -12,7 +13,9 @@ import { BrainCapabilities } from '#types';
 
 export * from './fact-store';
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const FactStore = Capability.lazyModule(
   'FactStore',
@@ -23,6 +26,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
   roles: ['org.dxos.plugin.brain.surface.facts'],
 });
 export const Settings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [BrainCapabilities.Settings],
 });
 export const MailboxAction = Capability.lazyModule(

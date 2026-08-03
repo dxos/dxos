@@ -134,11 +134,11 @@ const WithPluginManagerApp = ({
   // Fire deprecated events only after the effect-owned manager for this story exists.
   useAsyncEffect(async () => {
     await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-    // Mirror the host contract (composer fires every plugin's start event at idle): stories
-    // see the module set the app converges to, so start-gated modules are present. A story
-    // switch shuts the manager down mid-trickle, interrupting the activation fiber —
-    // expected; real failures still surface.
-    EffectEx.runDetached(ActivationEvents.activateAllPluginStartEvents(pluginManager));
+    // In the app plugins start on demand (surface render), but stories render one surface in
+    // isolation — fire every start event so start-gated modules are present regardless of
+    // which plugin's surface the story exercises. A story switch shuts the manager down
+    // mid-trickle, interrupting the activation fiber — expected; real failures still surface.
+    EffectEx.runDetached(ActivationEvents.activateConvergedModules(pluginManager));
   }, [fireEvents, pluginManager, storyId]);
 
   // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;

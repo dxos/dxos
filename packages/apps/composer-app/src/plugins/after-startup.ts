@@ -10,30 +10,22 @@ import * as Queue from 'effect/Queue';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 const meta = Plugin.makeMeta({
   key: DXN.make('org.dxos.plugin.afterStartup'),
   name: 'After Startup',
-  description: 'Fires the app-wide start events at host idle once startup completes.',
+  description: 'Fires the host idle event once startup completes and the shell has painted.',
   tags: ['system'],
 });
 
 const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
 
 /**
- * The start events that are app-wide rather than per-feature, so no surface can gate them:
- * graph builders populate the navtree, and an item must exist there before it can be opened.
- * Every other plugin's start event is fired by its own surface rendering (see the module loader).
- */
-const APP_WIDE_START_EVENTS = [AppCapability.GraphStart];
-
-/**
  * Resolves at host idle (`requestIdleCallback` when available, macrotask fallback). The long
  * timeout is a stall backstop only: an aggressive timeout fires mid-render of the ready UI and
- * the start-event waves then flood the main thread ahead of first paint of the workspace.
+ * the idle wave then floods the main thread ahead of first paint of the workspace.
  */
 const idle: Effect.Effect<void> = Effect.async<void>((resume) => {
   if (typeof requestIdleCallback === 'function') {
@@ -47,7 +39,7 @@ const idle: Effect.Effect<void> = Effect.async<void>((resume) => {
 /**
  * Bounded wait for the app shell's first paint: the ready message precedes the shell render,
  * and `requestIdleCallback` can find an idle gap mid-render-pipeline — firing there floods the
- * main thread with the deferred wave ahead of the workspace paint.
+ * main thread with the idle wave ahead of the workspace paint.
  */
 const awaitPaint: Effect.Effect<void> = Effect.gen(function* () {
   for (let i = 0; i < 100 && performance.getEntriesByName(FIRST_INTERACTIVE_MARK).length === 0; i++) {
@@ -55,11 +47,11 @@ const awaitPaint: Effect.Effect<void> = Effect.gen(function* () {
   }
 });
 
-const FireAppWideStartEvents = Capability.inlineModule('FireAppWideStartEvents', { provides: [] }, () =>
+const FireIdleEvent = Capability.inlineModule('FireIdleEvent', { provides: [] }, () =>
   Effect.gen(function* () {
     const manager = yield* Plugin.Service;
     // Daemon: this module activates during the startup pass, long before the ready signal
-    // it waits for; the start-event dispatch must also outlive the activation call itself.
+    // it waits for; the dispatch must also outlive the activation call itself.
     yield* Effect.gen(function* () {
       yield* Effect.scoped(
         Effect.gen(function* () {
@@ -75,30 +67,18 @@ const FireAppWideStartEvents = Capability.inlineModule('FireAppWideStartEvents',
       );
       yield* awaitPaint;
       yield* idle;
-      // Sequential so the post-ready background load never saturates the main thread in one
-      // burst; per-event failures are logged and skipped so one broken wave cannot stall the rest.
-      yield* Effect.forEach(
-        APP_WIDE_START_EVENTS,
-        (event) =>
-          manager
-            .activate(event)
-            .pipe(
-              Effect.catchAll((error) =>
-                Effect.sync(() => log.warn('start event failed', { event: event.id, error: String(error) })),
-              ),
-            ),
-        { discard: true },
-      );
+      // The app-wide registration wave (graph builders, operation handler sets, deferred
+      // settings). Every FEATURE's modules ride its own plugin start event, fired when that
+      // plugin's surface renders — see the module loader.
+      yield* manager.activate(ActivationEvents.Idle);
     }).pipe(
-      Effect.catchAll((error) =>
-        Effect.sync(() => log.error('plugin start dispatch failed', { error: String(error) })),
-      ),
+      Effect.catchAll((error) => Effect.sync(() => log.error('idle event dispatch failed', { error: String(error) }))),
       Effect.forkDaemon,
     );
     return [];
   }),
 );
 
-export const AfterStartupPlugin = Plugin.define(meta).pipe(Plugin.addModule(FireAppWideStartEvents), Plugin.make);
+export const AfterStartupPlugin = Plugin.define(meta).pipe(Plugin.addModule(FireIdleEvent), Plugin.make);
 
 export default AfterStartupPlugin;

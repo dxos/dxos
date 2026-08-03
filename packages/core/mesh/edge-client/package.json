@@ -45,6 +45,13 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "http": [
+        "dist/types/src/edge-http-client.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src",
@@ -77,12 +84,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "http": [
-        "dist/types/src/edge-http-client.d.ts"
-      ]
-    }
   }
 }

@@ -135,10 +135,10 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
           manager.activate(ActivationEvents.Startup),
         ]),
       );
-      // Mirror the host contract: after startup the host fires every plugin's start event
-      // (composer does so at idle). Tests fire them synchronously so start-gated modules
-      // are present, matching what the app converges to.
-      await EffectEx.runAndForwardErrors(ActivationEvents.activateAllPluginStartEvents(manager));
+      // In the app plugins start on demand (surface render), which a headless harness never
+      // triggers — fire every start event synchronously so start-gated modules are present,
+      // matching the module set the app converges to.
+      await EffectEx.runAndForwardErrors(ActivationEvents.activateConvergedModules(manager));
     } catch (err) {
       await EffectEx.runAndForwardErrors(manager.shutdown()).catch(() => undefined);
       throw err;

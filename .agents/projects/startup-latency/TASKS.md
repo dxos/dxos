@@ -712,3 +712,36 @@ dependency, not a barrel re-export) so it needs a component refactor — lazy-lo
 inside SegmentedInput, or split the date-specific parts out of Input. Next boot-size lever.
 
 Warm-cold e2e green (profilerTotal 4054, navToReady 8036 in-container).
+
+## Checkpoint 2026-08-03 (task #38: demand-gated plugin start events)
+
+Taxonomy ratified in discussion, then measured into its final shape:
+
+- **Demand signal (core mechanism):** the module loader fires a plugin's own start event
+  (forked) when one of its modules contributes `Capabilities.ReactSurface` — the surface
+  rendering IS the demand. Safe because contributions land in reactive capability atoms.
+- **`appGraphBuilder` -> `GraphStart` default** (33 own-start overrides dropped): a builder
+  gated on its own start deadlocks (item never in navtree -> surface never renders).
+- **All 71 surfaces role-gated**, zero `activatesOn` overrides (19 were own-start-gated —
+  unreachable without the blanket fire; 3 declared no roles and were silently eager).
+- **43 operation-handler sets -> `GraphStart`**, **18 settings -> `SettingsStart`** — NOT
+  eager. First attempt made them dependency-mode: modules at ready 283-289 -> 306-316,
+  profilerTotal 6.9-7.3s, top1 = the moved modules themselves (BENCHMARKS rows at 34d12659).
+  Repointed at the two idle waves instead. Handler sets are keyed definition->loader maps,
+  so bodies still load per invocation (spotlight's `make()` set is the one non-keyed
+  exception — Tauri window entry, not composer boot).
+- **Settings NOT panel-gated and NOT all deferred** (user decision + e2e evidence): firing
+  `SettingsStart` post-ready for ALL settings fatals — transcription's driver
+  (`ReactContext`, mounts with the shell) and `DeckLayout` read settings via strict
+  `useAtomCapability`, and deck boot modules `require` them. Maker default stays ungated;
+  only the 18 whose values are read solely from their own deferred surfaces ride
+  `SettingsStart`, which `after-startup` fires right after `GraphStart` at idle.
+- **after-startup** now fires exactly [GraphStart, SettingsStart] instead of all ~80 plugin
+  starts. `activateAllPluginStartEvents` remains for the converged-set callers only: test
+  harnesses + deck URL parse-miss recovery.
+- Repointed strays: wnfs `Dependencies` -> `FileEvents.Start`, inbox
+  `NavigationTargetResolver` -> `GraphStart` (neither reachable via own start: no surface /
+  needed before the surface exists).
+
+Verified: composer-app build green, app-framework 220 + app-toolkit 119 tests green, lint
+clean on all touched packages (remaining warnings pre-existing on branch).

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
@@ -50,7 +51,9 @@ export const MarkdownBinding = Capability.lazyModule(
   },
   () => import('./markdown-binding'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
@@ -59,6 +62,7 @@ export const HistorySurface = AppCapability.surface(() => import('./history-surf
   name: 'HistorySurface',
 });
 export const CommentsSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [CommentCapabilities.Settings],
 });
 export const CommentState = Capability.lazyModule(

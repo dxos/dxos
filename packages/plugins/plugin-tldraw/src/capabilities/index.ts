@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { IllustratorCapabilities, IllustratorEvents } from '@dxos/plugin-illustrator/types';
@@ -15,5 +16,6 @@ export const DrawingVariant = Capability.lazyModule(
 );
 
 export const TldrawSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [TldrawCapabilities.Settings],
 });

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -23,6 +24,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
   props: ({ logStore }: DebugPluginOptions) => ({ logStore }),
 });
 export const DebugSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [DebugCapabilities.Settings],
 });
 export const StatsPanel = Capability.lazyModule(

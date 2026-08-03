@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
@@ -18,7 +19,9 @@ export const MarkerProvider = Capability.lazyModule(
   { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start },
   () => import('./marker-provider'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [
     'org.dxos.plugin.map.role.map',
@@ -29,6 +32,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
   ],
 });
 export const MapSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [MapCapabilities.Settings],
 });
 export const MapState = Capability.lazyModule(
