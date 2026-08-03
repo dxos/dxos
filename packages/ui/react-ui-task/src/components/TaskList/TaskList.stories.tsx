@@ -4,6 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
+import { expect } from 'storybook/test';
 
 import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -39,12 +40,17 @@ const DefaultStory = ({ readonly }: { readonly?: boolean }) => {
 
   return (
     <div className='w-[36rem]'>
-      <TaskList
+      <TaskList.Root
         tasks={tasks}
         onTaskCreate={readonly ? undefined : handleCreate}
         onTaskUpdate={readonly ? undefined : handleUpdate}
         onTaskDelete={readonly ? undefined : handleDelete}
-      />
+      >
+        <TaskList.Viewport>
+          <TaskList.Content />
+          <TaskList.Create />
+        </TaskList.Viewport>
+      </TaskList.Root>
     </div>
   );
 };
@@ -59,7 +65,37 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  // The status toggle and the add-`+` share one row grid; assert their icon gutters actually line
+  // up, since only geometry (not the DOM) shows the misalignment.
+  play: async ({ canvasElement }) => {
+    const row = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item"]');
+    const create = canvasElement.querySelector<HTMLElement>('[data-testid="taskList.create"]');
+    if (!row || !create) {
+      throw new Error('Task rows not found.');
+    }
+
+    const center = (element: Element) => {
+      const { left, width } = element.getBoundingClientRect();
+      return left + width / 2;
+    };
+
+    const rowIcon = row.firstElementChild;
+    const createIcon = create.firstElementChild;
+    if (!rowIcon || !createIcon) {
+      throw new Error('Row icons not found.');
+    }
+
+    // Same icon column ⇒ same horizontal centre (sub-pixel tolerance for rounding).
+    await expect(Math.abs(center(rowIcon) - center(createIcon))).toBeLessThan(1);
+    // ...and the labels start at the same x.
+    await expect(
+      Math.abs(row.children[1].getBoundingClientRect().left - create.children[1].getBoundingClientRect().left),
+    ).toBeLessThan(1);
+    // The row spans the full width, so trailing actions sit at the far edge.
+    await expect(row.getBoundingClientRect().width).toBeGreaterThan(create.getBoundingClientRect().width * 0.9);
+  },
+};
 
 export const Readonly: Story = {
   args: { readonly: true },

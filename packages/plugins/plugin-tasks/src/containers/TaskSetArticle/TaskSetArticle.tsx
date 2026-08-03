@@ -53,14 +53,18 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet }: TaskSet
   );
 
   const content = (
-    <TaskList
+    <TaskList.Root
       tasks={tasks}
       statusLabel={statusLabel}
-      createPlaceholder={t('task-create.placeholder')}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskDelete={handleDelete}
-    />
+    >
+      <TaskList.Viewport>
+        <TaskList.Content />
+        <TaskList.Create placeholder={t('task-create.placeholder')} />
+      </TaskList.Viewport>
+    </TaskList.Root>
   );
 
   // Embedded as a section (e.g. the ProjectArticle Tasks section): the host owns scroll and

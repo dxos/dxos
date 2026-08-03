@@ -113,12 +113,17 @@ const TaskSetView = ({ outline }: { outline: Outline.Outline }) => {
     <Panel.Root>
       <Panel.Toolbar />
       <Panel.Content>
-        <TaskList
+        <TaskList.Root
           tasks={filtered}
           onTaskCreate={handleCreate}
           onTaskUpdate={handleUpdate}
           onTaskDelete={handleDelete}
-        />
+        >
+          <TaskList.Viewport>
+            <TaskList.Content />
+            <TaskList.Create />
+          </TaskList.Viewport>
+        </TaskList.Root>
       </Panel.Content>
     </Panel.Root>
   );
@@ -197,6 +202,14 @@ export const ConvertToTask: Story = {
     // The item is now a bullet carrying a link chip, and the document holds a markdown link.
     const chip = await canvas.findByRole('button', { name: ITEM }, { timeout: 10_000 });
     await waitFor(() => expect(sourceText(canvasElement)).toMatch(new RegExp(`- \\[${ITEM}\\]\\(echo://`)));
+
+    // A converted item carries an anchor chip; its line must stay the same height as its plain
+    // neighbours (the chip's vertical padding is cancelled by a negative margin).
+    await waitFor(() => {
+      const lines = [...canvasElement.querySelectorAll('.cm-content')][0].querySelectorAll('.cm-line');
+      const heights = [...lines].map((line) => line.getBoundingClientRect().height).filter((height) => height > 0);
+      return expect(Math.max(...heights) - Math.min(...heights)).toBeLessThan(1);
+    });
 
     // The promoted task appears in the durable task list (third column), proving the outliner
     // filed it into the outline's task set.

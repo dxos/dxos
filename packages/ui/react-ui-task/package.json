@@ -29,7 +29,9 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@dxos/ui-theme": "workspace:*"
+    "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
+    "@radix-ui/react-context": "catalog:"
   },
   "devDependencies": {
     "@dxos/storybook-utils": "workspace:*",
