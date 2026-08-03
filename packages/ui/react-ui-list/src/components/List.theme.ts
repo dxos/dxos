@@ -42,7 +42,7 @@ const listStyles = tv({
     // `ui-theme/src/css/components/state.md`). `outline-none` removes the native focus
     // ring; Tabster / `dx-focus-ring` handles keyboard focus at the container level.
     listboxItem:
-      'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) py-trim-xs cursor-pointer outline-none',
+      'flex items-center dx-hover dx-selected min-h-(--dx-control) px-(--dx-control-pad) cursor-pointer outline-none',
     listboxItemLabel: 'grow truncate',
 
     //
@@ -65,7 +65,7 @@ const listStyles = tv({
     // `px-[var(--gutter,…)]` aligns padding with sibling `Column.Center` content, falling back to
     // the density control pad when not nested under `Column.Root`.
     pickerItem:
-      'dx-hover dx-selected flex items-center min-h-(--dx-control) px-[var(--gutter,var(--dx-control-pad))] py-trim-xs cursor-pointer select-none',
+      'dx-hover dx-selected flex items-center min-h-(--dx-control) px-[var(--gutter,var(--dx-control-pad))] cursor-pointer select-none',
 
     //
     // Combobox
