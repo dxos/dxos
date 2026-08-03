@@ -1,6 +1,6 @@
 # plugin-projects — Tasks
 
-_Resume: M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; Phase 4 DXOS SIDE DONE locally (unpushed, unsigned commits — 1Password agent unreachable): McpToolAnnotation + every §7.2 verb now exists app-side. Next: open the Phase 4 PR, then Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, play test). Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
+_Resume: M5 Phases 1+3 + Phase 2 core MERGED as PR #12431; **Phase 4 DXOS SIDE MERGED as PR #12440** 2026-08-03 (McpToolAnnotation + all 12 §7.2 verbs, annotation verified through `Operation.serialize`). Also merged from this branch: #12442 (story rename) and #12444 (doc corrections). The checklist loop is now covered by CI play scripts in `stories-assistant/Chat.stories.tsx` — `WithPlanningScripted` (scripted `update-tasks`, title-keyed upsert does not duplicate) and `WithSubAgentsTest2` (delegation adds an unchecked item, checks it off on sub-agent completion); `WithPlanning`/`WithSubAgentsTest1` are the live `!test` counterparts. Next: Phase 2 remainder (templates scaffold/adopt TaskSet, app-graph task nodes, goals authoring, stories-projects play test); Phase 4 edge projection is the peer agent's. Do NOT pin a worktree in resume pointers — each session works in its harness-assigned worktree. PR #12389 MERGED 2026-07-29 — Milestone 4 open items (galleries width collapse, table-tool gap, tagged scaffold errors) remain below._
 
 _Superseded pointer (2026-07-29): Milestone 4 (USE-CASES.md) groundwork + UC-A + UC-B + UC-C implemented and OPEN as PR #12389 (one growing PR, per user direction 2026-07-29; leave open for review — do NOT auto-merge). §2.1 decision RATIFIED by the user (keep `artifacts` as outputs; routines inherit project scope; no schema change — scope travels via `instructions.objects`/`skills` seeding). Check GREEN on 668f48f01f (all jobs; two review-fix rounds: public-deps inversion, CreateProjectPanel story context, six CodeRabbit threads fixed/answered). Preview: https://pr-12389-composer-main.dxos.workers.dev. NOTE: commits from 3f6744347c on are UNSIGNED (1Password signing agent unreachable mid-session). Next: user walkthrough of the three `stories-projects` stories (each has numbered manual steps), then land. Live-model runs NOT executed — no `DX_ANTHROPIC_API_KEY` in the session env (`sender-ledger.eval.ts` authored but unverified; run live before trusting it). Earlier context: #12335…#12386 merged; #12388 (would have ended the registry entry) CLOSED unmerged. Still open: URL binding for project chats (MAJOR, needs Josiah)._
 
@@ -372,7 +372,7 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
       consumers: plugin-assistant chat task list (currently checklist-form), kanban adoption.
       REMAINING: templates scaffold/adopt a TaskSet; app-graph task nodes under a project;
       goals authoring UI; stories-projects play test; kanban adoption (separate PR per §9.2).
-- [~] **Phase 4 — MCP verbs** — DXOS SIDE DONE 2026-08-02 (edge side pending). Ownership
+- [~] **Phase 4 — MCP verbs** — DXOS SIDE MERGED 2026-08-03 as PR #12440 (edge side pending). Ownership
   RATIFIED (MILESTONE-5 §7.3): **dxos defines, edge projects**; an edge-only tool is a
   contract defect. Contract in §7.4.
   SHIPPED HERE: `McpToolAnnotation` in @dxos/compute/Operation — the pipeable
@@ -392,6 +392,20 @@ task-plugin reconciliation and skill-sync specs fold in here on the dxos side.
   EDGE SIDE (peer agent): switch projection to the annotation, delete local taskList, land
   identity-through-invokeOperation. Already green there: task write verbs verified over OAuth
   2026-08-02 (`e2e-task-smoke.mjs`, 52/52 workerd tests, branch `mcp-task-tools`).
+
+- [x] **Checklist-loop play coverage** — 2026-08-03, PRs #12440/#12442/#12444. CI-runnable
+      proof that the two-forms model closes: `WithPlanningScripted` drives `update-tasks`
+      twice and asserts the title-keyed upsert rewrites items in place rather than appending
+      duplicates; `WithSubAgentsTest2` asserts delegation adds an **unchecked** checklist item
+      and that `onComplete` **checks it off** after the sub-agent finishes. Both read the real
+      objects (space query → `Outline.parseChecklist`) via an `onInit` space capture and a
+      polling helper, because no surface in those layouts renders the outline. Live
+      counterparts `WithPlanning`/`WithSubAgentsTest1` stay `tags: ['!test']`. Teeth-checked by
+      disabling the `onComplete` upsert in `delegation-strategy.ts` — the story failed, then
+      passed on restore. Scripted stories must leave **no open checklist items** at the end, or
+      the end-of-request plan reminder consumes an extra scripted turn and the story flakes.
+      NOT DONE: no `promote-task` verb, so outside delegation the agent still cannot create a
+      durable Task — the TaskList column fills only via delegation or a human convert-to-task.
 
 - [ ] **Phase 5 — MCP-first dogfood** (alongside 2–4) — this milestone as a Project in the
       shared space; goals/tasks mirrored; task-planning skill registry `tasksDxn` once the sync

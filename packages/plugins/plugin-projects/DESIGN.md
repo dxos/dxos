@@ -38,6 +38,14 @@ to be one of the core aspects of Composer.
   `Project.taskSet` (the durable container). Project chats write the project's outline;
   standalone chats own theirs.
 
+**Status (2026-08-03).** The loop is proven in CI by two play stories in
+`stories-assistant/Chat.stories.tsx`: `WithPlanningScripted` (the planning skill's
+title-keyed upsert rewrites checklist items in place rather than duplicating them) and
+`WithSubAgentsTest2` (delegation adds an unchecked item; the supervisor's `onComplete`
+checks it off). **Open gap:** promotion is still delegation-only — there is no
+`promote-task` verb, so an agent cannot turn a checklist line into a durable `Task`
+except by delegating it. Human convert-to-task is the only other path.
+
 ## Background: Project, Agent, Chat, AiSession
 
 **Agent**: a durable named actor (`org.dxos.type.agent@0.1.0`,
