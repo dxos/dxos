@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { isCursorForTarget, type ConnectorEntry } from '@dxos/plugin-connector';
+import { type ConnectorEntry, isCursorForTarget } from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
 
 /**

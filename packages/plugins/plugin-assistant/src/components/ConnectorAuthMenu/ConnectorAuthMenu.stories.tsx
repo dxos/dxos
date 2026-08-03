@@ -15,7 +15,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connector, connectorAuthActions, type ConnectorEntry } from '@dxos/plugin-connector';
+import { Connector, type ConnectorEntry, connectorAuthActions } from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { Graph } from '@dxos/plugin-graph';

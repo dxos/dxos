@@ -17,8 +17,8 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import {
   COMPANION_VIEW_STATE_CONTEXT,
   PLANK_COMPANION_TYPE,
-  companionAspect,
   type StoredDeckState,
+  companionAspect,
 } from '@dxos/plugin-deck';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import { Attention } from '@dxos/react-ui-attention';

@@ -294,6 +294,13 @@ numbers, lever comparisons, and CI thresholds key on warm-cold; its
       283 baseline was a single sample. It is still the only metric whose signal clears the
       in-container noise, and the only one that can see this class of regression at all —
       moving a module onto the startup pass changes nothing statically.
+- [ ] Cold `Client.initialize()` cost — proto-guard's `withSnapshot` bounded it at 2s and this
+      branch pushed past it, because the HALO adapters became construction-safe and their setup
+      moved out of the (untimed) constructor into `initialize()`. Measured in-container:
+      construct 3ms, first `initialize()` 4688ms, second (warm) 123ms. The bound was raised to
+      20s as a hang guard; the underlying cost is the `_open()` long pole already noted in the
+      critical path above, now fully inside the timed window. Composer forks `initialize()` so
+      its paint is unaffected, but node consumers await it directly.
 - [ ] **TODO (blocked: no fixed runner).** Gate on `profilerTotal` / `navToReady` / lab TBT.
       Today they are recorded per run and trended, never failed on: repeats of one unchanged
       commit spanned 3828-7330 ms profilerTotal (1.9x) and 6851-10576 ms navToReady purely from
