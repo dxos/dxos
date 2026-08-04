@@ -2,14 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import {
-  MosaicContainer,
-  type MosaicContainerProps,
-  type MosaicContainerState,
-  type MosaicScrollController,
-  useMosaicContainerContext,
-} from './Container';
+import { MosaicContainer, type MosaicContainerProps, type MosaicScrollController } from './Container';
 import { MosaicDragHandle, type MosaicDragHandleProps } from './DragHandle';
+import { type MosaicContainerState, useMosaicContainerContext } from './MosaicContainerContext';
+import { type MosaicTileState, useMosaicTileContext } from './MosaicTileContext';
 import {
   MosaicDropIndicator,
   type MosaicDropIndicatorProps,
@@ -18,7 +14,7 @@ import {
 } from './Placeholder';
 import { MosaicResizeHandle, type MosaicResizeHandleProps } from './ResizeHandle';
 import { MosaicStack, type MosaicStackProps, type MosaicStackTileComponent, MosaicVirtualStack } from './Stack';
-import { MosaicTile, type MosaicTileProps, type MosaicTileState, useMosaicTileContext } from './Tile';
+import { MosaicTile, type MosaicTileProps } from './Tile';
 
 //
 // Mosaic
