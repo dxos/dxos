@@ -52,50 +52,21 @@ ended: []
 
 ### The `/project` command
 
-The **single** task-planning entrypoint is `/project VERB [ARGS]`, leading the
-message as a slash command does. A `UserPromptSubmit` hook
-(`.claude/hooks/track.sh`) sees the raw typed text before the command expands and
-injects the matching directive; when you see one, follow it and confirm in one
-short line.
+`/project VERB [ARGS]` drives the registry — `(bare) | list [all] | new | end |
+track | hydrate | resume`. **The per-verb instructions are not repeated here.**
+`.claude/hooks/track.sh` reads the raw typed text on `UserPromptSubmit` and
+injects the directive for the verb actually given; that directive is
+authoritative and arrives whether or not the command expansion does. Follow it
+and confirm in one short line.
 
-The directive, not the command body, is authoritative — it is generated from the
-verb actually given, and it arrives whether or not the expansion does.
+This file covers what applies **without** the command — the TASKS.md convention,
+the registry schema, and the handoff steps below — because the skill loads on
+"work spans several steps" or "resuming work", when nobody has typed anything.
 
-- `/project` (bare) — report the **current** project, not the registry. Resolve
-  it by branch (strip `claude/` and the trailing `-<hash>`), else the single
-  `active` entry for the current user; if neither resolves, say so and suggest
-  `/project list`. Report worktree + branch, the entry's status / `tasks` /
-  `design` / `prs`, tracked-file state (`git status --short`, ahead-of-origin,
-  naming every uncommitted file), and the next action from `resume` in one line.
-- `/project list [all]` — render the active projects as a **numbered markdown
-  table**: the first column is a 1-based row number, followed by `name`,
-  `status`, `user`, `host`, and a one-line summary. **By default show only the
-  current user's projects** (`user` == `whoami`); `list all` lists every user.
-  Then tell the user they can reply with a row number to resume that project.
-  **A lone number in the user's next message means "resume the project at that
-  row"** — run the "Project handoff" → resume steps for that entry.
-- `/project new <name> [summary]` — add an `active` entry (`user` = `whoami`,
-  `host` = `hostname -s`); scaffold `.agents/projects/<name>/{TASKS.md,DESIGN.md}`
-  unless the docs already live somewhere (record that path instead). Confirm in
-  one line.
-- `/project end <name>` — move the entry to `ended`, recording the final PR/status.
-- `/project track <text>` — record `<text>` as a follow-up in the active
-  `TASKS.md` (never a background task chip).
-- `/project hydrate` (alias `checkpoint`) — **checkpoint** the project before
-  stopping or opening a PR (see "Project handoff").
-- `/project resume [name]` (alias `rehydrate`) — **reload** project state at the
-  start of a session (see "Project handoff").
-
-The `$project` sentinel and the legacy `$track` / `track:` / `$hydrate` /
-`$checkpoint` / `$resume` / `$rehydrate` forms have been **removed**. They matched
-anywhere in a message, so prose about them fired them — a message asking to
-convert `$project` ran `$project list` (2026-08-04). `/project` is anchored to
-the first line, where prose cannot reach it.
-
-`resume` / `hydrate` key off the registry: **which project** is resolved by name
-(`/project resume <name>`) or by the row number from the most recent `/project`
-table. With no argument, fall back to the single `active` entry for the current
-user; if more than one is active, ask which (list them numbered) — never a guess.
+**A lone number** in the user's next message after a `/project list` table means
+"resume the project at that row". With no argument, `resume`/`hydrate` fall back
+to the single `active` entry for the current user; if more than one is active,
+ask which (list them numbered) — never a guess.
 
 > The registry deliberately does **not** record a branch/worktree. Each session
 > runs in a fresh harness-assigned worktree, and a project's original branch is
