@@ -234,8 +234,6 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
     const deletedId = dataset.messages[1].id;
 
-    // `listMessages` enumerates the id, then the user deletes the message before `getMessage` runs. The
-    // 404 is per-message and permanent, so it must drop that id rather than fail the whole run.
     const result = await EffectEx.runPromise(
       runGoogleSync({ binding: Ref.make(binding), now }).pipe(
         Effect.provide(ambientSyncServices(db)),
@@ -878,9 +876,8 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
     expect(tokenOf(binding)).toBe('1000');
 
-    // The delta adds two messages, one already deleted by the time this run fetches it. Unlike the crash
-    // above, this 404 is permanent: failing the run would leave the token at '1000', so every following
-    // run re-reads the same history page, 404s again, and the mailbox never syncs another message.
+    // Unlike the transient crash above, this 404 is permanent: failing the run would strand the token at
+    // '1000', leaving every following run to re-read the same history page and die on the same id.
     const arrival = generateGmailDataset({ count: 1, seed: 88, start: subDays(now, 1), end: now, idPrefix: 'new' })
       .messages[0];
     const deletedId = 'deleted-1';

@@ -91,11 +91,9 @@ export const fetchMessages = (
           config.onRetrieved?.();
           return Option.some(message);
         }).pipe(
-          // A message deleted between its id being enumerated (listed, or logged in `history.list`) and
-          // this fetch 404s permanently, so failing the run wedges the mailbox: the delta token only
-          // advances on a clean run, leaving every following run to re-read the same history page and die
-          // on the same id. Drop just that message; any other error still fails the run so the durable
-          // retry re-fetches it rather than stranding it once the cursor advances.
+          // A message deleted before this fetch 404s forever and the token only advances on a clean run,
+          // so failing here wedges the mailbox on that one id. Any other error must still fail, so the
+          // durable retry re-fetches it rather than stranding it once the cursor advances.
           Effect.catchIf(
             (error) => error instanceof GoogleApiError && error.code === 404,
             (error) => {
