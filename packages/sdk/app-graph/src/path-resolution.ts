@@ -3,6 +3,7 @@
 //
 
 import * as Array from 'effect/Array';
+import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -166,13 +167,31 @@ type KeyedExtension = { id: string; path: string[] | GraphBuilder.PathResolver }
 /**
  * Materialize a candidate qualified node id and confirm it exists: expand its ancestors, then check
  * the node is known. Returns the id on success, `null` otherwise.
+ *
+ * Expansion only triggers population — the objects behind it load out of band — so on a cold
+ * restore the check can run before the node lands and report a false absence. `wait` bounds a
+ * {@link Graph.waitFor} on the candidate for callers that already know it should exist; without it
+ * the read stays immediate, so a candidate being tried speculatively still falls through at once.
  */
 const materializeCandidate = async (
   builder: GraphBuilder.GraphBuilder,
   candidateId: string,
+  wait?: Duration.DurationInput,
 ): Promise<string | null> => {
   await expandAncestors(builder, candidateId);
-  return Option.isSome(Graph.getNode(builder.graph, candidateId)) ? candidateId : null;
+  if (Option.isSome(Graph.getNode(builder.graph, candidateId))) {
+    return candidateId;
+  }
+  if (wait === undefined) {
+    return null;
+  }
+
+  return EffectEx.runPromise(
+    Graph.waitFor(builder.graph, candidateId).pipe(
+      Effect.as(candidateId),
+      Effect.timeoutTo({ duration: wait, onTimeout: (): string | null => null, onSuccess: (id) => id }),
+    ),
+  );
 };
 
 /**
@@ -191,6 +210,7 @@ const resolveKeyId = async (
   workspace: string,
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
+  wait?: Duration.DurationInput,
 ): Promise<string | null> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(builder.urlGrammar.tailSeparator);
@@ -199,6 +219,7 @@ const resolveKeyId = async (
       const resolved = await materializeCandidate(
         builder,
         [workspaceBaseId, ...extension.path, ...idSegments].join('/'),
+        wait,
       );
       if (resolved) {
         return resolved;
@@ -249,6 +270,7 @@ const resolveLinked = async (
 const resolveUrlAsync = async (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
+  options?: ResolveUrlOptions,
 ): Promise<Array<ResolvedPair | null>> => {
   const keyTable = buildKeyTable(builder);
   const allExtensions = builder.getExtensions();
@@ -290,7 +312,14 @@ const resolveUrlAsync = async (
     // A normal key addresses a node by id; an id-less singleton key (e.g. `home`) addresses a fixed node
     // whose terminal segment IS the key — resolve it the same way with the key standing in for the id
     // (`root/<ws>/<...path>/<key>`).
-    const nodeId = await resolveKeyId(builder, workspaceBaseId, pair.workspace, extensions, pair.id ?? pair.key);
+    const nodeId = await resolveKeyId(
+      builder,
+      workspaceBaseId,
+      pair.workspace,
+      extensions,
+      pair.id ?? pair.key,
+      options?.wait?.(pairIndex),
+    );
     results.push(nodeId ? { pairIndex, nodeId } : null);
     lastItemNodeId = nodeId ?? undefined;
   }
@@ -308,10 +337,20 @@ const resolveUrlAsync = async (
  * how a `null` is surfaced is the caller's concern. A linked pair resolves against the *preceding
  * item's* node, not the raw preceding pair.
  */
+export type ResolveUrlOptions = {
+  /**
+   * How long to wait for a pair's candidate node to materialize, by pair index. Per-pair because
+   * the answer differs: a pair whose object is known to exist is merely late, while one nothing
+   * vouches for is absent and must not hold up the restore. Return `undefined` to read immediately.
+   */
+  readonly wait?: (pairIndex: number) => Duration.DurationInput | undefined;
+};
+
 export const resolveUrl = (
   builder: GraphBuilder.GraphBuilder,
   parsed: { workspace: string; pairs: ReadonlyArray<UrlPair> },
-): Effect.Effect<Array<ResolvedPair | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed));
+  options?: ResolveUrlOptions,
+): Effect.Effect<Array<ResolvedPair | null>> => Effect.promise(() => resolveUrlAsync(builder, parsed, options));
 
 /**
  * Reverse-map a graph node id back to its `(key, id?, workspace)` representation, the inverse of

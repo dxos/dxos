@@ -36,8 +36,8 @@ import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
 /**
  * Deadline for a cold restore's container chain to materialize. Not a poll interval: resolution
- * re-runs on graph change, and this only bounds the wait so a node that never arrives cannot hang
- * the restore. Generous because it costs nothing when the chain lands early.
+ * waits on the candidate node and returns as soon as it lands, so this only bounds the wait for a
+ * node that never arrives. Generous because it costs nothing when the chain lands early.
  */
 const RESOLVE_TIMEOUT = '10 seconds';
 
@@ -118,14 +118,16 @@ export default Capability.makeModule(
         return;
       }
 
-      let parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
-      if (Option.isNone(parsed)) {
-        // URL keys come from graph builders that ride Idle, and a deep link can be restored before
-        // that wave lands. The URL is itself the demand signal, so pull the wave and re-parse —
-        // awaited, so this settles when the contributions are in rather than on a timer.
-        yield* manager.activate(ActivationEvents.Idle);
-        parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
-      }
+      const parseUrl = () => UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
+      const parsed = yield* parseUrl().pipe(
+        Option.match({
+          onSome: Effect.succeedSome,
+          // URL keys come from graph builders that ride Idle, and a deep link can be restored
+          // before that wave lands. The URL is itself the demand signal, so pull the wave and
+          // re-parse — awaited, so this settles when the contributions are in, not on a timer.
+          onNone: () => manager.activate(ActivationEvents.Idle).pipe(Effect.map(parseUrl)),
+        }),
+      );
       if (Option.isNone(parsed)) {
         // Unknown/malformed path: same outcome as an unresolvable subject id always had — open the
         // not-found sentinel. `immediate` skips validation, which is redundant for the sentinel anyway.
@@ -182,35 +184,14 @@ export default Capability.makeModule(
       }
 
       // Loading an object does not load its container chain (e.g. the collection it lives in), which
-      // `resolveUrl`'s expansion triggers but cannot synchronously await. Every node that arrives
-      // emits `onNodeChanged`, so re-resolve on that rather than on a timer: the restore completes
-      // the moment the chain lands, and the deadline below is a backstop, not the mechanism.
-      const nextGraphChange = Effect.async<void>((resume) => {
-        const unsubscribe = builder.graph.onNodeChanged.on(() => {
-          unsubscribe();
-          resume(Effect.void);
-        });
-        return Effect.sync(() => unsubscribe());
-      });
-
-      const resolveOnce = PathResolution.resolveUrl(builder, { workspace, pairs });
-      const resolved = yield* Effect.gen(function* () {
-        let current = yield* resolveOnce;
-        while (pairs.some((pair, index) => confirmed[index] && !current[index])) {
-          yield* nextGraphChange;
-          current = yield* resolveOnce;
-        }
-        return current;
-      }).pipe(
-        Effect.timeout(RESOLVE_TIMEOUT),
-        // Timing out is not fatal: restore what did resolve. Unresolved planks fall to not-found
-        // below, which is the same outcome the bounded retry produced.
-        Effect.catchAll(() =>
-          Effect.gen(function* () {
-            log.warn('URL restore timed out waiting for the graph', { pathname });
-            return yield* resolveOnce;
-          }),
-        ),
+      // resolution expands but cannot synchronously observe. Resolution waits for the candidate node
+      // itself — the id is known before the lookup — so the restore completes the moment the chain
+      // lands. Only confirmed pairs wait: a pair a loader disconfirmed is absent, not late, and must
+      // fail fast rather than hold the restore for the full deadline.
+      const resolved = yield* PathResolution.resolveUrl(
+        builder,
+        { workspace, pairs },
+        { wait: (index) => (confirmed[index] ? RESOLVE_TIMEOUT : undefined) },
       );
 
       // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
