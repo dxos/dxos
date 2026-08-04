@@ -3,25 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { getParentId } from '@dxos/plugin-graph';
-import { useNode } from '@dxos/plugin-graph/hooks';
 import { DraftMessage, Event, Message, Organization, Person } from '@dxos/types';
 
 import {
   CalendarArticle,
   CalendarProperties,
   EditMessageArticle,
-  EventArticle,
   EventCard,
   MailboxArticle,
   MailboxProperties,
-  MessageArticle,
   MessageCard,
   RelatedToContact,
   RelatedToOrganization,
@@ -32,6 +27,7 @@ import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants';
 import { getSubscriptionsId } from '../paths';
+import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -46,30 +42,25 @@ export default Capability.makeModule(() =>
           const lastSegment = data.attendableId.split('/').pop();
           return lastSegment === getSubscriptionsId() && Mailbox.instanceOf(data.subject);
         }),
-        component: ({ data, role }) => {
-          return <SubscriptionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
-        },
+        component: SubscriptionsArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'mailbox',
         filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
-        component: ({ data }) => {
-          return (
-            <MailboxArticle
-              subject={data.subject}
-              filter={data.properties?.filter}
-              systemTag={data.properties?.systemTag}
-              attendableId={data.attendableId}
-            />
-          );
-        },
+        component: MailboxArticle,
+        props: ({ data: { subject, attendableId, properties } }) => ({
+          subject,
+          filter: properties?.filter,
+          systemTag: properties?.systemTag,
+          attendableId,
+        }),
       }),
       Surface.create({
         id: 'draftMessage',
         filter: AppSurface.subject(AppSurface.Article, DraftMessage.instanceOf),
-        component: ({ data: { subject }, role }) => {
-          return <EditMessageArticle role={role} subject={subject} />;
-        },
+        component: EditMessageArticle,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: 'message',
@@ -78,17 +69,8 @@ export default Capability.makeModule(() =>
           AppSurface.subject(AppSurface.Article, isNonDraftMessage),
           AppSurface.subject(AppSurface.Section, isNonDraftMessage),
         ),
-        component: ({ data, role }) => {
-          const { graph } = useAppGraph();
-          const parent = useNode(graph, getParentId(data.attendableId));
-          // A message lives under its mailbox view; every mailbox view carries the mailbox as its node
-          // `data`, so use that (not `properties.mailbox`, which only some views set) to scope the
-          // conversation lookup in MessageArticle.
-          const mailbox = Mailbox.instanceOf(parent?.data) ? parent.data : undefined;
-          return (
-            <MessageArticle role={role} subject={data.subject} attendableId={data.attendableId} mailbox={mailbox} />
-          );
-        },
+        component: MessageArticleSurface,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'event',
@@ -105,41 +87,26 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Event.Event),
           AppSurface.object(AppSurface.Section, Event.Event),
         ),
-        component: ({ data, role }) => {
-          const { graph } = useAppGraph();
-          // In companion mode attendableId is the calendar node itself; in primary mode
-          // (navigated directly) attendableId is the event node and its parent is the calendar.
-          const atNode = useNode(graph, data.attendableId);
-          const parentNode = useNode(graph, getParentId(data.attendableId));
-          const calendar = Calendar.instanceOf(atNode?.data)
-            ? atNode.data
-            : Calendar.instanceOf(parentNode?.data)
-              ? parentNode.data
-              : undefined;
-          if (!calendar) {
-            return null;
-          }
-          return (
-            <EventArticle role={role} subject={data.subject} attendableId={data.attendableId} companionTo={calendar} />
-          );
-        },
+        component: EventArticleSurface,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'calendar',
         filter: AppSurface.object(AppSurface.Article, Calendar.Calendar),
-        component: ({ data, role }) => (
-          <CalendarArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: CalendarArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'messageCard',
         filter: AppSurface.object(AppSurface.CardContent, Message.Message),
-        component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
+        component: MessageCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: 'eventCard',
         filter: AppSurface.object(AppSurface.CardContent, Event.Event),
-        component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
+        component: EventCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: POPOVER_SAVE_FILTER,
@@ -147,29 +114,34 @@ export default Capability.makeModule(() =>
           AppSurface.Popover,
           POPOVER_SAVE_FILTER,
         ),
-        component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
+        component: SaveFilterPopover,
+        props: ({ data: { props } }) => ({ mailbox: props.mailbox, filter: props.filter }),
       }),
       Surface.create({
         id: 'mailboxProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Mailbox.Mailbox),
-        component: ({ data }) => <MailboxProperties subject={data.subject} />,
+        component: MailboxProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'calendarProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Calendar.Calendar),
-        component: ({ data }) => <CalendarProperties subject={data.subject} />,
+        component: CalendarProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
 
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
         id: 'contactRelated',
         filter: AppSurface.object(AppSurface.Related, Person.Person),
-        component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
+        component: RelatedToContact,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'organizationRelated',
         filter: AppSurface.object(AppSurface.Related, Organization.Organization),
-        component: ({ data: { subject } }) => <RelatedToOrganization subject={subject} />,
+        component: RelatedToOrganization,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),
