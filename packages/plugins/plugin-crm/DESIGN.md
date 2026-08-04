@@ -331,22 +331,28 @@ account membership already provides exactly the needed access control, via `wran
 
 1. The `test-fixtures` bucket is private and reachable only through `wrangler` — nothing to
    misconfigure into public, no token that could reach a browser.
-2. Every object is encrypted with `age` **before it leaves the machine**, so bucket read access
-   alone yields ciphertext. The recipient key is shared (team-readable archives); the identity file
-   lives in 1Password.
+2. Every object is encrypted with `age` **before it leaves the machine**, under the pushing
+   developer's **own** key — so bucket read access alone yields ciphertext, and one developer's
+   archives stay unreadable to everyone else, including whoever administers the bucket. The
+   recipient is _derived_ from the identity (`age-keygen -y`) rather than configured separately, so
+   push and pull cannot drift into an archive nobody can open. Sharing is deliberate and
+   per-object (`push --recipient age1...`), never a standing default.
 
-| Aspect          | Choice                                                                                                                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Bucket / prefix | `test-fixtures`, keys under `mailbox/<user>/<name>-<yyyy-mm-dd>.json.age`                                                                                                      |
-| Auth            | Cloudflare account membership (`wrangler login`), `CLOUDFLARE_ACCOUNT_ID` when the token spans accounts                                                                        |
-| Encryption      | `age`, recipient in `DX_FIXTURES_AGE_RECIPIENT`, identity in `DX_FIXTURES_AGE_KEY` (both accept `op://` references, resolved via the 1Password CLI like `pnpm 1p-credentials`) |
-| Landing path    | `pull` refuses to write outside the git-ignored `stories-brain/fixtures/local/`, so an archive cannot be committed by a stray `git add -A`; `*.age` is git-ignored repo-wide   |
+| Aspect          | Choice                                                                                                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bucket / prefix | `test-fixtures`, keys under `mailbox/<user>/<name>-<yyyy-mm-dd>.json.age`                                                                                                    |
+| Auth            | Cloudflare account membership (`wrangler login`), `CLOUDFLARE_ACCOUNT_ID` when the token spans accounts                                                                      |
+| Encryption      | `age`, per-user; one secret — `DX_FIXTURES_AGE_KEY` (a path, or an `op://` reference materialized only for the life of the command)                                          |
+| Landing path    | `pull` refuses to write outside the git-ignored `stories-brain/fixtures/local/`, so an archive cannot be committed by a stray `git add -A`; `*.age` is git-ignored repo-wide |
 
 **Flow.** ArchiveModule (star messages → "Download starred") → `pnpm fixtures push
 ~/Downloads/mailbox-feed.json --name inbox` → elsewhere `pnpm fixtures pull` (newest by default, or
 an explicit key) → the existing `MAILBOX_FEED_FIXTURE` consumers read it. `pnpm fixtures list`
 enumerates the user's archives. Both directions validate the payload is an array of serialized
-messages, so pushing the wrong file fails at push rather than after a pull.
+messages, so pushing the wrong file fails at push rather than after a pull. Wrangler is invoked as
+`pnpm exec wrangler` (the repo-pinned version): a globally installed or 1Password-aliased wrangler
+can be old enough to reject flags this script needs, surfacing only as "Unknown argument".
+Developer-facing usage lives in `stories-inbox/README.md`.
 
 **CI is excluded structurally, not by policy**: CI has neither Cloudflare credentials nor the age
 identity, so `pull` cannot succeed there. Fixture-backed tests stay gated on the file's presence

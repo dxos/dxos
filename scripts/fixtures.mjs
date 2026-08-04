@@ -11,20 +11,29 @@
 //
 //  1. The bucket is private and reachable only through `wrangler`, so access is Cloudflare account
 //     membership — there is no HTTP endpoint to misconfigure, and no token to leak into a browser.
-//  2. Every object is encrypted with `age` BEFORE it leaves the machine, so bucket read access alone
-//     does not yield a readable inbox.
+//  2. Every object is encrypted with `age` BEFORE it leaves the machine, under the pushing user's
+//     OWN key, so bucket read access alone does not yield a readable inbox — and one developer's
+//     archives stay unreadable to everyone else, including whoever administers the bucket.
+//
+// The recipient is derived from the identity (`age-keygen -y`) rather than configured separately, so
+// push and pull are symmetric by construction: you cannot encrypt an archive you cannot decrypt.
+// Sharing is therefore deliberate and per-object — `push --recipient <age1...>` encrypts to someone
+// else's public key — never a standing default.
 //
 // CI never has either credential, so `pull` cannot succeed there; fixture-backed tests stay gated on
 // the file's presence and skip. That is an absence of capability rather than a policy.
 //
+// Setup (once per developer):
+//   age-keygen -o ~/.config/dxos/fixtures.key     # then store it in 1Password
+//   export DX_FIXTURES_AGE_KEY=~/.config/dxos/fixtures.key
+//
 // Usage:
-//   fixtures.mjs push <file> [--name <name>]   Encrypt and upload; prints the key.
+//   fixtures.mjs push <file> [--name <name>] [--recipient <age1...>]
 //   fixtures.mjs pull [<key>] [--out <file>]   Download and decrypt (defaults to the newest).
 //   fixtures.mjs list                          List this user's fixtures.
 //
 // Environment:
-//   DX_FIXTURES_AGE_RECIPIENT  age public key (push). May be an `op://` reference.
-//   DX_FIXTURES_AGE_KEY        Path to the age identity file (pull). May be an `op://` reference.
+//   DX_FIXTURES_AGE_KEY        Path to your age identity file. May be an `op://` reference.
 //   DX_FIXTURES_BUCKET         Overrides the bucket name (default `test-fixtures`).
 //   CLOUDFLARE_ACCOUNT_ID      Required by wrangler when the token spans several accounts.
 //
@@ -34,8 +43,8 @@
 //   node scripts/fixtures.mjs pull mailbox/burdon/inbox-2026-08-04.json.age
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from 'node:fs';
-import { tmpdir, userInfo } from 'node:os';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { homedir, tmpdir, userInfo } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -72,15 +81,18 @@ const push = (args) => {
     fail(`No such file: ${source}`);
   }
 
-  const recipient = resolveSecret('DX_FIXTURES_AGE_RECIPIENT');
-  if (!recipient) {
-    fail('DX_FIXTURES_AGE_RECIPIENT is required (the team age public key).');
-  }
   // Sanity-check the payload before it becomes an opaque blob: an archive is a JSON array of
   // serialized messages, and pushing the wrong file is only discoverable after a pull otherwise.
   const messages = readArchive(source);
   const key = `mailbox/${userInfo().username}/${flags.name ?? 'mailbox-feed'}-${today()}.json.age`;
   requireBinary('age', 'brew install age');
+
+  // Default to our own public key so a push is always reversible by the pusher; an explicit
+  // `--recipient` is the deliberate act of handing one archive to someone else.
+  const recipient = flags.recipient ?? ownRecipient();
+  if (flags.recipient) {
+    console.warn(`Encrypting for ${flags.recipient} — you will NOT be able to decrypt this archive.\n`);
+  }
 
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
   try {
@@ -96,15 +108,12 @@ const push = (args) => {
 
 const pull = (args) => {
   const { positional, flags } = parseArgs(args);
-  const identity = resolveSecret('DX_FIXTURES_AGE_KEY');
-  if (!identity) {
-    fail('DX_FIXTURES_AGE_KEY is required (path to the age identity file).');
-  }
   const out = flags.out ? resolve(flags.out) : DEFAULT_OUT;
   if (!out.startsWith(LOCAL_DIR)) {
     fail(`Refusing to write outside ${LOCAL_DIR} (it is git-ignored; fixtures must never be committed).`);
   }
   requireBinary('age', 'brew install age');
+  const identity = identityFile();
 
   const key = positional[0] ?? latestKey();
   if (!key) {
@@ -143,6 +152,43 @@ const latestKey = () => {
   return keys.sort().at(-1);
 };
 
+/**
+ * Our own age public key, derived from the identity file rather than configured separately: one
+ * secret to manage, and push/pull cannot drift apart into an archive nobody can open.
+ */
+const ownRecipient = () => {
+  const identity = identityFile();
+  return execFileSync('age-keygen', ['-y', identity], { encoding: 'utf8' }).trim();
+};
+
+/** Path to the age identity file, resolving an `op://` reference to a temporary file. */
+const identityFile = () => {
+  const configured = process.env.DX_FIXTURES_AGE_KEY;
+  if (!configured) {
+    fail('DX_FIXTURES_AGE_KEY is required. Create one: age-keygen -o ~/.config/dxos/fixtures.key');
+  }
+  if (!configured.startsWith('op://')) {
+    const path = resolve(configured.replace(/^~(?=\/)/, homedir()));
+    if (!existsSync(path)) {
+      fail(`No age identity at ${path}. Create one: age-keygen -o ${path}`);
+    }
+    return path;
+  }
+
+  // A 1Password-held identity is materialized for the life of the process only: `age` takes a file,
+  // and leaving the key on disk afterwards would defeat storing it in a vault.
+  requireBinary('op', 'brew install 1password-cli');
+  const contents = execFileSync('op', ['read', configured], { encoding: 'utf8' });
+  const path = join(mkdtempSync(join(tmpdir(), 'dxos-age-')), 'identity');
+  writeFileSync(path, contents, { mode: 0o600 });
+  temporaryIdentities.push(dirname(path));
+  return path;
+};
+
+const temporaryIdentities = [];
+
+process.on('exit', () => temporaryIdentities.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
+
 /** Validates the archive shape and returns its message count. */
 const readArchive = (file) => {
   let parsed;
@@ -157,31 +203,25 @@ const readArchive = (file) => {
   return parsed.length;
 };
 
+/**
+ * Runs the repo-pinned wrangler via `pnpm exec` rather than whatever is on PATH: a globally
+ * installed (or 1Password-plugin-aliased) wrangler can be old enough to reject flags this script
+ * relies on, and the failure surfaces as an opaque "Unknown argument".
+ */
 const wrangler = (args, { capture = false } = {}) => {
-  requireBinary('wrangler', 'pnpm add -g wrangler');
   try {
-    return execFileSync('wrangler', args, {
+    return execFileSync('pnpm', ['exec', 'wrangler', ...args], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
       stdio: capture ? ['inherit', 'pipe', 'inherit'] : 'inherit',
     });
   } catch (error) {
-    fail(`wrangler ${args.slice(0, 3).join(' ')} failed. Check CLOUDFLARE_ACCOUNT_ID and \`wrangler login\`.`);
+    fail(
+      `wrangler ${args.slice(0, 3).join(' ')} failed. Authenticate first (\`pnpm 1p-credentials\` or ` +
+        '`wrangler login`) and set CLOUDFLARE_ACCOUNT_ID if your token spans several accounts.',
+    );
     throw error;
   }
-};
-
-/**
- * Reads a secret from the environment, resolving `op://` references through the 1Password CLI so the
- * age key can be stored there rather than exported in a shell profile (matching `pnpm 1p-credentials`).
- */
-const resolveSecret = (name) => {
-  const value = process.env[name];
-  if (!value?.startsWith('op://')) {
-    return value;
-  }
-  requireBinary('op', 'brew install 1password-cli');
-  return execFileSync('op', ['read', value], { encoding: 'utf8' }).trim();
 };
 
 const requireBinary = (name, hint) => {
