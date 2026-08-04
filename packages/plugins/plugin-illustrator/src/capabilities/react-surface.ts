@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -23,14 +22,14 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Drawing.Drawing),
           AppSurface.object(AppSurface.Slide, Drawing.Drawing),
         ),
-        component: ({ data: { subject, attendableId, extrinsic }, role }) => (
-          <DrawingArticle role={role} subject={subject} attendableId={attendableId} extrinsic={extrinsic} />
-        ),
+        component: DrawingArticle,
+        props: ({ role, data: { subject, attendableId, extrinsic } }) => ({ role, subject, attendableId, extrinsic }),
       }),
       Surface.create({
         id: 'drawingCard',
         filter: AppSurface.object(AppSurface.CardContent, Drawing.Drawing),
-        component: ({ data, role }) => <DrawingCard role={role} subject={data.subject} editable={data.editable} />,
+        component: DrawingCard,
+        props: ({ role, data: { subject, editable } }) => ({ role, subject, editable }),
       }),
     ]),
   ),

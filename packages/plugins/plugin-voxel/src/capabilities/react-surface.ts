@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -22,14 +21,14 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Voxel.World),
           AppSurface.object(AppSurface.Section, Voxel.World),
         ),
-        component: ({ data, role }) => (
-          <VoxelArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: VoxelArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'worldCard',
         filter: AppSurface.object(AppSurface.CardContent, Voxel.World),
-        component: ({ data, role }) => <VoxelCard role={role} subject={data.subject} />,
+        component: VoxelCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
     ]),
   ),

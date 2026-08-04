@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -11,8 +10,10 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
-import { MeetingArticle, MeetingsList } from '#containers';
+import { MeetingArticle } from '#containers';
 import { Meeting } from '#types';
+
+import { MeetingCompanion } from './MeetingCompanion';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -20,9 +21,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'meeting',
         filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
-        component: ({ role, data }) => (
-          <MeetingArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: MeetingArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'meetingCompanion',
@@ -32,13 +32,8 @@ export default Capability.makeModule(() =>
             (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&
             Obj.instanceOf(Channel.Channel, data.companionTo),
         ),
-        component: ({ role, data }) => {
-          return data.subject === 'meeting' ? (
-            <MeetingsList companionTo={data.companionTo} />
-          ) : (
-            <MeetingArticle role={role} subject={data.subject} />
-          );
-        },
+        component: MeetingCompanion,
+        props: ({ role, data: { subject, companionTo } }) => ({ role, subject, companionTo }),
       }),
     ]),
   ),

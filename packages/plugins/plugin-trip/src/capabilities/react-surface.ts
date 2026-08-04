@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -21,9 +20,8 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Trip.Trip),
           AppSurface.object(AppSurface.Section, Trip.Trip),
         ),
-        component: ({ data, role }) => (
-          <TripArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: TripArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // Companion surface dispatched when a segment is selected within a
       // Trip's attendable context. Mirrors plugin-inbox's EventArticle
@@ -38,14 +36,13 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Segment.Segment),
           AppSurface.companion(AppSurface.Article, Trip.Trip),
         ),
-        component: ({ data, role }) => (
-          <SegmentArticle
-            role={role}
-            subject={data.subject}
-            companionTo={data.companionTo}
-            attendableId={data.attendableId}
-          />
-        ),
+        component: SegmentArticle,
+        props: ({ role, data: { subject, companionTo, attendableId } }) => ({
+          role,
+          subject,
+          companionTo,
+          attendableId,
+        }),
       }),
     ]),
   ),

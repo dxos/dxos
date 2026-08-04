@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -18,14 +17,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'root',
         filter: AppSurface.object(AppSurface.Article, Pipeline.Pipeline),
-        component: ({ data, role }) => (
-          <PipelineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: PipelineArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
-        component: ({ data }) => <PipelineProperties subject={data.subject} />,
+        component: PipelineProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),

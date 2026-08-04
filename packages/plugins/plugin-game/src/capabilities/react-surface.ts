@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -22,14 +21,14 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Game.Game),
           AppSurface.object(AppSurface.Section, Game.Game),
         ),
-        component: ({ data, role }) => (
-          <GameArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: GameArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'gameCard',
         filter: AppSurface.object(AppSurface.CardContent, Game.Game),
-        component: ({ data, role }) => <GameCard role={role} subject={data.subject} />,
+        component: GameCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
     ]),
   ),

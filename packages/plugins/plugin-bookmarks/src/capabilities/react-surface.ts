@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -18,14 +17,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'bookmarkArticle',
         filter: AppSurface.object(AppSurface.Article, Bookmark.Bookmark),
-        component: ({ data, role }) => (
-          <BookmarkArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: BookmarkArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'bookmarkCard',
         filter: AppSurface.object(AppSurface.CardContent, Bookmark.Bookmark),
-        component: ({ data, role }) => <BookmarkCard role={role} subject={data.subject} />,
+        component: BookmarkCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
     ]),
   ),

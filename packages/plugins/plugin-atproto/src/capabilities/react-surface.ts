@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -31,14 +30,14 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article),
           Surface.makeFilter(AppSurface.Article, (data) => data.variant === ATPROTO_COMPANION_VARIANT),
         ),
-        component: ({ data, role }) => (
-          <AtprotoCompanion subject={data.subject} role={role} attendableId={data.attendableId} />
-        ),
+        component: AtprotoCompanion,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'pdsBrowser',
         filter: AppSurface.subject(AppSurface.Article, isPdsSubject),
-        component: ({ data, role }) => <PdsBrowser role={role} space={data.subject.space} />,
+        component: PdsBrowser,
+        props: ({ role, data: { subject } }) => ({ role, space: subject.space }),
       }),
     ]),
   ),

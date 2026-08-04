@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -22,9 +21,8 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Graph.Graph),
           AppSurface.object(AppSurface.Section, Graph.Graph),
         ),
-        component: ({ data, role }) => {
-          return <ExplorerArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
-        },
+        component: ExplorerArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // Neighborhood companion offered on any ECHO object; `companionTo` is the active node.
       Surface.create({
@@ -33,9 +31,8 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'neighborhood'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data, role }) => {
-          return <NeighborhoodCompanion role={role} subject={data.companionTo} />;
-        },
+        component: NeighborhoodCompanion,
+        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
       }),
     ]),
   ),
