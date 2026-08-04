@@ -8733,6 +8733,9 @@ importers:
       '@dxos/react-ui-tabs':
         specifier: workspace:*
         version: link:../../ui/react-ui-tabs
+      '@dxos/react-ui-thread':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-thread
       '@dxos/react-ui-transcription':
         specifier: workspace:*
         version: link:../../ui/react-ui-transcription
@@ -24881,6 +24884,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
+      '@dxos/react-ui-thread':
+        specifier: workspace:*
+        version: link:../react-ui-thread
       '@dxos/tracing':
         specifier: workspace:*
         version: link:../../common/tracing

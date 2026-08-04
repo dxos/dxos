@@ -8,15 +8,14 @@ import { format } from 'date-fns/format';
 import { intervalToDuration } from 'date-fns/intervalToDuration';
 
 import { type CleanupFn, addEventListener, combine } from '@dxos/async';
+import { type ChunkModel, EditorChunkDocument } from '@dxos/react-ui-thread/model';
 import { type Message } from '@dxos/types';
-
-import { EditorChunkDocument, type TranscriptModel } from '../../model';
 
 /**
  * Data structure that maps Chunks queue to lines with transcript state.
  */
 export type TranscriptionOptions = {
-  model: TranscriptModel<Message.Message>;
+  model: ChunkModel<Message.Message>;
   started?: Date;
 };
 
@@ -35,7 +34,7 @@ export const transcription = ({ model, started }: TranscriptionOptions): Extensi
         for (const { from, to } of view.visibleRanges) {
           let line = view.state.doc.lineAt(from);
           while (line.from <= to) {
-            const block = model.getChunkAtLine(line.number)?.blocks[0];
+            const block = model.getChunkStartingAt(line.from)?.blocks[0];
             const timestamp = block?._tag === 'transcript' && block.started;
             if (timestamp) {
               builder.add(line.from, line.from, new TimestampMarker(line.number, new Date(timestamp), start));

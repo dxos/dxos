@@ -5,42 +5,31 @@
 import { useEffect, useMemo } from 'react';
 
 import type { Obj } from '@dxos/echo';
-
-import { type ChunkRenderer, TranscriptModel } from '../model';
+import { ChunkModel, type ChunkRenderer } from '@dxos/react-ui-thread/model';
 
 /**
  * Feeds an array of objects (typically from `useQuery(db, Query.from(feed))`) into a
- * `TranscriptModel`, appending each new tail item as the array grows.
+ * {@link ChunkModel}.
+ *
+ * The snapshot is handed over whole on every change: the model reconciles it against what it last
+ * wrote, so a feed that swaps, back-fills history, or revises an earlier segment is handled by the
+ * same call as a plain append.
  *
  * @param renderer - chunk renderer.
  * @param objects - current snapshot of feed items.
- * @param initialChunks - chunks to seed the model with on first render.
+ * @param initialChunks - chunks rendered ahead of the snapshot.
  */
 export const useFeedModelAdapter = <T extends Obj.Unknown>(
   renderer: ChunkRenderer<T>,
   objects: readonly T[],
   initialChunks: T[] = [],
-): TranscriptModel<T> => {
-  const model = useMemo(() => new TranscriptModel<T>(renderer, initialChunks), [renderer]);
+): ChunkModel<T> => {
+  const model = useMemo(() => new ChunkModel<T>(renderer), [renderer]);
 
-  // Seed the model with the current snapshot on first render and whenever the
-  // identity of `objects` changes (e.g. feed swapped).
   useEffect(() => {
-    for (const chunk of objects) {
-      model.appendChunk(chunk);
-    }
-  }, [model, objects]);
-
-  // Append new tail items as the array grows.
-  useEffect(() => {
-    if (model.chunks.length === objects.length) {
-      return;
-    }
-    const chunk = objects.at(-1);
-    if (chunk) {
-      model.appendChunk(chunk);
-    }
-  }, [model, objects.length]);
+    model.set([...initialChunks, ...objects]);
+    // `initialChunks` defaults to a fresh array, so depending on it would re-set on every render.
+  }, [model, objects, objects.length]);
 
   return model;
 };

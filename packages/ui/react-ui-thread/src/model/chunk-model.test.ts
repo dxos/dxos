@@ -208,6 +208,47 @@ describe('ChunkModel', () => {
   });
 });
 
+describe('ChunkModel lookup by position', () => {
+  const seed = () => {
+    const model = new ChunkModel(render);
+    model.set([line('a', 'one'), line('b', 'two'), line('c', 'three')]);
+    return model;
+  };
+
+  test('finds the chunk containing a position', () => {
+    const model = seed();
+    expect(model.getChunkAt(0)?.id).toBe('a');
+    expect(model.getChunkAt(3)?.id).toBe('a');
+    expect(model.getChunkAt(4)?.id).toBe('b');
+    expect(model.getChunkAt(8)?.id).toBe('c');
+  });
+
+  test('the end bound belongs to the next chunk, not both', () => {
+    const model = seed();
+    // 'one\n' occupies [0, 4); position 4 is the first character of 'two'.
+    expect(model.getChunkAt(4)?.id).toBe('b');
+  });
+
+  test('a position past the end has no chunk', () => {
+    const model = seed();
+    expect(model.getChunkAt(14)).toBeUndefined();
+  });
+
+  test('starting position distinguishes a chunk head from its body', () => {
+    const model = seed();
+    expect(model.getChunkStartingAt(4)?.id).toBe('b');
+    expect(model.getChunkStartingAt(5)).toBeUndefined();
+  });
+
+  test('a chunk that renders to nothing claims no position', () => {
+    const model = new ChunkModel<Line>((chunk) => (chunk.text === '' ? '' : `${chunk.text}\n`));
+    model.set([line('a', 'one'), line('empty', ''), line('c', 'three')]);
+    expect(model.getChunkAt(0)?.id).toBe('a');
+    expect(model.getChunkAt(4)?.id).toBe('c');
+    expect(model.getChunkStartingAt(4)?.id).toBe('c');
+  });
+});
+
 describe('ChunkModel render caching', () => {
   const countingRenderer = () => {
     const calls: string[] = [];

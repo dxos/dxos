@@ -60,6 +60,8 @@ export class ChunkModel<T extends Chunk> {
   /** Rendered text per chunk id, reused while the chunk's revision and index are unchanged. */
   readonly #rendered = new Map<string, { index: number; revision: unknown; text: string }>();
 
+  #chunks: readonly T[] = [];
+
   #ranges: ChunkRange[] = [];
 
   /** The document text as of the last {@link sync}; the diff baseline. */
@@ -78,6 +80,11 @@ export class ChunkModel<T extends Chunk> {
     return this.#desired;
   }
 
+  /** The chunks of the last {@link set}, in document order. */
+  get chunks(): readonly T[] {
+    return this.#chunks;
+  }
+
   /**
    * Chunk ranges within {@link text}, in document order. Positions address the document only once
    * {@link sync} has applied the pending change.
@@ -86,12 +93,49 @@ export class ChunkModel<T extends Chunk> {
     return this.#ranges;
   }
 
+  /** The chunk whose range contains `pos` — what a decoration or a pointer at an offset belongs to. */
+  getChunkAt(pos: number): T | undefined {
+    const index = this.#indexAt(pos);
+    return index === undefined ? undefined : this.#chunks[index];
+  }
+
+  /**
+   * The chunk whose range *starts* at `pos`, for per-chunk chrome that must be drawn once — a
+   * gutter marker or a heading decoration, which a containment test would repeat on every line.
+   */
+  getChunkStartingAt(pos: number): T | undefined {
+    const index = this.#indexAt(pos);
+    return index !== undefined && this.#ranges[index].from === pos ? this.#chunks[index] : undefined;
+  }
+
+  /** Index of the range containing `pos`; ranges tile the document, so this is a binary search. */
+  #indexAt(pos: number): number | undefined {
+    let low = 0;
+    let high = this.#ranges.length - 1;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      const range = this.#ranges[mid];
+      // Zero-width ranges (a chunk that renders to nothing) can never contain a position, and the
+      // `to` bound is exclusive so adjacent chunks do not both claim the boundary.
+      if (pos < range.from) {
+        high = mid - 1;
+      } else if (pos >= range.to) {
+        low = mid + 1;
+      } else {
+        return mid;
+      }
+    }
+
+    return undefined;
+  }
+
   /**
    * Drop the chunks, so the next {@link sync} empties the document. The diff baseline is kept
    * because it describes what the document still holds — see {@link rebase} for the other case.
    */
   reset(): this {
     this.#rendered.clear();
+    this.#chunks = [];
     this.#ranges = [];
     if (this.#desired === '') {
       return this;
@@ -140,6 +184,7 @@ export class ChunkModel<T extends Chunk> {
       }
     }
 
+    this.#chunks = chunks;
     this.#ranges = ranges;
     if (text === this.#desired) {
       return this;

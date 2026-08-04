@@ -163,6 +163,9 @@
       "path": "../../ui/react-ui-tabs"
     },
     {
+      "path": "../../ui/react-ui-thread"
+    },
+    {
       "path": "../../ui/react-ui-transcription"
     },
     {
