@@ -73,9 +73,9 @@ default state. That single gap is why "be terse" never survived.
       `UserPromptExpansion` hook. The plan's premise was wrong: `UserPromptSubmit`
       carries the **raw typed text** and fires _before_ the command expands, so
       `hooks/mode.sh` greps `/mode <MODE>` there and writes state at exactly the
-      point the sentinel did. `commands/mode.md` is pure ergonomics (autocomplete
-      + a one-line report) and sets nothing. `UserPromptExpansion` is for blocking
-      an expansion, not for beating it. **`$mode` has since been removed**, so
+      point the sentinel did. `commands/mode.md` is pure ergonomics — autocomplete
+      plus a one-line report — and sets nothing. `UserPromptExpansion` is for
+      blocking an expansion, not for beating it. **`$mode` has since been removed**, so
       `/mode` anchored to the start of the message is the only form — which also
       retires the "prose flips the mode" class of bug rather than narrowing it.
       Verified: `/mode terse` and `/MODE Concise` fire; `$mode terse`, a bare
