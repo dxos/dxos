@@ -211,6 +211,15 @@ the only violator in `packages/ui`. Note this is not an argument against named a
    idiom replaces the three current ones.
 3. **Kill or promote `Column.Bleed`** — zero users; either delete it or make the canonical
    Panel/ScrollArea story actually use it. Same decision for `withColumn.propagate()`.
+
+   **Resolved: promote, not kill.** `propagate()` has one consumer (`Dialog.theme.ts` body) and it
+   is load-bearing. Replacing it with `center()` was measured against
+   `ui/react-ui-core/components/Dialog/Scrolling`: the body's `ScrollArea` went from spanning the
+   dialog (left 1, width 510) to being confined to the centre track (left 33, width 446), moving
+   the scrollbar 32px inboard — out of the gutter that story exists to demonstrate. The subgrid,
+   and its `:not(.dx-container)` exception, is what lets a body child opt out of the centre track.
+   It stays; the four placement mechanisms consolidate to three.
+
 4. **Migrate the ten hand-rolled 3-track grids** (start with `react-ui-thread`, `react-ui-chat` —
    they're in the design system's own package family).
 5. **Rewrite `Column`'s documentation once** (component docstrings, delete the stale
