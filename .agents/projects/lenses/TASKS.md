@@ -174,6 +174,14 @@ so the real `Task` is available, and it has the replication harness).
       `Task`; peer 2 completes it through the lens (`done = true`) and sets an overlay. Both survive
       on both peers, the overlay replicates, and a later canonical-side `status` change shows through
       the lens on the other peer. **This is the test that fails if a lens write is not minimal.**
+- [x] **Flake fixed at its root (not in this suite).** The two-peer test was intermittently red on
+      peer 2's first query (`db2.query(Filter.type(Task.Task))` empty despite
+      `waitUntilHeadsReplicated` + `updateIndexes`). Not a lens defect: that barrier was host-side
+      only, so the client's space-root replica — the object → document routing table the index-hit
+      hydration path checks — could still be behind, and the hit was dropped silently. The client-side
+      wait now lives in `EntityManager.waitUntilHeadsReplicated`; the interim `expect.poll` workaround
+      in this test is gone, as are the five `waitForReplication` workarounds in `integration.test.ts`
+      that cited dxos/dxos#7240 (the same gap — that issue can close).
 
 ## Phase 4: Stories
 
