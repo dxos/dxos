@@ -9,9 +9,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { NotFound } from '@dxos/app-toolkit';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
+import { DeckSettings } from '#containers';
 import { meta } from '#meta';
-
-import { DeckSettingsSurface } from './DeckSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -19,7 +18,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: DeckSettingsSurface,
+        component: DeckSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({

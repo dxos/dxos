@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -13,18 +14,18 @@ import { Settings } from '#types';
 
 const isSocket = !!(globalThis as any).__args;
 
-export type DeckSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type DeckSettingsProps = AppSurface.SettingsData;
 
-export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) => {
+export const DeckSettings = ({ subject }: DeckSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
   return (
     <Form.Root
       variant='settings'
       schema={Settings.Settings}
       values={settings}
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>

@@ -4,6 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -13,16 +14,17 @@ import { Settings } from '#types';
 
 import { pingExtension } from '../../util';
 
-export type CrxSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
-
 type TestState =
   | { kind: 'idle' }
   | { kind: 'pending' }
   | { kind: 'ok'; message: string }
   | { kind: 'error'; message: string };
 
-export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) => {
+export type CrxSettingsProps = AppSurface.SettingsData<{ readonly?: boolean }>;
+
+export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
 
   // Round-trip a ping to the extension and report its identity (or why it failed).
@@ -44,8 +46,8 @@ export const CrxSettings = ({ settings, onSettingsChange }: CrxSettingsProps) =>
       schema={Settings.Settings}
       values={settings}
       variant='settings'
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      readonly={readonly}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>

@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { Proxy } from '@dxos/crx-protocol';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 import { Settings } from '../../types';
 import { CrxSettings } from './CrxSettings';
@@ -43,14 +45,18 @@ const withFakeExtension: Decorator = (Story) => {
   return <Story />;
 };
 
-const DefaultStory = (props: { initial?: Settings.Settings; readonly?: boolean }) => {
-  const [settings, setSettings] = useState<Settings.Settings>(props.initial ?? Settings.defaults);
-  return (
-    <CrxSettings
-      settings={settings}
-      onSettingsChange={props.readonly ? undefined : (update) => setSettings((prev) => update(prev))}
-    />
+// The container reads and writes the contributed settings entry, so the story owns one per render.
+const DefaultStory = ({ initial, readonly }: { initial?: Settings.Settings; readonly?: boolean }) => {
+  const subject = useMemo(
+    () => ({
+      prefix: pluginMeta.profile.key,
+      schema: Settings.Settings,
+      atom: Atom.make<Settings.Settings>(initial ?? Settings.defaults).pipe(Atom.keepAlive),
+    }),
+    [initial],
   );
+
+  return <CrxSettings subject={subject} readonly={readonly} />;
 };
 
 const meta: Meta<typeof DefaultStory> = {

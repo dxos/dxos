@@ -8,12 +8,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { CodeArticle, SpecArticle } from '#containers';
+import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Spec } from '#types';
 
 import { isPluginSpecSubject } from '../plugin-spec';
-import { CodeSettingsSurface } from './CodeSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -45,7 +44,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'codeSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: CodeSettingsSurface,
+        component: CodeSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),

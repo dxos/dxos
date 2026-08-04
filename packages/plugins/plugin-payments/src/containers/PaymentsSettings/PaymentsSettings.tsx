@@ -51,6 +51,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
       setStatus({ kind: 'error', text: t('no-payments-url.message') });
       return;
     }
+
     setStatus({ kind: 'pending' });
     try {
       const { url } = await createStripeCheckout(client, paymentsUrl, 100);
