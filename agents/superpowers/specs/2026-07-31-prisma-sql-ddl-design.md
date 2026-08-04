@@ -1,8 +1,8 @@
 # Prisma-authored SQLite schemas
 
 Date: 2026-07-31
-Status: `feed` piloted end to end and green (see Pilot below); 8 packages remain.
-Durable Object verification against edge still outstanding — see "Runs inside SqlTransaction".
+Status: `feed` piloted end to end, green in dxos and verified in a real Durable Object via edge
+(dxos#12449, edge#790); 8 packages remain.
 
 Replace hand-written SQL DDL embedded in TypeScript template literals with per-package
 Prisma schemas that generate committed `.sql` migrations, imported into the runtime via
@@ -68,76 +68,71 @@ package boundary — the only FK, `blocks` → `feeds`, is internal to `feed`.
 ### Migrations are numbered, immutable, and tracked in a migrations table
 
 Each store keeps its own history table (`feed_migrations`, …), since several packages share one
-physical database. Migrations are numbered `.sql` files, listed explicitly in an `index.ts`
-manifest so ids and ordering are reviewable in a diff. Once written they are never edited: they
-are recorded as applied and never re-run, so changing one would diverge from databases that
-already ran it.
+physical database. Migrations are numbered `.sql` files, listed explicitly in an `index.ts` manifest
+so ids and ordering are reviewable in a diff and a bundler cannot change what ships. Once written
+they are never edited: they are recorded as applied and never re-run, so changing one would diverge
+from databases that already ran it.
 
-Implemented in `SqlMigrator`, and **not** on `@effect/sql`'s `Migrator`. That library wraps its
-work in `SqlClient.withTransaction`, whose implementation emits literal `BEGIN` / `COMMIT` — which
-workerd forbids. Since `FeedSpace` runs `feedStore.migrate()` inside `blockConcurrencyWhile`, using
-the library would prevent the Durable Object from starting. See "Runs inside SqlTransaction" below.
+Applied with `@effect/sql`'s own `Migrator` — `Migrator.fromRecord` takes migrations as an in-memory
+record, so nothing touches a filesystem and it works in the browser. `SqlMigrations.apply` supplies
+each migration's body, splitting the raw `.sql` into statements because SQLite prepares one at a
+time and no platform client exposes an `exec`.
 
-The initial migration carries `IF NOT EXISTS` on every `CREATE`, added **by hand**. Prisma emits
-bare statements, which fail against a database that already holds the tables — reachable when a
-store's baseline predicate does not fire, e.g. one left partly initialised by an earlier release.
+Two properties of the library are accepted rather than worked around:
 
-Added by hand rather than rewritten by the generator, so the committed file is exactly what a
-reviewer read. Textual rewriting of generated SQL is fragile — an earlier version silently missed
-`CREATE VIRTUAL TABLE`, which `index-core` needs. The generator instead **verifies** the clause is
-present and fails otherwise, which also closes the hole that made the manual step unsafe: deleting
-and regenerating the file drops the clause, and the drift check cannot see it because `IF NOT EXISTS`
-does not change the resulting schema shape. Later migrations are exempt — they are `ALTER`s, and the
-migrations table guarantees they run exactly once, so failing loudly on a second run is the point.
+- Pending work is everything above `MAX(migration_id)`, so a migration numbered at or below one that
+  has shipped is skipped permanently. Ids must only ever increase.
+- No checksum is stored, so editing an applied migration is undetectable at runtime.
 
-Owning the loop also avoids two properties of the library that would otherwise have to be designed
-around, both of which cost correctness:
+Both are developer-discipline failures that review catches, and both were at one point guarded by a
+bespoke migrator (set difference + fingerprints). That was removed: ~180 lines and a parallel
+concept to maintain, for guardrails the manifest diff already surfaces. If either bites in practice,
+a manifest-integrity CI check is the cheaper place to put it back.
 
-- It advances a **high-water mark** (`id > MAX(applied)`) rather than diffing the applied set. A
-  migration numbered at or below a shipped id is skipped permanently. `SqlMigrator` takes a set
-  difference, so an id added below a shipped one is still applied.
-- It stores **no checksum**, so editing an already-applied migration is undetectable. `SqlMigrator`
-  fingerprints each migration's SQL and fails with `checksum-mismatch` on an edit, making
-  immutability enforced rather than conventional. Line endings are normalised so a CRLF checkout is
-  not misread as an edit.
+### `SqlTransaction.clientLayer` makes the library work off-Node
 
-Migrations are applied in **id order regardless of manifest order**, and a manifest with duplicate
-ids is rejected before anything runs.
+The migrator wraps its work in `SqlClient.withTransaction`, whose implementation emits literal
+`BEGIN` / `COMMIT`. workerd forbids those, which is why edge ships `createDoSqlTransactionLayer`
+backed by `ctx.storage.transaction()` and why `@dxos/sql-sqlite/SqlTransaction` documents itself as
+the replacement for the client's transaction. `FeedSpace` runs `feedStore.migrate()` inside
+`blockConcurrencyWhile`, so a migrator that cannot execute there stops the Durable Object starting.
 
-### Runs inside `SqlTransaction`, never the client's transaction
+`SqlTransaction.clientLayer` provides a `SqlClient` whose `withTransaction` delegates to the
+`SqlTransaction` service, and is provided locally around the migrator:
 
-`@dxos/sql-sqlite/SqlTransaction` exists precisely because `SqlClient.withTransaction` is not
-portable: its own docs say to use the service "instead of SqlClient.withTransaction() or SQL native
-transaction syntaxes". Edge supplies `createDoSqlTransactionLayer`, backed by
-`ctx.storage.transaction()`, and states the reason directly — "required in workerd, where SQL
-`BEGIN` / `COMMIT` is forbidden".
+```ts
+Migrator.make({})({ loader, table }).pipe(Effect.provide(SqlTransaction.clientLayer));
+```
 
-The transaction cannot simply be dropped: recording a migration and executing it must be atomic, or
-a failure part-way leaves a migration marked applied that never ran.
+Provided locally, deliberately: edge composes the raw Durable Object client in its own `_runSql`, so
+nothing outside `@dxos/feed` has to change. The layer is the extension point rather than a call-site
+wrapper; internally it is a `Proxy`, because the client is a callable tagged-template function —
+spreading it drops the call signature (verified: `TypeError: sql is not a function`) and
+`Object.assign` silently omits non-enumerable members.
+
+When composing it into a layer stack rather than providing it locally, the underlying client must
+appear only in `Layer.provide`. Merging it into the output as well shadows the wrapper back out,
+silently and with no type error — a mistake made and caught during the pilot.
 
 Neither `feed` nor `sql-sqlite` carries `ts-test-workerd`, so **dxos CI cannot catch a regression
-here** — a green Check says nothing about the Durable Object path. `SqlMigrator.test.ts` runs the
-core cases under both the native transaction layer and a pass-through layer standing in for a DO,
-which is the worst case (nothing rolls back, so each statement must succeed unaided). That is a
-stub, not workerd; real coverage needs Durable Object bindings threaded through
-`WorkerdOptions`/`createWorkerdProject` in `vite.base.config.ts`, which currently hardcodes its
-miniflare config, plus `@effect/sql-sqlite-do` in the catalog.
+here**; a green Check says nothing about the Durable Object path. Verification is edge-side —
+`db-service` 140 tests against a linked dxos build, including a `feed-migrations.workerd.test.ts`
+that asserts the history table in real DO SQL storage.
 
-### Legacy databases are baselined, not migrated
+### Legacy databases need no baselining
 
-Databases created before migration tracking already contain the tables from migration 1 but have
-no history, making them indistinguishable from fresh ones by the migrations table alone. Running
-migration 1 against them would be wrong even though its `IF NOT EXISTS` DDL would appear to
-succeed.
+A database created before migration tracking already holds migration 1's tables but has no history,
+so the migrator will run migration 1 against it. That is safe precisely because every statement in
+migration 1 is `IF NOT EXISTS`: it applies as a no-op and is recorded like any other.
 
-`SqlMigrator.run` therefore takes an optional `baseline: { throughId, when }`. When the history is
-empty and `when` holds — typically `tableExists('<a table the store owns>')` — migrations up to
-`throughId` are **recorded without being executed**. This is the equivalent of `prisma migrate
-resolve --applied`, which is unavailable to us because it needs a live database and an engine.
+Verified: applying it to a database built by the pre-prisma DDL leaves the schema byte-identical,
+preserves rows, and records the migration. This is what the hand-added `IF NOT EXISTS` clauses buy,
+and the reason they are required rather than cosmetic.
 
-Correctness here cannot be observed from the resulting schema, since a stamped and a re-run
-migration leave the same tables. The observable difference is `run`'s return value: the list of
-migrations actually executed, which excludes anything stamped.
+An earlier design stamped such databases instead (`prisma migrate resolve --applied`'s equivalent).
+That was removed once it was clear an idempotent initial migration makes it redundant — it also
+required a predicate guessing whether a database was "legacy" from a single table, which could not
+be right for a partially-initialised one.
 
 ### schema.prisma is kept honest by a build-time replay
 
@@ -193,23 +188,23 @@ packages/core/echo/feed/
     └── feed-store.ts                # runs the migrations
 ```
 
-Generated SQL lives under `src/`, **not** at package root as in edge. moon's `sources`
-fileGroup is `src/**/*`, and `build` takes `@group(sources)` as its inputs — a root-level
-`migrations/` would be invisible to the build cache, so a schema change would not trigger a
-rebuild. Putting it under `src/` also means the existing `files: ["dist", "src"]` publishes it
-with no packaging change.
+Migrations live under `src/`, **not** at package root as in edge, so the bundler and moon's
+`sources` fileGroup (`src/**/*`) both see them and the existing `files: ["dist", "src"]` publishes
+them with no packaging change.
 
-`.moon/tasks/tag-prisma.yml` gives every tagged package an internal `prisma` task. dxos has no
-`prebuild` meta-task (edge does), so the task is attached by appending to `build`'s `deps` —
-moon merges inherited `deps` by append, which was verified: `feed:build` lists `feed:prisma`
-alongside the deps declared in `tag-ts-vite-build.yml`.
+**There is no build-time codegen.** Migrations are produced by running prisma once, by hand:
 
-`scripts/prisma-generate-sql.mjs` runs `prisma migrate diff --from-empty --to-schema-datamodel` and
-writes `0001_init.sql` only when no migration exists yet — it never overwrites a migration. On every
-other run it checks the initial migration still carries `IF NOT EXISTS` and performs the replay
-comparison above. It sets
-`PRISMA_HIDE_UPDATE_MESSAGE=1`, since the CLI otherwise prints an upgrade banner on every
-invocation, and aborts if prisma emits no DDL, so a prisma failure cannot empty committed SQL.
+```bash
+pnpm exec prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script
+```
+
+The output is committed, `IF NOT EXISTS` is added to each `CREATE`, and the file is immutable from
+then on. Subsequent changes are hand-written `ALTER` migrations plus a matching edit to
+`schema.prisma`. `prisma` stays a devDependency purely so that command is available; nothing runs it
+during a build, and no moon task or tag is involved.
+
+This is the same arrangement as edge, which hand-maintains its numbered migrations and uses the
+prisma CLI only when a new one is needed.
 
 ### Runtime
 
@@ -219,19 +214,19 @@ Each store's `migrate` effect loses its inline DDL and runs its migration histor
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 
 migrate = Effect.fn('FeedStore.migrate')(() =>
-  SqlMigrator.run({
-    table: MIGRATIONS_TABLE,
-    migrations: MIGRATIONS,
-    baseline: { throughId: 1, when: SqlMigrator.tableExists('feeds') },
-  }).pipe(Effect.asVoid, Effect.withSpan('FeedStore.migrate')),
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    Effect.asVoid,
+    Effect.withSpan('FeedStore.migrate'),
+  ),
 );
 ```
 
-`SqlMigrator` and `SqlMigrations` land in `@dxos/sql-sqlite` — already a dependency of 7 of the 9
+`SqlMigrations` and `SqlTransaction.clientLayer` land in `@dxos/sql-sqlite` — already a dependency of 7 of the 9
 affected packages; `crawler` and `pipeline-discord` gain it as `workspace:*`. `SqlMigrations.apply`
 splits a script into statements (quote- and comment-aware, since a naive split on `;` is wrong in
-general) and executes each through `sql`${sql.literal(…)}``; `SqlMigrator` composes it with the
-history table and baselining.
+general) and executes each through `sql`${sql.literal(…)}``; `@effect/sql`'s `Migrator` composes it
+with the history table.
 
 Splitting is not optional: SQLite's `prepare` compiles exactly one statement, and none of the
 three platform clients expose an `exec`-family call. Verified — `sql.unsafe(wholeFile)`,
@@ -294,11 +289,13 @@ profile keeps whatever columns it was created with. Dropping the ALTERs would no
 missing** on older profiles while the code expects them. That is the single highest-risk item in
 the change, since it affects real local-first user data in OPFS and fails silently.
 
-`index-core` is also where baselining stops being mechanical. `feed` baselines at `throughId: 1`
+`index-core` is also where the initial migration stops being mechanical. `feed` needs no special
+handling because its whole initial migration is `IF NOT EXISTS`; `objectMeta` cannot be expressed
+that way. `feed` gets away with `throughId: 1`-style reasoning
 because its schema never changed, but an old `objectMeta` may or may not already carry each of
 those four columns depending on when it was created, so a fixed `throughId` cannot be right for
-every database. Its baseline predicate will have to probe the live columns and decide per
-migration — or the ALTER migrations themselves must stay individually tolerant. Decide this when
+every database. Its migrations will have to probe the live columns, or the `ALTER`s must stay
+individually tolerant. Decide this when
 `index-core` is converted; do not assume `feed`'s shape generalises.
 
 ## Affected packages
@@ -338,7 +335,6 @@ it returns.
   canonical repository, ~200M weekly downloads, attestation simply absent. Same class as the
   `semver` and `@swc/core@1.15.46` entries already on that list. Edge does not hit this because
   it sets no trust policy.
-- Add `.moon/tasks/tag-prisma.yml` and tag the nine packages.
 - Add an ambient `declare module '*.sql?raw'` per package, following the existing
   `typings.d.ts` / `vite-env.d.ts` convention.
 
@@ -360,21 +356,23 @@ Per package, as established by the `feed` pilot:
   `run` actually executed, since a stamped and a re-run migration leave identical schemas. Also:
   a fresh database is _not_ stamped, both paths converge on the same schema, and rows survive.
 - **History:** every migration is recorded; an already-recorded migration is not re-run (proven
-  with a non-idempotent `ALTER`); a later migration applies on top of a baselined database.
+  with a non-idempotent `ALTER`).
 - **Statement splitter:** unit tests for `;` inside string literals, quoted identifiers, doubled
   quotes, and both comment styles.
 - Existing store tests must pass unchanged — the conversion is behaviour-preserving.
 
-Assertions must derive from the `MIGRATIONS` manifest rather than hard-coding ids or counts. The
-pilot's first draft hard-coded them and four tests broke the moment a second migration was added,
-which would have recurred on every future schema change.
+Assertions should derive from the `MIGRATIONS` manifest rather than hard-coding ids or counts. An
+earlier draft hard-coded them and four tests broke the moment a second migration was added, which
+would have recurred on every future schema change.
 
-Duplicate ids and edits to applied migrations are rejected at runtime by `SqlMigrator`, and
-schema drift at build time by the generator. One check is still worth adding:
+Nothing verifies migration ids or contents at runtime — see the accepted trade-offs above. Checks
+still worth adding:
 
 - **Durable Object coverage** — `sql-sqlite` needs `ts-test-workerd` with a Durable Object binding,
   so the `BEGIN`-forbidden constraint is enforced by CI rather than by review. This is the gap that
   let the first implementation ship a migrator that could not start a DO.
+- **`IF NOT EXISTS` on the initial migration, and schema/migration agreement** — both are currently
+  review responsibilities, deliberately (see above). Worth revisiting per package as more convert.
 
 ## Spike (run 2026-07-31)
 
@@ -399,7 +397,9 @@ green; `echo-host` and `client-services` build clean against it.
 
 The pilot ran in two passes. The first used an idempotent regenerated snapshot with no version
 table; the second replaced that with `@effect/sql`'s migrator, numbered immutable migrations, and
-baselining, which is what the sections above now describe.
+baselining. The third — what landed — dropped the bespoke migrator for `@effect/sql`'s, since an
+idempotent initial migration removes the need for baselining and `SqlTransaction.clientLayer` removes
+the Durable Object obstacle. Net −691 lines against the second pass.
 
 What the pilot changed in the design:
 
@@ -455,8 +455,8 @@ legacy DDL left it anonymous, and emits all `CREATE TABLE`s before all `CREATE I
 Single PR, per the decision to land this in one change. Ordered so risk is front-loaded onto
 the cheapest packages:
 
-1. ~~Plumbing — catalog entry, `onlyBuiltDependencies`, `trustPolicyExclude`, `tag-prisma.yml`,
-   generator script, `SqlMigrations` and `SqlMigrator` + their tests.~~ **Done in the pilot.**
+1. ~~Plumbing — catalog entry, `onlyBuiltDependencies`, `trustPolicyExclude`, `SqlMigrations` and
+   `SqlMigrations` and `SqlTransaction.clientLayer` + their tests.~~ **Done in the pilot.**
 2. ~~`feed` as the proving ground.~~ **Done.** (Chosen over `pipeline-rdf` because it is the
    richest schema — autoincrement PKs, a foreign key, a composite PK, a `BLOB`, a non-trivial
    default — so it exercises more of the type mapping than a 3-table pipeline would.)

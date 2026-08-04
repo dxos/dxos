@@ -3,27 +3,119 @@
 //
 
 import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { SqlMigrations, SqlMigrator, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
-import { LEGACY_DDL, describeSchema, migrate } from './testing/schema-harness';
+import init from './migrations/0001_init.sql?raw';
 
 const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 
-/** Migrations stamped onto a database that predates migration tracking. */
-const BASELINED_THROUGH = 1;
+/**
+ * The DDL the feed store shipped before its schema moved to prisma. Retained verbatim so the
+ * generated migration can be proven equivalent for databases created by earlier releases — those are
+ * real local-first user databases, and migration 1 has to apply to them as a no-op.
+ */
+const LEGACY_DDL = [
+  `CREATE TABLE IF NOT EXISTS feeds (
+    feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
+    spaceId TEXT NOT NULL,
+    feedId TEXT NOT NULL,
+    feedNamespace TEXT
+  )`,
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)',
+  `CREATE TABLE IF NOT EXISTS blocks (
+    insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
+    feedPrivateId INTEGER NOT NULL,
+    position INTEGER,
+    sequence INTEGER NOT NULL,
+    actorId TEXT NOT NULL,
+    prevSequence INTEGER,
+    prevActorId TEXT,
+    timestamp INTEGER NOT NULL,
+    data BLOB NOT NULL,
+    FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
+  )`,
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)',
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId
+     ON blocks(feedPrivateId, sequence, actorId)`,
+  `CREATE TABLE IF NOT EXISTS subscriptions (
+    subscriptionId TEXT PRIMARY KEY,
+    expiresAt INTEGER NOT NULL,
+    feedPrivateIds TEXT NOT NULL -- JSON array
+  )`,
+  `CREATE TABLE IF NOT EXISTS cursor_tokens (
+    spaceId TEXT PRIMARY KEY,
+    token TEXT NOT NULL
+  )`,
+  `CREATE TABLE IF NOT EXISTS sync_state (
+    spaceId TEXT NOT NULL,
+    feedNamespace TEXT NOT NULL,
+    lastPulledPosition INTEGER NOT NULL DEFAULT -1,
+    PRIMARY KEY (spaceId, feedNamespace)
+  )`,
+];
 
-const ALL_MIGRATIONS = MIGRATIONS.map((migration) => [migration.id, migration.name]);
-const AFTER_BASELINE = MIGRATIONS.filter((migration) => migration.id > BASELINED_THROUGH).map((migration) => [
-  migration.id,
-  migration.name,
-]);
-const NEXT_FREE_ID = Math.max(...MIGRATIONS.map((migration) => migration.id)) + 1;
+type TableInfo = { name: string; type: string; notnull: number; pk: number; dflt_value: string | null };
+type ForeignKey = { from: string; table: string; to: string; on_delete: string; on_update: string };
+
+/** Mirrors `FeedStore.migrate`, so the tests exercise the production configuration. */
+const migrate = Migrator.make({})({
+  loader: Migrator.fromRecord(MIGRATIONS),
+  table: MIGRATIONS_TABLE,
+}).pipe(Effect.provide(SqlTransaction.clientLayer), Effect.orDie);
+
+/**
+ * Reads the physical shape of every user table, so two databases can be compared by what SQLite
+ * actually stores rather than by the text of the DDL that produced them. The migrations table is
+ * excluded — it is bookkeeping, present only after the migrator has run.
+ *
+ * Nullability of primary-key columns is deliberately excluded: prisma cannot express a nullable
+ * `@id`, so it always emits `NOT NULL` on a primary key where the legacy DDL left it off. For an
+ * `INTEGER PRIMARY KEY` that is cosmetic — it aliases the rowid and rejects NULL either way. For a
+ * `TEXT PRIMARY KEY` it is a real tightening, pinned by its own test.
+ */
+const describeSchema = Effect.fn('describeSchema')(function* () {
+  const sql = yield* SqlClient.SqlClient;
+  const tables = yield* sql<{ name: string }>`
+    SELECT name FROM sqlite_master
+    WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name != ${MIGRATIONS_TABLE}
+    ORDER BY name
+  `;
+
+  const result: Record<string, { columns: string[]; indexes: string[]; foreignKeys: string[] }> = {};
+  for (const { name } of tables) {
+    const columns = yield* sql.unsafe<TableInfo>(`PRAGMA table_info("${name}")`);
+    const indexList = yield* sql.unsafe<{ name: string; unique: number }>(`PRAGMA index_list("${name}")`);
+    const foreignKeys = yield* sql.unsafe<ForeignKey>(`PRAGMA foreign_key_list("${name}")`);
+
+    const indexes: string[] = [];
+    for (const index of indexList.filter((entry) => !entry.name.startsWith('sqlite_'))) {
+      const info = yield* sql.unsafe<{ name: string }>(`PRAGMA index_info("${index.name}")`);
+      indexes.push(`${index.name}${index.unique ? ' UNIQUE' : ''}(${info.map((column) => column.name).join(',')})`);
+    }
+
+    result[name] = {
+      columns: columns.map(
+        (column) =>
+          `${column.name} ${column.type}` +
+          `${column.notnull && !column.pk ? ' NOT NULL' : ''}` +
+          `${column.pk ? ` PK${column.pk}` : ''}` +
+          `${column.dflt_value !== null ? ` DEFAULT ${column.dflt_value}` : ''}`,
+      ),
+      indexes: indexes.sort(),
+      foreignKeys: foreignKeys
+        .map((key) => `${key.from}->${key.table}.${key.to} ON DELETE ${key.on_delete} ON UPDATE ${key.on_update}`)
+        .sort(),
+    };
+  }
+  return result;
+});
 
 const appliedIds = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
@@ -34,18 +126,16 @@ const appliedIds = Effect.gen(function* () {
 });
 
 describe('generated feed schema', () => {
-  // Scoped to the initial migration deliberately: it is the one that has to match databases built
-  // by the pre-prisma DDL. Later migrations are expected to diverge from the legacy shape.
-  it.effect('the initial migration matches the legacy hand-written DDL', () =>
+  it.effect('matches the legacy hand-written DDL', () =>
     Effect.gen(function* () {
-      const fromInit = yield* SqlMigrations.apply(MIGRATIONS[0].sql).pipe(Effect.andThen(describeSchema()));
+      const fromMigration = yield* SqlMigrations.apply(init).pipe(Effect.andThen(describeSchema()));
       const fromLegacy = yield* Effect.provide(
         SqlMigrations.apply(...LEGACY_DDL).pipe(Effect.andThen(describeSchema())),
         TestLayer,
       );
 
-      expect(fromInit).toEqual(fromLegacy);
-      expect(Object.keys(fromInit)).toEqual(['blocks', 'cursor_tokens', 'feeds', 'subscriptions', 'sync_state']);
+      expect(fromMigration).toEqual(fromLegacy);
+      expect(Object.keys(fromMigration)).toEqual(['blocks', 'cursor_tokens', 'feeds', 'subscriptions', 'sync_state']);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -54,11 +144,11 @@ describe('generated feed schema', () => {
   it.effect('tightens nullable TEXT primary keys to NOT NULL', () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      yield* migrate();
+      yield* migrate;
 
       const primaryKeys = yield* Effect.forEach(['subscriptions', 'cursor_tokens'], (table) =>
         Effect.map(
-          sql.unsafe<{ pk: number; notnull: number }>(`PRAGMA table_info("${table}")`),
+          sql.unsafe<TableInfo>(`PRAGMA table_info("${table}")`),
           (columns) =>
             [table, columns.filter((column) => column.pk > 0).map((column) => column.notnull === 1)] as const,
         ),
@@ -67,167 +157,54 @@ describe('generated feed schema', () => {
       expect(Object.fromEntries(primaryKeys)).toEqual({ subscriptions: [true], cursor_tokens: [true] });
     }).pipe(Effect.provide(TestLayer)),
   );
+});
 
-  it.effect('converges on the same schema whether baselined or migrated from empty', () =>
+describe('feed migrations', () => {
+  it.effect('applies and records every migration on a fresh database', () =>
     Effect.gen(function* () {
-      // A database that predates migration tracking: tables already present, no history.
-      yield* SqlMigrations.apply(...LEGACY_DDL);
-      yield* migrate();
-      const baselined = yield* describeSchema();
-
-      const fresh = yield* Effect.provide(migrate().pipe(Effect.andThen(describeSchema())), TestLayer);
-
-      expect(baselined).toEqual(fresh);
+      expect(yield* migrate).toEqual(Object.keys(MIGRATIONS).map((key) => [Number(key.split('_')[0]), 'init']));
+      expect(yield* appliedIds).toEqual([[1, 'init']]);
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('is idempotent on a fresh database', () =>
+  it.effect('is a no-op on the second run', () =>
     Effect.gen(function* () {
-      yield* migrate();
+      yield* migrate;
       const first = yield* describeSchema();
-      yield* migrate();
 
+      expect(yield* migrate).toEqual([]);
       expect(yield* describeSchema()).toEqual(first);
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('preserves rows in a legacy database', () =>
+  // Databases created before migration tracking existed need no baselining: migration 1 is entirely
+  // `IF NOT EXISTS`, so it applies as a no-op and is recorded like any other. This is the test that
+  // protects existing local-first user data, and the reason the `IF NOT EXISTS` clauses are required.
+  it.effect('applies as a no-op to a database created before migration tracking', () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       yield* SqlMigrations.apply(...LEGACY_DDL);
       yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES ('space-1', 'token-1')`;
+      const before = yield* describeSchema();
 
-      yield* migrate();
+      expect(yield* migrate).toEqual([[1, 'init']]);
 
+      expect(yield* describeSchema()).toEqual(before);
+      expect(yield* appliedIds).toEqual([[1, 'init']]);
       const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens`;
       expect(rows.map((row) => row.token)).toEqual(['token-1']);
     }).pipe(Effect.provide(TestLayer)),
   );
-});
 
-describe('feed migration history', () => {
-  it.effect('executes and records every migration on a fresh database', () =>
-    Effect.gen(function* () {
-      expect(yield* migrate()).toEqual(ALL_MIGRATIONS);
-      expect(yield* appliedIds).toEqual(ALL_MIGRATIONS);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('stamps a legacy database instead of executing the baselined migrations', () =>
+  it.effect('converges on the same schema from empty or from a legacy database', () =>
     Effect.gen(function* () {
       yield* SqlMigrations.apply(...LEGACY_DDL);
+      yield* migrate;
+      const upgraded = yield* describeSchema();
 
-      // The load-bearing assertion is the absence of the baselined ids from the *executed* list:
-      // they were recorded without running. The schema alone cannot show this, since migration 1
-      // is `IF NOT EXISTS` and would look identical had it run.
-      const executed = yield* migrate();
-      expect(executed).toEqual(AFTER_BASELINE);
-      expect(executed.map(([id]) => id)).not.toContain(1);
+      const fresh = yield* Effect.provide(migrate.pipe(Effect.andThen(describeSchema())), TestLayer);
 
-      // Recorded nonetheless, so it is never reconsidered.
-      expect(yield* appliedIds).toEqual(ALL_MIGRATIONS);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('does not stamp a fresh database', () =>
-    Effect.gen(function* () {
-      // The baseline predicate must not fire when there is nothing to baseline, or migration 1
-      // would be recorded without its tables ever being created.
-      expect(yield* migrate()).toEqual(ALL_MIGRATIONS);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('applies a later migration on top of a baselined database', () =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* SqlMigrations.apply(...LEGACY_DDL);
-      yield* migrate();
-
-      const later = {
-        id: NEXT_FREE_ID,
-        name: 'add_probe',
-        sql: 'ALTER TABLE cursor_tokens ADD COLUMN probe TEXT',
-      };
-      const executed = yield* SqlMigrator.run({
-        table: MIGRATIONS_TABLE,
-        migrations: [...MIGRATIONS, later],
-      });
-
-      expect(executed).toEqual([[later.id, later.name]]);
-      const columns = yield* sql.unsafe<{ name: string }>('PRAGMA table_info("cursor_tokens")');
-      expect(columns.map((column) => column.name)).toContain('probe');
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  // The @effect/sql migrator this replaced advanced a high-water mark, so a migration numbered
-  // below a recorded id was skipped forever. Pending work is now a set difference.
-  it.effect('applies a migration inserted below the highest recorded id', () =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const high = { id: NEXT_FREE_ID + 5, name: 'high', sql: 'ALTER TABLE cursor_tokens ADD COLUMN high TEXT' };
-      yield* SqlMigrator.run({ table: MIGRATIONS_TABLE, migrations: [...MIGRATIONS, high] });
-
-      const infill = { id: NEXT_FREE_ID, name: 'infill', sql: 'ALTER TABLE cursor_tokens ADD COLUMN infill TEXT' };
-      const executed = yield* SqlMigrator.run({
-        table: MIGRATIONS_TABLE,
-        migrations: [...MIGRATIONS, infill, high],
-      });
-
-      expect(executed).toEqual([[infill.id, infill.name]]);
-      const columns = yield* sql.unsafe<{ name: string }>('PRAGMA table_info("cursor_tokens")');
-      expect(columns.map((column) => column.name)).toContain('infill');
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('reports a migration edited after it was applied', () =>
-    Effect.gen(function* () {
-      yield* migrate();
-
-      const edited = MIGRATIONS.map((migration) =>
-        migration.id === 1 ? { ...migration, sql: `${migration.sql}\n-- edited after the fact` } : migration,
-      );
-      const error = yield* Effect.flip(SqlMigrator.run({ table: MIGRATIONS_TABLE, migrations: edited }));
-
-      expect(error._tag === 'SqlMigrationError' && error.reason).toEqual('checksum-mismatch');
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('accepts an unchanged manifest on every subsequent run', () =>
-    Effect.gen(function* () {
-      yield* migrate();
-      // Guards against a checksum that is not stable across runs, which would make every open fail.
-      expect(yield* migrate()).toEqual([]);
-      expect(yield* migrate()).toEqual([]);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('rejects a manifest with duplicate ids', () =>
-    Effect.gen(function* () {
-      const error = yield* Effect.flip(
-        SqlMigrator.run({
-          table: MIGRATIONS_TABLE,
-          migrations: [...MIGRATIONS, { id: 1, name: 'clash', sql: 'SELECT 1' }],
-        }),
-      );
-
-      expect(error._tag === 'SqlMigrationError' && error.reason).toEqual('duplicate-id');
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('does not re-run a migration that is already recorded', () =>
-    Effect.gen(function* () {
-      yield* migrate();
-
-      // `ALTER TABLE ... ADD COLUMN` is not idempotent, so a second execution would fail.
-      const migrations = [
-        ...MIGRATIONS,
-        { id: NEXT_FREE_ID, name: 'add_probe', sql: 'ALTER TABLE cursor_tokens ADD COLUMN probe TEXT' },
-      ];
-      yield* SqlMigrator.run({ table: MIGRATIONS_TABLE, migrations });
-      const second = yield* SqlMigrator.run({ table: MIGRATIONS_TABLE, migrations });
-
-      expect(second).toEqual([]);
-      expect(yield* appliedIds).toEqual([...ALL_MIGRATIONS, [NEXT_FREE_ID, 'add_probe']]);
+      expect(upgraded).toEqual(fresh);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

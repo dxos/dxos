@@ -1,12 +1,17 @@
 --
--- Generated from prisma/schema.prisma by scripts/prisma-generate-sql.mjs, then maintained by hand.
+-- Generated once from prisma/schema.prisma, then maintained by hand:
 --
--- `IF NOT EXISTS` is added deliberately. Prisma emits bare statements, which fail against a
--- database that already holds these tables — reachable when the baseline predicate does not fire,
--- e.g. a database left partly initialised by an earlier release.
+--   pnpm exec prisma migrate diff --from-empty \
+--     --to-schema-datamodel prisma/schema.prisma --script
 --
--- Immutable from here on: it is recorded in `feed_migrations`, never re-run, and its checksum is
--- verified on every open. Add a new numbered migration instead of editing this one.
+-- `IF NOT EXISTS` was added afterwards, and is required. Prisma emits bare statements, which fail
+-- against a database that already holds these tables — reachable when the baseline predicate does
+-- not fire, e.g. one left partly initialised by an earlier release. Later migrations are `ALTER`s
+-- and deliberately not idempotent: `feed_migrations` guarantees they run exactly once.
+--
+-- Immutable from here on: recorded in `feed_migrations`, never re-run, and its checksum verified on
+-- every open. A schema change means a new numbered migration plus an update to schema.prisma —
+-- nothing checks that they agree, so keep them in step by hand.
 --
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "feeds" (

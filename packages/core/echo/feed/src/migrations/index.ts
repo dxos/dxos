@@ -2,18 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SqlMigrator } from '@dxos/sql-sqlite';
+import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import init from './0001_init.sql?raw';
 
 /**
- * Feed store migrations, in application order.
+ * Feed store migrations, keyed `<id>_<name>` as `@effect/sql`'s `Migrator.fromRecord` expects.
  *
- * Listed explicitly rather than globbed so that ids and ordering are reviewable in a diff, and
- * so a bundler cannot change what ships. Ids are permanent: the migrator advances a high-water
- * mark, so a new migration must take the next unused id and an applied one must never be edited.
+ * Listed explicitly rather than globbed so ids and ordering are reviewable in a diff, and so a
+ * bundler cannot change what ships. Each value executes its raw `.sql`, splitting it into statements
+ * because SQLite prepares one at a time.
+ *
+ * Ids are permanent and must only ever increase: the migrator applies everything above the highest
+ * recorded id, so a migration numbered at or below one that has shipped is skipped for good. An
+ * applied migration must never be edited either — nothing verifies its contents.
  */
-export const MIGRATIONS: ReadonlyArray<SqlMigrator.Migration> = [{ id: 1, name: 'init', sql: init }];
+export const MIGRATIONS = {
+  '0001_init': SqlMigrations.apply(init),
+};
 
 /**
  * Separate history per store, since several packages share one physical database.

@@ -42,3 +42,38 @@ export const layer: Layer.Layer<SqlTransaction, never, SqlClient.SqlClient> = La
     }),
   ),
 );
+
+/**
+ * Replaces `SqlClient` with one whose `withTransaction` delegates to {@link SqlTransaction}.
+ *
+ * Lets library code that calls `sql.withTransaction` — `@effect/sql`'s `Migrator`, for instance —
+ * run on platforms where the client's own implementation cannot. That implementation emits literal
+ * `BEGIN` / `COMMIT`, which workerd rejects, so a Durable Object supplies a `SqlTransaction` backed
+ * by `ctx.storage.transaction()` instead.
+ *
+ * Provide it around the code that needs it, so a platform that composes the raw client still gets
+ * the right behaviour without changing how it builds its layers:
+ *
+ * @example
+ * ```typescript
+ * yield* libraryEffect.pipe(Effect.provide(SqlTransaction.clientLayer));
+ * ```
+ *
+ * A `Proxy` rather than a copy because the client is a callable tagged-template function: spreading
+ * it drops the call signature, and `Object.assign` would silently omit non-enumerable members.
+ *
+ * When composing this into a layer stack rather than providing it locally, the underlying client
+ * must appear only in `Layer.provide` — merging it into the output as well shadows this one back
+ * out, silently and without a type error.
+ */
+export const clientLayer: Layer.Layer<SqlClient.SqlClient, never, SqlClient.SqlClient | SqlTransaction> = Layer.effect(
+  SqlClient.SqlClient,
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const transaction = yield* SqlTransaction;
+    return new Proxy(sql, {
+      get: (target, property, receiver) =>
+        property === 'withTransaction' ? transaction.withTransaction : Reflect.get(target, property, receiver),
+    });
+  }),
+);

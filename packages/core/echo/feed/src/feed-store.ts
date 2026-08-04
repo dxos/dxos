@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
@@ -11,7 +12,7 @@ import { Event } from '@dxos/async';
 import { assertArgument } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { SqlMigrator, SqlTransaction } from '@dxos/sql-sqlite';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { PositionConflictError } from './errors';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
@@ -64,19 +65,20 @@ export class FeedStore {
   /**
    * Applies any migrations this database has not recorded yet.
    *
-   * Databases created before migration tracking existed already hold the tables from migration 1,
-   * so they are stamped rather than re-run; `feeds` is the marker for that.
+   * A database created before migration tracking existed already holds migration 1's tables, and
+   * needs no special handling: every statement in it is `IF NOT EXISTS`, so it applies as a no-op
+   * and is recorded like any other.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd, where this runs inside
+   * a Durable Object.
    */
   migrate = Effect.fn('FeedStore.migrate')(() =>
-    SqlMigrator.run({
-      table: MIGRATIONS_TABLE,
-      migrations: MIGRATIONS,
-      baseline: { throughId: 1, when: SqlMigrator.tableExists('feeds') },
-    }).pipe(
-      // A SqlMigrationError means the bundled manifest is malformed or contradicts the database's
-      // history — a defect, not something a caller can recover from — so it dies rather than
-      // widening this signature beyond SqlError.
-      Effect.catchTag('SqlMigrationError', (error) => Effect.die(error)),
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A MigrationError means the bundled manifest is malformed — a defect, not something a caller
+      // can recover from — so it dies rather than widening this signature beyond SqlError.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
       Effect.asVoid,
       Effect.withSpan('FeedStore.migrate'),
     ),
