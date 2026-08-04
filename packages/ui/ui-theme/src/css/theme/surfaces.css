@@ -22,9 +22,9 @@
    * Level      Dark   Light  Roles
    *   sunken   n-950  0.905  deck gaps, wells, scrim base, L0/R0 outer rails
    *   chrome   n-925  0.935  sidebars, topbar, statusbar, L1/R1 sidebars
-   *   base     n-900  0.965  document canvas, attention zone
-   *   raised   n-850  0.982  cards, side panels
-   *   overlay  n-800  0.992  dialogs, sheets, drawers
+   *   base     n-900  0.980  document canvas, attention zone
+   *   raised   n-850  0.990  cards, side panels
+   *   overlay  n-800  0.995  dialogs, sheets, drawers
    *   popup    n-775  1.000  popover, menu, toast, tooltip
    *
    * Toolbars, groups and inputs are deliberately NOT levels: they are aspects derived from
@@ -35,9 +35,9 @@
    */
   --dx-surface-sunken: light-dark(var(--color-neutral-150), var(--color-neutral-950));
   --dx-surface-chrome: light-dark(var(--color-neutral-100), var(--color-neutral-925));
-  --dx-surface-base: light-dark(oklch(0.965 0.001 190), var(--color-neutral-900));
-  --dx-surface-raised: light-dark(oklch(0.982 0.001 190), var(--color-neutral-850));
-  --dx-surface-overlay: light-dark(oklch(0.992 0.001 190), var(--color-neutral-800));
+  --dx-surface-base: light-dark(oklch(0.98 0.001 190), var(--color-neutral-900));
+  --dx-surface-raised: light-dark(oklch(0.99 0.001 190), var(--color-neutral-850));
+  --dx-surface-overlay: light-dark(oklch(0.995 0.001 190), var(--color-neutral-800));
   --dx-surface-popup: light-dark(oklch(1 0 0), var(--color-neutral-775));
 
   /**
@@ -67,8 +67,8 @@
 
   --color-sidebar-surface: var(--dx-surface-chrome);
   --color-header-surface: var(--dx-surface-chrome);
-  --color-l1-surface: light-dark(oklch(0.965 0.001 190), var(--dx-surface-chrome));
-  --color-r1-surface: light-dark(oklch(0.965 0.001 190), var(--dx-surface-chrome));
+  --color-l1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
+  --color-r1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
 
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
   --color-sidebar-fg: light-dark(var(--color-neutral-700), var(--color-neutral-250));
