@@ -10,7 +10,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 
-import { SpaceCapabilities } from '#types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

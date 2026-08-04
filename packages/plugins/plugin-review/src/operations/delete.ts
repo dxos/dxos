@@ -12,8 +12,8 @@ import { batchEvents } from '@dxos/echo/internal';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Thread } from '@dxos/types';
 
-import { CommentCapabilities } from '../types';
-import { CommentOperation } from '../types';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOperation.Delete.pipe(
   Operation.withHandler(

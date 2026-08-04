@@ -15,7 +15,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { GoogleCalendar } from '../../../../apis';
 import { AccessTokenNotPopulatedError } from '../../../../errors';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 
 const CALENDAR_LIST_URL =
   'https://www.googleapis.com/calendar/v3/users/me/calendarList?fields=items(id,summary,description,primary)';

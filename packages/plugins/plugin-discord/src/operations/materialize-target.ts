@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { Channel } from '@dxos/types';
 
 import { DISCORD_SOURCE } from '../constants';
-import { DiscordOperation } from '../types';
+import * as DiscordOperation from '../types/DiscordOperation';
 import { findChannelForDiscordChannel } from './sync';
 
 /**

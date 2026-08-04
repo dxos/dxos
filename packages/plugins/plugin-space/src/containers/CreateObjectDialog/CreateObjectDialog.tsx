@@ -26,8 +26,9 @@ import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
-import { SpaceCapabilities, SpaceEvents } from '#types';
 
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../types/SpaceEvents';
 import { getSpaceDisplayName } from '../../util';
 
 export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;

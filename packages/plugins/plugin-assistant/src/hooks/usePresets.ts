@@ -9,10 +9,11 @@ import { Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 
-import { type Assistant, AssistantCapabilities, Ollama } from '#types';
-
 import { type AiServicePreset, defaultsKeyForProvider, presetsForProvider, resolveProvider } from '../processor';
+import type * as Assistant from '../types/Assistant';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
 import * as AssistantPreset from '../types/AssistantPreset';
+import * as Ollama from '../types/Ollama';
 
 export type UsePresets = {
   preset: AiServicePreset | undefined;

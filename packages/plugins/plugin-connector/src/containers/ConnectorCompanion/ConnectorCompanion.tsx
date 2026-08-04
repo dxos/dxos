@@ -19,9 +19,9 @@ import { Form } from '@dxos/react-ui-form';
 
 import { useConnector } from '#hooks';
 import { meta } from '#meta';
-import { Connection } from '#types';
 
 import { connectionDeckSubject } from '../../constants';
+import * as Connection from '../../types/Connection';
 
 const EMPTY_SCHEMA = Schema.Struct({});
 const EMPTY_VALUES = {};

@@ -13,7 +13,7 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { JmapCredentials, JmapMailApi } from '../../../../services';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { runMailSync } from '../../mail-sync';
 import { jmapMailSyncProvider } from './sync-provider';
 

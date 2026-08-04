@@ -9,8 +9,7 @@ import { Obj } from '@dxos/echo';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
-import { type Kanban } from '#types';
-
+import type * as Kanban from '../types/Kanban';
 import * as KanbanLayout from '../types/KanbanLayout';
 import {
   computeColumnStructure,

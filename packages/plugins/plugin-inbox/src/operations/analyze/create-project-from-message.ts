@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { buildThreads, clusterThreads, deriveThreadId, resolveModel, summarizeTopics } from '@dxos/pipeline-email';
 import { AnchoredTo, Message } from '@dxos/types';
 
-import { InboxOperation } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
 
 /**
  * Creates a single `Project` seeded from one message's thread: gathers the sibling messages sharing the

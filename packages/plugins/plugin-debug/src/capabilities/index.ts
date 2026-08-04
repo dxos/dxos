@@ -8,9 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { DebugEvents } from '#types';
-
 import * as Debug from '../types/Debug';
+import * as DebugEvents from '../types/DebugEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

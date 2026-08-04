@@ -10,7 +10,7 @@ import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCa
 import { TldrawArticle, TldrawCard } from '#containers';
 import { TldrawBuilder } from '#model';
 
-import { Tldraw } from '../types';
+import * as Tldraw from '../types/Tldraw';
 
 // No `canvasType`/`createCanvas`: tldraw stores its records in the base `Drawing.Canvas`,
 // discriminated by `schema`.

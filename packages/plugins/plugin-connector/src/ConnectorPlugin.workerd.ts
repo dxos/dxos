@@ -9,7 +9,8 @@ import { AccessToken, Cursor } from '@dxos/link';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection } from '#types';
+
+import * as Connection from './types/Connection';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

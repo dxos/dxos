@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { GameArticle, GameCard } from '#containers';
 
-import { Game } from '../types';
+import * as Game from '../types/Game';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

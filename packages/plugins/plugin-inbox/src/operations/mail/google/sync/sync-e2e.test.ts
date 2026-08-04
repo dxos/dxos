@@ -26,7 +26,7 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID } from '../../../../constants';
-import { Mailbox } from '../../../../types';
+import * as Mailbox from '../../../../types/Mailbox';
 
 const config = configPreset({ edge: 'local' });
 

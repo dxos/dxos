@@ -16,9 +16,10 @@ import { Card } from '@dxos/react-ui';
 import { Event, Message, type Person } from '@dxos/types';
 
 import { RelatedEvents, RelatedMessages } from '#components';
-import { Calendar, Mailbox } from '#types';
 
 import { getCalendarEventPath, getMailboxMessagePath } from '../../paths';
+import * as Calendar from '../../types/Calendar';
+import * as Mailbox from '../../types/Mailbox';
 
 export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
 

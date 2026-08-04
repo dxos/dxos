@@ -12,7 +12,8 @@ import { Cursor } from '@dxos/link';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 
-import { InboxOperation, type Mailbox } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
+import type * as Mailbox from '../../types/Mailbox';
 
 /**
  * Finds the persisted feed-to-feed {@link Cursor} tracking this mailbox's fact-extraction progress

@@ -9,8 +9,7 @@ import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
-import { Kanban } from '#types';
-
+import * as Kanban from '../types/Kanban';
 import * as KanbanConstants from '../types/KanbanConstants';
 import {
   computeColumnStructure,

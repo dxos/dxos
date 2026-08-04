@@ -12,8 +12,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ObservabilitySettings } from '#containers';
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#types';
-import { type Settings } from '#types';
+
+import * as ObservabilityOperation from '../types/ObservabilityOperation';
+import type * as Settings from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

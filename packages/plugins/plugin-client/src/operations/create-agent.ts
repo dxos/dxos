@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import { ClientCapabilities } from '../types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 import { CreateAgent } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreateAgent> = CreateAgent.pipe(

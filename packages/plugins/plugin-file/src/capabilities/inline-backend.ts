@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
 
-import { FileCapabilities } from '#types';
+import * as FileCapabilities from '../types/FileCapabilities';
 
 /**
  * Inline backend descriptor: file bytes are stored on the ECHO object itself.

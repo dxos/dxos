@@ -22,7 +22,9 @@ import {
 } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 import extractMailboxHandler from './extract-mailbox';
 import extractMessageHandler from './extract-message';
 

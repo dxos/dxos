@@ -10,8 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { Connection } from '#types';
-
+import * as Connection from '../../types/Connection';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { ensureSyncTrigger } from '../../util';
 

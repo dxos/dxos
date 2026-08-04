@@ -24,8 +24,9 @@ import {
   MarkdownSettings,
 } from '#containers';
 import { meta } from '#meta';
-import { Markdown, MarkdownCapabilities } from '#types';
 
+import * as Markdown from '../types/Markdown';
+import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
 import { editorViewModeAspect } from './editor-view-state';
 
 export default Capability.makeModule(() =>

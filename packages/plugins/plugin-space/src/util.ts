@@ -11,7 +11,8 @@ import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { type SpaceCapabilities } from '#types';
+
+import type * as SpaceCapabilities from './types/SpaceCapabilities';
 
 //
 // Constants

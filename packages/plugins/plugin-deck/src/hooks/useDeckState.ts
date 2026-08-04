@@ -9,8 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 
-import { DeckCapabilities } from '#types';
-
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import * as DeckSchema from '../types/DeckSchema';
 
 export type DeckStateHook = {

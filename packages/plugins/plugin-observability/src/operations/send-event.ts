@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 
-import { ObservabilityCapabilities, ObservabilityOperation } from '../types';
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
+import * as ObservabilityOperation from '../types/ObservabilityOperation';
 
 const handler: Operation.WithHandler<typeof ObservabilityOperation.SendEvent> = ObservabilityOperation.SendEvent.pipe(
   Operation.withHandler(

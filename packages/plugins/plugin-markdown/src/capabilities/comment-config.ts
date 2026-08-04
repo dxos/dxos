@@ -8,8 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { MarkdownOperation } from '#types';
-import { Markdown } from '#types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const activate = Effect.fnUntraced(function* () {
   const config: AppCapabilities.CommentConfig = {

@@ -17,7 +17,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Message } from '@dxos/types';
 
-import { AssistantOperation } from '#types';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.ForkChat> = AssistantOperation.ForkChat.pipe(
   Operation.withHandler(

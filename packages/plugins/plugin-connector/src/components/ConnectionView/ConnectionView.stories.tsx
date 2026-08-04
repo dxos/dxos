@@ -19,8 +19,8 @@ import { Expando } from '@dxos/schema';
 
 import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
-import { Connection } from '#types';
 
+import * as Connection from '../../types/Connection';
 import { isCursorForConnection } from '../../util';
 import { ConnectionView } from './ConnectionView';
 

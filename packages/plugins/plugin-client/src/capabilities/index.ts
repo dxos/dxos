@@ -7,8 +7,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ClientOptions } from '#types';
-import { ClientCapabilities, ClientEvents } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
+import * as ClientEvents from '../types/ClientEvents';
+import * as ClientOptions from '../types/ClientOptions';
 
 export const AccountCache = Capability.lazyModule(
   'AccountCache',

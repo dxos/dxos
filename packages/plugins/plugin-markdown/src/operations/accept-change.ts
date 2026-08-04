@@ -13,7 +13,7 @@ import { Doc } from '@dxos/echo-doc';
 import { Text } from '@dxos/schema';
 import { cherryPickHunk } from '@dxos/ui-editor/headless';
 
-import { Markdown } from '../types';
+import * as Markdown from '../types/Markdown';
 
 /** Narrow a decoded automerge value to a keyed record so string fields can be read without a cast. */
 const isRecord = (value: unknown): value is { readonly [key: string]: DecodedAutomergePrimaryValue } =>

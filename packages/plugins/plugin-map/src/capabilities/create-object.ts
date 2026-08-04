@@ -11,7 +11,8 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { ViewModel } from '@dxos/schema';
 
-import { Map, MapAction } from '#types';
+import * as Map from '../types/Map';
+import * as MapAction from '../types/MapAction';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

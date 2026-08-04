@@ -9,7 +9,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
-import { CommentOperation } from '#types';
+
+import * as CommentOperation from '../types/CommentOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

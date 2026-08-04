@@ -11,8 +11,7 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { ViewModel } from '@dxos/schema';
 
-import { Kanban } from '#types';
-
+import * as Kanban from '../types/Kanban';
 import * as KanbanSchema from '../types/KanbanSchema';
 
 export default Capability.makeModule(

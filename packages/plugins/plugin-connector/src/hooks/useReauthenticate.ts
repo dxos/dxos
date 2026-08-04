@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { useConnector } from '#hooks';
 
-import { Connection } from '../types';
+import * as Connection from '../types/Connection';
 import * as ConnectorCoordination from '../types/ConnectorCoordination';
 
 export type UseReauthenticateResult = {

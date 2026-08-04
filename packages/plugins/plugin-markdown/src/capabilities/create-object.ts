@@ -10,7 +10,7 @@ import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Markdown } from '#types';
+import * as Markdown from '../types/Markdown';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

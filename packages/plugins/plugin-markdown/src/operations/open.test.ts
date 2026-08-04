@@ -13,7 +13,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { OperationTestLayer, WithProperties } from '#testing';
 
-import { MarkdownOperation } from '../types';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 EntityId.dangerouslyDisableRandomness();
 

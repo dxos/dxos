@@ -12,9 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { RecordBuilder } from '#model';
 import { data } from '#testing';
-import { Tldraw } from '#types';
 
 import { migrateCanvas } from '../../migrations';
+import * as Tldraw from '../../types/Tldraw';
 import { CanvasComponent } from './Canvas';
 
 const DefaultStory = () => {

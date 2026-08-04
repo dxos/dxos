@@ -13,7 +13,8 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
-import { InboxCapabilities } from '#types';
+
+import * as InboxCapabilities from '../types/InboxCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

@@ -7,7 +7,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CreateObject, OperationHandler, SkillDefinition, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
-import { Kanban } from '#types';
+
+import * as Kanban from './types/Kanban';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

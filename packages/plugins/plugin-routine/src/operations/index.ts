@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { RoutineOperation } from '../types';
+import * as RoutineOperation from '../types/RoutineOperation';
 
 export const RoutineOperationHandlerSet = OperationHandlerSet.keyed([
   [RoutineOperation.CreateTriggerFromTemplate, () => import('./create-trigger-from-template')],

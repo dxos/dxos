@@ -11,8 +11,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Outline } from '#types';
 
+import * as Outline from '../../types/Outline';
 import { OutlineArticle } from './OutlineArticle';
 
 const DefaultStory = () => {

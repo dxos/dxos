@@ -20,8 +20,8 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-import { DeckCapabilities } from '#types';
 
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import { upsertToast } from '../util';
 
 const NOTIFY_TOAST_DURATION = 5_000;

@@ -21,8 +21,8 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
 
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import * as SpaceSchema from '../../types/SpaceSchema';
 
 const SpaceFormSchema = SpaceSchema.SpaceForm;

@@ -22,7 +22,7 @@ import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { MailSyncError } from '../../errors';
-import { Mailbox } from '../../types';
+import * as Mailbox from '../../types/Mailbox';
 import * as SyncStreamConfig from '../../types/SyncStreamConfig';
 import { readBindingOptions } from '../../util';
 

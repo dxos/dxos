@@ -28,7 +28,9 @@ import {
   runJmapSync,
   seedMailboxBinding,
 } from '../../../../testing/sync-fixture';
-import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
+import * as Mailbox from '../../../../types/Mailbox';
+import * as SystemTags from '../../../../types/SystemTags';
 import { createSyncProgressKey } from '../../mail-sync';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
 

@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
-import { PresenterCapabilities } from '#types';
+import * as PresenterCapabilities from '../types/PresenterCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const MarkdownExtension = Capability.lazyModule(

@@ -15,8 +15,8 @@ import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/r
 import { Position } from '@dxos/util';
 
 import { KanbanArticle, KanbanProperties } from '#containers';
-import { Kanban } from '#types';
 
+import * as Kanban from '../types/Kanban';
 import * as KanbanSchema from '../types/KanbanSchema';
 
 export default Capability.makeModule(() =>

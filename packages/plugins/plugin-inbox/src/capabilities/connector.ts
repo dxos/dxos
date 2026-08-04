@@ -27,7 +27,7 @@ import {
   JMAP_DEFAULT_HOST,
   JMAP_MAIL_CONNECTOR_ID,
 } from '../constants';
-import { InboxOperation } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
 import * as SyncOptions from '../types/SyncOptions';
 import { jmapCredentialForm } from './jmap-credential-form';
 

@@ -6,7 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { contactExtractor, extractContact } from '@dxos/extractor-lib';
 
-import { InboxOperation } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
 
 export const TEMPLATE_ID = 'org.dxos.plugin.inbox.extractor.contact';
 

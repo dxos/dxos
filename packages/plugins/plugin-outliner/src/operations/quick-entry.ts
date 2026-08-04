@@ -10,7 +10,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { Journal, OutlineOperation } from '../types';
+import * as Journal from '../types/Journal';
+import * as OutlineOperation from '../types/OutlineOperation';
 
 const handler: Operation.WithHandler<typeof OutlineOperation.QuickJournalEntry> =
   OutlineOperation.QuickJournalEntry.pipe(

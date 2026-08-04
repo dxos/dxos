@@ -8,7 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 
 import { parseThreadAnchorAsCellRange } from '../integrations/thread-ranges';
-import { SheetCapabilities, SheetOperation } from '../types';
+import * as SheetCapabilities from '../types/SheetCapabilities';
+import * as SheetOperation from '../types/SheetOperation';
 
 const handler: Operation.WithHandler<typeof SheetOperation.ScrollToAnchor> = SheetOperation.ScrollToAnchor.pipe(
   Operation.withHandler(

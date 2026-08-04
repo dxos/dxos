@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 
-import { ClientCapabilities } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

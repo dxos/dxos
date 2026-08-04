@@ -36,11 +36,11 @@ import {
 } from '@dxos/react-ui-grid';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#types';
-import { SheetCapabilities } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus } from '../../integrations';
+import * as SheetCapabilities from '../../types/SheetCapabilities';
+import * as SheetOperation from '../../types/SheetOperation';
 import * as SheetUtil from '../../types/SheetUtil';
 import { useSheetContext } from '../SheetRoot';
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';

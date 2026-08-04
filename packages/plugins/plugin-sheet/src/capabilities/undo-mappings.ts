@@ -9,7 +9,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#types';
+
+import * as SheetOperation from '../types/SheetOperation';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -50,7 +50,6 @@ import {
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { Settings, SpaceCapabilities } from '#types';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -59,6 +58,8 @@ import {
   JOIN_DIALOG,
   RENAME_POPOVER,
 } from '../constants';
+import * as Settings from '../types/Settings';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import * as SpaceForm from '../types/SpaceForm';
 import * as SpaceSchema from '../types/SpaceSchema';
 import * as SpaceSurface from '../types/SpaceSurface';

@@ -26,7 +26,9 @@ import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
-import { InboxCapabilities, InboxOperation, type Mailbox } from '../types';
+import * as InboxCapabilities from '../types/InboxCapabilities';
+import * as InboxOperation from '../types/InboxOperation';
+import type * as Mailbox from '../types/Mailbox';
 
 /** Read `syncBackDays` and `filter` from the binding options (opaque record). */
 export const readBindingOptions = (binding: Cursor.ExternalCursor) => {

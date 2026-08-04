@@ -4,7 +4,7 @@
 
 import { type ClassNameValue } from '@dxos/react-ui';
 
-import { type Sheet } from '../types';
+import type * as Sheet from '../types/Sheet';
 
 export const alignKey = 'alignment';
 export type AlignKey = typeof alignKey;

@@ -16,7 +16,8 @@ import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
 import { meta } from '#meta';
 
-import { InboxOperation, Mailbox } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 import { REPLY_REGEXP } from '../../util';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;

@@ -18,9 +18,10 @@ import { type Channel } from '@dxos/types';
 import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
-import { ThreadCapabilities, ThreadOperation } from '#types';
 
 import * as ChannelBackend from '../../types/ChannelBackend';
+import * as ThreadCapabilities from '../../types/ThreadCapabilities';
+import * as ThreadOperation from '../../types/ThreadOperation';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);

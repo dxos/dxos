@@ -5,7 +5,7 @@
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { MapCapabilities } from '#types';
+import * as MapCapabilities from '../types/MapCapabilities';
 
 // The capabilities `MapPlugin.node` activates, and only those. A lazy module defers its import at
 // runtime but a bundler still walks it, so listing `ReactSurface` here would pull the map

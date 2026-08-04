@@ -7,9 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ConnectorEvents } from '#types';
-
 import * as ConnectorCoordination from '../types/ConnectorCoordination';
+import * as ConnectorEvents from '../types/ConnectorEvents';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 
 export * from './connector-coordinator';

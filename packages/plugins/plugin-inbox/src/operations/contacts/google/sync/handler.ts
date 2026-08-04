@@ -20,7 +20,7 @@ import { Person } from '@dxos/types';
 import { GoogleContacts } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
 import { GoogleCredentials } from '../../../../services';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { mapGooglePerson } from '../mapper';
 
 const COMMIT_PAGE_SIZE = 10;

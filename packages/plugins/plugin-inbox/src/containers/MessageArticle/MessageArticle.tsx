@@ -25,9 +25,12 @@ import {
   keyOf,
   messageViewModeAspect,
 } from '#components';
-import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
+import type * as Settings from '../../types/Settings';
 import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */

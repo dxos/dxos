@@ -9,7 +9,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { AssistantOperation } from '#types';
+
+import * as AssistantOperation from '../types/AssistantOperation';
 
 const FALLBACK_SUGGESTION_KEYS = [
   'space-home.suggestion-magazine.label',

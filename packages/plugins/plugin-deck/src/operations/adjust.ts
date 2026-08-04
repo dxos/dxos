@@ -17,7 +17,8 @@ import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
-import { DeckCapabilities, DeckOperation } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
+import * as DeckOperation from '../types/DeckOperation';
 import * as DeckSchema from '../types/DeckSchema';
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';

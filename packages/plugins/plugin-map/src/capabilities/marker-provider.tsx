@@ -15,7 +15,8 @@ import { type GeoMarker } from '@dxos/react-ui-geo';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { getDeep } from '@dxos/util';
 
-import { Map, MapCapabilities } from '#types';
+import * as Map from '../types/Map';
+import * as MapCapabilities from '../types/MapCapabilities';
 
 /**
  * Reactive markers for a {@link Map.Map}: queries the map's backing view and plots each row at its

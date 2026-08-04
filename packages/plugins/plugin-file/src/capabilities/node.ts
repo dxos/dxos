@@ -7,7 +7,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { FileCapabilities } from '#types';
+import * as FileCapabilities from '../types/FileCapabilities';
 
 // The capabilities `FilePlugin.node` activates, and only those. A lazy module defers its import at
 // runtime but a bundler still walks it, so listing the React surfaces here would pull the plugin's

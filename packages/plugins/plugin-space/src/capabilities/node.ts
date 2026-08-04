@@ -6,9 +6,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { SpaceCapabilities } from '#types';
-
 import { SpaceOperationConfig } from '../operations/helpers';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 

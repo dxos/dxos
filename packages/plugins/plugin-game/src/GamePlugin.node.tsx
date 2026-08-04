@@ -7,7 +7,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Game } from '#types';
+
+import * as Game from './types/Game';
 
 /**
  * Headless variant of GamePlugin (no React surfaces / CreateObject panel).

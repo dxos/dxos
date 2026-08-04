@@ -27,8 +27,8 @@ import { Listbox } from '@dxos/react-ui-list';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceCapabilities } from '#types';
 
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import * as SpaceSchema from '../../types/SpaceSchema';
 
 // TODO(thure): Get/derive these values from protocol

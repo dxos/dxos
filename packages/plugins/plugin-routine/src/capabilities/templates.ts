@@ -6,9 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { RoutineCapabilities } from '#types';
-
 import { defaultTemplates } from '../templates';
+import * as RoutineCapabilities from '../types/RoutineCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

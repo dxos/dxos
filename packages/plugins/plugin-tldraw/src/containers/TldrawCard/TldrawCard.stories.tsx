@@ -11,8 +11,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { RecordBuilder } from '#model';
-import { Tldraw } from '#types';
 
+import * as Tldraw from '../../types/Tldraw';
 import { TldrawCard } from './TldrawCard';
 
 const CardStory = () => {

@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { IllustratorEvents } from '#types';
+import * as IllustratorEvents from '../types/IllustratorEvents';
 
 export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
   activatesOn: IllustratorEvents.Start,

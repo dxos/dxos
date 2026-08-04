@@ -26,7 +26,8 @@ import { mx } from '@dxos/ui-theme';
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
-import { AssistantCapabilities } from '#types';
+
+import * as AssistantCapabilities from '../../types/AssistantCapabilities';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 

@@ -23,7 +23,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Calendar, ExtractedFrom, Mailbox } from '#types';
+
+import * as Calendar from './types/Calendar';
+import * as ExtractedFrom from './types/ExtractedFrom';
+import * as Mailbox from './types/Mailbox';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

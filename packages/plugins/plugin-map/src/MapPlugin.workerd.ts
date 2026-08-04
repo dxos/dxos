@@ -7,7 +7,8 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Map } from '#types';
+
+import * as Map from './types/Map';
 
 export const MapPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

@@ -9,7 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { RoutineCapabilities } from '#types';
+import * as RoutineCapabilities from '../types/RoutineCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));

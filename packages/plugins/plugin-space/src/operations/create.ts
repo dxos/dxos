@@ -16,7 +16,8 @@ import { hues } from '@dxos/ui-types';
 import { iconValues } from '@dxos/ui-types';
 
 import { SpaceNotReadyError } from '../errors';
-import { SpaceCapabilities, SpaceEvents } from '../types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceEvents from '../types/SpaceEvents';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 

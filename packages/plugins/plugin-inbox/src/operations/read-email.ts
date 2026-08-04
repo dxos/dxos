@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { InboxOperation } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
 import { renderMarkdown } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ReadEmail> = InboxOperation.ReadEmail.pipe(

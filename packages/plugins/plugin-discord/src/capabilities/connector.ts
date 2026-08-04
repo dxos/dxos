@@ -24,7 +24,7 @@ import {
 } from '../constants';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
 import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
-import { DiscordOperation } from '../types';
+import * as DiscordOperation from '../types/DiscordOperation';
 import * as DiscordTargetOptions from '../types/DiscordTargetOptions';
 
 /**

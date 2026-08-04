@@ -26,9 +26,11 @@ import {
 } from '#containers';
 import { useCompiler } from '#hooks';
 import { meta } from '#meta';
-import { Notebook, ScriptCapabilities, type Settings } from '#types';
 
 import { DEPLOYMENT_DIALOG } from '../constants';
+import * as Notebook from '../types/Notebook';
+import * as ScriptCapabilities from '../types/ScriptCapabilities';
+import type * as Settings from '../types/Settings';
 import { getAccessCredential } from '../util';
 
 export default Capability.makeModule(() =>

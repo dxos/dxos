@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { PresenterOperation } from '#types';
+import * as PresenterOperation from '../types/PresenterOperation';
 
 export const PresenterOperationHandlerSet = OperationHandlerSet.keyed([
   [PresenterOperation.TogglePresentation, () => import('./toggle-presentation')],

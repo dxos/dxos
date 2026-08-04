@@ -5,7 +5,7 @@
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { DeckOperation } from '../types';
+import * as DeckOperation from '../types/DeckOperation';
 
 export const DeckOperationHandlerSet = OperationHandlerSet.keyed([
   [LayoutOperation.AddToast, () => import('./add-toast')],

@@ -16,8 +16,8 @@ import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/r
 import { Position } from '@dxos/util';
 
 import { MapSurface, MapViewEditor } from '#containers';
-import { Map } from '#types';
 
+import * as Map from '../types/Map';
 import * as MapCapabilities from '../types/MapCapabilities';
 import * as MapRole from '../types/MapRole';
 

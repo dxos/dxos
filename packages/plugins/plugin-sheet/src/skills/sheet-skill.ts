@@ -6,7 +6,8 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Sheet, SheetOperation } from '#types';
+import * as Sheet from '../types/Sheet';
+import * as SheetOperation from '../types/SheetOperation';
 
 const operations = [SheetOperation.Create, SheetOperation.GetValues, SheetOperation.SetValues];
 

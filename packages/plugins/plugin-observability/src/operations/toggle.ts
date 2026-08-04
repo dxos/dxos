@@ -12,7 +12,9 @@ import { Observability } from '@dxos/observability';
 
 import { meta } from '#meta';
 
-import { ObservabilityCapabilities, ObservabilityOperation, type Settings } from '../types';
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
+import * as ObservabilityOperation from '../types/ObservabilityOperation';
+import type * as Settings from '../types/Settings';
 
 const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = ObservabilityOperation.Toggle.pipe(
   Operation.withHandler(

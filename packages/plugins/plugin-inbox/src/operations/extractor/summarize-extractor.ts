@@ -19,7 +19,7 @@ import {
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { InboxOperation } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
 
 /**
  * AI summarization extractor. Matches any message with a non-trivial plain-text body

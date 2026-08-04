@@ -21,8 +21,9 @@ import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } f
 
 import { useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox, SystemTags } from '#types';
 
+import * as Mailbox from '../../types/Mailbox';
+import * as SystemTags from '../../types/SystemTags';
 import { createDraftMessage, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
 import { HtmlViewer } from '../HtmlViewer';

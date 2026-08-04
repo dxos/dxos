@@ -12,8 +12,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
-import { NavTreeCapabilities } from '#types';
-
+import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
 import { navTreeOpenAspect } from './nav-tree-view-state';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */

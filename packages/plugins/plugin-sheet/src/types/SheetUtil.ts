@@ -14,7 +14,7 @@ import { randomBytes } from '@dxos/crypto/random';
 import { type Obj } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 
-import { type Sheet } from '../types';
+import type * as Sheet from '../types/Sheet';
 
 export const MAX_ROWS = 500;
 export const MAX_COLS = 676; // 26^2;

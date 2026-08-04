@@ -8,8 +8,8 @@ import type * as Operation from '@dxos/compute/Operation';
 import { type Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Connection, ConnectorOperation } from '#types';
-
+import type * as Connection from '../../types/Connection';
+import * as ConnectorOperation from '../../types/ConnectorOperation';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 
 /**

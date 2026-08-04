@@ -19,7 +19,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 
 import { connectionDeckSubject } from '../../constants';
-import { Connection } from '../../types';
+import * as Connection from '../../types/Connection';
 
 // The add-connection action uses Form's `settings` variant for its labeled-row chrome
 // (an action-mode `Form.Row`); there are no fields to bind, so the schema is empty.

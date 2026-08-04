@@ -2,7 +2,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { KanbanOperation } from '../types';
+import * as KanbanOperation from '../types/KanbanOperation';
 
 export const KanbanOperationHandlerSet = OperationHandlerSet.keyed([
   [KanbanOperation.DeleteCard, () => import('./delete-card')],

@@ -29,11 +29,11 @@ import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
-import { CommentOperation } from '#types';
-import { CommentCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state';
 import { type SuggestionGroup, useStatus } from '../../hooks';
+import * as CommentCapabilities from '../../types/CommentCapabilities';
+import * as CommentOperation from '../../types/CommentOperation';
 import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { getMessageMetadata } from '../../util';
 

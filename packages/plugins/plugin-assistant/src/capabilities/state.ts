@@ -10,7 +10,8 @@ import { type Obj } from '@dxos/echo';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { AssistantCapabilities } from '#types';
+
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

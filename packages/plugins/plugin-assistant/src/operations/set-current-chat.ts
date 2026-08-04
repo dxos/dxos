@@ -9,7 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 
-import { AssistantCapabilities, AssistantOperation } from '#types';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.SetCurrentChat> = AssistantOperation.SetCurrentChat.pipe(
   Operation.withHandler(

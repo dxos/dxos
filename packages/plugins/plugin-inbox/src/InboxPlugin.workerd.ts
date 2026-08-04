@@ -9,9 +9,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Event, Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Calendar, Mailbox } from '#types';
 
 import OperationHandler from './capabilities/operation-handler';
+import * as Calendar from './types/Calendar';
+import * as Mailbox from './types/Mailbox';
 
 const OperationHandlerModule = Capability.inlineModule(
   'operation-handler',

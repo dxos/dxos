@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
 
 import { templates } from '../templates';
-import { ScriptOperation } from '../types';
+import * as ScriptOperation from '../types/ScriptOperation';
 
 const handler: Operation.WithHandler<typeof ScriptOperation.CreateScript> = ScriptOperation.CreateScript.pipe(
   Operation.withHandler(

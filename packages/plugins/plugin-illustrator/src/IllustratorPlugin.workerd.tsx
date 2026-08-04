@@ -6,7 +6,8 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
-import { Drawing } from '#types';
+
+import * as Drawing from './types/Drawing';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppCapability.schema([Drawing.Drawing])),

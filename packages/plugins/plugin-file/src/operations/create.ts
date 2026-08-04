@@ -10,8 +10,10 @@ import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
 import { File } from '@dxos/types';
 
-import { FileCapabilities, FileOperation, Settings } from '../types';
+import * as FileCapabilities from '../types/FileCapabilities';
 import * as FileLimits from '../types/FileLimits';
+import * as FileOperation from '../types/FileOperation';
+import * as Settings from '../types/Settings';
 
 export class UnsupportedFileTypeError extends Error {
   constructor(public readonly type: string) {

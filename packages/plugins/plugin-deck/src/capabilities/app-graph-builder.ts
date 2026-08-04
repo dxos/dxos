@@ -15,7 +15,8 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DeckCapabilities } from '#types';
+
+import * as DeckCapabilities from '../types/DeckCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

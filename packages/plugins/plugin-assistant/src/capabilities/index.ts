@@ -16,7 +16,8 @@ import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { AssistantCapabilities, AssistantEvents } from '#types';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantEvents from '../types/AssistantEvents';
 
 export const AgentHydrator = Capability.lazyModule(
   'AgentHydrator',

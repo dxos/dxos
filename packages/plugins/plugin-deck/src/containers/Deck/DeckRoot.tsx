@@ -8,9 +8,8 @@ import React, { type PropsWithChildren, useMemo } from 'react';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useMediaQuery } from '@dxos/react-ui';
 
-import { type Settings } from '#types';
-
 import { type DeckStateHook } from '../../hooks/useDeckState';
+import type * as Settings from '../../types/Settings';
 import { resolveSidebarState } from '../../util';
 
 const DECK_NAME = 'Deck';

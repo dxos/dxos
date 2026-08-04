@@ -13,7 +13,7 @@ import { useConnector } from '#hooks';
 import { meta } from '#meta';
 
 import { SYNC_TARGETS_DIALOG } from '../constants';
-import { type Connection } from '../types';
+import type * as Connection from '../types/Connection';
 
 export type UseSyncTargetsChecklistResult = {
   /** True when the connection's connector exposes `getSyncTargets`. Drives "edit" button visibility. */

@@ -21,7 +21,7 @@ import { meta } from '#meta';
 import { DEFAULT_DAYS, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
 import { formatDiscordSyncFailure } from '../errors';
 import { makeDiscordLayerFromToken } from '../services';
-import { DiscordOperation } from '../types';
+import * as DiscordOperation from '../types/DiscordOperation';
 
 /**
  * Hard cap on `maxDays` to keep a misconfigured (or fat-fingered) value

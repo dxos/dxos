@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { DrawingArticle, DrawingCard } from '#containers';
 
-import { Drawing } from '../types';
+import * as Drawing from '../types/Drawing';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

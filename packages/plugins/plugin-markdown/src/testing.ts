@@ -13,7 +13,8 @@ import { Annotation, Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
 import { HasSubject } from '@dxos/types';
 
 import { MarkdownOperationHandlerSet } from '#operations';
-import { Markdown } from '#types';
+
+import * as Markdown from './types/Markdown';
 
 // Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale. Uses the `#plugin` subpath so the node-only build is

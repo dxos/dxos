@@ -9,8 +9,9 @@ import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 import { Message } from '@dxos/types';
 
-import { ThreadCapabilities, ThreadOperation } from '../types';
 import * as ChannelBackend from '../types/ChannelBackend';
+import * as ThreadCapabilities from '../types/ThreadCapabilities';
+import * as ThreadOperation from '../types/ThreadOperation';
 
 const handler: Operation.WithHandler<typeof ThreadOperation.AppendChannelMessage> =
   ThreadOperation.AppendChannelMessage.pipe(

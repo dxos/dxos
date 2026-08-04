@@ -6,7 +6,7 @@ import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { Markdown } from '#types';
+import * as Markdown from './types/Markdown';
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.

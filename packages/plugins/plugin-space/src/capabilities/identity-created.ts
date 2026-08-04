@@ -13,7 +13,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { SpaceCapabilities } from '#types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

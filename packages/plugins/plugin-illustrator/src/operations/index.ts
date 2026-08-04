@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { DrawingOperation } from '../types';
+import * as DrawingOperation from '../types/DrawingOperation';
 
 export const IllustratorOperationHandlerSet = OperationHandlerSet.keyed([
   [DrawingOperation.Create, () => import('./create')],

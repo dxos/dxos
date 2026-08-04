@@ -15,7 +15,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
-import { Calendar } from '#types';
+
+import * as Calendar from '../../types/Calendar';
 
 export type CalendarPropertiesProps = AppSurface.ObjectPropertiesProps<Calendar.Calendar>;
 

@@ -15,9 +15,8 @@ import { Sequence } from '@dxos/conductor';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { AssistantOperation } from '#types';
-
 import { getChatsPath } from '../paths';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

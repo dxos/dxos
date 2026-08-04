@@ -4,8 +4,7 @@
 
 import { type SelectOption } from '@dxos/echo/Format';
 
-import { type Kanban } from '#types';
-
+import type * as Kanban from '../types/Kanban';
 import * as KanbanConstants from '../types/KanbanConstants';
 import * as KanbanLayout from '../types/KanbanLayout';
 

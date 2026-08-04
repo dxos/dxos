@@ -11,9 +11,9 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
-import { CommentCapabilities } from '#types';
 
 import { commentSync } from '../extensions';
+import * as CommentCapabilities from '../types/CommentCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

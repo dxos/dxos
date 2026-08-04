@@ -12,8 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Journal, Outline } from '#types';
 
+import * as Journal from '../../types/Journal';
+import * as Outline from '../../types/Outline';
 import * as OutlinerUtil from '../../types/OutlinerUtil';
 import { Journal as JournalComponent } from './Journal';
 

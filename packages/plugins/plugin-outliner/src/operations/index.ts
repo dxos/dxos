@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { OutlineOperation } from '../types';
+import * as OutlineOperation from '../types/OutlineOperation';
 
 export const OutlinerOperationHandlerSet = OperationHandlerSet.keyed([
   [OutlineOperation.CreateOutline, () => import('./create-outline')],

@@ -10,8 +10,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import { CommentCapabilities } from '../types';
-import { CommentOperation } from '../types';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Select> = CommentOperation.Select.pipe(
   Operation.withHandler(

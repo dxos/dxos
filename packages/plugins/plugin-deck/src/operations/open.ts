@@ -19,7 +19,7 @@ import { Graph } from '@dxos/plugin-graph';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { addSubjectsToActiveDeck } from '../layout';
-import { DeckCapabilities } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
 

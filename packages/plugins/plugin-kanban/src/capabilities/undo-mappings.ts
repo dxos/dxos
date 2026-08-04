@@ -7,7 +7,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
-import { KanbanOperation } from '#types';
+
+import * as KanbanOperation from '../types/KanbanOperation';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

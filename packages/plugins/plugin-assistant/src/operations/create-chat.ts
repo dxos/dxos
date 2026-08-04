@@ -15,7 +15,8 @@ import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantSkill } from '#skills';
-import { AssistantOperation } from '#types';
+
+import * as AssistantOperation from '../types/AssistantOperation';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(

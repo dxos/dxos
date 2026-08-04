@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { CommentCapabilities } from '#types';
-
+import * as CommentCapabilities from '../types/CommentCapabilities';
 import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 export default Capability.makeModule(

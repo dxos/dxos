@@ -16,7 +16,7 @@ import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
 import { invariant } from '@dxos/invariant';
 
-import { ClientCapabilities } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 //
 // Capability Module

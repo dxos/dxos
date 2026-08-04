@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { DiscordOperation } from '../types';
+import * as DiscordOperation from '../types/DiscordOperation';
 
 export const DiscordOperationHandlerSet = OperationHandlerSet.keyed([
   [DiscordOperation.GetDiscordChannels, () => import('./get-discord-channels')],

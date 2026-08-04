@@ -14,7 +14,8 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { SearchOperation } from '#types';
+
+import * as SearchOperation from '../types/SearchOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

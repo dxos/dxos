@@ -11,7 +11,8 @@ import { log } from '@dxos/log';
 import { Jmap, JmapMail } from '../../../../apis';
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../../errors';
 import { JmapCredentials } from '../../../../services';
-import { InboxOperation, SystemTags } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
+import * as SystemTags from '../../../../types/SystemTags';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 

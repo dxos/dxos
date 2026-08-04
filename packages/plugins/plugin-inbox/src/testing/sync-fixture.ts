@@ -26,7 +26,7 @@ import { googleMailSyncProvider } from '../operations/mail/google/sync/sync-prov
 import { jmapMailSyncProvider } from '../operations/mail/jmap/sync/sync-provider';
 import { type RunMailSyncOptions, runMailSync } from '../operations/mail/mail-sync';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
-import { Mailbox } from '../types';
+import * as Mailbox from '../types/Mailbox';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
 // with a mailbox binding, plus the ambient services `runGoogleSync`/`runJmapSync` require. Not exported

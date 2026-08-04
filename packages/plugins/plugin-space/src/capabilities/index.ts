@@ -9,9 +9,9 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { SpaceCapabilities, SpaceCapability } from '#types';
-
 import { SpaceOperationConfig } from '../operations/helpers';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceCapability from '../types/SpaceCapability';
 import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 

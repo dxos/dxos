@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { SheetOperation } from '../types';
+import * as SheetOperation from '../types/SheetOperation';
 
 export const SheetOperationHandlerSet = OperationHandlerSet.keyed([
   [SheetOperation.Create, () => import('./create')],

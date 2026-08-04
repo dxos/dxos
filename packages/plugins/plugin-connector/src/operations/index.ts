@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ConnectorOperation } from '../types';
+import * as ConnectorOperation from '../types/ConnectorOperation';
 
 export const ConnectorOperationHandlerSet = OperationHandlerSet.keyed([
   [ConnectorOperation.CreateConnection, () => import('./create-connection')],

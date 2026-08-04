@@ -12,7 +12,7 @@ import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { EffectEx } from '@dxos/effect';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities } from '#types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 
 /** Identifier for the native redirect dialog surface (defined in welcome plugin). */
 const NATIVE_REDIRECT_DIALOG = 'org.dxos.plugin.welcome.component.native-redirect-dialog';

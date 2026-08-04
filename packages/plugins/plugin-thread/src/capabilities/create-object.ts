@@ -15,8 +15,8 @@ import { Channel } from '@dxos/types';
 import { ChannelCreatePanel } from '#containers';
 
 import { getChannelsPath } from '../paths';
-import { ThreadCapabilities } from '../types';
 import * as ChannelBackend from '../types/ChannelBackend';
+import * as ThreadCapabilities from '../types/ThreadCapabilities';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

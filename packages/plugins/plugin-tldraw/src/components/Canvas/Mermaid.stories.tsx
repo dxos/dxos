@@ -12,8 +12,8 @@ import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { applyCommands } from '#model';
-import { Tldraw } from '#types';
 
+import * as Tldraw from '../../types/Tldraw';
 import { CanvasComponent } from './Canvas';
 
 const FLOWCHART = `

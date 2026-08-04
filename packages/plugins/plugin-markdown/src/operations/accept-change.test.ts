@@ -19,7 +19,8 @@ import { HasSubject } from '@dxos/types';
 
 import { WithProperties } from '#testing';
 
-import { Markdown, MarkdownOperation } from '../types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 import { MarkdownOperationHandlerSet } from './index';
 
 const TestLayer = AssistantTestLayer({

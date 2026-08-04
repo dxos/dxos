@@ -5,7 +5,7 @@
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ClientOptions } from '#types';
+import * as ClientOptions from '../../types/ClientOptions';
 
 export type { NavigationHandlerOptions } from './navigation-handler';
 

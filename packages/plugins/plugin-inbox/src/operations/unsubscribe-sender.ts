@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { InboxOperation, Mailbox } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
+import * as Mailbox from '../types/Mailbox';
 
 /**
  * Unsubscribes from a bulk sender: adds a skip-sender filter to the mailbox (hides existing + future

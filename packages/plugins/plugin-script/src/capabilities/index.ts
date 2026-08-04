@@ -7,7 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ScriptCapabilities, ScriptEvents } from '#types';
+import * as ScriptCapabilities from '../types/ScriptCapabilities';
+import * as ScriptEvents from '../types/ScriptEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

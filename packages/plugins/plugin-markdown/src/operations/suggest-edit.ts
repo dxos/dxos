@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Branch } from '@dxos/versioning';
 
-import { MarkdownOperation } from '../types';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.SuggestEdit> = MarkdownOperation.SuggestEdit.pipe(
   Operation.withHandler(

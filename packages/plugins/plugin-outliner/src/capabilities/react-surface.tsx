@@ -12,7 +12,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
-import { Journal, Outline } from '#types';
+
+import * as Journal from '../types/Journal';
+import * as Outline from '../types/Outline';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

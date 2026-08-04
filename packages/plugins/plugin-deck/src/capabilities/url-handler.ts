@@ -25,8 +25,7 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities } from '#types';
-
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import * as DeckSchema from '../types/DeckSchema';
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';

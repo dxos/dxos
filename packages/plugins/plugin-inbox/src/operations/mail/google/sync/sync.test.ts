@@ -30,7 +30,9 @@ import {
   runGoogleSync,
   seedMailboxBinding,
 } from '../../../../testing/sync-fixture';
-import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
+import * as Mailbox from '../../../../types/Mailbox';
+import * as SystemTags from '../../../../types/SystemTags';
 import { createSyncProgressKey } from '../../mail-sync';
 import { GMAIL_TAG_SOURCE } from '../tags';
 import { GMAIL_SYSTEM_TAGS } from './system-tags';

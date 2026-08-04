@@ -11,8 +11,8 @@ import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
-import { DeckCapabilities } from '#types';
 
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import * as DeckSchema from '../types/DeckSchema';
 import { migratePersistedState } from '../util';
 

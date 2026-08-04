@@ -16,8 +16,8 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
-import { Assistant } from '#types';
 
+import * as Assistant from '../../types/Assistant';
 import * as AssistantPreset from '../../types/AssistantPreset';
 
 const styles = {

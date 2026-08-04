@@ -5,7 +5,7 @@
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ThreadCapabilities } from '#types';
+import * as ThreadCapabilities from '../types/ThreadCapabilities';
 
 // The capabilities `ThreadPlugin.node` activates, and only those. A lazy module defers its import at
 // runtime but a bundler still walks it, so listing the React surfaces here would pull the plugin's

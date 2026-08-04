@@ -29,10 +29,11 @@ import {
   SaveFilterPopover,
   SubscriptionsArticle,
 } from '#containers';
-import { Calendar, Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../constants';
 import { getSubscriptionsId } from '../paths';
+import * as Calendar from '../types/Calendar';
+import * as Mailbox from '../types/Mailbox';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);

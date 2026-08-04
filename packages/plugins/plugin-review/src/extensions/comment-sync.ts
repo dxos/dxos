@@ -15,8 +15,7 @@ import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments } from '@dxos/ui-editor';
 
-import { CommentOperation } from '#types';
-
+import * as CommentOperation from '../types/CommentOperation';
 import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 // Resolve the anchor snippet against the document the editor produced the cursor from: the branch

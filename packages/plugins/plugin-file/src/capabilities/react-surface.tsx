@@ -16,9 +16,9 @@ import { File } from '@dxos/types';
 import { FileInput } from '#components';
 import { FileArticle, FileSettings } from '#containers';
 import { meta } from '#meta';
-import { type Settings } from '#types';
 
 import * as FileCapabilities from '../types/FileCapabilities';
+import type * as Settings from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

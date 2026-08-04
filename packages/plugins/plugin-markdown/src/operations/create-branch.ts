@@ -8,7 +8,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Branch } from '@dxos/versioning';
 
-import { Markdown, MarkdownOperation } from '../types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.CreateBranch> = MarkdownOperation.CreateBranch.pipe(
   Operation.withHandler(

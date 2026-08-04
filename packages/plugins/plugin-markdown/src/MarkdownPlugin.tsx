@@ -21,7 +21,8 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Markdown } from '#types';
+
+import * as Markdown from './types/Markdown';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

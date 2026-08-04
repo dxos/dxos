@@ -27,8 +27,8 @@ import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '#testing';
 import { translations } from '#translations';
-import { Notebook } from '#types';
 
+import * as Notebook from '../../types/Notebook';
 import { NotebookArticle } from './NotebookArticle';
 
 const meta: Meta<typeof NotebookArticle> = {

@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { type Thread } from '@dxos/types';
 
-import { CommentOperation } from '../types';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.SetAgentConfig> = CommentOperation.SetAgentConfig.pipe(
   Operation.withHandler(

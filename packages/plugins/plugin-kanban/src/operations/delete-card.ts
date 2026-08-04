@@ -6,7 +6,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { KanbanOperation } from '../types';
+import * as KanbanOperation from '../types/KanbanOperation';
 
 const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCard> = KanbanOperation.DeleteCard.pipe(
   Operation.withHandler(({ card }) =>

@@ -10,7 +10,8 @@ import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Journal, Outline } from '#types';
+import * as Journal from '../types/Journal';
+import * as Outline from '../types/Outline';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

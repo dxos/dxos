@@ -14,7 +14,7 @@ import { Cursor } from '@dxos/link';
 
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
-import { ConnectorOperation } from '../types';
+import * as ConnectorOperation from '../types/ConnectorOperation';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isCursorForConnection, syncBinding } from '../util';
 

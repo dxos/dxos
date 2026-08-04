@@ -19,9 +19,11 @@ import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
 import { meta } from '#meta';
-import { InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { JMAP_MAIL_CONNECTOR_ID } from '../constants';
+import * as InboxOperation from '../types/InboxOperation';
+import * as Mailbox from '../types/Mailbox';
+import * as SystemTags from '../types/SystemTags';
 
 /**
  * The send callback for the composer: routes the draft to its mailbox's provider, records the provider

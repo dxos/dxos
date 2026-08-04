@@ -10,8 +10,8 @@ import * as Script from '@dxos/compute/Script';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { ScriptOperation } from '#types';
-import { Notebook } from '#types';
+import * as Notebook from '../types/Notebook';
+import * as ScriptOperation from '../types/ScriptOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

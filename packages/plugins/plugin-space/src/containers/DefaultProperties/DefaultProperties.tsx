@@ -19,7 +19,8 @@ import { type Database, type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
 
-import { SpaceCapabilities, SpaceEvents } from '#types';
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../types/SpaceEvents';
 
 export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 

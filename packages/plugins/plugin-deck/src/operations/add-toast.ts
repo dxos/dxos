@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import { DeckCapabilities } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import { upsertToast } from '../util';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.AddToast> = LayoutOperation.AddToast.pipe(

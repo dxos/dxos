@@ -42,8 +42,8 @@ import { ReviewPlugin, type ReviewPluginOptions } from '../../ReviewPlugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 import { translations } from '../../translations';
-import { CommentCapabilities } from '../../types';
 import * as AgentIdentity from '../../types/AgentIdentity';
+import * as CommentCapabilities from '../../types/CommentCapabilities';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];

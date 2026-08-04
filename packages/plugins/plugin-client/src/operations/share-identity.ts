@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { Account } from '../types';
+import * as Account from '../types/Account';
 import { ShareIdentity } from './definitions';
 
 const handler: Operation.WithHandler<typeof ShareIdentity> = ShareIdentity.pipe(

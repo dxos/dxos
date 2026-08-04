@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
 import { closeEntry } from '../layout';
-import { DeckCapabilities } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
 

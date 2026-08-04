@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { FileOperation } from '../types';
+import * as FileOperation from '../types/FileOperation';
 
 export const FileOperationHandlerSet = OperationHandlerSet.keyed([
   [FileOperation.Create, () => import('./create')],

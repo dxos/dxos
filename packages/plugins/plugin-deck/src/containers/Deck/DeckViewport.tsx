@@ -46,8 +46,8 @@ import {
   useSelectedCompanionVariant,
 } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#types';
 
+import * as DeckOperation from '../../types/DeckOperation';
 import * as DeckRole from '../../types/DeckRole';
 import { layoutAppliesTopbar } from '../../util';
 import {

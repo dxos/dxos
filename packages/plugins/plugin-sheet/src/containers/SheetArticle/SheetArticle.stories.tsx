@@ -21,9 +21,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ComputeGraphContext, useComputeGraph } from '#components';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
-import { SheetOperation } from '#types';
-import { Sheet } from '#types';
 
+import * as Sheet from '../../types/Sheet';
+import * as SheetOperation from '../../types/SheetOperation';
 import RangeList from '../RangeList';
 import { SheetArticle } from './SheetArticle';
 

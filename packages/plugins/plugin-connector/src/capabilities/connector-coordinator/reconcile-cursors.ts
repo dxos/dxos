@@ -9,8 +9,7 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 
-import { Connection } from '#types';
-
+import * as Connection from '../../types/Connection';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { ensureSyncTrigger, isCursorForConnection } from '../../util';
 

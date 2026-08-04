@@ -13,8 +13,8 @@ import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Connection } from '#types';
 
+import * as Connection from '../../types/Connection';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { SyncTargetsDialog, type SyncTargetsDialogProps } from './SyncTargetsDialog';
 

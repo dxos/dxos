@@ -11,7 +11,8 @@ import { Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateRoutinePanel } from '#components';
-import { RoutineOperation } from '#types';
+
+import * as RoutineOperation from '../types/RoutineOperation';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 

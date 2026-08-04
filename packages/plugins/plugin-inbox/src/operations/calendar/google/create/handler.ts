@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GoogleCredentials } from '../../../../services/google-credentials';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { toGoogleEvent } from '../mapper';
 
 const handler = InboxOperation.CreateGoogleCalendarEvent.pipe(

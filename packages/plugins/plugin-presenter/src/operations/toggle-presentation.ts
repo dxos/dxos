@@ -12,9 +12,8 @@ import { Obj } from '@dxos/echo';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckOperation from '@dxos/plugin-deck/DeckOperation';
 
-import { PresenterOperation } from '#types';
-
 import { getPresentationPath } from '../paths';
+import * as PresenterOperation from '../types/PresenterOperation';
 
 /**
  * Enters or exits presentation for the given object. When `state` is omitted the

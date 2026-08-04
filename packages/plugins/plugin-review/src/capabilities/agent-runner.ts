@@ -21,8 +21,8 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { AnchoredTo, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { CommentCapabilities } from '../types';
 import * as AgentIdentity from '../types/AgentIdentity';
+import * as CommentCapabilities from '../types/CommentCapabilities';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-sonnet-4-6.default';
 

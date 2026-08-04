@@ -11,8 +11,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Ref, Type } from '@dxos/echo';
 
-import { RoutineCapabilities } from '#types';
-
+import * as RoutineCapabilities from '../types/RoutineCapabilities';
 import { makeRoutine } from '../util';
 
 /**

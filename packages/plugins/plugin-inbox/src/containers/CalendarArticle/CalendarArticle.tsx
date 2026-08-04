@@ -28,9 +28,11 @@ import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
-import { Calendar, DraftEvent, SystemTags } from '#types';
 
 import { getCalendarRangeSelectionId } from '../../paths';
+import * as Calendar from '../../types/Calendar';
+import * as DraftEvent from '../../types/DraftEvent';
+import * as SystemTags from '../../types/SystemTags';
 import { InitializeCalendar } from './InitializeCalendar';
 
 const byDate =

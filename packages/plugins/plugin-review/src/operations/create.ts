@@ -14,8 +14,8 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import { Attention } from '@dxos/react-ui-attention/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 
-import { CommentCapabilities } from '../types';
-import { CommentOperation } from '../types';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOperation.Create.pipe(
   Operation.withHandler(

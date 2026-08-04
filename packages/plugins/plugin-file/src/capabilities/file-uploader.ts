@@ -12,7 +12,7 @@ import { Blob, Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { FileOperation } from '#types';
+import * as FileOperation from '../types/FileOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

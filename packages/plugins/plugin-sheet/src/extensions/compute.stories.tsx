@@ -24,9 +24,9 @@ import { isNonNullable } from '@dxos/util';
 
 import { Sheet, useComputeGraph } from '#components';
 import { useTestSheet, withComputeGraphDecorator } from '#testing';
-import { Sheet as SheetType } from '#types';
 
 import { useSheetModel } from '../model';
+import * as SheetType from '../types/Sheet';
 import { compute, computeGraphFacet } from './compute';
 
 const str = (...lines: string[]) => lines.join('\n');

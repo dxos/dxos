@@ -15,7 +15,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox } from '#types';
+
+import * as Mailbox from '../../types/Mailbox';
 
 export type MailboxPropertiesProps = AppSurface.ObjectPropertiesProps<Mailbox.Mailbox>;
 

@@ -11,7 +11,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { TemplatePanel } from '#components';
-import { Template } from '#types';
+
+import * as Template from '../types/Template';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

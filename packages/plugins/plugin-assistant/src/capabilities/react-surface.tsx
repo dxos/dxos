@@ -35,8 +35,8 @@ import {
   TriggerStatus,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { type Assistant } from '#types';
 
+import type * as Assistant from '../types/Assistant';
 import * as ChatSurface from '../types/ChatSurface';
 
 export default Capability.makeModule(() =>

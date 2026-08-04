@@ -14,7 +14,7 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
-import { Calendar } from '../../../../types';
+import * as Calendar from '../../../../types/Calendar';
 import * as SyncStreamConfig from '../../../../types/SyncStreamConfig';
 import { mapEvent } from '../mapper';
 import { type CalendarPageEffect, fetchEvents } from './fetch';

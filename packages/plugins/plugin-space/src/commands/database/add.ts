@@ -22,8 +22,8 @@ import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type SpaceId } from '@dxos/keys';
 
-import { SpaceCapabilities, SpaceEvents } from '#types';
-
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../types/SpaceEvents';
 import { printObject } from './util';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).

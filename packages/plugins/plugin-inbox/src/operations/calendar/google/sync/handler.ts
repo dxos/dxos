@@ -12,7 +12,7 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 
 import { GoogleCredentials } from '../../../../services';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { type SyncCalendarProps, syncCalendar } from './sync';
 
 const handler = InboxOperation.GoogleCalendarSync.pipe(

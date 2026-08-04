@@ -8,8 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { SheetOperation } from '#types';
-import { Sheet } from '#types';
+import * as Sheet from '../types/Sheet';
+import * as SheetOperation from '../types/SheetOperation';
 
 const activate = Effect.fnUntraced(function* () {
   const config: AppCapabilities.CommentConfig = {

@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { CommentOperation } from '#types';
+import * as CommentOperation from '../types/CommentOperation';
 
 const SKILL_KEY = 'org.dxos.skill.comments';
 

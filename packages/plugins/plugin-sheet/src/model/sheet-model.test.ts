@@ -10,8 +10,7 @@ import { TestBuilder, testFunctionPlugins } from '@dxos/compute-hyperformula/tes
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { Sheet } from '#types';
-
+import * as Sheet from '../types/Sheet';
 import * as SheetUtil from '../types/SheetUtil';
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';

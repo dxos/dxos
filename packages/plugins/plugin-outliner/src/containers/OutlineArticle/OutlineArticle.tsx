@@ -8,7 +8,8 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 
 import { Outline } from '#components';
-import { type Outline as OutlineType } from '#types';
+
+import type * as OutlineType from '../../types/Outline';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline>;
 

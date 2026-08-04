@@ -24,7 +24,8 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ClientOptions } from '#types';
+
+import * as ClientOptions from './types/ClientOptions';
 
 export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

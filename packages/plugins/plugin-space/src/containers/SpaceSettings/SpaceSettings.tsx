@@ -11,8 +11,8 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { type Settings } from '#types';
 
+import type * as Settings from '../../types/Settings';
 import { getSpaceDisplayName } from '../../util';
 
 export type SpaceSettingsProps = {

@@ -5,7 +5,7 @@
 import { Obj } from '@dxos/echo';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { Sheet } from '#types';
+import * as Sheet from './types/Sheet';
 
 export const serializer: SpaceSchema.TypedObjectSerializer<Sheet.Sheet> = {
   serialize: async ({ object }): Promise<string> => {

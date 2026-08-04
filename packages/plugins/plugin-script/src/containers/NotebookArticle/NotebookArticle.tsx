@@ -27,9 +27,9 @@ import { isNonNullable } from '@dxos/util';
 
 import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '#components';
 import { meta } from '#meta';
-import { type Notebook } from '#types';
 
 import { ComputeGraph } from '../../notebook';
+import type * as Notebook from '../../types/Notebook';
 
 const INCLUDE_SKILLS = ['org.dxos.skill.assistant', 'org.dxos.skill.database', 'org.dxos.skill.markdown'];
 

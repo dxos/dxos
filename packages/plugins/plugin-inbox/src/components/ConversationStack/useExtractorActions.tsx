@@ -8,7 +8,8 @@ import { type ObjectExtractor } from '@dxos/extractor';
 import { log } from '@dxos/log';
 
 import { isAiServiceUnavailable } from '../../operations/extractor/ai-gate';
-import { InboxOperation, Mailbox } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 
 export type ExtractorMenuItem = {
   id: string;

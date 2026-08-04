@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { InboxOperation } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
 
 export * from './extractor';
 export * from './util';

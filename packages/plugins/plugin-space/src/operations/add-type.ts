@@ -8,7 +8,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { SpaceCapabilities, SpaceEvents } from '../types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceEvents from '../types/SpaceEvents';
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.AddType> = SpaceOperation.AddType.pipe(

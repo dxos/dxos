@@ -10,8 +10,7 @@ import { type Obj } from '@dxos/echo';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type APIKey } from '@dxos/schema';
 
-import { MapCapabilities } from '#types';
-
+import * as MapCapabilities from '../../types/MapCapabilities';
 // Import the lazy wrapper (ComponentType<any>) so JSX assignment is not blocked by the
 // compound GeoControlProps & MapArticleProps intersection that TS cannot unify directly.
 import { MapArticle } from '../index';

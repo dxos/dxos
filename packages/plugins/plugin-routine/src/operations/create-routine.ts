@@ -11,7 +11,8 @@ import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getRoutinesPath } from '../paths';
-import { RoutineCapabilities, RoutineOperation } from '../types';
+import * as RoutineCapabilities from '../types/RoutineCapabilities';
+import * as RoutineOperation from '../types/RoutineOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateRoutine> = RoutineOperation.CreateRoutine.pipe(
   Operation.withHandler(

@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, EID } from '@dxos/echo';
 import { Position } from '@dxos/util';
 
-import { ClientCapabilities } from '../types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 const handler: Operation.WithHandler<typeof NavigationOperation.ResolveNavigationTargets> =
   NavigationOperation.ResolveNavigationTargets.pipe(

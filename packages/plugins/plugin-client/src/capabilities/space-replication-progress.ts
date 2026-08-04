@@ -15,9 +15,8 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';
 
-import { ClientCapabilities } from '#types';
-
 import { createSpaceFeedReplicationProgressKey, createSpaceReplicationProgressKey } from '../progress';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 type MonitorUpdate = {
   readonly label: string;

@@ -11,7 +11,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
-import { OutlineOperation } from '#types';
+
+import * as OutlineOperation from '../types/OutlineOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

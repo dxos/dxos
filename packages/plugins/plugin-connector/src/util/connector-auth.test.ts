@@ -16,7 +16,7 @@ import { AccessToken, Cursor } from '@dxos/link';
 import { Node } from '@dxos/plugin-graph';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { Connection } from '../types';
+import * as Connection from '../types/Connection';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 import { connectorAuthActions } from './connector-auth';
 

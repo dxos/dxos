@@ -9,8 +9,7 @@ import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { Tldraw } from '#types';
-
+import * as Tldraw from '../types/Tldraw';
 import { TLDrawStoreAdapter } from './adapter';
 
 /**

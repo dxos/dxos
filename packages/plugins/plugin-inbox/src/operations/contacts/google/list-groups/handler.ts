@@ -15,7 +15,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { GoogleContacts } from '../../../../apis';
 import { AccessTokenNotPopulatedError } from '../../../../errors';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 
 const CONTACT_GROUPS_BASE_URL = 'https://people.googleapis.com/v1/contactGroups';
 

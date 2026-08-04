@@ -20,9 +20,9 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import * as Connection from '../types/Connection';
 import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 

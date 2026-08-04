@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { ScriptOperation } from '../types';
+import * as ScriptOperation from '../types/ScriptOperation';
 
 export const ScriptOperationHandlerSet = OperationHandlerSet.keyed([
   [ScriptOperation.CreateScript, () => import('./create-script')],

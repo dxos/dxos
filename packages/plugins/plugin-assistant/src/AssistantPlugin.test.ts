@@ -26,10 +26,10 @@ import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { AssistantPlugin } from '#plugin';
-import { AssistantEvents } from '#types';
 
 import { meta } from './meta';
 import { AssistantSkill } from './skills/assistant';
+import * as AssistantEvents from './types/AssistantEvents';
 
 EntityId.dangerouslyDisableRandomness();
 

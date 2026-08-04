@@ -22,8 +22,8 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
 
+import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
 import * as SpaceSchema from '../../../types/SpaceSchema';
 import { getSpaceDisplayName } from '../../../util';
 import {

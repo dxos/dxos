@@ -10,9 +10,8 @@ import { type SpaceCapabilities } from '@dxos/plugin-space';
 import { Column } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { ThreadCapabilities } from '#types';
-
 import * as ChannelBackend from '../../types/ChannelBackend';
+import * as ThreadCapabilities from '../../types/ThreadCapabilities';
 
 /**
  * Provider-driven create panel for channels. Reads the registered

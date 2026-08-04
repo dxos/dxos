@@ -28,8 +28,9 @@ import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities, SpaceEvents } from '#types';
 
+import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../../types/SpaceEvents';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util';
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,

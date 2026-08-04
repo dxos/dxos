@@ -13,7 +13,7 @@ import { type Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { getRoutinesSettingsPath } from '../paths';
-import { RoutineOperation } from '../types';
+import * as RoutineOperation from '../types/RoutineOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.CreateTriggerFromTemplate> =
   RoutineOperation.CreateTriggerFromTemplate.pipe(

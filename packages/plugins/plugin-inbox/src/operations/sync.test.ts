@@ -21,7 +21,7 @@ import { DraftMessage, Message, Organization, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../constants';
 import { seedMailboxBinding } from '../testing/sync-fixture';
-import { type Mailbox } from '../types';
+import type * as Mailbox from '../types/Mailbox';
 
 const TEST_SOURCE = 'test.mail';
 

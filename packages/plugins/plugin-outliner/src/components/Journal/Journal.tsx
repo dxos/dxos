@@ -12,8 +12,8 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { Journal as JournalType } from '#types';
 
+import * as JournalType from '../../types/Journal';
 import * as OutlinerUtil from '../../types/OutlinerUtil';
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 

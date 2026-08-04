@@ -12,9 +12,9 @@ import { EffectEx } from '@dxos/effect';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
 
-import { ClientEvents } from '#types';
-import { ClientOptions } from '#types';
-import { ClientCapabilities } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
+import * as ClientEvents from '../types/ClientEvents';
+import * as ClientOptions from '../types/ClientOptions';
 
 type ClientCapabilityOptions = Omit<
   ClientOptions.ClientPluginOptions,

@@ -5,7 +5,7 @@
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 
-import { AssistantOperation } from '#types';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 export const AssistantOperationHandlerSet = OperationHandlerSet.keyed([
   [AssistantOperation.CreateChat, () => import('./create-chat')],

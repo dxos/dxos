@@ -22,7 +22,7 @@ import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCa
 
 import { TldrawBuilder } from '#model';
 
-import { Tldraw } from './types';
+import * as Tldraw from './types/Tldraw';
 
 EntityId.dangerouslyDisableRandomness();
 

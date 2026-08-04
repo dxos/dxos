@@ -19,9 +19,9 @@ import { Expando, Text } from '@dxos/schema';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { NativeFilesystemOperation } from '#types';
 
 import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
+import * as NativeFilesystemOperation from '../types/NativeFilesystemOperation';
 import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
 

@@ -12,10 +12,10 @@ import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { ClientCapabilities } from '#types';
 
 import { useHubHttpClient } from '../../hooks';
 import * as AccountCache from '../../types/AccountCache';
+import * as ClientCapabilities from '../../types/ClientCapabilities';
 
 export const InvitationsContainer = () => {
   const { t } = useTranslation(meta.profile.key);

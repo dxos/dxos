@@ -36,9 +36,11 @@ import {
   Wireframe,
 } from '#containers';
 import { meta } from '#meta';
-import { DebugNodes, DebugSurface, type Settings } from '#types';
 
 import * as Debug from '../types/Debug';
+import * as DebugNodes from '../types/DebugNodes';
+import * as DebugSurface from '../types/DebugSurface';
+import type * as Settings from '../types/Settings';
 
 type SpaceDebug = {
   type: string;

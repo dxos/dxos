@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Identity, Space } from '@dxos/halo';
 
-import { ClientCapabilities } from './types';
+import * as ClientCapabilities from './types/ClientCapabilities';
 
 /**
  * Provides the canonical `@dxos/halo` services (`Identity.Service` / `Space.Service`) from the

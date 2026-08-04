@@ -13,7 +13,7 @@ import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
 import { GoogleCredentials, GoogleMailApi } from '../../../../services';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { runMailSync } from '../../mail-sync';
 import { googleMailSyncProvider } from './sync-provider';
 

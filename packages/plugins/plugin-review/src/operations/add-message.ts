@@ -15,9 +15,9 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { shouldTriggerAgent } from '../should-trigger-agent';
-import { CommentCapabilities } from '../types';
-import { CommentOperation } from '../types';
 import * as AgentIdentity from '../types/AgentIdentity';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(

@@ -10,9 +10,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { AccessToken } from '@dxos/link';
 
-import { Connection } from '#types';
-
 import { CUSTOM_PROVIDER_ID } from '../constants';
+import * as Connection from '../types/Connection';
 import * as ConnectorSpec from '../types/ConnectorSpec';
 
 /** Default form for manually entered access tokens (custom connector). */

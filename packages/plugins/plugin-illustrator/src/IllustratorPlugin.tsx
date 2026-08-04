@@ -15,10 +15,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Drawing } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Drawing from './types/Drawing';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Migrations),

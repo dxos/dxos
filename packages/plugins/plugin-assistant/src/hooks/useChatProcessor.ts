@@ -22,9 +22,8 @@ import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { type Assistant } from '#types';
-
 import { AiChatProcessor, type AiServicePreset } from '../processor';
+import type * as Assistant from '../types/Assistant';
 
 export type UseChatProcessorProps = {
   space?: Space;

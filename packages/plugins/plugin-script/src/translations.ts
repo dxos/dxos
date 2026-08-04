@@ -7,7 +7,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Notebook } from '#types';
+
+import * as Notebook from './types/Notebook';
 
 export const translations = [
   {

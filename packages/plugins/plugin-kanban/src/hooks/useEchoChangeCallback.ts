@@ -6,8 +6,7 @@ import { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 
-import { type Kanban } from '#types';
-
+import type * as Kanban from '../types/Kanban';
 import * as KanbanLayout from '../types/KanbanLayout';
 
 /**

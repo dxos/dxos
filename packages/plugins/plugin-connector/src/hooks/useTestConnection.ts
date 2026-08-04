@@ -19,7 +19,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useConnector } from '#hooks';
 
-import { type Connection } from '../types';
+import type * as Connection from '../types/Connection';
 
 export type TestConnectionStatus =
   /** No test has run yet (connection or its token not resolved). */

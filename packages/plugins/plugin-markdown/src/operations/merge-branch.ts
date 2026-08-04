@@ -9,7 +9,8 @@ import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Branch as VersioningBranch } from '@dxos/versioning';
 
-import { Markdown, MarkdownOperation } from '../types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.MergeBranch> = MarkdownOperation.MergeBranch.pipe(
   Operation.withHandler(

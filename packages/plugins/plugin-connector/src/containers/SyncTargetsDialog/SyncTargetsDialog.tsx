@@ -17,7 +17,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import { type Connection } from '../../types';
+import type * as Connection from '../../types/Connection';
 import * as ConnectorCoordination from '../../types/ConnectorCoordination';
 import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { isCursorForConnection } from '../../util';

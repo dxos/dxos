@@ -20,8 +20,8 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ObservabilityCapabilities } from '#types';
 
+import * as ObservabilityCapabilities from './types/ObservabilityCapabilities';
 import * as ObservabilityOptions from './types/ObservabilityOptions';
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(

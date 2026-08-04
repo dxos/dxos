@@ -6,8 +6,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { ClientOptions } from '#types';
-import { ClientCapabilities } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
+import * as ClientOptions from '../types/ClientOptions';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',

@@ -11,7 +11,8 @@ import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabili
 import { Selection } from '@dxos/react-ui-attention/types';
 
 import { type SelectionRange, getSelectionRanges } from '../model/selection';
-import { Markdown, MarkdownOperation } from '../types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.GetSelection> = MarkdownOperation.GetSelection.pipe(
   Operation.withHandler(

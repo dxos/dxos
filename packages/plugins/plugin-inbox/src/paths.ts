@@ -4,7 +4,7 @@
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 
-import { Calendar } from '#types';
+import * as Calendar from './types/Calendar';
 
 const { getSectionPath: getCalendarsPath, getObjectPath: getCalendarPath } = GraphPath.createTypeSectionPaths(
   Calendar.Calendar,

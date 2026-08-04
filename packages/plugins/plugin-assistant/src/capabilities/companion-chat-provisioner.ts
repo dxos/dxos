@@ -21,7 +21,9 @@ import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats

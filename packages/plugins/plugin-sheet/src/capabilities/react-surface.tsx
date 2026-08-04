@@ -13,7 +13,9 @@ import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { RangeList, SheetArticle } from '#containers';
-import { Sheet, SheetCapabilities } from '#types';
+
+import * as Sheet from '../types/Sheet';
+import * as SheetCapabilities from '../types/SheetCapabilities';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

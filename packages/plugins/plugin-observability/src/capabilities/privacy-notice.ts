@@ -10,7 +10,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 
 import { meta } from '#meta';
-import { ObservabilityCapabilities } from '#types';
+
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
 
 /**
  * Shows the privacy notice toast once when an identity is first created.

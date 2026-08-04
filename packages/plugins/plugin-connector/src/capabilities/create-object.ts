@@ -8,8 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Connection } from '#types';
-
+import * as Connection from '../types/Connection';
 import * as ConnectorCoordination from '../types/ConnectorCoordination';
 import * as ConnectorForm from '../types/ConnectorForm';
 

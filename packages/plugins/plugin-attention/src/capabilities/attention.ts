@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Attention, ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
-import { AttentionCapabilities } from '#types';
+import * as AttentionCapabilities from '../types/AttentionCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

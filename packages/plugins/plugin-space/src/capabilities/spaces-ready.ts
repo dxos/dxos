@@ -30,8 +30,8 @@ import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
 
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import * as SpaceSchema from '../types/SpaceSchema';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;

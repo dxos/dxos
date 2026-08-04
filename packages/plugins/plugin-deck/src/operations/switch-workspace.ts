@@ -13,7 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 import { Graph, Node } from '@dxos/plugin-graph';
 
-import { DeckCapabilities } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import * as DeckSchema from '../types/DeckSchema';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(

@@ -4,7 +4,7 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { CommentOperation } from '../types';
+import * as CommentOperation from '../types/CommentOperation';
 
 export const CommentOperationHandlerSet = OperationHandlerSet.keyed([
   [CommentOperation.AddMessage, () => import('./add-message')],

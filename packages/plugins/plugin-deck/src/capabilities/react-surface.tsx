@@ -13,7 +13,8 @@ import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
 import { DeckSettings } from '#containers';
 import { meta } from '#meta';
-import { type Settings } from '#types';
+
+import type * as Settings from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

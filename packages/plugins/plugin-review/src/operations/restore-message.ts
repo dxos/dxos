@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Thread } from '@dxos/types';
 
-import { CommentOperation } from '../types';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.RestoreMessage> = CommentOperation.RestoreMessage.pipe(
   Operation.withHandler(

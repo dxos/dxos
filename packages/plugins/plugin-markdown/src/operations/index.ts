@@ -5,7 +5,7 @@
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { MarkdownOperation } from '../types';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 export const MarkdownOperationHandlerSet = OperationHandlerSet.keyed([
   [CollaborationOperation.AcceptChange, () => import('./accept-change')],

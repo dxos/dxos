@@ -10,7 +10,7 @@ import { Annotation } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { SpaceCapabilities } from '../types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOperation.Migrate.pipe(

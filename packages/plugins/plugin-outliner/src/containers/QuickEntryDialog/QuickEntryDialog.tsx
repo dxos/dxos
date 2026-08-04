@@ -12,7 +12,8 @@ import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { OutlineOperation } from '#types';
+
+import * as OutlineOperation from '../../types/OutlineOperation';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(

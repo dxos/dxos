@@ -8,10 +8,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Journal, Outline } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Journal from './types/Journal';
+import * as Outline from './types/Outline';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

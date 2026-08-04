@@ -15,9 +15,9 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { withComputeGraphDecorator } from '#testing';
-import { Sheet } from '#types';
 
 import { useSheetModel } from '../../model';
+import * as Sheet from '../../types/Sheet';
 import { useComputeGraph } from './ComputeGraphContextProvider';
 
 const FUNCTION_NAME = 'TEST';

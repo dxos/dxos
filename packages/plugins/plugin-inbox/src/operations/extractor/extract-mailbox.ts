@@ -10,7 +10,7 @@ import { Database, Feed, Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { InboxOperation } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
 
 const DEFAULT_CONCURRENCY = InboxOperation.DEFAULT_EXTRACT_MAILBOX_CONCURRENCY;
 

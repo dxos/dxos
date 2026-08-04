@@ -14,7 +14,8 @@ import { type Space } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DebugNodes } from '#types';
+
+import * as DebugNodes from '../types/DebugNodes';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
