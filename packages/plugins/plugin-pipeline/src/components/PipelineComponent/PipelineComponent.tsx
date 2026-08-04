@@ -3,7 +3,6 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type FC, type PropsWithChildren } from 'react';
 
@@ -23,8 +22,6 @@ type ItemProps = {
   item: Obj.Unknown;
   projectionModel?: ProjectionModel;
 };
-
-export const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
 //
 // Root
