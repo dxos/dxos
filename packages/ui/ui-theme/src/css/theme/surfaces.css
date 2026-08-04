@@ -129,6 +129,19 @@
    * lifts away from the host like the state surfaces do (offset 0.30). */
   --color-placeholder: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.3) c h);
 
+  /*
+   * Scrollbar thumb. Fixed neutrals collided with the surface they scrolled over: in light mode the
+   * thumb was neutral-200, the same value as the base canvas, so it was invisible. Deriving it from
+   * the host keeps the same contrast on any surface, in either theme (offsets 0.23 / 0.30 / 0.34).
+   */
+  --color-scrollbar-thumb: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.23) c h);
+  --color-scrollbar-thumb-hover: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.3) c h
+  );
+  --color-scrollbar-thumb-active: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.34) c h
+  );
+
   /* State aspects — same host-derived mechanism; see the offsets above. */
   --color-hover-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.08) c h);
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));

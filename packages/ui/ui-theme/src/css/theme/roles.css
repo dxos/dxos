@@ -49,10 +49,8 @@
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 
   /* Scrollbar */
+  /* The groove. The thumb is host-derived — see the Aspects block in surfaces.css. */
   --color-scrollbar-track: light-dark(var(--color-neutral-50), var(--color-neutral-950));
-  --color-scrollbar-thumb: light-dark(var(--color-neutral-200), var(--color-neutral-600));
-  --color-scrollbar-thumb-active: light-dark(var(--color-neutral-200), var(--color-neutral-600));
-  --color-scrollbar-thumb-hover: light-dark(var(--color-neutral-200), var(--color-neutral-600));
 
   /*
    * Sheet / Grid — intentionally OFF the elevation ladder.
