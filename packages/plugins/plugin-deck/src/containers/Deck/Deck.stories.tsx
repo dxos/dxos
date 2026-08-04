@@ -541,10 +541,10 @@ export const Expose: Story = {
     // so the looser check passes on the pre-existing focus and proves nothing about the caret.
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(tiles().some((tile) => tile.querySelector('[inert]'))).toBe(false));
-    await waitFor(() => {
+    await waitFor(async () => {
       const active = document.activeElement as HTMLElement | null;
-      expect(active?.closest('[data-object-id]')?.getAttribute('data-object-id')).toEqual(held);
-      expect(active?.classList.contains('cm-content')).toBe(true);
+      await expect(active?.closest('[data-object-id]')?.getAttribute('data-object-id')).toEqual(held);
+      await expect(active?.classList.contains('cm-content')).toBe(true);
     });
   },
 };
