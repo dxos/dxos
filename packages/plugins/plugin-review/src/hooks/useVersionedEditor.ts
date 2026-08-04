@@ -12,7 +12,7 @@ import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { Branch } from '@dxos/versioning';
 
-import { ReviewCapabilities } from '../types';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 import { deriveBinding } from './review-lifecycle';
 import { type useVersioning } from './useVersioning';
 
@@ -39,7 +39,7 @@ export type VersionedEditor = {
   branchLoading: boolean;
   // Derived review state consumed by the extension/overlay layer and the view-mode dropdown.
   ambient: boolean;
-  policy: ReviewCapabilities.ReviewRenderConfig;
+  policy: ReviewCapabilities.ReviewCapabilities.ReviewRenderConfig;
   ambientSuggesting: boolean;
   suggestActive: boolean;
   compareActive: boolean;
@@ -106,8 +106,8 @@ export const useVersionedEditor = ({
   // absent (e.g. a bare story host) ⇒ the GDocs-parity default.
   // Optional lookup: the absent-policy fallback below already covers hosts without a plugin
   // manager (bare stories, headless hook tests), so the manager itself must not be required.
-  const [reviewRenderPolicy] = useOptionalCapabilities(ReviewCapabilities.ReviewRenderPolicy);
-  const renderPolicy = reviewRenderPolicy ?? ReviewCapabilities.defaultReviewRenderPolicy;
+  const [reviewRenderPolicy] = useOptionalCapabilities(ReviewCapabilities.ReviewCapabilities.ReviewRenderPolicy);
+  const renderPolicy = reviewRenderPolicy ?? ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy;
   const ambient = selection.kind === 'current';
   const policy = renderPolicy(mode);
   const ambientEditable = ambient ? policy.editable : true;

@@ -31,16 +31,9 @@ import { Position } from '@dxos/util';
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import {
-  DeckCapabilities,
-  type EphemeralDeckState,
-  PLANK_COMPANION_TYPE,
-  type Settings,
-  type StoredDeckState,
-  defaultDeck,
-  getMode,
-} from '#types';
+import { DeckCapabilities, type Settings } from '#types';
 
+import * as DeckSchema from '../../types/DeckSchema';
 import { DeckLayout } from './DeckLayout';
 
 random.seed(1234);
@@ -63,20 +56,20 @@ const storyDeckSettings = Capability.makeModule(() =>
 // TODO(burdon): Factor out.
 const storyDeckState = Capability.makeModule(() =>
   Effect.sync(() => {
-    const defaultStoredDeckState: StoredDeckState = {
+    const defaultStoredDeckState: DeckSchema.StoredDeckState = {
       sidebarState: 'expanded',
       complementarySidebarState: 'collapsed',
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
       decks: {
-        default: { ...defaultDeck },
+        default: { ...DeckSchema.defaultDeck },
       },
     };
 
-    const stateAtom = Atom.make<StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
+    const stateAtom = Atom.make<DeckSchema.StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
 
-    const defaultEphemeralDeckState: EphemeralDeckState = {
+    const defaultEphemeralDeckState: DeckSchema.EphemeralDeckState = {
       fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
@@ -91,7 +84,9 @@ const storyDeckState = Capability.makeModule(() =>
       scrollIntoView: undefined,
     };
 
-    const ephemeralAtom = Atom.make<EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(Atom.keepAlive);
+    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(
+      Atom.keepAlive,
+    );
 
     const layoutAtom = Atom.make((get) => {
       const state = get(stateAtom);
@@ -99,7 +94,7 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
@@ -309,7 +304,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const { invokePromise } = useOperationInvoker();
   const connections = useConnections(graph, id, 'child');
   const items = useMemo(
-    () => connections.filter((node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE),
+    () => connections.filter((node) => !Node.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
     [connections],
   );
 

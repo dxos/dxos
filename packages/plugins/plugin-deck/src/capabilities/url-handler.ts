@@ -25,8 +25,9 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities, DEFAULT_DECK_ID, type StoredDeckState, defaultDeck } from '#types';
+import { DeckCapabilities } from '#types';
 
+import * as DeckSchema from '../types/DeckSchema';
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, serializeDeckToUrl } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
@@ -81,7 +82,7 @@ export default Capability.makeModule(
     };
 
     // Helper to update state.
-    const updateState = (fn: (current: StoredDeckState) => StoredDeckState) => {
+    const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
       registry.set(stateAtom, fn(getState()));
     };
 
@@ -99,9 +100,9 @@ export default Capability.makeModule(
       if (pathname === '/reset') {
         updateState((s) => ({
           ...s,
-          activeDeck: DEFAULT_DECK_ID,
+          activeDeck: DeckSchema.DEFAULT_DECK_ID,
           decks: {
-            [DEFAULT_DECK_ID]: { ...defaultDeck },
+            [DeckSchema.DEFAULT_DECK_ID]: { ...DeckSchema.defaultDeck },
           },
         }));
         window.location.pathname = '/';
@@ -140,7 +141,8 @@ export default Capability.makeModule(
       const { workspace, pairs } = parsed.value;
       // `/w/default` was written by builds that serialized the unresolved-workspace sentinel; map it back
       // to the sentinel rather than to `root/default`, which resolves to no node and so can never heal.
-      const workspacePath = workspace === DEFAULT_DECK_ID ? DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
+      const workspacePath =
+        workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
       const state = getState();
       if (workspacePath !== state.activeDeck) {
         yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
@@ -288,7 +290,7 @@ export default Capability.makeModule(
     let synced = false;
     const syncUrl = (method: 'push' | 'replace' = 'push') => {
       const state = getState();
-      if (state.activeDeck === DEFAULT_DECK_ID) {
+      if (state.activeDeck === DeckSchema.DEFAULT_DECK_ID) {
         // The sentinel is not a workspace: serializing it produces `/w/default`, which on the next load
         // parses as a workspace that resolves to no node, leaving the app with an unavailable workspace.
         // Leave the URL alone until a real workspace becomes active.

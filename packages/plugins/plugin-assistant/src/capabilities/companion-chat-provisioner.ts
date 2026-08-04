@@ -14,13 +14,9 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import {
-  COMPANION_VIEW_STATE_CONTEXT,
-  PLANK_COMPANION_TYPE,
-  type StoredDeckState,
-  companionAspect,
-} from '@dxos/plugin-deck';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect } from '@dxos/plugin-deck';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
@@ -105,7 +101,7 @@ export default Capability.makeModule(
     };
 
     const provision = () => {
-      const deckState: StoredDeckState = registry.get(deckStateAtom);
+      const deckState: DeckSchema.StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
       if (!deck?.companionOpen) {
         unsubAllPlanks();
@@ -173,7 +169,7 @@ const resolveEffectiveVariant = (
   preferredVariant: string | undefined,
 ): string | undefined => {
   const companions = Graph.getConnections(graph, plankId, 'child')
-    .filter((node) => node.type === PLANK_COMPANION_TYPE)
+    .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   if (companions.length === 0) {

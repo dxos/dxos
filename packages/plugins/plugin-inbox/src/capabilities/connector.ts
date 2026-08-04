@@ -26,7 +26,8 @@ import {
   JMAP_DEFAULT_HOST,
   JMAP_MAIL_CONNECTOR_ID,
 } from '../constants';
-import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
+import { InboxOperation } from '../types';
+import * as SyncOptions from '../types/SyncOptions';
 import { jmapCredentialForm } from './jmap-credential-form';
 
 /** How often a mailbox's sync Routine polls for new mail. */
@@ -144,7 +145,7 @@ export default Capability.makeModule(
           // Single-target connector: no `getTargets`. The coordinator calls `materializeTarget`
           // (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: InboxOperation.MaterializeGmailTarget,
-          optionsSchema: SyncOptions,
+          optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
         },
@@ -163,7 +164,7 @@ export default Capability.makeModule(
           // Single-target connector (the account inbox): no `getTargets`. The coordinator calls
           // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: InboxOperation.MaterializeJmapTarget,
-          optionsSchema: SyncOptions,
+          optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
         },
@@ -186,7 +187,7 @@ export default Capability.makeModule(
           operation: InboxOperation.GoogleCalendarSync,
           getTargets: InboxOperation.GetGoogleCalendars,
           materializeTarget: InboxOperation.MaterializeCalendarTarget,
-          optionsSchema: CalendarSyncOptions,
+          optionsSchema: SyncOptions.CalendarSyncOptions,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,

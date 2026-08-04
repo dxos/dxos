@@ -11,15 +11,18 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
 import type { ReviewPluginOptions } from '#plugin';
-import { AgentIdentity, CommentCapabilities, DEFAULT_AGENT_IDENTITY, ReviewCapabilities, ReviewEvents } from '#types';
+import { CommentCapabilities, ReviewEvents } from '#types';
+
+import * as AgentIdentity from '../types/AgentIdentity';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 export const AgentIdentityModule = Capability.inlineModule(
   'agent-identity',
   {
-    provides: [AgentIdentity],
-    props: (options: ReviewPluginOptions) => options.agentIdentity ?? DEFAULT_AGENT_IDENTITY,
+    provides: [AgentIdentity.AgentIdentity],
+    props: (options: ReviewPluginOptions) => options.agentIdentity ?? AgentIdentity.DEFAULT_AGENT_IDENTITY,
   },
-  (identity) => Effect.succeed([Capability.contribute(AgentIdentity, identity)]),
+  (identity) => Effect.succeed([Capability.contribute(AgentIdentity.AgentIdentity, identity)]),
 );
 export const AgentRunner = Capability.lazyModule(
   'AgentRunner',
@@ -47,7 +50,7 @@ export const Markdown = Capability.lazyModule(
 export const MarkdownBinding = Capability.lazyModule(
   'MarkdownBinding',
   {
-    provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.HistoryProvider],
+    provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.ReviewCapabilities.HistoryProvider],
     activatesOn: MarkdownEvents.Start,
   },
   () => import('./markdown-binding'),
@@ -73,7 +76,7 @@ export const CommentState = Capability.lazyModule(
 );
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
-  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
+  { provides: [ReviewCapabilities.ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
   () => import('./review-state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {

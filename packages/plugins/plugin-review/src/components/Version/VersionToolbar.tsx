@@ -10,7 +10,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Branch, Version } from '@dxos/versioning';
 
 import { type UseVersioningResult } from '../../hooks';
-import { type ReviewCapabilities } from '../../types';
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { authorHue } from '../../util';
 import { VersionBanner } from './VersionBanner';
 
@@ -52,7 +52,7 @@ export const VersionToolbar = ({ versioning }: VersionToolbarProps) => {
       ? document?.history?.branches.find((branch) => branch.key === branchKey && branch.status === 'active')
       : undefined;
   }, [document, activeVersion]);
-  const tipSelection = useCallback((): ReviewCapabilities.VersionSelection => {
+  const tipSelection = useCallback((): ReviewCapabilities.ReviewCapabilities.VersionSelection => {
     const branch = branchOfActiveVersion();
     return branch ? { kind: 'branch', branchId: branch.id } : { kind: 'current' };
   }, [branchOfActiveVersion]);

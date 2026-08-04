@@ -16,7 +16,9 @@ import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/r
 import { Position } from '@dxos/util';
 
 import { MapSurface, MapViewEditor } from '#containers';
-import { LocationAnnotationId, Map, MapInline } from '#types';
+import { LocationAnnotationId, Map } from '#types';
+
+import * as MapRole from '../types/MapRole';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -32,10 +34,10 @@ export default Capability.makeModule(() =>
         ),
       }),
       // Generic inline map for any subject a MarkerProvider matches; requested explicitly by
-      // role (e.g. TripArticle renders `<Surface.Surface type={MapInline} data={{ subject, attendableId }} />`).
+      // role (e.g. TripArticle renders `<Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId }} />`).
       Surface.create({
         id: 'surface.mapInline',
-        filter: AppSurface.subject(MapInline, Obj.isObject),
+        filter: AppSurface.subject(MapRole.MapInline, Obj.isObject),
         component: ({ data, role }) => (
           <MapSurface subject={data.subject} attendableId={data.attendableId} role={role} />
         ),

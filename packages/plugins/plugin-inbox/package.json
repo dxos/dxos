@@ -81,49 +81,15 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
-    },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
-    "./testing": {
-      "source": {
-        "node": "./src/testing/node.ts",
-        "default": "./src/testing/index.ts"
-      },
-      "types": "./dist/types/src/testing/index.d.ts",
-      "node": "./dist/lib/testing/node.mjs",
-      "default": "./dist/lib/testing.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
     "./Calendar": {
       "source": "./src/types/Calendar.ts",
       "types": "./dist/types/src/types/Calendar.d.ts",
       "import": "./dist/lib/Calendar.mjs"
+    },
+    "./DraftEvent": {
+      "source": "./src/types/DraftEvent.ts",
+      "types": "./dist/types/src/types/DraftEvent.d.ts",
+      "import": "./dist/lib/DraftEvent.mjs"
     },
     "./ExtractedFrom": {
       "source": "./src/types/ExtractedFrom.ts",
@@ -155,23 +121,70 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./DraftEvent": {
-      "source": "./src/types/DraftEvent.ts",
-      "types": "./dist/types/src/types/DraftEvent.d.ts",
-      "import": "./dist/lib/DraftEvent.mjs"
+    "./SyncOptions": {
+      "source": "./src/types/SyncOptions.ts",
+      "types": "./dist/types/src/types/SyncOptions.d.ts",
+      "import": "./dist/lib/SyncOptions.mjs"
+    },
+    "./SyncStreamConfig": {
+      "source": "./src/types/SyncStreamConfig.ts",
+      "types": "./dist/types/src/types/SyncStreamConfig.d.ts",
+      "import": "./dist/lib/SyncStreamConfig.mjs"
     },
     "./SystemTags": {
       "source": "./src/types/SystemTags.ts",
       "types": "./dist/types/src/types/SystemTags.d.ts",
       "import": "./dist/lib/SystemTags.mjs"
     },
-    "./package.json": "./package.json"
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "import": "./dist/lib/containers.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
+    },
+    "./testing": {
+      "source": {
+        "node": "./src/testing/node.ts",
+        "default": "./src/testing/index.ts"
+      },
+      "types": "./dist/types/src/testing/index.d.ts",
+      "node": "./dist/lib/testing/node.mjs",
+      "default": "./dist/lib/testing.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "Calendar": [
         "dist/types/src/types/Calendar.d.ts"
+      ],
+      "DraftEvent": [
+        "dist/types/src/types/DraftEvent.d.ts"
       ],
       "ExtractedFrom": [
         "dist/types/src/types/ExtractedFrom.d.ts"
@@ -191,8 +204,11 @@
       "Settings": [
         "dist/types/src/types/Settings.d.ts"
       ],
-      "DraftEvent": [
-        "dist/types/src/types/DraftEvent.d.ts"
+      "SyncOptions": [
+        "dist/types/src/types/SyncOptions.d.ts"
+      ],
+      "SyncStreamConfig": [
+        "dist/types/src/types/SyncStreamConfig.d.ts"
       ],
       "SystemTags": [
         "dist/types/src/types/SystemTags.d.ts"

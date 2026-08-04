@@ -14,6 +14,7 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
+    DiscordTargetOptions: 'src/types/DiscordTargetOptions.ts',
     DiscordEvents: 'src/types/DiscordEvents.ts',
     DiscordOperation: 'src/types/DiscordOperation.ts',
   },

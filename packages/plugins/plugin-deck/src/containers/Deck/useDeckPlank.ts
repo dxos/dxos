@@ -13,7 +13,9 @@ import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
 
 import { useBreakpoints, useCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, type ResolvedPart } from '#types';
+import { DeckOperation } from '#types';
+
+import * as DeckSchema from '../../types/DeckSchema';
 
 /** Sigil-menu dispositions surfaced as plank actions. */
 const PLANK_ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-item'];
@@ -31,7 +33,7 @@ export type PlankCapabilities = {
 export type UseDeckPlankOptions = {
   id: string;
   /** Resolved part for the primary plank (`main` | `complementary`). */
-  part: ResolvedPart;
+  part: DeckSchema.ResolvedPart;
   /** Ordered active planks (multi mode); enables the increment affordances. */
   active?: string[];
 };

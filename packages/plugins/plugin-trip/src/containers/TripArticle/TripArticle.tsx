@@ -12,8 +12,8 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { MapInline } from '@dxos/plugin-map';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
+import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -303,7 +303,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface type={MapInline} data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

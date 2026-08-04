@@ -22,7 +22,8 @@ import { type TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { MailSyncError } from '../../errors';
-import { Mailbox, type SyncStreamConfig } from '../../types';
+import { Mailbox } from '../../types';
+import * as SyncStreamConfig from '../../types/SyncStreamConfig';
 import { readBindingOptions } from '../../util';
 
 /**
@@ -133,7 +134,7 @@ export interface MailSyncProviderService {
   /** Provider tag for spans and logs (`gmail`, `jmap`); the run's span is `<name>-sync`. */
   readonly name: string;
   /** The provider's streaming-pipeline tuning (commit page size, per-run cap, …). */
-  readonly config: SyncStreamConfig;
+  readonly config: SyncStreamConfig.SyncStreamConfig;
   /** Foreign-key source stamped on committed items (dedup key namespace). */
   readonly foreignKeySource: string;
   /**

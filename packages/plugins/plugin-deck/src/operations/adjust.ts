@@ -17,7 +17,8 @@ import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
-import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
+import { DeckCapabilities, DeckOperation } from '../types';
+import * as DeckSchema from '../types/DeckSchema';
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
 
@@ -52,7 +53,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
             Graph.getNode(graph, input.id),
             Option.map((node) =>
               Graph.getConnections(graph, node.id, 'child')
-                .filter((n) => n.type === PLANK_COMPANION_TYPE)
+                .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
                 ),

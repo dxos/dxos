@@ -27,10 +27,11 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type AgentIdentity as AgentIdentityType, CommentCapabilities } from '#types';
+import { CommentCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as AgentIdentity from './types/AgentIdentity';
 
 /**
  * Test/storybook hosts swap in a stub `AgentRunner`/`AgentIdentity` via these options rather
@@ -39,7 +40,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
  */
 export type ReviewPluginOptions = {
   agentRunner?: CommentCapabilities.AgentRunner;
-  agentIdentity?: AgentIdentityType;
+  agentIdentity?: AgentIdentity.AgentIdentity;
 };
 
 export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(

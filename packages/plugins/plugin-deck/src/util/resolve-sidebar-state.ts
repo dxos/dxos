@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type StoredDeckState } from '#types';
+import * as DeckSchema from '../types/DeckSchema';
 
-export type SidebarState = StoredDeckState['sidebarState'];
+export type SidebarState = DeckSchema.StoredDeckState['sidebarState'];
 
 /**
  * Resolves the navigation sidebar state for the current breakpoint.

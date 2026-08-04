@@ -21,6 +21,7 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
+    'MapRole': 'src/types/MapRole.ts',
     'Map': 'src/types/Map.ts',
     'MapAction': 'src/types/MapAction.ts',
     'MapCapabilities': 'src/types/MapCapabilities.ts',

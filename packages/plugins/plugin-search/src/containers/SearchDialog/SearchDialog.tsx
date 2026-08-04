@@ -13,10 +13,10 @@ import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
+import { type SearchResult } from '@dxos/react-ui-search';
 
 import { buildSearchQuery, toSearchResults, useGlobalSearch } from '#hooks';
 import { meta } from '#meta';
-import { type SearchResult } from '#types';
 
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
   pivotId?: string;

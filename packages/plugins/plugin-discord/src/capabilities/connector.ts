@@ -29,7 +29,8 @@ import {
 } from '../constants';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
 import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services';
-import { DiscordOperation, DiscordTargetOptions } from '../types';
+import { DiscordOperation } from '../types';
+import * as DiscordTargetOptions from '../types/DiscordTargetOptions';
 
 /**
  * Manual-credential form for the Discord Bot connector.
@@ -177,7 +178,7 @@ export default Capability.makeModule(
           operation: DiscordOperation.SyncDiscordChannel,
           getTargets: DiscordOperation.GetDiscordChannels,
           materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-          optionsSchema: DiscordTargetOptions,
+          optionsSchema: DiscordTargetOptions.DiscordTargetOptions,
         },
         onTokenCreated,
       },
@@ -193,7 +194,7 @@ export default Capability.makeModule(
           operation: DiscordOperation.SyncDiscordChannel,
           getTargets: DiscordOperation.GetDiscordChannels,
           materializeTarget: DiscordOperation.MaterializeDiscordTarget,
-          optionsSchema: DiscordTargetOptions,
+          optionsSchema: DiscordTargetOptions.DiscordTargetOptions,
         },
         onTokenCreated: userOnTokenCreated,
         testConnection: userTestConnection,

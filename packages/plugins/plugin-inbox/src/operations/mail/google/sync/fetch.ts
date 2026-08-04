@@ -15,17 +15,17 @@ import { EmailStage } from '@dxos/pipeline-email';
 
 import { GoogleMail } from '../../../../apis';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../../services';
-import { type SyncStreamConfig } from '../../../../types';
+import * as SyncStreamConfig from '../../../../types/SyncStreamConfig';
 import { type AttachmentMetadata } from '../mapper';
 
-/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 export const GOOGLE_SYNC_CONFIG = {
   listPageSize: 500,
   fetchConcurrency: 5,
   commitPageSize: 10,
   maxItemsPerRun: 500,
   dateChunkDays: 7,
-} as const satisfies SyncStreamConfig;
+} as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 //
 // Fetch messages

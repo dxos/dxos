@@ -12,13 +12,14 @@ import { Obj } from '@dxos/echo';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { ReviewCapabilities } from '#types';
+
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     const getHistoryProvider = (typename: string) =>
-      capabilities.getAll(ReviewCapabilities.HistoryProvider).find(({ id }) => id === typename);
+      capabilities.getAll(ReviewCapabilities.ReviewCapabilities.HistoryProvider).find(({ id }) => id === typename);
 
     // Version history plank companion, gated per-type by a HistoryProvider contribution.
     const extension = yield* GraphBuilder.createExtension({

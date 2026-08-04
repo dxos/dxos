@@ -21,7 +21,8 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { AnchoredTo, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AgentIdentity, CommentCapabilities } from '../types';
+import { CommentCapabilities } from '../types';
+import * as AgentIdentity from '../types/AgentIdentity';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-sonnet-4-6.default';
 
@@ -196,7 +197,7 @@ export default Capability.makeModule(
           const aiServiceLayer = ServiceResolver.provide({ space: db.spaceId }, AiService.AiService).pipe(
             Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
           );
-          const identity = yield* Capability.get(AgentIdentity);
+          const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
 
           // Load every referenced message into a plain Message.Message[].
           const loaded = yield* Effect.forEach(

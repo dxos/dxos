@@ -46,8 +46,9 @@ import {
   useSelectedCompanionVariant,
 } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, Keyshortcuts } from '#types';
+import { DeckOperation } from '#types';
 
+import * as DeckRole from '../../types/DeckRole';
 import { layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -160,7 +161,7 @@ export const DeckContentEmpty = () => {
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
     <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface type={Keyshortcuts} />
+      <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );

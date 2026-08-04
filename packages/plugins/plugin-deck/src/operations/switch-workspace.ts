@@ -13,7 +13,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 import { Graph, Node } from '@dxos/plugin-graph';
 
-import { DeckCapabilities, defaultDeck } from '../types';
+import { DeckCapabilities } from '../types';
+import * as DeckSchema from '../types/DeckSchema';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
@@ -29,7 +30,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
           const newDecks = state.decks[input.subject]
             ? state.decks
-            : { ...state.decks, [input.subject]: { ...defaultDeck } };
+            : { ...state.decks, [input.subject]: { ...DeckSchema.defaultDeck } };
           return {
             ...state,
             previousDeck: shouldUpdatePrevious ? state.activeDeck : state.previousDeck,

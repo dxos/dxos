@@ -73,7 +73,33 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./FileCapabilities": {
+      "source": "./src/types/FileCapabilities.ts",
+      "types": "./dist/types/src/types/FileCapabilities.d.ts",
+      "import": "./dist/lib/FileCapabilities.mjs"
+    },
+    "./FileEvents": {
+      "source": "./src/types/FileEvents.ts",
+      "types": "./dist/types/src/types/FileEvents.d.ts",
+      "import": "./dist/lib/FileEvents.mjs"
+    },
+    "./FileLimits": {
+      "source": "./src/types/FileLimits.ts",
+      "types": "./dist/types/src/types/FileLimits.d.ts",
+      "import": "./dist/lib/FileLimits.mjs"
+    },
+    "./FileOperation": {
+      "source": "./src/types/FileOperation.ts",
+      "types": "./dist/types/src/types/FileOperation.d.ts",
+      "import": "./dist/lib/FileOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -88,28 +114,7 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    },
-    "./FileCapabilities": {
-      "source": "./src/types/FileCapabilities.ts",
-      "types": "./dist/types/src/types/FileCapabilities.d.ts",
-      "import": "./dist/lib/FileCapabilities.mjs"
-    },
-    "./FileEvents": {
-      "source": "./src/types/FileEvents.ts",
-      "types": "./dist/types/src/types/FileEvents.d.ts",
-      "import": "./dist/lib/FileEvents.mjs"
-    },
-    "./FileOperation": {
-      "source": "./src/types/FileOperation.ts",
-      "types": "./dist/types/src/types/FileOperation.d.ts",
-      "import": "./dist/lib/FileOperation.mjs"
-    },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -119,6 +124,9 @@
       ],
       "FileEvents": [
         "dist/types/src/types/FileEvents.d.ts"
+      ],
+      "FileLimits": [
+        "dist/types/src/types/FileLimits.d.ts"
       ],
       "FileOperation": [
         "dist/types/src/types/FileOperation.d.ts"

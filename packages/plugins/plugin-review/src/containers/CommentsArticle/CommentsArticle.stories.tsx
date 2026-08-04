@@ -42,7 +42,8 @@ import { ReviewPlugin, type ReviewPluginOptions } from '../../ReviewPlugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 import { translations } from '../../translations';
-import { AgentIdentity, CommentCapabilities } from '../../types';
+import { CommentCapabilities } from '../../types';
+import * as AgentIdentity from '../../types/AgentIdentity';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
@@ -94,7 +95,7 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
 const StubAgentRunner: CommentCapabilities.AgentRunner = {
   run: ({ thread }) =>
     Effect.gen(function* () {
-      const identity = yield* Capability.get(AgentIdentity);
+      const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
       // User-authored messages have no role set; only assistant messages do.
       const lastUser = [...thread.messages].reverse().find((ref) => ref.target?.sender.role !== 'assistant');
       const echoText = textOf(lastUser?.target);

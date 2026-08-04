@@ -15,8 +15,8 @@ import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
-import { ReviewCapabilities } from '#types';
 
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
@@ -24,21 +24,23 @@ export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.Versioned
 /**
  * Companion panel: git-graph timeline of an object's checkpoints, branch forks, and merges.
  * Clicking a checkpoint time-travels the object's surfaces; clicking a branch fork switches to it.
- * Gated per-type by a `ReviewCapabilities.HistoryProvider` contribution.
+ * Gated per-type by a `ReviewCapabilities.ReviewCapabilities.HistoryProvider` contribution.
  */
 export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role, subject }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
-  const providers = useCapabilities(ReviewCapabilities.HistoryProvider);
+  const providers = useCapabilities(ReviewCapabilities.ReviewCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);
   useObject(subject, 'history');
 
   // Selection is session-local: collaborators each view their own version.
   const objectId = subject.id;
-  const selection = useViewState(ReviewCapabilities.viewAspect, objectId).selection ?? { kind: 'current' as const };
-  const { update } = useViewStateActions(ReviewCapabilities.viewAspect, objectId);
+  const selection = useViewState(ReviewCapabilities.ReviewCapabilities.viewAspect, objectId).selection ?? {
+    kind: 'current' as const,
+  };
+  const { update } = useViewStateActions(ReviewCapabilities.ReviewCapabilities.viewAspect, objectId);
   const setSelection = useCallback(
-    (next: ReviewCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),
+    (next: ReviewCapabilities.ReviewCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),
     [update],
   );
 

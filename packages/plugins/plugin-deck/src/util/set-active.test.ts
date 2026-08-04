@@ -4,12 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { type DeckState, defaultDeck } from '#types';
-
+import * as DeckSchema from '../types/DeckSchema';
 import { computeActiveUpdates } from './set-active';
 
-const makeDeck = (overrides: Partial<DeckState> = {}): DeckState => ({
-  ...defaultDeck,
+const makeDeck = (overrides: Partial<DeckSchema.DeckState> = {}): DeckSchema.DeckState => ({
+  ...DeckSchema.defaultDeck,
   ...overrides,
 });
 

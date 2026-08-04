@@ -4,7 +4,7 @@
 
 import { produce } from 'immer';
 
-import { type DeckAction } from '#types';
+import * as DeckSchema from './types/DeckSchema';
 
 export type AddSubjectsToActiveDeckOptions = {
   /** Insert opened subjects immediately after this plank (in-plank navigation anchors at its origin). */
@@ -51,7 +51,7 @@ export const closeEntry = (deck: string[], entryId: string): string[] => {
   });
 };
 
-export const incrementPlank = (deck: string[], adjustment: DeckAction.Adjustment): string[] => {
+export const incrementPlank = (deck: string[], adjustment: DeckSchema.DeckAction.Adjustment): string[] => {
   return produce(deck, (draft) => {
     const index = draft.findIndex((id) => id === adjustment.id);
     if (

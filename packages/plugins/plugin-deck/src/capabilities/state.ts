@@ -11,33 +11,27 @@ import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
-import {
-  DeckCapabilities,
-  DEFAULT_DECK_ID,
-  type EphemeralDeckState,
-  StoredDeckState,
-  defaultDeck,
-  getMode,
-} from '#types';
+import { DeckCapabilities } from '#types';
 
+import * as DeckSchema from '../types/DeckSchema';
 import { migratePersistedState } from '../util';
 
 const STATE_KEY = `${meta.profile.key}.state`;
 
 /** Default persisted state. */
-const defaultDeckState: StoredDeckState = {
+const defaultDeckState: DeckSchema.StoredDeckState = {
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,
-  activeDeck: DEFAULT_DECK_ID,
-  previousDeck: DEFAULT_DECK_ID,
+  activeDeck: DeckSchema.DEFAULT_DECK_ID,
+  previousDeck: DeckSchema.DEFAULT_DECK_ID,
   decks: {
-    [DEFAULT_DECK_ID]: { ...defaultDeck },
+    [DeckSchema.DEFAULT_DECK_ID]: { ...DeckSchema.defaultDeck },
   },
 };
 
 /** Default ephemeral state. */
-const defaultDeckEphemeralState: EphemeralDeckState = {
+const defaultDeckEphemeralState: DeckSchema.EphemeralDeckState = {
   fullscreen: undefined,
   dialogContent: null,
   dialogOpen: false,
@@ -61,12 +55,14 @@ export default Capability.makeModule(
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
       key: STATE_KEY,
-      schema: StoredDeckState,
+      schema: DeckSchema.StoredDeckState,
       defaultValue: () => ({ ...defaultDeckState }),
     });
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
-    const ephemeralAtom = Atom.make<EphemeralDeckState>({ ...defaultDeckEphemeralState }).pipe(Atom.keepAlive);
+    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultDeckEphemeralState }).pipe(
+      Atom.keepAlive,
+    );
 
     // Create derived layout atom (read-only) from both state atoms.
     const layoutAtom = Atom.make((get) => {
@@ -75,7 +71,7 @@ export default Capability.makeModule(
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',

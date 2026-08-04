@@ -80,12 +80,43 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AgentIdentity": {
+      "source": "./src/types/AgentIdentity.ts",
+      "types": "./dist/types/src/types/AgentIdentity.d.ts",
+      "import": "./dist/lib/AgentIdentity.mjs"
+    },
+    "./CommentCapabilities": {
+      "source": "./src/types/CommentCapabilities.ts",
+      "types": "./dist/types/src/types/CommentCapabilities.d.ts",
+      "import": "./dist/lib/CommentCapabilities.mjs"
+    },
+    "./CommentOperation": {
+      "source": "./src/types/CommentOperation.ts",
+      "types": "./dist/types/src/types/CommentOperation.d.ts",
+      "import": "./dist/lib/CommentOperation.mjs"
+    },
+    "./ReviewCapabilities": {
+      "source": "./src/types/ReviewCapabilities.ts",
+      "types": "./dist/types/src/types/ReviewCapabilities.d.ts",
+      "import": "./dist/lib/ReviewCapabilities.mjs"
+    },
+    "./ReviewEvents": {
+      "source": "./src/types/ReviewEvents.ts",
+      "types": "./dist/types/src/types/ReviewEvents.d.ts",
+      "import": "./dist/lib/ReviewEvents.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "import": "./dist/lib/operations.mjs"
     },
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -105,34 +136,13 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
-    },
-    "./CommentCapabilities": {
-      "source": "./src/types/CommentCapabilities.ts",
-      "types": "./dist/types/src/types/CommentCapabilities.d.ts",
-      "import": "./dist/lib/CommentCapabilities.mjs"
-    },
-    "./CommentOperation": {
-      "source": "./src/types/CommentOperation.ts",
-      "types": "./dist/types/src/types/CommentOperation.d.ts",
-      "import": "./dist/lib/CommentOperation.mjs"
-    },
-    "./ReviewEvents": {
-      "source": "./src/types/ReviewEvents.ts",
-      "types": "./dist/types/src/types/ReviewEvents.d.ts",
-      "import": "./dist/lib/ReviewEvents.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
+      "AgentIdentity": [
+        "dist/types/src/types/AgentIdentity.d.ts"
       ],
       "CommentCapabilities": [
         "dist/types/src/types/CommentCapabilities.d.ts"
@@ -140,8 +150,14 @@
       "CommentOperation": [
         "dist/types/src/types/CommentOperation.d.ts"
       ],
+      "ReviewCapabilities": [
+        "dist/types/src/types/ReviewCapabilities.d.ts"
+      ],
       "ReviewEvents": [
         "dist/types/src/types/ReviewEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
       ]
     }
   },

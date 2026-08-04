@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 
 import { meta } from '#meta';
 
-import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './schema';
+import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
   `${meta.profile.key}.capability.settings`,

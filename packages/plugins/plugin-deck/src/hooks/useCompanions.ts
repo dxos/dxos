@@ -9,7 +9,7 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
-import { PLANK_COMPANION_TYPE } from '#types';
+import * as DeckSchema from '../types/DeckSchema';
 
 /**
  * Companion (child) nodes for a plank.
@@ -35,7 +35,7 @@ export const useCompanions = (id?: string): Node.Node[] => {
     const update = () => {
       const next = registry
         .get(atom)
-        .filter((node) => node.type === PLANK_COMPANION_TYPE)
+        .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
         .toSorted((a, b) => Position.compare(a.properties, b.properties));
       setCompanions((prev) =>
         prev.length === next.length && prev.every((node, index) => node === next[index]) ? prev : next,

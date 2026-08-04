@@ -15,7 +15,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
+import * as DeckRole from '@dxos/plugin-deck/DeckRole';
 import { SpaceHomeContent } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { Position } from '@dxos/util';
@@ -88,12 +88,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'hints',
-        filter: Surface.makeFilter(Hints),
+        filter: Surface.makeFilter(DeckRole.Hints),
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
         id: 'keyshortcuts',
-        filter: Surface.makeFilter(Keyshortcuts),
+        filter: Surface.makeFilter(DeckRole.Keyshortcuts),
         component: () => <ShortcutsList />,
       }),
       Surface.create({

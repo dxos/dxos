@@ -4,7 +4,7 @@
 
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
-import { type ReviewCapabilities } from '../types';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 /**
  * Everything the editor-binding decision depends on, flattened to plain data. The hooks gather these
@@ -13,13 +13,13 @@ import { type ReviewCapabilities } from '../types';
  */
 export type LifecycleInputs = {
   /** Per-user review posture for the document (ambient path only). */
-  mode: ReviewCapabilities.ReviewMode;
+  mode: ReviewCapabilities.ReviewCapabilities.ReviewMode;
   /** The editor's built-in view mode (source/preview/readonly). */
   viewMode: EditorViewMode | undefined;
   /** What the render policy says this mode may do. */
-  policy: ReviewCapabilities.ReviewRenderConfig;
+  policy: ReviewCapabilities.ReviewCapabilities.ReviewRenderConfig;
   /** Version selection kind — `current` is the ambient path. */
-  selection: ReviewCapabilities.VersionSelection['kind'];
+  selection: ReviewCapabilities.ReviewCapabilities.VersionSelection['kind'];
   /** Ids for key derivation (present when the corresponding selection is active). */
   branchId?: string;
   versionId?: string;
@@ -125,7 +125,7 @@ export const deriveBinding = (inputs: LifecycleInputs): BindingDescriptor => {
 /** A view-mode dropdown selection: a built-in editor mode, or a contributed entry carrying its review mode. */
 export type ViewModeSelection =
   | { kind: 'builtin'; viewMode: EditorViewMode }
-  | { kind: 'contributed'; reviewMode: ReviewCapabilities.ReviewMode };
+  | { kind: 'contributed'; reviewMode: ReviewCapabilities.ReviewCapabilities.ReviewMode };
 
 /**
  * The single owner of what a dropdown selection means: both halves of the (review mode, view mode)
@@ -135,9 +135,9 @@ export type ViewModeSelection =
  * editable view mode, stepping off readonly if that is where the user came from.
  */
 export const applyViewModeSelection = (
-  prev: { mode: ReviewCapabilities.ReviewMode; viewMode: EditorViewMode | undefined },
+  prev: { mode: ReviewCapabilities.ReviewCapabilities.ReviewMode; viewMode: EditorViewMode | undefined },
   selection: ViewModeSelection,
-): { mode: ReviewCapabilities.ReviewMode; viewMode: EditorViewMode | undefined } => {
+): { mode: ReviewCapabilities.ReviewCapabilities.ReviewMode; viewMode: EditorViewMode | undefined } => {
   if (selection.kind === 'builtin') {
     return {
       mode: selection.viewMode === 'readonly' ? 'viewing' : 'editing',

@@ -19,6 +19,7 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
+    'FileLimits': 'src/types/FileLimits.ts',
     'FileCapabilities': 'src/types/FileCapabilities.ts',
     'FileEvents': 'src/types/FileEvents.ts',
     'FileOperation': 'src/types/FileOperation.ts',

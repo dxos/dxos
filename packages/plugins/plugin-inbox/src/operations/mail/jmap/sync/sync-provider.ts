@@ -21,7 +21,8 @@ import { Jmap, JmapMail } from '../../../../apis';
 import { JMAP_MESSAGE_SOURCE } from '../../../../constants';
 import { type JmapApiError, MailSyncError } from '../../../../errors';
 import { JmapMailApi } from '../../../../services';
-import { Mailbox, type SyncStreamConfig, SystemTags } from '../../../../types';
+import { Mailbox, SystemTags } from '../../../../types';
+import * as SyncStreamConfig from '../../../../types/SyncStreamConfig';
 import { type MailSyncItem, MailSyncProvider, type MailSyncSource } from '../../mail-sync';
 import { type AttachmentMetadata, decodeBody, mapToMessage } from '../mapper';
 import { findOrCreateJmapTag } from '../tags';
@@ -37,13 +38,13 @@ type DeltaPlan = {
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 
-/** JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+/** JMAP mail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 const JMAP_SYNC_CONFIG = {
   listPageSize: 50,
   fetchConcurrency: 5,
   commitPageSize: 10,
   maxItemsPerRun: 500,
-} as const satisfies SyncStreamConfig;
+} as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 /**
  * JMAP's {@link MailSyncProvider}: session/account discovery, the email source, the folder→tag map, and

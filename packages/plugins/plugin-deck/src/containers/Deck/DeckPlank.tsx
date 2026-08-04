@@ -13,8 +13,8 @@ import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
-import { type ResolvedPart } from '#types';
 
+import * as DeckSchema from '../../types/DeckSchema';
 import { CompanionPlank } from './CompanionPlank';
 import { PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
@@ -24,7 +24,7 @@ const PLANK_LOADING = <PlankLoading />;
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
-  part: ResolvedPart;
+  part: DeckSchema.ResolvedPart;
   /** Whether this plank is displayed fullscreen (headless, no chrome). */
   fullscreen?: boolean;
   /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */

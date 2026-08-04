@@ -29,12 +29,12 @@ import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
-import { ReviewCapabilities } from '#types';
 import { CommentOperation } from '#types';
 import { CommentCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state';
 import { type SuggestionGroup, useStatus } from '../../hooks';
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { getMessageMetadata } from '../../util';
 
 /**
@@ -167,7 +167,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // The active review branch: the core branch the local user is currently viewing for this subject
   // (per-object version selection, shared with the editor surface). `undefined` = main/unbranched.
   // Comments are scoped to it so the companion shows only the branch under review's threads.
-  const versionSelection = useViewState(ReviewCapabilities.viewAspect, subject.id).selection;
+  const versionSelection = useViewState(ReviewCapabilities.ReviewCapabilities.viewAspect, subject.id).selection;
   const markdownDoc = Obj.instanceOf(Markdown.Document, subject) ? subject : undefined;
   const reviewBranch = useMemo(() => {
     if (!markdownDoc || versionSelection?.kind !== 'branch') {
@@ -358,9 +358,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
   // The current suggestion, by group key — shared with the editor so clicking a change in the document
   // accents its card, and clicking a card reveals the change.
-  const { suggestion: selectedSuggestion, hiddenAuthors } = useViewState(ReviewCapabilities.viewAspect, subject.id);
+  const { suggestion: selectedSuggestion, hiddenAuthors } = useViewState(
+    ReviewCapabilities.ReviewCapabilities.viewAspect,
+    subject.id,
+  );
   const { set: setReviewView, update: updateReviewView } = useViewStateActions(
-    ReviewCapabilities.viewAspect,
+    ReviewCapabilities.ReviewCapabilities.viewAspect,
     subject.id,
   );
   // Per-author visibility (session-local): shared through the ViewState aspect so the editor overlay

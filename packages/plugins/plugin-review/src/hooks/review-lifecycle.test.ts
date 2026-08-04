@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ReviewCapabilities } from '../types';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 import {
   type BindingDescriptor,
   type LifecycleInputs,
@@ -12,9 +12,9 @@ import {
   deriveBinding,
 } from './review-lifecycle';
 
-const EDITING = ReviewCapabilities.defaultReviewRenderPolicy('editing');
-const SUGGESTING = ReviewCapabilities.defaultReviewRenderPolicy('suggesting');
-const VIEWING = ReviewCapabilities.defaultReviewRenderPolicy('viewing');
+const EDITING = ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy('editing');
+const SUGGESTING = ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy('suggesting');
+const VIEWING = ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy('viewing');
 
 /** Ambient editing on main with everything resolved — rows override what they test. */
 const BASE: LifecycleInputs = {

@@ -4,9 +4,12 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type DeckState, type StoredDeckState } from '../types';
+import * as DeckSchema from '../types/DeckSchema';
 
-export const updateActiveDeck = (current: StoredDeckState, deckUpdates: Partial<DeckState>): StoredDeckState => {
+export const updateActiveDeck = (
+  current: DeckSchema.StoredDeckState,
+  deckUpdates: Partial<DeckSchema.DeckState>,
+): DeckSchema.StoredDeckState => {
   const currentDeck = current.decks[current.activeDeck];
   invariant(currentDeck, `Deck not found: ${current.activeDeck}`);
   return {

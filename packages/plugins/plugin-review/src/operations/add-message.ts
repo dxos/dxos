@@ -15,8 +15,9 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { shouldTriggerAgent } from '../should-trigger-agent';
-import { AgentIdentity, CommentCapabilities } from '../types';
+import { CommentCapabilities } from '../types';
 import { CommentOperation } from '../types';
+import * as AgentIdentity from '../types/AgentIdentity';
 
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(
@@ -101,7 +102,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
       // Gate the comment-thread agent. Identity is optional — if no capability
       // is contributed we simply never trigger. Schedule (not invoke) so the
       // user's message commit returns immediately and the agent runs out-of-band.
-      const identities = yield* Capability.getAll(AgentIdentity);
+      const identities = yield* Capability.getAll(AgentIdentity.AgentIdentity);
       const identity = identities[0];
       if (identity && shouldTriggerAgent(thread, message, identity.name)) {
         yield* Operation.schedule(CommentOperation.RespondToThread, {

@@ -25,15 +25,9 @@ import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import {
-  DeckCapabilities,
-  type EphemeralDeckState,
-  type Settings,
-  type StoredDeckState,
-  defaultDeck,
-  getMode,
-} from '#types';
+import { DeckCapabilities, type Settings } from '#types';
 
+import * as DeckSchema from '../../types/DeckSchema';
 import { Deck } from './Deck';
 
 type StoryItem = { id: string; title: string; icon: string };
@@ -63,16 +57,16 @@ const storyDeckSettings = Capability.makeModule(() =>
 // persists to localStorage, which otherwise leaks planks between stories.
 const storyDeckState = Capability.makeModule(() =>
   Effect.sync(() => {
-    const stateAtom = Atom.make<StoredDeckState>({
+    const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
       sidebarState: 'closed',
       complementarySidebarState: 'closed',
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
-      decks: { default: { ...defaultDeck } },
+      decks: { default: { ...DeckSchema.defaultDeck } },
     }).pipe(Atom.keepAlive);
 
-    const ephemeralAtom = Atom.make<EphemeralDeckState>({
+    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
       fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
@@ -93,7 +87,7 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
@@ -200,7 +194,7 @@ type DefaultStoryProps = {
   /** Fold-transition variant to apply (see {@link FOLD_ANIMATIONS}). */
   foldAnimation?: FoldAnimation;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
-  sidebarState?: StoredDeckState['sidebarState'];
+  sidebarState?: DeckSchema.StoredDeckState['sidebarState'];
 };
 
 const DefaultStory = ({ count = 0, foldAnimation = 'slide', sidebarState = 'closed' }: DefaultStoryProps) => {

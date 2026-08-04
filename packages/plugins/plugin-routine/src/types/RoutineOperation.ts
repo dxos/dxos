@@ -20,7 +20,7 @@ import { EID as _EchoURIReference } from '@dxos/keys';
 
 import { meta } from '#meta';
 
-import { TriggerTemplate } from './schema';
+import { TriggerTemplate } from './Routine';
 export { _EchoURIReference };
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);

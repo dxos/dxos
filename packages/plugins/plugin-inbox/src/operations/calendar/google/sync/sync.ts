@@ -14,15 +14,16 @@ import { Pipeline, Stage } from '@dxos/pipeline';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
-import { Calendar, type SyncStreamConfig } from '../../../../types';
+import { Calendar } from '../../../../types';
+import * as SyncStreamConfig from '../../../../types/SyncStreamConfig';
 import { mapEvent } from '../mapper';
 import { type CalendarPageEffect, fetchEvents } from './fetch';
 
-/** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+/** Calendar's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 const CALENDAR_SYNC_CONFIG = {
   listPageSize: 100,
   commitPageSize: 10,
-} as const satisfies SyncStreamConfig;
+} as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 const DEFAULT_SYNC_BACK_DAYS = 30;
 const DEFAULT_SYNC_FORWARD_DAYS = 365;

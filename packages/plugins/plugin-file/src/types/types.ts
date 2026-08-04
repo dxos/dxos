@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { meta } from '#meta';
 
-import { ACCEPTED_MIME } from './limits';
+import { ACCEPTED_MIME } from './FileLimits';
 
 export namespace FileAction {
   export const UploadAnnotationId = Symbol.for(`${meta.profile.key}.annotation.upload`);
