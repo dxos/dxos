@@ -39,7 +39,7 @@ const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRe
  */
 const DefaultStory = () => {
   return (
-    <Panel.Root className='dx-document'>
+    <Panel.Root classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />

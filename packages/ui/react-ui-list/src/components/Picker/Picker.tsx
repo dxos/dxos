@@ -26,7 +26,15 @@ import React, {
   useState,
 } from 'react';
 
-import { type Density, type Elevation, Input, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import {
+  type Density,
+  type Elevation,
+  Input,
+  type ThemedClassName,
+  composableProps,
+  slottable,
+  useThemeContext,
+} from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme';
@@ -300,8 +308,8 @@ type PickerItemProps = ThemedClassName<{
   children?: ReactNode;
 }>;
 
-const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
-  ({ classNames, value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
+const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
+  ({ value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
     const { selectedValue, onSelectedValueChange, registerItem, unregisterItem } = usePickerItemContext('Picker.Item');
     const internalRef = useRef<HTMLDivElement>(null);
 
@@ -339,7 +347,10 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
 
     return (
       <Comp
-        {...props}
+        {...composableProps<HTMLDivElement>(props, {
+          classNames: styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed') }),
+          role: 'option',
+        })}
         ref={(node: HTMLDivElement | null) => {
           internalRef.current = node;
           if (typeof forwardedRef === 'function') {
@@ -348,7 +359,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
             forwardedRef.current = node;
           }
         }}
-        role='option'
         aria-selected={isSelected}
         aria-disabled={disabled}
         data-selected={isSelected}
@@ -356,7 +366,6 @@ const PickerItem = forwardRef<HTMLDivElement, PickerItemProps>(
         data-value={value}
         // Browser focus stays on the input; highlight is via `aria-selected`.
         tabIndex={-1}
-        className={styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed', classNames) })}
         onMouseDown={handleMouseDown}
         onClick={handleClick}
       >
@@ -375,5 +384,3 @@ export const Picker = {
 };
 
 export type { PickerInputProps, PickerItemProps, PickerRootProps };
-
-export { usePickerInputContext, usePickerItemContext } from './context';

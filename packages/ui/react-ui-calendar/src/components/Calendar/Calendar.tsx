@@ -154,7 +154,7 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
     <div
       {...composableProps(props, {
         role: 'none',
-        classNames: ['shrink-0 grid! grid-cols-3 items-center bg-toolbar-surface', classNames],
+        classNames: ['shrink-0 grid! grid-cols-3 items-center dx-toolbar-surface', classNames],
       })}
       ref={forwardedRef}
     >

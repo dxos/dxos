@@ -7,6 +7,8 @@ import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
 import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { visitNodes } from './visit-nodes';
+
 export const IconButton = ({
   iconName,
   classNames,
@@ -55,24 +57,6 @@ export function* visitor(node: TreeNodeData, open: ItemMap): Generator<TreeItera
     }
   }
 }
-
-export const visitNodes = <T,>(
-  node: TreeNodeData,
-  callback: (node: TreeNodeData, depth: number) => T,
-  depth = 0,
-): T | undefined => {
-  const result = callback(node, depth);
-  if (result) {
-    return result;
-  }
-
-  for (const child of node.children ?? []) {
-    const result = visitNodes(child, callback, depth + 1);
-    if (result) {
-      return result;
-    }
-  }
-};
 
 export type ItemMap<T = boolean> = Record<TreeNodeData['id'], T>;
 

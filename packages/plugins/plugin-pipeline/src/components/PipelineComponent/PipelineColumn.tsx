@@ -17,7 +17,8 @@ import { type Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type ItemProps, usePipeline } from './PipelineComponent';
+import { type ItemProps } from './PipelineComponent';
+import { usePipeline } from './PipelineContext';
 
 //
 // PipelineColumn

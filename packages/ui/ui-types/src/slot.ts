@@ -13,17 +13,20 @@ import { type ThemedClassName } from './theme';
  * A composable component spreads unknown props onto its root DOM element and forwards its ref,
  * allowing a parent slot to inject layout or styling props transparently.
  *
- * - `className` is set by the Slot merge mechanism.
- * - `classNames` is the consumer-facing prop for theming overrides.
+ * - `classNames` is the only styling prop a consumer may pass.
  * - `children` is always accepted.
  *
- * NOTE: Use `composableProps` to reconcile both `className` and `classNames` into a single `className`.
+ * `className` is deliberately absent: accepting both gave every part two indistinguishable styling
+ * props, and a part that destructured one and spread the other silently dropped the caller's
+ * classes. Radix `Slot` still injects `className` at runtime, so implementations receive it via
+ * `HTMLAttributes` (see `composable`/`slottable`) and must merge it — that is what `composableProps`
+ * does.
  *
  * @see https://www.radix-ui.com/primitives/docs/guides/composition
  * @see slot.stories.tsx (@dxos/react-ui)
  */
 export type ComposableProps<P extends object = {}> = ThemedClassName<P> &
-  Pick<HTMLAttributes<Element>, 'children' | 'className' | 'role' | 'style'>;
+  Pick<HTMLAttributes<Element>, 'children' | 'role' | 'style'>;
 
 /**
  * Props for components that render a default DOM element but support `asChild` to delegate rendering
