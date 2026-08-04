@@ -217,6 +217,9 @@
       "path": "packages/common/feed-store/tsconfig.json"
     },
     {
+      "path": "tools/fixtures/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/functions-runtime-cloudflare/tsconfig.json"
     },
     {

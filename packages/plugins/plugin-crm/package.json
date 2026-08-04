@@ -58,8 +58,7 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "default": "./dist/lib/types.mjs"
-    },
-    "#util": "./src/util/index.ts"
+    }
   },
   "exports": {
     ".": {
@@ -99,9 +98,11 @@
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
+    "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",

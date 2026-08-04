@@ -155,7 +155,12 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
     return;
   }
   Obj.update(mailbox, (mailbox) => {
-    const map = (mailbox.extracted ??= {});
+    if (!mailbox.extracted) {
+      mailbox.extracted = {};
+    }
+    // Re-read through the proxy: `??=` would evaluate to the plain right-hand object, and mutations
+    // of a detached record are not written through, silently dropping the first recorded entry.
+    const map = mailbox.extracted;
     const merged = [...(map[messageId] ?? [])];
     for (const id of objectIds) {
       if (!merged.includes(id)) {

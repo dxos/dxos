@@ -10618,6 +10618,9 @@ importers:
       '@dxos/edge-client':
         specifier: workspace:*
         version: link:../../core/mesh/edge-client
+      '@dxos/extractor':
+        specifier: workspace:*
+        version: link:../../core/compute/extractor
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../../core/compute/extractor-lib
@@ -10627,6 +10630,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -21255,6 +21261,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -21333,6 +21342,9 @@ importers:
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-crm':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-crm
       '@dxos/plugin-debug':
         specifier: workspace:*
         version: link:../../plugins/plugin-debug
@@ -21406,6 +21418,12 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
     devDependencies:
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
+      '@dxos/pipeline':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -25886,6 +25904,8 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 16.0.4
+
+  tools/fixtures: {}
 
   tools/lockfile-explorer:
     dependencies:

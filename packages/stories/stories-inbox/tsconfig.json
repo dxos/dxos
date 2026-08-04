@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/fixtures"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -49,6 +52,9 @@
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/pipeline"
+    },
+    {
       "path": "../../core/compute/pipeline-email"
     },
     {
@@ -74,6 +80,9 @@
     },
     {
       "path": "../../plugins/plugin-connector"
+    },
+    {
+      "path": "../../plugins/plugin-crm"
     },
     {
       "path": "../../plugins/plugin-debug"
