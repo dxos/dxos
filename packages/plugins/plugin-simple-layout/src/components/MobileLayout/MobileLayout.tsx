@@ -12,7 +12,6 @@ import { mx } from '@dxos/ui-theme';
 import { useDebugLog } from '../DebugOverlay';
 import { MobileLayoutProvider } from './MobileLayoutContext';
 
-export const MOBILE_LAYOUT_NAME = 'MobileLayout';
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
 const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
 

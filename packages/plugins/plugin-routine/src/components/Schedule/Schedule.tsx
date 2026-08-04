@@ -19,6 +19,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron';
+import { type Day, Days } from './days';
 import { describeSchedule } from './describe-schedule';
 
 //
@@ -38,18 +39,6 @@ export const ScheduleKinds = [
 export type ScheduleKind = (typeof ScheduleKinds)[number];
 
 const isScheduleKind = (value: string): value is ScheduleKind => (ScheduleKinds as readonly string[]).includes(value);
-
-export const Days = [
-  { value: 'mon', label: 'Mon' },
-  { value: 'tue', label: 'Tue' },
-  { value: 'wed', label: 'Wed' },
-  { value: 'thu', label: 'Thu' },
-  { value: 'fri', label: 'Fri' },
-  { value: 'sat', label: 'Sat' },
-  { value: 'sun', label: 'Sun' },
-] as const;
-
-export type Day = (typeof Days)[number]['value'];
 
 /** Discriminated schedule value. Times are `HH:mm` (24h); `once.date` is `YYYY-MM-DDTHH:mm`. */
 export type ScheduleValue =

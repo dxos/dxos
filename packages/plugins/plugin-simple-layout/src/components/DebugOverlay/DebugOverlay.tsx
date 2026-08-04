@@ -6,8 +6,6 @@ import React, { type PropsWithChildren, useCallback, useRef } from 'react';
 
 import { DebugOverlayProvider } from './DebugOverlayContext';
 
-export const DEBUG_OVERLAY_NAME = 'DebugOverlay';
-
 //
 // Context
 //

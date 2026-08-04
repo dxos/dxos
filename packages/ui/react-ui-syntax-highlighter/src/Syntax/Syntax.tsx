@@ -17,8 +17,6 @@ import { SyntaxProvider, type SyntaxScopedProps, useSyntaxContext } from './Synt
 // Context
 //
 
-export const SYNTAX_NAME = 'Syntax';
-
 export type SyntaxContextValue = {
   mode: 'text' | 'json';
   // Text mode.

@@ -30,7 +30,7 @@ import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } fro
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
-import { TableController } from './Table';
+import { type TableController } from './Table';
 import { useTableContext } from './TableContext';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };

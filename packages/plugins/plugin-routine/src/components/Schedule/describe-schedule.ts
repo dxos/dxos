@@ -3,7 +3,8 @@
 //
 
 import { describeCron } from './cron';
-import { type Day, Days, type ScheduleValue } from './Schedule';
+import { type Day, Days } from './days';
+import { type ScheduleValue } from './Schedule';
 
 // Kept out of `Schedule.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

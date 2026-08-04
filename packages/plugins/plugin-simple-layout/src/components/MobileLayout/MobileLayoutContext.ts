@@ -4,10 +4,10 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { MOBILE_LAYOUT_NAME } from './MobileLayout';
-
 // Kept out of `MobileLayout.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
+
+export const MOBILE_LAYOUT_NAME = 'MobileLayout';
 
 //
 // Context
