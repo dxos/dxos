@@ -23,12 +23,13 @@
 
   --spacing-tag-padding-block: 0.125rem;
 
-  /** The one spacing ramp: 4 / 8 / 12 / 16 / 24. Every other spacing family aliases onto it. */
+  /** The one spacing ramp: 4 / 8 / 12 / 16 / 24 / 32. Every other spacing family aliases onto it. */
   --spacing-trim-xs: 0.25rem;
   --spacing-trim-sm: 0.5rem;
   --spacing-trim-md: 0.75rem;
   --spacing-trim-lg: 1rem;
   --spacing-trim-xl: 1.5rem;
+  --spacing-trim-2xl: 2rem;
 
   /** Minimal trim to allow for ring/outline. */
   --spacing-form-chrome: var(--spacing-trim-xs);
@@ -95,12 +96,17 @@
     --dx-line-1: 1px;
     --dx-line-2: 2px;
 
+    /*
+     * Gutters source from the spacing ramp rather than carrying their own literals. The names are
+     * the gutter's own scale (form / dialog / card), so they intentionally do not line up with the
+     * ramp step names — sm is one ramp step, md two, lg four.
+     */
     /* Form:   8px */
-    --dx-gutter-sm: 0.5rem;
+    --dx-gutter-sm: var(--spacing-trim-sm);
     /* Dialog: 16px */
-    --dx-gutter-md: 1rem;
+    --dx-gutter-md: var(--spacing-trim-lg);
     /* Card:   32px */
-    --dx-gutter-lg: 2rem;
+    --dx-gutter-lg: var(--spacing-trim-2xl);
   }
 
   :root {
