@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type ComponentProps } from 'react';
+import { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -20,27 +20,26 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: COMMANDS_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof CommandsDialogContent>>(AppSurface.Dialog, COMMANDS_DIALOG),
-        component: ({ data, ref }) => <CommandsDialogContent {...data.props} ref={ref} />,
+        component: CommandsDialogContent,
+        props: ({ data: { props }, ref }) => ({ ...props, ref }),
       }),
       Surface.create({
         id: 'navigation',
         filter: Surface.makeFilter(AppSurface.Navigation),
-        component: ({ data, ref }) => (
-          <NavTreeContainer tab={data.current} popoverAnchorId={data.popoverAnchorId} ref={ref} />
-        ),
+        component: NavTreeContainer,
+        props: ({ data: { current, popoverAnchorId }, ref }) => ({ tab: current, popoverAnchorId, ref }),
       }),
       Surface.create({
         id: 'documentTitle',
         filter: Surface.makeFilter(AppSurface.DocumentTitle),
-        component: ({ data }) => (
-          <NavTreeDocumentTitle node={Node.isGraphNode(data.subject) ? data.subject : undefined} />
-        ),
+        component: NavTreeDocumentTitle,
+        props: ({ data: { subject } }) => ({ node: Node.isGraphNode(subject) ? subject : undefined }),
       }),
       Surface.create({
         id: 'searchInput',
         filter: Surface.makeFilter(AppSurface.SearchInput),
         position: Position.last,
-        component: () => <CommandsTrigger />,
+        component: CommandsTrigger,
       }),
     ]),
   ),

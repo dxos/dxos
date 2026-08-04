@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -20,27 +19,27 @@ export default Capability.makeModule(() =>
         id: 'resultCard',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Result.Result),
-        component: ({ data }) => <ResultCard subject={data.subject} />,
+        component: ResultCard,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'searchArticle',
         filter: AppSurface.object(AppSurface.Article, Search.Search),
-        component: ({ data, role }) => (
-          <SearchArticle subject={data.subject} attendableId={data.attendableId} role={role} />
-        ),
+        component: SearchArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Search.Search),
-        component: ({ data }) => <SearchProperties search={data.subject} />,
+        component: SearchProperties,
+        props: ({ data: { subject } }) => ({ search: subject }),
       }),
       Surface.create({
         id: 'providerArticle',
         filter: AppSurface.object(AppSurface.Article, Provider.Provider),
-        component: ({ data, role }) => (
-          <ProviderArticle subject={data.subject} attendableId={data.attendableId} role={role} />
-        ),
+        component: ProviderArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
     ]),
   ),

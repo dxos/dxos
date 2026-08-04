@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -33,9 +32,8 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Video.Video),
           AppSurface.object(AppSurface.Section, Video.Video, (data) => !('part' in data)),
         ),
-        component: ({ data, role }) => (
-          <VideoArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: VideoArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // The three parts of a video, each isolated in its own surface (roles 'section' + 'tabpanel') so
       // the cross-origin player iframe never shares a component/prop graph with the CodeMirror editors.
@@ -46,7 +44,8 @@ export default Capability.makeModule(() =>
           Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'player')),
           Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'player')),
         ),
-        component: ({ data }) => <VideoSection subject={data.subject} attendableId={data.attendableId} />,
+        component: VideoSection,
+        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
       Surface.create({
         id: 'video.transcript',
@@ -54,7 +53,8 @@ export default Capability.makeModule(() =>
           Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'transcript')),
           Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'transcript')),
         ),
-        component: ({ data }) => <TranscriptSection subject={data.subject} attendableId={data.attendableId} />,
+        component: TranscriptSection,
+        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
       Surface.create({
         id: 'video.summary',
@@ -62,7 +62,8 @@ export default Capability.makeModule(() =>
           Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'summary')),
           Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'summary')),
         ),
-        component: ({ data }) => <SummarySection subject={data.subject} attendableId={data.attendableId} />,
+        component: SummarySection,
+        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
     ]),
   ),

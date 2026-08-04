@@ -7,18 +7,23 @@
 // Each `Surface.create()` call registers a component for a specific role and data shape.
 // The framework matches surfaces by role first, then applies the filter function to
 // select the correct component for the current data.
+//
+// A container is registered as itself via `component`, and `props` maps the surface's data
+// envelope onto the container's own props. The mapper's argument type comes from the same
+// `filter` that defines the surface's data shape, so the unpacking is type-checked against it.
+// A surface whose component needs hooks cannot use a mapper — see `SampleSurfaces.tsx`.
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { Surface } from '@dxos/app-framework/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
-import { SampleStatusIndicator } from '#components';
-import { SampleArticle, SampleCompanionPanel, SampleDeckCompanion, SampleProperties } from '#containers';
-import { SampleCapabilities, SampleItem } from '#types';
+import { SampleArticle, SampleCompanionPanel, SampleProperties } from '#containers';
+import { SampleItem } from '#types';
+
+import { SampleDeckCompanionSurface, SampleStatusSurface } from './SampleSurfaces';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -34,9 +39,8 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, SampleItem.SampleItem),
           AppSurface.object(AppSurface.Section, SampleItem.SampleItem),
         ),
-        component: ({ data, role }) => (
-          <SampleArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: SampleArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
       // --- Object properties surface ---
@@ -46,21 +50,16 @@ export default Capability.makeModule(() =>
         id: 'objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, SampleItem.SampleItem),
-        component: ({ data }) => <SampleProperties subject={data.subject} />,
+        component: SampleProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
 
       // --- Status indicator surface ---
       // `AppSurface.StatusIndicator` renders in the application status bar.
-      // `useAtomCapability` subscribes to the settings atom reactively so the
-      // indicator hides/shows when the setting is toggled. This must be in the
-      // component (not the filter) so the atom subscription triggers re-renders.
       Surface.create({
         id: 'sampleStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: () => {
-          const settings = useAtomCapability(SampleCapabilities.Settings);
-          return settings.showStatusIndicator !== false ? <SampleStatusIndicator /> : null;
-        },
+        component: SampleStatusSurface,
       }),
 
       // --- Companion article surface ---
@@ -74,7 +73,8 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'related'),
           AppSurface.companion(AppSurface.Article, SampleItem.SampleItem),
         ),
-        component: ({ data }) => <SampleCompanionPanel companionTo={data.companionTo} />,
+        component: SampleCompanionPanel,
+        props: ({ data: { companionTo } }) => ({ companionTo }),
       }),
 
       // --- Deck companion surface ---
@@ -84,19 +84,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'deckCompanion',
         filter: Surface.makeFilter(AppSurface.deckCompanion('samplePanel')),
-        component: () => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-          return (
-            <SampleDeckCompanion
-              role={AppSurface.deckCompanion('samplePanel').role}
-              space={space}
-              attendableId={space.id}
-            />
-          );
-        },
+        component: SampleDeckCompanionSurface,
       }),
     ]),
   ),

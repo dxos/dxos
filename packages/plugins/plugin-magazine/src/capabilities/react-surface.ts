@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -19,34 +18,33 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'magazineArticle',
         filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
-        component: ({ data, role }) => (
-          <MagazineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: MagazineArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'feedArticle',
         filter: AppSurface.object(AppSurface.Article, Subscription.Subscription),
-        component: ({ data, role }) => (
-          <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: FeedArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'postArticle',
         filter: AppSurface.object(AppSurface.Article, Subscription.Post),
-        component: ({ data, role }) => (
-          <PostArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: PostArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'postCard',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Subscription.Post),
-        component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
+        component: PostCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: 'feedProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Subscription.Subscription),
-        component: ({ data }) => <FeedProperties subject={data.subject} />,
+        component: FeedProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),
