@@ -6,7 +6,6 @@ import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
 import { type Entity } from '@dxos/echo';
 import { GlobalFilterProvider } from '@dxos/react-ui-search';
-import { type SearchResult } from '@dxos/react-ui-search';
 
 import { SearchContext } from './SearchContext';
 import { filterObjectsSync, queryStringToMatch } from './sync';

@@ -13,7 +13,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
 import * as Settings from '../../types/Settings';
-import { PaymentsSettings, type PaymentsSettingsProps } from './PaymentsSettings';
+import { PaymentsSettings } from './PaymentsSettings';
 
 type StoryProps = {
   settings: Settings.Settings;
