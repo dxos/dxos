@@ -179,6 +179,11 @@ flagged the default-off guarantee). Also the chat ship gate.
       rendered pages.
 - [ ] Eviction: LRU under a per-feed/space budget; pinned ranges (tail
       always); define ref-into-evicted-range behavior (deref goes remote).
+- [ ] Aggregation semantics over sparse history (raised 2026-08-04): mailbox's
+      thread aggregate (`group threadId` / `count` / `max created` / `items`)
+      runs on the local index and assumes dense history. Decide per aggregate:
+      serve from backend vs hydrate-range-then-aggregate locally vs report
+      partial counts (`count` over held ranges + has-more). See DESIGN.md.
 - [ ] Define against the `FeedBackend` interface shape, not EDGE specifics
       (companion workstream — keeps external backends a swap).
 

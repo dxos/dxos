@@ -100,7 +100,17 @@ by event-sourcing semantics. Dependency chain 1 → 2 → 3 → 4, one PR each; 
    `before`/`after`/position-range/`reverse`); domain-order paging bounded by a
    position watermark, with the live tail patching rendered pages (late
    arrivals, edits, tombstones). Driven by email archive browsing; first-party
-   channels inherit device-exceeding scale for free.
+   channels inherit device-exceeding scale for free. **Open design point
+   (2026-08-04): aggregation over sparse history.** Mailbox's conversation view
+   is an aggregate (`group threadId` / `count` / `max created` / `items`,
+   `MailboxArticle.tsx`) over the local index, which assumes dense history —
+   with evicted ranges, per-thread `count` undercounts and a thread whose
+   latest activity lies wholly in an evicted range drops out of `orderBy
+lastMessageAt`. Recent pages stay correct (the pinned tail is dense); deep
+   pages must either hydrate the target range first and aggregate locally over
+   the now-dense cache, be served as backend-computed aggregates alongside the
+   domain-key index, or report explicitly-partial counts. Decide per aggregate
+   in phase 4.
 5. **Delta blocks (demand-gated).** Partial-object update blocks + field-level
    LWW merge at the index; block vocabulary grows from {snapshot, tombstone} to
    {create, patch, delete}; per-object rollback/replay of the fold on position
