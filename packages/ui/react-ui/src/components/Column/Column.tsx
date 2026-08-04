@@ -4,26 +4,13 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, createContext, useContext } from 'react';
+import React, { type CSSProperties } from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { composableProps, slottable } from '../../util';
-
-//
-// Context
-//
-
-const ColumnContext = createContext(false);
-
-/**
- * Whether the caller is already inside a `Column.Root`. A component that would otherwise establish
- * its own gutter grid (a form viewport, say) should use this to place itself in the host's content
- * track instead — nesting a second grid is what makes a form's fields inset differently from the
- * card title above them.
- */
-export const useInColumn = () => useContext(ColumnContext);
+import { ColumnContext } from './ColumnContext';
 
 //
 // Root

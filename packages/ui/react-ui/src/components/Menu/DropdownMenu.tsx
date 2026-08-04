@@ -6,11 +6,8 @@
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope } from '@radix-ui/react-context';
-import type { Scope } from '@radix-ui/react-context';
 import { useId } from '@radix-ui/react-id';
 import * as MenuPrimitive from '@radix-ui/react-menu';
-import { createMenuScope } from '@radix-ui/react-menu';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
@@ -31,31 +28,19 @@ import React, {
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import {
+  DROPDOWN_MENU_NAME,
+  DropdownMenuProvider,
+  type ScopedProps,
+  useDropdownMenuContext,
+  useMenuScope,
+} from './DropdownMenuContext';
 
 type Direction = 'ltr' | 'rtl';
 
 //
 // DropdownMenu
 //
-
-const DROPDOWN_MENU_NAME = 'DropdownMenu';
-
-type ScopedProps<P> = P & { __scopeDropdownMenu?: Scope };
-const [createDropdownMenuContext, createDropdownMenuScope] = createContextScope(DROPDOWN_MENU_NAME, [createMenuScope]);
-const useMenuScope: (scope?: Scope) => any = createMenuScope();
-
-type DropdownMenuContextValue = {
-  triggerId: string;
-  triggerRef: RefObject<HTMLButtonElement | null>;
-  contentId: string;
-  open: boolean;
-  onOpenChange(open: boolean): void;
-  onOpenToggle(): void;
-  modal: boolean;
-};
-
-const [DropdownMenuProvider, useDropdownMenuContext] =
-  createDropdownMenuContext<DropdownMenuContextValue>(DROPDOWN_MENU_NAME);
 
 type DropdownMenuRootProps = PropsWithChildren<{
   dir?: Direction;
@@ -644,12 +629,6 @@ export const DropdownMenu = {
   SubTrigger: DropdownMenuSubTrigger,
   SubContent: DropdownMenuSubContent,
 };
-
-type DropdownMenuScope = Scope;
-
-const useDropdownMenuMenuScope: (scope?: DropdownMenuScope) => any = useMenuScope;
-
-export { createDropdownMenuScope, useDropdownMenuContext, useDropdownMenuMenuScope };
 
 export type {
   DropdownMenuArrowProps,

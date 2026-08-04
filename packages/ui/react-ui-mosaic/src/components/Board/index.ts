@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './BoardColumnContext';
-export * from './BoardContext';
+export { type BoardColumnContextValue, useBoardColumn } from './BoardColumnContext';
+export { type BoardModel, useBoard } from './BoardContext';
 
 export * from './Board';

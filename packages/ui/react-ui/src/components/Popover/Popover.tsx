@@ -6,14 +6,11 @@
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope } from '@radix-ui/react-context';
-import { type Scope } from '@radix-ui/react-context';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import { useFocusGuards } from '@radix-ui/react-focus-guards';
 import { FocusScope } from '@radix-ui/react-focus-scope';
 import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
-import { createPopperScope } from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -38,32 +35,18 @@ import { RemoveScroll } from 'react-remove-scroll';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import {
+  POPOVER_NAME,
+  PopoverProvider,
+  type ScopedProps,
+  createPopoverContext,
+  usePopoverContext,
+  usePopperScope,
+} from './PopoverContext';
 
 //
 // Context
 //
-
-type ScopedProps<P> = P & { __scopePopover?: Scope };
-
-const POPOVER_NAME = 'Popover';
-
-const [createPopoverContext, createPopoverScope] = createContextScope(POPOVER_NAME, [createPopperScope]);
-
-const usePopperScope = createPopperScope();
-
-type PopoverContextValue = {
-  triggerRef: RefObject<HTMLButtonElement>;
-  contentId: string;
-  hasCustomAnchor: boolean;
-  modal: boolean;
-  open: boolean;
-  onOpenChange(open: boolean): void;
-  onOpenToggle(): void;
-  onCustomAnchorAdd(): void;
-  onCustomAnchorRemove(): void;
-};
-
-const [PopoverProvider, usePopoverContext] = createPopoverContext<PopoverContextValue>(POPOVER_NAME);
 
 //
 // PopoverRoot
@@ -607,8 +590,6 @@ export const Popover = {
   Arrow: PopoverArrow,
   Viewport: PopoverViewport,
 };
-
-export { createPopoverScope };
 
 export type {
   PopoverAnchorProps,
