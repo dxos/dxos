@@ -31,18 +31,18 @@ here, and on the Claude harness `.claude/hooks/mode.sh` re-injects them on every
 prompt — a rule stated only in an always-loaded file is diluted to nothing once
 a large skill loads mid-session (see `.claude/README.md` §A).
 
-- **Open with the worktree and the files you read.** One line naming the
-  worktree directory you are in and the instruction/skill files you actually
-  consulted this turn. **Every reply**, not just the first of a session —
-  otherwise it decays immediately and the user has to ask.
+- **Open the session with the worktree and the files you read.** One line naming
+  the worktree directory you are in and the instruction/skill files in play.
+  **First reply only** — repeating it every turn is noise, and the `SessionStart`
+  hook already delivers the branch and toplevel deterministically.
 - **Number every question and every set of options.** Never an unnumbered
   a-or-b, never a bare open question.
 - **Lead with the answer.** No preamble, no restatement of the request, no
   narration of what you are about to do.
 - **Verbosity is a mode.** `terse` caps a reply at 8 lines with minimal markdown;
   `normal` (the default) sets no budget but keeps length proportionate — length
-  is earned by content, never by restating. Toggle with `$mode terse` /
-  `$mode normal`.
+  is earned by content, never by restating. Set it with `/mode terse` /
+  `/mode normal`.
 - These govern form only. They never override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly.
 

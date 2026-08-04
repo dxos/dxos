@@ -41,37 +41,65 @@ default state. That single gap is why "be terse" never survived.
 
 - [x] **Emit in every state** — `scripts/mode.sh context` now prints the
       `RESPONSE RULES` block in both modes; only the length clause branches.
-- [x] **Fold in the state-independent invariants** — open every reply with the
-      worktree and the instruction/skill files read that turn; number every
-      question and option set; lead with the answer. `AGENTS.md` previously
-      required the worktree line in the _first_ reply only, so it decayed
-      immediately — hence the recurring "which worktree are you in?".
+- [x] **Fold in the state-independent invariants** — number every question and
+      option set; lead with the answer.
+- [x] **Reverted: the worktree line is first-reply only** (user, 2026-08-04).
+      Phase 2 originally promoted it to every reply, reasoning that a first-reply
+      rule decays. Wrong lever: it made every reply open with a restatement, and
+      it duplicated a rule `~/.claude/hooks/session-context.sh` already delivers
+      on `SessionStart` ("First reply must state: this branch, this toplevel
+      path, and the guidance files in play"). Removed from the per-turn block; no
+      turn-counter needed. **Rule learned:** per-turn injection is for rules that
+      govern every reply — a once-per-session rule belongs on `SessionStart`.
 - [x] **Refresh `AGENTS.md`** — replaced the first-reply clause with a
       "Responding to the user" section, canonical, noting the per-turn
       re-injection.
 - [x] **Consolidate the scattered sources** — `.claude/CLAUDE.md` now points at
       the canonical section instead of restating it.
-- [ ] **Update `~/.claude/CLAUDE.md`** (decision: yes). BLOCKED from the agent
-      side: it symlinks to `~/Code/richburdon/config/dotfiles/.claude/CLAUDE.md`,
-      a separate repo whose HEAD is `main`, so `guard-worktree.sh` refuses the
-      edit. Needs the user to apply it, or to branch that repo.
-- [ ] **Drop the bare one-token sentinel forms** — the regex still matches a bare
-      `$terse` / `$normal` (and the aliases) anywhere in the message, so prose
-      _about_ the modes flips them. Observed live on 2026-08-03: a message
-      containing "`$natural/$concise/$verbose`" as an example set the mode. Only
-      the two-token `$mode <MODE>` should remain — prose can't hit it by accident.
-- [ ] **Add `/mode` as a second entrance** — a slash command cannot write state
-      (it expands into a prompt and depends on the agent to act), so keep the
-      sentinel as the deterministic path and give `/mode` a
-      `UserPromptExpansion` hook (matcher `mode`) doing the same write. One
-      backend, two entrances, neither relying on agent compliance.
+- [x] **Update `~/.claude/CLAUDE.md`** — CLOSED, decided against (user, 2026-08-04).
+      Nothing there was stale (verified: no `$mode` / `$project` /
+      legacy-sentinel references), so this was only ever the optional addition of
+      the response invariants for repos with no `UserPromptSubmit` hook. Inside
+      this repo the hook already delivers them, and the file symlinks into
+      `~/Code/richburdon/config` (a separate repo on `main`), so the coupling was
+      not worth it.
+- [x] **Drop the bare one-token sentinel forms** — the `$mode` verb is now
+      mandatory in `hooks/mode.sh`, so prose _about_ the modes no longer flips
+      them (observed live on 2026-08-03: a message containing
+      "`$natural/$concise/$verbose`" as an example set the mode). The alias words
+      survive as _values_. Verified against six prompts: the three bare forms are
+      inert, `$mode terse` / `$mode normal` / `$MODE Concise` all still fire.
+- [x] **Convert the sentinel to `/mode`** — done without the planned
+      `UserPromptExpansion` hook. The plan's premise was wrong: `UserPromptSubmit`
+      carries the **raw typed text** and fires _before_ the command expands, so
+      `hooks/mode.sh` greps `/mode <MODE>` there and writes state at exactly the
+      point the sentinel did. `commands/mode.md` is pure ergonomics — autocomplete
+      plus a one-line report — and sets nothing. `UserPromptExpansion` is for
+      blocking an expansion, not for beating it. **`$mode` has since been removed**, so
+      `/mode` anchored to the start of the message is the only form — which also
+      retires the "prose flips the mode" class of bug rather than narrowing it.
+      Verified: `/mode terse` and `/MODE Concise` fire; `$mode terse`, a bare
+      `/mode`, a mid-message `/mode terse` and a `src/mode normal` path are inert.
+      Proven live in-session — `/mode terse` took effect on the following turn.
+- [x] **Bare `/mode` re-orients** — matches no mode word, so the hook is inert and
+      the command body does the work: worktree + branch, the instruction files
+      actually consulted (skills included), and the current mode. This is the
+      answer to the reversal above — the worktree line stays a first-reply rule,
+      and `/mode` is how the user asks for it again, on demand rather than on
+      every turn.
+- [x] **No numbered options in the `/mode` report** — the first version offered
+      the modes as a numbered list, the user answered `1`, and a numeric reply is
+      the one form the `UserPromptSubmit` hook cannot catch, so the agent had to
+      write the state itself. Options are now inline commands. **Rule:** never
+      offer a numbered choice whose selection needs to travel through a hook.
 
 ### Decisions (settled 2026-08-03)
 
 - [x] Terse-mode budget: **8 lines**, minimal markdown, no headings/nesting.
 - [x] `normal` carries **no budget** — invariants only, plus "stay
       proportionate; length is earned by content".
-- [x] **Yes**, update the global `~/.claude/CLAUDE.md` (blocked, see above).
+- [x] ~~Yes, update the global `~/.claude/CLAUDE.md`~~ — REVERSED 2026-08-04; see
+      the closed task above.
 - [x] Default when `.claude/.mode` is absent: **`normal`**.
 
 ## Phase 3: Cleanups found on the way
@@ -88,17 +116,57 @@ default state. That single gap is why "be terse" never survived.
       is live task-planning state. Still open at
       `.agents/projects/ai-testing-strategy/TASKS.md:411` — close that entry
       when this lands.
-- [ ] **Collapse the two `mode.sh` files, or document the split** —
-      `.claude/hooks/mode.sh` is the `UserPromptSubmit` adapter,
-      `.claude/scripts/mode.sh` the state backend (`get|set|toggle|context`).
-      Defensible in principle, unearned as built: one caller, and the
-      hand-runnable path is documented nowhere.
-- [ ] **Fix the stale claim that desktop has no slash commands** — removed from
-      `.claude/CLAUDE.md`; `task-planning/SKILL.md` still asserts it.
-      `.claude/commands/commit.md` registers and resolves as `/commit`.
-- [ ] **Surface guard-hook output to the user** — `branch-beacon.sh` writes plain
-      stdout on `UserPromptSubmit`, which only the agent sees. Adding
-      `systemMessage` to the same invocation would print it to the user too.
+- [x] **Document the `mode.sh` split** — kept, not collapsed: the `/mode` command
+      gave the backend a second caller (`commands/mode.md` runs `get`), so the
+      split is now earned rather than speculative. The header of
+      `scripts/mode.sh` names both callers and the hand-runnable path.
+- [x] **Fix the stale claim that desktop has no slash commands** —
+      `task-planning/SKILL.md` corrected; it now points at the `/mode` recipe.
+      (It briefly proposed a `/project` twin as future work — built the same day,
+      see Phase 4.)
+- [x] **Surface guard-hook output to the user** — `branch-beacon.sh` now emits
+      JSON with **both** `systemMessage` (user) and `additionalContext` (agent)
+      instead of plain stdout, which was agent-only. Built with `jq -n` so message
+      quoting cannot produce an invalid payload — a malformed hook result is
+      dropped silently, which would disable the guard with no signal at all.
+      Falls back to plain stdout if `jq` is missing. Verified: valid JSON with
+      both fields in this worktree; silent outside the DXOS tree.
+      **NOTE: this file is `~/.claude/hooks/branch-beacon.sh`, outside the repo —
+      it is not carried by the PR and does not travel to another machine.**
+
+## Phase 4: `/project` (2026-08-04)
+
+The `$project` sentinel demonstrated its own bug: the message asking to convert
+it contained `"$project"` in prose and fired `$project list`. Same fix as
+`/mode`, same day.
+
+### Tasks
+
+- [x] **Convert `$project` to `/project`** — `hooks/track.sh` matches
+      `/project VERB [ARGS]` on the first line only; `commands/project.md`
+      registers the name and defers to the injected directive (which is
+      authoritative, being generated from the verb actually given). All six verbs
+      and their argument extraction verified.
+- [x] **Remove the legacy `$track` / `track:` / `$hydrate` / `$checkpoint` /
+      `$resume` / `$rehydrate` forms** — each matched anywhere in a message and
+      carried the identical flaw. Nothing replaces them; `/project <verb>` covers
+      every case.
+- [x] **Anchor on the first line, not just `^`** — `grep -E` applies `^` per
+      line, so a quoted command on line 3 of a multi-line message would still
+      fire. Both hooks now take `head -1` of the prompt first. `mode.sh` was
+      retro-fitted with the same guard and re-verified.
+- [x] **Check `~/.claude/CLAUDE.md` for stale markers** — none. Verified
+      2026-08-04: it never referenced `$mode`, `$project` or the legacy
+      sentinels, so the conversions leave nothing to correct there. Folded into
+      the Phase 2 item, which is now the only open work.
+
+- [x] **Review fixes (CodeRabbit, #12463)** — two valid findings, both fixed:
+      (1) `/mode tersex` prefix-matched `terse`, so the value now requires a
+      trailing whitespace-or-EOL boundary (trailing task text still allowed);
+      (2) the registry `resume` pointer still claimed `$project` greps anywhere
+      and listed a `/project` twin as future work — both stale within the same
+      PR that did the conversion. **Rule:** refresh the resume pointer in the
+      commit that invalidates it, not at hydrate time.
 
 ### References
 
