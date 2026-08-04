@@ -61,6 +61,7 @@ import {
   SpaceSettingsSurface,
   TypeArticleSurface,
   ViewEditorSurface,
+  tryGetViewForObject,
 } from './SpaceSurfaces';
 
 type ReactSurfaceOptions = {
@@ -215,17 +216,10 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'objectProperties',
-        filter: Surface.makeFilter(AppSurface.ObjectProperties, (data) => {
-          if (!Obj.isObject(data.subject)) {
-            return false;
-          }
-          const type = Obj.getType(data.subject);
-          const path = type
-            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
-            : [];
-          const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
-          return !!viewTarget;
-        }),
+        filter: Surface.makeFilter(
+          AppSurface.ObjectProperties,
+          (data) => Obj.isObject(data.subject) && !!tryGetViewForObject(data.subject),
+        ),
         component: ViewEditorSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),

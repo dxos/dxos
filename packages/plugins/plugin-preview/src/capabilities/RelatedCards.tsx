@@ -26,6 +26,7 @@ export type PersonCardContentProps = AppSurface.ObjectCardData<Person.Person> & 
   role: string;
 };
 
+/** Renders a person card with one nested `Related` surface. */
 export const PersonCardContent = ({ role, ...data }: PersonCardContentProps) => (
   <>
     <PersonCard role={role} subject={data.subject} />

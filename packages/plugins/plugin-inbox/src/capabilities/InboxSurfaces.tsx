@@ -21,6 +21,7 @@ export type MessageArticleSurfaceProps = {
   attendableId: string;
 };
 
+/** Resolves the mailbox that scopes a message's conversation from the graph. */
 export const MessageArticleSurface = ({ role, subject, attendableId }: MessageArticleSurfaceProps) => {
   const { graph } = useAppGraph();
   const parent = useNode(graph, getParentId(attendableId));
@@ -38,6 +39,7 @@ export type EventArticleSurfaceProps = {
   attendableId: string;
 };
 
+/** Resolves the calendar an event belongs to; renders nothing when none is found. */
 export const EventArticleSurface = ({ role, subject, attendableId }: EventArticleSurfaceProps) => {
   const { graph } = useAppGraph();
   // In companion mode attendableId is the calendar node itself; in primary mode

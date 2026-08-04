@@ -22,6 +22,10 @@ type TestState =
 
 export type CrxSettingsProps = AppSurface.SettingsData<{ readonly?: boolean }>;
 
+/**
+ * Settings panel for the browser extension: edits the plugin's schema-driven settings and offers a
+ * round-trip connection test against the extension's content relay.
+ */
 export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

@@ -30,8 +30,12 @@ export const ScriptSettingsSurface = ({ subject }: ScriptSettingsSurfaceProps) =
   const client = useClient();
   // TODO(burdon): Check token.
   const handleAuthenticate = async () => {
-    const { identityKey } = client.halo.identity.get()!;
-    await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+    const identity = client.halo.identity.get();
+    if (!identity) {
+      return;
+    }
+
+    await client.halo.writeCredentials([getAccessCredential(identity.identityKey)]);
   };
 
   return <ScriptSettings settings={settings} onSettingsChange={updateSettings} onAuthenticate={handleAuthenticate} />;

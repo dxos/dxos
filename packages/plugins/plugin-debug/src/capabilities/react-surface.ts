@@ -30,7 +30,13 @@ type SpaceDebug = {
   space: Space;
 };
 
-const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === DebugNodes.SpaceType && isSpace(data.space);
+const isSpaceDebug = (data: unknown): data is SpaceDebug =>
+  typeof data === 'object' &&
+  data !== null &&
+  'type' in data &&
+  data.type === DebugNodes.SpaceType &&
+  'space' in data &&
+  isSpace(data.space);
 
 type ReactSurfaceOptions = {
   logStore?: IdbLogStore;

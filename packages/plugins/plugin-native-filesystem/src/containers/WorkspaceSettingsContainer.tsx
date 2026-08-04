@@ -126,6 +126,10 @@ export const WorkspaceSettingsContainer = () => {
     [t],
   );
 
+  if (!workspace) {
+    return null;
+  }
+
   return (
     <Form.Root
       variant='settings'

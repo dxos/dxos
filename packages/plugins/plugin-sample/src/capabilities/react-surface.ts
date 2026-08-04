@@ -11,7 +11,7 @@
 // A container is registered as itself via `component`, and `props` maps the surface's data
 // envelope onto the container's own props. The mapper's argument type comes from the same
 // `filter` that defines the surface's data shape, so the unpacking is type-checked against it.
-// A surface whose component needs hooks cannot use a mapper — see `SampleSurfaces.tsx`.
+// Hooks cannot run in a mapper, so hook-dependent surfaces get a named component — see `SampleSurfaces.tsx`.
 
 import * as Effect from 'effect/Effect';
 

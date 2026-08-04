@@ -23,14 +23,19 @@ export const LocationField = ({ data, ...inputProps }: LocationFieldProps) => {
   const target = data.target;
   const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
   const { typename } = useFormValues('MapForm');
-  const schema =
-    typename && db
-      ? db.graph.registry
-          .list()
-          .filter(Type.isType)
-          .find((type) => Type.getTypename(type) === typename)
-      : undefined;
-  const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
+  // Both derivations are memoized: the registry scan is O(types), and an unmemoized
+  // `toJsonSchema` would return a fresh identity each render, defeating the memo below.
+  const schema = useMemo(
+    () =>
+      typename && db
+        ? db.graph.registry
+            .list()
+            .filter(Type.isType)
+            .find((type) => Type.getTypename(type) === typename)
+        : undefined,
+    [db, typename],
+  );
+  const jsonSchema = useMemo(() => (schema ? JsonSchema.toJsonSchema(schema) : undefined), [schema]);
   const coordinateProperties = useMemo(() => {
     if (!jsonSchema?.properties) {
       return [];

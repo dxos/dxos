@@ -11,7 +11,7 @@ import React, { type Ref } from 'react';
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation, type AppCapabilities } from '@dxos/app-toolkit';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type, type View } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
@@ -118,6 +118,16 @@ export const SpaceSchemaSurface = () => {
   return <SchemaContainer space={space} />;
 };
 
+/**
+ * Resolves the view backing an object through its type's `ViewAnnotation` path. The
+ * `objectProperties` filter and both consuming surfaces must agree, so they share this.
+ */
+export const tryGetViewForObject = (subject: Obj.Unknown): View.View | undefined => {
+  const type = Obj.getType(subject);
+  const path = type ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[]) : [];
+  return path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(subject, path) : undefined;
+};
+
 export type SelectedObjectsSurfaceProps = {
   companionTo: Type.AnyEntity | Obj.Unknown;
   ref?: Ref<HTMLDivElement>;
@@ -129,12 +139,7 @@ export const SelectedObjectsSurface = ({ companionTo, ref }: SelectedObjectsSurf
   const isTypeCompanion = Type.isType(companionTo);
 
   // Object companion (e.g. a Table.Table): resolve its type via the view backing it.
-  const objectType = !isTypeCompanion ? Obj.getType(companionTo) : undefined;
-  const path = objectType
-    ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(objectType)), () => [] as readonly string[])
-    : [];
-  const view =
-    !isTypeCompanion && path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(companionTo, path) : undefined;
+  const view = !isTypeCompanion ? tryGetViewForObject(companionTo) : undefined;
   const viewDb = view ? Obj.getDatabase(view) : undefined;
   const viewTypeUri = view?.query ? getTypeURIFromQuery(view.query.ast) : undefined;
   const resolvedViewType = useType(viewDb, viewTypeUri);
@@ -185,9 +190,7 @@ export type ViewEditorSurfaceProps = {
 
 /** Resolves the view backing the object; the filter has already established that one exists. */
 export const ViewEditorSurface = ({ subject }: ViewEditorSurfaceProps) => {
-  const type = Obj.getType(subject);
-  const path = type ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[]) : [];
-  const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(subject, path) : undefined;
+  const view = tryGetViewForObject(subject);
   if (!view) {
     return null;
   }

@@ -52,10 +52,18 @@ type GraphDebug = {
   root: string;
 };
 
-const isGraphDebug = (data: any): data is GraphDebug => {
-  const graph = data?.graph;
+const isGraphDebug = (data: unknown): data is GraphDebug => {
+  if (typeof data !== 'object' || data === null || !('graph' in data) || !('root' in data)) {
+    return false;
+  }
+
+  const { graph, root } = data;
   return (
-    graph != null && typeof graph === 'object' && typeof graph.json === 'function' && typeof data?.root === 'string'
+    typeof graph === 'object' &&
+    graph !== null &&
+    'json' in graph &&
+    typeof graph.json === 'function' &&
+    typeof root === 'string'
   );
 };
 
