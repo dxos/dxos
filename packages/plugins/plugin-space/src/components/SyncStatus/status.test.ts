@@ -8,7 +8,7 @@ import { type StatusInput, getStatus } from './status';
 
 describe('getStatus', () => {
   test('unsaved work takes precedence', () => {
-    expect(getStatus(createInput({ saved: false, offline: true }))).toBe('saving-locally');
+    expect(getStatus(createInput({ saved: false, offline: true, stalled: true }))).toBe('saving-locally');
   });
 
   test('offline with nothing outstanding is persisted', () => {
@@ -18,6 +18,14 @@ describe('getStatus', () => {
   test('offline with outstanding work is disconnected', () => {
     expect(getStatus(createInput({ offline: true, needsToUpload: true }))).toBe('disconnected');
     expect(getStatus(createInput({ offline: true, needsToDownload: true }))).toBe('disconnected');
+  });
+
+  test('stalled outranks the transfer direction', () => {
+    expect(getStatus(createInput({ stalled: true, needsToDownload: true }))).toBe('stalled');
+  });
+
+  test('stalled is never reported while offline', () => {
+    expect(getStatus(createInput({ offline: true, stalled: true, needsToDownload: true }))).toBe('disconnected');
   });
 
   test('transfer direction', () => {
@@ -34,6 +42,7 @@ describe('getStatus', () => {
 const createInput = (props: Partial<StatusInput> = {}): StatusInput => ({
   offline: false,
   saved: true,
+  stalled: false,
   needsToUpload: false,
   needsToDownload: false,
   ...props,
