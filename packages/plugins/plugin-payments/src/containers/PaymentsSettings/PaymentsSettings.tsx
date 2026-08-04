@@ -5,7 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, Message, useTranslation } from '@dxos/react-ui';
@@ -20,10 +20,7 @@ type Status = {
   text?: string;
 };
 
-export type PaymentsSettingsProps = {
-  /** The plugin's contributed settings entry; its atom is read and written through the atom registry. */
-  subject: AppCapabilities.Settings;
-};
+export type PaymentsSettingsProps = AppSurface.SettingsData;
 
 export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);

@@ -23,7 +23,10 @@ type UpdateActions = {
   onRelaunch: () => Promise<void>;
 };
 
-type UpdateRow = { description: string; button: ReactNode };
+type UpdateRow = {
+  description: string;
+  button: ReactNode;
+};
 
 /** Update status comes from the update-manager capability, so this panel takes no settings props. */
 export const NativeSettings = () => {
