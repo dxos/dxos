@@ -425,7 +425,7 @@ optimization). Instrumentation gaps obscure first-time-user vs returning-user.
 moon run composer-app:bundle
 
 # Run the harness only:
-DX_PWA=false moon run composer-app:e2e -- src/playwright/startup.spec.ts
+DX_PWA=false moon run composer-app:e2e-startup
 
 # Output:
 ls test-results/composer-app/startup-*.json

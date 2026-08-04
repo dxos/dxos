@@ -30,7 +30,7 @@ tasks:
   check-startup-budget:
     script: >-
       rm -f ../../../test-results/composer-app/startup-warm-cold.runs.jsonl &&
-      pnpm exec playwright test --config=src/playwright/playwright.config.ts --grep "warm-cold" --repeat-each=5 &&
+      pnpm exec playwright test --config=src/playwright/playwright-startup.config.ts --grep "warm-cold" --repeat-each=5 &&
       node scripts/check-startup-budget.mjs
     env:
       DX_PWA: 'false'
