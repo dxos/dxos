@@ -130,7 +130,7 @@ const DefaultStory = ({ debug: debugProp }: StoryProps) => {
           </Input.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='grid grid-cols-2 h-full gap-4 overflow-hidden'>
+      <Panel.Content classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>
         <SurfaceComponent
           key={debug ? 'debug' : 'prod'}
           type={ItemRole}

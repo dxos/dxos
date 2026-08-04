@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -22,7 +21,8 @@ export default Capability.makeModule(() =>
         id: 'defaultPluginSettings',
         position: Position.last,
         filter: AppSurface.settings(AppSurface.Article),
-        component: ({ data: { subject } }) => <DefaultSettings subject={subject} />,
+        component: DefaultSettings,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),

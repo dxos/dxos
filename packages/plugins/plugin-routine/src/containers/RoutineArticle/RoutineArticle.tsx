@@ -71,9 +71,9 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
+          <Menu.Toolbar classNames='dx-document' />
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <RoutineForm db={db} routine={subject} />
         </Panel.Content>
       </Panel.Root>

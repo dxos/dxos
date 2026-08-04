@@ -14,8 +14,17 @@ export type MainStyleProps = Partial<{
   handlesFocus: boolean;
 }>;
 
+// The app canvas is the base zone: it paints the level and publishes `--surface-bg`, which every
+// aspect inside it (bars, wells, hover/current rows) derives from.
 const content: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
-  mx(padding, mainPaddingTransitions, bounce && 'dx-main-bounce-layout', 'dx-focus-ring-main', ...etc);
+  mx(
+    padding,
+    mainPaddingTransitions,
+    bounce && 'dx-main-bounce-layout',
+    'dx-base-surface',
+    'dx-focus-ring-main',
+    ...etc,
+  );
 
 const sidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx('dx-main-sidebar', 'dx-focus-ring-inset-over-all', ...etc);

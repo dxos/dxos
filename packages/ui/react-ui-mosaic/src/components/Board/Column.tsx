@@ -87,7 +87,7 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
           border
           classNames={mx(
             'group/column',
-            'h-full w-full md:w-card-default-width snap-center bg-deck-surface',
+            'h-full w-full md:w-card-default-width snap-center dx-deck-surface',
             'overflow-hidden',
             classNames,
           )}

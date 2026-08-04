@@ -348,7 +348,7 @@ export const Timeline = memo(
                   aria-current={current === index}
                   className={mx(
                     'group/row col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center px-[2px]',
-                    'dx-row aria-[current=true]:bg-current-surface! hover:bg-hover-surface-subtle',
+                    'aria-[current=true]:bg-current-surface! hover:bg-hover-surface-subtle',
                   )}
                   style={{ height: `${options.lineHeight}px` }}
                   onClick={handleClick}

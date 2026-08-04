@@ -5,6 +5,10 @@
 @layer dx-base {
   :root {
     color-scheme: light;
+    /* Direction an aspect moves off its host surface: away from the canvas in either theme.
+     * Aspects multiply their offset by this instead of branching on light-dark(), which resolves
+     * unreliably when nested inside a relative-color expression. */
+    --dx-lift: -1;
     touch-action: pan-x pan-y;
     font-synthesis: none;
     font-variation-settings:
@@ -17,6 +21,7 @@
 
   .dark {
     color-scheme: dark;
+    --dx-lift: 1;
   }
 
   button {

@@ -110,7 +110,7 @@ export default Capability.makeModule(() =>
           const feedDXN = feed ? Feed.getFeedUri(feed) : undefined;
           return (
             <Panel.Root role={role}>
-              <Panel.Content>
+              <Panel.Content asChild>
                 <InvocationTraceContainer
                   db={space?.db}
                   feedDXN={feedDXN}

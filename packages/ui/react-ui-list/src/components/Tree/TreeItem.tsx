@@ -27,8 +27,6 @@ import React, {
 import { invariant } from '@dxos/invariant';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
-  ghostFocusWithin,
-  ghostHover,
   hoverableControls,
   hoverableFocusedKeyboardControls,
   hoverableFocusedWithinControls,
@@ -362,8 +360,7 @@ const RawTreeItem = <T extends { id: string } = any>({
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,
           hoverableDescriptionIcons,
-          ghostFocusWithin,
-          ghostHover,
+          'focus-within:bg-hover-surface hover:bg-hover-surface',
           className,
         )}
         onKeyDown={handleKeyDown}

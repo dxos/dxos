@@ -223,7 +223,7 @@ export const ThemePane = ({ mode, children }: { mode: ColorScheme; children: Rea
     // The class stays for rules scoped to `.dark`.
     <div className={mode} style={{ colorScheme: mode }}>
       <ThemeProvider tx={tx} themeMode={mode}>
-        <div className='bg-base-surface text-base-fg p-2 overflow-auto border border-separator rounded'>
+        <div className='dx-base-surface text-base-fg p-2 overflow-auto border border-separator rounded'>
           <div className='pb-1 text-xs uppercase tracking-wide text-description'>{mode}</div>
           {children}
         </div>
@@ -246,8 +246,8 @@ export const Compare = ({ render }: { render: () => ReactNode }) => (
 /** Frame shared by both story suites: the sample's note above the rendered body (or comparison). */
 export const SampleFrame = ({ note, children }: { note: string; children: ReactNode }) => (
   <Panel.Root>
-    <Panel.Toolbar className='flex items-center p-1 text-description'>{note}</Panel.Toolbar>
-    <Panel.Content className='overflow-auto'>{children}</Panel.Content>
+    <Panel.Toolbar classNames='flex items-center p-1 text-description'>{note}</Panel.Toolbar>
+    <Panel.Content classNames='overflow-auto'>{children}</Panel.Content>
   </Panel.Root>
 );
 
