@@ -1,7 +1,5 @@
 # For packages whose SQLite schema is authored as a prisma schema.
-# The `prisma` task generates DDL into `src/migrations/`; stores import that SQL with `?raw` and
-# apply it via `SqlMigrator.run`. Prisma is build-time only — no `@prisma/client` and no query
-# engine ship to the runtime.
+# Prisma is build-time only: no `@prisma/client` and no query engine ship to the runtime.
 
 $schema: https://moonrepo.dev/schemas/tasks.json
 
@@ -13,22 +11,21 @@ tasks:
   prisma:
     options:
       internal: true
-    # `node:sqlite` is used to replay migrations for the drift check; it is still experimental, and
-    # the warning would otherwise appear in every build.
+    # `--disable-warning` silences node:sqlite's experimental notice, used to replay migrations.
     command: node --disable-warning=ExperimentalWarning $workspaceRoot/scripts/prisma-generate-sql.mjs
-    # Migrations are inputs as well as an output: the task compares them against the schema, so
+    # Migrations are inputs as well as an output: the task replays them against the schema, so
     # editing one has to re-trigger it.
     inputs:
       - /scripts/prisma-generate-sql.mjs
       - 'prisma/**/*.prisma'
       - 'src/migrations/*.sql'
-    # Only the generated SQL — `src/migrations/index.ts` is hand-written, and moon restores
-    # declared outputs from cache, which would clobber it.
+    # Only the generated SQL — `src/migrations/index.ts` is hand-written, and moon restores declared
+    # outputs from cache, which would clobber it.
     outputs:
       - 'src/migrations/*.sql'
 
-  # `deps` merges by append, so this adds to the build deps declared in tag-ts-vite-build.yml
-  # rather than replacing them. There is no `prebuild` meta-task in this repo.
+  # `deps` merges by append, so this adds to the build deps from tag-ts-vite-build.yml rather than
+  # replacing them. There is no `prebuild` meta-task in this repo.
   build:
     deps:
       - prisma

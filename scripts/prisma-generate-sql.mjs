@@ -33,25 +33,16 @@ const MIGRATIONS_DIR = resolve('src/migrations');
 const INITIAL_PATH = join(MIGRATIONS_DIR, '0001_init.sql');
 
 const HEADER = `--
--- Generated from prisma/schema.prisma by scripts/prisma-generate-sql.mjs.
+-- Generated from prisma/schema.prisma by scripts/prisma-generate-sql.mjs, then maintained by hand.
 --
--- This migration is immutable: it is recorded in the migrations table and never re-run, so
--- editing it would diverge from databases that already applied it. Add a new numbered
--- migration instead.
+-- Add \`IF NOT EXISTS\` to every CREATE below. Prisma emits bare statements, which fail against a
+-- database that already holds these tables — reachable when a store's baseline predicate does not
+-- fire, e.g. a database left partly initialised by an earlier release.
+--
+-- Immutable from then on: it is recorded in the migrations table, never re-run, and its checksum is
+-- verified on every open. Add a new numbered migration instead of editing this one.
 --
 `;
-
-/**
- * Rewrites Prisma's bare \`CREATE\` statements to be idempotent, so the initial migration can be
- * stamped onto a database created before migration tracking existed without failing.
- */
-const makeIdempotent = (sql) =>
-  sql
-    .replace(/\bCREATE TABLE (?!IF NOT EXISTS)/g, 'CREATE TABLE IF NOT EXISTS ')
-    .replace(
-      /\bCREATE (UNIQUE )?INDEX (?!IF NOT EXISTS)/g,
-      (_match, unique) => `CREATE ${unique ?? ''}INDEX IF NOT EXISTS `,
-    );
 
 /**
  * The physical shape SQLite ends up with, so two scripts can be compared by what they produce
@@ -105,7 +96,7 @@ if (!/CREATE TABLE/i.test(generated)) {
   process.exit(1);
 }
 
-const schema = makeIdempotent(generated).trimEnd() + '\n';
+const schema = generated.trimEnd() + '\n';
 mkdirSync(MIGRATIONS_DIR, { recursive: true });
 
 const migrations = readdirSync(MIGRATIONS_DIR)
@@ -114,8 +105,31 @@ const migrations = readdirSync(MIGRATIONS_DIR)
 
 if (migrations.length === 0) {
   writeFileSync(INITIAL_PATH, HEADER + schema);
-  console.log(`Wrote ${relative(process.cwd(), INITIAL_PATH)}`);
+  console.log(
+    `Wrote ${relative(process.cwd(), INITIAL_PATH)}\n` +
+      'Now add `IF NOT EXISTS` to each CREATE, so the migration is safe to stamp onto a database ' +
+      'that already holds these tables. See the header in the generated file.',
+  );
   process.exit(0);
+}
+
+// The initial migration is the one that can be stamped onto a database that already holds these
+// tables, so every CREATE in it must tolerate that. Verified rather than rewritten: the file stays
+// exactly what a reviewer read, and regenerating it (which drops the clause, since prisma emits
+// bare statements) fails here instead of silently losing the guarantee.
+const initial = readFileSync(join(MIGRATIONS_DIR, migrations[0]), 'utf8');
+const bare = initial
+  .replace(/--[^\n]*/g, '')
+  .match(/\bCREATE\s+(?:VIRTUAL\s+TABLE|UNIQUE\s+INDEX|TABLE|INDEX)\s+(?!IF\s+NOT\s+EXISTS)\S+/gi);
+if (bare) {
+  console.error(
+    `${migrations[0]} has ${bare.length} statement(s) without \`IF NOT EXISTS\`:\n` +
+      bare.map((statement) => `  ${statement.replace(/\s+/g, ' ')}`).join('\n') +
+      '\n\nAdd the clause by hand. Prisma emits bare statements, which fail against a database that ' +
+      "already holds these tables — reachable when a store's baseline predicate does not fire.\n" +
+      'Later migrations are exempt: the migrations table guarantees they run exactly once.',
+  );
+  process.exit(1);
 }
 
 const replayed = describe(migrations.map((entry) => readFileSync(join(MIGRATIONS_DIR, entry), 'utf8')).join('\n'));

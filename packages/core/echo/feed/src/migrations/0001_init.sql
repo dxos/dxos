@@ -1,9 +1,12 @@
 --
--- Generated from prisma/schema.prisma by scripts/prisma-generate-sql.mjs.
+-- Generated from prisma/schema.prisma by scripts/prisma-generate-sql.mjs, then maintained by hand.
 --
--- This migration is immutable: it is recorded in the migrations table and never re-run, so
--- editing it would diverge from databases that already applied it. Add a new numbered
--- migration instead.
+-- `IF NOT EXISTS` is added deliberately. Prisma emits bare statements, which fail against a
+-- database that already holds these tables — reachable when the baseline predicate does not fire,
+-- e.g. a database left partly initialised by an earlier release.
+--
+-- Immutable from here on: it is recorded in `feed_migrations`, never re-run, and its checksum is
+-- verified on every open. Add a new numbered migration instead of editing this one.
 --
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "feeds" (

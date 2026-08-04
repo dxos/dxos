@@ -78,8 +78,17 @@ work in `SqlClient.withTransaction`, whose implementation emits literal `BEGIN` 
 workerd forbids. Since `FeedSpace` runs `feedStore.migrate()` inside `blockConcurrencyWhile`, using
 the library would prevent the Durable Object from starting. See "Runs inside SqlTransaction" below.
 
-Prisma's generated DDL is still post-processed to inject `IF NOT EXISTS`, because the initial
-migration has to be safe to stamp onto a database that already has the tables.
+The initial migration carries `IF NOT EXISTS` on every `CREATE`, added **by hand**. Prisma emits
+bare statements, which fail against a database that already holds the tables — reachable when a
+store's baseline predicate does not fire, e.g. one left partly initialised by an earlier release.
+
+Added by hand rather than rewritten by the generator, so the committed file is exactly what a
+reviewer read. Textual rewriting of generated SQL is fragile — an earlier version silently missed
+`CREATE VIRTUAL TABLE`, which `index-core` needs. The generator instead **verifies** the clause is
+present and fails otherwise, which also closes the hole that made the manual step unsafe: deleting
+and regenerating the file drops the clause, and the drift check cannot see it because `IF NOT EXISTS`
+does not change the resulting schema shape. Later migrations are exempt — they are `ALTER`s, and the
+migrations table guarantees they run exactly once, so failing loudly on a second run is the point.
 
 Owning the loop also avoids two properties of the library that would otherwise have to be designed
 around, both of which cost correctness:
@@ -195,9 +204,10 @@ with no packaging change.
 moon merges inherited `deps` by append, which was verified: `feed:build` lists `feed:prisma`
 alongside the deps declared in `tag-ts-vite-build.yml`.
 
-`scripts/prisma-generate-sql.mjs` runs `prisma migrate diff --from-empty --to-schema-datamodel`,
-injects `IF NOT EXISTS`, and writes `0001_init.sql` only when no migration exists yet — it never
-overwrites a migration. Otherwise it performs the replay comparison above. It sets
+`scripts/prisma-generate-sql.mjs` runs `prisma migrate diff --from-empty --to-schema-datamodel` and
+writes `0001_init.sql` only when no migration exists yet — it never overwrites a migration. On every
+other run it checks the initial migration still carries `IF NOT EXISTS` and performs the replay
+comparison above. It sets
 `PRISMA_HIDE_UPDATE_MESSAGE=1`, since the CLI otherwise prints an upgrade banner on every
 invocation, and aborts if prisma emits no DDL, so a prisma failure cannot empty committed SQL.
 
