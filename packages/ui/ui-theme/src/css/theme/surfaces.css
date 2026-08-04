@@ -116,12 +116,12 @@
 
   /* Bar: a sticky strip on its host (toolbar, statusbar). */
   --color-toolbar-surface: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.025) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-bar) * 0.025) c h
   );
 
   /* Well: an inset region on its host (group, input, focus). */
   --color-group-surface: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-well-scale) * 0.05) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-well) * 0.05) c h
   );
   --color-input-surface: var(--color-group-surface);
   --color-focus-surface: var(--color-group-surface);
@@ -133,19 +133,26 @@
 
   /* Placeholder ink is an aspect too: a fixed neutral reads correctly on one surface only, so it
    * lifts away from the host like the state surfaces do (offset 0.30). */
-  --color-placeholder: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.3) c h);
+  --color-placeholder: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-placeholder) * 0.3) c
+      h
+  );
 
   /*
    * Scrollbar thumb. Fixed neutrals collided with the surface they scrolled over: in light mode the
    * thumb was neutral-200, the same value as the base canvas, so it was invisible. Deriving it from
    * the host keeps the same contrast on any surface, in either theme (offsets 0.23 / 0.30 / 0.34).
    */
-  --color-scrollbar-thumb: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.23) c h);
+  --color-scrollbar-thumb: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.23) c
+      h
+  );
   --color-scrollbar-thumb-hover: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.3) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.3) c h
   );
   --color-scrollbar-thumb-active: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.34) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.34) c
+      h
   );
 
   /*
@@ -156,22 +163,25 @@
    * mirror it in light.
    */
   --color-separator: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-separator-line-scale) * 0.166)
-      c h
+    from var(--surface-bg, var(--color-base-surface))
+      calc(l + var(--dx-lift) * var(--dx-attenuate-separator-line) * 0.166) c h
   );
   --color-input-separator: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.115) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.115) c
+      h
   );
   --color-subdued-separator: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.089) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c
+      h
   );
   --color-primary-separator: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.064) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.064) c
+      h
   );
 
   /* State aspects — same host-derived mechanism; see the offsets above. */
   --color-hover-surface: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.08) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
   );
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
@@ -181,15 +191,15 @@
    * controls (buttons) keep --color-hover-surface.
    */
   --color-hover-surface-subtle: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.02) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.02) c h
   );
 
   /* current (aria-current) */
   --color-current-surface: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.1) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.1) c h
   );
   --color-current-surface-hover: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.12) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.12) c h
   );
   --color-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 

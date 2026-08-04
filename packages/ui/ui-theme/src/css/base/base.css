@@ -10,18 +10,31 @@
      * unreliably when nested inside a relative-color expression. */
     --dx-lift: -1;
     /*
+     * Light attenuation.
+     *
      * Lightness is not perceptually symmetric: subtracting 0.10 L from a near-white surface reads
-     * far heavier than adding 0.10 to a near-black one, so the state offsets that are a whisper in
-     * dark became grey slabs in light. State aspects scale their offset by this; dark keeps 1.
+     * far heavier than adding 0.10 to a near-black one. Every aspect family therefore multiplies
+     * its offset by a factor declared here — dark sets them all to 1, so the dark appearance is the
+     * reference and light is tuned against it. One family, one factor, one place.
+     *
+     * Family      Offsets (dark)          Light   Light dL on the canvas
+     *   state       .02 / .08 / .10 / .12   0.5     hover .04, selected .05
+     *   well        .05                     0.5     input fill .025
+     *   separator   .089 / .115 / .064      0.75    subdued .067, input .086
+     *   sep-line    .166                    0.45    .075 — near the floor; subdued is .067
+     *   bar         .025                    1       toolbars read correctly as-is
+     *   placeholder .30                     1       ink, not a surface; wants the contrast
+     *   scrollbar   .23 / .30 / .34         1       was invisible in light before deriving
+     *
+     * Adjust a family by changing its factor, not by editing offsets — those are the dark contract.
      */
-    --dx-state-scale: 0.5;
-    /* Same asymmetry, gentler: a separator still has to read as a line, so it is trimmed rather
-     * than halved. Dark keeps 1. The plain separator is the heaviest of the four and carries its
-     * own factor, so it can be softened without touching the subdued and input variants. */
-    --dx-separator-scale: 0.75;
-    --dx-separator-line-scale: 0.45;
-    /* Wells (the input fill) sit on near-white in light, where a 0.05 step reads as a grey box. */
-    --dx-well-scale: 0.5;
+    --dx-attenuate-state: 0.5;
+    --dx-attenuate-well: 0.5;
+    --dx-attenuate-separator: 0.75;
+    --dx-attenuate-separator-line: 0.45;
+    --dx-attenuate-bar: 1;
+    --dx-attenuate-placeholder: 1;
+    --dx-attenuate-scrollbar: 1;
     touch-action: pan-x pan-y;
     font-synthesis: none;
     font-variation-settings:
@@ -35,10 +48,14 @@
   .dark {
     color-scheme: dark;
     --dx-lift: 1;
-    --dx-state-scale: 1;
-    --dx-separator-scale: 1;
-    --dx-separator-line-scale: 1;
-    --dx-well-scale: 1;
+    /* Dark is the reference: every family runs at full strength. */
+    --dx-attenuate-state: 1;
+    --dx-attenuate-well: 1;
+    --dx-attenuate-separator: 1;
+    --dx-attenuate-separator-line: 1;
+    --dx-attenuate-bar: 1;
+    --dx-attenuate-placeholder: 1;
+    --dx-attenuate-scrollbar: 1;
   }
 
   button {
