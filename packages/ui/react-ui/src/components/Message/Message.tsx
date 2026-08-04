@@ -18,14 +18,7 @@ import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
 import { Icon } from '../Icon';
-
-const messageIcons: Record<MessageValence, string> = {
-  success: 'ph--check-circle--duotone',
-  info: 'ph--info--duotone',
-  warning: 'ph--warning--duotone',
-  error: 'ph--warning-circle--duotone',
-  neutral: 'ph--info--duotone',
-};
+import { messageIcons } from './message-icons';
 
 type MessageRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   valence?: MessageValence;
@@ -208,5 +201,3 @@ export const Message = {
 export const Callout = Message;
 
 export type { MessageContentProps, MessageRootProps, MessageTitleProps };
-
-export { messageIcons };

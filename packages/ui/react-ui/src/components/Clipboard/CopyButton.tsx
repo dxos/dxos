@@ -10,7 +10,7 @@ import { useTranslation } from '../../primitives';
 import { Button, type ButtonProps, IconButton } from '../Button';
 import { Icon, type IconProps } from '../Icon';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
-import { useClipboard } from './ClipboardProvider';
+import { useClipboard } from './ClipboardContext';
 
 export type CopyButtonProps = ButtonProps &
   Pick<IconProps, 'size'> & {

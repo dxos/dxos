@@ -5,6 +5,31 @@
 export * from './common';
 export * from './defs';
 
+// Shape schemas, factories and defs, kept out of the component modules so those can fast-refresh.
+export * from './append-def';
+export * from './array-def';
+export * from './audio-def';
+export * from './beacon-def';
+export * from './chat-def';
+export * from './constant-def';
+export * from './database-def';
+export * from './feed-def';
+export * from './function-def';
+export * from './gpt-def';
+export * from './gpt-realtime-def';
+export * from './json-def';
+export * from './logic-def';
+export * from './rng-def';
+export * from './scope-def';
+export * from './surface-def';
+export * from './switch-def';
+export * from './table-def';
+export * from './template-def';
+export * from './text-def';
+export * from './text-to-image-def';
+export * from './thread-def';
+export * from './trigger-def';
+
 export * from './Array';
 export * from './Append';
 export * from './Audio';

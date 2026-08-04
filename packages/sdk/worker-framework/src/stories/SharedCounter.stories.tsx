@@ -285,7 +285,7 @@ const BlockWorkerPanel = ({
         <span className='text-xs text-subdued'>ms</span>
         <button
           type='button'
-          className='rounded-md bg-destructive px-3 py-1.5 text-sm font-medium text-destructiveContrast disabled:opacity-50'
+          className='rounded-md bg-error-bg px-3 py-1.5 text-sm font-medium text-error-fg disabled:opacity-50'
           disabled={!ready || blocking}
           onClick={() => {
             const parsed = Number(durationMs);
@@ -314,14 +314,14 @@ const CounterPanel = ({ label, connection }: CounterPanelProps) => {
       <div className='text-3xl font-semibold tabular-nums'>{ready ? count : '…'}</div>
       <button
         type='button'
-        className='rounded-md bg-primary px-3 py-2 text-sm font-medium text-primaryContrast disabled:opacity-50'
+        className='rounded-md bg-accent-bg px-3 py-2 text-sm font-medium text-accent-fg disabled:opacity-50'
         disabled={!ready}
         onClick={() => void increment()}
       >
         Increment
       </button>
       <BlockWorkerPanel ready={ready} blocking={blocking} onBlock={blockCpu} />
-      {error && <div className='text-xs text-error'>{error}</div>}
+      {error && <div className='text-xs text-error-text'>{error}</div>}
     </div>
   );
 };

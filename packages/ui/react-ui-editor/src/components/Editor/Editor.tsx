@@ -4,7 +4,6 @@
 
 import { type EditorState, type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom';
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   forwardRef,
@@ -19,7 +18,6 @@ import { createPortal } from 'react-dom';
 
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { type XmlWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -34,33 +32,9 @@ import {
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
 } from '../EditorToolbar';
-import {
-  type EditorController,
-  EditorView as NaturalEditorContent,
-  type EditorViewProps as NaturalEditorContentProps,
-  createEditorController,
-  noopController,
-} from './EditorView';
-
-//
-// Context
-//
-
-type EditorContextValue = {
-  controller?: EditorController;
-  setController: (controller: EditorController) => void;
-  extensions?: Extension[];
-  /** xmlTags widget portals (embedded blocks); rendered by `Editor.Blocks`, fed via `setWidgets`. */
-  widgets?: XmlWidgetState[];
-  state: Atom.Writable<EditorToolbarState>;
-};
-
-const [EditorContextProvider, useEditorContext] = createContext<EditorContextValue>('Editor');
-
-/**
- * Access the editor context. Must be used within `Editor.Root`.
- */
-export { useEditorContext };
+import { type EditorController, noopController } from './controller';
+import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext';
+import { EditorView as NaturalEditorContent, type EditorViewProps as NaturalEditorContentProps } from './EditorView';
 
 //
 // Root
@@ -318,5 +292,3 @@ export type {
   EditorToolbarState,
   EditorViewProps,
 };
-
-export { createEditorController };

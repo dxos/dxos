@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { type Point } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
 import {
@@ -16,19 +15,9 @@ import {
   shapeAttrs,
   styles,
 } from '../components';
-import { createCurveThroughPoints, createPathThroughPoints2 } from '../layout';
 import { type PathShape } from '../types';
 
 const createUrl = (ref: string | undefined) => (ref ? `url(#${MARKER_PREFIX}-${ref})` : undefined);
-
-export type CreatePathProps = Omit<PathShape, 'type' | 'path'> & { points: Point[] };
-
-export const createPath = ({ id, points, ...rest }: CreatePathProps): PathShape => ({
-  id,
-  type: 'path',
-  path: points.length === 2 ? createPathThroughPoints2(points) : createCurveThroughPoints(points),
-  ...rest,
-});
 
 /**
  * Path shape.

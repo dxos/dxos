@@ -674,6 +674,37 @@ export class EntityManager implements IDatabaseBinding {
         },
       }),
     );
+
+    await this._waitUntilRootDocHasHeads(heads);
+  }
+
+  /**
+   * Waits for this client's replica of the space root document to carry the given heads.
+   *
+   * The service call is a host-side barrier only, but the root document carries the object ->
+   * document routing table that index-hit hydration validates against
+   * (`EchoClient._loadObjectFromDocument`), so a query run before this replica catches up drops the
+   * hits it cannot route and comes back empty. Cf. dxos/dxos#7240.
+   */
+  private async _waitUntilRootDocHasHeads(heads: SpaceDocumentHeads): Promise<void> {
+    const rootHandle = this._spaceRootDocHandle;
+    const rootDocumentId = rootHandle?.documentId;
+    if (!rootHandle || !rootDocumentId) {
+      return;
+    }
+    const rootHeads = heads.heads[rootDocumentId];
+    if (!rootHeads?.length) {
+      return;
+    }
+
+    await asyncTimeout(
+      Event.wrap<ChangeEvent<DatabaseDirectory>>(rootHandle, 'change').waitForCondition(() => {
+        const doc = rootHandle.doc();
+        return doc != null && A.hasHeads(doc, rootHeads);
+      }),
+      RPC_TIMEOUT,
+      'waiting for the space root document to replicate to the client',
+    );
   }
 
   async reIndexHeads(): Promise<void> {

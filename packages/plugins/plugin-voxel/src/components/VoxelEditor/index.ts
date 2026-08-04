@@ -9,5 +9,5 @@ export {
   type VoxelBounds,
   VoxelEditor,
   type VoxelEditorProps,
-  computeVoxelBounds,
 } from './VoxelEditor';
+export { computeVoxelBounds } from './voxel-bounds';

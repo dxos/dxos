@@ -5,15 +5,20 @@
 - When performing complex tasks maintain a plan.
 - NEVER use the `send_later` tool.
 
-## Response mode
+## Mode
 
-- Desktop clients don't expose custom slash commands, so the response-verbosity
-  mode is toggled by a sentinel in a normal message: type `$concise` or
-  `$natural` (also `$mode concise`) anywhere in a message.
-- A `UserPromptSubmit` hook (`.claude/hooks/response-mode.sh`) parses the
-  sentinel, sets the mode, and while concise injects a terseness directive into
-  every prompt. State lives in the untracked `.claude/.response-mode`.
-- When the injected `RESPONSE MODE: CONCISE` directive is present, follow it.
+- The response-verbosity mode is toggled by a sentinel in an ordinary message:
+  type `$mode terse` or `$mode normal` anywhere in a message. The bare one-token
+  forms still work, and `concise` aliases `terse` while
+  `natural`/`default`/`off` alias `normal`.
+- A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) parses the sentinel, sets
+  the mode, and injects the `RESPONSE RULES` block into **every** prompt. State
+  lives in the untracked `.claude/.mode`; `normal` is the default when absent.
+- The block is emitted in both modes — the invariants (worktree + files-read
+  line, numbered options, lead with the answer) are state-independent and only
+  the length clause varies. Follow it whenever it is present.
+- The rules themselves are canonical in `AGENTS.md` → "Responding to the user";
+  the machinery is documented in `.claude/README.md`.
 
 ## Task planning
 

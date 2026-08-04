@@ -11,7 +11,7 @@ import { initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
-import { type EditorController, createEditorController, noopController } from './controller';
+import { type EditorController, createEditorController } from './controller';
 
 export type EditorViewProps = ThemedClassName<
   {
@@ -100,5 +100,3 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
     );
   },
 );
-
-export { type EditorController, createEditorController, noopController };

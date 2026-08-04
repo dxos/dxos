@@ -4,7 +4,7 @@
 
 import { useCallback, useSyncExternalStore } from 'react';
 
-import { useIconRegistry } from '../primitives/ThemeProvider/IconRegistry';
+import { useIconRegistry } from '../primitives/ThemeProvider/icon-registry';
 
 /**
  * Resolves an icon name to a same-document `<use href>`.

@@ -49,6 +49,7 @@
     }
   ],
   "files.associations": {
+    "*.css": "tailwindcss",
     "*.pcss": "css",
     "package.json": "jsonc",
     "workspace.json": "jsonc",

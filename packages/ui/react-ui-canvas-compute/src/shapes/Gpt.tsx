@@ -2,34 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
-import { GptInput, GptOutput } from '@dxos/conductor';
 import { ScrollArea } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-import { FunctionBody, createFunctionAnchors, getHeight } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-
-export const GptShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('gpt'),
-  }),
-);
-
-export type GptShape = Schema.Schema.Type<typeof GptShape>;
-
-export type CreateGptProps = CreateShapeProps<GptShape>;
-
-export const createGpt = (props: CreateGptProps) =>
-  createShape<GptShape>({
-    type: 'gpt',
-    size: { width: 256, height: Math.max(getHeight(GptInput), getHeight(GptOutput)) },
-    ...props,
-  });
+import { FunctionBody } from './common';
+import { type GptShape } from './gpt-def';
 
 export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
   const { meta, runtime } = useComputeNodeState(shape);
@@ -84,14 +64,4 @@ export const GptComponent = ({ shape }: ShapeComponentProps<GptShape>) => {
       outputSchema={meta.output}
     />
   );
-};
-
-export const gptShape: ShapeDef<GptShape> = {
-  type: 'gpt',
-  name: 'GPT',
-  icon: 'ph--brain--regular',
-  component: GptComponent,
-  createShape: createGpt,
-  getAnchors: (shape) => createFunctionAnchors(shape, GptInput, GptOutput),
-  openable: true,
 };

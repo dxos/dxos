@@ -82,7 +82,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
           </Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='flex flex-col gap-2 p-2 text-sm overflow-auto'>
+      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
         <JsonHighlighter
           data={{
             dispatcher: state?.enabled ? 'running' : 'stopped',
