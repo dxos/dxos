@@ -4,22 +4,24 @@
 
 import React from 'react';
 
+import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
 
-export type ExcalidrawSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type ExcalidrawSettingsProps = AppSurface.SettingsData;
 
-export const ExcalidrawSettings = ({ settings, onSettingsChange }: ExcalidrawSettingsProps) => {
+export const ExcalidrawSettings = ({ subject }: ExcalidrawSettingsProps) => {
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+
   return (
     <Form.Root
       variant='settings'
       schema={Settings.Settings}
-      readonly={!onSettingsChange}
       values={settings}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>

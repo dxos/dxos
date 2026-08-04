@@ -8,9 +8,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { ExcalidrawSettings } from '#containers';
 import { meta } from '#meta';
-
-import { ExcalidrawSettingsSurface } from './ExcalidrawSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'plugin-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: ExcalidrawSettingsSurface,
+        component: ExcalidrawSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),

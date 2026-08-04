@@ -11,12 +11,11 @@ import { Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
-import { EditableMarkdownCard, MarkdownCard } from '#containers';
+import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#containers';
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
 import { MarkdownContainer } from './MarkdownContainer';
-import { MarkdownSettingsSurface } from './MarkdownSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -59,7 +58,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'surface.pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: MarkdownSettingsSurface,
+        component: MarkdownSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({

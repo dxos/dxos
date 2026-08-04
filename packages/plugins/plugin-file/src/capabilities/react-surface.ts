@@ -9,11 +9,10 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
 
-import { FileArticle } from '#containers';
+import { FileArticle, FileSettings } from '#containers';
 import { meta } from '#meta';
 import { File, FileAction } from '#types';
 
-import { FileSettingsSurface } from './FileSettingsSurface';
 import { FileUploadField } from './FileUploadField';
 
 export default Capability.makeModule(() =>
@@ -39,7 +38,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: FileSettingsSurface,
+        component: FileSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
