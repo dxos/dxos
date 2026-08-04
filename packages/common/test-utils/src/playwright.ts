@@ -71,6 +71,10 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
   return {
     testDir,
     outputDir: testResultOuputDir,
+    // Playwright's default is 30s, which equals the action bound below — leaving a test no budget beyond
+    // a single slow action. Storybook-backed suites also pay an on-demand story compile in the first
+    // test's `beforeEach`, which alone exceeded 30s. Individual configs may still raise this.
+    timeout: 60_000,
     // Run tests in files in parallel.
     fullyParallel: true,
     // Fail the build on CI if you accidentally left test.only in the source code.
