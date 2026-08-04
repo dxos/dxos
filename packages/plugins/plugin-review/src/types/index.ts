@@ -8,5 +8,3 @@ export * as CommentOperation from './CommentOperation';
 export * as ReviewCapabilities from './ReviewCapabilities';
 export * as ReviewEvents from './ReviewEvents';
 export * as Settings from './Settings';
-export * from './AgentIdentity';
-export * from './ReviewCapabilities';

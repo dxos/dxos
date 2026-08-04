@@ -23,6 +23,8 @@ export default defineConfig({
     'types': 'src/types/index.ts',
     'AgentIdentity': 'src/types/AgentIdentity.ts',
     'ReviewCapabilities': 'src/types/ReviewCapabilities.ts',
+    'AgentIdentity': 'src/types/AgentIdentity.ts',
+    'ReviewCapabilities': 'src/types/ReviewCapabilities.ts',
     'Settings': 'src/types/Settings.ts',
     'CommentCapabilities': 'src/types/CommentCapabilities.ts',
     'CommentOperation': 'src/types/CommentOperation.ts',

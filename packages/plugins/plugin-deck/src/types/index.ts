@@ -7,5 +7,3 @@ export * as DeckOperation from './DeckOperation';
 export * as DeckRole from './DeckRole';
 export * as DeckSchema from './DeckSchema';
 export * as Settings from './Settings';
-export * from './DeckRole';
-export * from './DeckSchema';

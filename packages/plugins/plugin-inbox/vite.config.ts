@@ -26,6 +26,8 @@ export default defineConfig({
     'types': 'src/types/index.ts',
     'SyncOptions': 'src/types/SyncOptions.ts',
     'SyncStreamConfig': 'src/types/SyncStreamConfig.ts',
+    'SyncOptions': 'src/types/SyncOptions.ts',
+    'SyncStreamConfig': 'src/types/SyncStreamConfig.ts',
     'Calendar': 'src/types/Calendar.ts',
     'ExtractedFrom': 'src/types/ExtractedFrom.ts',
     'InboxCapabilities': 'src/types/InboxCapabilities.ts',
