@@ -21,12 +21,12 @@ import {
   SpaceHomeWelcome,
   SupportArticle,
   SupportCompanion,
+  SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
 import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants';
-import { SupportSettingsSurface } from './SupportSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -94,7 +94,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: SupportSettingsSurface,
+        component: SupportSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),

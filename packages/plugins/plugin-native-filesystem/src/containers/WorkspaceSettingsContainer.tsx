@@ -15,9 +15,10 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
+import { useActiveFilesystemWorkspace } from '#hooks';
 import { meta } from '#meta';
 import { NativeFilesystemOperation } from '#types';
-import { type FilesystemWorkspace, NativeFilesystemCapabilities } from '#types';
+import { NativeFilesystemCapabilities } from '#types';
 
 import { writeComposerConfig } from '../util';
 
@@ -26,22 +27,20 @@ const WorkspaceSettingsSchema = Schema.Struct({
   hue: Schema.optional(Schema.String).annotations({ title: 'Color' }),
 });
 
-export type WorkspaceSettingsContainerProps = {
-  workspace: FilesystemWorkspace;
-};
-
-export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsContainerProps) => {
+/** Renders nothing until a filesystem workspace is active; the workspace comes from context. */
+export const WorkspaceSettingsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
+  const workspace = useActiveFilesystemWorkspace();
   const [, updateState] = useAtomCapabilityState(NativeFilesystemCapabilities.State);
 
   const values = useMemo(
     () => ({
-      icon: workspace.icon,
-      hue: workspace.hue,
+      icon: workspace?.icon,
+      hue: workspace?.hue,
     }),
-    [workspace.icon, workspace.hue],
+    [workspace?.icon, workspace?.hue],
   );
 
   const handleValuesChanged = useCallback(
@@ -50,7 +49,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
       valueMeta: { changed?: Record<string, boolean> },
     ) => {
       const changed = valueMeta.changed ?? {};
-      if (!changed['icon'] && !changed['hue']) {
+      if (!workspace || (!changed['icon'] && !changed['hue'])) {
         return;
       }
 
@@ -85,6 +84,10 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
   );
 
   const handleRemove = useCallback(async () => {
+    if (!workspace) {
+      return;
+    }
+
     await invokePromise(NativeFilesystemOperation.CloseDirectory, { id: workspace.id });
     const personalSpaceId = AppSpace.getPersonalSpace(client)?.id;
     if (personalSpaceId) {
@@ -92,7 +95,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         subject: GraphPath.getSpacePath(personalSpaceId),
       });
     }
-  }, [workspace.id, invokePromise, client]);
+  }, [workspace, invokePromise, client]);
 
   const fieldMap = useMemo<FormFieldMap>(
     () => ({

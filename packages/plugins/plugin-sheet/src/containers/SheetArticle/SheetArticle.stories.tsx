@@ -4,11 +4,13 @@
 
 import { type Meta } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useContext } from 'react';
+import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { ComputeGraphRegistry } from '@dxos/compute-hyperformula';
+import { createMockedComputeRuntimeProvider } from '@dxos/compute-hyperformula/testing';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -16,14 +18,18 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { ComputeGraphContext, useComputeGraph } from '#components';
+import { useComputeGraph } from '#components';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
-import { SheetOperation } from '#types';
+import { SheetCapabilities, SheetOperation } from '#types';
 import { Sheet } from '#types';
 
 import RangeList from '../RangeList';
 import { SheetArticle } from './SheetArticle';
+
+// SheetArticle resolves the registry from its capability, so the context and the capability must
+// share one instance.
+const registry = new ComputeGraphRegistry({ computeRuntime: createMockedComputeRuntimeProvider() });
 
 const meta = {
   title: 'plugins/plugin-sheet/containers/SheetArticle',
@@ -32,10 +38,11 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
-    withComputeGraphDecorator(),
+    withComputeGraphDecorator({ registry }),
     withPluginManager({
       plugins: [...corePlugins()],
       capabilities: [
+        Capability.contributes(SheetCapabilities.ComputeGraphRegistry, registry),
         Capability.contributes(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
@@ -61,22 +68,14 @@ export default meta;
 export const Default = () => {
   const [space] = useSpaces();
   const graph = useComputeGraph(space);
-  const { registry } = useContext(ComputeGraphContext) ?? {};
   const sheet = useTestSheet(space, graph, { cells: createTestCells() });
-  if (!sheet || !space || !registry) {
+  if (!sheet || !space) {
     return null;
   }
 
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
-      <SheetArticle
-        role='article'
-        space={space}
-        subject={sheet}
-        attendableId='test'
-        registry={registry}
-        ignoreAttention
-      />
+      <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
     </AttendableContainer>
   );
 };
@@ -84,23 +83,15 @@ export const Default = () => {
 export const Spec = () => {
   const [space] = useSpaces();
   const graph = useComputeGraph(space);
-  const { registry } = useContext(ComputeGraphContext) ?? {};
   const sheet = useTestSheet(space, graph, { cells: { A1: { value: 'Ready' } } });
-  if (!sheet || !space || !registry) {
+  if (!sheet || !space) {
     return null;
   }
 
   return (
     <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
       <div className='w-full grid grid-cols-[1fr_20rem]'>
-        <SheetArticle
-          role='article'
-          space={space}
-          subject={sheet}
-          attendableId='test'
-          registry={registry}
-          ignoreAttention
-        />
+        <SheetArticle role='article' subject={sheet} attendableId='test' ignoreAttention />
         <div data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>

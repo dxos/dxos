@@ -9,9 +9,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Channel, Thread } from '@dxos/types';
 
-import { ChannelArticle } from '#containers';
-
-import { ThreadArticleSurface } from './ThreadArticleSurface';
+import { ChannelArticle, ThreadArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -35,8 +33,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'thread',
         filter: AppSurface.object(AppSurface.Article, Thread.Thread),
-        component: ThreadArticleSurface,
-        props: ({ data: { subject } }) => ({ subject }),
+        component: ThreadArticle,
+        props: ({ data: { subject } }) => ({ thread: subject }),
       }),
     ]),
   ),

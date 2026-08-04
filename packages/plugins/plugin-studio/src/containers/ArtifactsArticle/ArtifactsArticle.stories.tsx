@@ -28,7 +28,7 @@ const DefaultStory = () => {
   if (!space) {
     return null;
   }
-  return <ArtifactsArticle role='article' space={space} attendableId='test' />;
+  return <ArtifactsArticle role='article' properties={{ space }} attendableId='test' />;
 };
 
 const meta = {

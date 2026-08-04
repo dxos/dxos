@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { type Space } from '@dxos/react-client/echo';
+import { getSpace } from '@dxos/react-client/echo';
 import { Panel, type ThemedClassName } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ThreadContentProps } from '@dxos/react-ui-thread';
@@ -18,7 +18,6 @@ import { useStatus } from '#hooks';
 
 export type ThreadArticleProps = ThemedClassName<
   {
-    space: Space;
     thread: Thread.Thread;
     context?: Obj.Unknown;
     autoFocus?: boolean;
@@ -30,7 +29,9 @@ export type ThreadArticleProps = ThemedClassName<
  * onto `thread.messages`. Used for comment threads and the meeting in-call chat.
  */
 export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
-  ({ space, thread, context, autoFocus, current, ...props }, forwardedRef) => {
+  ({ thread, context, autoFocus, current, ...props }, forwardedRef) => {
+    // Members and presence are space-scoped; a thread outside a space has nothing to resolve against.
+    const space = getSpace(thread);
     const id = Obj.getURI(thread);
     const identity = useIdentity()!;
     const members = useMembers(space?.id);
@@ -56,6 +57,10 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
       });
       return true;
     };
+
+    if (!space) {
+      return null;
+    }
 
     return (
       <Panel.Root>

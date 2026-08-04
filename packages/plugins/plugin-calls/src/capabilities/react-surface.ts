@@ -8,10 +8,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { CallArticle, CallSidebar } from '#containers';
+import { CallArticle, CallDebugPanel, CallSidebar } from '#containers';
 import { type CallsCapabilities } from '#types';
-
-import { CallDebugSurface } from './CallDebugSurface';
 
 type CallRoomData = { subject: CallsCapabilities.Call; attendableId: string };
 
@@ -31,7 +29,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'devtoolsOverview',
         filter: Surface.makeFilter(AppSurface.DevtoolsOverview),
-        component: CallDebugSurface,
+        component: CallDebugPanel,
       }),
       // TODO(wittjosiah): Update to use a typed token exported from plugin-calls.
       Surface.create({

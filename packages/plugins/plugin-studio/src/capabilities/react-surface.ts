@@ -10,12 +10,11 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj } from '@dxos/echo';
 
 import { ArtifactCard, ImageVariant, VideoVariant } from '#components';
-import { ArtifactArticle, GalleryArticle, LightboxArticle } from '#containers';
+import { ArtifactArticle, ArtifactsArticle, GalleryArticle, LightboxArticle } from '#containers';
 import { VariantRenderer } from '#surfaces';
 import { Artifact, Lightbox } from '#types';
 
 import { ARTIFACTS_NODE_DATA } from '../constants';
-import { ArtifactsArticleSurface } from './ArtifactsArticleSurface';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 
@@ -50,7 +49,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'artifactsArticle',
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.subject === ARTIFACTS_NODE_DATA),
-        component: ArtifactsArticleSurface,
+        component: ArtifactsArticle,
         props: ({ role, data: { attendableId, properties } }) => ({ role, attendableId, properties }),
       }),
       Surface.create({

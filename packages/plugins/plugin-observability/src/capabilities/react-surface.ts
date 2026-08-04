@@ -8,9 +8,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { ObservabilitySettings } from '#containers';
 import { meta } from '#meta';
-
-import { ObservabilitySettingsSurface } from './ObservabilitySettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -18,7 +17,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'root',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: ObservabilitySettingsSurface,
+        component: ObservabilitySettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),

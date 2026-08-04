@@ -2,22 +2,35 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
 import React, { useEffect, useMemo, useState } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, Panel } from '@dxos/devtools';
 import { log } from '@dxos/log';
 import { IconButton, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
+import { CallsCapabilities } from '#types';
 
 import { type EncodedTrackName, type GlobalState } from '../../calls';
 
-export type CallDebugPanelProps = ThemedClassName<{ state?: GlobalState }>;
+// Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
+const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);
 
-export const CallDebugPanel = ({ state }: CallDebugPanelProps) => {
+export type CallDebugPanelProps = ThemedClassName<{
+  /** Overrides the live manager state; used by stories to render fixtures. */
+  state?: GlobalState;
+}>;
+
+export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  // `useCapabilities` tolerates the manager being absent, which is the case in stories.
+  const [manager] = useCapabilities(CallsCapabilities.Manager);
+  const liveState = useAtomValue(manager?.stateAtom ?? noCallState);
+  const state = stateOverride ?? liveState;
 
   const [open, setOpen] = useState(false);
   const handleToggle = () => setOpen(!open);

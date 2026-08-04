@@ -9,10 +9,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
-import { RangeList } from '#containers';
+import { RangeList, SheetArticle } from '#containers';
 import { Sheet } from '#types';
-
-import { SheetArticleSurface } from './SheetArticleSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -24,7 +22,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
           AppSurface.object(AppSurface.Section, Sheet.Sheet, (data) => !!Obj.getDatabase(data.subject)),
         ),
-        component: SheetArticleSurface,
+        component: SheetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({

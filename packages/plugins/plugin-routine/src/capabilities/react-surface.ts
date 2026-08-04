@@ -10,10 +10,8 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Routine, Skill } from '@dxos/compute';
 
 import { RoutineCard } from '#components';
-import { RoutineArticle, RoutineCompanion, RoutineTraceCompanion, SkillArticle } from '#containers';
+import { RoutineArticle, RoutineCompanion, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
 import { meta } from '#meta';
-
-import { RoutineSettingsSurface } from './RoutineSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -21,7 +19,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceSettingsAutomation',
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.space-settings-automation`),
-        component: RoutineSettingsSurface,
+        component: RoutineSettings,
       }),
       Surface.create({
         id: 'automation.article',
