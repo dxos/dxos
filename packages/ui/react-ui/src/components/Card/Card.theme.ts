@@ -5,6 +5,8 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
+import { withColumn } from '../Column/withColumn';
+
 export type CardStyleProps = {
   border?: boolean;
   fullWidth?: boolean;
@@ -26,11 +28,7 @@ const root: ComponentFunction<CardStyleProps> = ({ padding, border, fullWidth },
   );
 
 const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
-  mx(
-    'dx-card__header col-span-3 grid grid-cols-subgrid items-center',
-    '[&>*:not(.dx-gutter)]:col-start-2 [&>*:not(.dx-gutter)>*]:col-start-2',
-    ...etc,
-  );
+  mx('dx-card__header col-span-3 grid grid-cols-subgrid items-center', withColumn.placeContent(), ...etc);
 
 const title: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
@@ -57,7 +55,11 @@ const posterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 
 const action: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx(
-    'dx-card__action col-span-3 grid grid-cols-subgrid [&>*:not(.dx-gutter)]:col-start-2 [&>*:not(.dx-gutter)>*]:col-start-2 p-0! gap-0! w-full text-start overflow-hidden',
+    mx(
+      'dx-card__action col-span-3 grid grid-cols-subgrid',
+      withColumn.placeContent(),
+      'p-0! gap-0! w-full text-start overflow-hidden',
+    ),
     ...etc,
   );
 
@@ -75,7 +77,11 @@ const actionAnnotation: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 
 const link: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx(
-    'dx-card__link col-span-3 grid grid-cols-subgrid [&>*:not(.dx-gutter)]:col-start-2 [&>*:not(.dx-gutter)>*]:col-start-2 group p-0! dx-button dx-focus-ring min-h-1!',
+    mx(
+      'dx-card__link col-span-3 grid grid-cols-subgrid',
+      withColumn.placeContent(),
+      'group p-0! dx-button dx-focus-ring min-h-1!',
+    ),
     ...etc,
   );
 
@@ -90,7 +96,7 @@ const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
       : // The `>*` selector reaches the real grid item when a content child is `display: contents`
         // (e.g. `dx-avatar`), which the direct-child selector cannot target. It is inert for normal
         // block children, whose inner nodes are not grid items of this row.
-        'col-span-3 grid grid-cols-subgrid [&>*:not(.dx-gutter)]:col-start-2 [&>*:not(.dx-gutter)>*]:col-start-2',
+        mx('col-span-3 grid grid-cols-subgrid', withColumn.placeContent()),
     ...etc,
   );
 
