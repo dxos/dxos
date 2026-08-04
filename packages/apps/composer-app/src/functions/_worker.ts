@@ -197,16 +197,16 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
  * relying party. WebAuthn otherwise only lets a page assert an RP ID that is a registrable-domain
  * suffix of its own origin, which would confine every ceremony to `*.composer.space`. Listing an
  * origin here is what lets the MCP passkey ceremony — served from the `hub-service` worker on
- * `auth.dxos.org` — reach those existing credentials without re-registration.
+ * `auth.dxos.network` — reach those existing credentials without re-registration.
  *
  * `composer.space` itself is deliberately absent: same-origin assertions are always permitted.
  *
  * Clients are only required to support 5 unique eTLD+1 labels, so entries are not free — but every
- * `*.composer.space` origin shares one label, and `dxos` covers `auth.dxos.org`.
+ * `*.composer.space` origin shares one label, and `dxos` covers `auth.dxos.network`.
  *
  * https://w3c.github.io/webauthn/#sctn-related-origins
  */
-const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.org'];
+const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.network'];
 
 /**
  * The native app's bundle id. Qualified by `APPLE_TEAM_ID` (wrangler.jsonc) into the `<team id>.<bundle
