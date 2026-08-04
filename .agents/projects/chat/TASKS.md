@@ -15,7 +15,9 @@ deep-linking, parked in stage 1, landed in round 9. Rounds 2–13 of jdw's
 review are folded in below, each marked with the round that asked for it;
 where a round revised an earlier decision the superseded entry says so.
 NEXT: stage 2 — the CodeMirror rendering substrate. Round 13 inserted this
-ahead of the rename, which moved to stage 2e.
+ahead of the rename, which moved to stage 2e. 2a (model) and 2b (assistant +
+transcription ported, no UI change) are DONE; 2c has a working prototype and
+two open questions before 2d switches the channel containers over.
 
 ## Decisions log
 
@@ -424,46 +426,73 @@ this stack. Its React tile components stay put until stage 3 moves
 plugin-review off them. See DESIGN.md § Rendering substrate for the model, the
 per-consumer decomposition, and the placement trade-off jdw accepted.
 
-### 2a — the model (no consumers yet)
+### 2a — the model (DONE)
 
-- [ ] Keyed, ordered, reconciling chunk document in `@dxos/react-ui-thread`:
-      `ChunkModel<T>` + `ChunkRenderer<T>` + the CM sync extension (today's
-      `EditorChunkDocument` + its `ViewPlugin`). Reconcile from a declarative
-      `set(chunks)` — ECHO reports a result set, not a change stream.
-- [ ] Keep a monotonic-append fast path so the assistant's typewriter cadence
-      is preserved exactly; that is the most visible thing a regression breaks.
-- [ ] Unit tests are the deliverable alongside the code: insert-in-middle,
-      delete-then-update in one batch, rename/edit in place, reset on identity
-      change, and the append fast path.
+- [x] `ChunkModel<T>` + `ChunkRenderer<T>` + `EditorChunkDocument`/`chunkSync`
+      in `@dxos/react-ui-thread/model` (its own subpath export, so a consumer
+      of the model does not pull the React components in). Reconciles from a
+      declarative `set(chunks)`.
+- [x] The diff baseline is the last _synced_ text, not the last `set`: several
+      sets collapse into one edit, and no change is applied against offsets
+      another already invalidated — the failure mode `TranscriptModel` had.
+- [x] Monotonic append is reported as its own change kind, so a streaming host
+      still animates it. A renderer must withhold its trailing separator while
+      a chunk is pending, or growth stops being an extension of the document.
+- [x] Render cache keyed on an opt-in `getRevision`, which is what makes an
+      impure renderer safe. Without it every chunk re-renders, which is what a
+      pure renderer wants.
+- [x] `getChunkAt`/`getChunkStartingAt` — position lookup for decorations,
+      gutter markers and the hover toolbar.
+- [x] 30 unit tests: insert-in-middle, delete-then-update in one batch, edit in
+      place, reset, rebase after a remount, prefix/suffix overlap, the append
+      path under streaming, cache invalidation, and position lookup.
 
-### 2b — port the existing UIs onto it (still no visible change)
+### 2b — port the existing UIs onto it (DONE, no visible change)
 
-- [ ] `MessageSyncer` (plugin-assistant `ChatThread/sync.ts`) → the model.
-      Guard: `sync.test.ts` (331 lines) + the assistant plays. Note it lives in
-      plugin-assistant, NOT react-ui-markdown — `MarkdownStream` is text-level
-      (`setContent`/`append`) and never becomes a consumer.
-- [ ] `TranscriptModel` (react-ui-transcription) → the model. This also fixes
-      real bugs: `sync()` replays a batch against line counts from the previous
-      sync, and `_chunkLineCounts` is populated only inside `sync()`, so a
-      delete followed by an update in one batch lands on the wrong lines.
-- [ ] Assistant chat UI and transcription UI untouched in this step.
+- [x] `MessageSyncer` → the model, with `sync.test.ts` unedited as the guard.
+      Blocks are the chunk, not messages: a finalized block must render exactly
+      once because `applyToolBlockToWidgetState` _appends_ a tool result to
+      widget state, so a second render would fold it in twice. Revision is a
+      sentinel rather than block identity — ECHO may mint a fresh proxy per
+      property access, so identity is not stable enough to compare.
+- [x] `TranscriptModel` deleted (not adapted) and its call sites moved over.
+      `useFeedModelAdapter` now hands the whole snapshot to the model, which
+      drops its duplicate-append path when the feed identity changed and its
+      only-ever-appends-the-tail path. `getChunkAtLine` → `getChunkStartingAt`.
+- [x] Renderers return text rather than lines, so `renderByline` joins its own.
+- [x] Verified: 141 plugin-assistant unit (incl. the 7 syncer tests) + 41
+      assistant plays + 8 transcription plays, all against unchanged UI.
 
-### 2c — the channel transcript UI (new, in react-ui-thread)
+### 2c — the channel transcript UI (prototype DONE)
 
-- [ ] Prototype FIRST, before committing to the rest: grouping + hover toolbar + reactions on one story, to settle the accessibility/per-tile-semantics
-      question (DESIGN.md Open questions) and measure widget density.
-- [ ] Read-only CM transcript component: theme + markdown + `xmlTags` +
-      `scroller({ overScroll, autoScroll })` — the last replaces the
+- [x] `Transcript` component + `transcriptChrome` extension + the item builder
+      (`buildTranscriptItems`, carrying over `groupMessages`' rules). Read-only
+      CM with `scroller({ overScroll, autoScroll })`, which replaces the
       hand-rolled `ResizeObserver` sticky-scroll in `Thread.Messages`.
-- [ ] Message text stays plain markdown lines; only chrome is decoration.
-      Heading → line decoration (`xmlBlockDecoration` precedent); avatar rail →
-      gutter (transcription's timestamp gutter precedent); day/gap dividers →
-      block widgets, reusing `groupMessages`' logic in the renderer; reactions,
-      thread-link and quote rows → block widgets.
-- [ ] Hover toolbar via `hoverTooltip` (`review/suggest.ts` precedent) — this
-      gets the round-7 overlay-not-layout requirement for free.
-- [ ] Edit-in-place: replace the message's line range with a nested editor
-      widget, committing through the existing `Obj.update` path.
+- [x] **Decorations are built from the model's chunk ranges, not by parsing the
+      document.** The model already knows where each message starts and ends, so
+      nothing has to be planted in the text to be decorated — which is what lets
+      a body stay plain markdown that wraps, selects across messages, and is
+      matched by find. This is the load-bearing decision of the whole stage.
+- [x] Heading and reaction pills as block widgets, avatars as a gutter, and a
+      divider that renders to NO text at all — its widget hangs off the head of
+      the message that follows, so it costs no line and leaves no blank row.
+      Each message is its own chunk (a run is a `head` flag) so a reaction, an
+      edit or the toolbar can address exactly one.
+- [x] Hover toolbar via `hoverTooltip`, which gets the round-7
+      overlay-not-layout requirement for free: the controls mount in the
+      tooltip layer, so a long message wraps across the full width.
+- [x] 5 plays: bodies render once, runs show one heading, both divider kinds,
+      reaction toggle, and per-message actions in the toolbar. Hover needs a
+      hand-dispatched `mousemove` — `userEvent.hover` does not give CodeMirror
+      the pointer coordinates it reads (same helper as `Suggest.stories`).
+- [ ] Remaining before 2d: quote row, thread-summary row, and edit-in-place
+      (replace the message's line range with a nested editor widget, committing
+      through the existing `Obj.update` path).
+- [ ] Still open, and the reason 2d is not started: accessibility and per-tile
+      semantics on a text surface — `onMessageSelect`, `aria-current` and the
+      e2e testids have no expression yet, and widget density is unmeasured on a
+      real channel. Both are DESIGN.md open questions.
 
 ### 2d — switch the channel containers over
 
