@@ -144,13 +144,31 @@ every event.
 A sentinel is a **marker typed inside a normal message** that a
 `UserPromptSubmit` hook greps for, acts on, and translates into a directive.
 
-| Sentinel                          | Hook                                 | Effect                                                     |
-| --------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
-| `$mode terse` / `$mode normal`    | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
-| `$project VERB [ARGS]`            | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
+| Marker                          | Hook                                 | Effect                                                     |
+| ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
+| `/project VERB [ARGS]`          | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
+
+**`/mode` is a slash command handled here rather than by its own expansion.**
+`UserPromptSubmit` carries the **raw typed text**, so this hook sees `/mode terse`
+before the command expands — the state write keeps the sentinel's determinism
+while the user gets autocomplete. `.claude/commands/mode.md` exists only to
+register the name and shape the reply; it deliberately does not set anything.
+This is the general recipe for a command that must change state: grep the raw
+text on `UserPromptSubmit`, and let the command body be a thin acknowledgement.
+
+The two halves split cleanly by whether state changes. **`/mode <MODE>`** is the
+hook's job — it fires before the model, and the body only confirms. **Bare
+`/mode`** matches nothing, so the hook is inert and the body does all the work:
+it reports worktree, branch, consulted instruction files, and the current mode.
+It deliberately does **not** offer the modes as numbered options — a numeric
+reply is the one form the hook cannot catch, so it would invite an answer that
+bypasses the deterministic write. That makes it the re-orientation command, and the
+supported way to ask for the worktree line, which §C keeps as a first-reply rule
+rather than a per-turn injection.
 
 The two mode values are `terse` and `normal` (the default when the state file is
 absent). `concise` aliases `terse`; `natural`, `default` and `off` alias
@@ -158,20 +176,34 @@ absent). `concise` aliases `terse`; `natural`, `default` and `off` alias
 value cannot wedge the machine — anything that is not `terse` means `normal`.
 
 **`mode.sh context` emits in BOTH states.** This is the point of the mechanism,
-not an implementation detail: the invariants it carries — open with the worktree
-and the instruction files you read, number every question, lead with the answer —
-are state-independent, and only the length clause varies (`terse` caps a reply at 8
-lines; `normal` sets no budget). A mode that stays silent in its default state
-delivers nothing on the turns that make up most of a session, which is exactly
-how the earlier version failed. The rules themselves are canonical in
-[`AGENTS.md`](../AGENTS.md) → "Responding to the user".
+not an implementation detail: the invariants it carries — number every question,
+lead with the answer — are state-independent, and only the length clause varies
+(`terse` caps a reply at 8 lines; `normal` sets no budget). A mode that stays
+silent in its default state delivers nothing on the turns that make up most of a
+session, which is exactly how the earlier version failed. The rules themselves
+are canonical in [`AGENTS.md`](../AGENTS.md) → "Responding to the user".
+
+**Only rules that genuinely govern _every_ reply belong here.** The
+worktree/files-read line is a **first-reply** rule and is deliberately absent: it
+is already carried by `~/.claude/hooks/session-context.sh` on `SessionStart`,
+whose output ends "First reply must state: this branch, this toplevel path, and
+the guidance files in play". Carrying it per turn as well made every reply open
+with a restatement — noise, and duplicated state the two channels could disagree
+about. Per-turn injection is a strong channel; putting a once-per-session rule on
+it is a misuse.
 
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
-> cannot tell a command from a mention of one. The bare one-token forms are still
-> accepted, so a message containing `` `$terse/$normal` `` as an _example_ will
-> set the mode — this happened on 2026-08-03. Prefer the two-token `$mode terse`,
-> which prose is far less likely to hit; dropping the bare forms is tracked in
-> `.agents/projects/agent-directives/TASKS.md`.
+> cannot tell a command from a mention of one. Both markers were bitten by this
+> and both ended up anchored:
+>
+> - `$terse` fired on a message that listed the aliases as an _example_
+>   (2026-08-03) → verb made mandatory, then `$mode` dropped for `/mode`.
+> - `$project` fired on the message asking to convert it (2026-08-04) →
+>   `$project` and its `$track`/`$hydrate`/`$resume` aliases dropped for
+>   `/project`.
+>
+> Both now match only on the **first line**, where a slash command must appear
+> and prose cannot reach. Any new marker should start there.
 
 ### Commands
 
@@ -186,10 +218,12 @@ Commands and sentinels are not interchangeable:
 - The expansion lands **after** the turn has begun, so it cannot gate that
   turn's own output.
 
-So a command is the right shape for "run this procedure" and the wrong shape for
-"switch this mode". To get both ergonomics and determinism, front a command with
-a `UserPromptExpansion` hook (matched on the command name) that performs the
-state write.
+So a command **body** is the right shape for "run this procedure" and the wrong
+shape for "switch this mode". The fix is not `UserPromptExpansion` (which fires
+on the expansion and can block it) but `UserPromptSubmit`, which already carries
+the raw `/name …` text one step earlier — grep it there and the command name is
+just ergonomics over a deterministic write. `/mode` is built this way; see
+§Sentinels.
 
 ### Skills
 
