@@ -106,6 +106,26 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     return new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' });
   }, [feed, space.db, isStarred]);
 
+  // The whole feed, unfiltered: starring curates a fixture, but capturing a corpus (volume,
+  // bulk-mail headers, senders the extraction gate rejects) means taking the mailbox as it is.
+  const handleDownloadAll = useCallback(async (): Promise<void> => {
+    if (!feed) {
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const serialized = await exportFeedMessages(feed, space.db);
+      downloadBlob(new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }), 'mailbox-feed.json');
+      setStatus({ action: 'downloaded all', count: serialized.length });
+    } catch (error) {
+      log.warn('feed export failed', { error });
+      setStatus({ action: `export failed: ${error instanceof Error ? error.message : String(error)}`, count: 0 });
+    } finally {
+      setBusy(false);
+    }
+  }, [feed, space.db]);
+
   // Saves the selected message as a single fixture: its raw email HTML when it has an html body (what
   // the HtmlViewer work needs), else the serialized message so a markdown/plaintext body is still
   // capturable.
@@ -180,6 +200,13 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             filename='mailbox-feed.json'
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
+          />
+          <IconButton
+            iconOnly
+            icon='ph--tray-arrow-down--regular'
+            label={`Download all (${messages.length})`}
+            disabled={!feed || busy || messages.length === 0}
+            onClick={() => void handleDownloadAll()}
           />
           <IconButton
             iconOnly

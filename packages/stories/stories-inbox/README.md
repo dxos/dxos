@@ -17,6 +17,7 @@ Captured archives keep their PII. They are encrypted under **your own** age key 
 ### One-time setup
 
 ```bash
+mkdir -p ~/.config/dxos
 age-keygen -o ~/.config/dxos/fixtures.key
 ```
 
@@ -35,8 +36,10 @@ pnpm 1p-credentials
 ### Capture and upload
 
 1. Run the `MailboxSync` story and **Connect** a real mail account, then sync.
-2. **Star** the messages worth keeping — starring is how a fixture is nominated, so the archive is a curated subset rather than your whole inbox.
-3. Click **Download starred** in the `Archive` panel to save `mailbox-feed.json`.
+2. Choose what to capture in the `Archive` panel:
+   - **Download starred** — star the messages worth keeping first. A curated subset: use it for a fixture that illustrates specific shapes.
+   - **Download all** — the whole feed, unfiltered. Use it for a corpus: volume, bulk-mail headers, and the senders a curated set would never include are exactly what shakes out pipeline bugs.
+3. Either saves `mailbox-feed.json`.
 4. Upload it:
 
 ```bash
