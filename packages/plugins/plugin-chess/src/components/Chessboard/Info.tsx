@@ -180,7 +180,7 @@ type PlayerIndicatorProps = PropsWithChildren<{
 const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps) => {
   const turn = player === (model.game.turn() === 'w' ? 'white' : 'black');
   return (
-    <div className='grid grid-cols-[2rem_1fr_2rem] gap-2 h-(--dx-rail-size) px-1 flex items-center overflow-hidden'>
+    <div className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)] gap-2 h-(--dx-rail-size) px-1 flex items-center overflow-hidden'>
       <div className='place-items-center'>
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}

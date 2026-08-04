@@ -21,14 +21,14 @@ const subgrid = 'col-span-3 grid grid-cols-subgrid gap-1 items-center';
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
     'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item)',
-    'group/card relative shrink-0 overflow-hidden p-0.5',
+    'group/card relative shrink-0 overflow-hidden p-1',
     border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
     ...etc,
   );
 
 const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
-  mx('dx-card__header col-span-3 grid grid-cols-subgrid items-center', withColumn.placeContent(), ...etc);
+  mx('dx-card__header', subgrid, withColumn.placeContent(), ...etc);
 
 const title: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
@@ -55,11 +55,7 @@ const posterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 
 const action: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx(
-    mx(
-      'dx-card__action col-span-3 grid grid-cols-subgrid',
-      withColumn.placeContent(),
-      'p-0! gap-0! w-full text-start overflow-hidden',
-    ),
+    mx('dx-card__action', subgrid, withColumn.placeContent(), 'p-0! gap-0! w-full text-start overflow-hidden'),
     ...etc,
   );
 
@@ -76,14 +72,7 @@ const actionAnnotation: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action-annotation shrink-0 text-xs text-description tabular-nums', ...etc);
 
 const link: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx(
-    mx(
-      'dx-card__link col-span-3 grid grid-cols-subgrid',
-      withColumn.placeContent(),
-      'group p-0! dx-button dx-focus-ring min-h-1!',
-    ),
-    ...etc,
-  );
+  mx(mx('dx-card__link', subgrid, withColumn.placeContent(), 'group p-0! dx-button dx-focus-ring min-h-1!'), ...etc);
 
 const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate text-sm!', ...etc);
@@ -99,14 +88,13 @@ const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
       : // The `>*` selector reaches the real grid item when a content child is `display: contents`
         // (e.g. `dx-avatar`), which the direct-child selector cannot target. It is inert for normal
         // block children, whose inner nodes are not grid items of this row.
-        mx('col-span-3 grid grid-cols-subgrid', withColumn.placeContent()),
+        mx(subgrid, withColumn.placeContent()),
     ...etc,
   );
 
 // NOTE: Direct children that lack an explicit `col-*` utility default to the
 // Column.Root center track (via `--dx-col`); see `ui-theme`'s `css/components/card.css`.
-const section: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__section col-span-full grid grid-cols-subgrid', ...etc);
+const section: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__section', subgrid, ...etc);
 
 const sectionTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__section-title col-start-2 col-span-full py-2 text-xs text-description font-medium uppercase', ...etc);

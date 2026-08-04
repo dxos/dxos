@@ -222,6 +222,20 @@ the only violator in `packages/ui`. Note this is not an argument against named a
 
 4. **Migrate the ten hand-rolled 3-track grids** (start with `react-ui-thread`, `react-ui-chat` —
    they're in the design system's own package family).
+
+   **Revised on inspection.** The count conflates two shapes. Only four sites were gutter grids in
+   Column's sense — fixed outer tracks around a flexible centre (`2rem_1fr_2rem`, in `plugin-chess`
+   `Info`, `plugin-script` `TestPanel` ×2, and devtools `WorkflowDebugPanel`); those now use
+   `var(--dx-rail-item)`, the token `Column.Block` already sizes gutter slots with, so they track
+   the shared scale. The rest are content-driven layouts (`min-content_1fr_min-content`,
+   `auto_1fr_auto`) whose outer tracks size to their content — wrapping them in `Column.Root` would
+   impose fixed gutters and change their behaviour, so they stay. `react-ui-thread` and
+   `react-ui-chat` no longer contain such a grid at all.
+
+   Full `Column.Root`/`Row`/`Block` markup was considered for the four and rejected: each is a
+   single row, so the composite adds two wrapper elements to express what one `grid-cols` already
+   says. The value on offer was the shared scale, and the token delivers that.
+
 5. **Rewrite `Column`'s documentation once** (component docstrings, delete the stale
    `react-ui/src/components/Column/AUDIT.md`) so there is exactly one written story.
 
