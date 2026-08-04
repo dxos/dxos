@@ -74,8 +74,10 @@ long-term investigation**, not a dependency.
 replication method, not an order consumers see** — email and chat alike display
 in domain order (`created`), never feed order — and deep history is served by
 backend-computed queries, so the client never cursors through the remote feed
-(range-map bookkeeping, the `patchUp` contract, and range hydration are all
-dropped: a backend query already answers latest-per-id from its own index).
+_for query traversal_ (range-map bookkeeping, the `patchUp` contract, and range
+hydration are all dropped: a backend query already answers latest-per-id from
+its own index). Stage-4 consumer cursors are a different thing — delivery
+watermarks into the replicated tail, not remote traversal.
 Primary focus is scaling feeds: stages 1 → 2 are the critical path and strictly
 ordered (nothing may be evicted locally until the backend can answer for it);
 stages 3–4 are the chat enablers (write correctness, then unread); everything
@@ -102,10 +104,18 @@ else waits on an explicit pull trigger, not a schedule.
    and an LRU cache for backend results. The one genuinely new design item is
    the **seam**: a query spanning tail + deep history splits at a watermark so
    the boundary neither double-counts nor drops, and the local side sees
-   not-yet-synced writes. Folded in: expose a monotonic server version on
+   not-yet-synced writes. The watermark alone does not resolve the same object
+   appearing on both sides (an unsynced local edit of an object whose head
+   lies behind the watermark; a tail tombstone for a backend-served result) —
+   seam responses are therefore **versioned**, merged latest-per-id across the
+   boundary for filters, aggregates, item lists, and pagination alike, with
+   local unconfirmed writes winning until they roundtrip. Cached backend
+   results record the watermark they were computed at and are revalidated (or
+   served explicitly stale-marked) after later tail arrivals or local writes —
+   never silently reused. Folded in: expose a monotonic server version on
    blocks/results reaching the client — the seam needs it, and it fixes the
    clean-state rollback mode in `reconcile` for near-free. Offline trade,
-   accepted: deep history degrades to the tail + a stale result cache.
+   accepted: deep history degrades to the tail + a marked-stale result cache.
 3. **Multi-writer lost-update protection (write versioning).** The remaining
    `reconcile` failure mode: while an append is pending, a genuinely newer
    concurrent remote write to the same object is ignored (silent lost update)
@@ -116,7 +126,10 @@ else waits on an explicit pull trigger, not a schedule.
    reorder-on-position-arrival semantics are dropped; latest-per-id never
    depended on them. Needed: compare the stage-2 server version for same-id
    blocks in `reconcile`, plus a per-object tiebreaker for concurrent offline
-   writers (Lamport `(sequence, actorId)`). Gate for first-party chat writes —
+   writers (Lamport `(sequence, actorId)`). The winner comparator is **one
+   shared definition applied on every read path** — index collapse, seam
+   merge, and `reconcile` — so a live object never disagrees with a fresh
+   query or a reload. Gate for first-party chat writes —
    message edits and reactions are multi-writer mutations of a single object.
    Today's production feeds are effectively single-writer connectors, which is
    why this can follow the scale stages rather than precede them. (Original

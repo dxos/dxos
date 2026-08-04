@@ -124,9 +124,11 @@ previously mutated in memory silently.
 Primary focus: scaling feeds. The feed is the replication method, not an order
 consumers see — display is domain-order everywhere (email and chat alike), and
 deep history is served by backend-computed queries, so the client never
-cursors the remote feed (range-map / `patchUp` / range-hydration dropped).
-Stages 1 → 2 are the critical path, strictly ordered; 3 gates chat writes;
-4 serves chat unread; the rest is pull-triggered, not scheduled.
+cursors the remote feed for query traversal (range-map / `patchUp` /
+range-hydration dropped); stage-4 consumer cursors are delivery watermarks
+into the replicated tail, not remote traversal. Stages 1 → 2 are the critical
+path, strictly ordered; 3 gates chat writes; 4 serves chat unread; the rest is
+pull-triggered, not scheduled.
 
 ### Stage 1 — backend-computed queries (NEXT)
 
@@ -160,10 +162,17 @@ answer for it.
 - [ ] Local/remote query seam: a query spanning tail + deep history splits at
       a position watermark — no double-count or drop at the boundary; local
       side sees not-yet-synced writes.
+- [ ] Seam merge semantics: responses are versioned and merged latest-per-id
+      across the boundary (filters, aggregates, item lists, pagination);
+      local unconfirmed writes win until they roundtrip. Tests: updates and
+      tombstones on both sides of the watermark.
+- [ ] Cache freshness: cached backend results record their watermark;
+      revalidate (or serve explicitly stale-marked) after later tail arrivals
+      and local writes — never silently reuse.
 - [ ] Expose a monotonic server version on blocks/results reaching the client
       (seam bookkeeping; also fixes the clean-state rollback in `reconcile`).
-- [ ] Document the offline trade: tail + stale result cache; deep history is
-      online-only (accepted).
+- [ ] Document the offline trade: tail + marked-stale result cache; deep
+      history is online-only (accepted).
 
 ### Stage 3 — multi-writer lost-update protection (write versioning)
 
@@ -179,6 +188,10 @@ today's production feeds are effectively single-writer connectors.
       remote write is currently ignored, "prefer local").
 - [ ] Per-object tiebreaker for concurrent offline writers: Lamport
       `(sequence, actorId)`.
+- [ ] One shared winner comparator across every read path — index collapse,
+      seam merge, `reconcile` — with persistence + query-path coverage for
+      the ordering tuple (a live object must never disagree with a fresh
+      query or reload).
 - [ ] Tests: cross-tab concurrent `Obj.update`; offline appends from two
       writers converge on sync.
 
@@ -191,7 +204,10 @@ this stage exists for read state, latency, and dedup hygiene.
       watermark ("seen through here") on the server-position axis — client
       timestamps skew (a timestamp cursor would mark never-seen late arrivals
       as read). Decide storage home (consumer's own object vs feed metadata)
-      and API (`Feed.getCursor`/`advance`); unread = `head - cursor`.
+      and API (`Feed.getCursor`/`advance`). Unread is a count of eligible
+      latest-per-id messages after the cursor — a query, not `head - cursor`:
+      positions count blocks, so re-appends, tombstones, reactions, and
+      unrelated feed objects must not inflate it.
 - [ ] Implement the stubbed `Feed.cursor`/`Feed.next` as Effect streams.
 - [ ] EDGE push: replace `FeedHandle`'s 1s polling via the sync protocol's
       subscription mechanism; keep polling fallback.
