@@ -131,7 +131,7 @@ For "put this child in the right track", the codebase currently uses **all** of:
 | Explicit `col-span-*` utilities as opt-out                                        | `Card.theme.ts` (`poster`, `action`, `link`, `row fullWidth`)                                                                                 |
 
 Plus `withColumn.propagate()` — an arbitrary-variant chain keyed on `.dx-column-root` _and_
-`.dx-container` (`withColumn.ts:22-23`) — used by exactly two theme files. This is too many ways
+`.dx-container` (`withColumn.ts:22-23`) — used by exactly one theme file, `Dialog.theme.ts`. This is too many ways
 to say the same thing; each has different behavior around `display: contents` children, and none
 of it is discoverable without reading three files.
 
@@ -204,6 +204,23 @@ the only violator in `packages/ui`. Note this is not an argument against named a
    `grid-column: var(--dx-col)`. Delete the unused `data-slot` writes and fix the docstrings;
    keep `.dx-gutter` only as the opt-out marker if the child-selector rule is retained during
    migration.
+
+   **Resolved: three mechanisms, documented — not one.** `--dx-col` is the default and the others
+   are not redundant with it, so collapsing onto it was abandoned after each survivor was shown to
+   be the only expression of its case:
+
+   - `center()` (`--dx-col`) places **the element**. Inheritance-based, so it survives a
+     `display: contents` wrapper. Use it wherever it suffices.
+   - `placeContent()` places **the element's children** and grandchildren, and needs the element to
+     already be a subgrid row. A wrapper (link, button) would otherwise strand its content in
+     column 1.
+   - `propagate()` **opens the tracks to descendants** — the only one that can. It spans the element
+     and re-exposes the tracks via subgrid, exempting `.dx-container` so a ScrollArea spans full
+     width and keeps its scrollbar in the gutter. Measured: swapping `Dialog.Body` to `center()`
+     moved its ScrollArea from `left 1, width 510` to `left 33, width 446`.
+
+   The canonical version of this table lives in `withColumn.ts`, next to the code.
+
 2. **Make nesting a first-class feature, not a per-call-site discovery.** `Column.Root` should
    detect (or accept) a host grid and become `subgrid` automatically; `Form.Viewport` must
    forward `subgrid`/`gutter` (or better: skip its own `Column.Root` when a host Column exists —
@@ -211,8 +228,31 @@ the only violator in `packages/ui`. Note this is not an argument against named a
    idiom replaces the three current ones.
 3. **Kill or promote `Column.Bleed`** — zero users; either delete it or make the canonical
    Panel/ScrollArea story actually use it. Same decision for `withColumn.propagate()`.
+
+   **Resolved: promote, not kill.** `propagate()` has one consumer (`Dialog.theme.ts` body) and it
+   is load-bearing. Replacing it with `center()` was measured against
+   `ui/react-ui-core/components/Dialog/Scrolling`: the body's `ScrollArea` went from spanning the
+   dialog (left 1, width 510) to being confined to the centre track (left 33, width 446), moving
+   the scrollbar 32px inboard — out of the gutter that story exists to demonstrate. The subgrid,
+   and its `:not(.dx-container)` exception, is what lets a body child opt out of the centre track.
+   It stays; the four placement mechanisms consolidate to three.
+
 4. **Migrate the ten hand-rolled 3-track grids** (start with `react-ui-thread`, `react-ui-chat` —
    they're in the design system's own package family).
+
+   **Revised on inspection.** The count conflates two shapes. Only four sites were gutter grids in
+   Column's sense — fixed outer tracks around a flexible centre (`2rem_1fr_2rem`, in `plugin-chess`
+   `Info`, `plugin-script` `TestPanel` ×2, and devtools `WorkflowDebugPanel`); those now use
+   `var(--dx-rail-item)`, the token `Column.Block` already sizes gutter slots with, so they track
+   the shared scale. The rest are content-driven layouts (`min-content_1fr_min-content`,
+   `auto_1fr_auto`) whose outer tracks size to their content — wrapping them in `Column.Root` would
+   impose fixed gutters and change their behaviour, so they stay. `react-ui-thread` and
+   `react-ui-chat` no longer contain such a grid at all.
+
+   Full `Column.Root`/`Row`/`Block` markup was considered for the four and rejected: each is a
+   single row, so the composite adds two wrapper elements to express what one `grid-cols` already
+   says. The value on offer was the shared scale, and the token delivers that.
+
 5. **Rewrite `Column`'s documentation once** (component docstrings, delete the stale
    `react-ui/src/components/Column/AUDIT.md`) so there is exactly one written story.
 
@@ -727,8 +767,9 @@ Phases 2–4 are independent of each other after Phase 1.
 > Outstanding: items 1, 3 and 4 below — consolidating on the single `--dx-col` placement mechanism,
 > migrating the ~10 hand-rolled 3-track grids, and sourcing `--dx-gutter-*` from the spacing ramp.
 
-1. Single placement mechanism (`--dx-col`); remove dead `data-slot` writes; consolidate the
-   repeated `[&>*:not(.dx-gutter)]` selectors into one shared fragment/CSS rule.
+1. ~~Single placement mechanism (`--dx-col`)~~ — **superseded**: three mechanisms, each load-bearing,
+   documented in `withColumn.ts` (see §3). Dead `data-slot` writes removed; the repeated
+   `[&>*:not(.dx-gutter)]` selectors consolidated into `withColumn.placeContent()`.
 2. Subgrid nesting: `Column.Root`-in-`Column.Root` adopts host tracks; `Form.Viewport` forwards
    `subgrid` (or skips its own root inside a host Column); document the one canonical
    form-in-card/dialog idiom and migrate the three current idioms + `ArrayField` hack.

@@ -331,8 +331,8 @@ const ListItemProviderHost = ({ id, selected, children }: PropsWithChildren<List
 
 type ItemLabelProps = ThemedClassName<ComponentPropsWithRef<'span'>>;
 
-const ItemLabel = forwardRef<HTMLSpanElement, ItemLabelProps>(({ classNames, children, ...rest }, forwardedRef) => (
-  <span {...rest} className={styles.listboxItemLabel({ class: mx(classNames) })} ref={forwardedRef}>
+const ItemLabel = composable<HTMLSpanElement, ItemLabelProps>(({ children, ...rest }, forwardedRef) => (
+  <span {...composableProps<HTMLSpanElement>(rest, { classNames: styles.listboxItemLabel() })} ref={forwardedRef}>
     {children}
   </span>
 ));

@@ -196,7 +196,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
     return (
       <div ref={forwardedRef} className='flex flex-col gap-6 h-full p-2 overflow-x-hidden overflow-y-auto'>
         {history.map((message, i) => (
-          <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
+          <div key={i} className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
             <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
             <div className='overflow-auto'>
               <MessageItem message={message} />

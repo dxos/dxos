@@ -153,8 +153,11 @@ Recorded in `AUDIT.md`; do not report these as bugs:
 
 - `bg-base-surface/70` in two `plugin-terra` floating panels still uses a bare utility — alpha
   surfaces have no zone equivalent yet.
-- Four CSS files still `@apply bg-*-surface` (`input.css`, `button.css`, `tag.css`, `size.css`);
-  `@apply` cannot take a zone class.
+- `@apply` still cannot take a zone class, but the list of four was wrong on inspection: `button.css`
+  and `tag.css` use `bg-hover-surface` / `bg-*-surface` as **state and hue fills**, where a zone
+  would be incorrect — a hover fill should not republish the surface. Only `.dx-input` was a real
+  zone candidate, and it now publishes `--surface-bg` explicitly (two lines instead of `@apply`), so
+  a placeholder derives from the input it sits on rather than the host behind it.
 - `Select`'s trigger keeps a bare utility — a zone class loses to `.dx-button[data-variant]` at
   equal layer.
 - `lit-grid` rows stay at a hard-coded 32px (a JS constant, outside CSS).

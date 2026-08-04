@@ -541,7 +541,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
   const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
 
   return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent p-1.5' })} ref={forwardedRef}>
       <Input.Root>
         <Input.TextInput
           placeholder={t('search.placeholder')}

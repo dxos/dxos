@@ -18,7 +18,16 @@ const layout =
 // every control inside it; the height then follows the same knob rather than a hard-coded step.
 const root: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
-    'dx-toolbar-surface shadow-sm',
+    // No shadow here: `Panel.Toolbar` casts the bar's edge shadow, and a toolbar reaches that slot
+    // two ways — as a descendant, or merged into it via `asChild`. Only the descendant form can be
+    // detected in CSS, so a shadow on this element would double up in the merged form and read as a
+    // floating bar. The slot owns it in both.
+    'dx-toolbar-surface',
+    // As a descendant of a Panel slot the slot has already painted the surface full-width; painting
+    // again clamps it to this element, which a `classNames='dx-document'` toolbar renders as a strip
+    // floating inside the bar. (Merged via `asChild` there is one element, which must keep it.)
+    '[[data-slot=toolbar]_&]:bg-transparent',
+    '[[data-slot=statusbar]_&]:bg-transparent',
     density && `dx-density-${density}`,
     disabled && '*:opacity-20',
     !layoutManaged && layout,

@@ -14,6 +14,8 @@
  */
 
 @layer dx-components {
+  /* The outer rails sit at the same depth as the deck gaps: they frame the panels rather than
+     belonging to them, so L0/R0 read one step behind the L1/R1 sidebars they flank. */
   [data-surface='sunken'],
   .dx-deck-surface {
     --surface-bg: var(--dx-surface-sunken);
@@ -21,12 +23,19 @@
 
   [data-surface='chrome'],
   .dx-sidebar-surface,
-  .dx-header-surface,
-  .dx-l0-surface,
-  .dx-l1-surface,
-  .dx-r0-surface,
-  .dx-r1-surface {
+  .dx-header-surface {
     --surface-bg: var(--dx-surface-chrome);
+  }
+
+  /* The rails are not levels: they carry their own tone per theme (see surfaces.css). */
+  .dx-l0-surface,
+  .dx-r0-surface {
+    --surface-bg: var(--color-l0-surface);
+  }
+
+  .dx-l1-surface,
+  .dx-r1-surface {
+    --surface-bg: var(--color-l1-surface);
   }
 
   [data-surface='base'],
@@ -122,12 +131,44 @@
   .dx-toolbar-surface,
   .dx-group-surface,
   .dx-input-surface,
+  .dx-input,
   .dx-main-sidebar {
-    --color-hover-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.08) c h);
-    --color-hover-surface-subtle: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.02) c h);
-    --color-current-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.1) c h);
-    --color-current-surface-hover: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.12) c h);
-    --color-placeholder: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.3) c h);
+    --color-hover-surface: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
+    );
+    --color-hover-surface-subtle: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.02) c h
+    );
+    --color-current-surface: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.1) c h
+    );
+    --color-current-surface-hover: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.12) c h
+    );
+    --color-placeholder: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-placeholder) * 0.3) c h
+    );
+    --color-scrollbar-thumb: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.23) c h
+    );
+    --color-scrollbar-thumb-hover: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.3) c h
+    );
+    --color-scrollbar-thumb-active: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.34) c h
+    );
+    --color-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator-line) * 0.166) c h
+    );
+    --color-input-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.115) c h
+    );
+    --color-subdued-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c h
+    );
+    --color-primary-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.064) c h
+    );
 
     /*
      * Aliases must be re-declared, not inherited: a `--color-x: var(--color-y)` alias substitutes
@@ -162,8 +203,10 @@
   .dx-modal-surface,
   .dx-popover-surface,
   .dx-main-sidebar {
-    --color-toolbar-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.025) c h);
-    --color-group-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.05) c h);
+    --color-toolbar-surface: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-bar) * 0.025) c h
+    );
+    --color-group-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-well) * 0.05) c h);
     --color-group-alt-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.08) c h);
 
     /* Re-declared for the same reason as the state aliases above. */

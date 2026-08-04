@@ -84,7 +84,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           data-tauri-drag-region
           style={iconSize(5)}
           className={mx(
-            'absolute z-1 inset-y-0 end-0 w-(--dx-r0-size)!',
+            'absolute z-5 inset-y-0 end-0 w-(--dx-r0-size)!',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
             'grid grid-cols-1 grid-rows-[1fr_min-content] dx-r0-surface dx-contain-layout dx-app-drag',
           )}

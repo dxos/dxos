@@ -9,6 +9,32 @@
      * Aspects multiply their offset by this instead of branching on light-dark(), which resolves
      * unreliably when nested inside a relative-color expression. */
     --dx-lift: -1;
+    /*
+     * Light attenuation.
+     *
+     * Lightness is not perceptually symmetric: subtracting 0.10 L from a near-white surface reads
+     * far heavier than adding 0.10 to a near-black one. Every aspect family therefore multiplies
+     * its offset by a factor declared here — dark sets them all to 1, so the dark appearance is the
+     * reference and light is tuned against it. One family, one factor, one place.
+     *
+     * Family      Offsets (dark)          Light   Light dL on the canvas
+     *   state       .02 / .08 / .10 / .12   0.5     hover .04, selected .05
+     *   well        .05                     0.5     input fill .025
+     *   separator   .089 / .115 / .064      0.75    subdued .067, input .086
+     *   sep-line    .166                    0.45    .075 — near the floor; subdued is .067
+     *   bar         .025                    1       toolbars read correctly as-is
+     *   placeholder .30                     1       ink, not a surface; wants the contrast
+     *   scrollbar   .23 / .30 / .34         1       was invisible in light before deriving
+     *
+     * Adjust a family by changing its factor, not by editing offsets — those are the dark contract.
+     */
+    --dx-attenuate-state: 0.5;
+    --dx-attenuate-well: 0.5;
+    --dx-attenuate-separator: 0.75;
+    --dx-attenuate-separator-line: 0.45;
+    --dx-attenuate-bar: 1;
+    --dx-attenuate-placeholder: 1;
+    --dx-attenuate-scrollbar: 1;
     touch-action: pan-x pan-y;
     font-synthesis: none;
     font-variation-settings:
@@ -22,6 +48,14 @@
   .dark {
     color-scheme: dark;
     --dx-lift: 1;
+    /* Dark is the reference: every family runs at full strength. */
+    --dx-attenuate-state: 1;
+    --dx-attenuate-well: 1;
+    --dx-attenuate-separator: 1;
+    --dx-attenuate-separator-line: 1;
+    --dx-attenuate-bar: 1;
+    --dx-attenuate-placeholder: 1;
+    --dx-attenuate-scrollbar: 1;
   }
 
   button {

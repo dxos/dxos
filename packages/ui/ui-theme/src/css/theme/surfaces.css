@@ -20,12 +20,12 @@
    * paper on a desk rather than paper in a well (see AUDIT.md D1/D2).
    *
    * Level      Dark   Light  Roles
-   *   sunken   n-950  n-300  deck gaps, wells, scrim base
-   *   chrome   n-925  n-250  sidebars, topbar, statusbar, L0/L1/R0/R1 rails
-   *   base     n-900  n-200  document canvas, attention zone
-   *   raised   n-850  n-125  cards, side panels
-   *   overlay  n-800  n-75   dialogs, sheets, drawers
-   *   popup    n-775  n-50   popover, menu, toast, tooltip
+   *   sunken   n-950  0.905  deck gaps, wells, scrim base, L0/R0 outer rails
+   *   chrome   n-925  0.935  sidebars, topbar, statusbar, L1/R1 sidebars
+   *   base     n-900  0.980  document canvas, attention zone
+   *   raised   n-850  0.990  cards, side panels
+   *   overlay  n-800  0.995  dialogs, sheets, drawers
+   *   popup    n-775  1.000  popover, menu, toast, tooltip
    *
    * Toolbars, groups and inputs are deliberately NOT levels: they are aspects derived from
    * whichever surface hosts them (see "Aspects" below), so a toolbar in a card and a toolbar on the
@@ -33,18 +33,27 @@
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
-  --dx-surface-sunken: light-dark(var(--color-neutral-300), var(--color-neutral-950));
-  --dx-surface-chrome: light-dark(var(--color-neutral-250), var(--color-neutral-925));
-  --dx-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-900));
-  --dx-surface-raised: light-dark(var(--color-neutral-125), var(--color-neutral-850));
-  --dx-surface-overlay: light-dark(var(--color-neutral-75), var(--color-neutral-800));
-  --dx-surface-popup: light-dark(var(--color-neutral-50), var(--color-neutral-775));
+  --dx-surface-sunken: light-dark(var(--color-neutral-150), var(--color-neutral-950));
+  --dx-surface-chrome: light-dark(var(--color-neutral-100), var(--color-neutral-925));
+  --dx-surface-base: light-dark(oklch(0.98 0.001 190), var(--color-neutral-900));
+  --dx-surface-raised: light-dark(oklch(0.99 0.001 190), var(--color-neutral-850));
+  --dx-surface-overlay: light-dark(oklch(0.995 0.001 190), var(--color-neutral-800));
+  --dx-surface-popup: light-dark(oklch(1 0 0), var(--color-neutral-775));
 
   /**
    * Level: sunken
    */
 
   --color-deck-surface: var(--dx-surface-sunken);
+
+  /*
+   * Outer rails frame the panels rather than belonging to them, so they read one step behind the
+   * L1/R1 sidebars they flank. They carry their own light-dark pair rather than aliasing a level:
+   * dark keeps the deck's depth, while light sits higher, because near white the same ladder step
+   * reads much heavier than it does near black.
+   */
+  --color-l0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
+  --color-r0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
 
   /* Translucent dimming layer; tracks the lowest level rather than a raw neutral. */
   --color-scrim-surface: light-dark(
@@ -58,10 +67,8 @@
 
   --color-sidebar-surface: var(--dx-surface-chrome);
   --color-header-surface: var(--dx-surface-chrome);
-  --color-l0-surface: var(--dx-surface-chrome);
-  --color-l1-surface: var(--dx-surface-chrome);
-  --color-r0-surface: var(--dx-surface-chrome);
-  --color-r1-surface: var(--dx-surface-chrome);
+  --color-l1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
+  --color-r1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
 
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
   --color-sidebar-fg: light-dark(var(--color-neutral-700), var(--color-neutral-250));
@@ -109,11 +116,13 @@
 
   /* Bar: a sticky strip on its host (toolbar, statusbar). */
   --color-toolbar-surface: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.025) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-bar) * 0.025) c h
   );
 
   /* Well: an inset region on its host (group, input, focus). */
-  --color-group-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.05) c h);
+  --color-group-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-well) * 0.05) c h
+  );
   --color-input-surface: var(--color-group-surface);
   --color-focus-surface: var(--color-group-surface);
 
@@ -124,10 +133,56 @@
 
   /* Placeholder ink is an aspect too: a fixed neutral reads correctly on one surface only, so it
    * lifts away from the host like the state surfaces do (offset 0.30). */
-  --color-placeholder: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.3) c h);
+  --color-placeholder: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-placeholder) * 0.3) c
+      h
+  );
+
+  /*
+   * Scrollbar thumb. Fixed neutrals collided with the surface they scrolled over: in light mode the
+   * thumb was neutral-200, the same value as the base canvas, so it was invisible. Deriving it from
+   * the host keeps the same contrast on any surface, in either theme (offsets 0.23 / 0.30 / 0.34).
+   */
+  --color-scrollbar-thumb: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.23) c
+      h
+  );
+  --color-scrollbar-thumb-hover: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.3) c h
+  );
+  --color-scrollbar-thumb-active: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-scrollbar) * 0.34) c
+      h
+  );
+
+  /*
+   * Separators. Fixed neutrals collided with the surfaces they divide once the ladder inverted:
+   * in light mode `separator` was neutral-200, the same value as the base canvas, and
+   * `subdued-separator` matched the sidebar exactly — both invisible. The offsets below reproduce
+   * the dark-mode appearance they had (0.166 / 0.115 / 0.089 / 0.064 above the base surface) and
+   * mirror it in light.
+   */
+  --color-separator: oklch(
+    from var(--surface-bg, var(--color-base-surface))
+      calc(l + var(--dx-lift) * var(--dx-attenuate-separator-line) * 0.166) c h
+  );
+  --color-input-separator: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.115) c
+      h
+  );
+  --color-subdued-separator: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c
+      h
+  );
+  --color-primary-separator: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.064) c
+      h
+  );
 
   /* State aspects — same host-derived mechanism; see the offsets above. */
-  --color-hover-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.08) c h);
+  --color-hover-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
+  );
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /*
@@ -136,13 +191,15 @@
    * controls (buttons) keep --color-hover-surface.
    */
   --color-hover-surface-subtle: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.02) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.02) c h
   );
 
   /* current (aria-current) */
-  --color-current-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.1) c h);
+  --color-current-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.1) c h
+  );
   --color-current-surface-hover: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.12) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.12) c h
   );
   --color-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 

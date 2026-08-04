@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
+import { mx } from '@dxos/ui-theme';
 
 import {
   Avatar,
@@ -19,11 +20,8 @@ import {
   Main,
   Message,
   Panel,
-  Popover,
   ScrollArea,
   Select,
-  Separator,
-  Status,
   Tag,
   Toolbar,
   useSidebars,
@@ -68,7 +66,7 @@ const ComplementaryToggle = ({ close }: { close?: boolean }) => {
 };
 
 const NavigationCard = () => (
-  <Card.Root>
+  <Card.Root fullWidth>
     <Card.Header>
       <Card.Block>
         <Icon icon='ph--folder--regular' />
@@ -86,7 +84,7 @@ const NavigationCard = () => (
 );
 
 const ContactCard = () => (
-  <Card.Root>
+  <Card.Root fullWidth>
     <Card.Header>
       <Card.DragHandle />
       <Card.Title>Card on the canvas</Card.Title>
@@ -114,60 +112,19 @@ const ContactCard = () => (
         </Input.Root>
         <Input.Root>
           <Input.Label>Switch</Input.Label>
-          <Input.Switch />
+          <Input.Block>
+            <Input.Switch />
+          </Input.Block>
         </Input.Root>
         <Input.Root>
           <Input.Label>Checkbox</Input.Label>
-          <Input.Checkbox />
+          <Input.Block>
+            <Input.Checkbox />
+          </Input.Block>
         </Input.Root>
       </Card.Section>
       <Card.Row>
         <Card.Text variant='description'>Card.Text with the description variant.</Card.Text>
-      </Card.Row>
-    </Card.Body>
-  </Card.Root>
-);
-
-const MessageCard = () => (
-  <Card.Root>
-    <Card.Header>
-      <Card.Block>
-        <Avatar.Root>
-          <Avatar.Content fallback='DX' size={6} variant='circle' />
-        </Avatar.Root>
-      </Card.Block>
-      <Card.Title>Avatar, message, status</Card.Title>
-    </Card.Header>
-    <Card.Body>
-      <Card.Row fullWidth>
-        <Message.Root valence='warning'>
-          <Message.Title>Message.Root</Message.Title>
-          <Message.Content>A valence surface nested inside a card.</Message.Content>
-        </Message.Root>
-      </Card.Row>
-      <Card.Row fullWidth>
-        <Status progress={0.6} />
-      </Card.Row>
-      <Card.Row fullWidth>
-        <Separator />
-      </Card.Row>
-      <Card.Row>
-        <Popover.Root>
-          <Popover.Trigger asChild>
-            <Button>Open popover</Button>
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content>
-              <Popover.Viewport>
-                <Input.Root>
-                  <Input.Label>Popover surface</Input.Label>
-                  <Input.TextInput placeholder='Input inside a popover' />
-                </Input.Root>
-              </Popover.Viewport>
-              <Popover.Arrow />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
       </Card.Row>
     </Card.Body>
   </Card.Root>
@@ -219,6 +176,28 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
   </Dialog.Root>
 );
 
+/**
+ * The narrow outer rails. In the app these are separate elements beside the L1/R1 sidebars
+ * (`L0Menu`, the companion tab strip), and they are the only consumers of `dx-l0-surface` /
+ * `dx-r0-surface` — so without them here nothing guards the rails collapsing back onto the
+ * sidebar tone.
+ */
+const Rail = ({ side }: { side: 'l0' | 'r0' }) => (
+  <div
+    role='none'
+    className={mx(
+      'shrink-0 grid grid-rows-[1fr_min-content] place-items-center py-2 w-(--dx-rail-size)',
+      side === 'l0' ? 'dx-l0-surface' : 'dx-r0-surface',
+    )}
+  >
+    <div className='grid gap-1 place-items-center'>
+      <IconButton iconOnly icon='ph--house--regular' label='Home' variant='ghost' />
+      <IconButton iconOnly icon='ph--folder--regular' label='Collections' variant='ghost' />
+    </div>
+    <IconButton iconOnly icon='ph--gear--regular' label='Settings' variant='ghost' />
+  </div>
+);
+
 const AppFrame = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -226,7 +205,8 @@ const AppFrame = () => {
     <Main.Root defaultNavigationSidebarState='expanded' defaultComplementarySidebarState='expanded'>
       <Main.Overlay />
 
-      <Main.NavigationSidebar label='Navigation'>
+      <Main.NavigationSidebar label='Navigation' classNames='flex flex-row'>
+        <Rail side='l0' />
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -236,7 +216,7 @@ const AppFrame = () => {
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <ScrollArea.Root>
+            <ScrollArea.Root centered thin classNames='py-trim-sm'>
               <ScrollArea.Viewport>
                 <NavigationCard />
               </ScrollArea.Viewport>
@@ -297,11 +277,16 @@ const AppFrame = () => {
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          <Panel.Content asChild>
+          <Panel.Content>
+            <div className='p-trim-md'>
+              <Message.Root valence='warning'>
+                <Message.Title>Message.Root</Message.Title>
+                <Message.Content>A valence surface nested inside a card.</Message.Content>
+              </Message.Root>
+            </div>
             <ScrollArea.Root centered>
-              <ScrollArea.Viewport>
+              <ScrollArea.Viewport classNames='flex flex-col gap-trim-md'>
                 <ContactCard />
-                <MessageCard />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Panel.Content>
@@ -318,7 +303,8 @@ const AppFrame = () => {
         </Panel.Root>
       </Main.Content>
 
-      <Main.ComplementarySidebar label='Complementary'>
+      <Main.ComplementarySidebar label='Complementary' classNames='flex flex-row-reverse'>
+        <Rail side='r0' />
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
