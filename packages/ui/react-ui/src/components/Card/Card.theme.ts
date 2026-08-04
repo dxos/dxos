@@ -14,14 +14,14 @@ export type CardStyleProps = {
   variant?: 'default' | 'subtitle' | 'description';
   density?: Density;
   truncate?: boolean;
-  padding?: boolean;
 };
 
-const root: ComponentFunction<CardStyleProps> = ({ padding, border, fullWidth }, ...etc) =>
+const subgrid = 'col-span-3 grid grid-cols-subgrid gap-1 items-center';
+
+const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
     'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item)',
-    'group/card relative shrink-0 overflow-hidden',
-    padding && 'p-1',
+    'group/card relative shrink-0 overflow-hidden p-0.5',
     border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
     ...etc,
@@ -90,7 +90,10 @@ const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 
 const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
   mx(
-    'dx-card__row overflow-hidden',
+    // No `overflow-hidden`: focus rings are drawn outside the border box (`.dx-input` uses
+    // `ring-offset`), so clipping here severs the ring of any focusable control in the row —
+    // `Column.Row` carries the same note. Children that need to clip do it themselves (`truncate`).
+    'dx-card__row',
     fullWidth
       ? 'col-span-full'
       : // The `>*` selector reaches the real grid item when a content child is `display: contents`

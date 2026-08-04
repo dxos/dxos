@@ -42,8 +42,10 @@ type CardRootProps = {
   'id'?: string;
   'border'?: boolean;
   'fullWidth'?: boolean;
-  /** Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
-   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`. */
+  /**
+   * Adopt the parent grid's columns (via `subgrid`) instead of defining the card's own gutters —
+   * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`.
+   */
   'subgrid'?: boolean;
   'density'?: Density;
   'style'?: CSSProperties;
