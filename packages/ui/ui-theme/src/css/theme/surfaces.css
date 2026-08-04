@@ -46,10 +46,14 @@
 
   --color-deck-surface: var(--dx-surface-sunken);
 
-  /* Outer rails frame the panels rather than belonging to them, so they share the deck's depth and
-     read one step behind the L1/R1 sidebars they flank. */
-  --color-l0-surface: var(--dx-surface-sunken);
-  --color-r0-surface: var(--dx-surface-sunken);
+  /*
+   * Outer rails frame the panels rather than belonging to them, so they read one step behind the
+   * L1/R1 sidebars they flank. They carry their own light-dark pair rather than aliasing a level:
+   * dark keeps the deck's depth, while light sits higher, because near white the same ladder step
+   * reads much heavier than it does near black.
+   */
+  --color-l0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
+  --color-r0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
 
   /* Translucent dimming layer; tracks the lowest level rather than a raw neutral. */
   --color-scrim-surface: light-dark(
@@ -63,8 +67,8 @@
 
   --color-sidebar-surface: var(--dx-surface-chrome);
   --color-header-surface: var(--dx-surface-chrome);
-  --color-l1-surface: var(--dx-surface-chrome);
-  --color-r1-surface: var(--dx-surface-chrome);
+  --color-l1-surface: light-dark(oklch(0.965 0.001 190), var(--dx-surface-chrome));
+  --color-r1-surface: light-dark(oklch(0.965 0.001 190), var(--dx-surface-chrome));
 
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
   --color-sidebar-fg: light-dark(var(--color-neutral-700), var(--color-neutral-250));

@@ -17,18 +17,25 @@
   /* The outer rails sit at the same depth as the deck gaps: they frame the panels rather than
      belonging to them, so L0/R0 read one step behind the L1/R1 sidebars they flank. */
   [data-surface='sunken'],
-  .dx-deck-surface,
-  .dx-l0-surface,
-  .dx-r0-surface {
+  .dx-deck-surface {
     --surface-bg: var(--dx-surface-sunken);
   }
 
   [data-surface='chrome'],
   .dx-sidebar-surface,
-  .dx-header-surface,
+  .dx-header-surface {
+    --surface-bg: var(--dx-surface-chrome);
+  }
+
+  /* The rails are not levels: they carry their own tone per theme (see surfaces.css). */
+  .dx-l0-surface,
+  .dx-r0-surface {
+    --surface-bg: var(--color-l0-surface);
+  }
+
   .dx-l1-surface,
   .dx-r1-surface {
-    --surface-bg: var(--dx-surface-chrome);
+    --surface-bg: var(--color-l1-surface);
   }
 
   [data-surface='base'],
