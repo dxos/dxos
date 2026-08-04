@@ -15,5 +15,7 @@ Surface.create({
 ```
 
 The mapper's input type derives from the same `filter` that defines the surface's data shape, so the
-unpacking is type-checked rather than restated by hand. Additive: definitions without `props` receive
-the full surface props exactly as before.
+unpacking is type-checked rather than restated by hand, and is exported as `Surface.ComponentProps`
+for components that consume the whole envelope. `component` accepts any `ComponentType`, so a
+container re-exported through a `lazy()` barrel needs no cast. Additive: definitions without `props`
+receive the full surface props exactly as before.
