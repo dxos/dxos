@@ -101,7 +101,7 @@ const ControlledStory = ({ items = defaultItems }: StoryArgs) => {
             <Toolbar.Button onClick={() => handleQueryChange('')}>Clear Query</Toolbar.Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <SearchList.Content>
             <SearchList.Viewport>
               {results.map((item) => (

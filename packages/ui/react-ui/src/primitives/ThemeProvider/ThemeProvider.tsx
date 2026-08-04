@@ -11,6 +11,7 @@ import { type SafeAreaPadding, useSafeArea } from '../../hooks';
 import { hasIosKeyboard } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { ElevationProvider } from '../ElevationProvider';
+import { IconRegistryProvider } from './IconRegistry';
 import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider';
 
 export type ThemeContextValue = {
@@ -18,7 +19,6 @@ export type ThemeContextValue = {
   themeMode: ThemeMode;
   hasIosKeyboard: boolean;
   safeAreaPadding?: SafeAreaPadding;
-  noCache?: boolean;
   platform?: 'mobile' | 'desktop';
 };
 
@@ -42,7 +42,6 @@ export const ThemeProvider = ({
   tx = (_path, _styleProps, ..._options) => undefined,
   themeMode = 'dark',
   rootDensity = 'md',
-  noCache,
   platform,
 }: ThemeProviderProps) => {
   useEffect(() => {
@@ -56,23 +55,25 @@ export const ThemeProvider = ({
   const safeAreaPadding = useSafeArea();
   // Destructure all props explicitly so useMemo deps are stable primitives, not a new `rest` object every render.
   const contextValue = useMemo(
-    () => ({ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), safeAreaPadding, noCache, platform }),
-    [tx, themeMode, safeAreaPadding, noCache, platform],
+    () => ({ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), safeAreaPadding, platform }),
+    [tx, themeMode, safeAreaPadding, platform],
   );
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      <TranslationsProvider
-        {...{
-          fallback,
-          resourceExtensions,
-          appNs,
-        }}
-      >
-        <ElevationProvider elevation='base'>
-          <DensityProvider density={rootDensity}>{children}</DensityProvider>
-        </ElevationProvider>
-      </TranslationsProvider>
+      <IconRegistryProvider>
+        <TranslationsProvider
+          {...{
+            fallback,
+            resourceExtensions,
+            appNs,
+          }}
+        >
+          <ElevationProvider elevation='base'>
+            <DensityProvider density={rootDensity}>{children}</DensityProvider>
+          </ElevationProvider>
+        </TranslationsProvider>
+      </IconRegistryProvider>
     </ThemeContext.Provider>
   );
 };

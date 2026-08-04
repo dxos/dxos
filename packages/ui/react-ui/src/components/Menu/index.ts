@@ -3,4 +3,6 @@
 //
 
 export * from './ContextMenu';
+export { createDropdownMenuScope, useDropdownMenuContext, useDropdownMenuMenuScope } from './DropdownMenuContext';
+
 export * from './DropdownMenu';

@@ -22,19 +22,13 @@ import { testId } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
 import { type ActionHandler } from '../../actions';
-import { DragMonitor, type EditingState, EditorContext, type EditorContextType, type EditorOptions } from '../../hooks';
+import { DragMonitor, type EditingState, EditorContext, type EditorContextType } from '../../hooks';
 import { defaultShapes } from '../../shapes';
 import { type CanvasBoard, CanvasGraphModel } from '../../types';
 import { Canvas, ShapeLayout, ShapeRegistry } from '../Canvas';
 import { type TestId } from '../defs';
 import { UI } from '../UI';
-
-export const defaultEditorOptions: EditorOptions = {
-  gridSize: 16,
-  gridSnap: 16,
-  zoomFactor: 2,
-  zoomDuration: 300,
-};
+import { defaultEditorOptions } from './editor-options';
 
 interface EditorController {
   action?: ActionHandler;

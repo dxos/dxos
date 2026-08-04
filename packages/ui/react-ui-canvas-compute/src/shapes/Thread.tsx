@@ -2,35 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useEffect, useRef } from 'react';
 
-import { createInputSchema, createOutputSchema } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { Message } from '@dxos/types';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { Box, createFunctionAnchors } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-
-const InputSchema = createInputSchema(Type.getSchema(Message.Message));
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Type.getSchema(Message.Message))));
-
-export const ThreadShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('thread'),
-  }),
-);
-
-export type ThreadShape = Schema.Schema.Type<typeof ThreadShape>;
-
-export type CreateThreadProps = CreateShapeProps<ThreadShape>;
-
-export const createThread = (props: CreateThreadProps) =>
-  createShape<ThreadShape>({ type: 'thread', size: { width: 384, height: 384 }, ...props });
+import { Box } from './common';
+import { type ThreadShape } from './thread-def';
 
 export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => {
   const items: any[] = [];
@@ -78,14 +57,4 @@ export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>)
       </div>
     </div>
   );
-};
-
-export const threadShape: ShapeDef<ThreadShape> = {
-  type: 'thread',
-  name: 'Thread',
-  icon: 'ph--chats-circle--regular',
-  component: ThreadComponent,
-  createShape: createThread,
-  getAnchors: (shape) => createFunctionAnchors(shape, InputSchema, OutputSchema),
-  resizable: true,
 };

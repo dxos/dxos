@@ -16,6 +16,7 @@ import {
 } from './SurfaceProfilerContext';
 import {
   type Binding as SurfaceBindingType,
+  type ComponentProps as SurfaceComponentPropsType,
   type Definition as SurfaceDefinition,
   type Filter as SurfaceFilterType,
   type TypedProps as SurfaceTypedProps,
@@ -42,6 +43,9 @@ export namespace Surface {
   export const isFilter = isFilterFn;
 
   export type TypedProps<TToken extends Role.Role<any>> = SurfaceTypedProps<TToken>;
+
+  /** Props a matched surface component receives, and the input to a definition's `props` mapper. */
+  export type ComponentProps<T extends Record<string, any> = Record<string, any>> = SurfaceComponentPropsType<T>;
 
   export const isDebugEnabled = isSurfaceDebugEnabled;
   export const setDebug = setSurfaceDebug;

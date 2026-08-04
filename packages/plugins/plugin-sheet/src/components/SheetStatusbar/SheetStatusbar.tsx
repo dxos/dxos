@@ -36,7 +36,7 @@ export const SheetStatusbar = composable<HTMLDivElement, SheetStatusbarProps>((p
       ref={forwardedRef}
       {...rest}
       className={mx(
-        'flex shrink-0 justify-between items-center px-4 py-1 text-sm bg-toolbar-surface border-y !border-subdued-separator',
+        'flex shrink-0 justify-between items-center px-4 py-1 text-sm dx-toolbar-surface border-y !border-subdued-separator',
         className,
       )}
     >

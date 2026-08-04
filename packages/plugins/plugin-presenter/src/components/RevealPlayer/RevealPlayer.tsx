@@ -162,7 +162,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
               rel='stylesheet'
               href='https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap'
             />
-            <div className={mx('slides', !fullscreen && 'bg-base-surface p-8')}>
+            <div className={mx('slides', !fullscreen && 'dx-base-surface p-8')}>
               <div />
               <section {...{ 'data-markdown': [] }}>
                 <textarea {...{ 'data-template': true }} defaultValue={[styles, content].join('\n')}></textarea>

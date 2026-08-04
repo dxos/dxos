@@ -101,7 +101,7 @@ const flattenedContent = Array.from(visitor(content, () => true));
 // Two columns (name + child count) with row dividers so the grid structure is visible — a
 // single-column treegrid reads as a plain list.
 const DefaultStory = () => (
-  <Treegrid.Root gridTemplateColumns='1fr min-content' classNames='gap-x-4 divide-y divide-separator'>
+  <Treegrid.Root gridTemplateColumns='1fr min-content' classNames='gap-x-4 divide-y divide-subdued-separator'>
     {flattenedContent.map(({ node, parentOf, path }) => (
       <Treegrid.Row
         key={node.id}

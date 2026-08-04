@@ -273,7 +273,7 @@ export const SqlitePanel = () => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
-        <Toolbar.Root className='col-span-2'>
+        <Toolbar.Root classNames='col-span-2'>
           <Toolbar.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
             Run Query
           </Toolbar.Button>
@@ -330,8 +330,8 @@ export const SqlitePanel = () => {
                       key={tableName}
                       type='button'
                       className={[
-                        'flex items-center gap-2 rounded px-2 py-1 text-left text-xs font-mono hover:bg-hoverOverlay',
-                        selectedTable === tableName ? 'bg-hoverOverlay' : '',
+                        'flex items-center gap-2 rounded px-2 py-1 text-left text-xs font-mono hover:bg-hover-surface',
+                        selectedTable === tableName ? 'bg-hover-surface' : '',
                       ].join(' ')}
                       onClick={() => handleSelectTable(tableName)}
                       disabled={isRunning}

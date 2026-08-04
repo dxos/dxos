@@ -4,7 +4,6 @@
 
 // TODO(burdon): Remove export of fragments.
 
-export * from './density';
 export * from './disabled';
 export * from './hover';
 export * from './text';

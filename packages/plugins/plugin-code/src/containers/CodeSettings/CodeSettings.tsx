@@ -4,6 +4,8 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
+import { useSettingsState } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
@@ -16,17 +18,15 @@ import { Settings as SettingsType } from '#types';
 
 const SERVICE = 'anthropic.com';
 
-export type CodeSettingsProps = {
-  settings: SettingsType.Settings;
-  onSettingsChange: (settings: SettingsType.Settings) => void;
-};
+export type CodeSettingsProps = AppSurface.SettingsData;
 
 /**
  * Settings panel for the Code plugin: manages the Anthropic API key (stored as
  * an ECHO `AccessToken`) and the schema-driven build-service `endpoint`.
  */
-export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) => {
+export const CodeSettings = ({ subject }: CodeSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { settings, updateSettings } = useSettingsState<SettingsType.Settings>(subject.atom);
   const spaces = useSpaces();
   const space = spaces[0];
   const tokens = useQuery(space?.db, Filter.type(AccessToken.AccessToken, { source: SERVICE }));
@@ -63,7 +63,7 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
       schema={SettingsType.Settings}
       values={settings}
       variant='settings'
-      onValuesChanged={(values) => onSettingsChange({ ...settings, ...values })}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>

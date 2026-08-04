@@ -97,7 +97,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
           </Focus.Group>
         </Panel.Content>
         {props.debug && (
-          <Panel.Statusbar className='h-[40dvh]'>
+          <Panel.Statusbar classNames='h-[40dvh]'>
             <DebugInfo />
           </Panel.Statusbar>
         )}
@@ -144,7 +144,7 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
           </Mosaic.Container>
         </Panel.Content>
         {props.debug && (
-          <Panel.Statusbar className='h-[40dvh]'>
+          <Panel.Statusbar classNames='h-[40dvh]'>
             <DebugInfo />
           </Panel.Statusbar>
         )}

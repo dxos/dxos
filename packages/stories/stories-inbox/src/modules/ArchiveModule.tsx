@@ -198,7 +198,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='flex flex-col gap-2 p-2 text-sm'>
+      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm'>
         <JsonHighlighter data={{ feed: feed?.id, ...status }} />
       </Panel.Content>
     </Panel.Root>

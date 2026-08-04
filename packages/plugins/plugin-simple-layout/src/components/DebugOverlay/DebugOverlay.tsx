@@ -2,24 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useRef } from 'react';
 
-const DEBUG_OVERLAY_NAME = 'DebugOverlay';
+import { DebugOverlayProvider } from './DebugOverlayContext';
 
 //
 // Context
 //
-
-type DebugOverlayContextValue = {
-  /** Log a timestamped message to the on-screen debug overlay. */
-  dbg: (msg: string) => void;
-};
-
-// Default to a no-op so hooks can call useDebugLog() safely outside of a provider.
-const [DebugOverlayProvider, useDebugLog] = createContext<DebugOverlayContextValue>(DEBUG_OVERLAY_NAME, {
-  dbg: () => {},
-});
 
 //
 // Root
@@ -92,5 +81,3 @@ const DebugOverlayRoot = ({ children, enabled = true, maxLines = 10 }: DebugOver
 export const DebugOverlay = {
   Root: DebugOverlayRoot,
 };
-
-export { useDebugLog };

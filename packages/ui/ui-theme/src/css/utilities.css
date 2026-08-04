@@ -38,13 +38,6 @@
 }
 
 /**
- * Column that fills the available space (extends dx-expander with overflow clipping).
- */
-@utility dx-column {
-  @apply flex-1 min-w-0 w-full;
-}
-
-/**
  * Fullscreen
  */
 @utility dx-fullscreen {
@@ -52,10 +45,21 @@
 }
 
 /**
- * Visual warning to indicate incorrect usage of `slottable`.
+ * Visual warning to indicate incorrect usage of `slottable` — an `asChild` whose child is not
+ * composable, so Radix `Slot` silently drops the injected className and ref.
+ *
+ * An outline rather than a border: it is applied to the part's own element (not a wrapper), so it
+ * must not consume layout space or fight a border the part already has. Dev builds only.
  */
 @utility dx-slot-warning {
-  @apply border border-rose-500 border-dashed;
+  /* No layout box of its own: these parts live in grids and subgrids, where an extra element
+     re-flows the layout — the diagnostic must not corrupt the thing it is diagnosing. */
+  display: contents;
+
+  & > * {
+    outline: 2px dashed var(--color-rose-500);
+    outline-offset: -2px;
+  }
 }
 
 /**

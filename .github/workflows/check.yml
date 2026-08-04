@@ -410,9 +410,9 @@ jobs:
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    # Headroom over the 45m test cap plus ~10m of bundling: the step timeout fails the job cleanly with
+    # Headroom over the 60m test cap plus ~10m of bundling: the step timeout fails the job cleanly with
     # traces attached, whereas hitting this cap cancels it and proves nothing.
-    timeout-minutes: 75
+    timeout-minutes: 90
     env:
       DX_ENVIRONMENT: ci
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
@@ -476,7 +476,9 @@ jobs:
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
-        timeout-minutes: 45
+        # The full three-browser suite measures 43m+ and a handful of retries takes it past 45m, so the
+        # cap was cancelling runs in which every test passed. Interim headroom until e2e shards by browser.
+        timeout-minutes: 60
         uses: trunk-io/analytics-uploader@v1
         env:
           PLAYWRIGHT_BROWSER: all

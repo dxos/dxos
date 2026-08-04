@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { CalendarDate, parseDate } from '@internationalized/date';
+import { CalendarDate } from '@internationalized/date';
 import React, { type ComponentPropsWithoutRef, type ReactNode, forwardRef } from 'react';
 import {
   type DateValue,
@@ -191,6 +191,4 @@ export const Calendar = {
   Root: CalendarRoot,
 };
 
-// Re-export the iso parser for convenience.
-export { parseDate as parseCalendarDate };
 export type { ComponentPropsWithoutRef };

@@ -29,6 +29,7 @@ import { createDraftMessage, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
+import { keyOf } from './key-of';
 import { ExtractorMenuItem } from './useExtractorActions';
 import { useMessageExtractedObjects } from './useMessageExtractedObjects';
 import { useMessageActions } from './useToolbar';
@@ -37,11 +38,7 @@ import { useMessageActions } from './useToolbar';
 // Types
 //
 
-type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
-
-/** Stable id for a message or unresolved ref, keying tiles and collapse state. */
-export const keyOf = (message: MessageOrRef): string =>
-  Ref.isRef(message) ? String(message.uri) : Obj.getURI(message);
+export type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
 
 /**
  * Reactive view options for a rendered message (body render mode + image loading). Passed in as a
