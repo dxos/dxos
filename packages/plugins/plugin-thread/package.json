@@ -75,21 +75,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
+    "./ChannelBackend": {
+      "source": "./src/types/ChannelBackend.ts",
+      "types": "./dist/types/src/types/ChannelBackend.d.ts",
+      "import": "./dist/lib/ChannelBackend.mjs"
     },
     "./ThreadCapabilities": {
       "source": "./src/types/ThreadCapabilities.ts",
@@ -106,11 +95,30 @@
       "types": "./dist/types/src/types/ThreadOperation.d.ts",
       "import": "./dist/lib/ThreadOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "ChannelBackend": [
+        "dist/types/src/types/ChannelBackend.d.ts"
+      ],
       "ThreadCapabilities": [
         "dist/types/src/types/ThreadCapabilities.d.ts"
       ],

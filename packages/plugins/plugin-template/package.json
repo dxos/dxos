@@ -50,6 +50,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Template": {
+      "source": "./src/types/Template.ts",
+      "types": "./dist/types/src/types/Template.d.ts",
+      "import": "./dist/lib/Template.mjs"
+    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -98,5 +103,12 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "Template": [
+        "dist/types/src/types/Template.d.ts"
+      ]
+    }
   }
 }

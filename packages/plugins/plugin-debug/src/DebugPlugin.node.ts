@@ -6,9 +6,10 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import { AppGraphBuilder, DebugSettings } from '#capabilities';
 import { meta } from '#meta';
-import { type DebugPluginOptions } from '#types';
 
-export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
+import * as Debug from './types/Debug';
+
+export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(DebugSettings),
   Plugin.make,

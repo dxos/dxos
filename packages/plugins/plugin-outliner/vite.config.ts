@@ -16,6 +16,8 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
+    OutlinerUtil: 'src/types/OutlinerUtil.ts',
+    OutlinerUtil: 'src/types/OutlinerUtil.ts',
     Journal: 'src/types/Journal.ts',
     Outline: 'src/types/Outline.ts',
     OutlineOperation: 'src/types/OutlineOperation.ts',

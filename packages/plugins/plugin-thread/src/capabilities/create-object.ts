@@ -15,7 +15,8 @@ import { Channel } from '@dxos/types';
 import { ChannelCreatePanel } from '#containers';
 
 import { getChannelsPath } from '../paths';
-import { ThreadCapabilities, resolveProvider } from '../types';
+import { ThreadCapabilities } from '../types';
+import * as ChannelBackend from '../types/ChannelBackend';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
@@ -30,7 +31,7 @@ export default Capability.makeModule(
       ) =>
         Effect.gen(function* () {
           const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
-          const provider = kind ? resolveProvider(providers, kind) : undefined;
+          const provider = kind ? ChannelBackend.resolveProvider(providers, kind) : undefined;
           const object = provider
             ? Channel.make({ name, backend: { kind: provider.kind, config: provider.makeConfig(options ?? {}) } })
             : Channel.make({ name });

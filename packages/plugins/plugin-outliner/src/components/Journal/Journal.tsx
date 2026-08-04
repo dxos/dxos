@@ -12,8 +12,9 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { Journal as JournalType, getDateString, parseDateString } from '#types';
+import { Journal as JournalType } from '#types';
 
+import * as OutlinerUtil from '../../types/OutlinerUtil';
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
@@ -38,7 +39,10 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
     [journalSnapshot],
   );
 
-  const hasTodayEntry = useMemo(() => entryRefs.some(({ dateKey }) => dateKey === getDateString()), [entryRefs]);
+  const hasTodayEntry = useMemo(
+    () => entryRefs.some(({ dateKey }) => dateKey === OutlinerUtil.getDateString()),
+    [entryRefs],
+  );
 
   const handleCreateEntry = useCallback(() => {
     if (!journal) {
@@ -47,7 +51,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
 
     const entry = JournalType.makeEntry();
     Obj.update(journal, (journal) => {
-      journal.entries[getDateString(date)] = Ref.make(entry);
+      journal.entries[OutlinerUtil.getDateString(date)] = Ref.make(entry);
     });
   }, [journal, date]);
 
@@ -90,8 +94,8 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
   const outlinerRef = useRef<OutlineController>(null);
   const [focused, setFocused] = useState(false);
 
-  const date = entry ? parseDateString(entry.date) : undefined;
-  const isToday = entry ? getDateString() === entry.date : false;
+  const date = entry ? OutlinerUtil.parseDateString(entry.date) : undefined;
+  const isToday = entry ? OutlinerUtil.getDateString() === entry.date : false;
   const isRecent = useMemo(() => (entry ? Date.now() - new Date(entry.date).getTime() < RECENT : false), [entry?.date]);
 
   const handleFocus = useCallback(() => {

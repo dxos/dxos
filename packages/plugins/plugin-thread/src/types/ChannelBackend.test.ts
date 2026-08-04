@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Feed } from '@dxos/echo';
 
-import { buildChannelFormSchema, resolveProvider } from './channel-backend';
+import { buildChannelFormSchema, resolveProvider } from './ChannelBackend';
 import * as ThreadCapabilities from './ThreadCapabilities';
 
 describe('channel-backend helpers', () => {

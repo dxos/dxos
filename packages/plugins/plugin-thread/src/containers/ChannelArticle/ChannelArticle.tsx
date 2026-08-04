@@ -18,7 +18,9 @@ import { type Channel } from '@dxos/types';
 import { MessageThread } from '#components';
 import { useMessages, useStatus } from '#hooks';
 import { meta } from '#meta';
-import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
+import { ThreadCapabilities, ThreadOperation } from '#types';
+
+import * as ChannelBackend from '../../types/ChannelBackend';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -51,7 +53,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const { invokePromise } = useOperationInvoker();
 
   const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
-  const provider = channel ? resolveProvider(providers, channel.backend.kind) : undefined;
+  const provider = channel ? ChannelBackend.resolveProvider(providers, channel.backend.kind) : undefined;
   const messages = useMessages(channel);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
 

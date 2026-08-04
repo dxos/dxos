@@ -12,8 +12,7 @@ import { type Node } from '@dxos/plugin-graph';
 import { Path, type TreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
-import { type NavTreeItemGraphNode } from '#types';
-
+import * as NavTreeNode from '../types/NavTreeNode';
 import { filterItems } from '../util';
 import { useNavTreeState } from './useNavTreeState';
 
@@ -101,7 +100,7 @@ const createItemCurrentFamily = (getItemAtom: ReturnType<typeof useNavTreeState>
 /**
  * Creates a TreeModel backed by the app graph and navtree state.
  */
-export const useNavTreeModel = (rootId: string): TreeModel<NavTreeItemGraphNode> => {
+export const useNavTreeModel = (rootId: string): TreeModel<NavTreeNode.NavTreeItemGraphNode> => {
   const { graph } = useAppGraph();
   const { getItemAtom } = useNavTreeState();
 

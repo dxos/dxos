@@ -8,7 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { DebugCapabilities, DebugEvents, type DebugPluginOptions } from '#types';
+import { DebugEvents } from '#types';
+
+import * as Debug from '../types/Debug';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
@@ -20,19 +22,19 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.section',
     'org.dxos.role.statusIndicator',
   ],
-  requires: [Capabilities.AtomRegistry, DebugCapabilities.Settings, AppCapabilities.FileUploader],
-  props: ({ logStore }: DebugPluginOptions) => ({ logStore }),
+  requires: [Capabilities.AtomRegistry, Debug.DebugCapabilities.Settings, AppCapabilities.FileUploader],
+  props: ({ logStore }: Debug.DebugPluginOptions) => ({ logStore }),
 });
 export const DebugSettings = AppCapability.settings(() => import('./settings'), {
   activatesOn: ActivationEvents.Idle,
-  provides: [DebugCapabilities.Settings],
+  provides: [Debug.DebugCapabilities.Settings],
 });
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
   {
     requires: [Capabilities.AtomRegistry],
     provides: [AppCapabilities.StatsPanel],
-    props: ({ persistStats }: DebugPluginOptions) => ({ persist: persistStats ?? true }),
+    props: ({ persistStats }: Debug.DebugPluginOptions) => ({ persist: persistStats ?? true }),
     activatesOn: DebugEvents.Start,
   },
   () => import('./stats-panel'),

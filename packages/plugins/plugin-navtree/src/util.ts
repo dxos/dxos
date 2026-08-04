@@ -5,25 +5,25 @@
 import { Graph, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
-import { type NavTreeItemGraphNode } from '#types';
+import * as NavTreeNode from './types/NavTreeNode';
 
 export const getParent = (
   graph: Graph.ReadableGraph,
-  node: NavTreeItemGraphNode,
+  node: NavTreeNode.NavTreeItemGraphNode,
   path: string[],
-): NavTreeItemGraphNode | undefined => {
+): NavTreeNode.NavTreeItemGraphNode | undefined => {
   const parentId = path[path.length - 2];
   return Graph.getConnections(graph, node.id, Node.childRelation('inbound')).find(
     (n: Node.Node) => n.id === parentId,
-  ) as NavTreeItemGraphNode | undefined;
+  ) as NavTreeNode.NavTreeItemGraphNode | undefined;
 };
 
 export const getPersistenceParent = (
   graph: Graph.ReadableGraph,
-  node: NavTreeItemGraphNode,
+  node: NavTreeNode.NavTreeItemGraphNode,
   path: string[],
   persistenceClass: string,
-): NavTreeItemGraphNode | null => {
+): NavTreeNode.NavTreeItemGraphNode | null => {
   if (node.properties.acceptPersistenceClass?.has(persistenceClass)) {
     return node;
   } else {
@@ -34,9 +34,9 @@ export const getPersistenceParent = (
 
 export const resolveMigrationOperation = (
   graph: Graph.ReadableGraph,
-  activeNode: NavTreeItemGraphNode,
+  activeNode: NavTreeNode.NavTreeItemGraphNode,
   destinationPath: string[],
-  destinationRelatedNode?: NavTreeItemGraphNode,
+  destinationRelatedNode?: NavTreeNode.NavTreeItemGraphNode,
 ): 'transfer' | 'copy' | 'reject' => {
   const activeClass = activeNode.properties.persistenceClass;
   if (destinationRelatedNode && activeClass) {
@@ -75,16 +75,16 @@ export const sortActions = (actions: Node.Action[]): Node.Action[] =>
 
 export const getChildren = (
   graph: Graph.ReadableGraph,
-  node: NavTreeItemGraphNode,
+  node: NavTreeNode.NavTreeItemGraphNode,
   path: readonly string[] = [],
-): NavTreeItemGraphNode[] => {
+): NavTreeNode.NavTreeItemGraphNode[] => {
   return Graph.getConnections(graph, node.id, 'child')
     .map((n: Node.Node) => {
       // Break cycles.
       const nextPath = [...path, node.id];
-      return nextPath.includes(n.id) ? undefined : (n as NavTreeItemGraphNode);
+      return nextPath.includes(n.id) ? undefined : (n as NavTreeNode.NavTreeItemGraphNode);
     })
-    .filter(isNonNullable) as NavTreeItemGraphNode[];
+    .filter(isNonNullable) as NavTreeNode.NavTreeItemGraphNode[];
 };
 
 /**

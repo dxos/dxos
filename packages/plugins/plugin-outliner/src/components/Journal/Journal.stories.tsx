@@ -12,8 +12,9 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Journal, Outline, getDateString } from '#types';
+import { Journal, Outline } from '#types';
 
+import * as OutlinerUtil from '../../types/OutlinerUtil';
 import { Journal as JournalComponent } from './Journal';
 
 const DefaultJournalStory = () => {
@@ -40,7 +41,7 @@ const JournalsStory = () => {
         Obj.make(Journal.Journal, {
           name: 'Journal 1',
           entries: dates.reduce(
-            (acc, date) => ({ ...acc, [getDateString(date)]: Ref.make(Journal.makeEntry(date)) }),
+            (acc, date) => ({ ...acc, [OutlinerUtil.getDateString(date)]: Ref.make(Journal.makeEntry(date)) }),
             {},
           ),
         }),

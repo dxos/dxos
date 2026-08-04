@@ -70,7 +70,18 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./NavTreeCapabilities": {
+      "source": "./src/types/NavTreeCapabilities.ts",
+      "types": "./dist/types/src/types/NavTreeCapabilities.d.ts",
+      "import": "./dist/lib/NavTreeCapabilities.mjs"
+    },
+    "./NavTreeNode": {
+      "source": "./src/types/NavTreeNode.ts",
+      "types": "./dist/types/src/types/NavTreeNode.d.ts",
+      "import": "./dist/lib/NavTreeNode.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -80,19 +91,16 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./NavTreeCapabilities": {
-      "source": "./src/types/NavTreeCapabilities.ts",
-      "types": "./dist/types/src/types/NavTreeCapabilities.d.ts",
-      "import": "./dist/lib/NavTreeCapabilities.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "NavTreeCapabilities": [
         "dist/types/src/types/NavTreeCapabilities.d.ts"
+      ],
+      "NavTreeNode": [
+        "dist/types/src/types/NavTreeNode.d.ts"
       ]
     }
   },

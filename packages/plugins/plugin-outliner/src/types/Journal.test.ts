@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 
 import { Journal, JournalEntry, addBullet, getOrCreateEntry, make, makeEntry } from './Journal';
-import { getDateString } from './util';
+import { getDateString } from './OutlinerUtil';
 
 describe('Journal', () => {
   let builder: EchoTestBuilder;

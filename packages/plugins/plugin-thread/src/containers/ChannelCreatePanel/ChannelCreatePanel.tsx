@@ -10,7 +10,9 @@ import { type SpaceCapabilities } from '@dxos/plugin-space';
 import { Column } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
-import { ThreadCapabilities, buildChannelFormSchema } from '#types';
+import { ThreadCapabilities } from '#types';
+
+import * as ChannelBackend from '../../types/ChannelBackend';
 
 /**
  * Provider-driven create panel for channels. Reads the registered
@@ -21,7 +23,7 @@ import { ThreadCapabilities, buildChannelFormSchema } from '#types';
  */
 export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities.CreateObjectCustomPanelProps) => {
   const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
-  const schema = useMemo(() => buildChannelFormSchema(providers), [providers]);
+  const schema = useMemo(() => ChannelBackend.buildChannelFormSchema(providers), [providers]);
 
   const handleSave = useCallback(
     (values: { name?: string; backend?: { kind: string } & Record<string, unknown> }) => {

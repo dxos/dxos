@@ -9,7 +9,9 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { DebugCapabilities, Settings } from '#types';
+import { Settings } from '#types';
+
+import * as Debug from '../types/Debug';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -20,7 +22,7 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contribute(DebugCapabilities.Settings, settingsAtom),
+      Capability.contribute(Debug.DebugCapabilities.Settings, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,

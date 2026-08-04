@@ -36,7 +36,9 @@ import {
   Wireframe,
 } from '#containers';
 import { meta } from '#meta';
-import { DebugCapabilities, DebugNodes, DebugSurface, type Settings } from '#types';
+import { DebugNodes, DebugSurface, type Settings } from '#types';
+
+import * as Debug from '../types/Debug';
 
 type SpaceDebug = {
   type: string;
@@ -92,7 +94,7 @@ type ReactSurfaceOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
     const registry = yield* Capabilities.AtomRegistry;
-    const settingsAtom = yield* DebugCapabilities.Settings;
+    const settingsAtom = yield* Debug.DebugCapabilities.Settings;
     const fileUploader = (yield* Capability.getAll(AppCapabilities.FileUploader))[0];
 
     return Capability.contribute(Capabilities.ReactSurface, [

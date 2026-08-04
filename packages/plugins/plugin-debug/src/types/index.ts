@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './debug';
+export * as Debug from './Debug';
 export * as DebugEvents from './DebugEvents';
 export * as DebugNodes from './DebugNodes';
 export * as DebugSurface from './DebugSurface';

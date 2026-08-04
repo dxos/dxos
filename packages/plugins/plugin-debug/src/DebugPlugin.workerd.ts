@@ -5,8 +5,9 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import { meta } from '#meta';
-import { type DebugPluginOptions } from '#types';
 
-export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(Plugin.make);
+import * as Debug from './types/Debug';
+
+export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(Plugin.make);
 
 export default DebugPlugin;

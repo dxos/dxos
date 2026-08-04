@@ -21,6 +21,7 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
     'ThreadCapabilities': 'src/types/ThreadCapabilities.ts',
+    'ChannelBackend': 'src/types/ChannelBackend.ts',
     'ThreadEvents': 'src/types/ThreadEvents.ts',
     'ThreadOperation': 'src/types/ThreadOperation.ts',
   },

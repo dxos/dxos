@@ -9,7 +9,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 import { Channel } from '@dxos/types';
 
-import { ThreadCapabilities, ThreadOperation, resolveProvider } from '../types';
+import { ThreadCapabilities, ThreadOperation } from '../types';
+import * as ChannelBackend from '../types/ChannelBackend';
 
 const handler: Operation.WithHandler<typeof ThreadOperation.CreateChannel> = ThreadOperation.CreateChannel.pipe(
   Operation.withHandler(
@@ -19,7 +20,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.CreateChannel> = Thr
       }
 
       const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
-      const provider = resolveProvider(providers, kind);
+      const provider = ChannelBackend.resolveProvider(providers, kind);
       invariant(provider, `No channel backend for kind: ${kind}`);
       const config = provider.makeConfig(options ?? {});
       return { object: Channel.make({ name, backend: { kind, config } }) };

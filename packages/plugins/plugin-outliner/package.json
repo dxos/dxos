@@ -60,17 +60,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Journal": {
       "source": "./src/types/Journal.ts",
       "types": "./dist/types/src/types/Journal.d.ts",
@@ -91,7 +80,23 @@
       "types": "./dist/types/src/types/OutlinerEvents.d.ts",
       "import": "./dist/lib/OutlinerEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./OutlinerUtil": {
+      "source": "./src/types/OutlinerUtil.ts",
+      "types": "./dist/types/src/types/OutlinerUtil.d.ts",
+      "import": "./dist/lib/OutlinerUtil.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -107,6 +112,9 @@
       ],
       "OutlinerEvents": [
         "dist/types/src/types/OutlinerEvents.d.ts"
+      ],
+      "OutlinerUtil": [
+        "dist/types/src/types/OutlinerUtil.d.ts"
       ]
     }
   },
