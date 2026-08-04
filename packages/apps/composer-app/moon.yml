@@ -109,6 +109,14 @@ tasks:
       - vite-plugin-import-source:build
       - vite-plugin-log:build
       - vite-plugin-shutdown:build
+  # Production startup harness — measures `vite preview` against `startup.spec.ts`. Its own task
+  # because the spec records benchmark rows rather than asserting behaviour: `e2e` ignores it so a
+  # timing measurement never gates a merge.
+  e2e-startup:
+    command: pnpm exec playwright test --config=src/playwright/playwright-startup.config.ts
+    deps:
+      - prebuild
+      - ^:build
   # Dev-server startup harness — measures `vite serve` against the shared
   # `dev-startup.spec.ts`. Distinct from `e2e` (which inherits from `ts-test`'s
   # default playwright config and runs the production preview harness).
