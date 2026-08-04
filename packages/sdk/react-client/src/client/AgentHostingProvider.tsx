@@ -2,18 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useContext, useState } from 'react';
+import React, { type PropsWithChildren, useState } from 'react';
 
 import { type AgentHostingProviderClient, AgentManagerClient, FakeAgentHostingProvider } from '@dxos/client';
 import { type Halo } from '@dxos/client/halo';
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import { useClient } from '../client';
+// Imported from the defining module, not the directory barrel: `'../client'` is this file's own
+// barrel, and that cycle made every downstream edit a full page reload.
+import { AgentHostingContext } from './context';
+import { useClient } from './useClient';
 
 export type AgentHostingProviderProps = { config: Config; halo: Halo };
-
-export const AgentHostingContext = createContext<AgentHostingProviderClient | null>(null);
 
 /**
  * Experimental agent hosting provider.
@@ -27,10 +28,6 @@ export const AgentHostingProvider = (props: PropsWithChildren) => {
   return (
     <AgentHostingContext.Provider value={agentHostingProviderClient}> {props.children}</AgentHostingContext.Provider>
   );
-};
-
-export const useAgentHostingClient = () => {
-  return useContext(AgentHostingContext);
 };
 
 const makeClient = ({ config, halo }: AgentHostingProviderProps) => {
