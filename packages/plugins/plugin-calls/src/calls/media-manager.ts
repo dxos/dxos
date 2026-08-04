@@ -69,7 +69,7 @@ export class MediaManager extends Resource {
   private _trackToReconcile: EncodedTrackName[] = [];
   private _blackCanvasStreamTrack?: MediaStreamTrack = undefined;
   private _inaudibleAudioStreamTrack?: MediaStreamTrack = undefined;
-  private _placeholderTracksReady = false;
+  private _placeholderTracks?: Promise<void>;
   private _pushTracksTask?: DeferredTask = undefined;
   private _pullTracksTask?: DeferredTask = undefined;
 
@@ -108,11 +108,15 @@ export class MediaManager extends Resource {
    * browser that merely cannot do calls must not take down the activation chain it shares.
    */
   private async _ensurePlaceholderTracks(): Promise<void> {
-    if (this._placeholderTracksReady) {
-      return;
-    }
-    // Set before awaiting: concurrent callers must not both enter the (expensive) build.
-    this._placeholderTracksReady = true;
+    // The promise is memoized, not a done flag: a flag set before the await lets a concurrent
+    // caller (camera-off then Join, from the lobby) return while the build is still running, so
+    // `_pushTracks` runs with no tracks and the late adoption below schedules no push — other
+    // participants see nothing until the next manual toggle.
+    this._placeholderTracks ??= this.#buildPlaceholderTracks();
+    return this._placeholderTracks;
+  }
+
+  async #buildPlaceholderTracks(): Promise<void> {
     try {
       this._blackCanvasStreamTrack = await createBlackCanvasStreamTrack({
         ctx: this._ctx,
@@ -147,7 +151,7 @@ export class MediaManager extends Resource {
     // The placeholders were built against the now-disposed context; a reopen must rebuild them.
     this._blackCanvasStreamTrack = undefined;
     this._inaudibleAudioStreamTrack = undefined;
-    this._placeholderTracksReady = false;
+    this._placeholderTracks = undefined;
     this._pushTracksTask = undefined;
     this._pullTracksTask = undefined;
   }

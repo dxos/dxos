@@ -55,7 +55,7 @@ describe('OpaqueToolkit.merge', () => {
 
       const provided = Effect.gen(function* () {
         const provider = yield* OpaqueToolkit.OpaqueToolkitProvider;
-        return provider.getToolkit();
+        return yield* provider.getToolkit();
       }).pipe(Effect.provide(OpaqueToolkit.providerLayer(merged)));
 
       const result = yield* provided;

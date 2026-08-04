@@ -15,7 +15,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { makeFactStoreRegistry } from '../../capabilities';
+import { makeFactStoreRegistry } from '../../capabilities/fact-store';
 import * as BrainCapabilities from '../../types/BrainCapabilities';
 import { FactsCompanion } from './FactsCompanion';
 

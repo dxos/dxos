@@ -13,12 +13,14 @@ import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
 import * as BrainCapabilities from '../types/BrainCapabilities';
 
-export * from './fact-store';
-
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+// No `export * from './fact-store'` here: that barrel re-export made the module a static import of
+// the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
+// pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
+// `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
 export const FactStore = Capability.lazyModule(
   'FactStore',
   { provides: [BrainCapabilities.FactStoreRegistry, Capabilities.LayerSpec] },

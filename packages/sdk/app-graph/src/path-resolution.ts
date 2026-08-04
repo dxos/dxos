@@ -169,29 +169,16 @@ type KeyedExtension = { id: string; path: string[] | GraphBuilder.PathResolver }
  * the node is known. Returns the id on success, `null` otherwise.
  *
  * Expansion only triggers population — the objects behind it load out of band — so on a cold
- * restore the check can run before the node lands and report a false absence. `wait` bounds a
- * {@link Graph.waitFor} on the candidate for callers that already know it should exist; without it
- * the read stays immediate, so a candidate being tried speculatively still falls through at once.
+ * restore the check can run before the node lands and report a false absence. Waiting for a node
+ * that has not arrived is the caller's job ({@link resolveKeyId} races one deadline across every
+ * candidate), so this stays immediate and a speculative candidate falls through at once.
  */
 const materializeCandidate = async (
   builder: GraphBuilder.GraphBuilder,
   candidateId: string,
-  wait?: Duration.DurationInput,
 ): Promise<string | null> => {
   await expandAncestors(builder, candidateId);
-  if (Option.isSome(Graph.getNode(builder.graph, candidateId))) {
-    return candidateId;
-  }
-  if (wait === undefined) {
-    return null;
-  }
-
-  return EffectEx.runPromise(
-    Graph.waitFor(builder.graph, candidateId).pipe(
-      Effect.as(candidateId),
-      Effect.timeoutTo({ duration: wait, onTimeout: (): string | null => null, onSuccess: (id) => id }),
-    ),
-  );
+  return Option.isSome(Graph.getNode(builder.graph, candidateId)) ? candidateId : null;
 };
 
 /**
@@ -214,36 +201,45 @@ const resolveKeyId = async (
 ): Promise<string | null> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(builder.urlGrammar.tailSeparator);
-  for (const extension of extensions) {
-    if (Array.isArray(extension.path)) {
-      const resolved = await materializeCandidate(
-        builder,
-        [workspaceBaseId, ...extension.path, ...idSegments].join('/'),
-        wait,
-      );
-      if (resolved) {
-        return resolved;
-      }
-    }
-  }
+  const candidateIds: string[] = extensions
+    .filter((extension) => Array.isArray(extension.path))
+    .map((extension) => [workspaceBaseId, ...(extension.path as string[]), ...idSegments].join('/'));
 
   // 2. Dynamic resolver: the extension computes the candidate id from runtime data (self-contained
-  // Effect; a defect degrades to no candidate rather than crashing resolution).
+  // Effect; a defect degrades to no candidate rather than crashing resolution). Ordered after the
+  // static ones, which is the declared precedence.
   for (const extension of extensions) {
     if (typeof extension.path === 'function') {
       const candidateId = await EffectEx.runPromise(
         extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchAllDefect(() => Effect.succeed(null))),
       );
       if (candidateId) {
-        const resolved = await materializeCandidate(builder, candidateId);
-        if (resolved) {
-          return resolved;
-        }
+        candidateIds.push(candidateId);
       }
     }
   }
 
-  return null;
+  // Immediate pass in precedence order, so an already-materialized node still resolves to the
+  // first extension that claims it.
+  for (const candidateId of candidateIds) {
+    const resolved = await materializeCandidate(builder, candidateId);
+    if (resolved) {
+      return resolved;
+    }
+  }
+  if (wait === undefined || candidateIds.length === 0) {
+    return null;
+  }
+
+  // One deadline for the pair, raced across every candidate — per-candidate waits run serially, so
+  // N key-sharing extensions would multiply the caller's bound by N. Dynamic candidates wait too:
+  // they name the recursive shapes (nested collections) whose containers are the slowest to
+  // materialize, which is exactly what the wait exists for.
+  return EffectEx.runPromise(
+    Effect.raceAll(
+      candidateIds.map((candidateId) => Graph.waitFor(builder.graph, candidateId).pipe(Effect.as(candidateId))),
+    ).pipe(Effect.timeoutTo({ duration: wait, onTimeout: (): string | null => null, onSuccess: (id) => id })),
+  );
 };
 
 /**

@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { OpaqueToolkit } from '@dxos/ai';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -31,6 +32,7 @@ import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 //
 // Capability Module
@@ -96,22 +98,31 @@ const OpaqueToolkitSpec = LayerSpec.make(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
         const pluginManager = yield* Plugin.Service;
-        let skillsRequested = false;
+        // Latched on success only: a fire-and-forget activation left the very first read — the one
+        // a trigger-fired routine makes — returning a skill-less toolkit for the whole run, and a
+        // latch set before the attempt made a failure permanent and silent.
+        let skillsReady = false;
+        const ensureSkills = Effect.suspend(() =>
+          skillsReady
+            ? Effect.void
+            : pluginManager.activate(AppActivationEvents.AssistantStart).pipe(
+                Effect.tap(() =>
+                  Effect.sync(() => {
+                    skillsReady = true;
+                  }),
+                ),
+                Effect.tapError((error) =>
+                  Effect.sync(() => log.warn('assistant skills activation failed', { error: String(error) })),
+                ),
+                Effect.ignore,
+              ),
+        );
         return Layer.succeed(OpaqueToolkit.OpaqueToolkitProvider, {
-          getToolkit: () => {
-            // Toolkit materialization is the headless demand signal for the assistant feature
-            // (a trigger-fired routine reaches here with no assistant UI open); skills ride the
-            // assistant's start event. Fire-and-forget: the read below stays sync and later
-            // reads see the registered skills.
-            if (!skillsRequested) {
-              skillsRequested = true;
-              void EffectEx.runAndForwardErrors(
-                pluginManager.activate(AppActivationEvents.AssistantStart).pipe(Effect.ignore),
-              );
-            }
-            const toolkits = capabilities.getAll(AppCapabilities.Toolkit);
-            return OpaqueToolkit.merge(...toolkits);
-          },
+          // Toolkit materialization is the headless demand signal for the assistant feature (a
+          // trigger-fired routine reaches here with no assistant UI open); skills ride the
+          // assistant's start event, so the read has to happen after it lands.
+          getToolkit: () =>
+            ensureSkills.pipe(Effect.map(() => OpaqueToolkit.merge(...capabilities.getAll(AppCapabilities.Toolkit)))),
         });
       }),
     ),
@@ -120,7 +131,7 @@ const OpaqueToolkitSpec = LayerSpec.make(
 const OperationsToRegistrySpec = LayerSpec.make(
   {
     affinity: 'space',
-    requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider, Capability.Service],
+    requires: [Registry.Service, OperationHandlerSet.OperationHandlerProvider, Capability.Service, Plugin.Service],
     provides: [Registry.Service],
   },
   () =>
@@ -129,6 +140,19 @@ const OperationsToRegistrySpec = LayerSpec.make(
       Effect.gen(function* () {
         const capabilities = yield* Capability.Service;
         const registry = yield* Registry.Service;
+        const pluginManager = yield* Plugin.Service;
+        // The snapshot below is one-shot, so every handler module must have contributed before it
+        // runs. Today none declares an `activatesOn`, which makes that true by accident — a
+        // one-line gate on any of them would silently drop its definitions from the registry.
+        // Pulling Idle first makes the requirement explicit and survives that change.
+        yield* pluginManager.activate(ActivationEvents.Idle).pipe(
+          Effect.tapError((error) =>
+            Effect.sync(() =>
+              log.warn('idle activation failed before operation registration', { error: String(error) }),
+            ),
+          ),
+          Effect.ignore,
+        );
         // Registration needs only the definitions: keyed sets enumerate them without loading
         // any handler body; unkeyed sets still force their own handlers (per-set, not global).
         const sets = capabilities.getAll(Capabilities.OperationHandler);

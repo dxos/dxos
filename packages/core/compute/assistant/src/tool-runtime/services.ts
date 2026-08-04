@@ -36,7 +36,7 @@ export const makeToolResolverFromOperations = <R = never>({
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
-            const toolkit = OpaqueToolkit.merge(extraToolkit, toolkitProvider.getToolkit());
+            const toolkit = OpaqueToolkit.merge(extraToolkit, yield* toolkitProvider.getToolkit());
 
             const tool = toolkit.toolkit.tools[id];
             if (tool) {
@@ -65,7 +65,7 @@ export const makeToolExecutionService = <E, R>(opts: {
     ToolExecutionService,
     Effect.gen(function* () {
       const toolkitProvider = yield* OpaqueToolkit.OpaqueToolkitProvider;
-      const toolkit = toolkitProvider.getToolkit();
+      const toolkit = yield* toolkitProvider.getToolkit();
 
       const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
       invariant(isHandlerLike(toolkitHandler));

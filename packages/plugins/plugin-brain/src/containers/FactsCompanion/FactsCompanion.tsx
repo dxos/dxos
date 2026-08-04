@@ -11,7 +11,7 @@ import { EffectEx } from '@dxos/effect';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
 import { FactViewer } from '@dxos/react-ui-rdf';
 
-import { type FactStoreRegistry } from '../../capabilities';
+import { type FactStoreRegistry } from '../../capabilities/fact-store';
 import * as BrainCapabilities from '../../types/BrainCapabilities';
 
 /**
