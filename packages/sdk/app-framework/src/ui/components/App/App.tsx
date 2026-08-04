@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useLayoutEffect } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 
 import { Capabilities } from '../../../common';
-import { topologicalSort } from '../../../helpers';
 import { LoadingState, type StartupProgress, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
+import { composeContexts } from '../Surface/SurfaceRootProviders';
 import { bootLoader } from './loader';
 
 const FIRST_INTERACTIVE_MARK = 'app-framework:first-interactive';
@@ -99,18 +99,4 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
       ))}
     </ComposedContext>
   );
-};
-
-const composeContexts = (contexts: Capabilities.ReactContext[]) => {
-  if (contexts.length === 0) {
-    return ({ children }: PropsWithChildren) => <>{children}</>;
-  }
-
-  return topologicalSort(contexts)
-    .map(({ context }) => context)
-    .reduce((Acc, Next) => ({ children }) => (
-      <Acc>
-        <Next>{children}</Next>
-      </Acc>
-    ));
 };

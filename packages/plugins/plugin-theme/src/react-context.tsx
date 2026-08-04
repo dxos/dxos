@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { ReactNode } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Surface } from '@dxos/app-framework/ui';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
@@ -78,6 +79,9 @@ export default Capability.makeModule(
         id: meta.profile.key,
         context: ({ children }: { children?: ReactNode }) => {
           const { themeMode } = useAtomValue(themeAtom);
+          // Chrome DOM must not repeat per surface boundary root (an extra viewport per root
+          // would occupy layout space wherever the boundary happens to sit).
+          const inBoundary = Surface.useBoundaryScope() != null;
           // Translations are registered in the shared i18next instance by the Translator module; the
           // theme provider only exposes that instance to React.
           return (
@@ -86,7 +90,7 @@ export default Capability.makeModule(
                 <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                   {children}
                 </Tooltip.Provider>
-                <Toast.Viewport />
+                {!inBoundary && <Toast.Viewport />}
               </Toast.Provider>
             </ThemeProvider>
           );

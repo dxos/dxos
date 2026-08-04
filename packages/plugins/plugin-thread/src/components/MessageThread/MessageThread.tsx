@@ -109,14 +109,10 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
  */
 const ObjectTile: ObjectTileComponent = ({ subject }) => {
   const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{subject.id}</span>, [subject]);
+  const data = useMemo(() => ({ subject }) satisfies AppSurface.ObjectCardData, [subject]);
   return (
     <Card.Root className={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
-      <Surface.Surface
-        type={AppSurface.CardContent}
-        limit={1}
-        data={{ subject } satisfies AppSurface.ObjectCardData}
-        fallback={Fallback}
-      />
+      <Surface.Surface type={AppSurface.CardContent} limit={1} data={data} fallback={Fallback} />
     </Card.Root>
   );
 };

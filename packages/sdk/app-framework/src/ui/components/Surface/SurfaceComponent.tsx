@@ -22,7 +22,8 @@ import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useDefaultValue } from '@dxos/react-hooks';
 
 import { Capabilities, Role } from '../../../common';
-import { usePluginManager } from '../PluginManager';
+import { useOptionalPluginManager, usePluginManager } from '../PluginManager';
+import { BoundaryScopeContext, getSurfaceBoundaryRenderer, isSurfaceBoundaryRole } from './boundary';
 import { SurfaceContext } from './context';
 import { DebugSurface, isSurfaceDebugEnabled, isSurfaceWrapperEnabled } from './SurfaceDebug';
 import { useSurfaceManager } from './SurfaceManagerContext';
@@ -33,6 +34,8 @@ import { type Definition, type Props, type TypedProps, type WebComponentDefiniti
 const DEBUG = import.meta.env?.VITE_DEBUG;
 
 const DEFAULT_PLACEHOLDER = <Fragment />;
+
+let staleRegistryWarned = false;
 
 /**
  * Wrapper component for rendering Web Component surfaces.
@@ -190,6 +193,15 @@ export const SurfaceComponent = memo(
   }: TypedProps<Role.Role<any>>) => {
     const data = useDefaultValue(dataProp, () => ({}));
     const surfaceManager = useSurfaceManager();
+    const boundaryScope = useContext(BoundaryScopeContext);
+
+    // A root wired without the app registry never throws — atom state silently goes stale.
+    const optionalManager = useOptionalPluginManager();
+    const contextRegistry = useContext(RegistryContext);
+    if (DEBUG && optionalManager && contextRegistry !== optionalManager.registry && !staleRegistryWarned) {
+      staleRegistryWarned = true;
+      log.warn('Surface rendered with a registry that is not the plugin manager registry; atom state will be stale.');
+    }
     // Subscribe only to this role's contributions: contributing/removing a surface for a
     // different role keeps this bucket referentially stable, so the atom does not re-render us.
     const effectiveRole = type?.role ?? '';
@@ -224,6 +236,15 @@ export const SurfaceComponent = memo(
         log.warn('Surface is missing required `type` prop', { id: _id });
       }
       return null;
+    }
+
+    // Dispatch across a web-component boundary when enabled for this role — unless already
+    // inside this role's own boundary, which must fall through to in-tree dispatch.
+    if (boundaryScope !== effectiveRole && isSurfaceBoundaryRole(effectiveRole)) {
+      const Boundary = getSurfaceBoundaryRenderer();
+      if (Boundary) {
+        return <Boundary role={effectiveRole} data={data} limit={limit} placeholder={placeholder} {...rest} />;
+      }
     }
 
     if (DEBUG && candidates.length === 0) {

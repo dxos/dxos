@@ -115,6 +115,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           <div
             className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
+            data-testid='deckPlugin.statusIndicators'
           >
             <Surface.Surface type={AppSurface.StatusIndicator} />
           </div>

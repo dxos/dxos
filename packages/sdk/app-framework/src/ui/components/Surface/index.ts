@@ -3,7 +3,14 @@
 //
 
 import { Role } from '../../../common';
+import { isSurfaceBoundaryRole, setSurfaceBoundaryRoles, useSurfaceBoundaryScope } from './boundary';
 import { SurfaceContext } from './context';
+import {
+  DX_SURFACE_BOUNDARY_TAG,
+  SURFACE_BOUNDARY_MOUNTED_EVENT,
+  SURFACE_BOUNDARY_UNMOUNTED_EVENT,
+  registerSurfaceBoundaryElement,
+} from './SurfaceBoundaryElement';
 import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent';
 import { isSurfaceDebugEnabled, setSurfaceDebug } from './SurfaceDebug';
 import { type SurfaceMetric, surfaceMetrics, useSurfaceMetrics } from './SurfaceMetrics';
@@ -14,6 +21,7 @@ import {
   useSurfaceProfilerEntries,
   useSurfaceProfilerStats,
 } from './SurfaceProfilerContext';
+import { SurfaceRootProviders } from './SurfaceRootProviders';
 import {
   type Binding as SurfaceBindingType,
   type Definition as SurfaceDefinition,
@@ -45,6 +53,16 @@ export namespace Surface {
 
   export const isDebugEnabled = isSurfaceDebugEnabled;
   export const setDebug = setSurfaceDebug;
+
+  // Web-component boundary dispatch (see boundary.ts / SurfaceBoundaryElement.tsx).
+  export const registerBoundaryElement = registerSurfaceBoundaryElement;
+  export const setBoundaryRoles = setSurfaceBoundaryRoles;
+  export const isBoundaryRole = isSurfaceBoundaryRole;
+  export const useBoundaryScope = useSurfaceBoundaryScope;
+  export const RootProviders = SurfaceRootProviders;
+  export const BOUNDARY_TAG = DX_SURFACE_BOUNDARY_TAG;
+  export const BOUNDARY_MOUNTED_EVENT = SURFACE_BOUNDARY_MOUNTED_EVENT;
+  export const BOUNDARY_UNMOUNTED_EVENT = SURFACE_BOUNDARY_UNMOUNTED_EVENT;
 
   export const ProfilerProvider = SurfaceProfilerProvider;
   export const useProfilerCallback = useSurfaceProfilerCallback;

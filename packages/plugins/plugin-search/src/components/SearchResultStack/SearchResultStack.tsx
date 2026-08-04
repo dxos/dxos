@@ -82,6 +82,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
     const [cardRef, pivotId] = useCardPivot();
     const menuItems = useObjectMenuItems(result.object, pivotId);
     const { setCurrentId } = useMosaicContainer('SearchResultTile');
+    const cardContentData = useMemo(() => ({ subject: result.object }), [result.object]);
 
     const handleCurrentChange = useCallback(() => {
       setCurrentId(result.id);
@@ -110,7 +111,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
                   <Menu.Content items={menuItems} />
                 </Card.Block>
               </Card.Header>
-              <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
+              <Surface.Surface type={AppSurface.CardContent} data={cardContentData} limit={1} />
             </Card.Root>
           </Focus.Item>
         </Mosaic.Tile>

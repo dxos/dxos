@@ -59,6 +59,11 @@ export type ReactContext = Readonly<{
 }>;
 
 /**
+ * A context wrapper composed around every app React root — including detached surface roots
+ * (see `Surface.RootProviders`), which re-instantiate the full stack per root. Contract: the
+ * wrapper must be a stateless carrier of shared singletons (capabilities, atoms, external
+ * stores); app state owned in a wrapper's `useState` would fork per root and silently diverge.
+ *
  * @category Capability
  */
 export const ReactContext = Capability$.make<ReactContext>('org.dxos.app-framework.capability.reactContext');
