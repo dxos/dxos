@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
@@ -12,7 +11,6 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { type Space, isSpace } from '@dxos/react-client/echo';
-import { ViewAnnotation } from '@dxos/schema';
 import { Position } from '@dxos/util';
 
 import {
