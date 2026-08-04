@@ -29,6 +29,14 @@ canonical() {
   esac
 }
 
+# Print the raw stored value; exit 1 when the file exists but cannot be read, so
+# callers can tell "no state" (safe to default) from "unknown state" (never safe
+# to overwrite or to discard the legacy copy).
+read_state() {
+  [ -e "$state" ] || return 0
+  cat "$state" 2>/dev/null || return 1
+}
+
 # Write via a temp file in the same directory so readers never observe the
 # truncate-then-write window and silently fall back to normal for a turn.
 write_state() {
@@ -47,10 +55,12 @@ write_state() {
 # legacy file is unlinked only once its value is safely stored canonically; a
 # failed read or write must not destroy the mode it was carrying.
 if [ -e "$legacy" ]; then
-  if [ -e "$state" ]; then
-    rm -f "$legacy" 2>/dev/null || true
-  elif ! legacy_value=$(cat "$legacy" 2>/dev/null); then
+  if ! legacy_value=$(cat "$legacy" 2>/dev/null); then
     printf 'WARNING: could not read %s; leaving it in place.\n' "$legacy" >&2
+  elif ! state_value=$(read_state); then
+    printf 'WARNING: %s could not be read; leaving %s in place.\n' "$state" "$legacy" >&2
+  elif [ -n "$state_value" ]; then
+    rm -f "$legacy" 2>/dev/null || true
   elif write_state "$(canonical "$legacy_value")"; then
     rm -f "$legacy" 2>/dev/null || true
   else
@@ -60,10 +70,13 @@ fi
 
 # Canonicalise on read so a stale or hand-edited state file cannot wedge the
 # machine in an unrecognised mode — anything that is not terse means normal.
+# Read-only callers degrade to normal so the hook keeps injecting the rules even
+# when state is unreadable; mutating callers must use read_state and refuse.
 current() {
-  local value=''
-  if [ -e "$state" ] && ! value=$(cat "$state" 2>/dev/null); then
+  local value
+  if ! value=$(read_state); then
     printf 'WARNING: %s exists but could not be read; using normal.\n' "$state" >&2
+    value=''
   fi
   canonical "$value"
 }
@@ -73,7 +86,13 @@ case "${1:-get}" in
     current; printf '\n'
     ;;
   toggle)
-    if [ "$(current)" = 'terse' ]; then next='normal'; else next='terse'; fi
+    # Strict read: flipping from an assumed normal would clobber an unknown
+    # state, and would look like a no-op if the stored mode was already terse.
+    if ! value=$(read_state); then
+      printf 'ERROR: %s exists but could not be read; refusing to overwrite it.\n' "$state" >&2
+      exit 1
+    fi
+    if [ "$(canonical "$value")" = 'terse' ]; then next='normal'; else next='terse'; fi
     write_state "$next" || { printf 'ERROR: could not write %s\n' "$state" >&2; exit 1; }
     printf 'Mode: %s\n' "$(printf '%s' "$next" | tr '[:lower:]' '[:upper:]')"
     ;;
