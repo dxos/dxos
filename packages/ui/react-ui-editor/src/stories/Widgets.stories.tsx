@@ -142,7 +142,7 @@ const PreviewBlockCard = ({ dxn, label }: XmlWidgetProps<{ dxn: string; label: s
       </Card.Header>
       {text && (
         <Card.Row>
-          <Card.Text className='text-description'>{text}</Card.Text>
+          <Card.Text classNames='text-description'>{text}</Card.Text>
         </Card.Row>
       )}
     </Card.Root>

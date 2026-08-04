@@ -191,9 +191,9 @@ export const RoutineCompanion = ({ subject: object, attendableId }: RoutineCompa
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root>
         <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
+          <Menu.Toolbar classNames='dx-document' />
         </Panel.Toolbar>
-        <Panel.Content asChild className='pt-trim-md'>
+        <Panel.Content asChild classNames='pt-trim-md'>
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               <MasterDetail<Routine.Routine>

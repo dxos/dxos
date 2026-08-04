@@ -246,8 +246,8 @@ export const Compare = ({ render }: { render: () => ReactNode }) => (
 /** Frame shared by both story suites: the sample's note above the rendered body (or comparison). */
 export const SampleFrame = ({ note, children }: { note: string; children: ReactNode }) => (
   <Panel.Root>
-    <Panel.Toolbar className='flex items-center p-1 text-description'>{note}</Panel.Toolbar>
-    <Panel.Content className='overflow-auto'>{children}</Panel.Content>
+    <Panel.Toolbar classNames='flex items-center p-1 text-description'>{note}</Panel.Toolbar>
+    <Panel.Content classNames='overflow-auto'>{children}</Panel.Content>
   </Panel.Root>
 );
 

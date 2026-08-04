@@ -86,6 +86,14 @@ Column/Form nesting → composition/enforcement.
    with raw `forwardRef` that provably drops Slot-injected `className`
    (`Listbox.tsx:359-362`, `Picker.tsx:341-359`, `AccordionItem.tsx:67` — each spreads
    `...rest` then overwrites `className=`). `slottable()` has **zero** uses outside `react-ui`.
+
+   **Addressed at the type level.** `className` is removed from `ComposableProps`, so a consumer
+   can only pass `classNames` and the two-indistinguishable-props trap is gone: the drop is now a
+   compile error rather than silent. Radix `Slot` still injects `className` at runtime, so
+   implementations receive it through `HTMLAttributes` and `composableProps` merges it. The
+   compiler enumerated the migration exactly — 62 call sites across 52 files, all mechanical
+   `className=` → `classNames=`.
+
 5. **Per-part boilerplate is still ~15 lines** (destructure `asChild`, `composableProps`,
    `Comp = asChild ? Slot : Primitive.div`, `tx(...)`, `displayName`). This invites the drift in
    (4). A `definePart({ tag, theme, defaultRole })` factory would collapse 90% of parts to one

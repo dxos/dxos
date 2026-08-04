@@ -57,7 +57,7 @@ const DefaultStory = () => {
             key={item.id}
             current={current === item.id}
             onCurrentChange={() => setCurrent(item.id)}
-            className={itemClassName}
+            classNames={itemClassName}
           >
             <span className='size-2 bg-primary-500 opacity-0 aria-[current]:opacity-100' />
             <span>{item.label}</span>
@@ -85,7 +85,7 @@ const HorizontalStory = () => {
             key={item.id}
             current={current === item.id}
             onCurrentChange={() => setCurrent(item.id)}
-            className='flex flex-col items-center justify-center w-20 h-20 border border-separator aria-current:border-primary-500 aria-current:bg-primary-50 dark:aria-current:bg-primary-900/20 cursor-pointer'
+            classNames='flex flex-col items-center justify-center w-20 h-20 border border-separator aria-current:border-primary-500 aria-current:bg-primary-50 dark:aria-current:bg-primary-900/20 cursor-pointer'
           >
             <span className='text-xs mt-1'>{item.label}</span>
           </Focus.Item>
@@ -110,7 +110,7 @@ const GridCell = ({ border, items }: { border?: boolean; items: Item[] }) => {
             key={item.id}
             current={current === item.id}
             onCurrentChange={() => setCurrent(item.id)}
-            className={itemClassName}
+            classNames={itemClassName}
           >
             <span>{item.label}</span>
           </Focus.Item>
@@ -166,7 +166,7 @@ const GridStory = () => {
       <div className='h-48 overflow-hidden'>
         <Focus.Group classNames='h-full'>
           {ITEMS.slice(0, 3).map((item) => (
-            <Focus.Item key={item.id} border className={itemClassName}>
+            <Focus.Item key={item.id} border classNames={itemClassName}>
               <span>{item.label}</span>
             </Focus.Item>
           ))}
@@ -178,7 +178,7 @@ const GridStory = () => {
       <div className='h-48 overflow-hidden'>
         <Focus.Group classNames='h-full' data-focus-state='error'>
           {ITEMS.slice(0, 3).map((item) => (
-            <Focus.Item key={item.id} className={itemClassName}>
+            <Focus.Item key={item.id} classNames={itemClassName}>
               <span>{item.label}</span>
             </Focus.Item>
           ))}

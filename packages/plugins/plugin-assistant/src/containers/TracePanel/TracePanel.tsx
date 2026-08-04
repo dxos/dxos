@@ -123,7 +123,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                 <Syntax.Root data={spanTree}>
                   <Syntax.Content>
                     <Syntax.Viewport>
-                      <Syntax.Code className='text-xs' />
+                      <Syntax.Code classNames='text-xs' />
                     </Syntax.Viewport>
                   </Syntax.Content>
                 </Syntax.Root>
@@ -145,7 +145,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
-                <Syntax.Code className='text-xs' />
+                <Syntax.Code classNames='text-xs' />
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>

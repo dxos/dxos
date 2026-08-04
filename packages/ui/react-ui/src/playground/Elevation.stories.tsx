@@ -329,7 +329,7 @@ const AppFrame = () => {
           </Panel.Toolbar>
           <Panel.Content asChild>
             <ScrollArea.Root centered padding>
-              <ScrollArea.Viewport className='flex flex-col items-center py-3 gap-3'>
+              <ScrollArea.Viewport classNames='flex flex-col items-center py-3 gap-3'>
                 {Array.from({ length: 20 }, (_, index) => (
                   <CompanionCard key={index} index={index + 1} />
                 ))}

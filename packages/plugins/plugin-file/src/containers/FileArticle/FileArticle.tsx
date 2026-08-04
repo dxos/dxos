@@ -78,7 +78,7 @@ export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
   }
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Content asChild>
         <FilePreview type={rendered.type} url={rendered.url} />
       </Panel.Content>

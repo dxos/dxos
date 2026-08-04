@@ -64,7 +64,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
           <Card.Block>
             <Icon icon='ph--at--regular' />
           </Card.Block>
-          <Card.Text truncate className='text-sky-text text-sm'>
+          <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>
             ))}

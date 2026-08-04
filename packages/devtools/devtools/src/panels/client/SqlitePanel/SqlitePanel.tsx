@@ -273,7 +273,7 @@ export const SqlitePanel = () => {
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
-        <Toolbar.Root className='col-span-2'>
+        <Toolbar.Root classNames='col-span-2'>
           <Toolbar.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
             Run Query
           </Toolbar.Button>

@@ -21,12 +21,13 @@ import { type ComposableProps, type SlottableProps, type ThemedClassName } from 
 
 /**
  * Reconciles className properties from a parent slot.
- * - `className` is set by the Slot merge mechanism.
+ * - `className` is injected at runtime by the Slot merge mechanism; it is absent from
+ *   `ComposableProps` so consumers cannot pass it, hence the widened parameter type here.
  * - `classNames` is the consumer-facing prop for theming overrides.
  * Use `composableProps` to reconcile both into a single `className`.
  */
 export const composableProps = <P extends HTMLElement = HTMLElement>(
-  { className, classNames, role, style, ...props }: ComposableProps,
+  { className, classNames, role, style, ...props }: ComposableProps & { className?: string },
   { classNames: defaultClassNames, ...defaults }: ThemedClassName<Partial<HTMLAttributes<P>>> | undefined = {},
 ) => ({
   // Default props.

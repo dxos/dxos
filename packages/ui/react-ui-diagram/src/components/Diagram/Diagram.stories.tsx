@@ -107,7 +107,7 @@ const DefaultStory = ({ source, projection, background }: StoryProps) => {
           <Panel.Content asChild>
             <SourceEditor key={key} value={text} onChange={handleChange} />
           </Panel.Content>
-          <Panel.Statusbar className='p-2'>
+          <Panel.Statusbar classNames='p-2'>
             <span>mermaid ({count(text.split('\n').length, 'line')})</span>
           </Panel.Statusbar>
         </Panel.Root>
@@ -130,7 +130,7 @@ const DefaultStory = ({ source, projection, background }: StoryProps) => {
               <Diagram.Background variant={background} />
             </Diagram.Canvas>
           </Panel.Content>
-          <Panel.Statusbar className='p-2'>
+          <Panel.Statusbar classNames='p-2'>
             <span>
               {[
                 count(resolved.graph.nodes.length, 'node'),

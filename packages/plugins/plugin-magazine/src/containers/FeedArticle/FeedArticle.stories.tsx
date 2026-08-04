@@ -67,7 +67,7 @@ const DefaultStory = ({ feedUrl }: FeedArticleStoryProps) => {
   const { feed, posts } = data;
 
   return (
-    <Panel.Root role='article' className='dx-document'>
+    <Panel.Root role='article' classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>{feed.name}</Toolbar.Text>

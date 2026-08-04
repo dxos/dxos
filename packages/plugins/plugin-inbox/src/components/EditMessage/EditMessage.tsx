@@ -207,7 +207,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
     const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
 
     return (
-      <ScrollArea.Root className='dx-container'>
+      <ScrollArea.Root classNames='dx-container'>
         <ScrollArea.Viewport>
           <Column.Root
             {...composableProps(props, {

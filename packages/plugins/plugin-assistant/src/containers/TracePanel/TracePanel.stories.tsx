@@ -58,7 +58,7 @@ const JsonInspectorPanel = ({ data }: { data: unknown }) => (
           <Syntax.Root data={data}>
             <Syntax.Content>
               <Syntax.Viewport>
-                <Syntax.Code className='text-xs' />
+                <Syntax.Code classNames='text-xs' />
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>
@@ -264,7 +264,7 @@ const TimelinePlayback = ({
           />
           <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
           <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
-          <Toolbar.Text className='text-right text-sm tabular-nums opacity-70'>
+          <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
           </Toolbar.Text>
         </Toolbar.Root>

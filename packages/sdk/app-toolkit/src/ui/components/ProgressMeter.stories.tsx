@@ -53,7 +53,7 @@ const DefaultStory = ({ state: stateProp, ...args }: ProgressMeterProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root />
       </Panel.Toolbar>
-      <Panel.Content className='p-2 h-[10rem]' />
+      <Panel.Content classNames='p-2 h-[10rem]' />
       <Panel.Statusbar asChild>
         <ProgressMeter {...args} state={state} />
       </Panel.Statusbar>

@@ -83,7 +83,7 @@ export const EventDetails = ({
           <Card.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
           </Card.Block>
-          <Card.Text className='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
+          <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
             <Card.Block end>
               <IconButton

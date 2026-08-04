@@ -35,7 +35,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
   }, [running]);
 
   return (
-    <Panel.Root className='dx-document'>
+    <Panel.Root classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
