@@ -14,7 +14,7 @@ import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '#hooks';
 
 import { useExpandPath } from '../hooks';
 import { Loading } from '../Loading';
-import { useMobileLayout } from '../MobileLayout';
+import { useMobileLayout } from '../MobileLayout/MobileLayoutContext';
 import { AppBar } from './AppBar';
 import { NavBar } from './NavBar';
 

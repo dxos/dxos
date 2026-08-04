@@ -15,6 +15,7 @@ import { Carousel, useTranslation } from '@dxos/react-ui';
 import { meta } from '#meta';
 
 import { WelcomeDismissedAnnotation } from '../../annotations';
+import { useWelcomeDismissed } from './use-welcome-dismissed';
 
 const WELCOME_SLIDE = {
   src: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Ff58459bcdf3a6f3e93644a4e0f39b22a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
@@ -42,25 +43,6 @@ export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
       <WelcomePanel />
     </HomeSection.Root>
   );
-};
-
-/**
- * Reactively read the per-space "welcome dismissed" annotation (synced via space properties) and a
- * setter that persists it. `useObject` subscribes to the properties object, so the Hide button, the
- * Settings "Show welcome page" action, and other devices all re-render live.
- */
-export const useWelcomeDismissed = (space?: Space): [boolean, (value: boolean) => void] => {
-  const spaceProperties = useMemo(() => space?.properties, [space]);
-  const [properties, updateProperties] = useObject(spaceProperties);
-  const dismissed = properties
-    ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
-    : false;
-  const setDismissed = useCallback(
-    (value: boolean) => updateProperties((current) => Annotation.set(current, WelcomeDismissedAnnotation, value)),
-    [updateProperties],
-  );
-
-  return [dismissed, setDismissed];
 };
 
 /**

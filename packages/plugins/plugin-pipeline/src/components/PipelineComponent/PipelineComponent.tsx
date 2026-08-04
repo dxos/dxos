@@ -17,19 +17,20 @@ import { type Pipeline } from '@dxos/types';
 import { meta } from '#meta';
 
 import { PipelineColumn } from './PipelineColumn';
+import { PIPELINE_ROOT, PipelineRootContext, usePipeline } from './PipelineContext';
 
 type ItemProps = {
   item: Obj.Unknown;
   projectionModel?: ProjectionModel;
 };
 
-const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
+export const itemNoOp = ({ item }: ItemProps) => <span>{item.id}</span>;
 
 //
 // Root
 //
 
-type PipelineContextValue = {
+export type PipelineContextValue = {
   Item: FC<ItemProps>;
   // TODO(wittjosiah): Support adding items.
   //  If the created item doesn't match the current query, it will not be visible.
@@ -38,12 +39,6 @@ type PipelineContextValue = {
 };
 
 type PipelineRootProps = PropsWithChildren<PipelineContextValue>;
-
-const PIPELINE_ROOT = 'Pipeline.Root';
-
-const [PipelineRootContext, usePipeline] = createContext<PipelineContextValue>(PIPELINE_ROOT, {
-  Item: itemNoOp,
-});
 
 const PipelineRoot = ({ children, ...contextValue }: PipelineRootProps) => (
   <PipelineRootContext {...contextValue}>{children}</PipelineRootContext>
@@ -135,6 +130,4 @@ export const PipelineComponent = {
   Toolbar: PipelineToolbar,
 };
 
-export { usePipeline };
-
-export type { ItemProps, PipelineColumnsProps, PipelineContentProps, PipelineContextValue, PipelineRootProps };
+export type { ItemProps, PipelineColumnsProps, PipelineContentProps, PipelineRootProps };

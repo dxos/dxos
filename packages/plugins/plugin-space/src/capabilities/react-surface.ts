@@ -59,8 +59,8 @@ import {
   SpaceSettingsSurface,
   TypeArticleSurface,
   ViewEditorSurface,
-  tryGetViewForObject,
 } from './SpaceSurfaces';
+import { tryGetViewForObject } from './try-get-view';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;

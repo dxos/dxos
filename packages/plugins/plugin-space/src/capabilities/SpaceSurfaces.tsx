@@ -33,6 +33,8 @@ import {
 import { SpaceOperation } from '#operations';
 import { type Settings, SpaceCapabilities } from '#types';
 
+import { tryGetViewForObject } from './try-get-view';
+
 export type SpaceHomeSectionProps = {
   space: Space;
 };
@@ -116,16 +118,6 @@ export const SpaceSchemaSurface = () => {
   }
 
   return <SchemaContainer space={space} />;
-};
-
-/**
- * Resolves the view backing an object through its type's `ViewAnnotation` path. The
- * `objectProperties` filter and both consuming surfaces must agree, so they share this.
- */
-export const tryGetViewForObject = (subject: Obj.Unknown): View.View | undefined => {
-  const type = Obj.getType(subject);
-  const path = type ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[]) : [];
-  return path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(subject, path) : undefined;
 };
 
 export type SelectedObjectsSurfaceProps = {

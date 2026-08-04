@@ -22,6 +22,7 @@ import {
 import { type Sheet } from '#types';
 
 import { type SheetModel, useSheetModel } from '../../model';
+import { SheetContext } from './SheetContext';
 
 export type SheetContextValue = {
   id: string;
@@ -50,13 +51,6 @@ export type SheetContextValue = {
   // Events.
   // TODO(burdon): Generalize.
   onInfo?: () => void;
-};
-
-// TODO(burdon): Use radix context.
-const SheetContext = createContext<SheetContextValue | undefined>(undefined);
-
-export const useSheetContext = (): SheetContextValue => {
-  return useContext(SheetContext) ?? raise(new Error('Missing SheetContext'));
 };
 
 export type SheetRootProps = {

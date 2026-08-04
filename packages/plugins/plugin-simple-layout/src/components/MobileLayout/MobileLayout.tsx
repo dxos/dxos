@@ -11,20 +11,11 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useDebugLog } from '../DebugOverlay';
+import { MobileLayoutProvider, useMobileLayout } from './MobileLayoutContext';
 
-const MOBILE_LAYOUT_NAME = 'MobileLayout';
+export const MOBILE_LAYOUT_NAME = 'MobileLayout';
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
 const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
-
-//
-// Context
-//
-
-type MobileLayoutContextValue = {
-  keyboardOpen: boolean;
-};
-
-const [MobileLayoutProvider, useMobileLayout] = createContext<MobileLayoutContextValue>(MOBILE_LAYOUT_NAME);
 
 //
 // Root
@@ -117,8 +108,6 @@ export const MobileLayout = {
   Root: MobileLayoutRoot,
   Panel: MobileLayoutPanel,
 };
-
-export { useMobileLayout };
 
 export type { MobileLayoutPanelProps, MobileLayoutRootProps };
 

@@ -5,6 +5,8 @@
 import type { Manifold } from 'manifold-3d';
 import React from 'react';
 
+import { extractSolidDebugInfo } from './solid-debug-info';
+
 const n = (value: number, decimals = 2) => value.toFixed(decimals);
 
 const styles = {
@@ -18,7 +20,7 @@ type StatsDebugInfo = {
   entries: Record<string, string | number>;
 };
 
-type SolidDebugInfo = {
+export type SolidDebugInfo = {
   type: 'solid';
   tris: number;
   volume: number;
@@ -172,41 +174,4 @@ export const DebugPanel = ({ info }: { info: DebugInfo }) => {
       </div>
     </div>
   );
-};
-
-/** Extracts debug info from a Manifold solid. */
-export const extractSolidDebugInfo = (solid: Manifold, position?: [number, number, number]): SolidDebugInfo => {
-  const mesh = solid.getMesh();
-  const { vertProperties, triVerts, numProp, numTri } = mesh;
-
-  const seen = new Set<number>();
-  const verts: SolidDebugInfo['verts'] = [];
-  for (let tri = 0; tri < numTri; tri++) {
-    for (let vi = 0; vi < 3; vi++) {
-      const idx = triVerts[tri * 3 + vi];
-      if (!seen.has(idx)) {
-        seen.add(idx);
-        verts.push({
-          idx,
-          x: vertProperties[idx * numProp],
-          y: vertProperties[idx * numProp + 1],
-          z: vertProperties[idx * numProp + 2],
-        });
-      }
-    }
-  }
-  verts.sort((a, b) => a.idx - b.idx);
-
-  const bbox = solid.boundingBox();
-  return {
-    type: 'solid',
-    tris: numTri,
-    verts,
-    volume: solid.volume(),
-    bbox: {
-      min: [bbox.min[0], bbox.min[1], bbox.min[2]],
-      max: [bbox.max[0], bbox.max[1], bbox.max[2]],
-    },
-    position,
-  };
 };

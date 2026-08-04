@@ -26,6 +26,7 @@ import {
   scheduleIntervalSeconds,
   scheduleToCron,
 } from './cron';
+import { describeSchedule } from './describe-schedule';
 
 //
 // Value model.
@@ -40,6 +41,7 @@ export const ScheduleKinds = [
   'monthly',
   'custom',
 ] as const;
+
 export type ScheduleKind = (typeof ScheduleKinds)[number];
 
 const isScheduleKind = (value: string): value is ScheduleKind => (ScheduleKinds as readonly string[]).includes(value);
@@ -53,6 +55,7 @@ export const Days = [
   { value: 'sat', label: 'Sat' },
   { value: 'sun', label: 'Sun' },
 ] as const;
+
 export type Day = (typeof Days)[number]['value'];
 
 /** Discriminated schedule value. Times are `HH:mm` (24h); `once.date` is `YYYY-MM-DDTHH:mm`. */
@@ -471,57 +474,3 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
 //
 // Summary.
 //
-
-const DAY_NAMES: Record<Day, string> = {
-  mon: 'Monday',
-  tue: 'Tuesday',
-  wed: 'Wednesday',
-  thu: 'Thursday',
-  fri: 'Friday',
-  sat: 'Saturday',
-  sun: 'Sunday',
-};
-
-/** Format a `HH:mm` (24h) time as a 12-hour clock string, e.g. `9:00 AM`. */
-const formatTime = (time: string): string => {
-  const [h, m] = time.split(':').map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) {
-    return time;
-  }
-
-  const period = h < 12 ? 'AM' : 'PM';
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, '0')} ${period}`;
-};
-
-const withZone = (text: string, timezone?: string): string => (timezone ? `${text} ${timezone}` : text);
-
-/** Human-readable summary of the schedule, suitable for the header. */
-// TODO(wittjosiah): Just use cronstrue for all cases?
-export const describeSchedule = (value: ScheduleValue, timezone?: string): string => {
-  switch (value.kind) {
-    // case 'once':
-    //   return value.date
-    //     ? `Runs once at ${formatTime(value.date.slice(11))} on ${value.date.slice(0, 10)}`
-    //     : 'Runs once';
-    case 'hourly':
-      return `Runs every hour at minute ${value.minute}`;
-    case 'daily':
-      return withZone(`Runs every day at ${formatTime(value.time)}`, timezone);
-    case 'weekly': {
-      const days =
-        value.days.length === 0
-          ? 'no days'
-          : value.days.length === 1
-            ? DAY_NAMES[value.days[0]]
-            : Days.filter((d) => value.days.includes(d.value))
-                .map((d) => d.label)
-                .join(', ');
-      return withZone(`Runs every ${days} at ${formatTime(value.time)}`, timezone);
-    }
-    case 'monthly':
-      return withZone(`Runs monthly on day ${value.day} at ${formatTime(value.time)}`, timezone);
-    case 'custom':
-      return withZone(describeCron(value.cron), timezone);
-  }
-};
