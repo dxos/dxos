@@ -56,10 +56,15 @@ default state. That single gap is why "be terse" never survived.
       re-injection.
 - [x] **Consolidate the scattered sources** — `.claude/CLAUDE.md` now points at
       the canonical section instead of restating it.
-- [ ] **Update `~/.claude/CLAUDE.md`** (decision: yes). BLOCKED from the agent
-      side: it symlinks to `~/Code/richburdon/config/dotfiles/.claude/CLAUDE.md`,
-      a separate repo whose HEAD is `main`, so `guard-worktree.sh` refuses the
-      edit. Needs the user to apply it, or to branch that repo.
+- [ ] **Update `~/.claude/CLAUDE.md`** (decision: yes) — the ONLY open item, and
+      optional. Nothing there is stale (verified 2026-08-04: no `$mode` /
+      `$project` / legacy-sentinel references), so this is purely about adding
+      the response invariants for repos that have no `UserPromptSubmit` hook of
+      their own — inside this repo the hook already delivers them. BLOCKED from
+      the agent side: it symlinks to
+      `~/Code/richburdon/config/dotfiles/.claude/CLAUDE.md`, a separate repo
+      whose HEAD is `main`, so `guard-worktree.sh` refuses the edit. Needs the
+      user to apply it, or to branch that repo.
 - [x] **Drop the bare one-token sentinel forms** — the `$mode` verb is now
       mandatory in `hooks/mode.sh`, so prose _about_ the modes no longer flips
       them (observed live on 2026-08-03: a message containing
@@ -150,8 +155,10 @@ it contained `"$project"` in prose and fired `$project list`. Same fix as
       line, so a quoted command on line 3 of a multi-line message would still
       fire. Both hooks now take `head -1` of the prompt first. `mode.sh` was
       retro-fitted with the same guard and re-verified.
-- [ ] **Update `~/.claude/CLAUDE.md`** if it mentions either marker — still
-      BLOCKED, same symlink-into-another-repo reason as Phase 2.
+- [x] **Check `~/.claude/CLAUDE.md` for stale markers** — none. Verified
+      2026-08-04: it never referenced `$mode`, `$project` or the legacy
+      sentinels, so the conversions leave nothing to correct there. Folded into
+      the Phase 2 item, which is now the only open work.
 
 ### References
 
