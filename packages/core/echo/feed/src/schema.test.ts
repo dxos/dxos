@@ -11,7 +11,6 @@ import * as Layer from 'effect/Layer';
 import { SqlMigrations, SqlMigrator, SqlTransaction } from '@dxos/sql-sqlite';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
-import snapshot from './migrations/snapshot.sql?raw';
 import { LEGACY_DDL, describeSchema, migrate } from './testing/schema-harness';
 
 const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
@@ -35,22 +34,6 @@ const appliedIds = Effect.gen(function* () {
 });
 
 describe('generated feed schema', () => {
-  // Migrations are frozen once written, so editing schema.prisma produces no new SQL on its own.
-  // This is what stops the two silently diverging: the snapshot always tracks schema.prisma, and
-  // replaying the migrations has to reproduce it. A schema change with no accompanying migration
-  // fails here.
-  it.effect('replaying the migrations reproduces what schema.prisma describes', () =>
-    Effect.gen(function* () {
-      const fromMigrations = yield* migrate().pipe(Effect.andThen(describeSchema()));
-      const fromSnapshot = yield* Effect.provide(
-        SqlMigrations.apply(snapshot).pipe(Effect.andThen(describeSchema())),
-        TestLayer,
-      );
-
-      expect(fromMigrations).toEqual(fromSnapshot);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
   // Scoped to the initial migration deliberately: it is the one that has to match databases built
   // by the pre-prisma DDL. Later migrations are expected to diverge from the legacy shape.
   it.effect('the initial migration matches the legacy hand-written DDL', () =>

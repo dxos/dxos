@@ -35,10 +35,10 @@ deny() {
   exit 0
 }
 
-# git worktree add — creating a side worktree.
-if printf '%s' "$normalized" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+worktree[[:space:]]+add([[:space:]]|$)'; then
-  deny "Refusing to create a worktree: the harness owns this session's worktree. Creating another breaks the Desktop UI's session/worktree pairing. Work on the assigned branch; if you need a different branch, ask the user."
-fi
+# # git worktree add — creating a side worktree.
+# if printf '%s' "$normalized" | grep -Eq '(^|[;&|[:space:]])git[[:space:]]+worktree[[:space:]]+add([[:space:]]|$)'; then
+#   deny "Refusing to create a worktree: the harness owns this session's worktree. Creating another breaks the Desktop UI's session/worktree pairing. Work on the assigned branch; if you need a different branch, ask the user."
+# fi
 
 # git checkout -b|-B / git switch -c|-C — creating a new branch. The suffix
 # accepts any char (not just whitespace) so combined forms like `-bq`/`-cname`

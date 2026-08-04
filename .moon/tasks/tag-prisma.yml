@@ -13,10 +13,15 @@ tasks:
   prisma:
     options:
       internal: true
-    command: node $workspaceRoot/scripts/prisma-generate-sql.mjs
+    # `node:sqlite` is used to replay migrations for the drift check; it is still experimental, and
+    # the warning would otherwise appear in every build.
+    command: node --disable-warning=ExperimentalWarning $workspaceRoot/scripts/prisma-generate-sql.mjs
+    # Migrations are inputs as well as an output: the task compares them against the schema, so
+    # editing one has to re-trigger it.
     inputs:
       - /scripts/prisma-generate-sql.mjs
       - 'prisma/**/*.prisma'
+      - 'src/migrations/*.sql'
     # Only the generated SQL — `src/migrations/index.ts` is hand-written, and moon restores
     # declared outputs from cache, which would clobber it.
     outputs:

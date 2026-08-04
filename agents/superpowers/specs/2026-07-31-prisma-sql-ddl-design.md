@@ -130,13 +130,18 @@ Correctness here cannot be observed from the resulting schema, since a stamped a
 migration leave the same tables. The observable difference is `run`'s return value: the list of
 migrations actually executed, which excludes anything stamped.
 
-### schema.prisma is kept honest by a generated snapshot
+### schema.prisma is kept honest by a build-time replay
 
 Because migrations are frozen, editing `schema.prisma` produces no new SQL by itself — the two
-could silently diverge. The generator therefore always writes `src/migrations/snapshot.sql`, the
-full schema prisma currently describes. It is never applied to a real database; a test asserts
-that replaying the migrations reproduces it, so a schema change with no accompanying migration
-fails the build.
+could silently diverge, leaving the schema as documentation that lies. On every run the generator
+replays the committed migrations into an in-memory `node:sqlite` database, applies the schema prisma
+currently describes to a second one, and compares the resulting shapes. A mismatch fails the build
+with the differing table and columns named.
+
+This deliberately replaced a committed `snapshot.sql` plus a test that compared against it. The
+snapshot was byte-identical to `0001_init.sql` until a second migration existed, so it read as pure
+duplication, and the check belongs where prisma already runs rather than in a test. Migrations are
+declared as task _inputs_ as well as outputs, so editing one re-triggers the comparison.
 
 The Prisma-native alternative is `migrate diff --from-migrations`, which would also _generate_
 the delta rather than only detecting the need for one. It requires Prisma's own migration
@@ -174,7 +179,6 @@ packages/core/echo/feed/
 └── src/
     ├── migrations/
     │   ├── 0001_init.sql            # generated once, then immutable
-    │   ├── snapshot.sql             # regenerated drift oracle, never applied
     │   └── index.ts                 # ordered manifest + history table name
     ├── typings.d.ts                 # declare module '*.sql?raw'
     └── feed-store.ts                # runs the migrations
@@ -192,10 +196,10 @@ moon merges inherited `deps` by append, which was verified: `feed:build` lists `
 alongside the deps declared in `tag-ts-vite-build.yml`.
 
 `scripts/prisma-generate-sql.mjs` runs `prisma migrate diff --from-empty --to-schema-datamodel`,
-injects `IF NOT EXISTS`, then always rewrites `snapshot.sql` and writes `0001_init.sql` only when
-no migration exists yet — it never overwrites a migration. It sets `PRISMA_HIDE_UPDATE_MESSAGE=1`,
-since the CLI otherwise prints an upgrade banner on every invocation, and aborts if prisma emits
-no DDL, so a prisma failure cannot empty committed SQL.
+injects `IF NOT EXISTS`, and writes `0001_init.sql` only when no migration exists yet — it never
+overwrites a migration. Otherwise it performs the replay comparison above. It sets
+`PRISMA_HIDE_UPDATE_MESSAGE=1`, since the CLI otherwise prints an upgrade banner on every
+invocation, and aborts if prisma emits no DDL, so a prisma failure cannot empty committed SQL.
 
 ### Runtime
 
@@ -336,8 +340,9 @@ explanatory comment next to either entry does not survive `pnpm install`.
 
 Per package, as established by the `feed` pilot:
 
-- **Schema drift:** replaying the migrations reproduces `snapshot.sql`. Catches a `schema.prisma`
-  edit with no accompanying migration. Verified to fail when one is introduced.
+- **Schema drift:** enforced at build time by the generator rather than by a test — see above.
+  Verified in both directions: editing `schema.prisma` without a migration fails the build, and
+  adding the migration clears it.
 - **Legacy equivalence:** the _initial_ migration alone produces the same schema as the old
   hand-written DDL. Scoped to migration 1 deliberately; later migrations are expected to diverge
   from the legacy shape.
@@ -354,11 +359,9 @@ Assertions must derive from the `MIGRATIONS` manifest rather than hard-coding id
 pilot's first draft hard-coded them and four tests broke the moment a second migration was added,
 which would have recurred on every future schema change.
 
-Duplicate ids and edits to applied migrations are now rejected at runtime by `SqlMigrator`. Two
-checks are still worth adding:
+Duplicate ids and edits to applied migrations are rejected at runtime by `SqlMigrator`, and
+schema drift at build time by the generator. One check is still worth adding:
 
-- **Stale snapshot** — regenerate and fail on a dirty tree, so a committed `snapshot.sql` cannot
-  lag `schema.prisma`.
 - **Durable Object coverage** — `sql-sqlite` needs `ts-test-workerd` with a Durable Object binding,
   so the `BEGIN`-forbidden constraint is enforced by CI rather than by review. This is the gap that
   let the first implementation ship a migrator that could not start a DO.
@@ -398,8 +401,10 @@ What the pilot changed in the design:
 3. **Build on `Migrator.make({})`, not the platform `SqliteMigrator`.** The node and bun entry
    points require `FileSystem`, `Path`, and `CommandExecutor` for schema dumping, which the
    browser cannot supply. The base migrator with `dumpSchema` omitted requires only `SqlClient`.
-4. **A generated `snapshot.sql` was added.** Freezing migrations creates a hole the first pass did
-   not have: editing `schema.prisma` produces no SQL and nothing notices. The snapshot closes it.
+4. **A drift check was added.** Freezing migrations creates a hole the first pass did not have:
+   editing `schema.prisma` produces no SQL and nothing notices. First closed with a committed
+   `snapshot.sql`; replaced by a build-time replay once it was clear the snapshot merely duplicated
+   `0001_init.sql`.
 5. **Test assertions must derive from the manifest.** Hard-coded migration ids broke four tests
    the moment a second migration appeared — verified by adding one, then removing it again.
 
