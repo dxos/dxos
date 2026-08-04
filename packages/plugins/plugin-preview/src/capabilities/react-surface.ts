@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -13,7 +12,8 @@ import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { ExpandoCard, FormCard, JsonCard, ProjectCard, TaskCard } from '../cards';
+import { OrganizationCardContent, PersonCardContent } from './RelatedCards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -27,51 +27,36 @@ export default Capability.makeModule(() =>
         id: 'organizationContent',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Organization.Organization),
-        component: ({ data, role }) => {
-          return (
-            <>
-              <OrganizationCard role={role} subject={data.subject} />
-              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
-            </>
-          );
-        },
+        component: OrganizationCardContent,
+        props: ({ role, data }) => ({ role, ...data }),
       }),
-      Surface.create<{ subject: Person.Person }>({
+      Surface.create({
         id: 'contactContent',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Person.Person),
-        component: ({ data, role }) => {
-          return (
-            <>
-              <PersonCard role={role} subject={data.subject} />
-              <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
-            </>
-          );
-        },
+        component: PersonCardContent,
+        props: ({ role, data }) => ({ role, ...data }),
       }),
 
       Surface.create({
         id: 'schemaPopoverProject',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Pipeline.Pipeline),
-        component: ({ data, role }) => {
-          return <ProjectCard role={role} subject={data.subject} />;
-        },
+        component: ProjectCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
       Surface.create({
         id: 'schemaPopoverTask',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Task.Task),
-        component: ({ data, role }) => {
-          return <TaskCard role={role} subject={data.subject} />;
-        },
+        component: TaskCard,
+        props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.create<AppSurface.ObjectCardData<Expando.Expando>>({
+      Surface.create({
         id: 'schemaPopoverExpando',
         filter: AppSurface.object(AppSurface.CardContent, Expando.Expando),
-        component: ({ data, role }) => {
-          return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
-        },
+        component: ExpandoCard,
+        props: ({ role, data: { subject, ignorePaths } }) => ({ role, subject, ignorePaths }),
       }),
 
       Surface.create({
@@ -100,11 +85,10 @@ export default Capability.makeModule(() =>
             return false;
           }
         }),
-        component: ({ data, role }) => {
-          // Dynamic/mutable schemas render an editable, full-layout form;
-          // FormCard handles both static and runtime schema resolution internally.
-          return <FormCard role={role} subject={data.subject} readonly={false} layout='full' />;
-        },
+        // Dynamic/mutable schemas render an editable, full-layout form;
+        // FormCard handles both static and runtime schema resolution internally.
+        component: FormCard,
+        props: ({ role, data: { subject } }) => ({ role, subject, readonly: false, layout: 'full' as const }),
       }),
 
       //
@@ -115,18 +99,16 @@ export default Capability.makeModule(() =>
         id: 'fallbackPopover',
         position: Position.last,
         filter: AppSurface.subject(AppSurface.CardContent, Obj.isObject),
-        component: ({ data, role }) => {
-          return <FormCard role={role} subject={data.subject} projection={data.projection} />;
-        },
+        component: FormCard,
+        props: ({ role, data: { subject, projection } }) => ({ role, subject, projection }),
       }),
 
       Surface.create({
         id: 'fallbackJson',
         filter: Surface.makeFilter(AppSurface.CardContent),
         position: Position.last,
-        component: ({ data }) => {
-          return <JsonCard data={data} />;
-        },
+        component: JsonCard,
+        props: ({ data }) => ({ data }),
       }),
 
       // Surface.create({

@@ -3,20 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { isSpace } from '@dxos/client/echo';
 import { Collection, Obj } from '@dxos/echo';
 
 import { ArtifactCard, ImageVariant, VideoVariant } from '#components';
-import { ArtifactArticle, ArtifactsArticle, GalleryArticle, LightboxArticle } from '#containers';
+import { ArtifactArticle, GalleryArticle, LightboxArticle } from '#containers';
 import { VariantRenderer } from '#surfaces';
 import { Artifact, Lightbox } from '#types';
 
 import { ARTIFACTS_NODE_DATA } from '../constants';
+import { ArtifactsArticleSurface } from './ArtifactsArticleSurface';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 
@@ -43,43 +42,39 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'artifactArticle',
         filter: AppSurface.object(AppSurface.Article, Artifact.Artifact),
-        component: ({ role, data }) => (
-          <ArtifactArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: ArtifactArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
       // Virtual "Artifacts" navtree node → the browse/create hub (bound by data sentinel, not an object).
       Surface.create({
         id: 'artifactsArticle',
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.subject === ARTIFACTS_NODE_DATA),
-        component: ({ role, data }) => {
-          const space = isSpace(data.properties?.space) ? data.properties.space : undefined;
-          return space ? <ArtifactsArticle role={role} space={space} attendableId={data.attendableId} /> : null;
-        },
+        component: ArtifactsArticleSurface,
+        props: ({ role, data: { attendableId, properties } }) => ({ role, attendableId, properties }),
       }),
       Surface.create({
         id: 'galleryArticle',
         filter: AppSurface.object(AppSurface.Article, Collection.Collection, (data) =>
           isArtifactCollection(data.subject),
         ),
-        component: ({ role, data }) => (
-          <GalleryArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: GalleryArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
       Surface.create({
         id: 'lightboxArticle',
         filter: AppSurface.object(AppSurface.Article, Lightbox.Lightbox),
-        component: ({ role, data }) => (
-          <LightboxArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: LightboxArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
       // Card rendering of an Artifact (cover thumbnail) — composes Artifacts into collections/boards.
       Surface.create({
         id: 'artifactCard',
         filter: AppSurface.object(AppSurface.CardContent, Artifact.Artifact),
-        component: ({ data }) => <ArtifactCard subject={data.subject} />,
+        component: ArtifactCard,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
 
       // Default variant renderers (image/*, video/*), overridable per contentType via Position.first.
@@ -89,7 +84,8 @@ export default Capability.makeModule(() =>
           VariantRenderer,
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('image/'),
         ),
-        component: ({ data }) => <ImageVariant variant={data.variant} />,
+        component: ImageVariant,
+        props: ({ data: { variant } }) => ({ variant }),
       }),
       Surface.create({
         id: 'videoVariant',
@@ -97,7 +93,8 @@ export default Capability.makeModule(() =>
           VariantRenderer,
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('video/'),
         ),
-        component: ({ data }) => <VideoVariant variant={data.variant} />,
+        component: VideoVariant,
+        props: ({ data: { variant } }) => ({ variant }),
       }),
     ]),
   ),

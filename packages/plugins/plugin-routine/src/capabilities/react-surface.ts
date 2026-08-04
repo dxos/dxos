@@ -3,16 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Routine, Skill } from '@dxos/compute';
 
 import { RoutineCard } from '#components';
-import { RoutineArticle, RoutineCompanion, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
+import { RoutineArticle, RoutineCompanion, RoutineTraceCompanion, SkillArticle } from '#containers';
 import { meta } from '#meta';
+
+import { RoutineSettingsSurface } from './RoutineSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -20,26 +21,19 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'spaceSettingsAutomation',
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.space-settings-automation`),
-        component: () => {
-          const space = useActiveSpace();
-          if (!space) {
-            return null;
-          }
-
-          return <RoutineSettings space={space} />;
-        },
+        component: RoutineSettingsSurface,
       }),
       Surface.create({
         id: 'automation.article',
         filter: AppSurface.object(AppSurface.Article, Routine.Routine),
-        component: ({ data, role }) => (
-          <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: RoutineArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'routine.card',
         filter: AppSurface.object(AppSurface.CardContent, Routine.Routine),
-        component: ({ data }) => <RoutineCard subject={data.subject} />,
+        component: RoutineCard,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'companion.automation',
@@ -47,9 +41,8 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'automation'),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data }) => {
-          return <RoutineCompanion attendableId={data.attendableId} subject={data.companionTo} />;
-        },
+        component: RoutineCompanion,
+        props: ({ data: { attendableId, companionTo } }) => ({ attendableId, subject: companionTo }),
       }),
       Surface.create({
         id: 'routine.runs',
@@ -57,14 +50,14 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'runs'),
           AppSurface.companion(AppSurface.Article, Routine.Routine),
         ),
-        component: ({ data, role }) => <RoutineTraceCompanion role={role} subject={data.companionTo} />,
+        component: RoutineTraceCompanion,
+        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
       }),
       Surface.create({
         id: 'skill',
         filter: AppSurface.object(AppSurface.Article, Skill.Skill),
-        component: ({ data, role }) => (
-          <SkillArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: SkillArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
     ]),
   ),

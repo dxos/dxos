@@ -3,14 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type ComponentProps, useMemo } from 'react';
+import { type ComponentProps } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useCapabilities } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
 import {
   ConnectionArticle,
@@ -19,9 +18,10 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId } from '#types';
+import { Connection, ConnectorAnnotationId } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import { ConnectorSelectorField } from './ConnectorSelectorField';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -29,14 +29,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'connectionsSectionArticle',
         filter: AppSurface.literal(AppSurface.Article, CONNECTIONS_SECTION_TYPE),
-        component: () => <ConnectionSettingsArticle />,
+        component: ConnectionSettingsArticle,
       }),
       Surface.create({
         id: 'connectionArticle',
         filter: AppSurface.object(AppSurface.Article, Connection.Connection),
-        component: ({ data, role }) => (
-          <ConnectionArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: ConnectionArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'connectorCompanion',
@@ -44,35 +43,25 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Cursor.Cursor),
           AppSurface.companion(AppSurface.Article),
         ),
-        component: ({ data, role }) => <ConnectorCompanion {...data} role={role} />,
+        component: ConnectorCompanion,
+        props: ({ role, data }) => ({ ...data, role }),
       }),
       Surface.create({
         id: 'syncTargetsDialog',
         filter: AppSurface.component<ComponentProps<typeof SyncTargetsDialog>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
-        component: ({ data }) => <SyncTargetsDialog {...data.props} />,
+        component: SyncTargetsDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: 'customTokenDialog',
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
-        component: ({ data }) => <CustomTokenDialog {...data.props} />,
+        component: CustomTokenDialog,
+        props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({
         id: 'connectorSelector',
         filter: AppSurface.formInputByField((ast) => !!SchemaEx.findAnnotation<boolean>(ast, ConnectorAnnotationId)),
-        component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
-          const connectors = useCapabilities(Connector).flat();
-          const options = useMemo(
-            () => connectors.map((connector) => ({ value: connector.id, label: connector.label ?? connector.id })),
-            [connectors],
-          );
-          if (!fieldPropertyAst) {
-            return null;
-          }
-          // Surface input props are erased to `unknown` at the form-input seam; re-attach the
-          // field AST and assert the renderer contract (same pattern as plugin-kanban/-space).
-          const props = { ...inputProps, type: fieldPropertyAst } as any as FormFieldRendererProps;
-          return <SelectField {...props} options={options} />;
-        },
+        component: ConnectorSelectorField,
       }),
     ]),
   ),
