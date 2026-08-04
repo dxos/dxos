@@ -7,13 +7,16 @@
 
 ## Mode
 
-- The response-verbosity mode is toggled by a sentinel in an ordinary message:
-  type `$mode terse` or `$mode normal` anywhere in a message. The `$mode` verb is
-  required — a bare `$terse` does nothing, so prose about the modes cannot flip
-  them. `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`.
-- A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) parses the sentinel, sets
-  the mode, and injects the `RESPONSE RULES` block into **every** prompt. State
-  lives in the untracked `.claude/.mode`; `normal` is the default when absent.
+- The response-verbosity mode is set with **`/mode terse`** or **`/mode normal`**.
+  `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. The legacy
+  `$mode <MODE>` sentinel still works anywhere in a message; the verb is required
+  in both forms, so prose about the modes cannot flip them.
+- A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) does the work: that event
+  carries the **raw typed text**, so it catches `/mode …` before the command
+  expands and writes the state deterministically — the expansion itself could
+  only ask the agent to comply. The same hook injects the `RESPONSE RULES` block
+  into **every** prompt. State lives in the untracked `.claude/.mode`; `normal`
+  is the default when absent.
 - The block is emitted in both modes — the invariants (numbered options, lead
   with the answer) are state-independent and only the length clause varies.
   Follow it whenever it is present. The worktree + files-read line is NOT in it:

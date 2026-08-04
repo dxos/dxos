@@ -41,8 +41,8 @@ a large skill loads mid-session (see `.claude/README.md` §A).
   narration of what you are about to do.
 - **Verbosity is a mode.** `terse` caps a reply at 8 lines with minimal markdown;
   `normal` (the default) sets no budget but keeps length proportionate — length
-  is earned by content, never by restating. Toggle with `$mode terse` /
-  `$mode normal`.
+  is earned by content, never by restating. Set it with `/mode terse` /
+  `/mode normal`.
 - These govern form only. They never override correctness, required safety
   steps, showing test/command output, or reporting a failure honestly.
 

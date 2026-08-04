@@ -144,13 +144,21 @@ every event.
 A sentinel is a **marker typed inside a normal message** that a
 `UserPromptSubmit` hook greps for, acts on, and translates into a directive.
 
-| Sentinel                          | Hook                                 | Effect                                                     |
-| --------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
-| `$mode terse` / `$mode normal`    | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
-| `$project VERB [ARGS]`            | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
+| Marker                                        | Hook                                 | Effect                                                     |
+| --------------------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
+| `/mode terse` / `/mode normal` (or `$mode …`) | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
+| `$project VERB [ARGS]`                        | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
+
+**`/mode` is a slash command handled here rather than by its own expansion.**
+`UserPromptSubmit` carries the **raw typed text**, so this hook sees `/mode terse`
+before the command expands — the state write keeps the sentinel's determinism
+while the user gets autocomplete. `.claude/commands/mode.md` exists only to
+register the name and report the result; it deliberately does not set anything.
+This is the general recipe for a command that must change state: grep the raw
+text on `UserPromptSubmit`, and let the command body be a thin acknowledgement.
 
 The two mode values are `terse` and `normal` (the default when the state file is
 absent). `concise` aliases `terse`; `natural`, `default` and `off` alias
@@ -193,10 +201,12 @@ Commands and sentinels are not interchangeable:
 - The expansion lands **after** the turn has begun, so it cannot gate that
   turn's own output.
 
-So a command is the right shape for "run this procedure" and the wrong shape for
-"switch this mode". To get both ergonomics and determinism, front a command with
-a `UserPromptExpansion` hook (matched on the command name) that performs the
-state write.
+So a command **body** is the right shape for "run this procedure" and the wrong
+shape for "switch this mode". The fix is not `UserPromptExpansion` (which fires
+on the expansion and can block it) but `UserPromptSubmit`, which already carries
+the raw `/name …` text one step earlier — grep it there and the command name is
+just ergonomics over a deterministic write. `/mode` is built this way; see
+§Sentinels.
 
 ### Skills
 

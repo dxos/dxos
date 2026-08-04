@@ -100,13 +100,23 @@ Corollary: `AGENTS.md` should hold the canonical wording (for humans and other
 harnesses) while the hook carries the enforcing copy per turn. Rules that govern
 **every** response get delivered on **every** prompt.
 
-### Why not a slash command
+### The slash command, and why it is safe
 
-`/mode terse` cannot write state — a command expands into a prompt and depends
-on the agent to run the script, and the expansion lands _after_ the turn begins
-so it cannot gate that turn's output. Keep the sentinel as the deterministic
-path; add `/mode` as an ergonomic front door backed by a `UserPromptExpansion`
-hook that performs the same write.
+A command **body** cannot write state: it expands into a prompt that depends on
+the agent to run the script, and the expansion lands _after_ the turn begins so
+it cannot gate that turn's own output. That argued against `/mode` — until the
+premise turned out to be wrong at one step earlier in the lifecycle.
+
+`UserPromptSubmit` carries the **raw typed text**, and fires before the command
+expands. So `hooks/mode.sh` greps `/mode <MODE>` there and performs exactly the
+write the sentinel performed, at exactly the same point in the turn. The command
+file is then pure ergonomics — autocomplete and a name — and its body only
+reports. No `UserPromptExpansion` hook is needed; that event is for _blocking_ an
+expansion, not for beating it.
+
+Generalised: **a slash command that must change state should be implemented as a
+`UserPromptSubmit` grep on its raw text, with a thin body.** The determinism
+comes from the event, never from the command.
 
 ### Sentinel grammar
 

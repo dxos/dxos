@@ -66,11 +66,16 @@ default state. That single gap is why "be terse" never survived.
       "`$natural/$concise/$verbose`" as an example set the mode). The alias words
       survive as _values_. Verified against six prompts: the three bare forms are
       inert, `$mode terse` / `$mode normal` / `$MODE Concise` all still fire.
-- [ ] **Add `/mode` as a second entrance** — a slash command cannot write state
-      (it expands into a prompt and depends on the agent to act), so keep the
-      sentinel as the deterministic path and give `/mode` a
-      `UserPromptExpansion` hook (matcher `mode`) doing the same write. One
-      backend, two entrances, neither relying on agent compliance.
+- [x] **Convert the sentinel to `/mode`** — done without the planned
+      `UserPromptExpansion` hook. The plan's premise was wrong: `UserPromptSubmit`
+      carries the **raw typed text** and fires _before_ the command expands, so
+      `hooks/mode.sh` greps `/mode <MODE>` there and writes state at exactly the
+      point the sentinel did. `commands/mode.md` is pure ergonomics (autocomplete
+      + a one-line report) and sets nothing. `UserPromptExpansion` is for blocking
+      an expansion, not for beating it. `$mode <MODE>` retained as a legacy
+      fallback. Verified against eight prompts: the four `/mode` forms and the
+      legacy sentinel fire; mid-message `/mode terse`, a `src/mode normal` path,
+      and a bare `$terse` are inert.
 
 ### Decisions (settled 2026-08-03)
 
