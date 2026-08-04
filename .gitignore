@@ -218,5 +218,7 @@ node_modules
 
 .superpowers/
 
-# Encrypted development fixtures (real mailbox archives; see scripts/fixtures.mjs). Never commit.
+# Development fixtures: real, PII-bearing corpora pulled by `moon run fixtures:pull`, plus any
+# encrypted archive staged for upload (see tools/fixtures). Never commit.
+/testing/fixtures/
 *.age

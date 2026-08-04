@@ -21204,6 +21204,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -25838,6 +25841,8 @@ importers:
       '@types/yargs':
         specifier: 'catalog:'
         version: 16.0.4
+
+  tools/fixtures: {}
 
   tools/lockfile-explorer:
     dependencies:

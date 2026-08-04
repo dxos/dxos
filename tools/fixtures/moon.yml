@@ -1,0 +1,25 @@
+layer: library
+language: typescript
+tags:
+  - ts-compile
+
+# Fixture transfer is a developer action against a private R2 bucket, never part of a build: the
+# tasks are `local` (no caching, no CI) and take their arguments after `--`.
+tasks:
+  push:
+    command: node bin/fixtures.mjs push
+    options:
+      cache: false
+      runInCI: false
+
+  pull:
+    command: node bin/fixtures.mjs pull
+    options:
+      cache: false
+      runInCI: false
+
+  list:
+    command: node bin/fixtures.mjs list
+    options:
+      cache: false
+      runInCI: false

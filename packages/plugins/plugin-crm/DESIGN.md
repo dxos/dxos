@@ -315,7 +315,7 @@ proxy) with a regression test in `plugin-inbox/src/types/Mailbox.test.ts`.
 - **Gaps**: no sharing between machines/developers, no versioning, no auditable storage boundary
   for PII, and every consumer wires its own path convention.
 
-### 8.2 Secure fixture storage — implemented (`scripts/fixtures.mjs`)
+### 8.2 Secure fixture storage — implemented (`tools/fixtures`)
 
 Goal: a developer captures their own (raw, PII-intact) mailbox once and can restore it on any of
 their machines — and share it with a teammate — for development and debugging. Never in CI, never
@@ -338,20 +338,21 @@ account membership already provides exactly the needed access control, via `wran
    push and pull cannot drift into an archive nobody can open. Sharing is deliberate and
    per-object (`push --recipient age1...`), never a standing default.
 
-| Aspect          | Choice                                                                                                                                                                       |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bucket / prefix | `test-fixtures`, keys under `mailbox/<user>/<name>-<yyyy-mm-dd>.json.age`                                                                                                    |
-| Auth            | Cloudflare account membership (`wrangler login`), `CLOUDFLARE_ACCOUNT_ID` when the token spans accounts                                                                      |
-| Encryption      | `age`, per-user; one secret — `DX_FIXTURES_AGE_KEY` (a path, or an `op://` reference materialized only for the life of the command)                                          |
-| Landing path    | `pull` refuses to write outside the git-ignored `stories-brain/fixtures/local/`, so an archive cannot be committed by a stray `git add -A`; `*.age` is git-ignored repo-wide |
+| Aspect          | Choice                                                                                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Bucket / prefix | `test-fixtures`, keys under `mailbox/<user>/<name>.json.age`                                                                                           |
+| Auth            | Cloudflare account membership (`wrangler login`), `CLOUDFLARE_ACCOUNT_ID` when the token spans accounts                                                |
+| Encryption      | `age`, per-user; one secret — `DX_FIXTURES_AGE_KEY` (a path, or an `op://` reference materialized only for the life of the command)                    |
+| Landing path    | One shared, git-ignored `testing/fixtures/` at the repo root, resolved by name from any package via `@dxos/fixtures`; `*.age` is git-ignored repo-wide |
 
 **Flow.** ArchiveModule ("Download starred" for a curated fixture, "Download all" for a corpus) →
-`pnpm fixtures push ~/Downloads/mailbox-feed.json --name inbox` → elsewhere `pnpm fixtures pull
-<key>` → the existing `MAILBOX_FEED_FIXTURE` consumers read it. Push prints the key and the pull
-command; there is deliberately no `list`, because wrangler's R2 surface is get/put/delete only and
-enumerating a prefix would need a second credential (the S3 API) — the dashboard covers browsing.
-Both directions validate the payload is an array of serialized messages, so pushing the wrong file
-fails at push rather than after a pull. Wrangler is invoked as
+`moon run fixtures:push -- ~/Downloads/mailbox-feed.json --name inbox` → elsewhere
+`moon run fixtures:pull -- inbox`. A fixture is identified by **name**, which fixes both the remote
+key (`mailbox/<user>/<name>.json.age`) and the local path (`testing/fixtures/<name>.json`) — that is
+what lets pull work without an object listing, since wrangler's R2 surface is get/put/delete only
+(enumerating would need the S3 API; the dashboard covers browsing). Both directions validate the
+payload is an array of serialized messages, so pushing the wrong file fails at push rather than
+after a pull. Developer-facing usage lives in `stories-inbox/README.md`. Wrangler is invoked as
 `pnpm exec wrangler` (the repo-pinned version): a globally installed or 1Password-aliased wrangler
 can be old enough to reject flags this script needs, surfacing only as "Unknown argument".
 Developer-facing usage lives in `stories-inbox/README.md`.

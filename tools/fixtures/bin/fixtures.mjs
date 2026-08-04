@@ -17,8 +17,13 @@
 //
 // The recipient is derived from the identity (`age-keygen -y`) rather than configured separately, so
 // push and pull are symmetric by construction: you cannot encrypt an archive you cannot decrypt.
-// Sharing is therefore deliberate and per-object — `push --recipient <age1...>` encrypts to someone
-// else's public key — never a standing default.
+// Sharing is deliberate and per-object — `push --recipient <age1...>` encrypts to someone else's
+// public key — never a standing default.
+//
+// A fixture is identified by NAME (e.g. `inbox`), which makes both the remote key and the local path
+// deterministic: `mailbox/<user>/<name>.json.age` remotely, `testing/fixtures/<name>.json` locally.
+// That is what lets `pull <name>` work without an object listing — wrangler's R2 surface is
+// get/put/delete only. Overwriting a name is intended; R2 object versioning keeps the history.
 //
 // CI never has either credential, so `pull` cannot succeed there; fixture-backed tests stay gated on
 // the file's presence and skip. That is an absence of capability rather than a policy.
@@ -28,35 +33,40 @@
 //   export DX_FIXTURES_AGE_KEY=~/.config/dxos/fixtures.key
 //
 // Usage:
-//   fixtures.mjs push <file> [--name <name>] [--recipient <age1...>]
-//   fixtures.mjs pull <key> [--out <file>]     Download and decrypt.
-//
-// `push` prints the key to pass to `pull`. There is no `list`: wrangler's R2 surface is
-// get/put/delete only, so enumerating a prefix would need a second credential (the S3 API); use the
-// Cloudflare dashboard to browse what has been pushed.
+//   moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]
+//   moon run fixtures:pull -- <name> [--user <user>]
+//   moon run fixtures:list          # local fixtures (the remote has no listing API)
 //
 // Environment:
-//   DX_FIXTURES_AGE_KEY        Path to your age identity file. May be an `op://` reference.
-//   DX_FIXTURES_BUCKET         Overrides the bucket name (default `test-fixtures`).
-//   CLOUDFLARE_ACCOUNT_ID      Required by wrangler when the token spans several accounts.
-//
-// Examples:
-//   node scripts/fixtures.mjs push ~/Downloads/mailbox-feed.json --name inbox
-//   node scripts/fixtures.mjs pull mailbox/burdon/inbox-2026-08-04.json.age
+//   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference.
+//   DX_FIXTURES_BUCKET    Overrides the bucket name (default `test-fixtures`).
+//   DX_FIXTURES_DIR       Overrides the local directory (default `<repo>/testing/fixtures`).
+//   CLOUDFLARE_ACCOUNT_ID Required by wrangler when the token spans several accounts.
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir, tmpdir, userInfo } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_BUCKET = process.env.DX_FIXTURES_BUCKET ?? 'test-fixtures';
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+const BUCKET = process.env.DX_FIXTURES_BUCKET ?? 'test-fixtures';
 
-// Decrypted fixtures may only land here: the directory is git-ignored, so a fixture cannot be
-// committed by a stray `git add -A`, and every consumer already reads from this path.
-const LOCAL_DIR = join(REPO_ROOT, 'packages/stories/stories-brain/fixtures/local');
-const DEFAULT_OUT = join(LOCAL_DIR, 'mailbox-feed.json');
+// One shared, git-ignored directory at the repo root: every package's tests resolve a fixture by
+// name from here (see `tools/fixtures/src`), so a corpus pulled once serves the whole monorepo.
+const FIXTURES_DIR = process.env.DX_FIXTURES_DIR ?? join(REPO_ROOT, 'testing/fixtures');
+
+// A name is a path segment, not a path: it is interpolated into both an R2 key and a local filename.
+const NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
 
 const main = () => {
   const [command, ...rest] = process.argv.slice(2);
@@ -65,6 +75,8 @@ const main = () => {
       return push(rest);
     case 'pull':
       return pull(rest);
+    case 'list':
+      return list();
     default:
       usage(`Unknown command: ${command ?? '(none)'}`);
   }
@@ -81,10 +93,12 @@ const push = (args) => {
     fail(`No such file: ${source}`);
   }
 
+  // Default the name from the filename so a push is never silently anonymous.
+  const name = validName(flags.name ?? basename(source).replace(/\.json$/, ''));
+
   // Sanity-check the payload before it becomes an opaque blob: an archive is a JSON array of
   // serialized messages, and pushing the wrong file is only discoverable after a pull otherwise.
   const messages = readArchive(source);
-  const key = `mailbox/${userInfo().username}/${flags.name ?? 'mailbox-feed'}-${today()}.json.age`;
   requireBinary('age', 'brew install age');
 
   // Default to our own public key so a push is always reversible by the pusher; an explicit
@@ -94,39 +108,37 @@ const push = (args) => {
     console.warn(`Encrypting for ${flags.recipient} — you will NOT be able to decrypt this archive.\n`);
   }
 
+  const key = remoteKey(name, userInfo().username);
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
   try {
     execFileSync('age', ['-r', recipient, '-o', encrypted, source], { stdio: 'inherit' });
-    wrangler(['r2', 'object', 'put', `${DEFAULT_BUCKET}/${key}`, '--file', encrypted, '--remote']);
+    wrangler(['r2', 'object', 'put', `${BUCKET}/${key}`, '--file', encrypted, '--remote']);
   } finally {
     rmSync(encrypted, { force: true });
   }
 
   console.log(`\nPushed ${messages} messages (${size(source)}) → ${key}`);
-  console.log(`Pull elsewhere with:  pnpm fixtures pull ${key}`);
+  console.log(`Pull elsewhere with:  moon run fixtures:pull -- ${name}`);
 };
 
 const pull = (args) => {
   const { positional, flags } = parseArgs(args);
-  const out = flags.out ? resolve(flags.out) : DEFAULT_OUT;
-  if (!out.startsWith(LOCAL_DIR)) {
-    fail(`Refusing to write outside ${LOCAL_DIR} (it is git-ignored; fixtures must never be committed).`);
+  if (!positional[0]) {
+    usage('pull requires a fixture name (e.g. `inbox`).');
   }
-  // The key is required: wrangler's R2 surface is get/put/delete only — it cannot list objects — so
-  // there is no way to resolve "the newest" without a second credential (the S3 API) or the
-  // dashboard. `push` prints the exact key to pass here.
-  const key = positional[0];
-  if (!key) {
-    usage('pull requires a key (printed by `push`, or read from the Cloudflare dashboard).');
-  }
+  const name = validName(positional[0]);
+  const owner = flags.user ?? userInfo().username;
 
   requireBinary('age', 'brew install age');
   const identity = identityFile();
+
+  const out = join(FIXTURES_DIR, `${name}.json`);
   mkdirSync(dirname(out), { recursive: true });
 
+  const key = remoteKey(name, owner);
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
   try {
-    wrangler(['r2', 'object', 'get', `${DEFAULT_BUCKET}/${key}`, '--file', encrypted, '--remote']);
+    wrangler(['r2', 'object', 'get', `${BUCKET}/${key}`, '--file', encrypted, '--remote']);
     execFileSync('age', ['-d', '-i', identity, '-o', out, encrypted], { stdio: 'inherit' });
   } finally {
     rmSync(encrypted, { force: true });
@@ -134,17 +146,40 @@ const pull = (args) => {
 
   const messages = readArchive(out);
   console.log(`\nPulled ${messages} messages (${size(out)}) → ${out}`);
-  console.log('Consumers read this path by default; override with MAILBOX_FEED_FIXTURE.');
+  console.log(`Tests resolve it by name: fixturePath('${name}').`);
+};
+
+/**
+ * Local fixtures only. The remote has no listing API — wrangler's R2 surface is get/put/delete —
+ * and adding one would need a second credential (the S3 API); browse the Cloudflare dashboard.
+ */
+const list = () => {
+  const entries = existsSync(FIXTURES_DIR) ? readdirSync(FIXTURES_DIR).filter((entry) => entry.endsWith('.json')) : [];
+  if (entries.length === 0) {
+    console.log(`No fixtures in ${FIXTURES_DIR}. Pull one: moon run fixtures:pull -- <name>`);
+    return;
+  }
+  for (const entry of entries) {
+    const path = join(FIXTURES_DIR, entry);
+    console.log(`${entry.replace(/\.json$/, '').padEnd(24)} ${size(path).padStart(10)}  ${path}`);
+  }
+};
+
+/** Remote key for a named fixture. Deterministic, so `pull <name>` needs no object listing. */
+const remoteKey = (name, owner) => `mailbox/${owner}/${name}.json.age`;
+
+const validName = (name) => {
+  if (!NAME_RE.test(name)) {
+    fail(`Invalid fixture name: "${name}". Use lowercase letters, digits and dashes (e.g. \`inbox\`).`);
+  }
+  return name;
 };
 
 /**
  * Our own age public key, derived from the identity file rather than configured separately: one
  * secret to manage, and push/pull cannot drift apart into an archive nobody can open.
  */
-const ownRecipient = () => {
-  const identity = identityFile();
-  return execFileSync('age-keygen', ['-y', identity], { encoding: 'utf8' }).trim();
-};
+const ownRecipient = () => execFileSync('age-keygen', ['-y', identityFile()], { encoding: 'utf8' }).trim();
 
 /** Path to the age identity file, resolving an `op://` reference to a temporary file. */
 const identityFile = () => {
@@ -201,9 +236,12 @@ const wrangler = (args) => {
       stdio: 'inherit',
     });
   } catch (error) {
+    // wrangler's own diagnosis is already on stderr (`stdio: 'inherit'`), so this only adds the
+    // causes it cannot know about — asserting a cause here would misattribute e.g. a missing key.
     fail(
-      `wrangler ${args.slice(0, 3).join(' ')} failed. Authenticate first (\`pnpm 1p-credentials\` or ` +
-        '`wrangler login`) and set CLOUDFLARE_ACCOUNT_ID if your token spans several accounts.',
+      `wrangler ${args.slice(0, 3).join(' ')} failed (see above). If it is an auth error, run ` +
+        '`pnpm 1p-credentials` (or `wrangler login`) and set CLOUDFLARE_ACCOUNT_ID when your token ' +
+        'spans several accounts.',
     );
     throw error;
   }
@@ -231,8 +269,6 @@ const parseArgs = (args) => {
   return { positional, flags };
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
-
 const size = (file) => `${(statSync(file).size / 1024).toFixed(0)} KB`;
 
 const fail = (message) => {
@@ -243,8 +279,9 @@ const fail = (message) => {
 const usage = (message) => {
   console.error(`${message}\n`);
   console.error('Usage:');
-  console.error('  fixtures.mjs push <file> [--name <name>]');
-  console.error('  fixtures.mjs pull <key> [--out <file>]');
+  console.error('  moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]');
+  console.error('  moon run fixtures:pull -- <name> [--user <user>]');
+  console.error('  moon run fixtures:list');
   process.exit(1);
 };
 

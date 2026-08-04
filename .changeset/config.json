@@ -78,6 +78,7 @@
       "@dxos/extractor-lib",
       "@dxos/feed",
       "@dxos/feed-store",
+      "@dxos/fixtures",
       "@dxos/functions-runtime-cloudflare",
       "@dxos/functions-simulator-cloudflare",
       "@dxos/functions-testing",
