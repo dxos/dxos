@@ -43,8 +43,12 @@ const at = (time: number, sender: typeof alice, text: string) =>
 
 /**
  * The prototype slice: grouping, both divider kinds, reactions and the hover toolbar, on the
- * CodeMirror substrate. Same fixture as `Thread.stories`'s `Grouped`, so the two renderings can be
- * compared side by side.
+ * CodeMirror substrate.
+ *
+ * Built on the same boundaries `Thread.stories`'s `Grouped` uses — two calendar days and the
+ * 10s/40s/2m/4h offsets that straddle the grouping window and the gap threshold — so both
+ * renderings are driven across the same cases, plus a long message the tile fixture has no reason
+ * to carry: wrapping is the thing the overlay toolbar is meant to buy back.
  */
 const useFixture = () =>
   useMemo(
