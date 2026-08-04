@@ -52,10 +52,12 @@ ended: []
 
 ### The `$project` sentinel
 
-Desktop clients don't expose custom slash commands, so the **single** task-planning
-sentinel is `$project VERB [ARGS]` anywhere in a normal message. A
-`UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it and injects the
-matching directive; when you see one, follow it and confirm in one short line.
+The **single** task-planning sentinel is `$project VERB [ARGS]` anywhere in a
+normal message. A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it
+and injects the matching directive; when you see one, follow it and confirm in
+one short line. Custom slash commands do work on desktop (`/commit`, `/mode`), so
+`$project` could gain a `/project` twin the way `/mode` did — see
+`.claude/README.md` §Sentinels for the recipe.
 
 - `$project` (bare) or `$project list [all]` — render the active projects as a
   **numbered markdown table**: the first column is a 1-based row number, followed

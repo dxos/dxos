@@ -120,13 +120,20 @@ comes from the event, never from the command.
 
 ### Sentinel grammar
 
-`$mode <MODE>` only, with the two values `terse` and `normal` (the `concise` /
-`natural`/`default`/`off` aliases survive as _values_). The regex used to accept
-the bare one-token forms too, so prose _about_ the modes flipped them — observed
-live on 2026-08-03 when a message containing "`$natural/$concise/$verbose`" set
-the mode. The verb is now mandatory, which generalises: a grep-driven hook cannot
-distinguish a command from a mention of one, so every sentinel needs a grammar
-prose does not write by accident.
+`/mode <MODE>` only, anchored to the start of the message, with the two values
+`terse` and `normal` (the `concise` / `natural`/`default`/`off` aliases survive as
+_values_). It got there in two steps, both driven by the same failure: a
+grep-driven hook cannot distinguish a command from a mention of one.
+
+1. The regex accepted bare one-token forms, so prose _about_ the modes flipped
+   them — observed live on 2026-08-03 when a message containing
+   "`$natural/$concise/$verbose`" set the mode. Fix: make the verb mandatory.
+2. `$mode <MODE>` still matched anywhere in a message, so writing the sentinel in
+   documentation prose would fire it. Fix: move to `/mode`, anchored to the start
+   — where a slash command must appear anyway, and where prose cannot reach.
+
+Generalised: **prefer an anchored command form over a free-floating sentinel.**
+`$project` has not been converted and still carries the original risk.
 
 ## Open decisions
 

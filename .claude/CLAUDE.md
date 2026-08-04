@@ -8,9 +8,9 @@
 ## Mode
 
 - The response-verbosity mode is set with **`/mode terse`** or **`/mode normal`**.
-  `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. The legacy
-  `$mode <MODE>` sentinel still works anywhere in a message; the verb is required
-  in both forms, so prose about the modes cannot flip them.
+  `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. It must
+  lead the message, as a slash command does — so a mid-sentence mention of the
+  command cannot flip the mode. The `$mode` sentinel has been removed.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
   branch, the instruction files actually consulted (including skills loaded this
   session), and the current mode — never the modes as numbered options, since a

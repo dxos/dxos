@@ -72,16 +72,23 @@ default state. That single gap is why "be terse" never survived.
       `hooks/mode.sh` greps `/mode <MODE>` there and writes state at exactly the
       point the sentinel did. `commands/mode.md` is pure ergonomics (autocomplete
       + a one-line report) and sets nothing. `UserPromptExpansion` is for blocking
-      an expansion, not for beating it. `$mode <MODE>` retained as a legacy
-      fallback. Verified against eight prompts: the four `/mode` forms and the
-      legacy sentinel fire; mid-message `/mode terse`, a `src/mode normal` path,
-      and a bare `$terse` are inert.
+      an expansion, not for beating it. **`$mode` has since been removed**, so
+      `/mode` anchored to the start of the message is the only form — which also
+      retires the "prose flips the mode" class of bug rather than narrowing it.
+      Verified: `/mode terse` and `/MODE Concise` fire; `$mode terse`, a bare
+      `/mode`, a mid-message `/mode terse` and a `src/mode normal` path are inert.
+      Proven live in-session — `/mode terse` took effect on the following turn.
 - [x] **Bare `/mode` re-orients** — matches no mode word, so the hook is inert and
       the command body does the work: worktree + branch, the instruction files
-      actually consulted (skills included), current mode, and the two modes as
-      numbered options. This is the answer to the reversal above — the worktree
-      line stays a first-reply rule, and `/mode` is how the user asks for it
-      again, on demand rather than on every turn.
+      actually consulted (skills included), and the current mode. This is the
+      answer to the reversal above — the worktree line stays a first-reply rule,
+      and `/mode` is how the user asks for it again, on demand rather than on
+      every turn.
+- [x] **No numbered options in the `/mode` report** — the first version offered
+      the modes as a numbered list, the user answered `1`, and a numeric reply is
+      the one form the `UserPromptSubmit` hook cannot catch, so the agent had to
+      write the state itself. Options are now inline commands. **Rule:** never
+      offer a numbered choice whose selection needs to travel through a hook.
 
 ### Decisions (settled 2026-08-03)
 
@@ -105,17 +112,22 @@ default state. That single gap is why "be terse" never survived.
       is live task-planning state. Still open at
       `.agents/projects/ai-testing-strategy/TASKS.md:411` — close that entry
       when this lands.
-- [ ] **Collapse the two `mode.sh` files, or document the split** —
-      `.claude/hooks/mode.sh` is the `UserPromptSubmit` adapter,
-      `.claude/scripts/mode.sh` the state backend (`get|set|toggle|context`).
-      Defensible in principle, unearned as built: one caller, and the
-      hand-runnable path is documented nowhere.
-- [ ] **Fix the stale claim that desktop has no slash commands** — removed from
-      `.claude/CLAUDE.md`; `task-planning/SKILL.md` still asserts it.
-      `.claude/commands/commit.md` registers and resolves as `/commit`.
-- [ ] **Surface guard-hook output to the user** — `branch-beacon.sh` writes plain
-      stdout on `UserPromptSubmit`, which only the agent sees. Adding
-      `systemMessage` to the same invocation would print it to the user too.
+- [x] **Document the `mode.sh` split** — kept, not collapsed: the `/mode` command
+      gave the backend a second caller (`commands/mode.md` runs `get`), so the
+      split is now earned rather than speculative. The header of
+      `scripts/mode.sh` names both callers and the hand-runnable path.
+- [x] **Fix the stale claim that desktop has no slash commands** —
+      `task-planning/SKILL.md` corrected; it now points at the `/mode` recipe and
+      notes `$project` could gain a `/project` twin the same way.
+- [x] **Surface guard-hook output to the user** — `branch-beacon.sh` now emits
+      JSON with **both** `systemMessage` (user) and `additionalContext` (agent)
+      instead of plain stdout, which was agent-only. Built with `jq -n` so message
+      quoting cannot produce an invalid payload — a malformed hook result is
+      dropped silently, which would disable the guard with no signal at all.
+      Falls back to plain stdout if `jq` is missing. Verified: valid JSON with
+      both fields in this worktree; silent outside the DXOS tree.
+      **NOTE: this file is `~/.claude/hooks/branch-beacon.sh`, outside the repo —
+      it is not carried by the PR and does not travel to another machine.**
 
 ### References
 

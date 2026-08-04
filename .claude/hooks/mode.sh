@@ -4,11 +4,10 @@
 #
 # UserPromptSubmit hook for the response-verbosity mode.
 #
-# 1. Toggle: `/mode terse` | `/mode normal` (or the legacy `$mode <MODE>`
-#    sentinel) sets the mode. This event carries the RAW typed text and runs
-#    before the model does, so the write is deterministic — the command's own
-#    expansion could only ask the agent to comply, and would land too late to
-#    gate the turn it appears in.
+# 1. Toggle: `/mode terse` | `/mode normal` sets the mode. This event carries the
+#    RAW typed text and runs before the model does, so the write is
+#    deterministic — the command's own expansion could only ask the agent to
+#    comply, and would land too late to gate the turn it appears in.
 # 2. Enforce: inject the response rules into the prompt context on every turn;
 #    only the length clause varies with the mode.
 
@@ -20,18 +19,13 @@ script="$root/.claude/scripts/mode.sh"
 input=$(cat)
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '')
 
-# `/mode <MODE>` (leading, as a slash command must be) or the legacy `$mode
-# <MODE>` sentinel anywhere in the message. UserPromptSubmit sees the RAW typed
-# text, so the command is caught here and the state write stays deterministic —
-# no UserPromptExpansion hook, and no dependence on the agent complying.
-#
-# The verb is mandatory in both forms: a bare `$terse` matched prose that merely
-# mentioned the modes and flipped them.
+# `/mode <MODE>`, leading, as a slash command must be. UserPromptSubmit sees the
+# RAW typed text, so the command is caught here and the state write stays
+# deterministic — no UserPromptExpansion hook, and no dependence on the agent
+# complying. Anchoring to the start is what keeps a mid-sentence mention of the
+# command, or a path like `src/mode normal.ts`, from flipping the mode.
 modes='terse|concise|normal|natural|default|off'
 sentinel=$(printf '%s\n' "$prompt" | grep -ioE "^[[:space:]]*/mode[[:space:]]+($modes)" | head -1 || true)
-if [ -z "$sentinel" ]; then
-  sentinel=$(printf '%s\n' "$prompt" | grep -ioE "\\\$mode[[:space:]]+($modes)" | head -1 || true)
-fi
 
 if [ -n "$sentinel" ]; then
   value=$(printf '%s' "$sentinel" | grep -ioE '(terse|concise|normal|natural|default|off)' \
