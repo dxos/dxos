@@ -347,10 +347,11 @@ account membership already provides exactly the needed access control, via `wran
 
 **Flow.** ArchiveModule ("Download starred" for a curated fixture, "Download all" for a corpus) →
 `moon run fixtures:push -- ~/Downloads/mailbox-feed.json --name inbox` → elsewhere
-`moon run fixtures:pull -- inbox`. A fixture is identified by **name**, which fixes both the remote
-key (`mailbox/<user>/<name>.json.age`) and the local path (`testing/fixtures/<name>.json`) — that is
-what lets pull work without an object listing, since wrangler's R2 surface is get/put/delete only
-(enumerating would need the S3 API; the dashboard covers browsing). Both directions validate the
+`moon run fixtures:pull -- inbox`. A fixture is a **name plus a UTC version stamp**, so pushes
+accumulate and a result can be reproduced against the exact corpus that produced it. Nothing can
+enumerate that history — wrangler's R2 surface is get/put/delete only — so each push also writes a
+few-byte `<name>.latest` pointer, which is what lets pull resolve the newest without a listing;
+`--at <version>` pins one, and readers default to the newest LOCAL version. Both directions validate the
 payload is an array of serialized messages, so pushing the wrong file fails at push rather than
 after a pull. Developer-facing usage lives in `stories-inbox/README.md`. Wrangler is invoked as
 `pnpm exec wrangler` (the repo-pinned version): a globally installed or 1Password-aliased wrangler

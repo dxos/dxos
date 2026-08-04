@@ -20,10 +20,12 @@
 // Sharing is deliberate and per-object — `push --recipient <age1...>` encrypts to someone else's
 // public key — never a standing default.
 //
-// A fixture is identified by NAME (e.g. `inbox`), which makes both the remote key and the local path
-// deterministic: `mailbox/<user>/<name>.json.age` remotely, `testing/fixtures/<name>.json` locally.
-// That is what lets `pull <name>` work without an object listing — wrangler's R2 surface is
-// get/put/delete only. Overwriting a name is intended; R2 object versioning keeps the history.
+// A fixture is identified by NAME (e.g. `inbox`) and a UTC VERSION stamp, so every push is a new
+// object and history accumulates: `mailbox/<user>/<name>-<version>.json.age` remotely,
+// `testing/fixtures/<name>-<version>.json` locally. Nothing can enumerate that history — wrangler's
+// R2 surface is get/put/delete only — so each push also writes `mailbox/<user>/<name>.latest`, a few
+// bytes naming the newest version. `pull <name>` follows the pointer; `pull <name> --at <version>`
+// pins one. Readers resolve the newest LOCAL version by name (see `tools/fixtures/src`).
 //
 // CI never has either credential, so `pull` cannot succeed there; fixture-backed tests stay gated on
 // the file's presence and skip. That is an absence of capability rather than a policy.
@@ -34,7 +36,7 @@
 //
 // Usage:
 //   moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]
-//   moon run fixtures:pull -- <name> [--user <user>]
+//   moon run fixtures:pull -- <name> [--at <version>] [--user <user>]
 //   moon run fixtures:list          # local fixtures (the remote has no listing API)
 //
 // Environment:
@@ -67,6 +69,9 @@ const FIXTURES_DIR = process.env.DX_FIXTURES_DIR ?? join(REPO_ROOT, 'testing/fix
 
 // A name is a path segment, not a path: it is interpolated into both an R2 key and a local filename.
 const NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
+
+// `YYYYMMDD-HHMMSS`, validated wherever it comes back off the network or a flag.
+const VERSION_RE = /^\d{8}-\d{6}$/;
 
 const main = () => {
   const [command, ...rest] = process.argv.slice(2);
@@ -108,13 +113,23 @@ const push = (args) => {
     console.warn(`Encrypting for ${flags.recipient} — you will NOT be able to decrypt this archive.\n`);
   }
 
-  const key = remoteKey(name, userInfo().username);
+  const owner = userInfo().username;
+  const version = timestamp();
+  const key = remoteKey(name, owner, version);
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
+  const pointer = join(tmpdir(), `dxos-fixture-${process.pid}.latest`);
   try {
     execFileSync('age', ['-r', recipient, '-o', encrypted, source], { stdio: 'inherit' });
     wrangler(['r2', 'object', 'put', `${BUCKET}/${key}`, '--file', encrypted, '--remote']);
+
+    // Each push is a new object, so history accumulates rather than overwriting. Nothing can
+    // enumerate it (wrangler's R2 surface is get/put/delete), so the newest version is recorded in
+    // a companion pointer — a few bytes naming the version, holding no fixture content.
+    writeFileSync(pointer, version);
+    wrangler(['r2', 'object', 'put', `${BUCKET}/${pointerKey(name, owner)}`, '--file', pointer, '--remote']);
   } finally {
     rmSync(encrypted, { force: true });
+    rmSync(pointer, { force: true });
   }
 
   console.log(`\nPushed ${messages} messages (${size(source)}) → ${key}`);
@@ -132,10 +147,13 @@ const pull = (args) => {
   requireBinary('age', 'brew install age');
   const identity = identityFile();
 
-  const out = join(FIXTURES_DIR, `${name}.json`);
+  // An explicit `--at` pins a version; otherwise resolve the newest through the pointer object.
+  const version = flags.at ? validVersion(flags.at) : readPointer(name, owner);
+  const key = remoteKey(name, owner, version);
+
+  const out = join(FIXTURES_DIR, `${name}-${version}.json`);
   mkdirSync(dirname(out), { recursive: true });
 
-  const key = remoteKey(name, owner);
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
   try {
     wrangler(['r2', 'object', 'get', `${BUCKET}/${key}`, '--file', encrypted, '--remote']);
@@ -146,7 +164,22 @@ const pull = (args) => {
 
   const messages = readArchive(out);
   console.log(`\nPulled ${messages} messages (${size(out)}) → ${out}`);
-  console.log(`Tests resolve it by name: fixturePath('${name}').`);
+  console.log(`Tests resolve it by name: fixturePath('${name}') takes the newest local version.`);
+};
+
+/** Newest version of a fixture, from the pointer object written by `push`. */
+const readPointer = (name, owner) => {
+  const file = join(tmpdir(), `dxos-fixture-${process.pid}.latest`);
+  try {
+    wrangler(['r2', 'object', 'get', `${BUCKET}/${pointerKey(name, owner)}`, '--file', file, '--remote']);
+    const version = readFileSync(file, 'utf8').trim();
+    if (!VERSION_RE.test(version)) {
+      fail(`Malformed pointer for "${name}": ${JSON.stringify(version)}`);
+    }
+    return version;
+  } finally {
+    rmSync(file, { force: true });
+  }
 };
 
 /**
@@ -159,14 +192,29 @@ const list = () => {
     console.log(`No fixtures in ${FIXTURES_DIR}. Pull one: moon run fixtures:pull -- <name>`);
     return;
   }
-  for (const entry of entries) {
+
+  // Newest first per name, so the version a reader would pick by default is the one listed first.
+  for (const entry of entries.sort().reverse()) {
     const path = join(FIXTURES_DIR, entry);
-    console.log(`${entry.replace(/\.json$/, '').padEnd(24)} ${size(path).padStart(10)}  ${path}`);
+    console.log(`${entry.replace(/\.json$/, '').padEnd(32)} ${size(path).padStart(10)}  ${path}`);
   }
 };
 
-/** Remote key for a named fixture. Deterministic, so `pull <name>` needs no object listing. */
-const remoteKey = (name, owner) => `mailbox/${owner}/${name}.json.age`;
+/** Remote key for one version of a named fixture. */
+const remoteKey = (name, owner, version) => `mailbox/${owner}/${name}-${version}.json.age`;
+
+/** Companion object naming the newest version — the stand-in for the listing wrangler cannot do. */
+const pointerKey = (name, owner) => `mailbox/${owner}/${name}.latest`;
+
+/** Sortable, filename-safe UTC stamp: `20260804-181500`. */
+const timestamp = () => new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
+
+const validVersion = (version) => {
+  if (!VERSION_RE.test(version)) {
+    fail(`Invalid version: "${version}". Expected YYYYMMDD-HHMMSS (e.g. 20260804-181500).`);
+  }
+  return version;
+};
 
 const validName = (name) => {
   if (!NAME_RE.test(name)) {
@@ -280,7 +328,7 @@ const usage = (message) => {
   console.error(`${message}\n`);
   console.error('Usage:');
   console.error('  moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]');
-  console.error('  moon run fixtures:pull -- <name> [--user <user>]');
+  console.error('  moon run fixtures:pull -- <name> [--at <version>] [--user <user>]');
   console.error('  moon run fixtures:list');
   process.exit(1);
 };

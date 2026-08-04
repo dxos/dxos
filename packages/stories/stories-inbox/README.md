@@ -46,7 +46,7 @@ pnpm 1p-credentials
 moon run fixtures:push -- ~/Downloads/mailbox-feed.json --name inbox
 ```
 
-The **name** is the handle: it fixes both the remote key (`mailbox/<user>/inbox.json.age`) and the local path (`testing/fixtures/inbox.json`), so `pull` needs nothing but the name. Re-pushing a name overwrites it — intended, and R2 object versioning keeps the history. Wrangler's R2 surface is get/put/delete only, so there is no remote listing; browse the Cloudflare dashboard.
+Each push is a new **version**, stamped in UTC: `mailbox/<user>/inbox-20260804-181500.json.age`. Pushes accumulate rather than overwrite, so a result can be reproduced against the exact corpus that produced it. Nothing can enumerate that history — wrangler's R2 surface is get/put/delete only — so each push also writes a few-byte `inbox.latest` pointer naming the newest version; that is what lets `pull inbox` resolve without a listing. Browse the full history in the Cloudflare dashboard.
 
 To hand one archive to a teammate, encrypt to their public key instead — a deliberate, per-object act:
 
@@ -62,12 +62,15 @@ Pull the archive by name on whichever machine will run the test. It decrypts int
 moon run fixtures:pull -- inbox
 ```
 
-`moon run fixtures:list` shows what you have locally, and `--user <name>` pulls a teammate's fixture (only decryptable if they pushed it to your key).
+That takes the newest version. Pin one with `--at 20260804-181500`, and pull a teammate's with `--user <name>` (only decryptable if they pushed it to your key). `moon run fixtures:list` shows local versions, newest first.
 
 Resolve it by name from any package with `@dxos/fixtures` (node-only):
 
 ```ts
-import { fixtureExists, fixturePath, readFixture } from '@dxos/fixtures';
+import { fixtureExists, fixturePath, fixtureVersions, readFixture } from '@dxos/fixtures';
+
+readFixture('inbox');                                  // newest local version
+readFixture('inbox', { version: '20260804-181500' });  // pinned
 ```
 
 Message reconstruction lives in `@dxos/stories-brain` (`src/testing/harness/fixture.ts`) and does the three things a raw archive needs: mints fresh message ids, collapses the MIME alternatives into one clean text block (HTML→Markdown), and sorts **oldest-first** — a cursored pipeline advances a high-water mark, so an unsorted feed would silently skip everything older than the first message it saw.
@@ -87,6 +90,7 @@ describe.skipIf(!fixtureExists('inbox'))('pipeline over a real mailbox', () => {
 Three rules for these tests:
 
 1. **Gate on `fixtureExists('<name>')`.** CI has neither the bucket credentials nor an age key, so the fixture is absent there and the test skips — coverage that depends on a private corpus must never be able to fail the build.
+   Pin a version when a result must be reproducible; take the newest when the test asserts invariants that should hold for any corpus.
 2. **Assert invariants, not counts.** The archive changes every time you re-export it. `expect(persons).toHaveLength(12)` is unmaintainable; assert instead that every `Person` has an email, that no two share a normalized address, that a second run creates nothing, that the cursor equals `max(created)`.
 3. **Seed the gate.** `shouldExtractContact` is an allow-list — a sender earns a `Person` only when its domain matches a known `Organization`. Against a raw archive with no Organizations seeded, a CRM pipeline test will pass while extracting nothing. Derive Organizations from the archive's sender domains first.
 
