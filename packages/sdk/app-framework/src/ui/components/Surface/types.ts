@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { FC, PropsWithChildren, ReactNode } from 'react';
+import type { ComponentType, FC, PropsWithChildren, ReactNode } from 'react';
 
 import { log } from '@dxos/log';
 import type { MakeOptional, Position } from '@dxos/util';
@@ -167,7 +167,9 @@ export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
   role: string | string[];
   position?: Position.Position;
-  component: ComponentFunction<T>;
+  component: ComponentType<any>;
+  /** Maps the surface props onto the component's props; see {@link TypedReactDefinition.props}. */
+  props?: (props: ComponentProps<T>) => Record<string, any>;
   filter?: (data: Record<string, unknown>, role?: string) => data is T;
 }>;
 
@@ -198,11 +200,35 @@ export type Definition<T extends Record<string, any> = any> = ReactDefinition<T>
 /**
  * Typed React surface definition — role is derived from the filter's bindings.
  */
-export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly<{
+export type TypedReactDefinition<
+  T extends Record<string, any> = any,
+  P extends Record<string, any> = ComponentProps<T>,
+> = Readonly<{
   id: string;
   filter: Filter<T>;
-  component: ComponentFunction<T>;
   position?: Position.Position;
+  /**
+   * Accepts any component type (not just a function) so a container re-exported through a
+   * `lazy()` barrel as `ComponentType<any>` can be registered without a cast.
+   */
+  component: ComponentType<P>;
+  /**
+   * Maps the surface props onto the component's own props, so a plain container can be registered
+   * directly instead of being wrapped in an adapter that unpacks `data`.
+   *
+   * Prefer this over an inline `component: ({ data }) => <Container … />`: the mapper's input type
+   * derives from the same `filter` that defines the surface's data shape, so the unpacking is
+   * checked against the filter rather than restated by hand.
+   *
+   * @example
+   * Surface.create({
+   *   id: 'defaultPluginSettings',
+   *   filter: AppSurface.settings(AppSurface.Article),
+   *   component: DefaultSettings,
+   *   props: ({ data: { subject } }) => ({ subject }),
+   * });
+   */
+  props?: (props: ComponentProps<T>) => P;
 }>;
 
 /**
@@ -248,11 +274,15 @@ export const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.
 /**
  * Creates a React surface definition from a typed filter.
  */
-export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T>;
-export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T> {
-  const { id, filter, component, position } = definition;
+export function create<T extends Record<string, any> = any, P extends Record<string, any> = ComponentProps<T>>(
+  definition: TypedReactDefinition<T, P>,
+): ReactDefinition<T>;
+export function create<T extends Record<string, any> = any, P extends Record<string, any> = ComponentProps<T>>(
+  definition: TypedReactDefinition<T, P>,
+): ReactDefinition<T> {
+  const { id, filter, component, props, position } = definition;
   const { role, guard } = expandBindings(filter);
-  return { kind: 'react', id, role, position, component, filter: guard };
+  return { kind: 'react', id, role, position, component, props, filter: guard };
 }
 
 /**
