@@ -56,15 +56,13 @@ default state. That single gap is why "be terse" never survived.
       re-injection.
 - [x] **Consolidate the scattered sources** — `.claude/CLAUDE.md` now points at
       the canonical section instead of restating it.
-- [ ] **Update `~/.claude/CLAUDE.md`** (decision: yes) — the ONLY open item, and
-      optional. Nothing there is stale (verified 2026-08-04: no `$mode` /
-      `$project` / legacy-sentinel references), so this is purely about adding
-      the response invariants for repos that have no `UserPromptSubmit` hook of
-      their own — inside this repo the hook already delivers them. BLOCKED from
-      the agent side: it symlinks to
-      `~/Code/richburdon/config/dotfiles/.claude/CLAUDE.md`, a separate repo
-      whose HEAD is `main`, so `guard-worktree.sh` refuses the edit. Needs the
-      user to apply it, or to branch that repo.
+- [x] **Update `~/.claude/CLAUDE.md`** — CLOSED, decided against (user, 2026-08-04).
+      Nothing there was stale (verified: no `$mode` / `$project` /
+      legacy-sentinel references), so this was only ever the optional addition of
+      the response invariants for repos with no `UserPromptSubmit` hook. Inside
+      this repo the hook already delivers them, and the file symlinks into
+      `~/Code/richburdon/config` (a separate repo on `main`), so the coupling was
+      not worth it.
 - [x] **Drop the bare one-token sentinel forms** — the `$mode` verb is now
       mandatory in `hooks/mode.sh`, so prose _about_ the modes no longer flips
       them (observed live on 2026-08-03: a message containing
@@ -100,7 +98,8 @@ default state. That single gap is why "be terse" never survived.
 - [x] Terse-mode budget: **8 lines**, minimal markdown, no headings/nesting.
 - [x] `normal` carries **no budget** — invariants only, plus "stay
       proportionate; length is earned by content".
-- [x] **Yes**, update the global `~/.claude/CLAUDE.md` (blocked, see above).
+- [x] ~~Yes, update the global `~/.claude/CLAUDE.md`~~ — REVERSED 2026-08-04; see
+      the closed task above.
 - [x] Default when `.claude/.mode` is absent: **`normal`**.
 
 ## Phase 3: Cleanups found on the way
@@ -122,8 +121,9 @@ default state. That single gap is why "be terse" never survived.
       split is now earned rather than speculative. The header of
       `scripts/mode.sh` names both callers and the hand-runnable path.
 - [x] **Fix the stale claim that desktop has no slash commands** —
-      `task-planning/SKILL.md` corrected; it now points at the `/mode` recipe and
-      notes `$project` could gain a `/project` twin the same way.
+      `task-planning/SKILL.md` corrected; it now points at the `/mode` recipe.
+      (It briefly proposed a `/project` twin as future work — built the same day,
+      see Phase 4.)
 - [x] **Surface guard-hook output to the user** — `branch-beacon.sh` now emits
       JSON with **both** `systemMessage` (user) and `additionalContext` (agent)
       instead of plain stdout, which was agent-only. Built with `jq -n` so message
@@ -159,6 +159,14 @@ it contained `"$project"` in prose and fired `$project list`. Same fix as
       2026-08-04: it never referenced `$mode`, `$project` or the legacy
       sentinels, so the conversions leave nothing to correct there. Folded into
       the Phase 2 item, which is now the only open work.
+
+- [x] **Review fixes (CodeRabbit, #12463)** — two valid findings, both fixed:
+      (1) `/mode tersex` prefix-matched `terse`, so the value now requires a
+      trailing whitespace-or-EOL boundary (trailing task text still allowed);
+      (2) the registry `resume` pointer still claimed `$project` greps anywhere
+      and listed a `/project` twin as future work — both stale within the same
+      PR that did the conversion. **Rule:** refresh the resume pointer in the
+      commit that invalidates it, not at hydrate time.
 
 ### References
 
