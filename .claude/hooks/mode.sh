@@ -25,7 +25,8 @@ prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '
 # complying. Anchoring to the start is what keeps a mid-sentence mention of the
 # command, or a path like `src/mode normal.ts`, from flipping the mode.
 modes='terse|concise|normal|natural|default|off'
-sentinel=$(printf '%s\n' "$prompt" | grep -ioE "^[[:space:]]*/mode[[:space:]]+($modes)" | head -1 || true)
+first_line=$(printf '%s' "$prompt" | head -1)
+sentinel=$(printf '%s\n' "$first_line" | grep -ioE "^[[:space:]]*/mode[[:space:]]+($modes)" | head -1 || true)
 
 if [ -n "$sentinel" ]; then
   value=$(printf '%s' "$sentinel" | grep -ioE '(terse|concise|normal|natural|default|off)' \

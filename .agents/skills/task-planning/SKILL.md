@@ -1,6 +1,6 @@
 ---
 name: task-planning
-description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$project` sentinel (any verb — list, new, end, track, hydrate, resume — or a legacy `$track`/`$hydrate`/`$checkpoint`/`$resume`/`$rehydrate` form). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `/project` command (any verb — list, new, end, track, hydrate, resume). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
 ---
 
 # Task Planning
@@ -50,40 +50,44 @@ ended: []
   at its package files and a brand-new project defaults to
   `.agents/projects/<name>/{TASKS.md,DESIGN.md}`. Keep it committed and current.
 
-### The `$project` sentinel
+### The `/project` command
 
-The **single** task-planning sentinel is `$project VERB [ARGS]` anywhere in a
-normal message. A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it
-and injects the matching directive; when you see one, follow it and confirm in
-one short line. Custom slash commands do work on desktop (`/commit`, `/mode`), so
-`$project` could gain a `/project` twin the way `/mode` did — see
-`.claude/README.md` §Sentinels for the recipe.
+The **single** task-planning entrypoint is `/project VERB [ARGS]`, leading the
+message as a slash command does. A `UserPromptSubmit` hook
+(`.claude/hooks/track.sh`) sees the raw typed text before the command expands and
+injects the matching directive; when you see one, follow it and confirm in one
+short line.
 
-- `$project` (bare) or `$project list [all]` — render the active projects as a
+The directive, not the command body, is authoritative — it is generated from the
+verb actually given, and it arrives whether or not the expansion does.
+
+- `/project` (bare) or `/project list [all]` — render the active projects as a
   **numbered markdown table**: the first column is a 1-based row number, followed
   by `name`, `status`, `user`, `host`, and a one-line summary. **By default show
   only the current user's projects** (`user` == `whoami`); `list all` lists every
   user. Then tell the user they can reply with a row number to resume that
   project. **A lone number in the user's next message means "resume the project
   at that row"** — run the "Project handoff" → resume steps for that entry.
-- `$project new <name> [summary]` — add an `active` entry (`user` = `whoami`,
+- `/project new <name> [summary]` — add an `active` entry (`user` = `whoami`,
   `host` = `hostname -s`); scaffold `.agents/projects/<name>/{TASKS.md,DESIGN.md}`
   unless the docs already live somewhere (record that path instead). Confirm in
   one line.
-- `$project end <name>` — move the entry to `ended`, recording the final PR/status.
-- `$project track <text>` — record `<text>` as a follow-up in the active
+- `/project end <name>` — move the entry to `ended`, recording the final PR/status.
+- `/project track <text>` — record `<text>` as a follow-up in the active
   `TASKS.md` (never a background task chip).
-- `$project hydrate` (alias `checkpoint`) — **checkpoint** the project before
+- `/project hydrate` (alias `checkpoint`) — **checkpoint** the project before
   stopping or opening a PR (see "Project handoff").
-- `$project resume [name]` (alias `rehydrate`) — **reload** project state at the
+- `/project resume [name]` (alias `rehydrate`) — **reload** project state at the
   start of a session (see "Project handoff").
 
-Legacy forms (`$track <text>` / `track:` lines, `$hydrate`, `$checkpoint`,
-`$resume`, `$rehydrate`) still map to the same directives; nudge toward the
-`$project <verb>` form once.
+The `$project` sentinel and the legacy `$track` / `track:` / `$hydrate` /
+`$checkpoint` / `$resume` / `$rehydrate` forms have been **removed**. They matched
+anywhere in a message, so prose about them fired them — a message asking to
+convert `$project` ran `$project list` (2026-08-04). `/project` is anchored to
+the first line, where prose cannot reach it.
 
 `resume` / `hydrate` key off the registry: **which project** is resolved by name
-(`$project resume <name>`) or by the row number from the most recent `$project`
+(`/project resume <name>`) or by the row number from the most recent `/project`
 table. With no argument, fall back to the single `active` entry for the current
 user; if more than one is active, ask which (list them numbered) — never a guess.
 
@@ -102,7 +106,7 @@ user; if more than one is active, ask which (list them numbered) — never a gue
 - Work spans **3+ distinct steps**, multiple files, or phases.
 - The task will likely outlive one session (you'll resume it later).
 - The user asks for a plan, roadmap, or to track progress.
-- The user uses **`$project track <text>`** — always record the item, never a
+- The user uses **`/project track <text>`** — always record the item, never a
   task chip.
 - You are resuming work — read the existing `TASKS.md` first to reload state.
 
@@ -155,12 +159,12 @@ Short paragraph of context — what this phase delivers and why.
 5. **Commit it** — `TASKS.md` is committed alongside the work it tracks. Do not
    leave it as an uncommitted local edit (see "commit nothing silently").
 
-## Project handoff (`$project hydrate` / `$project resume`)
+## Project handoff (`/project hydrate` / `/project resume`)
 
 `TASKS.md` is the handoff medium — no separate `HANDOFF.md` (keep plans in the
 original doc). The two verbs are the explicit checkpoint/reload actions.
 
-### `$project hydrate` — checkpoint before stopping or opening a PR
+### `/project hydrate` — checkpoint before stopping or opening a PR
 
 1. **Reconcile `TASKS.md`** — check off what's done; add a one-line status note to
    each in-progress item (what's blocked, what's next).
@@ -176,7 +180,7 @@ original doc). The two verbs are the explicit checkpoint/reload actions.
 5. **Confirm** the checkpoint in one short block (done / in-progress / next /
    uncommitted).
 
-### `$project resume` — reload at the start of a session
+### `/project resume` — reload at the start of a session
 
 1. **Stay put** — resume continues the work-stream in **this session's assigned
    worktree**; never `cd` into or adopt the project's previous worktree/branch.

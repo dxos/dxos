@@ -32,20 +32,21 @@
 
 ## Task planning
 
-- One sentinel: `$project VERB [ARGS]` anywhere in a message; a
-  `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it and injects the
-  matching directive.
-  - `$project` / `$project list [all]` — numbered table of the registry
+- One command: `/project VERB [ARGS]`, leading the message; a `UserPromptSubmit`
+  hook (`.claude/hooks/track.sh`) reads the raw text before the command expands
+  and injects the matching directive — follow the directive, not the expansion.
+  - `/project` / `/project list [all]` — numbered table of the registry
     (`.agents/projects/registry.yml`); reply with a row number to resume.
-  - `$project new <name> [summary]` / `$project end <name>` — manage entries;
+  - `/project new <name> [summary]` / `/project end <name>` — manage entries;
     each project has a `TASKS.md` + `DESIGN.md`.
-  - `$project track <text>` — record a follow-up in the active `TASKS.md`
+  - `/project track <text>` — record a follow-up in the active `TASKS.md`
     (never a background task chip).
-  - `$project hydrate` (alias `checkpoint`) — checkpoint before stopping or
+  - `/project hydrate` (alias `checkpoint`) — checkpoint before stopping or
     opening a PR.
-  - `$project resume [name]` — reload state at session start, always in the
+  - `/project resume [name]` — reload state at session start, always in the
     session's assigned worktree.
-- Legacy `$track`/`$hydrate`/`$checkpoint`/`$resume`/`$rehydrate` forms map to
-  the same directives.
+- The `$project` sentinel and the legacy `$track`/`$hydrate`/`$checkpoint`/
+  `$resume`/`$rehydrate` forms are **removed** — they matched anywhere in a
+  message, so prose about them fired them.
 - See the `task-planning` skill for the file format, workflow, registry, and
   handoff steps.

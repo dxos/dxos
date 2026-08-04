@@ -129,6 +129,30 @@ default state. That single gap is why "be terse" never survived.
       **NOTE: this file is `~/.claude/hooks/branch-beacon.sh`, outside the repo —
       it is not carried by the PR and does not travel to another machine.**
 
+## Phase 4: `/project` (2026-08-04)
+
+The `$project` sentinel demonstrated its own bug: the message asking to convert
+it contained `"$project"` in prose and fired `$project list`. Same fix as
+`/mode`, same day.
+
+### Tasks
+
+- [x] **Convert `$project` to `/project`** — `hooks/track.sh` matches
+      `/project VERB [ARGS]` on the first line only; `commands/project.md`
+      registers the name and defers to the injected directive (which is
+      authoritative, being generated from the verb actually given). All six verbs
+      and their argument extraction verified.
+- [x] **Remove the legacy `$track` / `track:` / `$hydrate` / `$checkpoint` /
+      `$resume` / `$rehydrate` forms** — each matched anywhere in a message and
+      carried the identical flaw. Nothing replaces them; `/project <verb>` covers
+      every case.
+- [x] **Anchor on the first line, not just `^`** — `grep -E` applies `^` per
+      line, so a quoted command on line 3 of a multi-line message would still
+      fire. Both hooks now take `head -1` of the prompt first. `mode.sh` was
+      retro-fitted with the same guard and re-verified.
+- [ ] **Update `~/.claude/CLAUDE.md`** if it mentions either marker — still
+      BLOCKED, same symlink-into-another-repo reason as Phase 2.
+
 ### References
 
 - `DESIGN.md` — findings, the control-point taxonomy, and the state-machine argument.

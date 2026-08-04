@@ -147,7 +147,7 @@ A sentinel is a **marker typed inside a normal message** that a
 | Marker                          | Hook                                 | Effect                                                     |
 | ------------------------------- | ------------------------------------ | ---------------------------------------------------------- |
 | `/mode terse` / `/mode normal`  | [`hooks/mode.sh`](./hooks/mode.sh)   | sets response verbosity mode (see aliases below)            |
-| `$project VERB [ARGS]`          | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
+| `/project VERB [ARGS]`          | [`hooks/track.sh`](./hooks/track.sh) | task-planning: list / new / end / track / hydrate / resume  |
 
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
@@ -193,12 +193,17 @@ about. Per-turn injection is a strong channel; putting a once-per-session rule o
 it is a misuse.
 
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
-> cannot tell a command from a mention of one. The mode grammar was narrowed
-> twice for this: first the verb became mandatory (a bare `$terse` fired on a
-> message that listed the aliases as an _example_, observed 2026-08-03), then the
-> `$mode` sentinel was dropped for `/mode`, anchored to the start of the message.
-> `$project` still greps anywhere and carries the original risk. Any new marker
-> should prefer the anchored command form.
+> cannot tell a command from a mention of one. Both markers were bitten by this
+> and both ended up anchored:
+>
+> - `$terse` fired on a message that listed the aliases as an _example_
+>   (2026-08-03) → verb made mandatory, then `$mode` dropped for `/mode`.
+> - `$project` fired on the message asking to convert it (2026-08-04) →
+>   `$project` and its `$track`/`$hydrate`/`$resume` aliases dropped for
+>   `/project`.
+>
+> Both now match only on the **first line**, where a slash command must appear
+> and prose cannot reach. Any new marker should start there.
 
 ### Commands
 

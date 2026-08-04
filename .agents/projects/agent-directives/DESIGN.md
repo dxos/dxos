@@ -133,7 +133,16 @@ grep-driven hook cannot distinguish a command from a mention of one.
    — where a slash command must appear anyway, and where prose cannot reach.
 
 Generalised: **prefer an anchored command form over a free-floating sentinel.**
-`$project` has not been converted and still carries the original risk.
+
+`$project` proved the point within the day. On 2026-08-04 the message asking to
+convert it — which contained `"$project"` in prose — fired `$project list`. It
+was converted the same way: `/project VERB [ARGS]` matched on the first line
+only, with the legacy `$track` / `track:` / `$hydrate` / `$checkpoint` /
+`$resume` / `$rehydrate` aliases removed, since each carried the identical flaw.
+
+Both hooks now extract `head -1` of the prompt before matching. Anchoring with
+`^` alone is not enough: `grep -E` applies `^` per line, so a quoted command on a
+later line of a multi-line message would still fire.
 
 ## Open decisions
 
