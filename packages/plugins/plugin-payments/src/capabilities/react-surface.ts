@@ -8,9 +8,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { PaymentsSettings } from '#containers';
 import { meta } from '#meta';
-
-import { PaymentsSettingsSurface } from './PaymentsSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -18,8 +17,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: PaymentsSettingsSurface,
-        props: ({ data: { subject } }) => ({ subject }),
+        component: PaymentsSettings,
+        props: ({ data: { subject } }) => ({ atom: subject.atom }),
       }),
     ]),
   ),

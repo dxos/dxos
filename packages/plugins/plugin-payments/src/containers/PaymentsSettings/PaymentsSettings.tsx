@@ -4,7 +4,8 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useSettingsState } from '@dxos/app-framework/ui';
+import { type AppCapabilities } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, Message, useTranslation } from '@dxos/react-ui';
@@ -19,13 +20,17 @@ type Status = {
   text?: string;
 };
 
-export type PaymentsSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type PaymentsSettingsProps = {
+  /** The plugin's contributed settings atom, read and written through the atom registry. */
+  atom: AppCapabilities.Settings['atom'];
+};
 
-export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSettingsProps) => {
+export const PaymentsSettings = ({ atom }: PaymentsSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(atom);
   const paymentsUrl = settings.paymentsUrl?.trim();
 
   const handleBuyPremium = useCallback(async () => {
@@ -33,6 +38,7 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
       setStatus({ kind: 'error', text: t('no-payments-url.message') });
       return;
     }
+
     setStatus({ kind: 'pending' });
     try {
       const result = await buyPremium(client, paymentsUrl);
@@ -65,9 +71,8 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
     <Form.Root
       variant='settings'
       schema={Settings.Settings}
-      readonly={!onSettingsChange}
       values={settings}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>

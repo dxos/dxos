@@ -8,9 +8,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { NativeSettings } from '#containers';
 import { meta } from '#meta';
-
-import { NativeSettingsSurface } from './NativeSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -18,8 +17,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
-        component: NativeSettingsSurface,
-        props: ({ data: { subject } }) => ({ subject }),
+        component: NativeSettings,
       }),
     ]),
   ),

@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -11,30 +12,29 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { type Settings } from '#types';
 
-import { PaymentsSettings, type PaymentsSettingsProps } from './PaymentsSettings';
+import { PaymentsSettings } from './PaymentsSettings';
 
-const DefaultStory = ({ settings: initialSettings, ...props }: PaymentsSettingsProps) => {
-  const [settings, setSettings] = useState<Settings.Settings>(initialSettings ?? {});
-  return (
-    <PaymentsSettings
-      settings={settings}
-      onSettingsChange={(update) => setSettings((current) => update(current))}
-      {...props}
-    />
-  );
+type StoryProps = {
+  settings: Settings.Settings;
+};
+
+// The container reads and writes the plugin's settings atom, so the story owns one per render.
+const DefaultStory = ({ settings }: StoryProps) => {
+  const atom = useMemo(() => Atom.make<Settings.Settings>(settings).pipe(Atom.keepAlive), [settings]);
+
+  return <PaymentsSettings atom={atom} />;
 };
 
 const meta = {
   title: 'plugins/plugin-payments/containers/PaymentsSettings',
-  component: PaymentsSettings,
-  render: DefaultStory,
+  component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   tags: ['settings'],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof PaymentsSettings>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

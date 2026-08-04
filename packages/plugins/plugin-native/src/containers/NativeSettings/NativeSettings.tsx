@@ -9,14 +9,11 @@ import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Settings, type Update } from '#types';
-
-export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+import { NativeCapabilities, type Update } from '#types';
 
 type Pending = null | 'check' | 'install' | 'relaunch';
 
@@ -28,7 +25,8 @@ type UpdateActions = {
 
 type UpdateRow = { description: string; button: ReactNode };
 
-export const NativeSettings = (_props: NativeSettingsProps) => {
+/** Update status comes from the update-manager capability, so this panel takes no settings props. */
+export const NativeSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const manager = useCapability(NativeCapabilities.UpdateManager);
   const status = useAtomValue(manager.status);
