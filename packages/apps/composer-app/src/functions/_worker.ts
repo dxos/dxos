@@ -208,20 +208,41 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
 const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.org'];
 
 /**
- * Handle /.well-known/webauthn — the Related Origin Requests manifest.
- *
- * The response must be `application/json`; browsers reject the manifest on any other content type,
- * which is why this is a Worker route rather than a static asset (an extensionless asset is served
- * as `application/octet-stream`) and why it is listed in `run_worker_first` (the SPA fallback would
- * otherwise answer with index.html).
+ * The native app, as `<team id>.<bundle id>` — matches `src-tauri/Entitlements.plist`, whose
+ * `associated-domains` list is the other half of this handshake: a domain is only claimed when the app
+ * names it *and* the domain serves the app back here.
  */
-const handleWebAuthnWellKnown = (request: Request): Response => {
+const APP_ID = '9428WC5MR8.org.dxos.composer';
+
+/**
+ * The well-known documents that verify this domain, keyed by path.
+ *
+ * These are Worker routes rather than static assets because both must be served as
+ * `application/json` and the paths carry no extension for the asset server to infer that from. They
+ * are covered by `run_worker_first` for the same reason the SPA fallback must not reach them.
+ *
+ * Asset routing and these routes alike ignore the hostname, so every domain mapped to this Worker —
+ * composer.space and composer.dxos.org — is verified by the same documents. That is what replaced the
+ * standalone `composer-dxos-org` Worker.
+ */
+const WELL_KNOWN_DOCUMENTS: Record<string, unknown> = {
+  // Universal Links (`applinks`) and passkeys (`webcredentials`) for the native app.
+  '/.well-known/apple-app-site-association': {
+    applinks: { details: [{ appIDs: [APP_ID], components: [{ '/': '/*' }] }] },
+    webcredentials: { apps: [APP_ID] },
+  },
+  // WebAuthn Related Origin Requests: origins permitted to assert the `composer.space` relying party.
+  '/.well-known/webauthn': { origins: WEBAUTHN_RELATED_ORIGINS },
+};
+
+/** Serve a well-known verification document. */
+const handleWellKnown = (request: Request, document: unknown): Response => {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     // RFC 9110 §15.5.6 requires a 405 to advertise the methods the resource does support.
     return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
   }
 
-  const body = JSON.stringify({ origins: WEBAUTHN_RELATED_ORIGINS });
+  const body = JSON.stringify(document);
   return new Response(request.method === 'HEAD' ? null : body, {
     status: 200,
     headers: {
@@ -330,9 +351,10 @@ const handler: ExportedHandler<Env> = {
   fetch: async (request, env, _context) => {
     const url = new URL(request.url);
 
-    // WebAuthn Related Origin Requests manifest (must precede the SPA fallback).
-    if (url.pathname === '/.well-known/webauthn') {
-      return handleWebAuthnWellKnown(request);
+    // Domain-verification documents (must precede the SPA fallback).
+    const wellKnown = WELL_KNOWN_DOCUMENTS[url.pathname];
+    if (wellKnown) {
+      return handleWellKnown(request, wellKnown);
     }
 
     // API routes.

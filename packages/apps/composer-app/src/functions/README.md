@@ -20,24 +20,24 @@ wrangler dev
 
 ## Domain verification
 
-`public/.well-known/apple-app-site-association` is what verifies the `org.dxos.composer` app against a
-domain — universal links and passkey `webcredentials`. It is a static asset, and asset routing ignores the
-hostname, so it is served on every domain mapped to this Worker: composer.space and composer.dxos.org
-alike. That is what replaced the standalone `composer-dxos-org` Worker, whose reason for existing was
-serving this file. Two consequences:
+`WELL_KNOWN_DOCUMENTS` in `_worker.ts` serves what verifies this domain: `apple-app-site-association`
+(universal links and passkey `webcredentials` for `org.dxos.composer`) and `webauthn` (Related Origin
+Requests). Both are Worker routes rather than static assets, because they must be served as
+`application/json` and their paths carry no extension for the asset server to infer that from.
 
-- composer.dxos.org is a Custom Domain on this Worker so these files resolve there; a Redirect Rule on the
-  dxos.org zone sends its other traffic to composer.space and must exclude `/.well-known/*`, since Apple
-  does not follow redirects when fetching the association file.
+Routing ignores the hostname, so every domain mapped to this Worker is verified by the same documents —
+composer.space and composer.dxos.org alike. That is what replaced the standalone `composer-dxos-org`
+Worker, whose reason for existing was serving the association file. Two consequences:
+
+- composer.dxos.org is a Custom Domain on this Worker so these documents resolve there; a Redirect Rule on
+  the dxos.org zone sends its other traffic to composer.space and must exclude `/.well-known/*`, since
+  Apple does not follow redirects when fetching the association file.
 - A domain also has to be listed in `src-tauri/Entitlements.plist` (`associated-domains`) for the app to
-  claim it; serving the file alone is not enough.
+  claim it; serving the document alone is not enough.
 
-Android App Links need `assetlinks.json` alongside it, declaring `org.dxos.composer` and the signing
-certificate's SHA-256 fingerprints (`keytool -list -v -keystore <keystore>`). Not written yet — the app
-does not ship on Android.
-
-`/.well-known/webauthn` is the exception to all of this: it is a Worker route rather than an asset,
-because browsers reject the manifest unless it is served as `application/json`.
+Android App Links need an `assetlinks.json` entry alongside them, declaring `org.dxos.composer` and the
+signing certificate's SHA-256 fingerprints (`keytool -list -v -keystore <keystore>`). Not written yet —
+the app does not ship on Android.
 
 ## Logs
 
