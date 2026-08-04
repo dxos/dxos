@@ -1,6 +1,6 @@
 ---
 name: task-planning
-description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `/project` command (any verb — list, new, end, track, hydrate, resume). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `/project` command (any verb — list, tasks, new, end, track, hydrate, resume). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
 ---
 
 # Task Planning
@@ -52,7 +52,7 @@ ended: []
 
 ### The `/project` command
 
-`/project VERB [ARGS]` drives the registry — `(bare) | list [all] | new | end |
+`/project VERB [ARGS]` drives the registry — `(bare) | list [all] | tasks | new | end |
 track | hydrate | resume`. **The per-verb instructions are not repeated here.**
 `.claude/hooks/track.sh` reads the raw typed text on `UserPromptSubmit` and
 injects the directive for the verb actually given; that directive is

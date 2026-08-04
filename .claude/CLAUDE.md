@@ -40,6 +40,8 @@
     and the next action.
   - `/project list [all]` — numbered table of the registry
     (`.agents/projects/registry.yml`); reply with a row number to resume.
+  - `/project tasks [all|<phase>]` — the open `- [ ]` items from the current
+    project's `TASKS.md`, numbered and grouped by phase.
   - `/project new <name> [summary]` / `/project end <name>` — manage entries;
     each project has a `TASKS.md` + `DESIGN.md`.
   - `/project track <text>` — record a follow-up in the active `TASKS.md`

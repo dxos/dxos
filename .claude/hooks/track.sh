@@ -8,6 +8,7 @@
 # must appear anyway.
 #   (bare)                -> status of the CURRENT project
 #   list [all]            -> numbered table of the registry
+#   tasks [all|<phase>]   -> open items from the current project's TASKS.md
 #   new <name> [summary]  -> add an active entry + scaffold docs
 #   end <name>            -> move the entry to ended
 #   track <text>          -> record <text> in the active TASKS.md
@@ -33,6 +34,10 @@ prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '
 
 emit_info() {
   printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project` (bare) — report the CURRENT project, do NOT list the registry. Resolve it from .agents/projects/registry.yml: prefer the entry whose name matches this branch (strip the `claude/` prefix and the trailing `-<hash>` from `git branch --show-current`); otherwise the single `active` entry for the current user (`whoami`). If neither resolves, say so and suggest `/project list`. Then report, compactly: (1) worktree directory + branch; (2) the project name, status, and its `tasks`/`design` paths and `prs`; (3) tracked-file state — `git status --short` and whether the branch is ahead of origin, naming every uncommitted file rather than summarising. Render EVERY file path in the report as a repo-relative markdown link so it is clickable: the `tasks`/`design` docs and each uncommitted file, e.g. `[TASKS.md](.agents/projects/<name>/TASKS.md)`. (4) the next action from the entry, taken from its `resume` field and condensed to one line. No numbered options unless something genuinely needs a decision.\n'
+}
+
+emit_tasks() {
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project tasks` — args: "%s". Read the CURRENT project'\''s TASKS.md (resolve the project exactly as for bare `/project`: by branch name, else the single `active` entry for the current user; the path is the entry'\''s `tasks` field). Report the OPEN work only — every unchecked `- [ ]` item, grouped under its `##` phase, each as one line: the bold headline plus the shortest note that makes it actionable. Number them 1..N across the whole list so the user can refer to one, and link the file itself. Then give a one-line count of what is done vs open, and name the next action. Do NOT reproduce completed `- [x]` items unless the args ask for `all`; if the args name a phase, restrict to it. If the entry has no `tasks` file, say so and suggest `/project`.\n' "$1"
 }
 
 emit_list() {
@@ -79,6 +84,9 @@ if [ -n "${raw:-}" ]; then
     list)
       emit_list "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')"
       ;;
+    tasks)
+      emit_tasks "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')"
+      ;;
     new)
       emit_new "$rest"
       ;;
@@ -100,7 +108,7 @@ if [ -n "${raw:-}" ]; then
       fi
       ;;
     *)
-      printf 'TASK-PLANNING: `/project %s` — verb not recognized (valid: bare | list [all] | new <name> | end <name> | track <text> | hydrate | resume [name]). Ask which was meant.\n' "$verb"
+      printf 'TASK-PLANNING: `/project %s` — verb not recognized (valid: bare | list [all] | tasks [all] | new <name> | end <name> | track <text> | hydrate | resume [name]). Ask which was meant.\n' "$verb"
       ;;
   esac
 fi
