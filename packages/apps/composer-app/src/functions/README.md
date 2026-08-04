@@ -26,8 +26,9 @@ hostname, so it is served on every domain mapped to this Worker: composer.space 
 alike. That is what replaced the standalone `composer-dxos-org` Worker, whose reason for existing was
 serving this file. Two consequences:
 
-- composer.dxos.org must stay mapped to this Worker, and whatever redirects it to composer.space must not
-  cover `/.well-known/*` — Apple does not follow redirects when fetching the association file.
+- composer.dxos.org is a Custom Domain on this Worker so these files resolve there; a Redirect Rule on the
+  dxos.org zone sends its other traffic to composer.space and must exclude `/.well-known/*`, since Apple
+  does not follow redirects when fetching the association file.
 - A domain also has to be listed in `src-tauri/Entitlements.plist` (`associated-domains`) for the app to
   claim it; serving the file alone is not enough.
 
