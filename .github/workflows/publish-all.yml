@@ -93,10 +93,10 @@ jobs:
         if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
-          # dxos-bot's PAT, not GITHUB_TOKEN: GitHub raises no workflow run for anything GITHUB_TOKEN
-          # authors, so a GITHUB_TOKEN-owned Version PR gets zero checks and can never satisfy the required
-          # checks the merge queue gates on. The action reads `process.env.GITHUB_TOKEN` ahead of this
-          # input, so that env var must stay unset here.
+          # dxos-bot's PAT, not GITHUB_TOKEN: GitHub's recursion guard parks every `pull_request` run a
+          # GITHUB_TOKEN update triggers in `action_required`, so a GITHUB_TOKEN-owned Version PR reports
+          # zero check runs until a human approves each one by hand. The action reads
+          # `process.env.GITHUB_TOKEN` ahead of this input, so that env var must stay unset here.
           github-token: ${{ secrets.GH_DXOS_BOT_PAT }}
           version: pnpm changeset:version
           publish: pnpm changeset:publish
