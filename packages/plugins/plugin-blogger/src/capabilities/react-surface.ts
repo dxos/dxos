@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -20,16 +19,14 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'blogger.publication',
         filter: AppSurface.object(AppSurface.Article, Blog.Publication),
-        component: ({ data, role }) => (
-          <PublicationArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: PublicationArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'blogger.post',
         filter: AppSurface.object(AppSurface.Article, Blog.Post),
-        component: ({ data, role }) => (
-          <PostArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: PostArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // Comments companion for a Post plank. Scoped to the `comments` companion variant (the draft's
       // `Markdown.Document` as `subject`) so it fires only for blogger's own companion. NOTE: the id's
@@ -42,7 +39,8 @@ export default Capability.makeModule(() =>
           Markdown.Document,
           (data) => (data as { variant?: string }).variant === 'comments',
         ),
-        component: ({ data }) => <CommentsArticle subject={data.subject} attendableId={data.attendableId} />,
+        component: CommentsArticle,
+        props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
     ]),
   ),

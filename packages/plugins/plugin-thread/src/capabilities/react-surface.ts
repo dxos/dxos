@@ -3,15 +3,15 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
-import { ChannelArticle, ThreadArticle } from '#containers';
+import { ChannelArticle } from '#containers';
+
+import { ThreadArticleSurface } from './ThreadArticleSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -19,9 +19,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'channel',
         filter: AppSurface.object(AppSurface.Article, Channel.Channel),
-        component: ({ data: { subject, attendableId }, role }) => (
-          <ChannelArticle role={role} subject={subject} attendableId={attendableId} />
-        ),
+        component: ChannelArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'chatCompanion',
@@ -29,20 +28,15 @@ export default Capability.makeModule(() =>
           AppSurface.literal(AppSurface.Article, 'chat'),
           AppSurface.companion(AppSurface.Article, Channel.Channel),
         ),
-        component: ({ data: { companionTo: channel } }) => <ChannelArticle subject={channel} chatOnly />,
+        component: ChannelArticle,
+        props: ({ data: { companionTo } }) => ({ subject: companionTo, chatOnly: true }),
       }),
       // TODO(burdon): Disambiguate with Channel.
       Surface.create({
         id: 'thread',
         filter: AppSurface.object(AppSurface.Article, Thread.Thread),
-        component: ({ data: { subject } }) => {
-          const space = getSpace(subject);
-          if (!space || !subject) {
-            return null;
-          }
-
-          return <ThreadArticle space={space} thread={subject} />;
-        },
+        component: ThreadArticleSurface,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),

@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -22,12 +21,12 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'home',
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),
-        component: () => <Home />,
+        component: Home,
       }),
       Surface.create({
         id: 'notFound',
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
-        component: () => <NotFoundArticle />,
+        component: NotFoundArticle,
       }),
       Surface.create({
         id: 'navBranch',
@@ -36,7 +35,8 @@ export default Capability.makeModule(() =>
           AppSurface.Article,
           (data) => ALLOWED_DISPOSITIONS.includes(data.properties?.disposition) || data.properties?.role === 'branch',
         ),
-        component: ({ data }) => <NavBranch id={data.attendableId} />,
+        component: NavBranch,
+        props: ({ data: { attendableId } }) => ({ id: attendableId }),
       }),
     ]),
   ),
