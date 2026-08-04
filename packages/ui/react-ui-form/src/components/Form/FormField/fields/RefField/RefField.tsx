@@ -9,63 +9,21 @@ import { Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { SchemaEx } from '@dxos/effect';
-import { DXN, EID, URI } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '#translations';
-import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps, type RefOption } from '#types';
+import { type CreateOptions, type FormFieldRendererProps, type RefFieldDataProps } from '#types';
 
 import { omitHiddenFormFields, omitId } from '../../../../../util';
 import { ObjectPicker } from '../../../../ObjectPicker';
 import { FormFieldLabel } from '../../FormRow';
 import { presentationFor } from '../../presentation';
+import { findRefOption } from './find-ref-option';
 
 // TODO(burdon): Factor out.
-const isRefSnapshot = (val: any): val is { '/': string } => {
-  return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
-};
-
-/**
- * Find the option a ref-like form value points at. Matches on the local (entity-id) form so a bare local EID
- * (`echo:/<id>`, produced by `Ref.make`) still resolves against an option keyed by the entity's qualified
- * self URI (`echo://<space>/<id>`). Returns `undefined` when the value is not a ref or no option matches.
- *
- * Comparing by entity id is only sound within one space (ids are unique there, not globally). Two EIDs that
- * both carry a space authority must therefore agree on it: a qualified value and a qualified option from
- * different spaces never match, even when their entity ids coincide.
- */
-export const findRefOption = (value: unknown, options: RefOption[]): RefOption | undefined => {
-  const isRef = Ref.isRef(value);
-  if (!isRef && !isRefSnapshot(value)) {
-    return undefined;
-  }
-  const valueUri = isRef ? value.uri : value['/'];
-  // Keyed/registry entities (skills, operations) are referenced by a named DXN rather than an
-  // entity-id, so they carry no parseable EID; match those by direct URI equality against the option id.
-  const directMatch = options.find((option) => option.id === valueUri);
-  if (directMatch) {
-    return directMatch;
-  }
-  const valueEid = EID.tryParse(valueUri);
-  if (!valueEid) {
-    return undefined;
-  }
-  const valueSpaceId = EID.getSpaceId(valueEid);
-  const valueLocal = EID.toLocal(valueEid);
-  return options.find((option) => {
-    const optionEid = EID.tryParse(option.id);
-    if (!optionEid) {
-      return false;
-    }
-    const optionSpaceId = EID.getSpaceId(optionEid);
-    if (valueSpaceId != null && optionSpaceId != null && valueSpaceId !== optionSpaceId) {
-      return false;
-    }
-    return EID.equals(EID.toLocal(optionEid), valueLocal);
-  });
-};
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (
   results,

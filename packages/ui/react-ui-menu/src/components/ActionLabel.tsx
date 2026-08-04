@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
-import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
 
@@ -25,9 +25,4 @@ export const ActionLabel = ({ action }: { action: Action }) => {
       {shortcut && <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>}
     </>
   );
-};
-
-export const actionLabel = (action: Action, t: TFunction) => {
-  const shortcut = getShortcut(action);
-  return `${toLocalizedString(action.properties!.label, t)}${shortcut ? ` (${keySymbols(shortcut).join('')})` : ''}`;
 };

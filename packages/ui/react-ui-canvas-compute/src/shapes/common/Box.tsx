@@ -9,9 +9,6 @@ import { Icon, IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { type CanvasBoard, useEditorContext, useShapeDef } from '@dxos/react-ui-canvas-editor';
 import { mx } from '@dxos/ui-theme';
 
-export const headerHeight = 32;
-export const footerHeight = 32;
-
 export type BoxActionHandler = (action: 'run' | 'open' | 'close') => void;
 
 export type BoxProps = PropsWithChildren<

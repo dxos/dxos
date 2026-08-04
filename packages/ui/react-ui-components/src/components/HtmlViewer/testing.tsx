@@ -7,10 +7,10 @@ import React, { type ReactNode } from 'react';
 import { Panel, ThemeProvider, useThemeContext } from '@dxos/react-ui';
 import { trim } from '@dxos/util';
 
+import { type ColorScheme } from './color-scheme';
 import m1 from './fixtures/m1.html?raw';
 import m2 from './fixtures/m2.html?raw';
 import m3 from './fixtures/m3.html?raw';
-import { type ColorScheme } from './Html';
 
 //
 // Sandbox samples — exercise `Html` itself, with no dialect.

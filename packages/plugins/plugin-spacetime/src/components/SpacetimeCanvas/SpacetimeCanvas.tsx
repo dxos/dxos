@@ -27,7 +27,8 @@ import {
   createToolManager,
   getSelectedObjectIds,
 } from '../../tools';
-import { type DebugInfo, DebugPanel, extractSolidDebugInfo } from './DebugPanel';
+import { type DebugInfo, DebugPanel } from './DebugPanel';
+import { extractSolidDebugInfo } from './solid-debug-info';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;

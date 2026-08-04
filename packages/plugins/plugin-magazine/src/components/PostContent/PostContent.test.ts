@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { dedupeImagesInMarkdown } from './PostContent';
+import { dedupeImagesInMarkdown } from './dedupe-images';
 
 describe('dedupeImagesInMarkdown', () => {
   test('strips an image whose URL matches the hero imageUrl', () => {

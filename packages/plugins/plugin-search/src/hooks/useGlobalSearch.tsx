@@ -2,25 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
-import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
 import { GlobalFilterProvider } from '@dxos/react-ui-search';
 
-import { type SearchResult } from '#types';
-
+import { SearchContext } from './SearchContext';
 import { filterObjectsSync, queryStringToMatch } from './sync';
-
-// Re-export for backward compatibility.
-export { GlobalFilterProvider, useGlobalFilteredObjects } from '@dxos/react-ui-search';
-
-type SearchContextType = {
-  match?: RegExp;
-  setMatch?: (text?: string) => void;
-};
-
-const SearchContext = createContext<SearchContextType>({});
 
 /**
  * Provider for global search context.
@@ -49,13 +37,4 @@ export const SearchContextProvider = ({ children }: PropsWithChildren) => {
       <GlobalFilterProvider filter={filterFn}>{children}</GlobalFilterProvider>
     </SearchContext.Provider>
   );
-};
-
-export const useGlobalSearch = () => {
-  return useContext(SearchContext) ?? raise(new Error('Missing SearchContext.'));
-};
-
-export const useGlobalSearchResults = <T extends Entity.Unknown>(objects?: T[]): SearchResult<T>[] => {
-  const { match } = useGlobalSearch();
-  return objects && match ? filterObjectsSync(objects, match) : [];
 };

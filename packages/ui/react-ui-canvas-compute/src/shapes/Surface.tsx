@@ -2,37 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { Card } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
-import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
 import { Box, type BoxActionHandler } from './common';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
-
-export const SurfaceShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('surface'),
-  }),
-);
-
-export type SurfaceShape = Schema.Schema.Type<typeof SurfaceShape>;
-
-export type CreateSurfaceProps = CreateShapeProps<SurfaceShape>;
-
-export const createSurface = (props: CreateSurfaceProps) =>
-  createShape<SurfaceShape>({
-    type: 'surface',
-    size: { width: 384, height: 384 },
-    ...props,
-  });
+import { type SurfaceShape } from './surface-def';
 
 export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) => {
   const { runtime } = useComputeNodeState(shape);
@@ -53,14 +33,4 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
       </Card.Root>
     </Box>
   );
-};
-
-export const surfaceShape: ShapeDef<SurfaceShape> = {
-  type: 'surface',
-  name: 'Surface',
-  icon: 'ph--frame-corners--regular',
-  component: SurfaceComponent,
-  createShape: createSurface,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
-  resizable: true,
 };

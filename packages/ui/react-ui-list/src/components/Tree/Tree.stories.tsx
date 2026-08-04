@@ -16,8 +16,8 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { Path } from '../../util';
 import { type TestItem, createTree, updateState } from './testing';
 import { Tree } from './Tree';
+import { type TreeData } from './tree-data';
 import { type TreeModel } from './TreeContext';
-import { type TreeData } from './TreeItem';
 
 random.seed(1234);
 
