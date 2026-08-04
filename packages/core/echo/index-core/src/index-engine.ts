@@ -7,7 +7,7 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import { type Context } from '@dxos/context';
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_RELATION_SOURCE, ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
@@ -75,6 +75,21 @@ const accumulateIndexingResult = (acc: MutableIndexingResult, objects: readonly 
       acc.objects.add(obj.data.id as EntityId);
     }
   }
+};
+
+/**
+ * The natural key an indexed object contributes to the merge trigger, if any.
+ *
+ * Queue (feed) entities are out of merge scope — they have no automerge document to merge — and
+ * relations are excluded: they are not merge subjects (endpoints would not be reconciled). The
+ * empty string is not a key; grouping on it would merge unrelated entities.
+ */
+const naturalKeyOf = (obj: IndexerObject): string | undefined => {
+  if (!obj.documentId || (obj.data as Record<string, unknown>)[ATTR_RELATION_SOURCE] !== undefined) {
+    return undefined;
+  }
+  const naturalKey = (obj.data[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey;
+  return typeof naturalKey === 'string' && naturalKey.length > 0 ? naturalKey : undefined;
 };
 
 /**
@@ -161,6 +176,39 @@ export class IndexEngine {
    */
   querySnapshotsJSON(recordIds: number[]) {
     return this.#ftsIndex.querySnapshotsJSON(recordIds);
+  }
+
+  /**
+   * Live rows carrying any of the given natural keys in one space — the detection point-lookup
+   * for natural-key merging.
+   */
+  queryByNaturalKeys(
+    spaceId: SpaceId,
+    naturalKeys: readonly string[],
+  ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryByNaturalKeys(spaceId, naturalKeys);
+  }
+
+  /**
+   * Pending natural-key merge intents (see {@link EntityMetaIndex.recordNaturalKeyIntents}).
+   */
+  takeNaturalKeyIntents(): Effect.Effect<
+    { maxId: number; intents: Map<SpaceId, Set<string>> },
+    SqlError.SqlError,
+    SqlClient.SqlClient
+  > {
+    return this.#objectMetaIndex.takeNaturalKeyIntents();
+  }
+
+  /**
+   * Clear a serviced natural-key intent up to the id returned by {@link takeNaturalKeyIntents}.
+   */
+  clearNaturalKeyIntents(
+    spaceId: SpaceId,
+    naturalKey: string,
+    upToId: number,
+  ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.clearNaturalKeyIntents(spaceId, naturalKey, upToId);
   }
 
   queryType(
@@ -301,6 +349,22 @@ export class IndexEngine {
         return { updated: 0, done: true, objects: [] as readonly IndexerObject[] };
       }
 
+      // Natural keys in this batch, deduplicated — recorded as durable merge intents inside the
+      // transaction below, atomically with the cursor advance that would otherwise be the only
+      // record that these writes were ever seen.
+      const intents: { spaceId: SpaceId; naturalKey: string }[] = [];
+      const seenIntents = new Set<string>();
+      for (const obj of objects) {
+        const naturalKey = naturalKeyOf(obj);
+        if (naturalKey !== undefined) {
+          const composite = JSON.stringify([obj.spaceId, naturalKey]);
+          if (!seenIntents.has(composite)) {
+            seenIntents.add(composite);
+            intents.push({ spaceId: obj.spaceId, naturalKey });
+          }
+        }
+      }
+
       // Writes run INSIDE the transaction for atomicity.
       return yield* sqlTransaction.withTransaction(
         Effect.gen(this, function* () {
@@ -309,6 +373,8 @@ export class IndexEngine {
 
           // Look up recordIds for the objects.
           yield* this.#objectMetaIndex.lookupRecordIds(objects);
+
+          yield* this.#objectMetaIndex.recordNaturalKeyIntents(intents);
 
           yield* index.update(objects);
           yield* this.#tracker.updateCursors(

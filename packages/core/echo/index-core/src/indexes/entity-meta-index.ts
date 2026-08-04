@@ -8,7 +8,14 @@ import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import {
+  ATTR_DELETED,
+  ATTR_META,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+} from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
@@ -72,6 +79,8 @@ export const EntityMeta = Schema.Struct({
   target: Schema.NullOr(EID.Schema),
   /** Parent object id (nullable). */
   parent: Schema.NullOr(EID.Schema),
+  /** Caller-supplied domain identity from `meta.naturalKey` (nullable); duplicates sharing one merge. */
+  naturalKey: Schema.NullOr(Schema.String),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */
@@ -112,9 +121,29 @@ const buildSourceCondition = (
   return sql.or(conditions);
 };
 
+// SQLite caps bound variables (conventionally 999); chunk well below it, matching the FTS index.
+const QUERY_CHUNK_SIZE = 500;
+
 export class EntityMetaIndex implements Index {
   migrate = Effect.fn('EntityMetaIndex.runMigrations')(function* () {
     const sql = yield* SqlClient.SqlClient;
+
+    // Detect an upgrade from a schema without `naturalKey` BEFORE the DDL runs: rows indexed by
+    // the old build hold NULL where a key may exist in the document, and re-indexing is
+    // per-object — an unchanged object would never repopulate, so duplicate detection would
+    // silently miss it forever. The fix is a one-time cursor reset (below) forcing a full
+    // re-index; a fresh database creates the table with the column and skips it.
+    const priorColumns = yield* sql<{ name: string }>`SELECT name FROM pragma_table_info('objectMeta')`;
+    const needsNaturalKeyBackfill = priorColumns.length > 0 && !priorColumns.some(({ name }) => name === 'naturalKey');
+    if (needsNaturalKeyBackfill) {
+      // The tracker migrates before the indexes, so the cursor table exists here. Dropping every
+      // cursor re-presents all documents to the indexing loop, whose per-index upserts are
+      // idempotent — the one-time cost of a full re-index buys correct duplicate detection over
+      // data indexed before the column existed. The wipe runs BEFORE the ALTER below: migration
+      // statements auto-commit individually, and a crash between them must re-run the wipe on
+      // the next startup, not see the column and skip it.
+      yield* sql`DELETE FROM indexCursor`;
+    }
 
     yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (
       recordId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -129,6 +158,7 @@ export class EntityMetaIndex implements Index {
       source TEXT,
       target TEXT,
       parent TEXT,
+      naturalKey TEXT,
       version INTEGER NOT NULL,
       createdAt INTEGER,
       updatedAt INTEGER
@@ -136,6 +166,8 @@ export class EntityMetaIndex implements Index {
 
     // Add `parent` column for tables created before it was introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
+    // Add `naturalKey` column for tables created before it was introduced.
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN naturalKey TEXT`, () => Effect.void);
     // Add timestamp columns for tables created before they were introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
@@ -149,9 +181,110 @@ export class EntityMetaIndex implements Index {
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_naturalKey ON objectMeta(spaceId, naturalKey)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
+
+    // Write-ahead intents for natural-key merging: rows are inserted in the same transaction
+    // that commits index rows and cursors, and deleted only after the merge pass services the
+    // key — so a crash or a faulted pass can never leave a detected duplicate unserviced.
+    yield* sql`CREATE TABLE IF NOT EXISTS naturalKeyIntents (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      spaceId TEXT NOT NULL,
+      naturalKey TEXT NOT NULL
+    )`;
   });
+
+  /**
+   * Document-backed object rows carrying any of the given natural keys in one space.
+   *
+   * The detection point-lookup for natural-key merging: called with only the keys seen in a just
+   * indexed batch, so its cost is proportional to writes that carry a natural key. Tombstoned
+   * rows are included — a merged-away loser that received late edits must be found so those
+   * edits can be folded into the winner; the merge re-verifies every row against its document.
+   */
+  queryByNaturalKeys = Effect.fn('EntityMetaIndex.queryByNaturalKeys')(
+    (
+      spaceId: SpaceId,
+      naturalKeys: readonly string[],
+    ): Effect.Effect<readonly EntityMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (naturalKeys.length === 0) {
+          return [];
+        }
+        const sql = yield* SqlClient.SqlClient;
+        // Chunked to stay under SQLite's bound-variable limit — an initial index of a fresh
+        // clone can present thousands of keys in one batch, and a thrown query here would skip
+        // detection for the whole batch with no retry.
+        const results: EntityMeta[] = [];
+        for (let offset = 0; offset < naturalKeys.length; offset += QUERY_CHUNK_SIZE) {
+          const chunk = naturalKeys.slice(offset, offset + QUERY_CHUNK_SIZE);
+          const rows =
+            yield* sql<EntityMeta>`SELECT * FROM objectMeta WHERE spaceId = ${spaceId} AND ${sql.in('naturalKey', chunk)} AND entityKind = 'object' AND queueId = ''`;
+          results.push(...rows.map((row) => ({ ...row, deleted: !!row.deleted })));
+        }
+        return results;
+      }),
+  );
+
+  /**
+   * Durably queue natural keys for duplicate detection. Runs inside the same transaction that
+   * commits the index rows and cursors (see `IndexEngine.#update`), so a keyed write can never
+   * be indexed-but-forgotten: until the merge pass services the key and clears the intent, every
+   * later pass re-presents it.
+   */
+  recordNaturalKeyIntents = Effect.fn('EntityMetaIndex.recordNaturalKeyIntents')(
+    (
+      intents: readonly { spaceId: SpaceId; naturalKey: string }[],
+    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        if (intents.length === 0) {
+          return;
+        }
+        const sql = yield* SqlClient.SqlClient;
+        for (const { spaceId, naturalKey } of intents) {
+          yield* sql`INSERT INTO naturalKeyIntents (spaceId, naturalKey) VALUES (${spaceId}, ${naturalKey})`;
+        }
+      }),
+  );
+
+  /**
+   * All pending natural-key intents, deduplicated per space, with the high-water id to pass back
+   * to {@link clearNaturalKeyIntents} — intents recorded after this read have larger ids and
+   * survive the clear, so a concurrent indexing pass cannot have its trigger erased.
+   */
+  takeNaturalKeyIntents = Effect.fn('EntityMetaIndex.takeNaturalKeyIntents')(
+    (): Effect.Effect<{ maxId: number; intents: Map<SpaceId, Set<string>> }, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const rows = yield* sql<{ id: number; spaceId: SpaceId; naturalKey: string }>`
+          SELECT id, spaceId, naturalKey FROM naturalKeyIntents`;
+        let maxId = 0;
+        const intents = new Map<SpaceId, Set<string>>();
+        for (const { id, spaceId, naturalKey } of rows) {
+          maxId = Math.max(maxId, id);
+          const keys = intents.get(spaceId) ?? new Set();
+          keys.add(naturalKey);
+          intents.set(spaceId, keys);
+        }
+        return { maxId, intents };
+      }),
+  );
+
+  /**
+   * Clear a serviced natural-key intent, bounded by the id captured at read time.
+   */
+  clearNaturalKeyIntents = Effect.fn('EntityMetaIndex.clearNaturalKeyIntents')(
+    (
+      spaceId: SpaceId,
+      naturalKey: string,
+      upToId: number,
+    ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DELETE FROM naturalKeyIntents WHERE spaceId = ${spaceId} AND naturalKey = ${naturalKey} AND id <= ${upToId}`;
+      }),
+  );
 
   query = Effect.fn('EntityMetaIndex.query')(
     (
@@ -313,14 +446,15 @@ export class EntityMetaIndex implements Index {
                 source: string | null;
                 target: string | null;
                 parent: string | null;
+                naturalKey: string | null;
               };
               let existing: readonly ExistingRow[];
               if (documentId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, naturalKey FROM objectMeta WHERE spaceId = ${spaceId} AND documentId = ${documentId} AND objectId = ${objectId} LIMIT 1`;
               } else if (queueId) {
                 existing =
-                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
+                  yield* sql<ExistingRow>`SELECT recordId, entityKind, typeDXN, source, target, parent, naturalKey FROM objectMeta WHERE spaceId = ${spaceId} AND queueId = ${queueId} AND objectId = ${objectId} LIMIT 1`;
               } else {
                 // Should not happen based on IndexerObject definition (one must be present ideally), but handle gracefully.
                 existing = [];
@@ -369,6 +503,10 @@ export class EntityMetaIndex implements Index {
                   : null;
               // Parent (nullable).
               const parent = preserveBody ? priorRow.parent : (castData[ATTR_PARENT] ?? null);
+              // Natural key (nullable) — from the meta section of the serialized object.
+              const naturalKey = preserveBody
+                ? priorRow.naturalKey
+                : ((castData[ATTR_META] as { naturalKey?: string } | undefined)?.naturalKey ?? null);
 
               const updatedAtTimestamp = object.updatedAt;
               // Prefer the creation timestamp stored in the document (survives compaction/migrations).
@@ -390,6 +528,7 @@ export class EntityMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
+                    naturalKey = ${naturalKey},
                     updatedAt = ${updatedAtTimestamp}
                   WHERE recordId = ${existing[0].recordId}
                 `;
@@ -397,12 +536,12 @@ export class EntityMetaIndex implements Index {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDXN, deleted, source, target, parent, version,
+                    entityKind, typeDXN, deleted, source, target, parent, naturalKey, version,
                     createdAt, updatedAt
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
-                    ${source}, ${target}, ${parent}, ${version},
+                    ${source}, ${target}, ${parent}, ${naturalKey}, ${version},
                     ${createdAtTimestamp}, ${updatedAtTimestamp}
                   )
                 `;

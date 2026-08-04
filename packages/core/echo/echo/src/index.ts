@@ -18,6 +18,7 @@ export * as Hypergraph from './Hypergraph';
 export * as Json from './Json';
 export * as JsonSchema from './JsonSchema';
 export * as Key from './Key';
+export * as Merge from './Merge';
 export * as Migration from './Migration';
 export * as Obj from './Obj';
 export * as Order from './Order';

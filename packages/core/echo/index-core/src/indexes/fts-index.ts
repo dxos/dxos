@@ -8,7 +8,7 @@ import type * as Statement from '@effect/sql/Statement';
 import * as Effect from 'effect/Effect';
 
 import type { Obj } from '@dxos/echo';
-import { ATTR_TYPE } from '@dxos/echo/internal';
+import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import type { EntityId, SpaceId } from '@dxos/keys';
 
 import type { EntityMeta } from './entity-meta-index';
@@ -252,7 +252,14 @@ export class FtsIndex implements Index {
                 isPartialBlock && existing.length > 0
                   ? { ...(JSON.parse(existing[0].snapshot) as Record<string, unknown>), ...data }
                   : data;
-              const snapshot = JSON.stringify(merged);
+              // Document objects carry `@meta` only so the entity-meta index can extract the
+              // natural key — full-text search must not match on foreign keys or identity
+              // strings the visible content never contains. Queue blocks always carried meta in
+              // their snapshot (clients hydrate from it), so theirs stays.
+              const searchable = object.documentId
+                ? Object.fromEntries(Object.entries(merged).filter(([key]) => key !== ATTR_META))
+                : merged;
+              const snapshot = JSON.stringify(searchable);
 
               if (existing.length > 0) {
                 yield* sql`DELETE FROM ftsIndex WHERE rowid = ${recordId}`;
