@@ -135,8 +135,7 @@ export class ModuleLoader {
             ),
           ),
         );
-        yield* this.#state.fibers.track(fiber);
-        yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.#state.fibers.untrack(fiber))));
+        yield* this.#state.fibers.trackForked(fiber);
 
         return deferred;
       }).pipe(semaphore.withPermits(1));
@@ -346,6 +345,8 @@ export class ModuleLoader {
         Effect.provide(requiresContext),
         Effect.provideService(Capability.Service, this.#capabilities),
         Effect.locally(Capability.CurrentModuleId, module.id),
+        Effect.locallyWith(Capability.ActivatingModuleIds, (ids) => new Set([...ids, module.id])),
+
         Scope.extend(scope),
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against

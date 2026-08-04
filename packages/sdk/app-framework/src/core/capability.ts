@@ -42,6 +42,17 @@ export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValu
 );
 
 /**
+ * Every module id whose `activate` body is on the current fiber's call stack, not just the
+ * innermost — a body may fire an activation event, and that event's wave must not wait on a module
+ * it is running inside. Such a wait only ends at the activation timeout, which the failure
+ * supervisor reads as a broken plugin and disables.
+ */
+export const ActivatingModuleIds: FiberRef.FiberRef<ReadonlySet<string>> = GlobalValue.globalValue(
+  Symbol.for('@dxos/app-framework/Capability/ActivatingModuleIds'),
+  () => FiberRef.unsafeMake<ReadonlySet<string>>(new Set<string>()),
+);
+
+/**
  * Get a single capability from the capability manager.
  * @param interfaceDef The interface definition of the capability.
  * @returns The capability implementation.

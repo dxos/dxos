@@ -12,6 +12,36 @@ import * as Effect from 'effect/Effect';
 const IDLE_TIMEOUT = 15_000;
 
 /**
+ * Backstop for the paint wait, for hosts where frames never come — a backgrounded tab does not
+ * run `requestAnimationFrame`, and the idle wave must not be lost to that.
+ */
+const PAINT_TIMEOUT = 2_000;
+
+/**
+ * Completes after the shell has painted. Two frames: the first callback runs before paint, the
+ * second after it. Without this the idle timeout below can expire mid-render-pipeline, flooding
+ * the main thread ahead of first paint — precisely the cost the wait exists to avoid.
+ */
+const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
+  if (typeof requestAnimationFrame !== 'function') {
+    return Effect.void;
+  }
+  return Effect.async<void>((resume) => {
+    let inner: number | undefined;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => resume(Effect.void));
+    });
+    return Effect.sync(() => {
+      cancelAnimationFrame(outer);
+      inner !== undefined && cancelAnimationFrame(inner);
+    });
+  }).pipe(
+    Effect.timeout(PAINT_TIMEOUT),
+    Effect.orElse(() => Effect.void),
+  );
+});
+
+/**
  * Completes once the host is idle, so work scheduled behind it lands after the shell has painted
  * rather than competing with it.
  *
@@ -23,8 +53,12 @@ export const whenIdle: Effect.Effect<void> = Effect.suspend(() => {
   if (typeof requestIdleCallback !== 'function') {
     return Effect.void;
   }
-  return Effect.async<void>((resume) => {
-    const handle = requestIdleCallback(() => resume(Effect.void), { timeout: IDLE_TIMEOUT });
-    return Effect.sync(() => cancelIdleCallback(handle));
-  });
+  return afterPaint.pipe(
+    Effect.andThen(
+      Effect.async<void>((resume) => {
+        const handle = requestIdleCallback(() => resume(Effect.void), { timeout: IDLE_TIMEOUT });
+        return Effect.sync(() => cancelIdleCallback(handle));
+      }),
+    ),
+  );
 });

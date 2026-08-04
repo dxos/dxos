@@ -296,9 +296,16 @@ export class PluginCatalog {
       });
 
       log('pending reset', { events: [...this.#state.getPendingReset()] });
-      // Replay events that already fired so the newly registered modules activate.
+      // Replay events that already fired so the newly registered modules activate. Startup is
+      // excluded: `activate` delegates it to `start()`, which would re-run the full unscoped
+      // passes, re-publish the event-level `activated` message that gates app-ready, and fork a
+      // second idle daemon — once per enable. The scoped pass below covers this plugin's
+      // baseline-wave modules, which is all the replay was reaching for.
+      const startupKey = ActivationEvent.eventKey(ActivationEvent.Startup);
+      const replay = this.#state.getPendingReset().filter((event) => event !== startupKey);
+      this.#state.clearPendingReset(startupKey);
       yield* Effect.all(
-        this.#state.getPendingReset().map((event) => this.#scheduler.activate(event)),
+        replay.map((event) => this.#scheduler.activate(event)),
         { concurrency: 'unbounded' },
       );
 
@@ -331,7 +338,9 @@ export class PluginCatalog {
             .activate(ActivationEvent.pluginStart(id))
             .pipe(Effect.catchAll((error) => Effect.sync(() => this.#state.recordFailure(id, 'activation', error))));
         } else {
-          yield* pass.pipe(Effect.forkDaemon);
+          // Tracked so `shutdown()` interrupts an incremental pass still running from the
+          // bootstrap enable chain.
+          yield* this.#state.fibers.trackForked(yield* pass.pipe(Effect.forkDaemon));
         }
       }
 

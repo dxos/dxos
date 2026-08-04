@@ -1338,6 +1338,48 @@ describe('PluginManager', () => {
     }),
   );
 
+  describe('self-referential activation', () => {
+    it.effect(
+      'a module may await an event that would activate itself',
+      () =>
+        Effect.gen(function* () {
+          // Regression: the wave `awaitSettled`s every matched module it finds mid-load, including
+          // the one whose body is calling it. That wait is circular and only ends at the activation
+          // timeout, which the failure supervisor reads as a broken plugin and disables.
+          const EventA = ActivationEvent.make('org.dxos.test.selfA');
+          const EventB = ActivationEvent.make('org.dxos.test.selfB');
+
+          const Test = Plugin.make(
+            Plugin.define(testMeta).pipe(
+              Plugin.addModule({
+                id: 'self',
+                activatesOn: ActivationEvent.oneOf(EventA, EventB),
+                provides: [String],
+                activate: Effect.fnUntraced(function* () {
+                  const manager = yield* Plugin.Service;
+                  yield* manager.activate(EventB);
+                  return [Capability.contribute(String, { string: 'self' })];
+                }),
+              }),
+            ),
+          );
+
+          const instance = Test();
+          const manager = PluginManager.make({
+            plugins: [instance],
+            enabled: [instance.meta.profile.key],
+            pluginLoader,
+          });
+          yield* manager.start();
+          yield* manager.activate(EventA);
+
+          assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'self' }]);
+          assert.deepStrictEqual(manager.getFailed(), []);
+        }),
+      { timeout: 20_000 },
+    );
+  });
+
   describe('streaming start', () => {
     const slowMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.slowdef'), name: 'SlowDef' });
 

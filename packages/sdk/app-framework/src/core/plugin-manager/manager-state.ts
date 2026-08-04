@@ -329,6 +329,18 @@ export class FiberTracker {
     Effect.runFork(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
   }
 
+  /**
+   * Registers a fiber forked inside an Effect, untracking it when it settles. The counterpart to
+   * {@link fork} for effects that need the ambient context (`Plugin.Service`), which `runFork`
+   * cannot supply.
+   */
+  trackForked(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      yield* this.track(fiber);
+      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
+    });
+  }
+
   interruptAll(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const fibers = yield* Ref.get(this.#fibers);

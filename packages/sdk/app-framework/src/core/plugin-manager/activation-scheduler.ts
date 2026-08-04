@@ -7,6 +7,7 @@ import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as FiberRef from 'effect/FiberRef';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 
@@ -15,7 +16,7 @@ import { log } from '@dxos/log';
 
 import { ActivationEvents } from '../../common';
 import * as ActivationEvent from '../activation-event';
-import type * as Capability from '../capability';
+import * as Capability from '../capability';
 import type * as CapabilityManager from '../capability-manager';
 import { DependencyCycleError, DuplicateProviderError, MissingProviderError } from '../errors';
 import type * as Plugin from '../plugin';
@@ -161,7 +162,10 @@ export class ActivationScheduler {
       // event, and a host that owned the wait would re-implement it (and could forget to).
       // Forked so `start` returns at ready, and deferred to host idle so the registration
       // contributions gated on it land after first paint instead of competing with it.
-      yield* this.#activateWhenIdle().pipe(Effect.forkDaemon);
+      // Tracked: the wave sits behind a wait of up to 15s, and an untracked daemon outlives
+      // `shutdown()` — dispatching Idle into a manager that has already reset re-activates
+      // modules after teardown.
+      yield* this.#state.fibers.trackForked(yield* this.#activateWhenIdle().pipe(Effect.forkDaemon));
 
       return this.#state.getActiveIds().length > activeBefore || ranAny;
     });
@@ -482,7 +486,7 @@ export class ActivationScheduler {
       // activated — demand pulls rely on "activate resolved ⇒ matched modules contributed"
       // (a lookup retry that runs earlier misses the handlers and fails a one-shot invocation).
       // Bounded: every load settles its deferred under the activation timeout.
-      const inFlight = modules.filter((module) => this.#loader.isLoading(module.id));
+      const inFlight = (yield* this.#notActivatingHere(modules)).filter((module) => this.#loader.isLoading(module.id));
       if (inFlight.length > 0) {
         yield* Effect.all(
           inFlight.map((module) => this.#loader.awaitSettled(module.id)),
@@ -595,6 +599,23 @@ export class ActivationScheduler {
   #isBaselineWave(module: Plugin.PluginModule): boolean {
     const startup = ActivationEvent.eventKey(ActivationEvent.Startup);
     return ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(startup);
+  }
+
+  /**
+   * Drops the modules whose `activate` bodies this fiber is running inside. A body that fires an
+   * activation event is a caller of the wave, so awaiting its own load is a circular wait that
+   * ends only at the activation timeout — recorded as a `PluginTimeoutError` and read by the
+   * failure supervisor as a broken plugin, which then disables it. Their contributions are simply
+   * not visible to this wave; the body contributes them when it returns.
+   */
+  #notActivatingHere(modules: Plugin.PluginModule[]): Effect.Effect<Plugin.PluginModule[]> {
+    return Effect.gen(function* () {
+      const activating = yield* FiberRef.get(Capability.ActivatingModuleIds);
+      if (activating.size === 0) {
+        return modules;
+      }
+      return modules.filter((module) => !activating.has(module.id));
+    });
   }
 
   /**
@@ -913,7 +934,9 @@ export class ActivationScheduler {
         // Providers already mid-load (e.g. via the concurrent startup pass) are joined, not
         // re-drained — the scoped round below filters them as `isLoading` and would otherwise
         // return before their capabilities land.
-        const inFlight = [...needed.values()].filter((module) => this.#loader.isLoading(module.id));
+        const inFlight = (yield* this.#notActivatingHere([...needed.values()])).filter((module) =>
+          this.#loader.isLoading(module.id),
+        );
         if (inFlight.length > 0) {
           yield* Effect.all(
             inFlight.map((module) => this.#loader.awaitSettled(module.id)),

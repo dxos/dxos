@@ -94,6 +94,16 @@ export class SurfaceManager {
     return true;
   }
 
+  /**
+   * Returns a claimed role to the pool. The claim is taken before the dispatch is known to have
+   * happened, so a dispatch that fails or is interrupted (shutdown, a failed activation) must give
+   * it back — nothing else re-requests the role, and `useIsSurfaceAvailable`'s own retry is
+   * claimed away too, leaving every surface in that role permanently empty.
+   */
+  releaseRole(role: string): void {
+    this.#requestedRoles.delete(role);
+  }
+
   /** Drops definitions with an invalid local id, warning once per id. */
   #dropInvalid(definitions: Definition[]): Definition[] {
     return definitions.filter((definition) => {

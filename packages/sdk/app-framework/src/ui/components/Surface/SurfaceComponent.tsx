@@ -3,6 +3,8 @@
 //
 
 import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import React, {
   type FC,
   Fragment,
@@ -51,7 +53,15 @@ const requestSurfaces = (
   if (!manager || !surfaceManager.requestRole(role)) {
     return;
   }
-  EffectEx.runDetached(manager.activate(ActivationEvents.SurfacesRequested(role)));
+  EffectEx.runDetached(
+    manager
+      .activate(ActivationEvents.SurfacesRequested(role))
+      .pipe(
+        Effect.onExit((exit) =>
+          Exit.isFailure(exit) ? Effect.sync(() => surfaceManager.releaseRole(role)) : Effect.void,
+        ),
+      ),
+  );
 };
 
 /**
