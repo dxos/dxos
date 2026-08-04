@@ -32,7 +32,8 @@
   /*
    * A filled control's hover has to move ITS OWN fill. `--color-hover-surface` is derived from the
    * host surface — correct for ghost/outline, which are transparent and let the host show through,
-   * but on a filled button it discards the fill and lands next to `--color-selected-surface`.
+   * but in light it sits above the fill, so a filled button lightened on hover into
+   * `--color-selected-surface`. Light-mode only: dark still uses the host tint (see button.css).
    */
   --color-input-bg-hover: oklch(
     from var(--color-input-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h

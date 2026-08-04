@@ -68,9 +68,18 @@
         @apply bg-hover-surface;
       }
 
+      /*
+       * Light moves the button's OWN fill: the host-derived hover sits above the fill here, so it
+       * lightened on hover and landed on `--color-selected-surface`. Dark keeps the host tint — the
+       * dark ladder puts it clear of the fill already, and the token cannot carry it: declared at
+       * `:root`, `var(--color-hover-surface)` would freeze there and stop tracking the zone.
+       */
       &[data-variant='default']:hover {
         color: var(--dx-valence-text);
         background-color: var(--dx-valence-bg-hover, var(--color-input-bg-hover));
+      }
+      .dark &[data-variant='default']:hover {
+        background-color: var(--dx-valence-bg-hover, var(--color-hover-surface));
       }
 
       /* 
