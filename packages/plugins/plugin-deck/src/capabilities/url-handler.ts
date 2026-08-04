@@ -5,8 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { PathResolution } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -32,9 +34,12 @@ import {
 } from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
-/** Bounded retry for URL resolution while a cold restore's container chain finishes loading. */
-const RESOLVE_RETRY_ATTEMPTS = 15;
-const RESOLVE_RETRY_INTERVAL = '150 millis';
+/**
+ * Deadline for a cold restore's container chain to materialize. Not a poll interval: resolution
+ * re-runs on graph change, and this only bounds the wait so a node that never arrives cannot hang
+ * the restore. Generous because it costs nothing when the chain lands early.
+ */
+const RESOLVE_TIMEOUT = '10 seconds';
 
 /** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
 const bareWorkspace = (qualifiedWorkspace: string): string => {
@@ -55,6 +60,7 @@ export default Capability.makeModule(
     // The graph builder is contributed once by plugin-graph and is stable for the app's lifetime,
     // so both the inbound (URL -> state) resolution and the outbound sync below share this handle.
     const builder = yield* AppCapabilities.AppGraph;
+    const manager = yield* Plugin.Service;
 
     /** Dispatch all NavigationHandler contributions with a given URL. */
     const dispatchNavigationHandlers = (url: URL) =>
@@ -112,8 +118,14 @@ export default Capability.makeModule(
         return;
       }
 
-      const keyTable = PathResolution.buildUrlKeyTable(builder);
-      const parsed = UrlPath.parse(pathname, keyTable);
+      let parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
+      if (Option.isNone(parsed)) {
+        // URL keys come from graph builders that ride Idle, and a deep link can be restored before
+        // that wave lands. The URL is itself the demand signal, so pull the wave and re-parse —
+        // awaited, so this settles when the contributions are in rather than on a timer.
+        yield* manager.activate(ActivationEvents.Idle);
+        parsed = UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
+      }
       if (Option.isNone(parsed)) {
         // Unknown/malformed path: same outcome as an unresolvable subject id always had — open the
         // not-found sentinel. `immediate` skips validation, which is redundant for the sentinel anyway.
@@ -147,7 +159,10 @@ export default Capability.makeModule(
       // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
       // below so a genuine 404 fails fast instead of waiting out the timeout.
       const loaders = navigationTargetLoaders.get();
-      const confirmed = new Array<boolean>(pairs.length).fill(false);
+      // Keyless pairs (singleton keys like the space home) carry no object id to confirm against;
+      // their nodes materialize with the workspace's graph subtree, so they wait rather than
+      // fail fast. Fail-fast stays reserved for object pairs a loader positively disconfirmed.
+      const confirmed = pairs.map((pair) => pair.id === undefined);
       if (loaders.length > 0) {
         yield* Effect.forEach(
           pairs,
@@ -167,15 +182,36 @@ export default Capability.makeModule(
       }
 
       // Loading an object does not load its container chain (e.g. the collection it lives in), which
-      // `resolveUrl`'s expansion triggers but cannot synchronously await. Retry the confirmed-existing
-      // planks (bounded) until their ancestors materialize, so a cold reload lands on the object.
-      let resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
-      const hasPendingConfirmed = () =>
-        pairs.some((pair, index) => pair.id !== undefined && confirmed[index] && !resolved[index]);
-      for (let attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && hasPendingConfirmed(); attempt++) {
-        yield* Effect.sleep(RESOLVE_RETRY_INTERVAL);
-        resolved = yield* PathResolution.resolveUrl(builder, { workspace, pairs });
-      }
+      // `resolveUrl`'s expansion triggers but cannot synchronously await. Every node that arrives
+      // emits `onNodeChanged`, so re-resolve on that rather than on a timer: the restore completes
+      // the moment the chain lands, and the deadline below is a backstop, not the mechanism.
+      const nextGraphChange = Effect.async<void>((resume) => {
+        const unsubscribe = builder.graph.onNodeChanged.on(() => {
+          unsubscribe();
+          resume(Effect.void);
+        });
+        return Effect.sync(() => unsubscribe());
+      });
+
+      const resolveOnce = PathResolution.resolveUrl(builder, { workspace, pairs });
+      const resolved = yield* Effect.gen(function* () {
+        let current = yield* resolveOnce;
+        while (pairs.some((pair, index) => confirmed[index] && !current[index])) {
+          yield* nextGraphChange;
+          current = yield* resolveOnce;
+        }
+        return current;
+      }).pipe(
+        Effect.timeout(RESOLVE_TIMEOUT),
+        // Timing out is not fatal: restore what did resolve. Unresolved planks fall to not-found
+        // below, which is the same outcome the bounded retry produced.
+        Effect.catchAll(() =>
+          Effect.gen(function* () {
+            log.warn('URL restore timed out waiting for the graph', { pathname });
+            return yield* resolveOnce;
+          }),
+        ),
+      );
 
       // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
       // than being a plank of its own, so it drives that plank's companion state and the selected variant.
