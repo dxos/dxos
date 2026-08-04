@@ -8,8 +8,10 @@
 #
 #   mode.sh get      -> print current mode (terse|normal)
 #   mode.sh toggle   -> flip the mode, print the new mode
-#   mode.sh context  -> when terse, print the directive injected into each
-#                       prompt; prints nothing in normal mode
+#   mode.sh context  -> print the response rules injected into each prompt; the
+#                       invariants are emitted in BOTH modes, only the length
+#                       clause varies. Never silent — a mode that says nothing
+#                       in its default state is the bug this replaced.
 #
 # State is per-user runtime, not repo policy: it lives in an untracked file and
 # must stay out of git (ignored via the root .gitignore).
@@ -61,19 +63,35 @@ case "${1:-get}" in
     esac
     ;;
   context)
-    # TODO(burdon): Emit in BOTH modes — the invariants (numbered options,
-    # worktree reporting) are state-independent and are lost while this returns
-    # early. See .agents/projects/agent-directives/TASKS.md Phase 2.
-    [ "$(current)" = 'terse' ] || exit 0
+    # Emitted in BOTH modes. The invariants are state-independent, and a rule
+    # stated only in always-loaded markdown is diluted to nothing by mid-session
+    # skill loads — re-injecting per turn is the only position that survives.
     cat <<'EOF'
-MODE: TERSE is ON.
-- Answer in the fewest words that fully address the request.
-  Lead with the direct answer or result; drop preamble, restatement, and filler.
-- Minimal markdown. Prefer one sentence or a short list over prose.
-- If material detail exists beyond the terse answer, end with a single line:
-  `(say "more" for detail)`.
-- This governs verbosity only — it does NOT override correctness, required
-  safety, numbered-option questions, or showing test/command output.
+RESPONSE RULES (re-injected every turn; these govern the reply, not the work).
+- Open with one line naming the worktree directory you are in and the
+  instruction/skill files you actually read this turn. State it every time, not
+  just in the first reply of a session.
+- Every question or set of options is a NUMBERED list — never an unnumbered
+  a-or-b, never a bare open question.
+- Lead with the direct answer or result. No preamble, no restatement of the
+  request, no summary of what you are about to do.
+EOF
+    if [ "$(current)" = 'terse' ]; then
+      cat <<'EOF'
+- MODE: TERSE — at most 8 lines total. No headings, no nested bullets, minimal
+  markdown. Prefer one sentence or a short flat list. If material detail
+  remains, end with exactly: `(say "more" for detail)`.
+EOF
+    else
+      cat <<'EOF'
+- MODE: NORMAL — no line budget, but stay proportionate to the request; length
+  is earned by content, never by restating or narrating.
+EOF
+    fi
+    cat <<'EOF'
+- These govern form only. They do NOT override correctness, required safety
+  steps, showing test/command output, or reporting a failure honestly. The
+  worktree line and numbered options survive in every mode.
 EOF
     ;;
   *)

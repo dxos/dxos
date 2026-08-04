@@ -33,15 +33,28 @@ surface and are unreviewable without it.
 ## Phase 2: Make the response directives durable
 
 `UserPromptSubmit` `additionalContext` lands adjacent to the current prompt —
-last position, every turn, immune to dilution. `mode.sh` already owns
-that channel but `context` returns early in `normal`, so the machine is silent
-in its default state. That single gap is why "be terse" never survives.
+last position, every turn, immune to dilution. `mode.sh` already owns that
+channel but used to return early in `normal`, leaving the machine silent in its
+default state. That single gap is why "be terse" never survived.
 
 ### Tasks
 
-- [ ] **Emit in every state** — `scripts/mode.sh context` currently
-      `exit 0`s unless the mode is `terse`. Make it always emit: invariants in
-      both modes, budget varying by mode.
+- [x] **Emit in every state** — `scripts/mode.sh context` now prints the
+      `RESPONSE RULES` block in both modes; only the length clause branches.
+- [x] **Fold in the state-independent invariants** — open every reply with the
+      worktree and the instruction/skill files read that turn; number every
+      question and option set; lead with the answer. `AGENTS.md` previously
+      required the worktree line in the _first_ reply only, so it decayed
+      immediately — hence the recurring "which worktree are you in?".
+- [x] **Refresh `AGENTS.md`** — replaced the first-reply clause with a
+      "Responding to the user" section, canonical, noting the per-turn
+      re-injection.
+- [x] **Consolidate the scattered sources** — `.claude/CLAUDE.md` now points at
+      the canonical section instead of restating it.
+- [ ] **Update `~/.claude/CLAUDE.md`** (decision: yes). BLOCKED from the agent
+      side: it symlinks to `~/Code/richburdon/config/dotfiles/.claude/CLAUDE.md`,
+      a separate repo whose HEAD is `main`, so `guard-worktree.sh` refuses the
+      edit. Needs the user to apply it, or to branch that repo.
 - [ ] **Drop the bare one-token sentinel forms** — the regex still matches a bare
       `$terse` / `$normal` (and the aliases) anywhere in the message, so prose
       _about_ the modes flips them. Observed live on 2026-08-03: a message
@@ -52,23 +65,14 @@ in its default state. That single gap is why "be terse" never survives.
       sentinel as the deterministic path and give `/mode` a
       `UserPromptExpansion` hook (matcher `mode`) doing the same write. One
       backend, two entrances, neither relying on agent compliance.
-- [ ] **Fold in the state-independent invariants** — numbered questions/options
-      always; state worktree + branch on any reply that writes files or runs
-      commands (`AGENTS.md:24` requires it in the _first_ reply only, so it
-      decays immediately — the recurring "which worktree are you in?").
-- [ ] **Consolidate the scattered sources** — `AGENTS.md:27`,
-      `~/.claude/CLAUDE.md:8-10`, `.claude/CLAUDE.md:10-16` each state part of
-      the response contract. One canonical statement, pointers elsewhere.
-- [ ] **Refresh `AGENTS.md`** — add the "Responding to the user" section; note
-      that the hook re-injects it per turn.
 
-### Open decisions
+### Decisions (settled 2026-08-03)
 
-- [ ] Terse-mode budget: ≤8 lines / ≤15 lines / unbudgeted prose directive.
-- [ ] Does `normal` mode carry a budget at all, or invariants only?
-- [ ] Edit `~/.claude/CLAUDE.md` (global, affects every project) or leave it and
-      let the repo hook override?
-- [ ] Default mode when `.claude/.mode` is absent: `normal` or `terse`?
+- [x] Terse-mode budget: **8 lines**, minimal markdown, no headings/nesting.
+- [x] `normal` carries **no budget** — invariants only, plus "stay
+      proportionate; length is earned by content".
+- [x] **Yes**, update the global `~/.claude/CLAUDE.md` (blocked, see above).
+- [x] Default when `.claude/.mode` is absent: **`normal`**.
 
 ## Phase 3: Cleanups found on the way
 

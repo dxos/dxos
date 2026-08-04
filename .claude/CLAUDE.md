@@ -12,9 +12,13 @@
   forms still work, and `concise` aliases `terse` while
   `natural`/`default`/`off` alias `normal`.
 - A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) parses the sentinel, sets
-  the mode, and while terse injects a terseness directive into every prompt.
-  State lives in the untracked `.claude/.mode`.
-- When the injected `MODE: TERSE` directive is present, follow it.
+  the mode, and injects the `RESPONSE RULES` block into **every** prompt. State
+  lives in the untracked `.claude/.mode`; `normal` is the default when absent.
+- The block is emitted in both modes — the invariants (worktree + files-read
+  line, numbered options, lead with the answer) are state-independent and only
+  the length clause varies. Follow it whenever it is present.
+- The rules themselves are canonical in `AGENTS.md` → "Responding to the user";
+  the machinery is documented in `.claude/README.md`.
 
 ## Task planning
 

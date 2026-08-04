@@ -152,10 +152,19 @@ A sentinel is a **marker typed inside a normal message** that a
 They exist because a hook can act on them **before the model runs**, which makes
 the state change deterministic rather than dependent on the agent complying.
 
-The two mode values are `terse` and `normal`. `concise` aliases `terse`;
-`natural`, `default` and `off` alias `normal`. The state file is canonicalised on
-read, so a stale or hand-edited value cannot wedge the machine — anything that is
-not `terse` means `normal`.
+The two mode values are `terse` and `normal` (the default when the state file is
+absent). `concise` aliases `terse`; `natural`, `default` and `off` alias
+`normal`. The state file is canonicalised on read, so a stale or hand-edited
+value cannot wedge the machine — anything that is not `terse` means `normal`.
+
+**`mode.sh context` emits in BOTH states.** This is the point of the mechanism,
+not an implementation detail: the invariants it carries — open with the worktree
+and the files you read, number every question, lead with the answer — are
+state-independent, and only the length clause varies (`terse` caps a reply at 8
+lines; `normal` sets no budget). A mode that stays silent in its default state
+delivers nothing on the turns that make up most of a session, which is exactly
+how the earlier version failed. The rules themselves are canonical in
+[`AGENTS.md`](../AGENTS.md) → "Responding to the user".
 
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
 > cannot tell a command from a mention of one. The bare one-token forms are still
