@@ -24,7 +24,6 @@ export default defineConfig({
     'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'AssistantEvents': 'src/types/AssistantEvents.ts',
     'AssistantOptions': 'src/types/AssistantOptions.ts',
     'AssistantPreset': 'src/types/AssistantPreset.ts',

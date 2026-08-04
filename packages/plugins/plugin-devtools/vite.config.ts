@@ -15,7 +15,6 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Devtools': 'src/types/Devtools.ts',
     'DevtoolsEvents': 'src/types/DevtoolsEvents.ts',
   },

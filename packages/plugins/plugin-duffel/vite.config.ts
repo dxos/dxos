@@ -13,7 +13,6 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     services: 'src/services/index.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     DuffelCapabilities: 'src/types/DuffelCapabilities.ts',
     DuffelEvents: 'src/types/DuffelEvents.ts',
     Settings: 'src/types/Settings.ts',

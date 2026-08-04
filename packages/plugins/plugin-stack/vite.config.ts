@@ -14,7 +14,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Stack: 'src/types/Stack.ts',
     StackEvents: 'src/types/StackEvents.ts',
   },

@@ -15,7 +15,6 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     sources: 'src/sources/index.ts',
     testing: 'src/testing/index.ts',
-    types: 'src/types/index.ts',
     translations: 'src/translations.ts',
     util: 'src/util/index.ts',
     CrmEvents: 'src/types/CrmEvents.ts',

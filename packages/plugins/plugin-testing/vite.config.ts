@@ -15,7 +15,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
-    types: 'src/types/index.ts',
     StorybookCapabilities: 'src/types/StorybookCapabilities.ts',
   },
   jsx: 'react',

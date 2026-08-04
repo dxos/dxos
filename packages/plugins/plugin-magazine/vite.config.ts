@@ -19,7 +19,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'plugin.workerd': 'src/plugin.workerd.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'atoms': 'src/atoms/index.ts',
     'testing': 'src/testing/index.ts',
     'CreateSubscription': 'src/types/CreateSubscription.ts',

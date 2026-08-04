@@ -16,7 +16,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Voxel: 'src/types/Voxel.ts',
     VoxelEvents: 'src/types/VoxelEvents.ts',
     VoxelOperation: 'src/types/VoxelOperation.ts',

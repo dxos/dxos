@@ -20,7 +20,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'AgentIdentity': 'src/types/AgentIdentity.ts',
     'ReviewCapabilities': 'src/types/ReviewCapabilities.ts',
     'AgentIdentity': 'src/types/AgentIdentity.ts',

@@ -15,7 +15,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Video: 'src/types/Video.ts',
     VideoEvents: 'src/types/VideoEvents.ts',
     VideoOperation: 'src/types/VideoOperation.ts',

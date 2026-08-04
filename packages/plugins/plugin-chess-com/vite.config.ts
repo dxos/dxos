@@ -18,7 +18,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'ChessComAccount': 'src/types/ChessComAccount.ts',
     'ChessComEvents': 'src/types/ChessComEvents.ts',
     'ChessComOperation': 'src/types/ChessComOperation.ts',

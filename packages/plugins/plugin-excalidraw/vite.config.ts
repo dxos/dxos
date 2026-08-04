@@ -15,7 +15,6 @@ export default defineConfig({
     model: 'src/model/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Excalidraw: 'src/types/Excalidraw.ts',
     ExcalidrawCapabilities: 'src/types/ExcalidrawCapabilities.ts',
     ExcalidrawEvents: 'src/types/ExcalidrawEvents.ts',

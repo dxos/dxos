@@ -14,7 +14,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Board: 'src/types/Board.ts',
     BoardEvents: 'src/types/BoardEvents.ts',
   },

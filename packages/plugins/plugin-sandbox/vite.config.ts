@@ -12,7 +12,6 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
-    types: 'src/types/index.ts',
     Sandbox: 'src/types/Sandbox.ts',
     SandboxEvents: 'src/types/SandboxEvents.ts',
   },

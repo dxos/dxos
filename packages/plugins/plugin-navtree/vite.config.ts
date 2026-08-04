@@ -17,7 +17,6 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     NavTreeNode: 'src/types/NavTreeNode.ts',
     NavTreeCapabilities: 'src/types/NavTreeCapabilities.ts',
   },

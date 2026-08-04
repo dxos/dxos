@@ -16,7 +16,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     CodeCapabilities: 'src/types/CodeCapabilities.ts',
     CodeEvents: 'src/types/CodeEvents.ts',
     CodeOperation: 'src/types/CodeOperation.ts',

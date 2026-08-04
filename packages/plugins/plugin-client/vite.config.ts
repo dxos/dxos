@@ -19,7 +19,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'ClientOptions': 'src/types/ClientOptions.ts',
     'Account': 'src/types/Account.ts',
     'AccountCache': 'src/types/AccountCache.ts',

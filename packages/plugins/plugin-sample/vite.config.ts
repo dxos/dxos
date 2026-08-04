@@ -18,7 +18,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'SampleCapabilities': 'src/types/SampleCapabilities.ts',
     'SampleEvents': 'src/types/SampleEvents.ts',
     'SampleItem': 'src/types/SampleItem.ts',

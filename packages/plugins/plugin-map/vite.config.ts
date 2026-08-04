@@ -20,7 +20,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'MapRole': 'src/types/MapRole.ts',
     'Map': 'src/types/Map.ts',
     'MapAction': 'src/types/MapAction.ts',

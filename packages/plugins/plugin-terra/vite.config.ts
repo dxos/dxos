@@ -14,7 +14,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Terra: 'src/types/Terra.ts',
     TerraObject: 'src/types/TerraObject.ts',
   },

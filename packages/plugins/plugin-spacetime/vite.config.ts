@@ -14,7 +14,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Model: 'src/types/Model.ts',
     Scene: 'src/types/Scene.ts',
     Settings: 'src/types/Settings.ts',

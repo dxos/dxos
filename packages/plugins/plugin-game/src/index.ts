@@ -7,4 +7,3 @@ export * as GameCapabilities from './types/GameCapabilities';
 export * as GameEvents from './types/GameEvents';
 export * as GameUtil from './util/load-game';
 export * from './meta';
-export * from './types';

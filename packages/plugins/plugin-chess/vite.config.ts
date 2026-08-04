@@ -20,7 +20,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Chess': 'src/types/Chess.ts',
     'ChessEvents': 'src/types/ChessEvents.ts',
     'ChessOperation': 'src/types/ChessOperation.ts',

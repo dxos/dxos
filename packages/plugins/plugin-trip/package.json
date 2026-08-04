@@ -59,11 +59,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -82,11 +77,6 @@
       "source": "./src/testing.ts",
       "types": "./dist/types/src/testing.d.ts",
       "import": "./dist/lib/testing.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     },
     "./Booking": {
       "source": "./src/types/Booking.ts",

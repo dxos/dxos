@@ -17,7 +17,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Presenter': 'src/types/Presenter.ts',
     'testing': 'src/testing.ts',
     'PresenterCapabilities': 'src/types/PresenterCapabilities.ts',

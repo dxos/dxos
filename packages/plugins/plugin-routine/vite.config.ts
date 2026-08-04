@@ -20,7 +20,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Routine': 'src/types/Routine.ts',
     'RoutineCapabilities': 'src/types/RoutineCapabilities.ts',
     'RoutineEvents': 'src/types/RoutineEvents.ts',

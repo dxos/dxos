@@ -20,7 +20,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'testing': 'src/testing/index.ts',
     'Settings': 'src/types/Settings.ts',
     'TranscriptionCapabilities': 'src/types/TranscriptionCapabilities.ts',

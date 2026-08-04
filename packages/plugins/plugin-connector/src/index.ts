@@ -19,5 +19,8 @@ export {
 } from './util';
 export * as Connection from './types/Connection';
 export * as ConnectorEvents from './types/ConnectorEvents';
-export * from './types';
 export * as ConnectorOperation from './types/ConnectorOperation';
+export * as ConnectorAnnotations from './types/ConnectorAnnotations';
+export * as ConnectorCoordination from './types/ConnectorCoordination';
+export * as ConnectorForm from './types/ConnectorForm';
+export * as ConnectorSpec from './types/ConnectorSpec';

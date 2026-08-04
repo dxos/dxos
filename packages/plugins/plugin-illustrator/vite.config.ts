@@ -19,7 +19,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'skills': 'src/skills/index.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'util': 'src/util/index.ts',
     'Drawing': 'src/types/Drawing.ts',
     'LegacySketch': 'src/types/LegacySketch.ts',

@@ -13,7 +13,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     NativeCapabilities: 'src/types/NativeCapabilities.ts',
     NativeEvents: 'src/types/NativeEvents.ts',
     Settings: 'src/types/Settings.ts',

@@ -18,8 +18,7 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": "./src/SettingsPlugin.ts",
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types/index.ts"
+    "#translations": "./src/translations.ts"
   },
   "exports": {
     ".": {

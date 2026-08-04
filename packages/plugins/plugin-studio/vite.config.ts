@@ -16,7 +16,6 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     surfaces: 'src/surfaces.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Artifact: 'src/types/Artifact.ts',
     Generation: 'src/types/Generation.ts',
     GenerationService: 'src/types/GenerationService.ts',

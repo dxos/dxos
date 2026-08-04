@@ -15,7 +15,6 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Profile: 'src/types/Profile.ts',
     Sidekick: 'src/types/Sidekick.ts',
   },

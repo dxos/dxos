@@ -15,7 +15,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Meeting: 'src/types/Meeting.ts',
     MeetingCapabilities: 'src/types/MeetingCapabilities.ts',
     MeetingEvents: 'src/types/MeetingEvents.ts',

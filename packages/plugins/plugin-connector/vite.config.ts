@@ -19,7 +19,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'ConnectorAnnotations': 'src/types/ConnectorAnnotations.ts',
     'ConnectorSpec': 'src/types/ConnectorSpec.ts',
     'ConnectorCoordination': 'src/types/ConnectorCoordination.ts',

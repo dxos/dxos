@@ -17,7 +17,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     HelpCapabilities: 'src/types/HelpCapabilities.ts',
     HelpOperation: 'src/types/HelpOperation.ts',
     Settings: 'src/types/Settings.ts',

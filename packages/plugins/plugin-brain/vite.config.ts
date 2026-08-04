@@ -11,7 +11,6 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     operations: 'src/operations/index.ts',
     skills: 'src/skills/index.ts',
-    types: 'src/types/index.ts',
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',

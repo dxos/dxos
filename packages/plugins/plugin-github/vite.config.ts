@@ -13,7 +13,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     GitHubEvents: 'src/types/GitHubEvents.ts',
     GitHubOperation: 'src/types/GitHubOperation.ts',
   },

@@ -18,7 +18,6 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Score': 'src/types/Score.ts',
     'ScoreOperation': 'src/types/ScoreOperation.ts',
     'Sequence': 'src/types/Sequence.ts',

@@ -16,7 +16,6 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     DeckRole: 'src/types/DeckRole.ts',
     DeckSchema: 'src/types/DeckSchema.ts',
     DeckSchema: 'src/types/DeckSchema.ts',

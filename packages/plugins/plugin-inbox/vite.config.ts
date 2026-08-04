@@ -23,7 +23,6 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'testing/node': 'src/testing/node.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'SyncOptions': 'src/types/SyncOptions.ts',
     'SyncStreamConfig': 'src/types/SyncStreamConfig.ts',
     'SyncOptions': 'src/types/SyncOptions.ts',

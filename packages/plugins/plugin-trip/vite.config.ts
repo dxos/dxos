@@ -19,7 +19,6 @@ export default defineConfig({
     'testing': 'src/testing.ts',
     'testing/index': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Booking': 'src/types/Booking.ts',
     'BookingOperation': 'src/types/BookingOperation.ts',
     'BookingSearch': 'src/types/BookingSearch.ts',

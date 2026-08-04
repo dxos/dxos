@@ -16,7 +16,6 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     skills: 'src/skills/index.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     Ibkr: 'src/types/Ibkr.ts',
     IbkrEvents: 'src/types/IbkrEvents.ts',
     IbkrOperation: 'src/types/IbkrOperation.ts',

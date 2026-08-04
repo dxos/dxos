@@ -17,7 +17,6 @@ export default defineConfig({
     'meta': 'src/meta.ts',
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'CallsCapabilities': 'src/types/CallsCapabilities.ts',
     'CallsEvents': 'src/types/CallsEvents.ts',
   },

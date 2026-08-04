@@ -21,7 +21,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'templates': 'src/templates/index.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Settings': 'src/types/Settings.ts',
     'testing': 'src/testing/index.ts',
     'Notebook': 'src/types/Notebook.ts',

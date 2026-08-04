@@ -22,7 +22,6 @@ export default defineConfig({
     'plugin.workerd': 'src/plugin.workerd.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'Markdown': 'src/types/Markdown.ts',
     'MarkdownCapabilities': 'src/types/MarkdownCapabilities.ts',
     'MarkdownEvents': 'src/types/MarkdownEvents.ts',

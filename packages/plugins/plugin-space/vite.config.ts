@@ -21,7 +21,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'SpaceCapabilities': 'src/types/SpaceCapabilities.ts',
     'SpaceEvents': 'src/types/SpaceEvents.ts',
     'SpaceForm': 'src/types/SpaceForm.ts',

@@ -20,7 +20,6 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
-    'types': 'src/types/index.ts',
     'SheetRange': 'src/types/SheetRange.ts',
     'SheetUtil': 'src/types/SheetUtil.ts',
     'skills': 'src/skills/index.ts',

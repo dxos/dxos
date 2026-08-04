@@ -17,7 +17,6 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     testing: 'src/testing.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
     SearchEvents: 'src/types/SearchEvents.ts',
     SearchOperation: 'src/types/SearchOperation.ts',
   },
