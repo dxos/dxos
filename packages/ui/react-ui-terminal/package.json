@@ -1,7 +1,6 @@
 {
   "name": "@dxos/react-ui-terminal",
   "version": "0.10.0",
-  "private": true,
   "description": "Browser terminal emulator for @effect/cli applications.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
