@@ -105,8 +105,8 @@ by event-sourcing semantics. Dependency chain 1 → 2 → 3 → 4, one PR each; 
    is an aggregate (`group threadId` / `count` / `max created` / `items`,
    `MailboxArticle.tsx`) over the local index, which assumes dense history —
    with evicted ranges, per-thread `count` undercounts and a thread whose
-   latest activity lies wholly in an evicted range drops out of `orderBy
-lastMessageAt`. Recent pages stay correct (the pinned tail is dense); deep
+   latest activity lies wholly in an evicted range drops out of the
+   `lastMessageAt` ordering. Recent pages stay correct (the tail is dense); deep
    pages must either hydrate the target range first and aggregate locally over
    the now-dense cache, be served as backend-computed aggregates alongside the
    domain-key index, or report explicitly-partial counts. Decide per aggregate
