@@ -50,7 +50,12 @@ const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   ) => {
     const { tx } = useThemeContext();
     return (
-      <Button {...props} classNames={tx('iconButton.root', { iconOnly, square }, classNames)} ref={forwardedRef}>
+      // `caretDown` stays in `props` so `Button` still renders the caret; the theme only reads it.
+      <Button
+        {...props}
+        classNames={tx('iconButton.root', { iconOnly, square, caretDown: props.caretDown }, classNames)}
+        ref={forwardedRef}
+      >
         {icon && !iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
         {icon && iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
