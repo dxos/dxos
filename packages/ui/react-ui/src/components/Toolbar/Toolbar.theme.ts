@@ -19,6 +19,11 @@ const layout =
 const root: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
     'dx-toolbar-surface shadow-sm',
+    // Inside a Panel slot the slot IS the bar: it paints the surface full-width and casts the edge
+    // shadow. A nested root must not paint its own, or a `classNames='dx-document'` toolbar renders
+    // as a shadowed strip floating inside the bar instead of clamping content within it.
+    '[[data-slot=toolbar]_&]:bg-transparent [[data-slot=toolbar]_&]:shadow-none',
+    '[[data-slot=statusbar]_&]:bg-transparent [[data-slot=statusbar]_&]:shadow-none',
     density && `dx-density-${density}`,
     disabled && '*:opacity-20',
     !layoutManaged && layout,

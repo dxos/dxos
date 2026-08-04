@@ -27,7 +27,7 @@ const root: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
 // `bar` is an aspect, not a level: the toolbar steps off whichever surface hosts the panel, so a
 // panel in a card and a panel on the canvas each get a bar that reads against their own host.
 const toolbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
-  mx('[grid-area:toolbar]', 'shrink-0', 'dx-toolbar-surface', sizes[size], ...etc);
+  mx('[grid-area:toolbar]', 'shrink-0', 'dx-toolbar-surface shadow-sm', sizes[size], ...etc);
 
 const content: ComponentFunction<PanelStyleProps> = (_, ...etc) => mx('[grid-area:content] min-h-0', ...etc);
 
