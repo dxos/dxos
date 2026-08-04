@@ -52,8 +52,14 @@
  * must not consume layout space or fight a border the part already has. Dev builds only.
  */
 @utility dx-slot-warning {
-  outline: 2px dashed var(--color-rose-500);
-  outline-offset: -2px;
+  /* No layout box of its own: these parts live in grids and subgrids, where an extra element
+     re-flows the layout — the diagnostic must not corrupt the thing it is diagnosing. */
+  display: contents;
+
+  & > * {
+    outline: 2px dashed var(--color-rose-500);
+    outline-offset: -2px;
+  }
 }
 
 /**

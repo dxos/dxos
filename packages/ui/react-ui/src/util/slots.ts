@@ -74,7 +74,9 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
 ): ForwardRefExoticComponent<SlottableProps<P> & RefAttributes<E>> {
   const wrapped = (props: SlottableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => {
     let warn = false;
-    if (props.asChild) {
+    // Dev-only: the check walks children on every render of every `asChild` part, and the marker it
+    // paints is a developer diagnostic, not a product affordance.
+    if (process.env.NODE_ENV !== 'production' && props.asChild) {
       try {
         const child = Children.only(props.children);
         if (isValidElement(child) && typeof child.type !== 'string' && !(child.type as any)[COMPOSABLE]) {
@@ -90,6 +92,10 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
 
     const result = render(props, forwardedRef);
     if (warn) {
+      // The marker cannot go on the rendered element: under `asChild` that element is the `Slot`,
+      // which merges the class into the very child that is dropping props — the bug being flagged
+      // swallows its own diagnostic. So it goes on a wrapper, which `dx-slot-warning` renders as
+      // `display: contents` so it adds no layout box; the outline is drawn on its children instead.
       return createElement('div', { role: 'none', className: 'dx-slot-warning' }, result);
     }
 
