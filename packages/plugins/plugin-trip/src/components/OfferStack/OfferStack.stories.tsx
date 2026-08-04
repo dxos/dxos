@@ -10,10 +10,10 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import type * as BookingSearchType from '../../types/BookingSearch';
+import type * as BookingSearch from '../../types/BookingSearch';
 import { OfferStack } from './OfferStack';
 
-const OFFERS: BookingSearchType.FlightOffer[] = [
+const OFFERS: BookingSearch.FlightOffer[] = [
   {
     _tag: 'flight',
     id: 'off_1',

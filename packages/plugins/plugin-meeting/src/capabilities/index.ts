@@ -29,7 +29,7 @@ export const CallExtension = Capability.lazyModule(
 );
 export const MeetingSettings = Capability.lazyModule(
   'MeetingSettings',
-  { provides: [MeetingCapabilities.Settings], activatesOn: MeetingEvents.Start },
+  { provides: [MeetingCapabilities.SettingsAtom], activatesOn: MeetingEvents.Start },
   () => import('./settings'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

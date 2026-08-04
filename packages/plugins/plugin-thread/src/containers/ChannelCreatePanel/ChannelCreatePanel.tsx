@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { type SpaceCapabilities } from '@dxos/plugin-space';
+import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Column } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 

@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Operation from '@dxos/compute/Operation';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 import * as HelpCapabilities from '../types/HelpCapabilities';
 import * as SupportCapabilities from '../types/SupportCapabilities';

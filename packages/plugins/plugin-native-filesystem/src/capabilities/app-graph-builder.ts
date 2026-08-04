@@ -12,7 +12,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Expando, Text } from '@dxos/schema';

@@ -13,7 +13,7 @@ import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as Subscription from '@dxos/plugin-magazine/Subscription';
 
 import { BLUESKY_TARGET, DEFAULT_MAX_PAGES, MAX_PAGES_HARD_CAP } from '../constants';

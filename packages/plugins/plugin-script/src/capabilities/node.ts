@@ -6,7 +6,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',

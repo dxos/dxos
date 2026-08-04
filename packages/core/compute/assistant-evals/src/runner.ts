@@ -24,7 +24,7 @@ import { Database, Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';

@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { CreateRoutinePanel } from '#components';
 

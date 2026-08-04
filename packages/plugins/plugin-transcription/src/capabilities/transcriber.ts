@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionManagerImpl } from '../transcription-manager';
 import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';

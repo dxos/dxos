@@ -12,7 +12,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE } from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
 

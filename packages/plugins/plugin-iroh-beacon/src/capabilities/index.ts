@@ -5,7 +5,7 @@
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ClientEvents } from '@dxos/plugin-client';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { BeaconCapabilities } from './beacon-service';
 

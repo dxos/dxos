@@ -12,7 +12,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import { Graph, Node } from '@dxos/plugin-graph';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
 import README_CONTENT from '../content/readme.md?raw';

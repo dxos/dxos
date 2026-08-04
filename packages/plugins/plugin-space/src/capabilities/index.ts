@@ -7,7 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { SpaceOperationConfig } from '../operations/helpers';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
@@ -61,7 +62,7 @@ export const Repair = Capability.lazyModule(
   () => import('./repair'),
 );
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
-  provides: [SpaceCapabilities.Settings],
+  provides: [SpaceCapabilities.SettingsAtom],
 });
 export const SpacesReady = Capability.lazyModule(
   'SpacesReady',

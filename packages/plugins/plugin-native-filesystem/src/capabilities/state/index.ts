@@ -4,7 +4,7 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 import * as NativeFilesystemEvents from '../../types/NativeFilesystemEvents';

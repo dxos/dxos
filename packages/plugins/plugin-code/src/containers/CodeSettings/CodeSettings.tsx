@@ -13,13 +13,13 @@ import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-import * as SettingsType from '../../types/Settings';
+import * as Settings from '../../types/Settings';
 
 const SERVICE = 'anthropic.com';
 
 export type CodeSettingsProps = {
-  settings: SettingsType.Settings;
-  onSettingsChange: (settings: SettingsType.Settings) => void;
+  settings: Settings.Settings;
+  onSettingsChange: (settings: Settings.Settings) => void;
 };
 
 /**
@@ -61,7 +61,7 @@ export const CodeSettings = ({ settings, onSettingsChange }: CodeSettingsProps) 
 
   return (
     <Form.Root
-      schema={SettingsType.Settings}
+      schema={Settings.Settings}
       values={settings}
       variant='settings'
       onValuesChanged={(values) => onSettingsChange({ ...settings, ...values })}

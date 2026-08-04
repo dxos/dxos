@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { CreateProjectPanel } from '#components';
 

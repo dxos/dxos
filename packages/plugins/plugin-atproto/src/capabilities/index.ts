@@ -4,7 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 

@@ -20,7 +20,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Entity, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { EffectEx } from '@dxos/effect';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
@@ -105,7 +105,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
       },
       connector: (space, get) => {
         // Read settings reactively — same pattern as the translator read below.
-        const settingsAtom = get(capabilities.atom(SpaceCapabilities.Settings)).at(0);
+        const settingsAtom = get(capabilities.atom(SpaceCapabilities.SettingsAtom)).at(0);
         const showHidden = settingsAtom ? get(settingsAtom).showHidden : false;
 
         // Persisted types live in the space db; static/runtime types live in the shared registry.

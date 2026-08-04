@@ -12,7 +12,8 @@ import { type Client } from '@dxos/client';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities, ClientOperation } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { redeemAccountInvitation } from '../credentials';
 import { OnboardingOperation } from '../operations';

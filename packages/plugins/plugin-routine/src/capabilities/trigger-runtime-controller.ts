@@ -12,7 +12,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { type Space } from '@dxos/react-client/echo';
 
 //

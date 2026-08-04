@@ -11,7 +11,7 @@ import { type BlobBackend } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 
 import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '../helpers';

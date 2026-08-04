@@ -24,7 +24,7 @@ import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';

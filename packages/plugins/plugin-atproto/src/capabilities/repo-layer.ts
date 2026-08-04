@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as AtprotoRepo from '../services/AtprotoRepo';
 import * as AtprotoCapabilities from '../types/AtprotoCapabilities';

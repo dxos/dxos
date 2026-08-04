@@ -11,7 +11,7 @@ import { Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type CallState, type MediaState } from '@dxos/plugin-calls';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';

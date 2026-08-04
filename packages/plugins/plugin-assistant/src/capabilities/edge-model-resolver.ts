@@ -14,7 +14,7 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import * as Header from '@dxos/compute/Header';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { ANTHROPIC_SOURCE } from '../constants';
 

@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
 
 import { lookupHiveBook, searchBooks } from '../operations/bookhive';

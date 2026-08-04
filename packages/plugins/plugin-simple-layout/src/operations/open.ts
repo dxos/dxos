@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { layoutStateAccess } from './state-access';
 

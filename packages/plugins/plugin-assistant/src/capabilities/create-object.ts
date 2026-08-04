@@ -13,7 +13,8 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Database, Obj, Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { getChatsPath } from '../paths';
 import * as AssistantOperation from '../types/AssistantOperation';

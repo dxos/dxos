@@ -4,7 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { ClientEvents } from '@dxos/plugin-client';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',

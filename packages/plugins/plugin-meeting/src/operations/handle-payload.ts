@@ -6,7 +6,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { EID, parseId } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as Meeting from '../types/Meeting';
 import * as MeetingCapabilities from '../types/MeetingCapabilities';

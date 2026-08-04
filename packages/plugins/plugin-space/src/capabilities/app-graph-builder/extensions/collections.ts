@@ -19,7 +19,7 @@ import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 

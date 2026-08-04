@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { AssistantSkill } from '#skills';
 

@@ -7,11 +7,11 @@ import React from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
 
-import { Outline } from '#components';
+import { Outline as OutlineComponent } from '#components';
 
-import type * as OutlineType from '../../types/Outline';
+import type * as Outline from '../../types/Outline';
 
-export type OutlineCardProps = AppSurface.ObjectCardProps<OutlineType.Outline>;
+export type OutlineCardProps = AppSurface.ObjectCardProps<Outline.Outline>;
 
 export const OutlineCard = ({ subject }: OutlineCardProps) => {
   if (!subject.content.target) {
@@ -19,11 +19,11 @@ export const OutlineCard = ({ subject }: OutlineCardProps) => {
   }
 
   return (
-    <Outline.Root id={subject.content.target.id} text={subject.content.target}>
+    <OutlineComponent.Root id={subject.content.target.id} text={subject.content.target}>
       <Card.Root id={subject.id} classNames='p-2'>
-        <Outline.Content />
+        <OutlineComponent.Content />
       </Card.Root>
-    </Outline.Root>
+    </OutlineComponent.Root>
   );
 };
 

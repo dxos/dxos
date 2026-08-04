@@ -20,7 +20,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';

@@ -17,10 +17,10 @@ import { type ComplexMap, type Position } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import * as Settings$ from './Settings';
+import * as Settings from './Settings';
 import { type CreateObject, type ObjectViewerProps } from './SpaceSchema';
 
-export const Settings = Capability.makeSingleton<Atom.Writable<Settings$.Settings>>()(
+export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 

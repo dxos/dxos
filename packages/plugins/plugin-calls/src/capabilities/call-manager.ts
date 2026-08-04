@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { CallManager } from '../calls';
 import * as CallsCapabilities from '../types/CallsCapabilities';

@@ -12,7 +12,8 @@ import { type Database, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID, URI } from '@dxos/keys';
 import { AccessToken, Cursor } from '@dxos/link';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 

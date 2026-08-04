@@ -46,7 +46,7 @@ import {
   makeExtractionStage,
   makeSummarizationStage,
 } from '@dxos/pipeline-transcription';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';

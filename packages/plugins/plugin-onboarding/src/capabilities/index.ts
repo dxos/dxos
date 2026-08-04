@@ -6,8 +6,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { OnboardingCapabilities } from './capabilities';
 

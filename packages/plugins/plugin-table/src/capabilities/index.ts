@@ -8,8 +8,9 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Operation from '@dxos/compute/Operation';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 import * as TableEvents from '../types/TableEvents';
 import * as TableOperation from '../types/TableOperation';

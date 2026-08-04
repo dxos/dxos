@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { CreateGamePanel } from '#components';
 

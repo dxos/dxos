@@ -4,7 +4,8 @@
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { SpaceOperationConfig } from '../operations/helpers';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';

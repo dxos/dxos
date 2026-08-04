@@ -3,7 +3,7 @@
 //
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 import * as FileEvents from '@dxos/plugin-file/FileEvents';
 

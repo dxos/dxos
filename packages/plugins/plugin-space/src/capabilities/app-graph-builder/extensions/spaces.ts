@@ -14,7 +14,7 @@ import { type Space, SpaceState } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Expando } from '@dxos/schema';
@@ -53,7 +53,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
   const stateCapAtom = yield* Capability.atom(SpaceCapabilities.State);
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
-  const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.Settings);
+  const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
   return yield* Effect.all([

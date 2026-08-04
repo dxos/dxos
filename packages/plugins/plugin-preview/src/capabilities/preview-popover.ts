@@ -15,7 +15,7 @@ import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
 import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 

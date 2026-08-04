@@ -14,7 +14,6 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     Template: 'src/types/Template.ts',
-    Template: 'src/types/Template.ts',
   },
   jsx: 'react',
   test: { node: true },

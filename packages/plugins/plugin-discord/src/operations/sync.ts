@@ -13,7 +13,7 @@ import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';

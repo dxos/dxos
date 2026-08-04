@@ -8,15 +8,14 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
-import type * as MC from '../types/MeetingCapabilities';
 import * as MeetingCapabilities from '../types/MeetingCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
-    const stateAtom = Atom.make<MC.MeetingState>({}).pipe(Atom.keepAlive);
+    const stateAtom = Atom.make<MeetingCapabilities.MeetingState>({}).pipe(Atom.keepAlive);
 
-    const updateState = (updater: (current: MC.MeetingState) => MC.MeetingState) => {
+    const updateState = (updater: (current: MeetingCapabilities.MeetingState) => MeetingCapabilities.MeetingState) => {
       registry.set(stateAtom, updater(registry.get(stateAtom)));
     };
 

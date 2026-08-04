@@ -9,7 +9,7 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 

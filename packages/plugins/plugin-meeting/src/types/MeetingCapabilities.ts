@@ -12,9 +12,9 @@ import * as TranscriptionCapabilities from '@dxos/plugin-transcription/Transcrip
 import { meta } from '#meta';
 
 import * as Meeting from './Meeting';
-import type * as SettingsType from './Settings';
+import type * as Settings from './Settings';
 
-export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType.Settings>>()(
+export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
 

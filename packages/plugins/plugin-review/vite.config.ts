@@ -22,8 +22,6 @@ export default defineConfig({
     'translations': 'src/translations.ts',
     'AgentIdentity': 'src/types/AgentIdentity.ts',
     'ReviewCapabilities': 'src/types/ReviewCapabilities.ts',
-    'AgentIdentity': 'src/types/AgentIdentity.ts',
-    'ReviewCapabilities': 'src/types/ReviewCapabilities.ts',
     'Settings': 'src/types/Settings.ts',
     'CommentCapabilities': 'src/types/CommentCapabilities.ts',
     'CommentOperation': 'src/types/CommentOperation.ts',

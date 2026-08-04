@@ -21,7 +21,7 @@ import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';

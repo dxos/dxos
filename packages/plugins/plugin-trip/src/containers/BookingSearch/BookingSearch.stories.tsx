@@ -19,13 +19,13 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { TripPlugin } from '../../testing';
 import * as Booking from '../../types/Booking';
-import type * as BookingSearchType from '../../types/BookingSearch';
+import type * as BookingSearch from '../../types/BookingSearch';
 import * as Segment from '../../types/Segment';
 import * as Trip from '../../types/Trip';
 import * as TripCapabilities from '../../types/TripCapabilities';
-import { BookingSearch } from './BookingSearch';
+import { BookingSearch as BookingSearchComponent } from './BookingSearch';
 
-const STUB_OFFER: BookingSearchType.FlightOffer = {
+const STUB_OFFER: BookingSearch.FlightOffer = {
   _tag: 'flight' as const,
   id: 'off_stub',
   provider: 'stub',
@@ -36,7 +36,7 @@ const STUB_OFFER: BookingSearchType.FlightOffer = {
   slices: [{ origin: { code: 'JFK', name: 'New York' }, destination: { code: 'LHR', name: 'London' }, number: 'SA1' }],
 };
 
-const STUB_SERVICE: BookingSearchType.BookingService = {
+const STUB_SERVICE: BookingSearch.BookingService = {
   id: 'stub',
   label: 'Stub Air',
   kinds: ['flight'],
@@ -67,7 +67,7 @@ const DefaultStory = () => {
     return <Loading data={{ space: !!space, db: !!space?.db, segment: !!segment }} />;
   }
 
-  return <BookingSearch segment={segment} />;
+  return <BookingSearchComponent segment={segment} />;
 };
 
 const meta = {

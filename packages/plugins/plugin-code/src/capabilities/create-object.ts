@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import * as CodeProject from '../types/CodeProject';
 import * as Spec from '../types/Spec';

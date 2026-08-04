@@ -4,7 +4,7 @@
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import * as FileCapabilities from '../types/FileCapabilities';

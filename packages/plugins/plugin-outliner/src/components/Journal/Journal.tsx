@@ -13,14 +13,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import * as JournalType from '../../types/Journal';
+import { type JournalEntry as JournalEntryObject, type Journal as JournalObject, makeEntry } from '../../types/Journal';
 import * as OutlinerUtil from '../../types/OutlinerUtil';
 import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
 export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
-  journal: JournalType.Journal;
+  journal: JournalObject;
 };
 
 // TODO(burdon): Virtualize.
@@ -49,7 +49,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
       return;
     }
 
-    const entry = JournalType.makeEntry();
+    const entry = makeEntry();
     Obj.update(journal, (journal) => {
       journal.entries[OutlinerUtil.getDateString(date)] = Ref.make(entry);
     });
@@ -81,7 +81,7 @@ Journal.displayName = 'Journal';
 
 type JournalEntryProps = ThemedClassName<
   {
-    entryRef: Ref.Ref<JournalType.JournalEntry>;
+    entryRef: Ref.Ref<JournalEntryObject>;
     onSelect?: (event: { date: Date }) => void;
   } & Pick<OutlineRootProps, 'autoFocus'>
 >;

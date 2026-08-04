@@ -19,7 +19,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';

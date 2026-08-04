@@ -7,8 +7,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AssistantEvents } from '@dxos/plugin-assistant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as AssistantEvents from '@dxos/plugin-assistant/AssistantEvents';
 
 import * as NativeCapabilities from '../types/NativeCapabilities';
 import * as NativeEvents from '../types/NativeEvents';

@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';

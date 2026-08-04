@@ -2,11 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import * as Capability from '@dxos/app-framework/Capability';
-import { type Client, type ClientOptions } from '@dxos/client';
 import { IdentityDid, SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';

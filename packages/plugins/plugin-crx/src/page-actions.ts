@@ -10,7 +10,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Database } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as CrxCapabilities from './types/CrxCapabilities';
 import * as PageAction from './types/PageAction';

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Migration } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as Drawing from '../types/Drawing';
 import * as LegacySketch from '../types/LegacySketch';

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Channel, Message } from '@dxos/types';
 
 import * as ThreadCapabilities from '../types/ThreadCapabilities';

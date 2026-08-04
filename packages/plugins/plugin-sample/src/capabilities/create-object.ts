@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import * as SampleItem from '../types/SampleItem';
 

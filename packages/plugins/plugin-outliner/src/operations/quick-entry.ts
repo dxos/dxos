@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as Journal from '../types/Journal';
 import * as OutlineOperation from '../types/OutlineOperation';

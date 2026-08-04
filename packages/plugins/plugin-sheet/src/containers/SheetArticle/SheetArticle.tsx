@@ -9,12 +9,12 @@ import { type ComputeGraphRegistry } from '@dxos/compute-hyperformula';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
-import { ComputeGraphContextProvider, Sheet, useComputeGraph } from '#components';
+import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
 
-import type * as SheetType from '../../types/Sheet';
+import type * as Sheet from '../../types/Sheet';
 
 export type SheetArticleProps = AppSurface.ObjectArticleProps<
-  SheetType.Sheet,
+  Sheet.Sheet,
   {
     space: Space;
     registry: ComputeGraphRegistry;
@@ -41,19 +41,19 @@ const SheetArticleInner = ({
   }
 
   return (
-    <Sheet.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
+    <SheetComponent.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
       <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square'}>
         <Panel.Toolbar asChild>
-          <Sheet.Toolbar />
+          <SheetComponent.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Sheet.Content />
+          <SheetComponent.Content />
         </Panel.Content>
         <Panel.Statusbar asChild>
-          <Sheet.Statusbar />
+          <SheetComponent.Statusbar />
         </Panel.Statusbar>
       </Panel.Root>
-    </Sheet.Root>
+    </SheetComponent.Root>
   );
 };
 

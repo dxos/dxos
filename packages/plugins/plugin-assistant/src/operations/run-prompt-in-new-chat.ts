@@ -16,7 +16,7 @@ import * as Template from '@dxos/compute/Template';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Text } from '@dxos/schema';
 

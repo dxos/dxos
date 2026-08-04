@@ -22,7 +22,7 @@ import * as Project from '@dxos/compute/Project';
 import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Attention } from '@dxos/react-ui-attention';

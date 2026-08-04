@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contribute(SpaceCapabilities.Settings, settingsAtom),
+      Capability.contribute(SpaceCapabilities.SettingsAtom, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,

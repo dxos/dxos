@@ -18,7 +18,8 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -52,7 +53,7 @@ const isSpaceDebug = (data: any): data is SpaceDebug => data?.type === DebugNode
 /** Returns `onOpen` and `canOpen` for the ObjectsTree "Open" action. */
 const useObjectOpenAction = (invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise']) => {
   const client = useClient();
-  const spaceSettings = useAtomCapability(SpaceCapabilities.Settings);
+  const spaceSettings = useAtomCapability(SpaceCapabilities.SettingsAtom);
   const showHidden = spaceSettings?.showHidden ?? false;
 
   const allTypes = useAtomValue(useMemo(() => client.graph.registry.query(Filter.type(Type.Type)).atom, [client]));

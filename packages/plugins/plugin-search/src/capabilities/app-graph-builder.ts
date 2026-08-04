@@ -9,7 +9,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Operation from '@dxos/compute/Operation';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 
