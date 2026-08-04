@@ -131,7 +131,7 @@ For "put this child in the right track", the codebase currently uses **all** of:
 | Explicit `col-span-*` utilities as opt-out                                        | `Card.theme.ts` (`poster`, `action`, `link`, `row fullWidth`)                                                                                 |
 
 Plus `withColumn.propagate()` — an arbitrary-variant chain keyed on `.dx-column-root` _and_
-`.dx-container` (`withColumn.ts:22-23`) — used by exactly two theme files. This is too many ways
+`.dx-container` (`withColumn.ts:22-23`) — used by exactly one theme file, `Dialog.theme.ts`. This is too many ways
 to say the same thing; each has different behavior around `display: contents` children, and none
 of it is discoverable without reading three files.
 

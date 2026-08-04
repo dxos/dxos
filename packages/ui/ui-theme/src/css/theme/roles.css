@@ -27,7 +27,16 @@
    * Light is not a ramp stop: neutral-250 sat 0.14 below the near-white canvas, so a default button
    * read as a dark slab next to an input fill 0.025 below it. Dark keeps neutral-700.
    */
-  --color-input-bg: light-dark(oklch(0.885 0.001 190), var(--color-neutral-700));
+  --color-input-bg: light-dark(oklch(0.87 0.001 190), var(--color-neutral-700));
+
+  /*
+   * A filled control's hover has to move ITS OWN fill. `--color-hover-surface` is derived from the
+   * host surface — correct for ghost/outline, which are transparent and let the host show through,
+   * but on a filled button it discards the fill and lands next to `--color-selected-surface`.
+   */
+  --color-input-bg-hover: oklch(
+    from var(--color-input-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
+  );
   --color-input-fg: var(--color-base-fg);
 
   /* Focus indicators are a global affordance, not a per-surface property. */

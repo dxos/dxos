@@ -45,9 +45,10 @@ export const withColumn = {
   /**
    * Places a subgrid row's content children in the center track, leaving `.dx-gutter` slots to
    * their own explicit `col-start`. Covers grandchildren too, so a wrapper element (a link, a
-   * button) doesn't strand its content in column 1.
+   * button) doesn't strand its content in column 1 — and excludes gutters at that depth as well,
+   * since a `display: contents` wrapper promotes its children into this grid.
    */
-  placeContent: () => '[&>*:not(.dx-gutter)]:col-start-2 [&>*:not(.dx-gutter)>*]:col-start-2',
+  placeContent: () => '[&>*:not(.dx-gutter)]:col-start-2 [&>*:not(.dx-gutter)>*:not(.dx-gutter)]:col-start-2',
 
   /**
    * Propagates the Column grid to children via subgrid. No-op outside Column.

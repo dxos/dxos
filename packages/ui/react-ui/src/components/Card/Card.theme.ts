@@ -16,7 +16,6 @@ export type CardStyleProps = {
   truncate?: boolean;
 };
 
-// TODO(burdon): Add gap.
 const subgrid = 'col-span-3 grid grid-cols-subgrid gap-1 items-center';
 
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>

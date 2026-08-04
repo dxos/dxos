@@ -70,7 +70,7 @@
 
       &[data-variant='default']:hover {
         color: var(--dx-valence-text);
-        background-color: var(--dx-valence-bg-hover, var(--color-hover-surface));
+        background-color: var(--dx-valence-bg-hover, var(--color-input-bg-hover));
       }
 
       /* 
