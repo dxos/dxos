@@ -87,7 +87,7 @@ export const Downloading: Story = {
 };
 
 /**
- * Outstanding documents with no bytes moving: pulses amber after the stall timeout.
+ * Outstanding documents with no bytes moving: switches to the warning icon after the stall timeout.
  */
 export const Stalled: Story = {
   args: {
@@ -108,7 +108,7 @@ export const Stalled: Story = {
 };
 
 /**
- * Outstanding documents with no connection: latches red.
+ * Outstanding documents with no connection.
  */
 export const Disconnected: Story = {
   args: {
