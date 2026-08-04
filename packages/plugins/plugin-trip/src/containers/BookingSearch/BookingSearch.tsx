@@ -182,11 +182,11 @@ export const BookingSearch = ({ segment }: BookingSearchProps) => {
       <div className='p-form-padding'>
         <Message.Root valence='info'>
           <Message.Title>{t('booking.no-providers.message')}</Message.Title>
-          <Message.Content classNames='flex flex-col py-1 gap-2'>
-            {/* `span` (not `p`): Message.Content already renders a `<p>`, and `<p>` cannot nest `<p>`. */}
+          <Message.Body classNames='flex flex-col py-1 gap-2'>
+            {/* `span` (not `p`): Message.Body already renders a `<p>`, and `<p>` cannot nest `<p>`. */}
             <span>{t('booking.enable-providers.message')}</span>
             <PluginRegistryButton />
-          </Message.Content>
+          </Message.Body>
         </Message.Root>
       </div>
     );

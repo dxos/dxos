@@ -223,25 +223,25 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               {/* Reasons publishing is unavailable. */}
               {!connection && (
                 <Message.Root valence='info'>
-                  <Message.Content>{t('no-connection.label')}</Message.Content>
+                  <Message.Body>{t('no-connection.label')}</Message.Body>
                 </Message.Root>
               )}
               {ineligibleReason && (
                 <Message.Root valence={reasonValence}>
-                  <Message.Content>{ineligibleReason}</Message.Content>
+                  <Message.Body>{ineligibleReason}</Message.Body>
                 </Message.Root>
               )}
               {error && (
                 <Message.Root valence='error'>
-                  <Message.Content>{error}</Message.Content>
+                  <Message.Body>{error}</Message.Body>
                 </Message.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
                 <Message.Root valence='warning'>
-                  <Message.Content>{t('confirm-publish.message')}</Message.Content>
-                  <Message.Content asChild>
+                  <Message.Body>{t('confirm-publish.message')}</Message.Body>
+                  <Message.Body asChild>
                     <div role='none' className='flex gap-2 pbs-2'>
                       <Button variant='primary' disabled={busy} onClick={handlePublish}>
                         {t('confirm-publish.label')}
@@ -250,7 +250,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                         {t('cancel.label')}
                       </Button>
                     </div>
-                  </Message.Content>
+                  </Message.Body>
                 </Message.Root>
               )}
 
@@ -261,7 +261,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Message.Root valence='warning'>
-                    <Message.Content>{t('mirror-unresolved.label')}</Message.Content>
+                    <Message.Body>{t('mirror-unresolved.label')}</Message.Body>
                   </Message.Root>
                 )}
                 <Treegrid.Root gridTemplateColumns='minmax(0, 1fr) minmax(0, 1fr) min-content' classNames='gap-x-3'>

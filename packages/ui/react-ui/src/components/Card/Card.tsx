@@ -26,7 +26,7 @@ import { useThemeContext } from '../../hooks';
 import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button, IconButton } from '../Button';
-import { Column } from '../Column';
+import { Column, type ColumnRootProps } from '../Column';
 import { Icon } from '../Icon';
 import { Image, type ImageProps } from '../Image';
 import { DropdownMenu } from '../Menu';
@@ -47,6 +47,12 @@ type CardRootProps = {
    * used to align a nested card's rows to an outer 3-track grid. See `Column.Root`.
    */
   'subgrid'?: boolean;
+  /**
+   * Width of the card's leading/trailing gutter tracks. Defaults to `lg` (chrome-sized inset for
+   * headers and rows); a card whose whole body is a form should use `sm` so the fields inset like
+   * a standalone form rather than by the card's chrome.
+   */
+  'gutter'?: ColumnRootProps['gutter'];
   'density'?: Density;
   'style'?: CSSProperties;
   'tabIndex'?: number;
@@ -68,14 +74,14 @@ type CardRootProps = {
  * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
-  ({ children, id, role, border = true, fullWidth, subgrid, density, ...props }, forwardedRef) => {
+  ({ children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', density, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
     return (
       <Column.Root
         asChild
-        gutter='lg'
+        gutter={gutter}
         subgrid={subgrid}
         classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
