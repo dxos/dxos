@@ -204,6 +204,23 @@ the only violator in `packages/ui`. Note this is not an argument against named a
    `grid-column: var(--dx-col)`. Delete the unused `data-slot` writes and fix the docstrings;
    keep `.dx-gutter` only as the opt-out marker if the child-selector rule is retained during
    migration.
+
+   **Resolved: three mechanisms, documented — not one.** `--dx-col` is the default and the others
+   are not redundant with it, so collapsing onto it was abandoned after each survivor was shown to
+   be the only expression of its case:
+
+   - `center()` (`--dx-col`) places **the element**. Inheritance-based, so it survives a
+     `display: contents` wrapper. Use it wherever it suffices.
+   - `placeContent()` places **the element's children** and grandchildren, and needs the element to
+     already be a subgrid row. A wrapper (link, button) would otherwise strand its content in
+     column 1.
+   - `propagate()` **opens the tracks to descendants** — the only one that can. It spans the element
+     and re-exposes the tracks via subgrid, exempting `.dx-container` so a ScrollArea spans full
+     width and keeps its scrollbar in the gutter. Measured: swapping `Dialog.Body` to `center()`
+     moved its ScrollArea from `left 1, width 510` to `left 33, width 446`.
+
+   The canonical version of this table lives in `withColumn.ts`, next to the code.
+
 2. **Make nesting a first-class feature, not a per-call-site discovery.** `Column.Root` should
    detect (or accept) a host grid and become `subgrid` automatically; `Form.Viewport` must
    forward `subgrid`/`gutter` (or better: skip its own `Column.Root` when a host Column exists —
@@ -750,8 +767,9 @@ Phases 2–4 are independent of each other after Phase 1.
 > Outstanding: items 1, 3 and 4 below — consolidating on the single `--dx-col` placement mechanism,
 > migrating the ~10 hand-rolled 3-track grids, and sourcing `--dx-gutter-*` from the spacing ramp.
 
-1. Single placement mechanism (`--dx-col`); remove dead `data-slot` writes; consolidate the
-   repeated `[&>*:not(.dx-gutter)]` selectors into one shared fragment/CSS rule.
+1. ~~Single placement mechanism (`--dx-col`)~~ — **superseded**: three mechanisms, each load-bearing,
+   documented in `withColumn.ts` (see §3). Dead `data-slot` writes removed; the repeated
+   `[&>*:not(.dx-gutter)]` selectors consolidated into `withColumn.placeContent()`.
 2. Subgrid nesting: `Column.Root`-in-`Column.Root` adopts host tracks; `Form.Viewport` forwards
    `subgrid` (or skips its own root inside a host Column); document the one canonical
    form-in-card/dialog idiom and migrate the three current idioms + `ArrayField` hack.
