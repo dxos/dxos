@@ -110,12 +110,13 @@ hook that performs the same write.
 
 ### Sentinel grammar
 
-Target: `$mode <MODE>` only, with the two values `terse` and `normal`. The
-regex still accepts the bare one-token forms (plus the `concise` /
-`natural`/`default`/`off` aliases), so prose _about_ the modes flips them —
-observed live on 2026-08-03 when a message containing
-"`$natural/$concise/$verbose`" set the mode. Dropping the bare forms is the
-remaining half of this item.
+`$mode <MODE>` only, with the two values `terse` and `normal` (the `concise` /
+`natural`/`default`/`off` aliases survive as _values_). The regex used to accept
+the bare one-token forms too, so prose _about_ the modes flipped them — observed
+live on 2026-08-03 when a message containing "`$natural/$concise/$verbose`" set
+the mode. The verb is now mandatory, which generalises: a grep-driven hook cannot
+distinguish a command from a mention of one, so every sentinel needs a grammar
+prose does not write by accident.
 
 ## Open decisions
 

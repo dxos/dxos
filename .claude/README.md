@@ -167,11 +167,10 @@ how the earlier version failed. The rules themselves are canonical in
 [`AGENTS.md`](../AGENTS.md) → "Responding to the user".
 
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
-> cannot tell a command from a mention of one. The bare one-token forms are still
-> accepted, so a message containing `` `$terse/$normal` `` as an _example_ will
-> set the mode — this happened on 2026-08-03. Prefer the two-token `$mode terse`,
-> which prose is far less likely to hit; dropping the bare forms is tracked in
-> `.agents/projects/agent-directives/TASKS.md`.
+> cannot tell a command from a mention of one, so the verb is mandatory: only the
+> two-token `$mode <MODE>` fires. The bare one-token forms used to be accepted and
+> a message containing `` `$terse/$normal` `` as an _example_ set the mode
+> (observed 2026-08-03) — hence the rule. Any new sentinel needs the same shape.
 
 ### Commands
 

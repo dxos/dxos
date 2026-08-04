@@ -55,11 +55,12 @@ default state. That single gap is why "be terse" never survived.
       side: it symlinks to `~/Code/richburdon/config/dotfiles/.claude/CLAUDE.md`,
       a separate repo whose HEAD is `main`, so `guard-worktree.sh` refuses the
       edit. Needs the user to apply it, or to branch that repo.
-- [ ] **Drop the bare one-token sentinel forms** — the regex still matches a bare
-      `$terse` / `$normal` (and the aliases) anywhere in the message, so prose
-      _about_ the modes flips them. Observed live on 2026-08-03: a message
-      containing "`$natural/$concise/$verbose`" as an example set the mode. Only
-      the two-token `$mode <MODE>` should remain — prose can't hit it by accident.
+- [x] **Drop the bare one-token sentinel forms** — the `$mode` verb is now
+      mandatory in `hooks/mode.sh`, so prose _about_ the modes no longer flips
+      them (observed live on 2026-08-03: a message containing
+      "`$natural/$concise/$verbose`" as an example set the mode). The alias words
+      survive as _values_. Verified against six prompts: the three bare forms are
+      inert, `$mode terse` / `$mode normal` / `$MODE Concise` all still fire.
 - [ ] **Add `/mode` as a second entrance** — a slash command cannot write state
       (it expands into a prompt and depends on the agent to act), so keep the
       sentinel as the deterministic path and give `/mode` a

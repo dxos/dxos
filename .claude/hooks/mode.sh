@@ -7,8 +7,8 @@
 # 1. Toggle: if the message contains a sentinel like `$mode terse` or
 #    `$mode normal`, set the mode accordingly (a sentinel acts before the model
 #    runs, so the state change does not depend on the agent complying).
-# 2. Enforce: while terse mode is active, inject the terseness directive into
-#    the prompt context. No-op (prints nothing) in normal mode.
+# 2. Enforce: inject the response rules into the prompt context on every turn;
+#    only the length clause varies with the mode.
 
 set -euo pipefail
 
@@ -18,9 +18,10 @@ script="$root/.claude/scripts/mode.sh"
 input=$(cat)
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '')
 
-# Sentinel: `$`, optional `mode`, then a mode word (case-insensitive).
+# Sentinel: `$mode` then a mode word (case-insensitive). The verb is mandatory —
+# a bare `$terse` matched prose that merely mentioned the modes and flipped them.
 sentinel=$(printf '%s\n' "$prompt" \
-  | grep -ioE '\$[[:space:]]*(mode[[:space:]]+)?(terse|concise|normal|natural|default|off)' \
+  | grep -ioE '\$mode[[:space:]]+(terse|concise|normal|natural|default|off)' \
   | head -1 || true)
 
 if [ -n "$sentinel" ]; then
