@@ -14,16 +14,22 @@ got here — checkpoints, measurements and findings, not work items.
 
 - [ ] **Post-merge check sweep** — the only item blocking PR #12415. Detail under
       [Later / standing](#later--standing).
-- [ ] **Wire `check-boot-budget` into CI** — highest leverage. Three boot-graph fixes have already
-      been silently undone by unrelated refactors, because each is a property of an import EDGE and
-      nothing fails when a refactor relocates it. Detail under
-      [Later / standing](#later--standing).
+- [x] **Wire `check-boot-budget` into CI** — a `Check boot budget` step after `Bundle` on the `e2e`
+      job (user-directed placement, 2026-08-04). **Caveat to revisit:** `e2e` is gated to
+      main/changeset-release/dispatch, so the check runs post-merge and does NOT gate the PR that
+      introduces the regression — which is the case it was motivated by. Promoting it to its own
+      always-on job is a small diff when that becomes worth the bundle minutes.
 - [ ] **Flip the default `activatesOn` from `Startup` to `Idle`** (own PR, user-directed) — plus the
       mandatory second half, `#isBaselineWave` becoming `Startup ∪ Idle`. Detail under [Later / standing](#later--standing).
 - [ ] **Collapse `ActivationSpec` to one mode** (own PR, user-directed) — dependency mode is a wave
       with no name. Detail under [Later / standing](#later--standing).
-- [ ] **Move the `Idle` fire out of React into the activation scheduler** — one lifecycle event with
-      two firing sites is the symptom. Detail under [Later / standing](#later--standing).
+- [x] **Move the `Idle` fire out of React into the activation scheduler** — already landed; the
+      ledger entry described the pre-fix state. `ActivationScheduler.#activateWhenIdle` forks a
+      tracked daemon behind `whenIdle` (`core/plugin-manager/idle.ts`), the feature-tested
+      paint-then-idle Effect with an `Effect.void` fallback for node/workerd. `useApp` holds no
+      idle effect. `activateDemandGatedModules` keeps its `Idle` element deliberately: the daemon is
+      forked, so a caller asserting as soon as `start()` returns would otherwise race it — the fire
+      is an ordering barrier, idempotent against the wave guard.
 - [ ] **Eager-core UI laziness** — `ResetDialog` drags ~2 MB for a fatal-error dialog; sweep `main`'s
       static closure for the same shape. Detail under
       [Wave 3](#wave-3--eager-core-ui-laziness-audit).

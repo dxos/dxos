@@ -452,6 +452,15 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run :bundle
 
+      # Static boot-graph budget over the bundle just built. The class it catches is a property of an
+      # IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a refactor
+      # that relocates the edge silently drops the fix and neither the build nor the tests notice;
+      # three separate fixes were undone that way. Not `--affected`-scoped, because the offending
+      # edit lands in some other package. NOTE: this job is gated to main/changeset-release/dispatch,
+      # so today the check runs post-merge and does not gate the PR that introduces the regression.
+      - name: Check boot budget
+        run: moon run composer-app:check-boot-budget
+
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
       # Storybook puts cache under node_modules/.cache/storybook/<hash>/sb-vite per package.

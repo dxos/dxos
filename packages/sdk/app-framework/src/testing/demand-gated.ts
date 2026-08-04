@@ -14,10 +14,13 @@ import { ActivationEvent, type PluginManager } from '../core';
  * {@link ActivationEvents.Idle} wave, then each core and enabled plugin's start event.
  *
  * Testing only, which is why it lives here rather than in the public `ActivationEvents` module.
- * Demand in a running app comes from the UI — `useApp` fires the idle wave once the app is ready,
- * and a plugin's start fires when one of its surfaces renders. Neither signal exists here: a
+ * A plugin's start fires when one of its surfaces renders, and that signal does not exist here: a
  * headless harness mounts no surfaces, and a story mounts exactly one in isolation, so both would
  * otherwise sit at whatever the startup pass activated and assert against modules that never load.
+ *
+ * The idle wave is included as an ordering barrier, not because the manager omits it — the
+ * scheduler fires it from a forked daemon, so a caller that asserts as soon as `start()` returns
+ * could otherwise race it. Firing here is idempotent against the wave guard either way.
  *
  * Fires unconditionally rather than tracking real demand, because narrowing it to the surfaces a
  * story mounts would starve any story whose subject depends on a sibling plugin's start-gated
