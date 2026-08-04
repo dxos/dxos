@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
  * live outside git in one shared directory at the repo root, so a corpus pulled once serves every
  * package's tests.
  *
- * A fixture is a NAME plus a UTC VERSION stamp (`inbox-20260804-181500.json`): pulls accumulate
+ * A fixture is a NAME plus a UTC VERSION stamp (`mailbox-20260804-181500.json`): pulls accumulate
  * rather than overwrite, so a result can be reproduced against the exact corpus that produced it.
  * Resolution defaults to the newest version; pass `{ version }` to pin one.
  *
@@ -68,7 +68,7 @@ export const fixturePath = (name: string, options: FixtureOptions = {}): string 
 
 /**
  * Whether a fixture has been pulled. Gate every fixture-backed suite on this:
- * `describe.skipIf(!fixtureExists('inbox'))`.
+ * `describe.skipIf(!fixtureExists('mailbox'))`.
  */
 export const fixtureExists = (name: string, options: FixtureOptions = {}): boolean =>
   fixturePath(name, options) !== undefined;

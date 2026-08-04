@@ -62,6 +62,8 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@dxos/fixtures": "workspace:*",
+    "@dxos/pipeline": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

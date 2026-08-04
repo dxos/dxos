@@ -27,11 +27,5 @@
     "bin",
     "dist",
     "src"
-  ],
-  "scripts": {
-    "test": "vitest run --passWithNoTests --project=node"
-  },
-  "devDependencies": {
-    "vitest": "catalog:"
-  }
+  ]
 }

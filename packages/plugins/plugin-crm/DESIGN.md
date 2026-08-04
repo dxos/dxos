@@ -346,9 +346,11 @@ account membership already provides exactly the needed access control, via `wran
 | Landing path    | One shared, git-ignored `testing/fixtures/` at the repo root, resolved by name from any package via `@dxos/fixtures`; `*.age` is git-ignored repo-wide |
 
 **Flow.** ArchiveModule ("Download starred" for a curated fixture, "Download all" for a corpus) →
-`moon run fixtures:push -- ~/Downloads/mailbox-feed.json --name inbox` → elsewhere
-`moon run fixtures:pull -- inbox`. A fixture is a **name plus a UTC version stamp**, so pushes
-accumulate and a result can be reproduced against the exact corpus that produced it. Nothing can
+`moon run fixtures:push -- ~/Downloads/mailbox-<version>.json` → elsewhere
+`moon run fixtures:pull -- mailbox`. A fixture is a **name plus a UTC version stamp**, carried by the capture
+filename itself (`mailbox-20260804-185124.json`) so the archive keeps one identity on disk and in
+R2, and the version means when the mailbox was captured rather than when it was uploaded. Pushes
+accumulate, so a result can be reproduced against the exact corpus that produced it. Nothing can
 enumerate that history — wrangler's R2 surface is get/put/delete only — so each push also writes a
 few-byte `<name>.latest` pointer, which is what lets pull resolve the newest without a listing;
 `--at <version>` pins one, and readers default to the newest LOCAL version. Both directions validate the

@@ -41,6 +41,17 @@ const getMessageHtml = (message: Message.Message): string | undefined =>
     .filter((block): block is ContentBlock.Text => block._tag === 'text')
     .find((block) => block.mimeType === 'text/html')?.text;
 
+/**
+ * Capture-time stamp matching the fixture tooling's version format (`20260804-185124`), so the
+ * downloaded file carries the moment the mailbox was captured and `moon run fixtures:push` adopts
+ * it verbatim — the archive keeps one identity on disk and in R2 rather than gaining an unrelated
+ * upload time.
+ */
+const timestamp = (): string => new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
+
+/** Archive filename for the whole mailbox: `<asset>-<version>.json`, the shape `push` parses. */
+const archiveFilename = (): string => `mailbox-${timestamp()}.json`;
+
 /** Filesystem-safe fixture name derived from the sender and date, e.g. `2026-07-30-alex-example-com`. */
 const getFixtureName = (message: Message.Message): string => {
   const date = (message.created ?? '').slice(0, 10);
@@ -116,7 +127,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     setBusy(true);
     try {
       const serialized = await exportFeedMessages(feed, space.db);
-      downloadBlob(new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }), 'mailbox-feed.json');
+      downloadBlob(new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }), archiveFilename());
       setStatus({ action: 'downloaded all', count: serialized.length });
     } catch (error) {
       log.warn('feed export failed', { error });
@@ -197,7 +208,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           <SystemIconButton.Download
             iconOnly
             label={`Download starred (${starredIds.length})`}
-            filename='mailbox-feed.json'
+            filename={archiveFilename()}
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />

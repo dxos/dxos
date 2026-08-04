@@ -37,7 +37,7 @@
 // Usage:
 //   moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]
 //   moon run fixtures:pull -- <name> [--at <version>] [--user <user>]
-//   moon run fixtures:list          # local fixtures (the remote has no listing API)
+//   moon run fixtures:info          # local fixtures + config (the remote has no listing API)
 //
 // Environment:
 //   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference.
@@ -80,8 +80,8 @@ const main = () => {
       return push(rest);
     case 'pull':
       return pull(rest);
-    case 'list':
-      return list();
+    case 'info':
+      return info();
     default:
       usage(`Unknown command: ${command ?? '(none)'}`);
   }
@@ -98,8 +98,13 @@ const push = (args) => {
     fail(`No such file: ${source}`);
   }
 
-  // Default the name from the filename so a push is never silently anonymous.
-  const name = validName(flags.name ?? basename(source).replace(/\.json$/, ''));
+  // The capture tool writes `<name>-<version>.json`, so both the asset name and the moment it was
+  // captured come from the filename. Adopting the capture stamp — rather than minting an upload
+  // time — keeps one identity for the archive on disk and in R2, and makes the version mean "when
+  // this mailbox looked like this" rather than "when it happened to be uploaded".
+  const { name: parsedName, version: parsedVersion } = parseArchiveName(basename(source));
+  const name = validName(flags.name ?? parsedName);
+  const version = parsedVersion ?? timestamp();
 
   // Sanity-check the payload before it becomes an opaque blob: an archive is a JSON array of
   // serialized messages, and pushing the wrong file is only discoverable after a pull otherwise.
@@ -114,7 +119,6 @@ const push = (args) => {
   }
 
   const owner = userInfo().username;
-  const version = timestamp();
   const key = remoteKey(name, owner, version);
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
   const pointer = join(tmpdir(), `dxos-fixture-${process.pid}.latest`);
@@ -183,20 +187,50 @@ const readPointer = (name, owner) => {
 };
 
 /**
- * Local fixtures only. The remote has no listing API — wrangler's R2 surface is get/put/delete —
- * and adding one would need a second credential (the S3 API); browse the Cloudflare dashboard.
+ * What is available locally and how this machine is configured — the first thing to run when a
+ * fixture-backed test skips unexpectedly, since it distinguishes "nothing pulled" from "pulled but
+ * misconfigured". Local only: the remote has no listing API (wrangler's R2 surface is
+ * get/put/delete), so browse the Cloudflare dashboard for the full history.
  */
-const list = () => {
+const info = () => {
+  console.log(`identity:   ${process.env.DX_FIXTURES_AGE_KEY ?? '(unset — DX_FIXTURES_AGE_KEY)'}`);
+  console.log(`directory:  ${FIXTURES_DIR}`);
+  console.log(`bucket:     ${BUCKET}`);
+  console.log(`user:       ${userInfo().username}`);
+
   const entries = existsSync(FIXTURES_DIR) ? readdirSync(FIXTURES_DIR).filter((entry) => entry.endsWith('.json')) : [];
   if (entries.length === 0) {
-    console.log(`No fixtures in ${FIXTURES_DIR}. Pull one: moon run fixtures:pull -- <name>`);
+    console.log('\nNo fixtures pulled. Get one: moon run fixtures:pull -- <name>');
     return;
   }
 
-  // Newest first per name, so the version a reader would pick by default is the one listed first.
+  // Grouped by asset, newest version first — the one a reader resolves by default is listed first.
+  const byName = new Map();
   for (const entry of entries.sort().reverse()) {
-    const path = join(FIXTURES_DIR, entry);
-    console.log(`${entry.replace(/\.json$/, '').padEnd(32)} ${size(path).padStart(10)}  ${path}`);
+    const { name, version } = parseArchiveName(entry);
+    byName.set(name, [...(byName.get(name) ?? []), { version, path: join(FIXTURES_DIR, entry) }]);
+  }
+
+  console.log('');
+  for (const [name, versions] of byName) {
+    console.log(`${name}`);
+    for (const [index, { version, path }] of versions.entries()) {
+      const marker = index === 0 ? '*' : ' ';
+      console.log(
+        `  ${marker} ${(version ?? '(unversioned)').padEnd(18)} ${size(path).padStart(10)}  ${entryCount(path)}`,
+      );
+    }
+  }
+  console.log('\n* = resolved by default');
+};
+
+/** Message count of an archive, or a marker when it cannot be read (so info never throws). */
+const entryCount = (path) => {
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8'));
+    return Array.isArray(parsed) ? `${parsed.length} entries` : '(not an array)';
+  } catch {
+    return '(unreadable)';
   }
 };
 
@@ -208,6 +242,16 @@ const pointerKey = (name, owner) => `mailbox/${owner}/${name}.latest`;
 
 /** Sortable, filename-safe UTC stamp: `20260804-181500`. */
 const timestamp = () => new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
+
+/**
+ * Splits `<name>-<version>.json` (what the capture tool writes) into its parts. A file without a
+ * trailing stamp yields no version, so the whole basename is the name and the caller stamps it now.
+ */
+const parseArchiveName = (filename) => {
+  const stem = filename.replace(/\.json$/, '');
+  const match = stem.match(/^(.*)-(\d{8}-\d{6})$/);
+  return match ? { name: match[1], version: match[2] } : { name: stem, version: undefined };
+};
 
 const validVersion = (version) => {
   if (!VERSION_RE.test(version)) {
@@ -329,7 +373,7 @@ const usage = (message) => {
   console.error('Usage:');
   console.error('  moon run fixtures:push -- <file> --name <name> [--recipient <age1...>]');
   console.error('  moon run fixtures:pull -- <name> [--at <version>] [--user <user>]');
-  console.error('  moon run fixtures:list');
+  console.error('  moon run fixtures:info');
   process.exit(1);
 };
 

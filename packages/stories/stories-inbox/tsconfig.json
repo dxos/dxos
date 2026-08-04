@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/fixtures"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -47,6 +50,9 @@
     },
     {
       "path": "../../core/compute/link"
+    },
+    {
+      "path": "../../core/compute/pipeline"
     },
     {
       "path": "../../core/compute/pipeline-email"
