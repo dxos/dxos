@@ -11,7 +11,7 @@ import { useMemo } from 'react';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { CommandConfig } from '@dxos/cli-util';
-import { type Client, ClientService } from '@dxos/client';
+import { type Client, ClientService, ConfigService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 
 const OPERATIONS_UNAVAILABLE = 'Operations are not available in the devtools terminal.';
@@ -41,6 +41,7 @@ const operationLayer = Layer.succeed(Operation.Service, {
 export const useCliApp = (client: Client) => {
   const manager = usePluginManager();
   const commands = useCapabilities(Capabilities.Command);
+  const contributed = useCapabilities(Capabilities.Layer);
 
   return useMemo(() => {
     // Destructured rather than passed as an array so the non-empty shape `withSubcommands` requires
@@ -65,13 +66,17 @@ export const useCliApp = (client: Client) => {
       ),
     );
 
+    // Plugins carry the services their own commands need, so take their layers rather than
+    // hand-listing services here and finding out at runtime which one is missing.
     const layer = Layer.mergeAll(
       ClientService.fromClient(client),
+      ConfigService.fromConfig(client.config),
       Layer.succeed(Plugin.Service, manager),
       Layer.succeed(Capability.Service, manager.capabilities),
       operationLayer,
+      ...contributed,
     );
 
     return { command, layer };
-  }, [client, manager, commands]);
+  }, [client, manager, commands, contributed]);
 };

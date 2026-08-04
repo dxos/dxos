@@ -86,11 +86,7 @@ export const createCliApp = Effect.fn(function* ({
   const layers = manager.capabilities.getAll(Capabilities.Layer);
   const capabilityServiceLayer = Layer.succeed(Capability.Service, manager.capabilities);
   const pluginServiceLayer = Layer.succeed(Plugin.Service, manager);
-  const layer = (Layer.mergeAll as (...args: Layer.Layer<any, any, any>[]) => Layer.Layer<any, any, never>)(
-    capabilityServiceLayer,
-    pluginServiceLayer,
-    ...layers,
-  );
+  const layer = Layer.mergeAll(capabilityServiceLayer, pluginServiceLayer, ...layers);
 
   // Gather all commands and provide them to the root command.
   const pluginCommands = manager.capabilities.getAll(Capabilities.Command);

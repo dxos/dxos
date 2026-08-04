@@ -23,6 +23,11 @@
       "types": "./dist/types/src/AgentService.d.ts",
       "import": "./dist/lib/AgentService.mjs"
     },
+    "./Operation": {
+      "source": "./src/Operation.ts",
+      "types": "./dist/types/src/Operation.d.ts",
+      "import": "./dist/lib/Operation.mjs"
+    },
     "./StorageService": {
       "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",

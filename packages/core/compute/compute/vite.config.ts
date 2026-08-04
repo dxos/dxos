@@ -8,6 +8,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     AgentService: 'src/AgentService.ts',
+    Operation: 'src/Operation.ts',
     StorageService: 'src/StorageService.ts',
     testing: 'src/testing/index.ts',
   },

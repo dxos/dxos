@@ -90,7 +90,9 @@ export const Command = Capability$.make<AnyCommand>('org.dxos.app-framework.capa
 /**
  * @category Capability
  */
-export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app-framework.capability.layer');
+// The input channel is closed: a contributed layer is merged into whatever a host is assembling, so
+// it has to carry its own requirements rather than expect the host to satisfy them.
+export const Layer = Capability$.make<Layer$.Layer<any, any, never>>('org.dxos.app-framework.capability.layer');
 
 /**
  * Layer specification contributed by plugins.
