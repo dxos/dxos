@@ -13,7 +13,8 @@
   in both forms, so prose about the modes cannot flip them.
 - **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
   branch, the instruction files actually consulted (including skills loaded this
-  session), the current mode, and the two modes as numbered options. This is how
+  session), and the current mode — never the modes as numbered options, since a
+  numeric reply is the one form the hook cannot catch. This is how
   the user asks for the worktree line again — it is a first-reply rule and is
   deliberately not re-injected every turn.
 - A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) does the work: that event

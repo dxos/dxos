@@ -163,8 +163,10 @@ text on `UserPromptSubmit`, and let the command body be a thin acknowledgement.
 The two halves split cleanly by whether state changes. **`/mode <MODE>`** is the
 hook's job — it fires before the model, and the body only confirms. **Bare
 `/mode`** matches nothing, so the hook is inert and the body does all the work:
-it reports worktree, branch, consulted instruction files, current mode, and the
-modes as numbered options. That makes it the re-orientation command, and the
+it reports worktree, branch, consulted instruction files, and the current mode.
+It deliberately does **not** offer the modes as numbered options — a numeric
+reply is the one form the hook cannot catch, so it would invite an answer that
+bypasses the deterministic write. That makes it the re-orientation command, and the
 supported way to ask for the worktree line, which §C keeps as a first-reply rule
 rather than a per-turn injection.
 

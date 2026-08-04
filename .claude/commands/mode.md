@@ -21,17 +21,18 @@ bash .claude/scripts/mode.sh get; git rev-parse --show-toplevel; git branch --sh
 the message clearly carries a task as well.
 
 **If `$ARGUMENTS` is empty**, this is a re-orientation request. Reply with
-exactly these four things and nothing else:
+exactly these three things and nothing else:
 
 1. The worktree directory and branch, from the command above.
 2. The instruction files in play: those listed by the command, plus every skill
    (`.agents/skills/*/SKILL.md`) you have actually loaded this session. Name what
    you really consulted — not the full catalogue of what exists.
-3. The current mode, from the command above.
-4. A numbered list of the modes to switch to, each with its one-line effect and
-   the command that selects it:
-   1. `/mode terse` — at most 8 lines, minimal markdown.
-   2. `/mode normal` — no line budget, length proportionate to the request.
+3. The current mode, from the command above, and the other mode's command on the
+   same line (`/mode terse` | `/mode normal`).
+
+Do **not** offer the modes as a numbered list. A numeric reply is the one form
+the `UserPromptSubmit` hook cannot catch, so it would invite an answer that
+silently bypasses the deterministic write.
 
 This is the intended way to re-orient mid-session: the worktree line is a
 first-reply rule, deliberately not re-injected every turn, so `/mode` on its own
