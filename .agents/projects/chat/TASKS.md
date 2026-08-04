@@ -16,9 +16,10 @@ review are folded in below, each marked with the round that asked for it;
 where a round revised an earlier decision the superseded entry says so.
 NEXT: stage 2 — the CodeMirror rendering substrate. Round 13 inserted this
 ahead of the rename, which moved to stage 2e. 2a (model), 2b (assistant +
-transcription ported, no UI change) and 2c (the `MessageDocument` prototype,
-including the accessibility and density questions) are DONE. NEXT: 2d — switch
-the channel containers over and port the 16 plugin-thread plays.
+transcription ported, no UI change) and 2c (`MessageDocument`, including
+in-place editing and the accessibility and density questions) are DONE.
+NEXT: 2d — switch the channel containers over, move the composer to
+`ChatEditor`, and port the 16 plugin-thread plays.
 
 ## Decisions log
 
@@ -464,11 +465,11 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
 - [x] Verified: 141 plugin-assistant unit (incl. the 7 syncer tests) + 41
       assistant plays + 8 transcription plays, all against unchanged UI.
 
-### 2c — the channel transcript UI (prototype DONE)
+### 2c — the message document UI (DONE)
 
-- [x] `Transcript` component + `transcriptChrome` extension + the item builder
-      (`buildTranscriptItems`, carrying over `groupMessages`' rules). Read-only
-      CM with `scroller({ overScroll, autoScroll })`, which replaces the
+- [x] `MessageDocument` component + `messageDocumentChrome` extension + the item
+      builder (`buildMessageDocumentItems`, carrying over `groupMessages`'
+      rules), on `scroller({ overScroll, autoScroll })` — which replaces the
       hand-rolled `ResizeObserver` sticky-scroll in `Thread.Messages`.
 - [x] **Decorations are built from the model's chunk ranges, not by parsing the
       document.** The model already knows where each message starts and ends, so
@@ -483,10 +484,9 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
 - [x] Hover toolbar via `hoverTooltip`, which gets the round-7
       overlay-not-layout requirement for free: the controls mount in the
       tooltip layer, so a long message wraps across the full width.
-- [x] 5 plays: bodies render once, runs show one heading, both divider kinds,
-      reaction toggle, and per-message actions in the toolbar. Hover needs a
-      hand-dispatched `mousemove` — `userEvent.hover` does not give CodeMirror
-      the pointer coordinates it reads (same helper as `Suggest.stories`).
+- [x] Hover needs a hand-dispatched `mousemove` in plays — `userEvent.hover`
+      does not give CodeMirror the pointer coordinates it reads (same helper as
+      `Suggest.stories`).
 - [x] Named `MessageDocument`, NOT a transcript: it renders threads of messages,
       and `react-ui-transcription`'s view is a different thing this never
       replaced — 2b only swapped the model underneath that one.
@@ -519,14 +519,17 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
       start-thread and withholds reply; a thread offers reply and withholds
       start-thread). 9 plays total.
 - [x] 10 plays and 41 unit tests in the package.
-- [ ] Not yet done, and needed before 2d: the composer. `Thread.Textbox` →
-      `ChatEditor`, plus the reply banner, is still 2d's work.
 
 ### 2d — switch the channel containers over
 
 - [ ] `MessageThread` renders the transcript instead of `Thread.Messages`.
 - [ ] `Thread.Textbox` → `ChatEditor` (`@dxos/react-ui-chat`) so input is one
       component too; today it is `useTextEditor` with a different assembly.
+      Carry the reply banner over with it.
+- [ ] NOTE for whoever does this: `createBasicExtensions({ readOnly: true })`
+      installs a transaction filter that drops every user edit, so the document
+      cannot use it — editability is governed by the chrome, which turns it on
+      only for the message being edited. This cost a full debugging round.
 - [ ] Port the 16 storybook plays onto widget DOM testids. This is where the
       schedule risk is, not in the rendering.
 
