@@ -94,6 +94,17 @@ const DEFAULT_TIMEOUT_MS = 5_000;
  *
  * For React tests, pass the returned harness to `render` or `renderSurface`
  * from `@dxos/app-framework/testing-react`.
+ *
+ * TODO(wittjosiah): Consider running activation tests under a browser runner.
+ *   A plugin's `#capabilities` resolves to its `capabilities/node.ts` under the `node` export
+ *   condition, so a Node-run activation test asserts the NODE barrel's wiring, not the one the
+ *   app ships. The two are hand-maintained siblings and drifted silently — 35 modules were gated
+ *   in `index.ts` and ungated in `node.ts` (found 2026-08-04; a `CreateObject` module read as
+ *   startup-eager in tests while the browser build gated it correctly). They were realigned, but
+ *   nothing keeps them that way, and a lint rule is the wrong instrument: the barrels legitimately
+ *   diverge (node omits React surfaces entirely), so "same gates" is not a property that holds in
+ *   general. Running these tests in a browser runner exercises the shipped barrel directly and
+ *   makes the question moot.
  */
 export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> => {
   const {

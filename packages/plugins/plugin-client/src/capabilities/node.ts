@@ -5,15 +5,15 @@
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import * as ClientCapabilities from '../types/ClientCapabilities';
+import * as ClientEvents from '../types/ClientEvents';
 import * as ClientOptions from '../types/ClientOptions';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  activatesOn: ClientEvents.Initialized,
+});
 export const Client = Capability.lazyModule(
   'Client',
   {
@@ -33,7 +33,14 @@ export const LayerSpecs = Capability.lazyModule(
 );
 export const Migrations = Capability.lazyModule(
   'Migrations',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration], provides: [] },
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration],
+    provides: [],
+    // The immediate subscription reads `client.spaces` synchronously, so this needs the forked
+    // client initialization to have completed — the same point it ran at when the startup pass
+    // awaited initialize.
+    activatesOn: ClientEvents.Initialized,
+  },
   () => import('./migrations'),
 );
 export const NavigationHandler = Capability.lazyModule(

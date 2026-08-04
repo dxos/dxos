@@ -15273,6 +15273,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol

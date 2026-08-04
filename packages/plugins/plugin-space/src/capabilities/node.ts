@@ -9,14 +9,11 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { SpaceOperationConfig } from '../operations/helpers';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceCapability from '../types/SpaceCapability';
 import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
