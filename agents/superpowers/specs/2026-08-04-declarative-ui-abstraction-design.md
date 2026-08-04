@@ -1,0 +1,325 @@
+# Declarative UI Abstraction — Design Exploration
+
+- **Date:** 2026-08-04
+- **Status:** Exploration (no implementation)
+- **Scope:** `react-ui-form` / `react-ui-card` / `react-ui-list` / `react-ui-mosaic`,
+  plugin containers, the Surface system, and the effect-atom substrate.
+
+## Problem
+
+Plugin containers today are the least uniform layer of the stack. The primitives
+below them are well-factored and increasingly declarative, but every composite
+container (a list + form + toolbar, say) is hand-written imperative React:
+hooks for queries, memoized derivations, a callback switchboard, and
+conditional-brace layout logic — all tangled in one component.
+
+The canonical pain case is `plugin-inbox`'s `MailboxArticle`
+(`containers/MailboxArticle/MailboxArticle.tsx`, ~670 lines): ~15 hooks up
+front (`useOperationInvoker`, `useAtomCapability`, `useSelection`,
+`useResolveRef`, a per-message atom family, debounced filter text →
+`QueryBuilder` → `usePagination`), one big `handleAction` switch, a
+`MenuBuilder` menu, and a render body of conditional chrome. None of this is
+wrong — but none of it is *declared*, so it cannot be inspected, generated,
+reused across renderers, or kept uniform across plugins except by convention.
+
+We want to explore a further unification: entire containers defined by a
+JSX-like template, driven by data binding and action handlers, with logic
+factored into non-React reactive state (atoms) — and to weigh that against
+alternatives. Goals, in priority order as stated:
+
+1. **Layout-engine independence** — eventually switching away from React.
+2. **Performance** — fine-grained invalidation, virtualization preserved.
+3. **Clarity / quality** — separation of layout from logic.
+4. **Uniformity / consistency** — one recipe across plugins.
+5. **On-the-fly generation** — an agent (or user) can produce UI at runtime.
+
+## Where we already are
+
+The important observation from the survey: **most of the abstraction already
+exists — it just stops one layer below containers.**
+
+### The reactive substrate is already renderer-neutral
+
+- `@effect-atom/atom` is the repo-wide state currency (85+ packages). ECHO
+  objects expose atom families (`Obj.atom`, `Obj.atomProperty`,
+  `Obj.labelAtom`, `Ref#atom`, `QueryResult.atom` —
+  `packages/core/echo/echo/src/internal/Obj/atoms.ts`); the capability system
+  (`capability-manager.ts`), the app graph (`app-graph/src/graph.ts`), menu
+  models (`react-ui-menu/src/builder.ts` + `useMenuActions(atom)`), and Surface
+  resolution (`SurfaceManager.ts`) are all atom computations. React is only the
+  last-mile `useAtomValue`.
+- Alternate bindings already exist: `@dxos/effect-atom-solid`, `echo-solid`,
+  `solid-ui`, `app-solid`, plus Lit web components (`@dxos/lit-ui`:
+  `dx-icon`, `dx-avatar`, `dx-anchor`, `dx-tag-picker`) and
+  `Surface.createWeb` (tag-name-based web-component surfaces). The
+  cross-framework seam is the atom layer, and it is already load-bearing.
+
+### The primitives are already controlled and increasingly data-driven
+
+- **Forms** (`react-ui-form`): a genuine schema-driven layout engine.
+  `Form.FieldSet` recursively walks the effect `SchemaAST` (nested objects,
+  arrays, discriminated unions, refs); adapters resolve in a fixed order —
+  `fieldMap` (by JSON path) → `fieldProvider` (callback) → annotation-driven
+  dynamic fields (`OptionsLookupAnnotation`, `AutofillAnnotation`) → built-in
+  scalar registry by `Format`/AST tag. The root is controlled
+  (`values`/`onValuesChanged`/`onSave`, sparse per-JsonPath overrides). And —
+  crucially — there is already a **template DSL**: `FormLayoutAnnotation`
+  carries named XML-ish templates (`<grid cols="2"><field name="x"
+  span="2"/></grid>`, parser in `FormLayout/parser.ts`) that override linear
+  rendering. This is the embryo of the container-template idea, shipped and in
+  use (`compute/types/Project.ts`, `plugin-magazine`, `plugin-library`).
+- **Lists** (`react-ui-list`): compounds over shared aspect hooks
+  (`useListSelection`, `useListNavigation`, …) with controlled roots
+  (`value`/`onValueChange`, `expandedId`, `onMove`) — see the aspects design
+  (`2026-06-13-react-ui-list-aspects-design.md`).
+- **Mosaic** (`react-ui-mosaic`): binding is already fully declarative —
+  `Mosaic.Stack`/`VirtualStack` take `items + getId + Tile`; the container root
+  owns `currentId`/`selectedIds` + `onCurrentChange`/`onSelectionChange`; DnD
+  is a protocol (`DndContainerHandler` in `react-ui-dnd`).
+- **Cards**: the outlier. `Card.*` (in `react-ui`) plus `react-ui-card`'s
+  shared fragments (`CardTile`, `Row.Date/Ref/Person/Tags/…`) give a good part
+  *vocabulary*, but every card is hand-composed JSX per type. The
+  semi-automated pattern in `plugin-inbox` is projection-by-helper:
+  `getMessageProps(message)` → a ~25-line JSX card → registered on the
+  `AppSurface.CardContent` role. The only schema-driven card is
+  `plugin-preview`'s fallback `FormCard` (Form in `static` presentation).
+
+### The action seam is already converging
+
+`InboxStack` funnels every interaction into a single discriminated-union
+callback `onAction: (action: InboxStackAction) => void`; container code routes
+arms to **Operations** (`invokePromise(TaskOperation.CreateTask, …)`). That is
+Elm's `update(msg)` in all but name, with Operations as the typed, serializable
+command layer. An agent already drives UI through a declarative channel:
+`plugin-assistant`'s `SurfaceWidget` parses `<surface role="…">{json}</surface>`
+content blocks into `<Surface>` dispatches via an `XmlWidgetRegistry`.
+
+**The gap, precisely:** the middle layer — per-container composition of query
+atoms, derived state, action routing, and layout — is hand-written React. That
+layer is what a declarative abstraction should capture.
+
+## Prior art
+
+| System | Lesson for us |
+| --- | --- |
+| **Jetpack Compose** (runtime/UI split) | The composition runtime (`compose-runtime`) is renderer-agnostic; Android UI is one client. Proof that "declarative tree + state model" can be decoupled from the layout engine — but the tree lives in compiled code, so it is not serializable/generative. |
+| **SwiftUI** | Value-typed view descriptions re-derived from state; identity + diffing owned by the runtime. Same non-serializable caveat; `@Observable` fine-grained tracking parallels atoms. |
+| **SolidJS** | Control flow as components (`<Show>`, `<For>`, `<Switch>/<Match>`) with fine-grained signals and no VDOM diffing. Directly answers "replace conditional braces with IF components" — and the pattern works as an *interpretation strategy*, not just a framework: `<For>` over an atom of items maps to keyed child materialization. |
+| **Elm / MVU** | `Model → view`, `Msg → update`. The discriminated-union `onAction` + Operations is MVU already; naming it makes containers testable headless. |
+| **QML** | Declarative markup + property bindings + signal handlers, logic in controllers; the closest end-state to the brief ("template + data binding + action handlers"). Shows the cost too: a binding language needs scoping/typing rules. |
+| **XAML / WPF** | `DataTemplate` + `DataTemplateSelector` = type-directed template resolution — which is exactly what Surface roles do (`AppSurface.object(CardContent, Message.Message)`). `ICommand` = Operations. MVVM = the "intermediate controller objects" the brief asks about; its failure mode (boilerplate ViewModels mirroring models) is what atom families avoid. |
+| **Server-driven UI** (Airbnb Ghost, Lyft, Shopify) | JSON component trees interpreted by a client registry; versioned schema; unknown-node fallback. The proven architecture for *generated* UI — and its discipline (small closed node set + registered escape hatches) is the right guard-rail. |
+| **Adaptive Cards** | A serializable, schema-validated card DSL with host-controlled styling and a template/data-binding language. Precedent for card unification specifically. |
+| **JSON Forms / RJSF `uiSchema`** | Schema (data) + uiSchema (layout) separation — `FormLayoutAnnotation` is already this, per-type and named-variant. |
+| **XState / statecharts** | Where controller logic outgrows `update(msg)` switches, statecharts keep it declarative and inspectable. Optional, per-container. |
+| **react-three-fiber / Ink** | Custom reconcilers re-target JSX to non-DOM hosts. A cheaper "leave React later" hedge — but it keeps the React runtime, so it serves portability of *authoring*, not independence of *runtime*. |
+| **ImGui (immediate mode)** | The opposite pole: no retained tree, everything re-derived per frame. Attractive for generation, wrong for accessibility/focus/virtualization; noted to bound the space. |
+
+Two syntheses from this table:
+
+1. Every successful "generate UI at runtime" system is **data-interpreted**
+   (SDUI, Adaptive Cards, QML), while every successful "maximum ergonomics for
+   engineers" system is **code-compiled** (Compose, SwiftUI, Solid). Systems
+   that need both (Airbnb) run a *closed data model interpreted by
+   code-authored components*. We should not pick one — we should put the
+   boundary in the right place.
+2. Everyone ends up with the same three-part split: **state/bindings**
+   (signals/atoms/observables), **messages/commands** (Msg, ICommand,
+   Operations), and a **template layer** (data or code) resolved by a
+   **type-directed registry** (DataTemplateSelector, SDUI registry, Surface).
+   We already have three of the four; the template layer is the missing part.
+
+## Design space
+
+Three axes structure the options:
+
+- **Template representation.** (a) TSX components (status quo, compiled,
+  maximally expressive, not serializable); (b) a serializable data model
+  (inspectable, generable, renderer-neutral, bounded expressiveness); (c)
+  isomorphic — TSX-looking authoring that *emits* the data model (JSX factory
+  or typed builder), so hand-written and generated templates converge on one
+  runtime path.
+- **Binding model.** Props-drilling explodes on composites (the brief's
+  concern). The alternative currency is **atom references**: a template node
+  binds to `state.<name>` where the controller publishes named atoms; item
+  scopes (inside a `For`) bind to per-item atom families (the
+  `useMessageTagsAtomFamily` pattern, generalized). Actions are not callbacks
+  but **messages**: `{ action: 'star', subject: $item }` routed through one
+  dispatcher to Operations.
+- **Where logic lives.** The "intermediate controller object" the brief
+  hypothesizes should be an **Effect-service-shaped controller**: a constructor
+  `(ctx: { db, settings, … }) => { state: Record<string, Atom>, dispatch:
+  (msg) => Effect }`. No React. Testable headless (vitest + registry), reusable
+  from Solid/Lit, and exactly what the existing menu (`MenuBuilder` → atom) and
+  board (`Board.Root model=`) APIs already do in miniature.
+
+## Options
+
+### Option A — Controller extraction + declarative control flow (no new runtime)
+
+Keep TSX. Introduce two conventions and a tiny library:
+
+1. **`ViewController`** — per-container controller objects built from atoms +
+   an MVU dispatch, constructed outside React (Effect layer), consumed via one
+   hook (`useController(MailboxController, props)`). All queries, derived
+   state, debounce, and action routing move out of the component.
+2. **Control-flow components** — Solid-style `<If test={atom}>`,
+   `<Match>/<Case>`, `<For each={atomOfItems}>` in a small package
+   (`react-ui-flow` or additions to `react-ui-components`), reading atoms
+   directly so branches re-render on fine-grained change without parent
+   re-render.
+
+The container becomes a pure template *in TSX*: composite roots + control-flow
+components + bindings to `controller.state.*` and `controller.dispatch`.
+
+- **Pros:** immediate clarity win; no interpreter; incremental per-container
+  migration; performance improves (atom-scoped subscriptions replace
+  component-scoped hooks); the controller is the renderer-independence seam.
+- **Cons:** templates are still compiled code — no runtime generation, no
+  serialization, uniformity still by convention; React remains the layout
+  engine for everything written this way.
+
+### Option B — A serializable container template model ("Surface templates")
+
+Generalize what `FormLayout` already proves at form scale to container scale.
+Define a **closed, schema-validated node model** (Effect Schema union — so
+templates are ECHO-storable objects), roughly:
+
+```
+TemplateNode =
+  | Layout:    panel | toolbar | section | grid | row        (chrome/geometry)
+  | Composite: list | stack | form | card | menu | tabs      (bind to composite roots)
+  | Content:   text | label | icon | image | value           (leaf bindings)
+  | Flow:      if | match | for                              (control structure)
+  | Escape:    surface (role + data) | component (registry key)
+Binding  = { path: JsonPath } | { state: string }            (controller atom by name)
+ActionRef = { action: string, args?: Record<string, Binding> } (→ dispatch → Operations)
+```
+
+An **interpreter** (per renderer) walks the tree: React first (each node type
+maps to the existing composites — `Panel`, `Mosaic.VirtualStack`, `Form.Root`,
+`Card.*`), Solid/Lit later against the same node model. Templates are resolved
+type-directedly, exactly like surfaces: a template is *contributed* for
+`(role, schema)` the way `Surface.create({ filter, component })` is today —
+hand-written components and templates coexist behind the same resolution,
+so migration is per-surface and reversible.
+
+Custom behavior has two sanctioned escape hatches, mirroring `fieldMap` /
+`fieldProvider` in forms: the `component` node (registry-keyed custom React/
+Solid component receiving bound props) and the `surface` node (delegate a
+subtree to normal Surface resolution). Extension = register a component or
+extend the node union — never fork the interpreter.
+
+- **Pros:** delivers generation (assistant emits a template object — the
+  `SurfaceWidget` pipeline already parses agent-emitted trees), uniformity
+  (one interpreter, one recipe), inspectability (templates are data; a
+  template editor is a form over the template schema), and true layout-engine
+  independence (the node model + controller contract is the portable artifact;
+  a renderer is "interpreter + primitive kit", and lit-ui/solid packages seed
+  the kit).
+- **Cons:** an interpreter to build and maintain; a binding/scoping language to
+  specify (the QML tax — keep bindings to path/state references, no
+  expressions, to stay out of the expression-language trap); bounded
+  expressiveness by design; virtualization and DnD must flow through the
+  composite nodes' existing props, not be reinvented per template.
+
+### Option C — Framework-agnostic retained UI runtime
+
+A compose-runtime-style layer: our own component/composition model over atoms,
+with React demoted to one backend (or dropped for a direct DOM/Lit backend).
+
+- **Pros:** maximal independence and performance ceiling (fine-grained direct
+  DOM updates, no VDOM).
+- **Cons:** we would own a UI runtime — scheduling, identity, focus,
+  accessibility, event systems, devtools. This is a company-scale investment
+  (Compose has a dedicated team) and duplicates what Solid/Lit already are.
+  If the day comes to leave React, **adopting** Solid/Lit behind the Option B
+  seam is strictly cheaper than building a runtime. Rejected as a project;
+  kept as the horizon that Options A+B must not foreclose.
+
+## Recommendation
+
+**A then B, as one program; C never as a build, only as a constraint.**
+
+They are not competitors: A's controller is B's binding target. The sequence
+matters because the controller extraction is pure win with zero speculative
+machinery, and it hardens the exact contract (`state` atoms + `dispatch`
+messages) that makes templates possible at all. Concretely:
+
+1. **Name the controller pattern.** Extract `MailboxArticle` (and one simple
+   container, e.g. `TaskSetArticle`) into `ViewController`s: atoms for query/
+   filter/selection state, one `dispatch` routing the existing
+   `InboxStackAction` union to Operations. Ship the `useController` hook and
+   headless controller tests. *Exit criterion: the container component contains
+   zero `useCallback`/`useMemo` and no branching beyond template flow.*
+2. **Ship control-flow components** (`If`/`Match`/`For` over atoms) and use
+   them in the extracted containers. This is the Solid idiom inside React and
+   doubles as the interpreter's flow semantics later.
+3. **Unify cards as the first template domain.** Cards are the smallest, most
+   repetitive, least stateful container family — and `FormLayoutAnnotation` +
+   `AdaptiveCards` show the shape. A `CardLayoutAnnotation` (named templates
+   over a projection: rows of `Row.Date/Person/Tags/…` parts bound by path)
+   replaces hand-rolled cards per type; `FormCard` remains the fallback;
+   hand-written cards remain a registered override. This retires the
+   `getMessageProps` + bespoke-JSX pattern where it is not earning its keep.
+4. **Generalize the template model to containers** (Option B proper): promote
+   the `FormLayout` parser idea from string-DSL-in-annotation to typed
+   `TemplateNode` objects (Effect Schema, ECHO-storable), write the React
+   interpreter over the existing composites, and register templates through
+   Surface resolution alongside components.
+5. **Generation + portability last, on proven rails.** Assistant emits
+   `TemplateNode` trees through the existing `<surface>` widget channel
+   (validated by the template schema — malformed output fails closed to the
+   fallback card/form). A Solid interpreter spike over `effect-atom-solid` +
+   `solid-ui` validates the independence claim on one real surface.
+
+Why this ordering wins against the goals: independence is achieved by
+*shrinking the React-specific surface to interpreter + primitives* rather than
+by rewriting; performance comes from atoms doing invalidation below the
+component level (and is preserved by binding templates to the existing
+virtualized composites rather than replacing them); clarity comes at step 1
+without waiting for the runtime; uniformity and generation come from the
+template layer being data resolved through the machinery (Surface) plugins
+already use.
+
+## Risks and mitigations
+
+- **Expression-language creep** in bindings (the QML/Angular-template trap).
+  Mitigate: bindings are references only (`path` | `state`); any computation
+  belongs in the controller as a derived atom.
+- **Two ways to build a container** during migration. Mitigate: templates and
+  components share Surface resolution, so each surface is one or the other;
+  track migration per role.
+- **Interpreter performance.** Mitigate: node → element materialization is
+  memoized per node identity; leaf re-rendering is atom-scoped; lists always
+  lower to `Mosaic.VirtualStack`. Budget: interpretation must be O(visible
+  nodes), never O(items).
+- **Prop explosion re-appears as binding explosion.** Mitigate: the controller
+  publishes a *named* state record (a scope), not positional props; templates
+  reference names; `For` introduces nested scopes — this is the MVVM
+  DataContext lesson.
+- **Typing serialized templates.** Effect Schema gives structural validation;
+  path bindings can be checked against the bound schema at contribution time
+  (the `resolveLayoutField` precedent already does dotted-path resolution).
+
+## Open questions
+
+1. Should the authoring form of templates be a typed builder
+   (`MenuBuilder`-style fluent API), literal TSX with a custom factory that
+   emits `TemplateNode`s, or schema-validated object literals? (Builder is the
+   repo's existing idiom; TSX-factory maximizes familiarity; literals maximize
+   generability. They can coexist — the runtime consumes only the data model.)
+2. Does the `ViewController` land as an Effect service per container
+   (constructed via layers, `Database.layer(db)` provided at mount) or as a
+   plain factory over the atom registry? The MenuBuilder/Board precedents use
+   plain factories; Operations pull toward Effect services.
+3. Is `CardLayoutAnnotation` per-schema (like `FormLayoutAnnotation`) or
+   contributed separately from the type (so plugins can theme cards for types
+   they don't own)? Surface-style contribution seems right but splits the
+   source of truth.
+4. How far do templates reach into chrome (toolbars/menus)? `MenuBuilder`
+   already has an atom-native declarative model — templates should probably
+   *reference* menu models, not re-describe them.
+5. Naming: "Surface templates" ties the feature to the existing resolution
+   mechanism; "screens" (the react-ui-form term of art) may fit the named-
+   variant axis (`default` | `card` | `compact`) better.
