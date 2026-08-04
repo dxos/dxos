@@ -11,7 +11,7 @@ import { type RefObject } from 'react';
 
 export const DROPDOWN_MENU_NAME = 'DropdownMenu';
 
-export type ScopedProps<P> = P & { __scopeDropdownMenu?: Scope };
+export type DropdownMenuScopedProps<P> = P & { __scopeDropdownMenu?: Scope };
 export const [createDropdownMenuContext, createDropdownMenuScope] = createContextScope(DROPDOWN_MENU_NAME, [
   createMenuScope,
 ]);

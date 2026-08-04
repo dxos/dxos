@@ -9,7 +9,7 @@ import { type RefObject } from 'react';
 // Kept out of `Popover.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
 
-export type ScopedProps<P> = P & { __scopePopover?: Scope };
+export type PopoverScopedProps<P> = P & { __scopePopover?: Scope };
 
 export const POPOVER_NAME = 'Popover';
 
