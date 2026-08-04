@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
 import { Placeholder } from '@dxos/devtools';
 import { useClient } from '@dxos/react-client';
 import { Panel } from '@dxos/react-ui';
 import { Terminal } from '@dxos/react-ui-terminal';
 
-import { createCliApp } from './cli';
+import { useCliApp } from './useCliApp';
 
 const BOLD = '\x1b[1m';
 const DIM = '\x1b[2m';
@@ -27,8 +26,7 @@ const BANNER = `${BOLD}DXOS CLI${RESET}\n${DIM}The dx commands, running against 
  */
 export const CliPanel = () => {
   const client = useClient();
-  const manager = usePluginManager();
-  const cli = useMemo(() => createCliApp(client, manager), [client, manager]);
+  const cli = useCliApp(client);
 
   // No ScrollArea: xterm owns its own viewport and scrollback.
   return (

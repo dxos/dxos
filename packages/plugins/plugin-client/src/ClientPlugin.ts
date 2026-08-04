@@ -27,8 +27,13 @@ import { translations } from '#translations';
 import { ClientEvents } from '#types';
 import { type ClientPluginOptions } from '#types';
 
+import { config, device, edge, halo } from './commands';
+
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  // `account` needs the OAuth callback server and `profile` a filesystem, so both stay in the
+  // node variant; the rest resolve through the client alone.
+  AppPlugin.addCommandModule({ commands: [config, device, edge, halo] }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp, invitationUrlHandler }) => ({
     activate: () => NavigationHandler({ invitationProp, invitationUrlHandler }),
   })),

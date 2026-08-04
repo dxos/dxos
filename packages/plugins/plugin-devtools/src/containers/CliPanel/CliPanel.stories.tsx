@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { database, queue, space } from '@dxos/plugin-space/commands';
+import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { runCommand, waitForTerminal } from '@dxos/react-ui-terminal/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -20,10 +19,8 @@ const meta = {
   title: 'plugins/plugin-devtools/containers/CliPanel',
   component: CliPanel,
   decorators: [
-    // Stands in for SpacePlugin, which contributes these through the same capability.
-    withPluginManager({
-      capabilities: [space, database, queue].map((command) => Capability.contributes(Capabilities.Command, command)),
-    }),
+    // The real plugin, so the story covers it actually contributing its commands.
+    withPluginManager({ plugins: [SpacePlugin({})] }),
     withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -47,7 +44,8 @@ export const Default: Story = {};
 export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const keyboard = (text: string) => userEvent.keyboard(text);
-    await waitForTerminal(canvasElement, 'dx>');
+    // The decorator resolves SpacePlugin lazily, so the first prompt waits on that import.
+    await waitForTerminal(canvasElement, 'dx>', 45_000);
 
     // `space list` reaches the client and reports the story's space.
     await runCommand(canvasElement, 'space list', keyboard);

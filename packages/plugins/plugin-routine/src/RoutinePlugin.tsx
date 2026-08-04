@@ -22,9 +22,11 @@ import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import { trigger } from './commands';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
+  AppPlugin.addCommandModule({ commands: [trigger] }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addPluginAssetModule({
