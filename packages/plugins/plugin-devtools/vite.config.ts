@@ -18,5 +18,5 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true, storybook: { isolate: false, timeout: 60_000 } },
+  test: { node: true, storybook: { isolate: false } },
 });

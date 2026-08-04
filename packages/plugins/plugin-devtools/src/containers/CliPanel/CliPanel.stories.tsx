@@ -3,11 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
 import { userEvent } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
-import { withClientProvider } from '@dxos/react-client/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { runCommand, waitForTerminal } from '@dxos/react-ui-terminal/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -19,14 +22,23 @@ const meta = {
   title: 'plugins/plugin-devtools/containers/CliPanel',
   component: CliPanel,
   decorators: [
-    // The real plugin, so the story covers it actually contributing its commands.
-    withPluginManager({ plugins: [SpacePlugin({})] }),
-    withClientProvider({ createIdentity: true, createSpace: true }),
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
+    withTheme(),
+    withPluginManager({
+      setupEvents: [AppActivationEvents.SetupSettings],
+      plugins: [
+        ...corePlugins(),
+        // The identity brings a personal space, which is what the commands resolve against.
+        ClientPlugin({ onClientInitialized: ({ client }) => Effect.asVoid(initializeIdentity(client)) }),
+        StorybookPlugin({}),
+        // The real plugin, so the story covers it actually contributing its commands.
+        SpacePlugin({}),
+      ],
+    }),
   ],
   parameters: {
     layout: 'fullscreen',
+    controls: { disable: true },
     translations,
   },
 } satisfies Meta<typeof CliPanel>;
@@ -44,12 +56,10 @@ export const Default: Story = {};
 export const Spec: Story = {
   play: async ({ canvasElement }) => {
     const keyboard = (text: string) => userEvent.keyboard(text);
-    // The decorator resolves SpacePlugin lazily, so the first prompt waits on that import.
-    await waitForTerminal(canvasElement, 'dx>', 45_000);
+    await waitForTerminal(canvasElement, 'dx>');
 
-    // `space list` reaches the client and reports the story's space.
+    // `space list` reaches the client and reports its space.
     await runCommand(canvasElement, 'space list', keyboard);
-    await waitForTerminal(canvasElement, 'Test Space');
     await waitForTerminal(canvasElement, 'SPACE_READY');
 
     // `database query` reaches ECHO through the layer the command provides for itself.
