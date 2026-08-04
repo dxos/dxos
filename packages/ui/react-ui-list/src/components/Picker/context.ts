@@ -5,6 +5,10 @@
 // Two contexts (Item / Input) instead of one — performance optimization
 // from the original SearchList: items don't subscribe to query / input
 // state, so typing in the input doesn't re-render every option.
+//
+// Kept out of `Picker.tsx` (and not re-exported from it): react-refresh only fast-refreshes a module
+// whose exports are all components, so contexts and hooks exported beside them force a full page
+// reload on every edit.
 
 import { createContext } from '@radix-ui/react-context';
 

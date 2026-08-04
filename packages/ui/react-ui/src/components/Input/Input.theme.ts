@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
+import { staticDisabled } from '@dxos/ui-theme';
 import { getSize, mx, sizeValue, snapSize, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
@@ -48,11 +48,15 @@ const valence = (valence?: MessageValence) => {
   }
 };
 
+// Height and inline padding come from the density knobs (theme/spacing.css) rather than utilities,
+// so a density class on any ancestor resizes the control without a matching React prop.
+const controlSize = 'min-h-(--dx-control) px-(--dx-control-pad) leading-(--dx-control-leading)';
+
 const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   'py-0 w-full bg-transparent text-current placeholder-placeholder',
   'dx-focus-subdued',
-  densityDimensions(props.density),
+  controlSize,
   props.disabled && staticDisabled,
 ];
 
@@ -60,7 +64,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
   'py-0 w-full text-base-fg placeholder-placeholder',
   'dx-input',
-  densityDimensions(props.density),
+  controlSize,
   props.disabled ? staticDisabled : textInputSurfaceHover,
 ];
 
@@ -111,13 +115,7 @@ const switch_: ComponentFunction<InputStyleProps> = (_props, ...etc) => mx('dx-c
 const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
-    props.density === 'lg'
-      ? 'text-lg'
-      : props.density === 'sm'
-        ? 'text-sm'
-        : props.density === 'xs'
-          ? 'text-xs'
-          : 'text-base pointer-fine:text-sm',
+    props.density === 'lg' ? 'text-lg' : props.density === 'sm' ? 'text-sm' : 'text-base pointer-fine:text-sm',
     props.disabled && 'cursor-not-allowed',
     ...etc,
   );
@@ -125,13 +123,8 @@ const pin: ComponentFunction<InputStyleProps> = (props, ...etc) =>
 const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'flex items-center justify-center tabular-nums',
-    props.density === 'lg'
-      ? 'size-12 rounded-xs'
-      : props.density === 'sm'
-        ? 'size-7 rounded-xs'
-        : props.density === 'xs'
-          ? 'size-6 rounded-xs'
-          : 'size-10 pointer-fine:size-8 rounded-xs',
+    // A PIN segment is a square control, so it takes the density height on both axes.
+    'size-(--dx-control) rounded-xs',
     'bg-input-surface text-base-fg transition-colors border border-input-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
@@ -154,7 +147,7 @@ const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
 
 const triggerIcon: ComponentFunction<{}> = (_p, ...etc) =>
   mx(
-    'shrink-0 inline-flex items-center justify-center size-7 rounded-xs',
+    'shrink-0 inline-flex items-center justify-center size-(--dx-control-sm) rounded-xs',
     'bg-input-surface text-subdued hover:text-base-fg hover:bg-hover-surface',
     'dx-focus-ring',
     ...etc,

@@ -261,7 +261,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
               </LayoutPanel>
             )}
           </Panel.Content>
-          <Panel.Statusbar className='flex items-center p-1 border-t border-subdued-separator'>
+          <Panel.Statusbar classNames='flex items-center p-1 border-t border-subdued-separator'>
             {t('item-count.label', { count: tileItems.length })}
           </Panel.Statusbar>
         </Panel.Root>

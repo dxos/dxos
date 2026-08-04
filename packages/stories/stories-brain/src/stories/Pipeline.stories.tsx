@@ -457,7 +457,7 @@ const MessageList = ({
       return (
         <div
           key={message.id}
-          className='flex flex-col bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+          className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
         >
           <span className='font-medium truncate'>{String(message.properties?.subject ?? '')}</span>
           <span className='text-sm text-description truncate'>{message.sender.email}</span>
@@ -473,7 +473,7 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
     {result.threads.map((thread) => (
       <div
         key={thread.id}
-        className='flex flex-col bg-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+        className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
       >
         <span className='font-medium truncate'>{thread.subject}</span>
         <span className='text-sm text-description'>

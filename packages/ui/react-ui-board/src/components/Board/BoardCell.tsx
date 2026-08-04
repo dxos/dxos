@@ -18,7 +18,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useBoardContext } from './Board';
+import { useBoardContext } from './BoardContext';
 import { type GridConstraints, type GridPosition, applyConstraints } from './engine';
 import { cellRect } from './geometry';
 

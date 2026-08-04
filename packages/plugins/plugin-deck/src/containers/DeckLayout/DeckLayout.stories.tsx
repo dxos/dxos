@@ -166,7 +166,7 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
 
           return (
             <Panel.Root>
-              <Panel.Content className='grid grid-rows-[min-content_1fr]'>
+              <Panel.Content classNames='grid grid-rows-[min-content_1fr]'>
                 {attendableId && <ItemComponent id={attendableId} />}
                 <Syntax.Root data={subject}>
                   <Syntax.Content>

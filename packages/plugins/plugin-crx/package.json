@@ -102,6 +102,7 @@
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
     "@types/react": "catalog:",
     "react": "catalog:",
     "vite": "catalog:",
