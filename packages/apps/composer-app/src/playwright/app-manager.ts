@@ -62,9 +62,10 @@ export class AppManager {
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
-    // Wait for boot generously (CI firefox measures ~16s) so a slow boot fails against this locator
-    // rather than as a bare `Test timeout` inside the first action.
-    await this.page.getByTestId('treeView.userAccount').waitFor({ timeout: 45_000 });
+    // Assert boot rather than proceed on a swallowed `false` (CI firefox measures ~16s), so a slow boot
+    // fails here instead of as a bare `Test timeout` inside the first action.
+    const authenticated = await this.isAuthenticated({ timeout: 45_000 });
+    expect(authenticated, 'app did not boot: treeView.userAccount never appeared').toBe(true);
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
