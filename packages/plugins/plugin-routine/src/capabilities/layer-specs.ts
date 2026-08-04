@@ -53,28 +53,19 @@ import { invariant } from '@dxos/invariant';
 const OperationHandlerProviderSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service],
+    requires: [Capability.Service, Capabilities.AtomRegistry],
     provides: [OperationHandlerSet.OperationHandlerProvider],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        const capabilities = yield* Capability.Service;
-        // Live view (not a one-shot snapshot): handlers contributed after materialization —
-        // e.g. by a plugin enabled later — still reach subsequent reads. Handler sets register
-        // eagerly at startup; keyed contributions load only the matched operation's body.
-        const currentSet = () => {
-          const sets = capabilities.getAll(Capabilities.OperationHandler);
-          return sets.length === 0 ? OperationHandlerSet.empty : OperationHandlerSet.merge(...sets);
-        };
-        const liveSet: OperationHandlerSet.OperationHandlerSet = {
-          [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-          definitions: () => currentSet().definitions(),
-          getHandlerFor: (key) => currentSet().getHandlerFor(key),
-          getHandlers: () => currentSet().getHandlers(),
-          handlers: Effect.suspend(() => currentSet().handlers),
-        };
-        return OperationHandlerSet.provide(liveSet);
+        // Live view (not a one-shot snapshot): handlers contributed after materialization — e.g. by
+        // a plugin enabled later — still reach subsequent reads. The manager memoizes one atom per
+        // capability, so `reactive` reads the current contributions and re-merges when they change.
+        // Declared in `requires`, so absence is a wiring bug rather than a recoverable error.
+        const registry = yield* Capability.get(Capabilities.AtomRegistry).pipe(Effect.orDie);
+        const sets = yield* Capability.atom(Capabilities.OperationHandler);
+        return OperationHandlerSet.provide(OperationHandlerSet.reactive(registry, sets));
       }),
     ),
 );
