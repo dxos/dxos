@@ -68,6 +68,7 @@ All mechanics run in GitHub Actions; the human's only actions are **merging an a
 **Publishing lives in `publish-all.yml` for both channels** because npm's OIDC trusted publisher is bound to that workflow filename — so the **trigger selects the channel**:
 
 - **`@latest`** — push to `main` maintains the "Version Packages" PR (consuming `.changeset/*.md`, bumping versions, writing changelogs); **merging that PR** triggers the publish (npm OIDC + `--provenance`) and the `@latest` tags.
+  - **The Version PR is owned by `GH_DXOS_BOT_PAT`, not `GITHUB_TOKEN`.** GitHub raises no workflow run for anything `GITHUB_TOKEN` authors, so a `GITHUB_TOKEN`-owned Version PR carries **zero** checks and can never satisfy the required checks the merge queue gates on — the release train stalls behind a PR that is permanently `blocked`. Because `changesets/action` authenticates its pushes via a `~/.netrc` it writes from `github-token`, the checkout must also set `persist-credentials: false`: a persisted `http.extraheader` credential outranks netrc and would put the pushes back on `GITHUB_TOKEN`.
 - **`@next`** — a `workflow_dispatch` runs `changeset version --snapshot next` + `sync-versions`, then `changeset publish --tag next --no-git-tag`. Versions are throwaway (`X.Y.Z-next-<commit>`); nothing is committed, no git tags, no-op when no changesets are pending. No `pre` mode anywhere — `publish-all.yml` fails fast if a stray `.changeset/pre.json` appears.
 
 Per-commit unreleased code is served by **pkg.pr.new** (§6 covers how a downstream repo consumes it), not npm.
