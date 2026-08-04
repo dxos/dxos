@@ -590,21 +590,19 @@ export default Capability.makeModule(
         return { added, removed };
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
-    return Capability.contribute(
-      ConnectorCoordination.ConnectorCoordinator,
-      {
-        createConnection,
-        reauthenticate,
-        createCustomConnection,
-        finalizeRedirectFlow,
-        submitCredentialForm,
-        setCursors,
-      },
-      () =>
-        Effect.sync(() => {
-          window.removeEventListener('message', handleMessage);
-          pending.clear();
-        }),
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        window.removeEventListener('message', handleMessage);
+        pending.clear();
+      }),
     );
+    return Capability.contribute(ConnectorCoordination.ConnectorCoordinator, {
+      createConnection,
+      reauthenticate,
+      createCustomConnection,
+      finalizeRedirectFlow,
+      submitCredentialForm,
+      setCursors,
+    });
   }),
 );

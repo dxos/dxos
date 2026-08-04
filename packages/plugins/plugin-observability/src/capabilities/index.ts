@@ -62,7 +62,8 @@ export const Observability = Capability.inlineModule(
   (observability) =>
     Effect.gen(function* () {
       const obs = yield* Effect.tryPromise(() => observability());
-      return [Capability.contribute(ObservabilityCapabilities.Observability, obs, () => obs.close())];
+      yield* Effect.addFinalizer(() => obs.close());
+      return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

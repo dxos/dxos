@@ -41,6 +41,21 @@ export default Capability.makeModule(
     performance.mark('milestone:client-initialize:start');
 
     let subscription: { unsubscribe: () => void } | undefined;
+
+    // Registered BEFORE the fork so it runs AFTER the fiber's interrupt — scope finalizers run in
+    // reverse order of addition, so the in-flight initialization stops before the client it is
+    // initializing goes away.
+    yield* Effect.addFinalizer(() =>
+      Effect.gen(function* () {
+        log.info('client capability: destroying client');
+        subscription?.unsubscribe();
+        yield* Effect.tryPromise(() => client.destroy()).pipe(
+          // A finalizer must not fail, and a teardown error must not mask the reason for teardown.
+          Effect.catchAll((error) => Effect.sync(() => log.warn('client destroy failed', { error: String(error) }))),
+        );
+      }),
+    );
+
     // Forked off the startup pass: the (uninitialized) client capability is contributed
     // immediately and startup completes without waiting; React consumers suspend via
     // `useClient` and imperative consumers ride `ClientEvents.Initialized` or
@@ -121,7 +136,10 @@ export default Capability.makeModule(
       ),
       Effect.provideService(Capability.Service, capabilityManager),
       Effect.provideService(Plugin.Service, pluginManager),
-      Effect.forkDaemon,
+      // Scoped, not daemon: the module's scope closes on deactivation (and on manager shutdown),
+      // so an initialization still in flight is interrupted instead of outliving the capability
+      // and contributing to a torn-down manager.
+      Effect.forkScoped,
     );
 
     log('client capability ready (initialization in flight)');
@@ -129,14 +147,7 @@ export default Capability.makeModule(
     return [
       // TODO(wittjosiah): Try to remove and prefer layer?
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
-      Capability.contribute(ClientCapabilities.Client, client, () =>
-        Effect.gen(function* () {
-          log.info('client capability: destroying client');
-          // TODO(dmaretskyi): use scope for destroy.
-          subscription?.unsubscribe();
-          yield* Effect.tryPromise(() => client.destroy());
-        }),
-      ),
+      Capability.contribute(ClientCapabilities.Client, client),
       Capability.contribute(Capabilities.Layer, ClientService.fromClient(client)),
       // HALO service instances for imperative consumers (so plugins read identity/spaces
       // through @dxos/halo instead of the client directly).

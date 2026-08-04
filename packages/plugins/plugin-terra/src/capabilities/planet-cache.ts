@@ -12,6 +12,7 @@ import * as TerraCapabilities from '../types/TerraCapabilities';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const cache = new PlanetCache();
-    return Capability.contribute(TerraCapabilities.PlanetCache, cache, () => Effect.sync(() => cache.clear()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => cache.clear()));
+    return Capability.contribute(TerraCapabilities.PlanetCache, cache);
   }),
 );

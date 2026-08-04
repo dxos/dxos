@@ -261,13 +261,16 @@ export default Capability.makeModule(
       remove,
     };
 
+    // One disposal path: the resolver and the manager close over the same runtime.
+    yield* Effect.addFinalizer(() =>
+      Effect.tryPromise(() => runtime.dispose()).pipe(
+        Effect.catchAll((error) => Effect.sync(() => log.warn('ollama runtime dispose failed', { error }))),
+      ),
+    );
     return [
-      // The runtime-dispose finalizer lives on the resolver contribution only; the manager closes
-      // over the same runtime, so there is a single disposal path.
       Capability.contribute(
         AppCapabilities.AiModelResolver,
         OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
-        () => Effect.tryPromise(() => runtime.dispose()),
       ),
       Capability.contribute(AssistantCapabilities.OllamaManager, manager),
     ];

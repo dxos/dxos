@@ -58,13 +58,14 @@ export default Capability.makeModule(
     updateNavigableCollections();
     const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
 
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        unsubscribe();
+      }),
+    );
     return [
       Capability.contribute(SpaceCapabilities.State, stateAtom),
-      Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
-        Effect.sync(() => {
-          unsubscribe();
-        }),
-      ),
+      Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralAtom),
     ];
   }),
 );

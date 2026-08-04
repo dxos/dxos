@@ -59,12 +59,13 @@ export default Capability.makeModule(
 
     setupDevtools(builder.graph);
 
-    return Capability.contribute(AppCapabilities.AppGraph, builder, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         // clearInterval(interval);
         unsubscribe();
       }),
     );
+    return Capability.contribute(AppCapabilities.AppGraph, builder);
   }),
 );
 

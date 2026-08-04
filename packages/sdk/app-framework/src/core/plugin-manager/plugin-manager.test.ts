@@ -1119,14 +1119,14 @@ describe('PluginManager', () => {
           provides: [String],
           id: 'WithDeactivate',
           activatesOn: ActivationEvents.Startup,
-          activate: () =>
-            Effect.succeed([
-              Capability.contribute(String, { string: 'hello' }, () =>
-                Effect.sync(() => {
-                  deactivated = true;
-                }),
-              ),
-            ]),
+          activate: Effect.fnUntraced(function* () {
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                deactivated = true;
+              }),
+            );
+            return [Capability.contribute(String, { string: 'hello' })];
+          }),
         }),
         Plugin.make,
       );
@@ -1152,14 +1152,14 @@ describe('PluginManager', () => {
           provides: [String],
           activatesOn: ActivationEvents.Startup,
           id: 'First',
-          activate: () =>
-            Effect.succeed([
-              Capability.contribute(String, { string: 'first' }, () =>
-                Effect.sync(() => {
-                  deactivationOrder.push('First');
-                }),
-              ),
-            ]),
+          activate: Effect.fnUntraced(function* () {
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                deactivationOrder.push('First');
+              }),
+            );
+            return [Capability.contribute(String, { string: 'first' })];
+          }),
         }),
         Plugin.make,
       );
@@ -1174,13 +1174,12 @@ describe('PluginManager', () => {
           id: 'Second',
           activate: Effect.fnUntraced(function* () {
             yield* String;
-            return [
-              Capability.contribute(Number, { number: 2 }, () =>
-                Effect.sync(() => {
-                  deactivationOrder.push('Second');
-                }),
-              ),
-            ];
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                deactivationOrder.push('Second');
+              }),
+            );
+            return [Capability.contribute(Number, { number: 2 })];
           }),
         }),
         Plugin.make,
@@ -2685,14 +2684,14 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () =>
-                Effect.succeed([
-                  Capability.contribute(String, { string: 'base' }, () =>
-                    Effect.sync(() => {
-                      deactivations.push('provider');
-                    }),
-                  ),
-                ]),
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    deactivations.push('provider');
+                  }),
+                );
+                return [Capability.contribute(String, { string: 'base' })];
+              }),
             }),
           ),
         );
@@ -2704,13 +2703,12 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
-                return [
-                  Capability.contribute(Number, { number: string.length }, () =>
-                    Effect.sync(() => {
-                      deactivations.push('consumer');
-                    }),
-                  ),
-                ];
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    deactivations.push('consumer');
+                  }),
+                );
+                return [Capability.contribute(Number, { number: string.length })];
               }),
             }),
           ),
@@ -2751,7 +2749,10 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' }, track('provider'))]),
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(track('provider'));
+                return [Capability.contribute(String, { string: 'p' })];
+              }),
             }),
             Plugin.addModule({
               id: 'consumer',
@@ -2759,14 +2760,18 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
-                return [Capability.contribute(Number, { number: string.length }, track('consumer'))];
+                yield* Effect.addFinalizer(track('consumer'));
+                return [Capability.contribute(Number, { number: string.length })];
               }),
             }),
             Plugin.addModule({
               id: 'event-root',
               provides: [Total],
               activatesOn: ActivationEvents.Startup,
-              activate: () => Effect.succeed([Capability.contribute(Total, { total: 0 }, track('event-root'))]),
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(track('event-root'));
+                return [Capability.contribute(Total, { total: 0 })];
+              }),
             }),
           ),
         );

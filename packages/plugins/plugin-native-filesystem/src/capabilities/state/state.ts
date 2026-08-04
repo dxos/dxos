@@ -121,11 +121,10 @@ export default Capability.makeModule(
     const currentWorkspaces = registry.get(stateAtom).workspaces;
     yield* Effect.forEach(currentWorkspaces, directoryWatcher.startWatching, { discard: true });
 
+    yield* Effect.addFinalizer(() => directoryWatcher.stopAll());
     return [
       Capability.contribute(NativeFilesystemCapabilities.State, stateAtom),
-      Capability.contribute(NativeFilesystemCapabilities.FilesystemManager, filesystemManager, () =>
-        directoryWatcher.stopAll(),
-      ),
+      Capability.contribute(NativeFilesystemCapabilities.FilesystemManager, filesystemManager),
     ];
   }),
 );

@@ -304,11 +304,6 @@ export type Capability<T> = {
    * The implementation of the capability.
    */
   readonly implementation: T;
-
-  /**
-   * Called when the capability is deactivated.
-   */
-  readonly deactivate?: () => Effect.Effect<void, Error>;
 };
 
 export type Any = Capability<any>;
@@ -351,7 +346,6 @@ export interface Contribution<Id = CapabilityIdentifier<string, Arity>> {
   // here would re-leak its service type into every consuming body's declaration emit.
   readonly capability: AnyTag;
   readonly values: readonly unknown[];
-  readonly deactivate?: () => Effect.Effect<void, Error>;
 }
 
 export type AnyContribution = Contribution;
@@ -374,29 +368,26 @@ export type IdentifierOf<C> =
  * Contributes an implementation for a declared capability.
  * Arity-aware: passing a multi capability where a singleton is expected (or vice versa)
  * is rejected by the value parameter type.
+ *
+ * Teardown belongs to the module's scope, not the contribution: `yield* Effect.addFinalizer(...)`
+ * in the module body. One mechanism covers resources that are not contributions, and finalizers
+ * run in a defined order relative to each other.
  */
 export const contribute: {
   <C extends Tag<any, any>>(
     capability: C,
     implementation: C extends Tag<infer T, any> ? T : never,
-    deactivate?: () => Effect.Effect<void, Error>,
   ): Contribution<IdentifierOf<C>>;
   <C extends MultiTag<any, any>>(
     capability: C,
     implementation: C extends MultiTag<infer T, any> ? T : never,
-    deactivate?: () => Effect.Effect<void, Error>,
   ): Contribution<IdentifierOf<C>>;
-} = <C extends AnyTag>(
-  capability: C,
-  implementation: unknown,
-  deactivate?: () => Effect.Effect<void, Error>,
-): Contribution<IdentifierOf<C>> => ({
+} = <C extends AnyTag>(capability: C, implementation: unknown): Contribution<IdentifierOf<C>> => ({
   // Controlled brand cast: `[ContributionTypeId]` is a type-only identifier brand; at runtime it
   // holds the tag ({@link CapabilityManager.isContribution} checks presence only).
   [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: [implementation],
-  deactivate,
 });
 
 /**
@@ -405,13 +396,11 @@ export const contribute: {
 export const contributeAll = <C extends MultiTag<any, any>>(
   capability: C,
   implementations: C extends MultiTag<infer T, any> ? readonly T[] : never,
-  deactivate?: () => Effect.Effect<void, Error>,
 ): Contribution<IdentifierOf<C>> => ({
   // Controlled brand cast: see {@link contribute}.
   [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: implementations,
-  deactivate,
 });
 
 /**

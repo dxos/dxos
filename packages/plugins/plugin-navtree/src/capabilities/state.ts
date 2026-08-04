@@ -149,14 +149,11 @@ export default Capability.makeModule(
       }
     }).pipe(Effect.forkDaemon);
 
-    return Capability.contribute(
-      NavTreeCapabilities.State,
-      {
-        getItem,
-        getItemAtom,
-        setItem,
-      },
-      () => Effect.sync(() => unsubscribe()),
-    );
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    return Capability.contribute(NavTreeCapabilities.State, {
+      getItem,
+      getItemAtom,
+      setItem,
+    });
   }),
 );

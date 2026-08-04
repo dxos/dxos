@@ -45,8 +45,7 @@ export const normalizeActivateResult = (
 
 /**
  * Expands typed contributions into per-value capability entries; legacy capability entries
- * pass through. A multi-value contribution's deactivate hook is attached to its first entry
- * so deactivation runs it exactly once.
+ * pass through.
  */
 export const expandContributions = (
   items: ReadonlyArray<Capability.Any | Capability.AnyContribution>,
@@ -54,10 +53,9 @@ export const expandContributions = (
   items.flatMap((item) =>
     isContribution(item)
       ? item.values.map(
-          (value, index): Capability.Any => ({
+          (value): Capability.Any => ({
             interface: item.capability,
             implementation: value,
-            deactivate: index === 0 ? item.deactivate : undefined,
           }),
         )
       : [item],

@@ -222,7 +222,6 @@ describe('Plugin module authoring', () => {
       const entries = CapabilityManager.expandContributions([contribution]);
       expect(entries).toHaveLength(2);
       expect(entries.map((entry) => entry.implementation)).toEqual([{ entry: 'a' }, { entry: 'b' }]);
-      expect(entries[0].deactivate).toBeUndefined();
     });
   });
 

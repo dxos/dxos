@@ -41,6 +41,7 @@ export default Capability.makeModule(
     register();
     const unsubscribe = registry.subscribe(translationsAtom, register);
 
-    return Capability.contribute(AppCapabilities.Translator, translator, () => Effect.sync(() => unsubscribe()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    return Capability.contribute(AppCapabilities.Translator, translator);
   }),
 );

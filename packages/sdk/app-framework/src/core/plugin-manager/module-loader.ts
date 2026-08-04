@@ -202,7 +202,7 @@ export class ModuleLoader {
     });
   }
 
-  /** Removes the module's contributions, runs deactivate hooks, and closes its scope. */
+  /** Removes the module's contributions and closes its scope (running its finalizers). */
   deactivate(module: Plugin.PluginModule): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const id = module.id;
@@ -213,8 +213,6 @@ export class ModuleLoader {
       if (capabilities) {
         for (const capability of capabilities) {
           this.#capabilities.remove(capability.interface, capability.implementation);
-          const program = capability.deactivate?.() ?? Effect.succeed(undefined);
-          yield* program;
         }
         this.#contributed.delete(id);
       }
