@@ -7,11 +7,10 @@ import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability, Plugin, type PluginManager } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin, type PluginManager } from '@dxos/app-framework';
 import { CommandConfig } from '@dxos/cli-util';
 import { type Client, ClientService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
-import { database, queue, space } from '@dxos/plugin-space/commands';
 
 const OPERATIONS_UNAVAILABLE = 'Operations are not available in the devtools terminal.';
 
@@ -28,11 +27,22 @@ const operationLayer = Layer.succeed(Operation.Service, {
 /**
  * Builds the `dx` command tree and the services its handlers need.
  *
- * Mirrors the binary's root command minus the options that only mean something on a filesystem
+ * Subcommands come from whatever plugins contributed them, the same way the binary collects them,
+ * so the terminal exposes the commands of the running app rather than a hardcoded set.
+ *
+ * The root mirrors the binary's minus the options that only mean something on a filesystem
  * (`--config`, `--profile`); everything else resolves the same way, including `--space-id`
  * defaulting to the first available space.
  */
 export const createCliApp = (client: Client, manager: PluginManager.PluginManager) => {
+  // Destructured rather than passed as an array so the non-empty shape `withSubcommands` requires
+  // is carried by the type instead of asserted. A host whose plugins contribute nothing has no
+  // shell to offer, so the caller renders an empty state instead.
+  const [first, ...rest] = manager.capabilities.getAll(Capabilities.Command);
+  if (!first) {
+    return undefined;
+  }
+
   // `provide` comes after the subcommands so the config reaches them in the type as well as at
   // runtime; applied before, every subcommand still advertises `CommandConfig` as unmet.
   const command = Command.make('dx', {
@@ -42,7 +52,7 @@ export const createCliApp = (client: Client, manager: PluginManager.PluginManage
       Options.withDescription('Verbose output.'),
     ),
   }).pipe(
-    Command.withSubcommands([space, database, queue]),
+    Command.withSubcommands([first, ...rest]),
     Command.provide(({ json, verbose }) =>
       Layer.succeed(CommandConfig, { json, verbose, profile: 'default', logLevel: 'info' }),
     ),

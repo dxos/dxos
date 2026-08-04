@@ -5,7 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { userEvent } from 'storybook/test';
 
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { database, queue, space } from '@dxos/plugin-space/commands';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { runCommand, waitForTerminal } from '@dxos/react-ui-terminal/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -18,7 +20,10 @@ const meta = {
   title: 'plugins/plugin-devtools/containers/CliPanel',
   component: CliPanel,
   decorators: [
-    withPluginManager({ capabilities: [] }),
+    // Stands in for SpacePlugin, which contributes these through the same capability.
+    withPluginManager({
+      capabilities: [space, database, queue].map((command) => Capability.contributes(Capabilities.Command, command)),
+    }),
     withClientProvider({ createIdentity: true, createSpace: true }),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

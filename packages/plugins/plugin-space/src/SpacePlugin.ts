@@ -47,8 +47,12 @@ import { type SpacePluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import { database, queue, space } from './commands';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
+  // Contributed here as well as in the node variant: the commands are platform-agnostic, and a
+  // browser host (the devtools terminal) collects them through the same capability.
+  AppPlugin.addCommandModule({ commands: [database, queue, space] }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp, invitationUrlHandler }) => ({
     activate: () => NavigationHandler({ invitationProp, invitationUrlHandler }),

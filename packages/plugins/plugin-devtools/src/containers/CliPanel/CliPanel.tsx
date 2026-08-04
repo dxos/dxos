@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
+import { Placeholder } from '@dxos/devtools';
 import { useClient } from '@dxos/react-client';
 import { Panel } from '@dxos/react-ui';
 import { Terminal } from '@dxos/react-ui-terminal';
@@ -20,19 +21,24 @@ const BANNER = `${BOLD}DXOS CLI${RESET}\n${DIM}The dx commands, running against 
 /**
  * Runs the `dx` CLI against the client backing this app.
  *
- * The command tree and its services are built once per client, so state the handlers hold survives
- * between commands the way it does in a long-lived shell.
+ * The command tree is assembled from the commands the installed plugins contribute, and it and its
+ * services are built once per client, so state the handlers hold survives between commands the way
+ * it does in a long-lived shell.
  */
 export const CliPanel = () => {
   const client = useClient();
   const manager = usePluginManager();
-  const { command, layer } = useMemo(() => createCliApp(client, manager), [client, manager]);
+  const cli = useMemo(() => createCliApp(client, manager), [client, manager]);
 
   // No ScrollArea: xterm owns its own viewport and scrollback.
   return (
     <Panel.Root>
       <Panel.Content>
-        <Terminal command={command} layer={layer} name='dx' banner={BANNER} />
+        {cli ? (
+          <Terminal command={cli.command} layer={cli.layer} name='dx' banner={BANNER} />
+        ) : (
+          <Placeholder label='No commands' />
+        )}
       </Panel.Content>
     </Panel.Root>
   );
