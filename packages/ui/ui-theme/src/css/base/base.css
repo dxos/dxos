@@ -15,6 +15,9 @@
      * dark became grey slabs in light. State aspects scale their offset by this; dark keeps 1.
      */
     --dx-state-scale: 0.5;
+    /* Same asymmetry, gentler: a separator still has to read as a line, so it is trimmed rather
+     * than halved. Dark keeps 1. */
+    --dx-separator-scale: 0.75;
     touch-action: pan-x pan-y;
     font-synthesis: none;
     font-variation-settings:
@@ -29,6 +32,7 @@
     color-scheme: dark;
     --dx-lift: 1;
     --dx-state-scale: 1;
+    --dx-separator-scale: 1;
   }
 
   button {

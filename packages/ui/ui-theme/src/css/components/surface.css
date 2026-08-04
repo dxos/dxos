@@ -145,10 +145,16 @@
     --color-scrollbar-thumb: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.23) c h);
     --color-scrollbar-thumb-hover: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.3) c h);
     --color-scrollbar-thumb-active: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.34) c h);
-    --color-separator: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.166) c h);
-    --color-input-separator: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.115) c h);
-    --color-subdued-separator: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.089) c h);
-    --color-primary-separator: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.064) c h);
+    --color-separator: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.166) c h);
+    --color-input-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.115) c h
+    );
+    --color-subdued-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.089) c h
+    );
+    --color-primary-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.064) c h
+    );
 
     /*
      * Aliases must be re-declared, not inherited: a `--color-x: var(--color-y)` alias substitutes
