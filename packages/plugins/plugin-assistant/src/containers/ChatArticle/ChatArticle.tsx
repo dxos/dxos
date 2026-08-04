@@ -91,7 +91,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Toolbar>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
           </Panel.Toolbar>
-          <Panel.Content>
+          <Panel.Content asChild>
             <ChatComponent.Content>
               <div className='dx-container relative'>
                 {viewType !== 'summary' && (

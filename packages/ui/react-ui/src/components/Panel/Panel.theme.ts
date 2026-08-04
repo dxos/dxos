@@ -24,13 +24,15 @@ const root: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
     ...etc,
   );
 
-// Toolbars default to the bar surface (tier 5); callers can still override via the trailing classes.
+// `bar` is an aspect, not a level: the toolbar steps off whichever surface hosts the panel, so a
+// panel in a card and a panel on the canvas each get a bar that reads against their own host.
 const toolbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
-  mx('[grid-area:toolbar]', 'shrink-0', 'bg-toolbar-surface', sizes[size], ...etc);
+  mx('[grid-area:toolbar]', 'shrink-0', 'dx-toolbar-surface', sizes[size], ...etc);
 
 const content: ComponentFunction<PanelStyleProps> = (_, ...etc) => mx('[grid-area:content] min-h-0', ...etc);
 
-const statusbar: ComponentFunction<PanelStyleProps> = (_, ...etc) => mx('[grid-area:statusbar]', 'shrink-0', ...etc);
+const statusbar: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
+  mx('[grid-area:statusbar]', 'shrink-0', 'dx-toolbar-surface', ...etc);
 
 export const panelTheme = {
   root,

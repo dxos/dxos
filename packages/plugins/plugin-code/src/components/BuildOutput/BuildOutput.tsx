@@ -135,7 +135,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
 };
 
 const SectionHeader = ({ label, count }: { label: string; count: number }) => (
-  <div className='px-2 py-1 text-description border-b border-separator flex items-center gap-2 bg-toolbar-surface'>
+  <div className='px-2 py-1 text-description border-b border-separator flex items-center gap-2 dx-toolbar-surface'>
     <span>{label}</span>
     <span className='text-description'>({count})</span>
   </div>

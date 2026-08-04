@@ -55,8 +55,8 @@ export const InvocationsSurface = ({ role, companionTo }: InvocationsSurfaceProp
   const target = Obj.instanceOf(Instructions.Instructions, companionTo) ? undefined : companionTo;
 
   return (
-    <Panel.Root role={role} className='dx-document'>
-      <Panel.Content>
+    <Panel.Root role={role} classNames='dx-document'>
+      <Panel.Content asChild>
         <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} target={target} detailAxis='block' />
       </Panel.Content>
     </Panel.Root>

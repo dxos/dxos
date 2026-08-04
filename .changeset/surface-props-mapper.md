@@ -2,4 +2,20 @@
 '@dxos/app-framework': minor
 ---
 
-Surface definitions accept an optional `props` mapper, so a container can be registered directly and have the surface's data envelope mapped onto its own props instead of being wrapped in an inline component. The mapper's input type derives from the definition's `filter`, and is exported as `Surface.ComponentProps`. `component` now accepts any `ComponentType`.
+`Surface.create` accepts an optional `props` mapper, so a container can be registered directly
+instead of being wrapped in an adapter that unpacks the surface's `data` envelope:
+
+```ts
+Surface.create({
+  id: 'defaultPluginSettings',
+  filter: AppSurface.settings(AppSurface.Article),
+  component: DefaultSettings,
+  props: ({ data: { subject } }) => ({ subject }),
+});
+```
+
+The mapper's input type derives from the same `filter` that defines the surface's data shape, so the
+unpacking is type-checked rather than restated by hand, and is exported as `Surface.ComponentProps`
+for components that consume the whole envelope. `component` accepts any `ComponentType`, so a
+container re-exported through a `lazy()` barrel needs no cast. Additive: definitions without `props`
+receive the full surface props exactly as before.

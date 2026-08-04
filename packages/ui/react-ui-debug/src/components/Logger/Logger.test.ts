@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { LogEntry, LogLevel, log, parseFilter, shouldLog } from '@dxos/log';
 
-import { type LevelName, composeFilter, startLogRecording } from './Logger';
+import { type LevelName, composeFilter, startLogRecording } from './recorder';
 
 describe('composeFilter', () => {
   test('base only when no overrides', ({ expect }) => {

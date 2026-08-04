@@ -82,7 +82,7 @@ type StoryArgs = { variant: VisualizationVariantId; focus?: string };
 const DefaultStory = ({ variant, focus }: StoryArgs) => {
   const model = useMemo(() => new SpaceGraphModel(Registry.make(), { nodes: NODES, edges: EDGES }), []);
   return (
-    <Visualization.Root classNames='bg-base-surface' model={model} variant={variant} focus={focus}>
+    <Visualization.Root classNames='dx-base-surface' model={model} variant={variant} focus={focus}>
       <Visualization.Graph debug={false} />
     </Visualization.Root>
   );

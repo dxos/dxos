@@ -58,7 +58,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
     <Panel.Root role={role}>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport className='p-4 space-y-4'>
+          <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root fullWidth border={false}>
               <Card.Header>
                 <Card.Block />

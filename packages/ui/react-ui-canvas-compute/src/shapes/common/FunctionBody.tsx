@@ -70,7 +70,7 @@ export const FunctionBody = ({
       ref={rootRef}
       shape={shape}
       title={name}
-      classNames='divide-y divide-separator'
+      classNames='divide-y divide-subdued-separator'
       open={open}
       onAction={handleAction}
       {...props}

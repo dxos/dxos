@@ -88,7 +88,7 @@ export const ScriptLogsSurface = ({ role, script }: ScriptLogsSurfaceProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Content asChild>
         <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} target={script} detailAxis='block' />
       </Panel.Content>
     </Panel.Root>

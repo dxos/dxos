@@ -37,7 +37,7 @@ const SyncStateModuleContainer = ({ space }: { space: Space }) => {
           <Toolbar.Text>Sync State</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='flex flex-col gap-2 p-2 text-sm overflow-auto'>
+      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm overflow-auto'>
         <JsonHighlighter data={syncState ?? {}} />
       </Panel.Content>
     </Panel.Root>

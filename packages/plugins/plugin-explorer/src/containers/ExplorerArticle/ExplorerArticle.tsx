@@ -104,9 +104,9 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
           </Toolbar.Root>
         </Panel.Toolbar>
       )}
-      <Panel.Content>
+      <Panel.Content asChild>
         <Visualization.Root
-          classNames='bg-base-surface'
+          classNames='dx-base-surface'
           variant={selected}
           model={model}
           onSurfaceClick={handleDismiss}

@@ -219,7 +219,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
 
   const rail = (
     <div className='grid grid-rows-[min-content_1fr]'>
-      <div className='p-1 bg-toolbar-surface'>
+      <div className='p-1 dx-toolbar-surface'>
         <DropdownMenu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
           <DropdownMenu.Trigger asChild>
             <AttentionSigilButton size='md' attendableId={attendableId}>
