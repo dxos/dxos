@@ -24790,6 +24790,9 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor

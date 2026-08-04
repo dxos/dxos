@@ -50,6 +50,7 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/types": "workspace:*",
+    "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "@radix-ui/react-context": "catalog:",

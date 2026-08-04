@@ -60,6 +60,9 @@
       "path": "../react-ui-pickers"
     },
     {
+      "path": "../ui"
+    },
+    {
       "path": "../ui-editor"
     },
     {

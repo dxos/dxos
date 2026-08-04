@@ -22,6 +22,15 @@ export type {
   MessageTileProps,
   MessageTimeProps,
 } from './Message';
+export { Transcript } from './Transcript';
+export type {
+  DividerItem,
+  MessageItem,
+  TranscriptAction,
+  TranscriptItem,
+  TranscriptItemOptions,
+  TranscriptProps,
+} from './Transcript';
 export { command } from './command';
 export { useThreadContext } from './context';
 export type {
