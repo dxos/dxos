@@ -94,7 +94,7 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
           </Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='overflow-hidden'>
+      <Panel.Content classNames='overflow-hidden'>
         {monitor ? <EventList events={events} /> : <div className='p-2 text-description'>No swarm trace source.</div>}
       </Panel.Content>
     </Panel.Root>

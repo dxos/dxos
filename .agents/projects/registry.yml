@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: agent-directives
+    status: active
+    user: burdon
+    host: burdon-mbp-2092
+    created: 2026-08-03
+    summary: Make the directives that govern how the agent RESPONDS (verbosity mode, numbered options, worktree reporting) survive a long session — they live in always-loaded markdown that gets diluted by skills, so move them onto the per-turn UserPromptSubmit channel and document the whole control-point surface in .claude/README.md.
+    tasks: .agents/projects/agent-directives/TASKS.md
+    design: .agents/projects/agent-directives/DESIGN.md
+    prs: [12453]
+    resume: 'PR #12453 OPEN — https://github.com/dxos/dxos/pull/12453. Phase 1 DONE: .claude/README.md documents the control surface (A generic control points / B lifecycle / C ours + NOTES on hooks, sentinels, commands); response-mode was renamed to `mode` throughout (hooks/mode.sh, scripts/mode.sh, .claude/.mode, settings.json, .gitignore) and the mode VALUES are now terse/normal (banner MODE: TERSE; `concise` aliases terse, `natural`/`default`/`off` alias normal; state canonicalised on read so a stale value cannot wedge it). Research in DESIGN.md: response directives are ~1.3% of ~7.2k tokens of always-loaded instruction and never repeated, while one skill (composer-plugins SKILL.md) is 4x AGENTS.md and lands later; post-hoc review CANNOT shorten an answer (Stop-block adds a turn, MessageDisplay is display-only) so the only lever is per-turn UserPromptSubmit re-injection. Phase 2 MOSTLY DONE: mode.sh context now emits the RESPONSE RULES block in BOTH modes (invariants = open with worktree + files-read line, numbered options, lead with the answer; only the length clause branches), AGENTS.md has a canonical "Responding to the user" section, .claude/CLAUDE.md points at it. DECISIONS SETTLED: terse = 8 lines; normal = no budget, invariants only; default when unset = normal; yes to editing the global file. REMAINING: (a) ~/.claude/CLAUDE.md is BLOCKED — it symlinks into ~/Code/richburdon/config (a separate repo on main) so guard-worktree.sh refuses the edit; the user must apply it. (b) drop the bare one-token sentinel forms so only `$mode <MODE>` remains. (c) add /mode via UserPromptExpansion.'
   - name: lenses
     status: active
     user: josiah
@@ -24,8 +34,11 @@ projects:
     summary: Claude ⇔ MCP ⇔ EDGE ⇔ Composer loop — local edge+mcp miniflare stack, composer sync, document round-trip; end goal is the task-planning skill using Composer documents for DESIGN/TASKS.
     tasks: .agents/projects/mcp/TASKS.md
     design: agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-design.md
-    prs: []
-    resume: 'OVERNIGHT 2026-08-01: landing #12423 (auto-merge armed 05:32Z; DO NOT push to branch until merged — each push restarts CI; after merge: git fetch, merge main, push local commits, continue in worktree). Edge PR #785 (object CRUD+discovery tools) OPEN. Local stack: edge:dev (START_MCP=1 DX_PARALLEL_WRANGLER_DEV=1, source .env) + worktree composer serve :5173. DONE tonight: object CRUD live-verified (Task+ExternalProject lifecycle in user space BHSYEBCA…, identity 04dc2287…, halo BIHS6ZL4…); reverse read; 2 design specs (agents/superpowers/specs/2026-08-01-*); oauth e2e script (.agents/projects/mcp/scripts/e2e-oauth-smoke.mjs — MCP legs verified, playwright leg unrun; FINDING: raw createObject orphans objects, script patches root collection objects[]). REMAINING overnight: run oauth script end-to-end w/ playwright; build device-invitation e2e script (halo create/share registered on branch; browser join via playwright typing auth code; bun-p2p handshake UNPROVEN); tunnel round-trip; runbook. Scratchpad mcp-call.mjs/mcp-read.mjs have the OAuth client pattern.'
+    specs:
+      - edge:packages/services/mcp-space-service/DESIGN.md (auth + spaces + milestones M6-M9)
+      - agents/superpowers/specs/2026-08-01-task-plugin-reconciliation-design.md (RESOLVED)
+    prs: [12423, 12428, 12432, 12443, 'edge#785', 'edge#786']
+    resume: '2026-08-03 (hydrated). MERGED: #12443 (plugin-projects workerd entry, task set in project scaffold, plugin-space worker-safe imports) at 2026-08-03 05:06Z. PR OPEN: edge#789 (MCP project+task verbs, 3 worker fixes, DESIGN.md + TESTING.md; CI red until @dxos/plugin-projects publishes (12443 has landed; watch pkg.pr.new for a main SHA >= 71aa2a68, then flip the operation-service deps from the local tarballs back to catalog:dxos) — it consumes local tarballs from ~/Code/dxos/edge/temp-tarballs). LANDED: #12423 #12428 #12432 #12443 edge#785 edge#786. MCP surface now: object CRUD + discovery + task verbs (live-verified) + project verbs (unit-tested). NEXT = M6 passkey auth, RESHAPED by Josiah edge#789: no new storage (HALO credentials via agents service = IdentityRecovery + verifyWebauthnSignature + hub lookupAccount), rp.id stays composer.space via Related Origin Requests (no re-registration), @simplewebauthn/server comes out of hub-service. FIRST TASK: dev-origin problem (local passkeys scoped to localhost by rp.id = location.hostname, so the composer.space well-known cannot reach them). Then M7 identity-through-invoke, M8 space CRUD + sticky enter/exit (needs space.create-in-workerd spike), M9 connector-directory listing. BLOCKED: #12446 (dmaretskyi) objectCreate hangs after the write lands — blocks M8 live acceptance only; device-invitation admission still fails. Spec: edge:packages/services/mcp-space-service/DESIGN.md (§4.2-4.6, §9); runbook: same dir TESTING.md.'
 
   - name: email-sync-stability
     status: active

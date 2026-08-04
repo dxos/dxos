@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 
 import { Annotation } from '@dxos/echo';
 
-import { resolveLayoutField } from './FormLayout';
+import { resolveLayoutField } from './resolve-layout-field';
 
 const Place = Schema.Struct({
   name: Schema.optional(Schema.String),

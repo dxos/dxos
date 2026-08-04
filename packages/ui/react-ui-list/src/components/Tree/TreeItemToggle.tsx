@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, memo } from 'react';
+import React, { memo } from 'react';
 
-import { IconButton, type IconButtonProps } from '@dxos/react-ui';
+import { IconButton, type IconButtonProps, composable } from '@dxos/react-ui';
 
 export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label'> & {
   open?: boolean;
@@ -13,7 +13,7 @@ export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label
 };
 
 export const TreeItemToggle = memo(
-  forwardRef<HTMLButtonElement, TreeItemToggleProps>(
+  composable<HTMLButtonElement, TreeItemToggleProps>(
     ({ classNames, open, isBranch, hidden, ...props }, forwardedRef) => {
       return (
         <IconButton

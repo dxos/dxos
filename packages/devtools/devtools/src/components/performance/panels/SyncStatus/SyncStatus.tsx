@@ -30,7 +30,7 @@ export const SyncStatus = ({ classNames, state, feedState }: SyncStatusProps) =>
       <div className='flex items-center gap-2'>
         <IconButton icon='ph--copy--regular' label={'copy raw'} onClick={handleCopyRaw} />
       </div>
-      <div className='flex flex-col divide-y divide-separator'>
+      <div className='flex flex-col divide-y divide-subdued-separator'>
         {entries.map(([spaceId, state]) => (
           <SpaceRowContainer
             key={spaceId}

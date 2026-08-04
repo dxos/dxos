@@ -30,7 +30,7 @@ const DefaultStory = ({ content }: StoryArgs) => {
   const [text] = useState(() => client.spaces.get()[0].db.add(Text.make({ content })));
   return (
     <Transcript
-      classNames='dx-document bg-base-surface'
+      classNames='dx-document dx-base-surface'
       id={text.id}
       source={Ref.make(text)}
       onSeek={(seconds) => console.log('[seek]', seconds)}

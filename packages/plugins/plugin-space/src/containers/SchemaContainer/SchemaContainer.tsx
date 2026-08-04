@@ -2,16 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Type } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
+import { useQuerySpaceTypes } from './use-query-space-types';
 
 export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -39,22 +40,6 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
       </Form.Viewport>
     </Form.Root>
   );
-};
-
-/**
- * Subscribe to and retrieve all types from a space's registry.
- */
-export const useQuerySpaceTypes = (space: Space): Type.AnyEntity[] => {
-  const [types, setTypes] = useState<Type.AnyEntity[]>(() => [...space.db.graph.registry.list().filter(Type.isType)]);
-
-  useEffect(() => {
-    setTypes([...space.db.graph.registry.list().filter(Type.isType)]);
-    return space.db.graph.registry.changed.on(() => {
-      setTypes([...space.db.graph.registry.list().filter(Type.isType)]);
-    });
-  }, [space]);
-
-  return types;
 };
 
 SchemaContainer.displayName = 'SchemaContainer';

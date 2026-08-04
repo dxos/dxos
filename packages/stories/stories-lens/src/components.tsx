@@ -25,7 +25,7 @@ import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd';
 
 /** The panel chrome: a captioned, scrollable region. */
 export const DemoPanel = ({ label, children, testId }: { label: string; children: ReactNode; testId: string }) => (
-  <Panel.Root classNames='min-w-0 bg-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
+  <Panel.Root classNames='min-w-0 dx-base-surface border border-subdued-separator rounded-md' data-testid={testId}>
     <Panel.Toolbar>
       <Toolbar.Root>
         <Toolbar.Text>{label}</Toolbar.Text>

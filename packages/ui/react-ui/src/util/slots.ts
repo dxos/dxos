@@ -21,12 +21,13 @@ import { type ComposableProps, type SlottableProps, type ThemedClassName } from 
 
 /**
  * Reconciles className properties from a parent slot.
- * - `className` is set by the Slot merge mechanism.
+ * - `className` is injected at runtime by the Slot merge mechanism; it is absent from
+ *   `ComposableProps` so consumers cannot pass it, hence the widened parameter type here.
  * - `classNames` is the consumer-facing prop for theming overrides.
  * Use `composableProps` to reconcile both into a single `className`.
  */
 export const composableProps = <P extends HTMLElement = HTMLElement>(
-  { className, classNames, role, style, ...props }: ComposableProps,
+  { className, classNames, role, style, ...props }: ComposableProps & { className?: string },
   { classNames: defaultClassNames, ...defaults }: ThemedClassName<Partial<HTMLAttributes<P>>> | undefined = {},
 ) => ({
   // Default props.
@@ -35,8 +36,10 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
   // Spread supplied props.
   ...props,
 
-  // Prefer explicit role, then defaults role, then 'none'.
-  role: role ?? defaults.role ?? 'none',
+  // No `role='none'` default. On a div it is a no-op, so the only elements it ever reached were the
+  // semantic ones — `Card.Header` renders a <header>, `Main.Content` a <main> — where it stripped
+  // the landmark. A part that genuinely wants its element ignored passes the role itself.
+  ...((role ?? defaults.role) ? { role: role ?? defaults.role } : null),
 
   // Merge styles.
   style: { ...defaults.style, ...style } as CSSProperties,
@@ -73,7 +76,9 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
 ): ForwardRefExoticComponent<SlottableProps<P> & RefAttributes<E>> {
   const wrapped = (props: SlottableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => {
     let warn = false;
-    if (props.asChild) {
+    // Dev-only: the check walks children on every render of every `asChild` part, and the marker it
+    // paints is a developer diagnostic, not a product affordance.
+    if (process.env.NODE_ENV !== 'production' && props.asChild) {
       try {
         const child = Children.only(props.children);
         if (isValidElement(child) && typeof child.type !== 'string' && !(child.type as any)[COMPOSABLE]) {
@@ -89,6 +94,10 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
 
     const result = render(props, forwardedRef);
     if (warn) {
+      // The marker cannot go on the rendered element: under `asChild` that element is the `Slot`,
+      // which merges the class into the very child that is dropping props — the bug being flagged
+      // swallows its own diagnostic. So it goes on a wrapper, which `dx-slot-warning` renders as
+      // `display: contents` so it adds no layout box; the outline is drawn on its children instead.
       return createElement('div', { role: 'none', className: 'dx-slot-warning' }, result);
     }
 

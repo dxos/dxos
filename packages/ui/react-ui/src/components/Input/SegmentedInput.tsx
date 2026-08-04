@@ -20,7 +20,8 @@ import { useDensityContext, useElevationContext, useThemeContext } from '../../h
 import { type ThemedClassName } from '../../util';
 import { DatePicker } from '../DatePicker';
 import { Popover } from '../Popover';
-import { type InputSharedProps, useInputTrigger } from './Input';
+import { type InputSharedProps } from './Input';
+import { useInputTrigger } from './InputTriggerContext';
 
 //
 // Value <-> @internationalized/date adapters.

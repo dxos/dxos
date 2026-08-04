@@ -173,7 +173,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   );
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention}>
           <DropdownMenu.Root>
@@ -191,7 +191,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content asChild>
         <NotebookStack
           db={db}
           notebook={notebook}

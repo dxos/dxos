@@ -48,6 +48,53 @@ Design: [agents/superpowers/specs/2026-07-31-local-edge-mcp-composer-roundtrip-d
 - [x] e2e rewritten as `scripts/e2e-project-task-smoke.mjs`: projectCreate → taskCreate ×2 (root + sub-task) → taskUpdate → taskAssign → taskComplete → taskList → projectList/projectGet
 - [ ] **BLOCKER (live stack, not code): `database.objectCreate` HANGS in the worker** — BISECTED 2026-08-03: NOT caused by the new registrations (removing ProjectOperationHandlerSet + SpaceOperationHandlerSet still hangs) and NOT the missing-live-peer theory (holding a Composer tab open for the space hangs identically). The write itself lands (`begin change`/`end change` on the ObjectCore are logged) and the request then never settles, so the stall is after the mutation — in the flush/replication ack. Remaining suspects in order: the @dxos pin bump f8637f1df3 → f10b1ce757 (yesterday's working runs were on the older pin) and the grown local `.wrangler` state. Next: reinstall at the old pin with the same identity to confirm, then diff the db-service write path across the two pins. Repro: any `createObject` against a space created today ("Workers runtime canceled this request because it detected that your Worker's code had hung"). Reproduced with a bare createObject (no attach), so it is upstream of the project work — it also blocks `CollectionModel.add` (root-collection filing) and therefore `projects.create` via AddObject. Task verbs consequently fail with 'Invalid argument `ids`' (they receive `echo:///undefined` from the failed create). NOT yet bisected: candidates are the @dxos pin bump f8637f1df3 → f10b1ce757, the freshly bootstrapped identity/space (queries return, writes hang), or the newly registered space handler set. Next: bisect by reverting the pin with the same identity, and check the db-service side of the hung write
 
+## Milestone 5 — passkey auth + space management (user-directed 2026-08-03)
+
+- [x] #12443 MERGED 2026-08-03 05:06Z (squash 71aa2a68): plugin-projects workerd entry + `ProjectOperationHandlerSet` export, task set in `scaffoldProject`, plugin-space worker-safe imports. Unblocks edge#789 once plugin-projects publishes
+
+Spec: `edge:packages/services/mcp-space-service/DESIGN.md` §4.2–4.6 (audit, hub, passkey design,
+space session, open questions) and §9 (milestones M6–M9).
+
+- [x] Hub identity/access-control audit — KEY FINDING: there is **no server-side passkey
+      verification in hub-service today** (EDGE does have it — see the correction below). The hub's `Identity`/`Passkey` tables are annotated vestigial
+      ("recovery passkeys now live as HALO credentials on the client"); `@simplewebauthn/server`
+      is a dependency nothing calls. Real passkeys are created client-side by
+      `plugin-client/src/operations/create-passkey.ts` with `rp.id = location.hostname` — i.e.
+      bound to Composer's serving origin — and are HALO _recovery_ credentials, not account
+      credentials. Hub access control is admin-key routes plus verifiable-presentation auth
+      (`hub-protocol/src/middleware.ts`, with `allowEphemeralIdentity` for invitation bootstrap)
+- [x] DESIGN.md extended: §4.1 (Composer signed-challenge) marked SUPERSEDED — booting Composer
+      to approve a connection is too slow; identity moves to a hub-hosted server-side endpoint
+- [x] ANSWERED by Josiah on edge#789 (2026-08-03) — two of the earlier decisions are SUPERSEDED:
+      (1) NO new storage: account-grade credentials are HALO credentials held by the **agents
+      service**; do not extend `Account`, revive `Passkey`, or touch the hub schema. Auth composes
+      `IdentityRecovery` (agents/prisma/schema.prisma:27) + `verifyWebauthnSignature`
+      (sdk/edge-crypto/src/webauthn.ts:24) + hub `lookupAccount`; `@simplewebauthn/server` comes
+      OUT of hub-service. (2) RP ID stays **composer.space** via Related Origin Requests —
+      `composer.space/.well-known/webauthn` (application/json) lists `https://auth.dxos.org`, so
+      existing passkeys work with NO re-registration. (3) My audit was WRONG that no server-side
+      passkey verification exists: `db-service/src/worker/api-handler/recovery.ts:199` does it
+      today (in EDGE, not the hub). (4) Passkeys were never being deprecated; the two `TODO`s mean
+      "delete these two models" — `Passkey` came from an old demo app and never shipped
+- [ ] M6 passkey auth from Claude (reshaped): harden `verifyWebauthnSignature` (it checks
+      challenge + signature but NOT `rpIdHash`, `clientDataJSON.origin`, UV flag or signature
+      counter — load-bearing once a second origin asserts); add registration with per-credential
+      labels + a revocation surface (`createRecoveryCredential` has neither); serve the
+      well-known file; MCP `/authorize` delegation + `/authorize/callback`; `DX_AUTH_BASE_URL`.
+      FIRST TASK = the dev-origin problem: local credentials are scoped to `localhost` by
+      `rp: { id: location.hostname }` (plugin-client/src/operations/create-passkey.ts:49), so the
+      well-known file on composer.space cannot reach them — more than a config change.
+      E2E via CDP virtual authenticator **plus one manual Touch ID pass** before M6 closes
+- [ ] M7 identity through `invokeOperation` (prerequisite for trusting assignee-bearing verbs)
+- [ ] M8 space management: sticky session (KV `session:<grantId>:currentSpace`) then CRUD; needs
+      the `space.create`-in-workerd spike first
+- [ ] M9 Claude connector-directory listing (self-serve custom-connector URL is the interim path)
+- [x] ASK JOSIAH — ANSWERED (see above). Note: RORs support is not universal (clients need only
+      5 unique eTLD+1 labels; we are far from the limit) — check the device-support matrix and
+      keep a fallback before committing the UX
+- [ ] BLOCKER #12446 (dmaretskyi): `database.objectCreate` hangs after the write lands; blocks M8
+      live acceptance, not M6
+
 ## Milestone 2 — task-planning ⇄ Composer documents (next)
 
 - [x] MCP object CRUD + discovery (edge PR #785 MERGED 2026-08-01 — incl. integration-suite port preserving #758 guards + uuid@14 vitest fix): createObject/getObject/updateObject/deleteObject/queryObjects + listPlugins/listTypes/listOperations; Task+ExternalProject registered; live-verified full Task/ExternalProject lifecycle in user's space

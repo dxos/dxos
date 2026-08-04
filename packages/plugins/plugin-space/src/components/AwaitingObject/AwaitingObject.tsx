@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -28,7 +29,12 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   const layout = useLayout();
 
   const client = useClient();
-  const objects = useQuery(client.spaces, Filter.everything());
+  // The awaited object may land in any space, so this queries the whole graph — which, unlike
+  // `db.query`, does not scope itself: an unscoped query reaches the planner and throws
+  // ("Query must be scoped with a from() clause"), killing whatever rendered this toast.
+  const spaces = useSpaces();
+  const query = useMemo(() => Query.select(Filter.everything()).from(spaces.map((space) => space.db)), [spaces]);
+  const objects = useQuery(client.spaces, query);
 
   useEffect(() => {
     if (!id) {

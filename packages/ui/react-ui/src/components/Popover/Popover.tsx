@@ -6,14 +6,11 @@
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContextScope } from '@radix-ui/react-context';
-import { type Scope } from '@radix-ui/react-context';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer';
 import { useFocusGuards } from '@radix-ui/react-focus-guards';
 import { FocusScope } from '@radix-ui/react-focus-scope';
 import { useId } from '@radix-ui/react-id';
 import * as PopperPrimitive from '@radix-ui/react-popper';
-import { createPopperScope } from '@radix-ui/react-popper';
 import { Portal as PortalPrimitive } from '@radix-ui/react-portal';
 import { Presence } from '@radix-ui/react-presence';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -38,32 +35,18 @@ import { RemoveScroll } from 'react-remove-scroll';
 
 import { useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
+import {
+  POPOVER_NAME,
+  PopoverProvider,
+  type PopoverScopedProps,
+  createPopoverContext,
+  usePopoverContext,
+  usePopperScope,
+} from './PopoverContext';
 
 //
 // Context
 //
-
-type ScopedProps<P> = P & { __scopePopover?: Scope };
-
-const POPOVER_NAME = 'Popover';
-
-const [createPopoverContext, createPopoverScope] = createContextScope(POPOVER_NAME, [createPopperScope]);
-
-const usePopperScope = createPopperScope();
-
-type PopoverContextValue = {
-  triggerRef: RefObject<HTMLButtonElement>;
-  contentId: string;
-  hasCustomAnchor: boolean;
-  modal: boolean;
-  open: boolean;
-  onOpenChange(open: boolean): void;
-  onOpenToggle(): void;
-  onCustomAnchorAdd(): void;
-  onCustomAnchorRemove(): void;
-};
-
-const [PopoverProvider, usePopoverContext] = createPopoverContext<PopoverContextValue>(POPOVER_NAME);
 
 //
 // PopoverRoot
@@ -77,7 +60,7 @@ type PopoverRootProps = {
   modal?: boolean;
 };
 
-const PopoverRoot: FC<PopoverRootProps> = (props: ScopedProps<PopoverRootProps>) => {
+const PopoverRoot: FC<PopoverRootProps> = (props: PopoverScopedProps<PopoverRootProps>) => {
   const { __scopePopover, children, open: openProp, defaultOpen, onOpenChange, modal = false } = props;
   const popperScope = usePopperScope(__scopePopover);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -121,7 +104,7 @@ type PopperAnchorProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Anchor>
 type PopoverAnchorProps = PopperAnchorProps;
 
 const PopoverAnchor = forwardRef<PopoverAnchorElement, PopoverAnchorProps>(
-  (props: ScopedProps<PopoverAnchorProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverAnchorProps>, forwardedRef) => {
     const { __scopePopover, ...anchorProps } = props;
     const context = usePopoverContext(ANCHOR_NAME, __scopePopover);
     const popperScope = usePopperScope(__scopePopover);
@@ -151,7 +134,7 @@ type PopoverTriggerProps = PrimitiveButtonProps & {
 };
 
 const PopoverTrigger = forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
-  (props: ScopedProps<PopoverTriggerProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverTriggerProps>, forwardedRef) => {
     const { __scopePopover, asChild, ...triggerProps } = props;
     const context = usePopoverContext(TRIGGER_NAME, __scopePopover);
     const popperScope = usePopperScope(__scopePopover);
@@ -193,7 +176,7 @@ type PopoverVirtualTriggerProps = {
   virtualRef: RefObject<PopoverTriggerElement | null>;
 };
 
-const PopoverVirtualTrigger = (props: ScopedProps<PopoverVirtualTriggerProps>) => {
+const PopoverVirtualTrigger = (props: PopoverScopedProps<PopoverVirtualTriggerProps>) => {
   const { __scopePopover, virtualRef } = props;
   const context = usePopoverContext(VIRTUAL_TRIGGER_NAME, __scopePopover);
   const popperScope = usePopperScope(__scopePopover);
@@ -232,7 +215,7 @@ type PopoverPortalProps = {
   forceMount?: true;
 };
 
-const PopoverPortal = (props: ScopedProps<PopoverPortalProps>) => {
+const PopoverPortal = (props: PopoverScopedProps<PopoverPortalProps>) => {
   const { __scopePopover, forceMount, children, container } = props;
   const context = usePopoverContext(PORTAL_NAME, __scopePopover);
   return (
@@ -263,7 +246,7 @@ type PopoverContentProps = ThemedClassName<PopoverContentTypeProps> & {
 };
 
 const PopoverContent = forwardRef<PopoverContentTypeElement, PopoverContentProps>(
-  (props: ScopedProps<PopoverContentProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverContentProps>, forwardedRef) => {
     const portalContext = usePortalContext(CONTENT_NAME, props.__scopePopover);
     const { forceMount = portalContext.forceMount, ...contentProps } = props;
     const context = usePopoverContext(CONTENT_NAME, props.__scopePopover);
@@ -289,7 +272,7 @@ export interface PopoverContentTypeProps extends Omit<
 > {}
 
 const PopoverContentModal = forwardRef<PopoverContentTypeElement, PopoverContentTypeProps>(
-  (props: ScopedProps<PopoverContentTypeProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverContentTypeProps>, forwardedRef) => {
     const context = usePopoverContext(CONTENT_NAME, props.__scopePopover);
     const contentRef = useRef<HTMLDivElement>(null);
     const composedRefs = useComposedRefs(forwardedRef, contentRef);
@@ -340,7 +323,7 @@ const PopoverContentModal = forwardRef<PopoverContentTypeElement, PopoverContent
 );
 
 const PopoverContentNonModal = forwardRef<PopoverContentTypeElement, PopoverContentTypeProps>(
-  (props: ScopedProps<PopoverContentTypeProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverContentTypeProps>, forwardedRef) => {
     const context = usePopoverContext(CONTENT_NAME, props.__scopePopover);
     const hasInteractedOutsideRef = useRef(false);
     const hasPointerDownOutsideRef = useRef(false);
@@ -424,7 +407,7 @@ type PopoverContentImplProps = Omit<PopperContentProps, 'onPlaced'> &
   };
 
 const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentImplProps>(
-  (props: ScopedProps<PopoverContentImplProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverContentImplProps>, forwardedRef) => {
     const {
       __scopePopover,
       trapFocus,
@@ -518,7 +501,7 @@ type PopoverCloseElement = ComponentRef<typeof Primitive.button>;
 type PopoverCloseProps = PrimitiveButtonProps;
 
 const PopoverClose = forwardRef<PopoverCloseElement, PopoverCloseProps>(
-  (props: ScopedProps<PopoverCloseProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverCloseProps>, forwardedRef) => {
     const { __scopePopover, ...closeProps } = props;
     const context = usePopoverContext(CLOSE_NAME, __scopePopover);
     return (
@@ -545,7 +528,7 @@ type PopperArrowProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPr
 type PopoverArrowProps = PopperArrowProps;
 
 const PopoverArrow = forwardRef<PopoverArrowElement, PopoverArrowProps>(
-  (props: ScopedProps<PopoverArrowProps>, forwardedRef) => {
+  (props: PopoverScopedProps<PopoverArrowProps>, forwardedRef) => {
     const { __scopePopover, classNames, ...arrowProps } = props;
     const popperScope = usePopperScope(__scopePopover);
     const { tx } = useThemeContext();
@@ -608,7 +591,9 @@ export const Popover = {
   Viewport: PopoverViewport,
 };
 
-export { createPopoverScope };
+// Type-only re-export (erased, so it does not affect the refresh boundary): keeps the inferred
+// types of downstream composites nameable across package boundaries.
+export type { PopoverScopedProps } from './PopoverContext';
 
 export type {
   PopoverAnchorProps,
