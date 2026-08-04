@@ -454,6 +454,31 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
     the per-plugin start events; simplify when fixing the race.
 - [x] Delete `OWN_PLUGIN_SPECIFIER` / `resolveOwnPlugin` — zero production users (one synthetic
       test, one comment); removed from the public `ActivationEvent` surface
+- [ ] **Flip the default `activatesOn` from `Startup` to `Idle` (own PR, user-directed 2026-08-04).**
+      Today omitting `activatesOn` normalizes to `Startup`, so forgetting the annotation costs TTI
+      and blocks the `useApp` ready gate — startup is the dumping ground. Invert it: anything that
+      must run at boot states `activatesOn: ActivationEvents.Startup` explicitly, everything else
+      lands in the idle sweep. User's framing, accepted: idle becoming the dumping ground is the
+      cheaper failure (post-paint responsiveness) than startup being one.
+  - **Mandatory second half — move the baseline wave with the default.** `#isBaselineWave`
+    (`activation-scheduler.ts:595`) returns true iff a module's events include `Startup`, and
+    baseline is what makes a module pullable by `#pullDependencyProviders` (`:856`) ahead of its
+    own gate. Flipping the default without flipping this makes every un-annotated provider
+    wave-scoped and invisible to the startup pass: `ClientPlugin`'s `Client` module would not
+    initialize until idle. Baseline must become `Startup ∪ Idle`. Modules that declare `Startup`
+    explicitly lose nothing — their wave fires first, so `#waveFired` covers them from then on.
+  - The payoff is the invariant, not the immediate delta: startup cost becomes exactly the
+    transitive demand closure of the boot path, enforced by the capability graph rather than by
+    remembering to annotate.
+  - Multi-capability contributors (surfaces, operation handlers, layer specs) have no individual
+    requirer, so they all slide to idle. `#pullDependencyProviders` does pull multi providers
+    (`:878`), so a startup snapshot consumer like the process manager still drags its LayerSpec
+    providers in — but only while they are baseline. Second reason the baseline change is not
+    optional.
+  - Prerequisite: idle-wave yielding (task #23). `#executeWaves` runs at `WAVE_CONCURRENCY = 16`;
+    a much larger idle wave is a long-task burst immediately after first paint.
+  - Expect a broad harness sweep: tests that fire `Startup` and assert `getActive()` will see far
+    less and need an explicit `Idle` fire (already hit in `ExcalidrawPlugin.test.ts`).
 - [ ] **Collapse `ActivationSpec` to one mode (own PR, user-directed 2026-08-03).** Dependency
       mode is a wave with no name: Startup for the no-`requires` modules, "whatever wave my
       providers landed in" for the rest. Replace with a single `activatesOn` defaulting to

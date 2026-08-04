@@ -15,6 +15,7 @@
     ".": "./index.js"
   },
   "devDependencies": {
+    "@dxos/plugin-chess": "workspace:*",
     "@typescript-eslint/parser": "catalog:"
   },
   "publishConfig": {

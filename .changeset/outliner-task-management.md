@@ -1,5 +1,5 @@
 ---
-'@dxos/plugin-outliner': minor
+'@dxos/plugin-tasks': minor
 '@dxos/ui-editor': minor
 ---
 
