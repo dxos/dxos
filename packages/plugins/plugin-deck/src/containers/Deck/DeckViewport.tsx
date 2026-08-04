@@ -402,6 +402,14 @@ const CompanionSplit = ({
 const FOLD_CONTENT_CLASSNAMES =
   'dx-fold-content size-full transition-opacity duration-200 ease-out group-data-[folded]/tile:pointer-events-none group-data-[folded]/tile:opacity-0 group-data-[fold-instant]/tile:transition-none';
 
+/*
+ * In the exposé a plank is a tile, not a pane: the frame is the hit target's outline, so the plank's own
+ * attention ring would draw a second, heavier border inside it. `after:ring-0` collapses that ring —
+ * `dx-focus-ring-inset-over-all` paints via `::after`, and utilities are the last cascade layer, so a
+ * width of zero here beats the component rule without touching the ring anywhere else.
+ */
+const EXPOSED_PLANK_CLASSNAMES = 'pointer-events-none after:ring-0';
+
 /**
  * Tile wrapping a {@link DeckPlank}, parameterized by the derived presentation: fullbleed renders an
  * absolutely-positioned plank with no resize affordance (today's solo look); sliding renders a
@@ -542,14 +550,14 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           active={deck.active}
           companionSize={companionSize}
           total={tileSize}
-          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
+          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && EXPOSED_PLANK_CLASSNAMES)}
         />
       ) : (
         <DeckPlank
           id={id}
           part='main'
           active={deck.active}
-          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && 'pointer-events-none')}
+          classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && EXPOSED_PLANK_CLASSNAMES)}
         />
       )}
       {/* The exposé's hit target, covering the plank so a click picks the tile rather than landing in a
@@ -557,7 +565,10 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           deck surface, and the outline is what makes it read as a tile at all. */}
       {exposed && (
         <button
-          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-focus-ring'
+          // Keyboard selection reads on the frame rather than the plank: focus lands on the attendable
+          // inside the tile, so the outline keys off the tile group containing focus — the same cue as
+          // hover, which is what makes the arrow keys visible now that the plank ring is suppressed.
+          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors group-focus-within/tile:outline-focus-ring hover:outline-focus-ring'
           aria-label={spineLabel}
           onClick={handleExposeSelect}
         />
@@ -1363,6 +1374,28 @@ export const DeckPlanks = () => {
         event.preventDefault();
         captureRef.current();
         void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        return;
+      }
+
+      // Enter commits the selection, the keyboard equivalent of clicking a tile: same three steps as
+      // `handleExposeSelect`. Modifier-free only, so a chord bound elsewhere still reaches its handler.
+      if (
+        event.key === 'Enter' &&
+        exposeRef.current &&
+        !(event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
+      ) {
+        const { planks: selectable, attendedPlankId: current } = navigationRef.current;
+        // Same DOM-over-state read as the arrows below: attention arrives with a render, so the focused
+        // tile is the only reliable answer to "which plank is selected right now".
+        const selected = document.activeElement?.closest('[role="listitem"]')?.getAttribute('data-object-id');
+        const subject = (selected && selectable.includes(selected) ? selected : undefined) ?? current;
+        if (!subject) {
+          return;
+        }
+        event.preventDefault();
+        captureRef.current();
+        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
+        void invokePromise(LayoutOperation.ScrollIntoView, { subject });
         return;
       }
 
