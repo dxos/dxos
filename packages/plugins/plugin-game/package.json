@@ -62,22 +62,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
     "./Game": {
       "source": "./src/types/Game.ts",
       "types": "./dist/types/src/types/Game.d.ts",
@@ -93,7 +77,28 @@
       "types": "./dist/types/src/types/GameEvents.d.ts",
       "import": "./dist/lib/GameEvents.mjs"
     },
-    "./package.json": "./package.json"
+    "./GameUtil": {
+      "source": "./src/util/load-game.ts",
+      "types": "./dist/types/src/util/load-game.d.ts",
+      "import": "./dist/lib/GameUtil.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    },
+    "./types": {
+      "source": "./src/types/index.ts",
+      "types": "./dist/types/src/types/index.d.ts",
+      "import": "./dist/lib/types.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -106,6 +111,9 @@
       ],
       "GameEvents": [
         "dist/types/src/types/GameEvents.d.ts"
+      ],
+      "GameUtil": [
+        "dist/types/src/util/load-game.d.ts"
       ]
     }
   },

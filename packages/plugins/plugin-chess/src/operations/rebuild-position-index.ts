@@ -9,7 +9,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Game from '@dxos/plugin-game/Game';
-import { GameVariantMismatchError, loadGame } from '@dxos/plugin-game/types';
+import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
 import * as positionIndexInternal from '../internal/position-index';
 import * as Chess from '../types/Chess';
@@ -42,10 +42,10 @@ export default ChessOperation.RebuildPositionIndex.pipe(
 
         // Skip games whose variant is not chess, but let database/ref failures abort the rebuild
         // rather than silently producing a partial index.
-        const loaded = yield* loadGame(Ref.make(game), Chess.State).pipe(
+        const loaded = yield* GameUtil.loadGame(Ref.make(game), Chess.State).pipe(
           Effect.asSome,
           Effect.catchIf(
-            (error) => error instanceof GameVariantMismatchError,
+            (error) => error instanceof GameUtil.GameVariantMismatchError,
             () => Effect.succeedNone,
           ),
         );

@@ -11,11 +11,12 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
 import { type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { File } from '@dxos/types';
 
 import { FileInput } from '#components';
 import { FileArticle, FileSettings } from '#containers';
 import { meta } from '#meta';
-import { File, type Settings } from '#types';
+import { type Settings } from '#types';
 
 import * as FileCapabilities from '../types/FileCapabilities';
 

@@ -8,8 +8,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
+import { File } from '@dxos/types';
 
-import { File, FileCapabilities, FileOperation, Settings } from '../types';
+import { FileCapabilities, FileOperation, Settings } from '../types';
 import * as FileLimits from '../types/FileLimits';
 
 export class UnsupportedFileTypeError extends Error {

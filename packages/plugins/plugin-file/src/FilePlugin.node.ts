@@ -5,10 +5,10 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Blob } from '@dxos/echo';
+import { File } from '@dxos/types';
 
 import { CreateObject, EdgeBackend, InlineBackend, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-import { File } from '#types';
 
 export const FilePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

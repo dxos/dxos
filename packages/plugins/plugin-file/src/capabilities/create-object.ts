@@ -8,8 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { File } from '@dxos/types';
 
-import { File, FileOperation } from '#types';
+import { FileOperation } from '#types';
 
 import * as FileCapabilities from '../types/FileCapabilities';
 

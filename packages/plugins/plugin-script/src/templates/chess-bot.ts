@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj } from '@dxos/echo';
 import * as Chess from '@dxos/plugin-chess/Chess';
 import * as Game from '@dxos/plugin-game/Game';
-import { loadGame } from '@dxos/plugin-game/types';
+import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
 const ChessBot = Operation.make({
   meta: {
@@ -38,7 +38,7 @@ const ChessBot = Operation.make({
 export default ChessBot.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ game, player = 'black' }) {
-      const { variant } = yield* loadGame(game, Chess.State);
+      const { variant } = yield* GameUtil.loadGame(game, Chess.State);
       const chess = new ChessJS();
       chess.loadPgn(variant.pgn ?? '');
       if (chess.turn() !== (player === 'white' ? 'w' : 'b')) {

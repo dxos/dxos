@@ -22,7 +22,7 @@ import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import * as Chess from '@dxos/plugin-chess/Chess';
 import * as Game from '@dxos/plugin-game/Game';
-import { loadGame } from '@dxos/plugin-game/types';
+import * as GameUtil from '@dxos/plugin-game/GameUtil';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
@@ -62,7 +62,7 @@ export default Commentary.pipe(
       function* ({ game: gameRef }) {
         // Load the game and its Chess variant state.
         log.info('load game', { gameRef });
-        const { game: chessGame, variant: chessState } = yield* loadGame(gameRef, Chess.State);
+        const { game: chessGame, variant: chessState } = yield* GameUtil.loadGame(gameRef, Chess.State);
 
         // Load the chess position from PGN or FEN.
         const chess = new ChessJS();

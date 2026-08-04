@@ -17,6 +17,7 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
+    'GameUtil': 'src/util/load-game.ts',
     'util': 'src/util/index.ts',
     'Game': 'src/types/Game.ts',
     'GameCapabilities': 'src/types/GameCapabilities.ts',
