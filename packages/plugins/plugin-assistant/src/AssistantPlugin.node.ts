@@ -4,14 +4,6 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AiContext } from '@dxos/assistant';
-import { Agent, Chat, McpServer, Memory } from '@dxos/assistant-toolkit';
-import * as Instructions from '@dxos/compute/Instructions';
-import * as Skill from '@dxos/compute/Skill';
-import { Sequence } from '@dxos/conductor';
-import { Feed } from '@dxos/echo';
-import { Text } from '@dxos/schema';
-import { HasSubject, Message } from '@dxos/types';
 
 import {
   AgentHydrator,
@@ -36,23 +28,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     Plugin.addModule(SkillDefinition),
     Plugin.addModule(CreateObject),
     Plugin.addModule(OperationHandler),
-    Plugin.addModule(
-      AppCapability.schema([
-        Chat.Chat,
-        Chat.CompanionTo,
-        Skill.Skill,
-        AiContext.Binding,
-        Feed.Feed,
-        HasSubject.HasSubject,
-        Message.Message,
-        Instructions.Instructions,
-        Agent.Agent,
-        McpServer.McpServer,
-        Sequence.Sequence,
-        Memory.Memory,
-        Text.Text,
-      ]),
-    ),
+    Plugin.addModule(AppCapability.schema(() => import('./schema-defs'))),
     Plugin.addModule(EdgeModelResolver),
     Plugin.addModule(LocalModelResolver),
     Plugin.addModule(AiService),

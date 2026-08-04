@@ -652,6 +652,10 @@ export class Client {
     await this._ctx.dispose();
 
     this._initialized = false;
+    // Back to WAITING alongside `_initialized`: leaving the trigger resolved makes
+    // `waitUntilInitialized()` resolve for a client that is not initialized, which spins
+    // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
+    this._initializedTrigger.reset();
   }
 
   async [Symbol.asyncDispose]() {

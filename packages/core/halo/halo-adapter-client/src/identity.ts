@@ -107,7 +107,9 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
     Stream.map((devices) => devices.map(toDeviceInfo)),
   ),
 
-  getDevicesSnapshot: () => client.halo.devices.get().map(toDeviceInfo),
+  // Empty pre-initialization for the same reason `getSnapshot` is `none`: `client.halo` throws
+  // before `initialize()`, and the contract for a pre-init read on this surface is silence.
+  getDevicesSnapshot: () => (client.initialized ? client.halo.devices.get().map(toDeviceInfo) : []),
 
   credentials: streamFromClientObservable(client, () => client.halo.credentials).pipe(
     Stream.map((credentials) => credentials.map(toCredential)),

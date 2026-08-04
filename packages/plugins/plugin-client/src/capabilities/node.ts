@@ -39,7 +39,7 @@ export const Migrations = Capability.lazyModule(
 export const NavigationHandler = Capability.lazyModule(
   'NavigationHandler',
   {
-    requires: [Capabilities.OperationInvoker],
+    requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
     provides: [AppCapabilities.NavigationHandler],
     props: ({ invitationProp }: ClientOptions.ClientPluginOptions) => ({ invitationProp }),
   },

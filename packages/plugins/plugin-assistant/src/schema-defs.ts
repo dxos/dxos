@@ -11,8 +11,9 @@ import { Feed, type Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
-// Loaded lazily by the plugin definition's schema module: these types ride heavy barrels
-// (@dxos/assistant → @effect/ai → fast-check/zod) that must stay out of the boot floor.
+// The single source for the plugin's schema list, loaded lazily by every `AssistantPlugin`
+// variant's schema module: these types ride heavy barrels (@dxos/assistant → @effect/ai →
+// fast-check/zod) that must stay out of the definition's static closure.
 const types: ReadonlyArray<Type.AnyEntity> = [
   Chat.Chat,
   Chat.CompanionTo,

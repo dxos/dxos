@@ -14,4 +14,6 @@ export const PlanetCache = Capability.lazyModule(
   { provides: [TerraCapabilities.PlanetCache] },
   () => import('./planet-cache'),
 );
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.section'],
+});

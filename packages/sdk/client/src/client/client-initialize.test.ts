@@ -40,4 +40,28 @@ describe('Client.waitUntilInitialized', () => {
     ]);
     expect(settled).toEqual('pending');
   });
+
+  test('goes back to pending after destroy', async () => {
+    // A resolved trigger on an uninitialized client spins `useClient`: it throws an
+    // already-settled promise, React retries, and it suspends again.
+    const client = new Client();
+    await client.initialize();
+    await client.destroy();
+    expect(client.initialized).toBeFalsy();
+
+    const settled = await Promise.race([
+      client.waitUntilInitialized().then(() => 'settled' as const),
+      new Promise<'pending'>((resolve) => setTimeout(() => resolve('pending'), 100)),
+    ]);
+    expect(settled).toEqual('pending');
+  });
+
+  test('resolves again after re-initialization', async () => {
+    const client = new Client();
+    await client.initialize();
+    await client.destroy();
+    await client.initialize();
+    await expect(client.waitUntilInitialized({ timeout: 100 })).resolves.toBeUndefined();
+    await client.destroy();
+  });
 });
