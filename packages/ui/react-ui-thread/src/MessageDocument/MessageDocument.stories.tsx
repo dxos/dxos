@@ -12,10 +12,10 @@ import { Message as MessageType } from '@dxos/types';
 import { translations } from '#translations';
 
 import { getStoryMetadata } from '../testing';
-import { type MessageLike, type MessageReaction } from '../types';
-import { Transcript } from './Transcript';
-import { type TranscriptAction } from './transcript-extension';
-import { type MessageItem } from './transcript-items';
+import { type MessageLike, type MessageReaction, type MessageThreadSummary } from '../types';
+import { type MessageAction } from './message-document-extension';
+import { type MessageItem } from './message-document-items';
+import { MessageDocument } from './MessageDocument';
 
 /**
  * CodeMirror's `hoverTooltip` reads pointer coordinates from a bubbling `mousemove`, which
@@ -89,7 +89,7 @@ const DefaultStory = () => {
 
   const getReactions = useCallback((message: MessageLike) => reactions[message.id] ?? [], [reactions]);
   const getActions = useCallback(
-    (item: MessageItem): TranscriptAction[] =>
+    (item: MessageItem): MessageAction[] =>
       item.message.sender.identityDid === alice.identityDid
         ? ['react', 'thread', 'edit', 'delete']
         : ['react', 'thread'],
@@ -113,7 +113,7 @@ const DefaultStory = () => {
   }, []);
 
   return (
-    <Transcript
+    <MessageDocument
       classNames='bs-full'
       messages={messages}
       getMetadata={getStoryMetadata}
@@ -124,8 +124,123 @@ const DefaultStory = () => {
   );
 };
 
+/**
+ * The channel view: roots only, each carrying its thread affordance. Discord's asymmetry — the
+ * channel offers start-thread and withholds reply, which is what pushes conversation into threads.
+ */
+const ChannelStory = () => {
+  const messages = useFixture();
+  const [currentId, setCurrentId] = useState<string>();
+  const threads = useMemo<Record<string, MessageThreadSummary>>(
+    () => ({
+      [messages[0].id]: { replyCount: 3, name: 'Deploy plan', lastActivity: new Date(DAY_1 + 900_000).toISOString() },
+      [messages[5].id]: { replyCount: 0 },
+    }),
+    [messages],
+  );
+
+  return (
+    <MessageDocument
+      classNames='bs-full'
+      messages={messages}
+      currentId={currentId}
+      getMetadata={getStoryMetadata}
+      getThreadSummary={(message) => threads[message.id]}
+      getActions={() => ['react', 'thread', 'delete']}
+      onSelect={(message) => setCurrentId(message.id)}
+      onThreadOpen={(message) => setCurrentId(message.id)}
+    />
+  );
+};
+
+/**
+ * A thread's own view: replies, quote-replies, and the reply affordance in place of start-thread —
+ * threads do not nest, so the channel's start-thread is withheld here.
+ */
+const ThreadStory = () => {
+  const root = useMemo(() => at(DAY_1, alice, 'Should we cut the release today?'), []);
+  const replies = useMemo(
+    () => [
+      at(DAY_1 + 60_000, bob, 'I would wait for the migration to land.'),
+      at(DAY_1 + 120_000, alice, 'Agreed — tomorrow then.'),
+    ],
+    [],
+  );
+  const messages = useMemo(() => [root, ...replies], [root, replies]);
+
+  return (
+    <MessageDocument
+      classNames='bs-full'
+      messages={messages}
+      getMetadata={getStoryMetadata}
+      // The second reply answers the first; the host resolves the target, this package never
+      // follows the ref itself.
+      getQuote={(message) =>
+        message.id === replies[1].id
+          ? { authorName: 'Bob', text: 'I would wait for the migration to land.' }
+          : undefined
+      }
+      getActions={() => ['react', 'reply', 'delete']}
+    />
+  );
+};
+
+/** Edit in place: the body's lines are replaced by an editor over the same text. */
+const EditingStory = () => {
+  const [messages, setMessages] = useState(() => [
+    at(DAY_1, alice, 'The original text.'),
+    at(DAY_1 + 120_000, bob, 'Another message, to show only one row is swapped.'),
+  ]);
+  const [editingId, setEditingId] = useState<string>();
+
+  return (
+    <MessageDocument
+      classNames='bs-full'
+      messages={messages}
+      editingId={editingId}
+      getMetadata={getStoryMetadata}
+      getActions={() => ['edit']}
+      onAction={(action, message) => action === 'edit' && setEditingId(message.id)}
+      onEditCancel={() => setEditingId(undefined)}
+      onEditCommit={(message, text) => {
+        setMessages((current) =>
+          current.map((candidate) =>
+            candidate.id === message.id
+              ? MessageType.make({ ...candidate, blocks: [{ _tag: 'text', text }] })
+              : candidate,
+          ),
+        );
+        setEditingId(undefined);
+      }}
+    />
+  );
+};
+
+/**
+ * A channel long enough to show what the substrate is actually for: CodeMirror renders only the
+ * lines in view, so the DOM holds a fraction of the messages.
+ */
+const DensityStory = () => {
+  const messages = useMemo(
+    () =>
+      Array.from({ length: 500 }, (_, index) =>
+        at(DAY_1 + index * 120_000, index % 2 === 0 ? alice : bob, `Message ${index} in a long channel.`),
+      ),
+    [],
+  );
+
+  return (
+    <MessageDocument
+      classNames='bs-full'
+      messages={messages}
+      getMetadata={getStoryMetadata}
+      getActions={() => ['react']}
+    />
+  );
+};
+
 const meta = {
-  title: 'ui/react-ui-thread/Transcript',
+  title: 'ui/react-ui-thread/MessageDocument',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
@@ -187,8 +302,8 @@ export const Reactions: Story = {
 export const HoverToolbar: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const button = (action: TranscriptAction) =>
-      canvasElement.querySelector<HTMLElement>(`.cm-tooltip [data-testid="transcript.${action}"]`);
+    const button = (action: MessageAction) =>
+      canvasElement.querySelector<HTMLElement>(`.cm-tooltip [data-testid="thread.document.${action}"]`);
 
     hover(await canvas.findByText(/Bob replies five seconds later/));
     await waitFor(() => expect(button('thread')).not.toBeNull());
@@ -198,5 +313,75 @@ export const HoverToolbar: Story = {
 
     hover(await canvas.findByText(/First message in a burst/));
     await waitFor(() => expect(button('delete')).not.toBeNull());
+  },
+};
+
+/** Roots carry a thread row; an existing thread shows its name and count, a bare one invites one. */
+export const Channel: Story = {
+  render: ChannelStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('Deploy plan')).toBeInTheDocument();
+    await expect(canvasElement.querySelectorAll('[data-testid="thread.document.open-thread"]')).toHaveLength(2);
+
+    // Selecting a row marks it for assistive technology, which is what a tile got from being its
+    // own element — the open question this prototype had to answer.
+    const row = await canvas.findByText(/First message in a burst/);
+    await userEvent.click(row);
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[aria-current="location"]')?.getAttribute('data-message-id')).not.toBeNull(),
+    );
+  },
+};
+
+/** A reply quotes what it answers, and a thread offers reply rather than start-thread. */
+export const Thread: Story = {
+  render: ThreadStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('thread.document.quote')).toHaveTextContent(
+      'I would wait for the migration',
+    );
+
+    hover(await canvas.findByText(/Should we cut the release/));
+    await waitFor(() =>
+      expect(canvasElement.querySelector('.cm-tooltip [data-testid="thread.document.reply"]')).not.toBeNull(),
+    );
+    await expect(canvasElement.querySelector('.cm-tooltip [data-testid="thread.document.thread"]')).toBeNull();
+  },
+};
+
+/** Editing swaps one body for an editor; committing writes the new text back into the document. */
+export const Editing: Story = {
+  render: EditingStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    hover(await canvas.findByText('The original text.'));
+    const edit = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip [data-testid="thread.document.edit"]');
+    await waitFor(() => expect(edit()).not.toBeNull());
+    await userEvent.click(edit()!);
+
+    const editor = await canvas.findByTestId('thread.document.editor');
+    await expect(editor).toBeInTheDocument();
+    // The other message keeps its body: only the edited row is replaced.
+    await expect(canvas.getByText(/Another message/)).toBeInTheDocument();
+
+    await userEvent.click(within(editor).getByText('The original text.'));
+    await userEvent.keyboard(' Edited.{Enter}');
+    await waitFor(() => expect(canvas.queryByTestId('thread.document.editor')).toBeNull());
+    await expect(await canvas.findByText(/Edited\./)).toBeInTheDocument();
+  },
+};
+
+/** 500 messages, of which only the visible ones reach the DOM. */
+export const Density: Story = {
+  render: DensityStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText(/Message 499 in a long channel/);
+    const lines = canvasElement.querySelectorAll('.cm-line');
+    // The measurement the prototype owed: rendered lines stay a small fraction of the channel, so
+    // widget density is bounded by the viewport rather than by history.
+    await expect(lines.length).toBeLessThan(120);
   },
 };

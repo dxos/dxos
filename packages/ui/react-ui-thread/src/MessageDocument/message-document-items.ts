@@ -25,9 +25,9 @@ export type MessageItem = {
   last: boolean;
 };
 
-export type TranscriptItem = DividerItem | MessageItem;
+export type MessageDocumentItem = DividerItem | MessageItem;
 
-export type TranscriptItemOptions = {
+export type MessageDocumentItemOptions = {
   /** Consecutive same-sender messages within this window (ms) belong to one run. */
   groupWindowMs?: number;
   /** Insert a labeled divider before the first message of each calendar day. */
@@ -60,16 +60,16 @@ const senderKey = (message: MessageLike): string =>
  * a run is expressed by the `head` flag. Grouping is presentation, and chunks have to stay 1:1 with
  * messages so a reaction, an edit or a hover toolbar can address one.
  */
-export const buildTranscriptItems = (
+export const buildMessageDocumentItems = (
   messages: readonly MessageLike[],
   {
     groupWindowMs = DEFAULT_GROUP_WINDOW_MS,
     dayDivider = true,
     gapDividerMs = DEFAULT_GAP_DIVIDER_MS,
     dtLocale,
-  }: TranscriptItemOptions = {},
-): TranscriptItem[] => {
-  const items: TranscriptItem[] = [];
+  }: MessageDocumentItemOptions = {},
+): MessageDocumentItem[] => {
+  const items: MessageDocumentItem[] = [];
   let runSender: string | undefined;
   let runLastTime: number | undefined;
   let prevTime: number | undefined;
@@ -129,5 +129,5 @@ export const getMessageText = (message: MessageLike): string => {
  * A divider renders to nothing at all: its widget hangs off the head of the message that follows,
  * so it costs no line and leaves no blank row to style away.
  */
-export const renderTranscriptItem: ChunkRenderer<TranscriptItem> = (item) =>
+export const renderMessageDocumentItem: ChunkRenderer<MessageDocumentItem> = (item) =>
   item.kind === 'divider' ? '' : `${getMessageText(item.message)}\n`;
