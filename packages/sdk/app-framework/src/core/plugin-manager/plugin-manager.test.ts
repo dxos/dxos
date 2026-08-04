@@ -1447,6 +1447,67 @@ describe('PluginManager', () => {
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'consumer' }]);
       }),
     );
+
+    it.effect('a snapshot consumer waits for the complete registry before reading a multi capability', () =>
+      Effect.gen(function* () {
+        // Regression: multi requires never gate, so a consumer registered in the first streaming
+        // batch would activate against whatever had contributed so far. In dev (one request per
+        // plugin definition) that window is wide enough for the process manager to snapshot
+        // `Capabilities.LayerSpec` without the client's specs — identity creation then failed with
+        // `ServiceNotAvailable`.
+        let releaseLoader!: () => void;
+        const gate = new Promise<void>((resolve) => {
+          releaseLoader = resolve;
+        });
+        let snapshot: readonly { string: string }[] = [];
+        const ProviderReal = Plugin.define<void>(slowMeta).pipe(
+          Plugin.addModule({
+            id: 'late-provider',
+            provides: [MultiString],
+            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'late' })]),
+          }),
+          Plugin.make,
+        );
+        const ProviderLazy = Plugin.lazy(slowMeta, async () => {
+          await gate;
+          return { default: ProviderReal };
+        });
+        const Snapshotter = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'early-provider',
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'early' })]),
+            }),
+            Plugin.addModule({
+              id: 'snapshotter',
+              requires: [MultiString],
+              provides: [String],
+              activate: Effect.fnUntraced(function* () {
+                snapshot = (yield* MultiString).get();
+                return [Capability.contribute(String, { string: 'snapshot' })];
+              }),
+            }),
+          ),
+        );
+        plugins = [Snapshotter(), ProviderLazy()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, slowMeta.profile.key],
+        });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        // Real turns for the streaming pass: the same-plugin provider lands early, and the
+        // snapshotter must NOT ride along with it.
+        yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), []);
+
+        releaseLoader();
+        yield* Fiber.join(startupFiber);
+        assert.deepStrictEqual(snapshot, [{ string: 'early' }, { string: 'late' }]);
+      }),
+    );
   });
 
   describe('Plugin.lazy', () => {
@@ -2785,6 +2846,36 @@ describe('PluginManager', () => {
         // Reverse activation order; consumer always before its provider.
         assert.isBelow(deactivations.indexOf('consumer'), deactivations.indexOf('provider'));
         assert.strictEqual(deactivations.length, 3);
+      }),
+    );
+
+    it.effect('a module finalizer runs on deactivation, not on activation', () =>
+      Effect.gen(function* () {
+        let finalized = 0;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'scratch',
+              provides: [String],
+              activatesOn: ActivationEvents.Startup,
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    finalized++;
+                  }),
+                );
+                return [Capability.contribute(String, { string: 'x' })];
+              }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* manager.start();
+        assert.strictEqual(finalized, 0, 'finalizer ran while the module was still active');
+
+        yield* manager.shutdown();
+        assert.strictEqual(finalized, 1, 'finalizer did not run on shutdown');
       }),
     );
 

@@ -608,6 +608,11 @@ export class ActivationScheduler {
       const active = this.#state.getActiveIds();
       const allModules = this.#state.getModules();
 
+      // During the streaming bootstrap the provider's plugin definition may simply not have
+      // registered yet — the module waits and the post-initialization pass re-evaluates;
+      // a missing provider is structural only once the registry is complete.
+      const registryComplete = yield* Deferred.isDone(this.#state.initialized);
+
       const reactivations = allModules.filter((module) => this.#state.reactivateOnNextPass.has(module.id));
       // Explicitly passed candidates are trusted to be triggered (an event wave passes its
       // matched modules before the event is marked fired); pooled candidates must have their
@@ -624,6 +629,15 @@ export class ActivationScheduler {
           // e.g. a cascade triggered by an event wave that an in-flight module itself fired.
           this.#loader.isLoading(module.id)
         ) {
+          return false;
+        }
+        // A multi require is a collection, so "satisfied" is only meaningful once every plugin
+        // definition has registered — a consumer admitted during the streaming window snapshots
+        // whatever happens to have contributed so far (the process manager's one-shot
+        // `Capabilities.LayerSpec` read is how this surfaced). Which providers are still to come
+        // is unknowable mid-registration, so these wait for the complete pass wholesale; this is
+        // the ordering they had before streaming.
+        if (!registryComplete && module.activation.requires.some((capability) => capability.arity === 'multi')) {
           return false;
         }
         if (!explicit.has(module.id) && !this.#waveFired(module, key)) {
@@ -684,10 +698,6 @@ export class ActivationScheduler {
       for (const waits of waiting) {
         log('module waiting on capability', { module: waits.module.id, capability: waits.capability });
       }
-      // During the streaming bootstrap the provider's plugin definition may simply not have
-      // registered yet — the module waits and the post-initialization pass re-evaluates;
-      // a missing provider is structural only once the registry is complete.
-      const registryComplete = yield* Deferred.isDone(this.#state.initialized);
       for (const miss of missing) {
         if (!registryComplete) {
           log('module waiting on unregistered provider', { module: miss.module.id, capability: miss.capability });

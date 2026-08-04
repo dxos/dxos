@@ -7,15 +7,21 @@ tags:
   - vite
   - ts-test
   - storybook
+# Inherited from the tags above and not redeclared here: `build`, `lint`, `typecheck`,
+# `check-module-structure`, `test-storybook`, and `e2e` (`.moon/tasks/tag-*.yml`). `e2e` is the
+# gated suite — production `vite preview` against `src/playwright/playwright.config.ts`; every
+# spec that config cannot host has its own `e2e-*` task below.
 tasks:
+  # The production web bundle (`out/composer`), consumed by `vite preview`, the Tauri builds, and
+  # the Cloudflare worker. `build:functions` emits `_worker.js` after `vite build` so it survives
+  # Vite's `emptyOutDir`.
   bundle:
-    # Emit `_worker.js` after `vite build` so it survives Vite's `emptyOutDir`.
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
   # than a step inside `bundle`: a perf budget must not fail the local build you are running in
-  # order to measure the very thing it is budgeting.
+  # order to measure the very thing it is budgeting. Run manually — no CI job invokes either budget.
   check-boot-budget:
     command: node scripts/check-boot-budget.mjs
     deps:
@@ -46,6 +52,7 @@ tasks:
     deps:
       - bundle
       - fetch-ollama
+  # iOS counterpart of `tauri-build`; no sidecar (the ollama runtime is desktop-only).
   tauri-ios-build:
     deps:
       - bundle
@@ -65,6 +72,8 @@ tasks:
     options:
       cache: false
       outputStyle: stream
+  # Stages runtime assets that ship from a dependency's package rather than this app's `public/`
+  # (currently tldraw's). Every task that serves or bundles the app depends on it.
   prebuild:
     script: pnpm run --silent copy:assets
     deps:
@@ -74,6 +83,7 @@ tasks:
       - moon.yml
     outputs:
       - public/assets/plugin-tldraw
+  # Full-plugin dev server (`vite dev`), inherited from the `vite` tag. The everyday inner loop.
   serve:
     deps:
       - prebuild
@@ -109,27 +119,33 @@ tasks:
       - vite-plugin-import-source:build
       - vite-plugin-log:build
       - vite-plugin-shutdown:build
-  # Production startup harness — measures `vite preview` against `startup.spec.ts`. Its own task
-  # because the spec records benchmark rows rather than asserting behaviour: `e2e` ignores it so a
-  # timing measurement never gates a merge.
+  # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
+  # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
+  # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.
+  # `check-startup-budget` is the gated counterpart, running one scenario repeatedly.
   e2e-startup:
     command: pnpm exec playwright test --config=src/playwright/playwright-startup.config.ts
     deps:
       - prebuild
-      - ^:build
-  # Dev-server startup harness — measures `vite serve` against the shared
-  # `dev-startup.spec.ts`. Distinct from `e2e` (which inherits from `ts-test`'s
-  # default playwright config and runs the production preview harness).
+      # `vite preview` serves `out/composer`, so the harness measures whatever `bundle` last emitted.
+      - bundle
+  # Dev-server harness — `dev-*.spec.ts` under `vite serve`. Separate because dev is a materially
+  # different runtime, not just a slower one: each plugin definition is its own request, so plugin
+  # registration streams in over a window the bundled build never exposes.
   e2e-dev:
     command: pnpm exec playwright test --config=src/playwright/playwright-dev.config.ts
     deps:
       - prebuild
       - ^:build
+  # Welcome-screen focus regression — drives Storybook on :9009 rather than the app, so it cannot
+  # run under `e2e`'s `vite preview` web server.
   e2e-welcome-focus:
     command: pnpm exec playwright test --config=src/playwright/playwright-welcome-focus.config.ts
     deps:
       - prebuild
       - ^:build
+  # Vitest (inherited from `ts-test`); the extra inputs keep the cache honest about the Storybook
+  # and Vite config this app's tests load.
   test:
     inputs:
       - .storybook/*

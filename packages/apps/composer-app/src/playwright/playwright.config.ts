@@ -8,9 +8,11 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
-  // The startup harnesses record benchmark rows rather than assert behaviour, so nothing gates on
-  // them; each has its own config and moon task (`e2e-startup`, `e2e-dev`).
-  testIgnore: ['**/startup.spec.ts', '**/dev-startup.spec.ts'],
+  // Specs this config cannot host: `startup.spec.ts` records benchmark rows rather than asserting
+  // behaviour, `dev-*` needs `vite serve` rather than this config's `vite preview`, and
+  // `welcome-focus.spec.ts` drives Storybook on :9009. Each has its own config and moon task
+  // (`e2e-startup`, `e2e-dev`, `e2e-welcome-focus`).
+  testIgnore: ['**/startup.spec.ts', '**/dev-*.spec.ts', '**/welcome-focus.spec.ts'],
   timeout: 60_000,
   expect: { timeout: 10_000 },
   workers: 1,
