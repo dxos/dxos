@@ -345,11 +345,13 @@ account membership already provides exactly the needed access control, via `wran
 | Encryption      | `age`, per-user; one secret — `DX_FIXTURES_AGE_KEY` (a path, or an `op://` reference materialized only for the life of the command)                                          |
 | Landing path    | `pull` refuses to write outside the git-ignored `stories-brain/fixtures/local/`, so an archive cannot be committed by a stray `git add -A`; `*.age` is git-ignored repo-wide |
 
-**Flow.** ArchiveModule (star messages → "Download starred") → `pnpm fixtures push
-~/Downloads/mailbox-feed.json --name inbox` → elsewhere `pnpm fixtures pull` (newest by default, or
-an explicit key) → the existing `MAILBOX_FEED_FIXTURE` consumers read it. `pnpm fixtures list`
-enumerates the user's archives. Both directions validate the payload is an array of serialized
-messages, so pushing the wrong file fails at push rather than after a pull. Wrangler is invoked as
+**Flow.** ArchiveModule ("Download starred" for a curated fixture, "Download all" for a corpus) →
+`pnpm fixtures push ~/Downloads/mailbox-feed.json --name inbox` → elsewhere `pnpm fixtures pull
+<key>` → the existing `MAILBOX_FEED_FIXTURE` consumers read it. Push prints the key and the pull
+command; there is deliberately no `list`, because wrangler's R2 surface is get/put/delete only and
+enumerating a prefix would need a second credential (the S3 API) — the dashboard covers browsing.
+Both directions validate the payload is an array of serialized messages, so pushing the wrong file
+fails at push rather than after a pull. Wrangler is invoked as
 `pnpm exec wrangler` (the repo-pinned version): a globally installed or 1Password-aliased wrangler
 can be old enough to reject flags this script needs, surfacing only as "Unknown argument".
 Developer-facing usage lives in `stories-inbox/README.md`.

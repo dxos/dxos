@@ -46,7 +46,7 @@ pnpm 1p-credentials
 pnpm fixtures push ~/Downloads/mailbox-feed.json --name inbox
 ```
 
-The printed key looks like `mailbox/<user>/inbox-<date>.json.age`. `pnpm fixtures list` shows yours.
+Push prints the key — `mailbox/<user>/inbox-<date>.json.age` — and the exact `pull` command to run elsewhere. Keep it; wrangler's R2 surface is get/put/delete only, so there is nothing to enumerate a prefix with. Browse what has been pushed in the Cloudflare dashboard.
 
 To hand one archive to a teammate, encrypt to their public key instead — a deliberate, per-object act:
 
@@ -56,10 +56,10 @@ pnpm fixtures push ~/Downloads/mailbox-feed.json --recipient age1...
 
 ## Using a real mailbox in a test
 
-Pull the archive on whichever machine will run the test. It decrypts into the git-ignored `stories-brain/fixtures/local/` (the script refuses to write anywhere else):
+Pull the archive on whichever machine will run the test, passing the key that `push` printed. It decrypts into the git-ignored `stories-brain/fixtures/local/` (the script refuses to write anywhere else):
 
 ```bash
-pnpm fixtures pull
+pnpm fixtures pull mailbox/<user>/inbox-<date>.json.age
 ```
 
 Consumers read that path by default; `MAILBOX_FEED_FIXTURE` overrides it. The loader lives in `@dxos/stories-brain` (`src/testing/harness/fixture.ts`) and does the three things a raw archive needs: mints fresh message ids, collapses the MIME alternatives into one clean text block (HTML→Markdown), and sorts **oldest-first** — a cursored pipeline advances a high-water mark, so an unsorted feed would silently skip everything older than the first message it saw.

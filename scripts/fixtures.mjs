@@ -29,8 +29,11 @@
 //
 // Usage:
 //   fixtures.mjs push <file> [--name <name>] [--recipient <age1...>]
-//   fixtures.mjs pull [<key>] [--out <file>]   Download and decrypt (defaults to the newest).
-//   fixtures.mjs list                          List this user's fixtures.
+//   fixtures.mjs pull <key> [--out <file>]     Download and decrypt.
+//
+// `push` prints the key to pass to `pull`. There is no `list`: wrangler's R2 surface is
+// get/put/delete only, so enumerating a prefix would need a second credential (the S3 API); use the
+// Cloudflare dashboard to browse what has been pushed.
 //
 // Environment:
 //   DX_FIXTURES_AGE_KEY        Path to your age identity file. May be an `op://` reference.
@@ -39,7 +42,6 @@
 //
 // Examples:
 //   node scripts/fixtures.mjs push ~/Downloads/mailbox-feed.json --name inbox
-//   node scripts/fixtures.mjs pull
 //   node scripts/fixtures.mjs pull mailbox/burdon/inbox-2026-08-04.json.age
 
 import { execFileSync } from 'node:child_process';
@@ -63,8 +65,6 @@ const main = () => {
       return push(rest);
     case 'pull':
       return pull(rest);
-    case 'list':
-      return list();
     default:
       usage(`Unknown command: ${command ?? '(none)'}`);
   }
@@ -112,13 +112,16 @@ const pull = (args) => {
   if (!out.startsWith(LOCAL_DIR)) {
     fail(`Refusing to write outside ${LOCAL_DIR} (it is git-ignored; fixtures must never be committed).`);
   }
+  // The key is required: wrangler's R2 surface is get/put/delete only — it cannot list objects — so
+  // there is no way to resolve "the newest" without a second credential (the S3 API) or the
+  // dashboard. `push` prints the exact key to pass here.
+  const key = positional[0];
+  if (!key) {
+    usage('pull requires a key (printed by `push`, or read from the Cloudflare dashboard).');
+  }
+
   requireBinary('age', 'brew install age');
   const identity = identityFile();
-
-  const key = positional[0] ?? latestKey();
-  if (!key) {
-    fail(`No fixtures found for ${userInfo().username} in ${DEFAULT_BUCKET}.`);
-  }
   mkdirSync(dirname(out), { recursive: true });
 
   const encrypted = join(tmpdir(), `dxos-fixture-${process.pid}.age`);
@@ -132,24 +135,6 @@ const pull = (args) => {
   const messages = readArchive(out);
   console.log(`\nPulled ${messages} messages (${size(out)}) → ${out}`);
   console.log('Consumers read this path by default; override with MAILBOX_FEED_FIXTURE.');
-};
-
-const list = () => {
-  const prefix = `mailbox/${userInfo().username}/`;
-  const output = wrangler(['r2', 'bucket', 'object', 'list', DEFAULT_BUCKET, '--prefix', prefix, '--remote'], {
-    capture: true,
-  });
-  console.log(output.trim() || `No fixtures under ${prefix}.`);
-};
-
-/** Newest key under this user's prefix, by the date embedded in the name. */
-const latestKey = () => {
-  const prefix = `mailbox/${userInfo().username}/`;
-  const output = wrangler(['r2', 'bucket', 'object', 'list', DEFAULT_BUCKET, '--prefix', prefix, '--remote'], {
-    capture: true,
-  });
-  const keys = [...output.matchAll(/"key"\s*:\s*"([^"]+)"/g)].map((match) => match[1]);
-  return keys.sort().at(-1);
 };
 
 /**
@@ -208,12 +193,12 @@ const readArchive = (file) => {
  * installed (or 1Password-plugin-aliased) wrangler can be old enough to reject flags this script
  * relies on, and the failure surfaces as an opaque "Unknown argument".
  */
-const wrangler = (args, { capture = false } = {}) => {
+const wrangler = (args) => {
   try {
     return execFileSync('pnpm', ['exec', 'wrangler', ...args], {
       cwd: REPO_ROOT,
       encoding: 'utf8',
-      stdio: capture ? ['inherit', 'pipe', 'inherit'] : 'inherit',
+      stdio: 'inherit',
     });
   } catch (error) {
     fail(
@@ -259,8 +244,7 @@ const usage = (message) => {
   console.error(`${message}\n`);
   console.error('Usage:');
   console.error('  fixtures.mjs push <file> [--name <name>]');
-  console.error('  fixtures.mjs pull [<key>] [--out <file>]');
-  console.error('  fixtures.mjs list');
+  console.error('  fixtures.mjs pull <key> [--out <file>]');
   process.exit(1);
 };
 
