@@ -8,6 +8,9 @@ import { createContext, useContext } from 'react';
 import { raise } from '@dxos/debug';
 import { type Label } from '@dxos/react-ui';
 
+// Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
+// components, so a context and hook exported beside one force a full page reload on every edit.
+
 export type TreeItemDataProps = {
   id: string;
   label: Label;

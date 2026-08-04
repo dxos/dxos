@@ -11,7 +11,6 @@ import {
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useAtomValue } from '@effect-atom/atom-react';
-import * as Schema from 'effect/Schema';
 import React, {
   type FC,
   type KeyboardEvent,
@@ -35,6 +34,7 @@ import {
 
 import { Treegrid, TREEGRID_PARENT_OF_SEPARATOR } from '../Treegrid';
 import { DEFAULT_INDENTATION, paddingIndentation } from './helpers';
+import { type TreeData } from './tree-data';
 import { useTree } from './TreeContext';
 import { TreeDropIndicator } from './TreeDropIndicator';
 import { TreeItemHeading } from './TreeItemHeading';
@@ -58,15 +58,6 @@ const NavTreeSectionHeader = ({ label }: { label: Label }) => {
 };
 
 type TreeItemDragState = 'idle' | 'dragging' | 'preview' | 'parent-of-instruction';
-
-export const TreeDataSchema = Schema.Struct({
-  id: Schema.String,
-  path: Schema.Array(Schema.String),
-  item: Schema.Any,
-});
-
-export type TreeData = Schema.Schema.Type<typeof TreeDataSchema>;
-export const isTreeData = (data: unknown): data is TreeData => Schema.is(TreeDataSchema)(data);
 
 export type ColumnRenderer<T extends { id: string } = any> = FC<{
   item: T;
