@@ -3,8 +3,8 @@
 //
 
 import { type Scope, createContextScope } from '@radix-ui/react-context';
-import { type ComponentPropsWithRef } from 'react';
 import { type Primitive } from '@radix-ui/react-primitive';
+import { type ComponentPropsWithRef } from 'react';
 
 // Kept out of `List.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

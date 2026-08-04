@@ -13,10 +13,12 @@ import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
 import { type Side, type Size } from '../types';
+import { RESIZE_SUBJECT, resizeAttributes } from './resize-attributes';
 
 // Root font size in px, read lazily and guarded for non-DOM environments (e.g. node tests) so that
 // merely importing this module doesn't touch the DOM at load time.
 let remCache: number | undefined;
+
 const getRem = (): number => {
   if (remCache === undefined) {
     remCache =
@@ -51,12 +53,7 @@ const getNextSize = (
   );
 };
 
-const RESIZE_SUBJECT = 'data-dx-resize-subject';
 const RESIZE_SUBJECT_DRAGGING = 'data-dx-resizing';
-
-export const resizeAttributes = {
-  [RESIZE_SUBJECT]: true,
-};
 
 export type ResizeHandleProps = ThemedClassName<{
   side: Side;

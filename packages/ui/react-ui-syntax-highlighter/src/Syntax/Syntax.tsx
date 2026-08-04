@@ -12,14 +12,15 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter';
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
+import { SyntaxProvider, type SyntaxScopedProps, createSyntaxScope, useSyntaxContext } from './SyntaxContext';
 
 //
 // Context
 //
 
-const SYNTAX_NAME = 'Syntax';
+export const SYNTAX_NAME = 'Syntax';
 
-type SyntaxContextValue = {
+export type SyntaxContextValue = {
   mode: 'text' | 'json';
   // Text mode.
   source?: string;
@@ -35,11 +36,6 @@ type SyntaxContextValue = {
   depth: number;
   setDepth: (depth: number) => void;
 };
-
-type ScopedProps<P> = P & { __scopeSyntax?: Scope };
-
-const [createSyntaxContext, createSyntaxScope] = createContextScope(SYNTAX_NAME);
-const [SyntaxProvider, useSyntaxContext] = createSyntaxContext<SyntaxContextValue>(SYNTAX_NAME);
 
 //
 // Root
@@ -77,7 +73,7 @@ type SyntaxRootProps = PropsWithChildren<{
  * text mode (which would trip `Syntax.Filter`'s JSON-only guard). Mode is chosen by prop
  * presence, not value.
  */
-const SyntaxRoot = (props: ScopedProps<SyntaxRootProps>) => {
+const SyntaxRoot = (props: SyntaxScopedProps<SyntaxRootProps>) => {
   const { __scopeSyntax, children, language, source, replacer, getReplacer, defaultDepth = 0, onDepthChange } = props;
   const isJson = 'data' in props;
   const data = props.data;
@@ -160,7 +156,7 @@ type SyntaxFilterProps = ComposableProps<{
 }>;
 
 /** JSONPath filter input. Only meaningful when `Syntax.Root` is in JSON mode. */
-const SyntaxFilter = forwardRef<HTMLInputElement, ScopedProps<SyntaxFilterProps>>(
+const SyntaxFilter = forwardRef<HTMLInputElement, SyntaxScopedProps<SyntaxFilterProps>>(
   ({ __scopeSyntax, classNames, placeholder = 'JSONPath (e.g., $.graph.nodes)' }, forwardedRef) => {
     const { mode, filterText, setFilterText, filterError } = useSyntaxContext(SYNTAX_FILTER_NAME, __scopeSyntax);
     if (mode !== 'json') {
@@ -196,7 +192,7 @@ type SyntaxDepthProps = ComposableProps;
  * Numeric expansion-depth control bound to `Syntax.Root`'s depth state. Meaningful when the Root is
  * given a `getReplacer` that consumes depth (e.g. to resolve references N levels deep).
  */
-const SyntaxDepth = forwardRef<HTMLInputElement, ScopedProps<SyntaxDepthProps>>(
+const SyntaxDepth = forwardRef<HTMLInputElement, SyntaxScopedProps<SyntaxDepthProps>>(
   ({ __scopeSyntax, classNames }, forwardedRef) => {
     const { depth, setDepth } = useSyntaxContext(SYNTAX_DEPTH_NAME, __scopeSyntax);
     return (
@@ -249,7 +245,7 @@ type SyntaxCodeProps = ComposableProps<{
 }>;
 
 /** Highlighted code leaf. Reads source/data from `Syntax.Root` context. */
-const SyntaxCode = composable<HTMLDivElement, ScopedProps<SyntaxCodeProps>>(
+const SyntaxCode = composable<HTMLDivElement, SyntaxScopedProps<SyntaxCodeProps>>(
   ({ __scopeSyntax, testId, ...props }, forwardedRef) => {
     const context = useSyntaxContext(SYNTAX_CODE_NAME, __scopeSyntax);
     const merged = composableProps(props, { classNames: 'py-1 px-2 text-sm' });
@@ -288,8 +284,6 @@ export const Syntax = {
   Viewport: SyntaxViewport,
   Code: SyntaxCode,
 };
-
-export { createSyntaxScope };
 
 export type {
   SyntaxCodeProps,

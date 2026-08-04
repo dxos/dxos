@@ -10,6 +10,7 @@ import { type DxGridAxisMeta, type DxGridPosition } from '@dxos/react-ui-grid';
 
 import { type InsertRowResult } from '../../model';
 import { TableContent } from './TableContent';
+import { TableContextProvider, useTableContext } from './TableContext';
 import { TableToolbar } from './TableToolbar';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
@@ -17,16 +18,6 @@ const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };
 const emptyColumnMeta = Atom.make<DxGridAxisMeta>({ grid: {} });
 
 //
-// Context
-//
-
-type TableContextValue = {
-  /** Mutable ref populated by Content so Root can expose the controller. */
-  controllerRef: RefObject<TableController>;
-};
-
-const [TableContextProvider, useTableContext] = createContext<TableContextValue>('Table');
-
 //
 // Controller
 //
@@ -73,5 +64,3 @@ export const Table = {
 
 export type { TableController, TableRootProps };
 export type { TableExportFormat } from './TableToolbar';
-
-export { useTableContext };

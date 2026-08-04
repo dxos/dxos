@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type CheckboxProps } from '@radix-ui/react-checkbox';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import {
   type ComponentPropsWithoutRef,
@@ -10,8 +11,6 @@ import {
   type RefAttributes,
   type SetStateAction,
 } from 'react';
-
-import { type CheckboxProps } from '@radix-ui/react-checkbox';
 
 // Kept out of `ListItem.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

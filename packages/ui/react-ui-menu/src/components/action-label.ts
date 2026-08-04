@@ -3,12 +3,15 @@
 //
 
 import React from 'react';
+
 import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
 import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
+
 import { translationKey } from '#translations';
+
 import { getShortcut } from '../util';
 
 type Action = Node.Action<MenuActionProperties> | Node.ActionGroup<MenuItemChrome>;

@@ -10,6 +10,8 @@ import React, { type PropsWithChildren, useCallback, useEffect, useState } from 
 
 import { log } from '@dxos/log';
 
+import { DndRootContextProvider, useDndRootContext } from './DndRootContext';
+import { resolveDrop } from './resolve-drop';
 import { type DndContainerHandler, type DndData, type DndTileData } from './types';
 
 //
@@ -27,19 +29,10 @@ type DndDraggingTarget = {
   handler?: DndContainerHandler;
 };
 
-type DndDraggingState = {
+export type DndDraggingState = {
   source: DndDraggingSource;
   target?: DndDraggingTarget;
 };
-
-type DndRootContextValue = {
-  containers: Record<string, DndContainerHandler>;
-  addContainer: (container: DndContainerHandler) => void;
-  removeContainer: (id: string) => void;
-  dragging?: DndDraggingState;
-};
-
-const [DndRootContextProvider, useDndRootContext] = createContext<DndRootContextValue>('DndRoot');
 
 //
 // Root
@@ -48,37 +41,6 @@ const [DndRootContextProvider, useDndRootContext] = createContext<DndRootContext
 const DND_ROOT_NAME = 'Dnd.Root';
 
 type DndRootProps = PropsWithChildren;
-
-/**
- * Resolve a completed drop by routing it to the appropriate container handler(s).
- * Same handler: the target handles the drop directly (e.g., reorder within a container).
- * Different handlers: the source is asked to relinquish the object (`onTake`), and only once
- * it supplies the (possibly transformed) object does the target receive the drop.
- */
-export const resolveDrop = (
-  sourceHandler: DndContainerHandler | undefined,
-  targetHandler: DndContainerHandler | undefined,
-  source: DndTileData,
-  target?: DndData,
-): void => {
-  if (!sourceHandler || !targetHandler) {
-    return;
-  }
-
-  if (sourceHandler === targetHandler) {
-    targetHandler.onDrop?.({ source, target });
-  } else {
-    if (!sourceHandler.onTake) {
-      log.warn('invalid source', { source });
-      return;
-    }
-
-    sourceHandler.onTake({ source }, async (object) => {
-      targetHandler.onDrop?.({ source: { ...source, data: object }, target });
-      return true;
-    });
-  }
-};
 
 /**
  * Headless: provides drag-and-drop orchestration and context only, renders no DOM of its own.
@@ -279,7 +241,3 @@ const DndRoot = ({ children }: DndRootProps) => {
 DndRoot.displayName = DND_ROOT_NAME;
 
 export const Dnd = { Root: DndRoot };
-
-export { useDndRootContext };
-
-export type { DndDraggingState, DndRootContextValue, DndRootProps };

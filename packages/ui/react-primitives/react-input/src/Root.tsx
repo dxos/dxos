@@ -7,13 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
-import {
-  INPUT_NAME,
-  InputProvider,
-  type InputRootProps,
-  type InputScopedProps,
-  type Valence,
-} from './InputContext';
+import { INPUT_NAME, InputProvider, type InputRootProps, type InputScopedProps, type Valence } from './InputContext';
 
 const InputRoot = ({
   __inputScope,

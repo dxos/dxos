@@ -34,12 +34,7 @@ import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import React, { forwardRef } from 'react';
 
-import {
-  LIST_NAME,
-  ListProvider,
-  type ListProps,
-  type ListScopedProps,
-} from './ListContext';
+import { LIST_NAME, ListProvider, type ListProps, type ListScopedProps } from './ListContext';
 
 const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<ListProps>, forwardedRef) => {
   const {
@@ -81,4 +76,3 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
 List.displayName = LIST_NAME;
 
 export { List };
-

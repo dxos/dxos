@@ -21,6 +21,7 @@ import {
 import { isTruthy } from '@dxos/util';
 
 import { type ReferencesOptions } from './references';
+import { useChatExtensions } from './useChatExtensions';
 
 export interface ChatEditorController extends EditorController {}
 
@@ -34,33 +35,6 @@ export type ChatEditorProps = ThemedClassName<
     Pick<UseTextEditorProps, 'id' | 'autoFocus'> &
     Pick<BasicExtensionsOptions, 'lineWrapping' | 'placeholder'>)
 >;
-
-export const useChatExtensions = ({
-  extensions,
-  markdown = false,
-  lineWrapping = false,
-  placeholder,
-  onSubmit,
-}: ChatEditorProps) => {
-  const { themeMode } = useThemeContext();
-  return useMemo<Extension[]>(
-    () =>
-      [
-        createThemeExtensions({ themeMode, syntaxHighlighting: markdown }),
-        createBasicExtensions({ bracketMatching: false, lineWrapping, placeholder }),
-        xmlFormatting(),
-        markdown && [createMarkdownExtensions(), decorateMarkdown(), formattingKeymap()],
-        // Caller extensions (e.g. `commands()`'s completion-aware Enter binding) must precede
-        // `submit()`: both bind Enter at `Prec.highest`, and CodeMirror breaks precedence ties by
-        // extension order, so listing `submit()` first would always win and swallow the keystroke.
-        extensions,
-        submit({ onSubmit }),
-      ]
-        .flat()
-        .filter(isTruthy),
-    [themeMode, markdown, lineWrapping, placeholder, extensions, onSubmit],
-  );
-};
 
 export const ChatEditor = forwardRef<ChatEditorController, ChatEditorProps>(
   (

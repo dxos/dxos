@@ -18,7 +18,7 @@ import {
   xmlTags,
 } from '@dxos/ui-editor';
 
-import { createMarkdownStreamController } from './MarkdownStream';
+import { createMarkdownStreamController } from './create-controller';
 
 /**
  * The host↔editor seam: a host mounts the controller and publishes the context widgets call back

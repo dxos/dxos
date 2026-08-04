@@ -4,7 +4,9 @@
 
 import { type ControlPosition } from 'leaflet';
 import React from 'react';
+
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+
 import { translationKey } from '#translations';
 
 // Kept out of `Controls.tsx`: react-refresh only fast-refreshes a module whose

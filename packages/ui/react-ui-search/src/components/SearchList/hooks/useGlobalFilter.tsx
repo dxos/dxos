@@ -4,17 +4,7 @@
 
 import React, { type PropsWithChildren, createContext, useContext, useMemo } from 'react';
 
-/**
- * Type for a filter function that filters an array of objects.
- */
-export type FilterFunction<T = any> = (objects: T[]) => T[];
-
-type GlobalFilterContextType = {
-  /** The current filter function. */
-  filter?: FilterFunction;
-};
-
-const GlobalFilterContext = createContext<GlobalFilterContextType>({});
+import { type FilterFunction, GlobalFilterContext } from './GlobalFilterContext';
 
 export type GlobalFilterProviderProps = PropsWithChildren<{
   /** The filter function to apply globally. */

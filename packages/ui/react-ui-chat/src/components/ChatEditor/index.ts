@@ -5,4 +5,6 @@
 export * from './commands';
 export * from './references';
 
+export * from './useChatExtensions';
+
 export * from './ChatEditor';

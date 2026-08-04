@@ -30,7 +30,8 @@ import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } fro
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
 import { RowActionsMenu } from './RowActionsMenu';
-import { TableController, useTableContext } from './Table';
+import { TableController } from './Table';
+import { useTableContext } from './TableContext';
 
 const columnDefault = { grid: { minSize: 80, maxSize: 640 } };
 const rowDefault = { frozenRowsStart: { readonly: true, focusUnfurl: false } };

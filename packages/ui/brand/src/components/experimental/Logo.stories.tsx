@@ -12,7 +12,8 @@ import { mx } from '@dxos/ui-theme';
 
 import ident from '../../../assets/sounds/ident-2.mp3';
 import { DXOS } from '../icons';
-import { ComposerLogo as AltComposerLogo, brandColors } from './ComposerLogo';
+import { brandColors } from './brand-colors';
+import { ComposerLogo as AltComposerLogo } from './ComposerLogo';
 import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
