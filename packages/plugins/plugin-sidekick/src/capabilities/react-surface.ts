@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { lazy } from 'react';
+import { lazy } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -20,9 +20,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'sidekickDashboard',
         filter: AppSurface.object(AppSurface.Article, Sidekick.Profile),
-        component: ({ data, role }) => (
-          <SidekickArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: SidekickArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
     ),
   ),

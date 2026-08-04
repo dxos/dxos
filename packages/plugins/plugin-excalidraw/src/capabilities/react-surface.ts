@@ -3,24 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { CommentsArticle } from '#containers';
+import { meta } from '#meta';
+
+import { ExcalidrawSettingsSurface } from './ExcalidrawSettingsSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'comments',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, 'comments'),
-          AppSurface.companion(AppSurface.Article),
-        ),
-        component: ({ data }) => <CommentsArticle attendableId={data.attendableId} subject={data.companionTo} />,
+        id: 'plugin-settings',
+        filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
+        component: ExcalidrawSettingsSurface,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),

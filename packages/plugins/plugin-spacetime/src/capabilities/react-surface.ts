@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
@@ -21,9 +20,8 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Scene.Scene),
           AppSurface.object(AppSurface.Section, Scene.Scene),
         ),
-        component: ({ data, role }) => {
-          return <SpacetimeArticle role={role} subject={data.subject} attendableId={data.attendableId} />;
-        },
+        component: SpacetimeArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
     ]),
   ),

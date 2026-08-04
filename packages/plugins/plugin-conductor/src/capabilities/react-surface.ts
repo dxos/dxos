@@ -3,29 +3,28 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
+import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
-import { ZenArticle } from '#containers';
-import { Dream } from '#types';
+import { CanvasArticle } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contributes(
+      Capabilities.ReactSurface,
       Surface.create({
         id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Dream.Dream),
-          AppSurface.object(AppSurface.Section, Dream.Dream),
+          AppSurface.object(AppSurface.Article, CanvasBoard.CanvasBoard),
+          AppSurface.object(AppSurface.Section, CanvasBoard.CanvasBoard),
         ),
-        component: ({ data, role }) => (
-          <ZenArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: CanvasArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-    ]),
+    ),
   ),
 );

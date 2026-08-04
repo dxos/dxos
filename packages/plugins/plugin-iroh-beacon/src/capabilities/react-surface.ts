@@ -3,21 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { ProgressStatusIndicator } from '#components';
+import { BeaconStatusIndicator } from '#components';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'progressStatusIndicator',
+        id: 'beaconStatus',
         filter: Surface.makeFilter(AppSurface.StatusIndicator),
-        component: () => <ProgressStatusIndicator />,
+        component: BeaconStatusIndicator,
       }),
     ]),
   ),

@@ -3,28 +3,26 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Transcript } from '@dxos/types';
 
-import { TranscriptionArticle } from '#containers';
+import { BoardArticle } from '#containers';
+import { Board } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'article.transcript',
+        id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, Transcript.Transcript),
-          AppSurface.object(AppSurface.Section, Transcript.Transcript),
+          AppSurface.object(AppSurface.Article, Board.Board),
+          AppSurface.object(AppSurface.Section, Board.Board),
         ),
-        component: ({ data, role }) => (
-          <TranscriptionArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+        component: BoardArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
     ]),
   ),
