@@ -6,6 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -36,7 +38,13 @@ const DefaultStory = ({ settings }: StoryProps) => {
 const meta = {
   title: 'plugins/plugin-support/containers/SupportSettings',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
+  // The container resolves the personal space and invokes an operation, so it needs both contexts.
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withClientProvider({ createIdentity: true }),
+    withPluginManager({ plugins: corePlugins() }),
+  ],
   parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;
 

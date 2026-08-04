@@ -6,6 +6,8 @@ import { Atom } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
@@ -36,7 +38,8 @@ const meta = {
   title: 'plugins/plugin-observability/containers/ObservabilitySettings',
   component: DefaultStory,
   tags: ['settings'],
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  // The container routes edits through an operation, so it needs the invoker capability.
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ plugins: corePlugins() })],
   parameters: { layout: 'fullscreen', translations },
 } satisfies Meta<typeof DefaultStory>;
 
