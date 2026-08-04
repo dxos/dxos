@@ -20,8 +20,8 @@
    * paper on a desk rather than paper in a well (see AUDIT.md D1/D2).
    *
    * Level      Dark   Light  Roles
-   *   sunken   n-950  n-300  deck gaps, wells, scrim base
-   *   chrome   n-925  n-250  sidebars, topbar, statusbar, L0/L1/R0/R1 rails
+   *   sunken   n-950  n-300  deck gaps, wells, scrim base, L0/R0 outer rails
+   *   chrome   n-925  n-250  sidebars, topbar, statusbar, L1/R1 sidebars
    *   base     n-900  n-200  document canvas, attention zone
    *   raised   n-850  n-125  cards, side panels
    *   overlay  n-800  n-75   dialogs, sheets, drawers
@@ -46,6 +46,11 @@
 
   --color-deck-surface: var(--dx-surface-sunken);
 
+  /* Outer rails frame the panels rather than belonging to them, so they share the deck's depth and
+     read one step behind the L1/R1 sidebars they flank. */
+  --color-l0-surface: var(--dx-surface-sunken);
+  --color-r0-surface: var(--dx-surface-sunken);
+
   /* Translucent dimming layer; tracks the lowest level rather than a raw neutral. */
   --color-scrim-surface: light-dark(
     oklch(from var(--dx-surface-sunken) l c h / 0.5),
@@ -58,9 +63,7 @@
 
   --color-sidebar-surface: var(--dx-surface-chrome);
   --color-header-surface: var(--dx-surface-chrome);
-  --color-l0-surface: var(--dx-surface-chrome);
   --color-l1-surface: var(--dx-surface-chrome);
-  --color-r0-surface: var(--dx-surface-chrome);
   --color-r1-surface: var(--dx-surface-chrome);
 
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */

@@ -14,17 +14,19 @@
  */
 
 @layer dx-components {
+  /* The outer rails sit at the same depth as the deck gaps: they frame the panels rather than
+     belonging to them, so L0/R0 read one step behind the L1/R1 sidebars they flank. */
   [data-surface='sunken'],
-  .dx-deck-surface {
+  .dx-deck-surface,
+  .dx-l0-surface,
+  .dx-r0-surface {
     --surface-bg: var(--dx-surface-sunken);
   }
 
   [data-surface='chrome'],
   .dx-sidebar-surface,
   .dx-header-surface,
-  .dx-l0-surface,
   .dx-l1-surface,
-  .dx-r0-surface,
   .dx-r1-surface {
     --surface-bg: var(--dx-surface-chrome);
   }
