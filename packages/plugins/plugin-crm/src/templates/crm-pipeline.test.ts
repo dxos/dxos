@@ -26,33 +26,14 @@ describe('crm pipeline project template', () => {
     await builder.close();
   });
 
-  const setup = async () => {
-    const { db } = await builder.createDatabase({
-      types: [
-        Project.Project,
-        Instructions.Instructions,
-        Routine.Routine,
-        Trigger.Trigger,
-        Collection.Collection,
-        Mailbox.Mailbox,
-        Feed.Feed,
-        TagIndex.TagIndex,
-        Text.Text,
-      ],
-    });
-    const mailbox = db.add(Mailbox.make({ name: 'Clients' }));
-    await db.flush();
-    return { db, mailbox };
-  };
-
   test('applies only to a Mailbox subject', async ({ expect }) => {
-    const { mailbox } = await setup();
+    const { mailbox } = await setup(builder);
     expect(crmPipeline.appliesTo?.(undefined)).toBe(false);
     expect(crmPipeline.appliesTo?.(mailbox)).toBe(true);
   });
 
   test('scaffolds a feed-triggered operation-action routine inside the project', async ({ expect }) => {
-    const { db, mailbox } = await setup();
+    const { db, mailbox } = await setup(builder);
     const project = await EffectEx.runPromise(
       crmPipeline
         .scaffold({ subject: mailbox })
@@ -86,3 +67,22 @@ describe('crm pipeline project template', () => {
     expect(trigger?.concurrency).toBe(1);
   });
 });
+
+const setup = async (builder: EchoTestBuilder) => {
+  const { db } = await builder.createDatabase({
+    types: [
+      Project.Project,
+      Instructions.Instructions,
+      Routine.Routine,
+      Trigger.Trigger,
+      Collection.Collection,
+      Mailbox.Mailbox,
+      Feed.Feed,
+      TagIndex.TagIndex,
+      Text.Text,
+    ],
+  });
+  const mailbox = db.add(Mailbox.make({ name: 'Clients' }));
+  await db.flush();
+  return { db, mailbox };
+};

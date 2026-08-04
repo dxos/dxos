@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Organization, type Person } from '@dxos/types';
@@ -23,11 +23,15 @@ export type ProfileContent = {
   readonly sections: ReadonlyArray<ProfileSection>;
 };
 
-/** Finds the existing ProfileOf relation whose target is the given subject. */
+/**
+ * Finds the existing ProfileOf relation whose target is the given subject. Scoped to the subject
+ * by the query rather than filtered in memory, so the cost does not grow with the space's total
+ * profile count (ProcessMailbox calls this once per new contact).
+ */
 export const findProfileRelation = (subject: Obj.Unknown) =>
   Effect.gen(function* () {
-    const relations = yield* Database.query(Filter.type(ProfileOf.ProfileOf)).run;
-    return relations.find((relation) => Relation.getTarget(relation)?.id === subject.id);
+    const relations = yield* Database.query(Query.select(Filter.id(subject.id)).targetOf(ProfileOf.ProfileOf)).run;
+    return relations.at(0);
   });
 
 /**
@@ -64,6 +68,7 @@ export const upsertProfile = (subject: Person.Person | Organization.Organization
     return { profile: Ref.make(profile), created: true };
   });
 
+/** Renders the profile document body from the deterministic section template. */
 export const renderProfile = ({ title, summary, sections }: ProfileContent): string =>
   [
     `# ${title}`,
@@ -75,9 +80,11 @@ export const renderProfile = ({ title, summary, sections }: ProfileContent): str
     '',
   ].join('\n');
 
+/** Best available display name for a person, falling back through the label fields to an email. */
 export const personDisplayName = (person: Person.Person): string =>
   person.preferredName ?? person.fullName ?? person.nickname ?? person.emails?.[0]?.value ?? 'Unknown person';
 
+/** Builds a person's profile content, seeded from the fields already known to ECHO. */
 export const personProfileContent = (
   person: Person.Person,
   organization?: Organization.Organization,
@@ -103,6 +110,7 @@ export const personProfileContent = (
   };
 };
 
+/** Builds an organization's profile content, listing the people the space already links to it. */
 export const organizationProfileContent = (
   organization: Organization.Organization,
   people: ReadonlyArray<Person.Person>,

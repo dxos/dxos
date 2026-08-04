@@ -123,6 +123,23 @@ describe('Research operations', () => {
         expect(text.content).toContain('- Saskia Volkov');
         expect(text.content).toContain('- Francesco Bruno');
         expect(text.content).not.toContain('Unaffiliated Person');
+
+        // Re-run refreshes provenance in place: same document, no second relation, and a newer
+        // `lastResearchedAt` (the refresh path also re-runs the organization's people query).
+        const relations = yield* Database.query(Filter.type(ProfileOf.ProfileOf)).run;
+        const before = relations[0]?.lastResearchedAt;
+        // A real timer, not `Effect.sleep`: `it.effect` runs on the TestClock, which never advances
+        // on its own, while `lastResearchedAt` is stamped from the wall clock.
+        yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 2)));
+        const rerun = yield* Operation.invoke(CrmOperation.ResearchOrganization, {
+          subject: Ref.make(organization),
+        });
+        expect(rerun.created).toBe(false);
+        expect(rerun.profile.uri.toString()).toBe(profile.uri.toString());
+        const after = yield* Database.query(Filter.type(ProfileOf.ProfileOf)).run;
+        expect(after).toHaveLength(1);
+        expect(Date.parse(after[0].lastResearchedAt)).toBeGreaterThan(Date.parse(before!));
+        expect((yield* Database.query(Filter.type(Markdown.Document)).run).length).toBe(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

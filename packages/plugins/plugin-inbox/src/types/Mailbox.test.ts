@@ -88,6 +88,13 @@ describe('Mailbox extraction provenance', () => {
     // Idempotent merge: duplicate ids are not appended; new ids for the same message are.
     Mailbox.recordExtraction(mailbox, 'message-1', ['object-a', 'object-c']);
     expect(Mailbox.getExtractedObjectIds(mailbox, 'message-1')).toEqual(['object-a', 'object-c']);
+
+    // Durability is the property the fix restores: read back through a fresh query rather than the
+    // live object, so a write that never reached the document would fail here.
+    await db.flush({ indexes: true });
+    const [reloaded] = await db.query(Filter.type(Mailbox.Mailbox)).run();
+    expect(Mailbox.getExtractedObjectIds(reloaded, 'message-1')).toEqual(['object-a', 'object-c']);
+    expect(Mailbox.getExtractedObjectIds(reloaded, 'message-2')).toEqual(['object-b']);
   });
 });
 

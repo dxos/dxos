@@ -36,32 +36,6 @@ const TestLayer = AssistantTestLayer({
   disableLlmMemoization: true,
 });
 
-/**
- * Fixture mailbox: the three shared email fixtures with distinct timestamps, plus Organizations
- * for the two corporate domains so those senders pass the extraction allow-list (a sender earns a
- * Person only when its domain matches a known Organization; the freemail fixture does not).
- */
-const seedMailbox = Effect.fnUntraced(function* () {
-  const { db } = yield* Database.Service;
-  const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
-  const feed = yield* Database.load(mailbox.feed);
-  db.add(
-    Obj.make(Organization.Organization, { name: 'Ventura Advisors', website: 'https://ventura-advisors.example' }),
-  );
-  db.add(
-    Obj.make(Organization.Organization, {
-      name: 'Silverline Partners',
-      website: 'https://silverline-partners.example',
-    }),
-  );
-  const messages = EMAIL_FIXTURES.map((fixture, index) =>
-    makeEmailMessage(fixture, { created: `2026-06-0${index + 1}T00:00:00.000Z` }),
-  );
-  yield* Effect.promise(() => db.appendToFeed(feed, messages));
-  yield* Effect.promise(() => db.flush());
-  return { db, mailbox, messages };
-});
-
 describe('ProcessMailbox operation', () => {
   it.effect(
     'extracts gated contacts from new messages and advances a durable feed cursor',
@@ -171,4 +145,30 @@ describe('ProcessMailbox operation', () => {
       TestHelpers.provideTestContext,
     ),
   );
+});
+
+/**
+ * Fixture mailbox: the three shared email fixtures with distinct timestamps, plus Organizations
+ * for the two corporate domains so those senders pass the extraction allow-list (a sender earns a
+ * Person only when its domain matches a known Organization; the freemail fixture does not).
+ */
+const seedMailbox = Effect.fnUntraced(function* () {
+  const { db } = yield* Database.Service;
+  const mailbox = db.add(Mailbox.make({ name: 'Inbox' }));
+  const feed = yield* Database.load(mailbox.feed);
+  db.add(
+    Obj.make(Organization.Organization, { name: 'Ventura Advisors', website: 'https://ventura-advisors.example' }),
+  );
+  db.add(
+    Obj.make(Organization.Organization, {
+      name: 'Silverline Partners',
+      website: 'https://silverline-partners.example',
+    }),
+  );
+  const messages = EMAIL_FIXTURES.map((fixture, index) =>
+    makeEmailMessage(fixture, { created: `2026-06-0${index + 1}T00:00:00.000Z` }),
+  );
+  yield* Effect.promise(() => db.appendToFeed(feed, messages));
+  yield* Effect.promise(() => db.flush());
+  return { db, mailbox, messages };
 });
