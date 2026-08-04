@@ -41,11 +41,16 @@ default state. That single gap is why "be terse" never survived.
 
 - [x] **Emit in every state** — `scripts/mode.sh context` now prints the
       `RESPONSE RULES` block in both modes; only the length clause branches.
-- [x] **Fold in the state-independent invariants** — open every reply with the
-      worktree and the instruction/skill files read that turn; number every
-      question and option set; lead with the answer. `AGENTS.md` previously
-      required the worktree line in the _first_ reply only, so it decayed
-      immediately — hence the recurring "which worktree are you in?".
+- [x] **Fold in the state-independent invariants** — number every question and
+      option set; lead with the answer.
+- [x] **Reverted: the worktree line is first-reply only** (user, 2026-08-04).
+      Phase 2 originally promoted it to every reply, reasoning that a first-reply
+      rule decays. Wrong lever: it made every reply open with a restatement, and
+      it duplicated a rule `~/.claude/hooks/session-context.sh` already delivers
+      on `SessionStart` ("First reply must state: this branch, this toplevel
+      path, and the guidance files in play"). Removed from the per-turn block; no
+      turn-counter needed. **Rule learned:** per-turn injection is for rules that
+      govern every reply — a once-per-session rule belongs on `SessionStart`.
 - [x] **Refresh `AGENTS.md`** — replaced the first-reply clause with a
       "Responding to the user" section, canonical, noting the per-turn
       re-injection.

@@ -31,10 +31,10 @@ here, and on the Claude harness `.claude/hooks/mode.sh` re-injects them on every
 prompt — a rule stated only in an always-loaded file is diluted to nothing once
 a large skill loads mid-session (see `.claude/README.md` §A).
 
-- **Open with the worktree and the files you read.** One line naming the
-  worktree directory you are in and the instruction/skill files you actually
-  consulted this turn. **Every reply**, not just the first of a session —
-  otherwise it decays immediately and the user has to ask.
+- **Open the session with the worktree and the files you read.** One line naming
+  the worktree directory you are in and the instruction/skill files in play.
+  **First reply only** — repeating it every turn is noise, and the `SessionStart`
+  hook already delivers the branch and toplevel deterministically.
 - **Number every question and every set of options.** Never an unnumbered
   a-or-b, never a bare open question.
 - **Lead with the answer.** No preamble, no restatement of the request, no

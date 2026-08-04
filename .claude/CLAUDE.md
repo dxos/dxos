@@ -14,9 +14,10 @@
 - A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) parses the sentinel, sets
   the mode, and injects the `RESPONSE RULES` block into **every** prompt. State
   lives in the untracked `.claude/.mode`; `normal` is the default when absent.
-- The block is emitted in both modes — the invariants (worktree + files-read
-  line, numbered options, lead with the answer) are state-independent and only
-  the length clause varies. Follow it whenever it is present.
+- The block is emitted in both modes — the invariants (numbered options, lead
+  with the answer) are state-independent and only the length clause varies.
+  Follow it whenever it is present. The worktree + files-read line is NOT in it:
+  that is a first-reply rule, carried by the `SessionStart` hook.
 - The rules themselves are canonical in `AGENTS.md` → "Responding to the user";
   the machinery is documented in `.claude/README.md`.
 

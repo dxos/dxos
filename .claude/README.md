@@ -158,13 +158,21 @@ absent). `concise` aliases `terse`; `natural`, `default` and `off` alias
 value cannot wedge the machine — anything that is not `terse` means `normal`.
 
 **`mode.sh context` emits in BOTH states.** This is the point of the mechanism,
-not an implementation detail: the invariants it carries — open with the worktree
-and the instruction files you read, number every question, lead with the answer —
-are state-independent, and only the length clause varies (`terse` caps a reply at 8
-lines; `normal` sets no budget). A mode that stays silent in its default state
-delivers nothing on the turns that make up most of a session, which is exactly
-how the earlier version failed. The rules themselves are canonical in
-[`AGENTS.md`](../AGENTS.md) → "Responding to the user".
+not an implementation detail: the invariants it carries — number every question,
+lead with the answer — are state-independent, and only the length clause varies
+(`terse` caps a reply at 8 lines; `normal` sets no budget). A mode that stays
+silent in its default state delivers nothing on the turns that make up most of a
+session, which is exactly how the earlier version failed. The rules themselves
+are canonical in [`AGENTS.md`](../AGENTS.md) → "Responding to the user".
+
+**Only rules that genuinely govern _every_ reply belong here.** The
+worktree/files-read line is a **first-reply** rule and is deliberately absent: it
+is already carried by `~/.claude/hooks/session-context.sh` on `SessionStart`,
+whose output ends "First reply must state: this branch, this toplevel path, and
+the guidance files in play". Carrying it per turn as well made every reply open
+with a restatement — noise, and duplicated state the two channels could disagree
+about. Per-turn injection is a strong channel; putting a once-per-session rule on
+it is a misuse.
 
 > **Caveat — keep the grammar unambiguous.** The hook greps raw message text and
 > cannot tell a command from a mention of one, so the verb is mandatory: only the
