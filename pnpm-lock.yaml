@@ -3489,15 +3489,6 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0(vite@8.1.4(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
 
-  packages/apps/composer-dxos-org:
-    devDependencies:
-      '@cloudflare/workers-types':
-        specifier: 'catalog:'
-        version: 5.20260719.1
-      wrangler:
-        specifier: '>=4.112.0'
-        version: 4.112.0(@cloudflare/workers-types@5.20260719.1)
-
   packages/apps/tasks:
     dependencies:
       '@dxos/config':
