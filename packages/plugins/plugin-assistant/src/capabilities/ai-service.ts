@@ -13,10 +13,10 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 
-import type { AssistantPluginOptions } from '#types';
+import { AssistantOptions } from '#types';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (options: AssistantPluginOptions | void) {
+  Effect.fnUntraced(function* (options: AssistantOptions.AssistantPluginOptions | void) {
     const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
 
     // TODO(dmaretskyi): Extract function to reduce them.

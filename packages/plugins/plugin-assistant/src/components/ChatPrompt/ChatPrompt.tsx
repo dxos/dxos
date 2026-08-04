@@ -25,9 +25,9 @@ import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
-import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
+import * as AssistantPreset from '../../types/AssistantPreset';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
@@ -50,7 +50,7 @@ export type ChatPromptProps = Merge<
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
-  ChatPresetProps
+  AssistantPreset.ChatPresetProps
 >;
 
 export const ChatPrompt = ({

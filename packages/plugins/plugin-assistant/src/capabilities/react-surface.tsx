@@ -35,7 +35,9 @@ import {
   TriggerStatus,
 } from '#containers';
 import { ASSISTANT_COMPANION_VARIANT, ASSISTANT_DIALOG, meta } from '#meta';
-import { type Assistant, ChatSurface } from '#types';
+import { type Assistant } from '#types';
+
+import * as ChatSurface from '../types/ChatSurface';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -157,7 +159,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'integrationPrompt',
-        filter: Surface.makeFilter(ChatSurface, (data) => data.role === 'integration-prompt'),
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: ({ data }) => {
           // `data.data` is model-supplied JSON (untyped); narrow `service` before use.
           const service = typeof data.data?.service === 'string' ? data.data.service : undefined;

@@ -16,14 +16,16 @@ import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveSkills, useContextObjects, useFilteredTypes, useSkillHandlers, useSkills } from '#hooks';
 import { meta } from '#meta';
-import { Assistant, type ChatPresetProps } from '#types';
+import { Assistant } from '#types';
+
+import * as AssistantPreset from '../../types/AssistantPreset';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
   toolbar: 'p-0! gap-0! border-t border-separator',
 };
 
-export type ChatOptionsProps = ChatPresetProps & {
+export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
   chat?: ChatModule.Chat;
   db: Database.Database;
   context: AiContext.Binder;

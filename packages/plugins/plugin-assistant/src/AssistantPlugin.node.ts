@@ -27,9 +27,9 @@ import {
   Toolkit,
 } from '#capabilities';
 import { meta } from '#meta';
-import { type AssistantPluginOptions } from '#types';
+import { AssistantOptions } from '#types';
 
-export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
+export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOptions | void>(meta)
   .pipe(
     Plugin.addModule(AppGraphBuilder),
     Plugin.addModule(SkillDefinition),

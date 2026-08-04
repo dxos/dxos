@@ -27,12 +27,12 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type AssistantPluginOptions } from '#types';
+import { AssistantOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
-export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
+export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOptions | void>(meta)
   .pipe(
     Plugin.addModule(AppGraphBuilder),
     Plugin.addModule(SkillDefinition),
