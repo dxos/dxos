@@ -124,6 +124,7 @@
   .dx-toolbar-surface,
   .dx-group-surface,
   .dx-input-surface,
+  .dx-input,
   .dx-main-sidebar {
     --color-hover-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.08) c h);
     --color-hover-surface-subtle: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.02) c h);
