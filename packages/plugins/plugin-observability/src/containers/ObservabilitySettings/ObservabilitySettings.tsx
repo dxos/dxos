@@ -4,25 +4,33 @@
 
 import React from 'react';
 
+import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Settings } from '#types';
+import { ObservabilityOperation, Settings } from '#types';
 
-export type ObservabilitySettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type ObservabilitySettingsProps = AppSurface.SettingsData;
 
-export const ObservabilitySettings = ({ settings, onSettingsChange }: ObservabilitySettingsProps) => {
+/**
+ * Edits are routed through {@link ObservabilityOperation.Toggle} rather than written to the atom
+ * directly, so enabling/disabling observability takes effect on the running services.
+ */
+export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { settings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { invokePromise } = useOperationInvoker();
 
   return (
     <Form.Root
       schema={Settings.Settings}
       values={settings}
       variant='settings'
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) =>
+        void invokePromise(ObservabilityOperation.Toggle, { state: { ...settings, ...values }.enabled })
+      }
     >
       <Form.Viewport scroll>
         <Form.Content>

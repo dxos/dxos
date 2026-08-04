@@ -13,16 +13,18 @@ export type FormBehavior = { showDescription: boolean };
 const formStyles = tv({
   slots: {
     viewport: '',
-    content: '',
+    // Bottom padding on the body, so the last field never sits flush against its host's edge
+    // (a form in a card, a dialog body, a scrolled panel all need it).
+    content: 'pb-form-padding',
     section: 'flex flex-col py-form-section-gap first:pt-0',
-    group: 'flex flex-col gap-3 p-trim-md border border-separator rounded-sm',
+    group: 'flex flex-col gap-trim-md p-trim-md border border-separator rounded-sm',
     sectionHeader: '',
     sectionTitle: 'text-lg',
     sectionDescription: 'text-description',
     fieldSet: '',
     field: '',
     // Columns: label (fills) → optional `labelEnd` readout → error icon (or its spacer) → optional trailing `button`.
-    fieldLabel: 'h-8 grid grid-cols-[1fr_auto_auto_auto] items-center select-none',
+    fieldLabel: 'min-h-(--dx-control) grid grid-cols-[1fr_auto_auto_auto] items-center select-none',
     fieldLabelText: '',
     fieldDescription: 'text-description',
     fieldControl: '',
@@ -32,7 +34,7 @@ const formStyles = tv({
     // Standalone submit row (full-width primary button).
     submit: 'flex w-full pt-form-padding',
     // Collapsible field-set body: indented column of sub-fields.
-    fieldSetBody: 'flex flex-col px-2 pb-2',
+    fieldSetBody: 'flex flex-col px-trim-sm pb-trim-sm',
     // Bordered container wrapping a collapsible nested group, plus its top spacing.
     fieldSetBox: 'border border-subdued-separator rounded-sm',
     fieldSetBoxOuter: '',
@@ -50,16 +52,19 @@ const formStyles = tv({
         sectionDescription: 'px-trim-md',
         // No top padding: the section gap already separates the field set from the title above it.
         fieldSet: 'flex flex-col gap-trim-md',
+        // Nested groups render their sub-fields through `fieldSetBody`, so it needs the same gap as
+        // `fieldSet` — otherwise fields inside a group sit flush while their top-level siblings don't.
+        fieldSetBody: 'flex flex-col gap-trim-md px-trim-sm pb-trim-sm',
         field: mx(
           'grid',
           'grid-cols-1 [grid-template-areas:"header""description""control""validation"]',
           'md:grid-cols-2 md:[grid-template-areas:"header_header""description_control""validation_validation"]',
-          'gap-x-trim-lg gap-y-0 p-trim-md border border-input-separator rounded-md',
+          'gap-x-trim-xl gap-y-0 p-trim-md border border-input-separator rounded-md',
         ),
         fieldLabel: '[grid-area:header]',
         fieldLabelText: 'text-base-fg text-lg',
-        fieldDescription: '[grid-area:description] pt-1 text-description',
-        fieldControl: '[grid-area:control] flex justify-end items-start pt-3 md:pt-0',
+        fieldDescription: '[grid-area:description] pt-trim-xs text-description',
+        fieldControl: '[grid-area:control] flex justify-end items-start pt-trim-md md:pt-0',
         fieldValidation: '[grid-area:validation]',
       },
     },

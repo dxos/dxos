@@ -174,10 +174,10 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   onSelect?: (id: string, event: MouseEvent) => void;
   /**
    * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
-   * viewport) to render the grid in a plain block instead of a nested scroll container — the grid is
-   * then sized by `dx-column` rather than by a `ScrollArea.Root`, which `Masonry.Content` provides
-   * and which is therefore not needed. Nesting scroll containers also risks collapsing the measured
-   * width to the scrollbar gutter, which would suppress the grid entirely (see the width gate below).
+   * viewport) to render the grid in a plain full-width block instead of a nested scroll container —
+   * the `ScrollArea.Root` that `Masonry.Content` provides is then not needed. Nesting scroll
+   * containers also risks collapsing the measured width to the scrollbar gutter, which would
+   * suppress the grid entirely (see the width gate below).
    * @default true
    */
   scroll?: boolean;
@@ -333,13 +333,13 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       </>
     );
 
-    // `dx-column` (not `dx-expander`) in the non-scrolling case: it gives the definite inline size
-    // the width gate needs (`w-full min-w-0`) without claiming the block axis, which would fight the
-    // surrounding flow — the grid's height comes from the computed layout.
+    // Not `dx-expander` in the non-scrolling case: the width gate needs a definite inline size
+    // (`w-full min-w-0`) without claiming the block axis, which would fight the surrounding flow —
+    // the grid's height comes from the computed layout.
     return scroll ? (
       <ScrollArea.Viewport ref={viewportRef}>{grid}</ScrollArea.Viewport>
     ) : (
-      <div className='dx-column' ref={viewportRef}>
+      <div className='flex-1 w-full min-w-0' ref={viewportRef}>
         {grid}
       </div>
     );

@@ -13,7 +13,7 @@ export type StatusStyleProps = {
 const root: ComponentFunction<StatusStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
     'h-1 relative rounded-full overflow-hidden',
-    variant === 'main-bottom' ? 'w-full block' : 'inline-20 inline-block bg-base-surface',
+    variant === 'main-bottom' ? 'w-full block' : 'inline-block bg-base-surface',
     ...etc,
   );
 

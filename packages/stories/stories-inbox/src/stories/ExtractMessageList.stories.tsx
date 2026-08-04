@@ -152,7 +152,7 @@ const DefaultStory = () => {
           </Toolbar.Button>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content data-testid='counts' className='dx-container grid grid-cols-2 gap-2 p-2 text-sm'>
+      <Panel.Content data-testid='counts' classNames='dx-container grid grid-cols-2 gap-2 p-2 text-sm'>
         <div className='overflow-auto'>
           <JsonHighlighter
             data={{

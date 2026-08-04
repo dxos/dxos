@@ -112,7 +112,7 @@ const BasicStory = () => {
   const selected = CATEGORIES.find((row) => row.id === selectedId);
   return (
     <Panel.Root>
-      <Panel.Content asChild className='pt-trim-md'>
+      <Panel.Content asChild classNames='pt-trim-md'>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <MasterDetail<Row>

@@ -98,7 +98,7 @@ const DefaultStory = ({ text }: StoryProps) => {
           />
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='grid overflow-hidden'>
+      <Panel.Content classNames='grid overflow-hidden'>
         <div ref={parentRef} className='dx-expander' />
       </Panel.Content>
     </Panel.Root>

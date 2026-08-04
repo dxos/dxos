@@ -76,7 +76,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
       <Panel.Root
         {...attentionAttrs}
         role='article'
-        classNames='w-[30rem] shrink-0 h-full bg-base-surface border-e border-separator'
+        classNames='w-[30rem] shrink-0 h-full dx-base-surface border-e border-separator'
       >
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Content classNames='grid'>
@@ -88,7 +88,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
             <Input.Root>
               <Input.Label>Level 1 (group)</Input.Label>
             </Input.Root>
-            <div className={mx(container, 'bg-base-surface')}>
+            <div className={mx(container, 'dx-base-surface')}>
               <Input.Root>
                 <Input.Label>Level 2 (base)</Input.Label>
                 <Input.TextArea placeholder='Enter text' />
