@@ -46,7 +46,7 @@ sequenceDiagram
     Note over Boot: performance.mark('boot:html-parsed')
     Boot->>Boot: render skeleton (no plugin code yet)
 
-    rect rgb(230, 240, 255)
+    rect rgba(80, 140, 255, 0.12)
     Note over App,ML: Startup wave — the critical path
     Boot->>App: mount
     App->>PM: make({ pluginLoader, plugins, enabled })
@@ -73,7 +73,7 @@ sequenceDiagram
     PM-->>App: ready
     App->>Browser: render shell (first paint)
 
-    rect rgb(235, 250, 235)
+    rect rgba(60, 190, 120, 0.12)
     Note over App,ML: Idle wave — after paint
     Sch-)Sch: whenIdle, then activate(Idle) — forked by start()
     Note over Sch: owned by the manager, not the host:<br/>no React effect, and headless hosts get it too
@@ -81,7 +81,7 @@ sequenceDiagram
     Note over ML: graph builders, handler sets, settings —<br/>contributions, not feature code
     end
 
-    rect rgb(255, 245, 230)
+    rect rgba(255, 160, 50, 0.12)
     Note over User,ML: Demand waves — driven by what renders
     User->>Browser: opens an item
     Browser->>App: Surface role=article mounts
