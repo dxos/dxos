@@ -8,7 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Database, Type } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
@@ -22,7 +22,7 @@ export default Capability.makeModule(
         if (!query?.uri) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.profile.key),
+              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
               label: 'Inbox settings',
               type: 'settings',
             },

@@ -17,6 +17,7 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
+    'ObservabilityOptions': 'src/types/ObservabilityOptions.ts',
     'ObservabilityCapabilities': 'src/types/ObservabilityCapabilities.ts',
     'ObservabilityEvents': 'src/types/ObservabilityEvents.ts',
     'ObservabilityOperation': 'src/types/ObservabilityOperation.ts',

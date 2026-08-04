@@ -11,18 +11,18 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as Operation from '@dxos/compute/Operation';
 
-import { SETTINGS_ID, getPluginRegistrySectionPath } from '../types';
+import * as SettingsPath from '../types/SettingsPath';
 
 const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry> =
   SettingsOperation.OpenPluginRegistry.pipe(
     Operation.withHandler(() =>
       Effect.gen(function* () {
         const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-        yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(SETTINGS_ID) });
+        yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(SettingsPath.SETTINGS_ID) });
         // Await (don't fork): SwitchWorkspace selects the workspace's first child, so a forked Open
         // races/drops before its deck update applies. Awaiting guarantees the registry is selected.
         yield* invoke(LayoutOperation.Open, {
-          subject: [getPluginRegistrySectionPath()],
+          subject: [SettingsPath.getPluginRegistrySectionPath()],
         });
       }),
     ),

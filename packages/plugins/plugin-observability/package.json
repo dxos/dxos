@@ -61,16 +61,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./ObservabilityCapabilities": {
       "source": "./src/types/ObservabilityCapabilities.ts",
       "types": "./dist/types/src/types/ObservabilityCapabilities.d.ts",
@@ -86,12 +76,27 @@
       "types": "./dist/types/src/types/ObservabilityOperation.d.ts",
       "import": "./dist/lib/ObservabilityOperation.mjs"
     },
+    "./ObservabilityOptions": {
+      "source": "./src/types/ObservabilityOptions.ts",
+      "types": "./dist/types/src/types/ObservabilityOptions.d.ts",
+      "import": "./dist/lib/ObservabilityOptions.mjs"
+    },
     "./Settings": {
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -104,6 +109,9 @@
       ],
       "ObservabilityOperation": [
         "dist/types/src/types/ObservabilityOperation.d.ts"
+      ],
+      "ObservabilityOptions": [
+        "dist/types/src/types/ObservabilityOptions.d.ts"
       ],
       "Settings": [
         "dist/types/src/types/Settings.d.ts"

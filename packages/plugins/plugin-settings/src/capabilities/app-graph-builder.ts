@@ -16,7 +16,7 @@ import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
+import * as SettingsPath from '../types/SettingsPath';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -52,7 +52,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             Node.make({
-              id: SETTINGS_ID,
+              id: SettingsPath.SETTINGS_ID,
               type: meta.profile.key,
               properties: {
                 label: ['plugin-settings.label', { ns: meta.profile.key }],
@@ -67,7 +67,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'plugins',
         url: { key: 'plugin', kind: 'item', path: [] },
-        match: NodeMatcher.whenId(GraphPath.getSpacePath(SETTINGS_ID)),
+        match: NodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);
@@ -90,7 +90,7 @@ export default Capability.makeModule(
               )
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
                 Node.make({
-                  id: `${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
+                  id: `${SettingsPath.SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
                   type: 'category',
                   data: settings,
                   properties: {

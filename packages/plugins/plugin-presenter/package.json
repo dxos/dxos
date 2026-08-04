@@ -67,16 +67,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
+    "./Presenter": {
+      "source": "./src/types/Presenter.ts",
+      "types": "./dist/types/src/types/Presenter.d.ts",
+      "import": "./dist/lib/Presenter.mjs"
     },
     "./PresenterCapabilities": {
       "source": "./src/types/PresenterCapabilities.ts",
@@ -98,11 +92,25 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./package.json": "./package.json"
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "Presenter": [
+        "dist/types/src/types/Presenter.d.ts"
+      ],
       "PresenterCapabilities": [
         "dist/types/src/types/PresenterCapabilities.d.ts"
       ],

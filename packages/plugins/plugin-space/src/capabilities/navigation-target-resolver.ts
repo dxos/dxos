@@ -10,7 +10,7 @@ import * as AppCaps from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Database, Entity } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -26,7 +26,7 @@ export default Capability.makeModule(
         if (!query?.uri) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.profile.key),
+              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
               label: 'Spaces settings',
               type: 'settings',
             },

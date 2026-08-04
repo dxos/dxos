@@ -8,7 +8,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ObservabilityCapabilities, ObservabilityEvents, type ObservabilityPluginOptions } from '#types';
+import { ObservabilityCapabilities, ObservabilityEvents } from '#types';
+
+import * as ObservabilityOptions from '../types/ObservabilityOptions';
 
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
@@ -47,7 +49,7 @@ export const Namespace = Capability.inlineModule(
   'namespace',
   {
     provides: [ObservabilityCapabilities.Namespace],
-    props: (options: ObservabilityPluginOptions) => options.namespace,
+    props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
   (namespace) => Effect.succeed([Capability.contribute(ObservabilityCapabilities.Namespace, namespace)]),
 );
@@ -55,7 +57,7 @@ export const Observability = Capability.inlineModule(
   'observability',
   {
     provides: [ObservabilityCapabilities.Observability],
-    props: (options: ObservabilityPluginOptions) => options.observability,
+    props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
   (observability) =>
     Effect.gen(function* () {
@@ -75,7 +77,7 @@ export const ObservabilityState = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry],
     provides: [ObservabilityCapabilities.State],
-    props: ({ namespace }: ObservabilityPluginOptions) => ({ namespace }),
+    props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
   },
   () => import('./state'),
 );

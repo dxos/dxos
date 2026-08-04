@@ -16,6 +16,7 @@ export default defineConfig({
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     types: 'src/types/index.ts',
+    SettingsPath: 'src/types/SettingsPath.ts',
   },
   jsx: 'react',
   test: { node: true },

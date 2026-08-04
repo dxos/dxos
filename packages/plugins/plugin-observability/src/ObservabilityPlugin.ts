@@ -20,18 +20,18 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ObservabilityCapabilities, type ObservabilityPluginOptions } from '#types';
+import { ObservabilityCapabilities } from '#types';
 
-export type { ObservabilityPluginOptions } from '#types';
+import * as ObservabilityOptions from './types/ObservabilityOptions';
 
-export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
+export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(Observability),
   Plugin.addModule(ObservabilitySettings),
   Plugin.addModule(ObservabilityState),
   Plugin.addModule(Namespace),
-  Plugin.addModule(({ downloadLogs }: ObservabilityPluginOptions) => ({
+  Plugin.addModule(({ downloadLogs }: ObservabilityOptions.ObservabilityPluginOptions) => ({
     id: 'log-downloader',
     requires: [],
     provides: downloadLogs !== undefined ? [ObservabilityCapabilities.LogDownloader] : [],

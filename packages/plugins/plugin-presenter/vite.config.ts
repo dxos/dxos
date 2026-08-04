@@ -18,6 +18,7 @@ export default defineConfig({
     'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
+    'Presenter': 'src/types/Presenter.ts',
     'testing': 'src/testing.ts',
     'PresenterCapabilities': 'src/types/PresenterCapabilities.ts',
     'PresenterEvents': 'src/types/PresenterEvents.ts',
