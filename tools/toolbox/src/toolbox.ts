@@ -221,7 +221,6 @@ export class Toolbox {
     const apps = [
       '@dxos/composer-app',
       '@dxos/composer-crx',
-      '@dxos/composer-dxos-org',
       '@dxos/docs',
       '@dxos/todomvc',
       'tasks',
