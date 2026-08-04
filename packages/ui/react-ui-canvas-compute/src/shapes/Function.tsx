@@ -6,7 +6,6 @@ import React, { useCallback, useRef } from 'react';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
-import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { Filter, Ref } from '@dxos/echo';
 import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { parseId } from '@dxos/keys';

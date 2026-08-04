@@ -9,12 +9,16 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppAnnotation, type AppCapabilities, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';

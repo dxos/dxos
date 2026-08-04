@@ -8,7 +8,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Routine, Skill } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
+import * as Skill from '@dxos/compute/Skill';
 
 import { RoutineCard } from '#components';
 import { RoutineArticle, RoutineCompanion, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';

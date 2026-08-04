@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { ActivationEvents, Capabilities } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -18,7 +19,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';

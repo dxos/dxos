@@ -9,7 +9,8 @@ import * as Option from 'effect/Option';
 import React, { type Ref } from 'react';
 
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppAnnotation, type AppCapabilities } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';

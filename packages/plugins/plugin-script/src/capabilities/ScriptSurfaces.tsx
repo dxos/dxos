@@ -7,8 +7,8 @@
 import React from 'react';
 
 import { useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { type Script } from '@dxos/compute';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as Script from '@dxos/compute/Script';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';

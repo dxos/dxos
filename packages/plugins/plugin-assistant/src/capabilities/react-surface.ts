@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, Chat } from '@dxos/assistant-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';

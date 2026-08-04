@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 import { fixtureExists, fixturePath, fixtureVersions, readFixture } from '@dxos/fixtures';
 import { log } from '@dxos/log';
 import { Pipeline, Stage } from '@dxos/pipeline';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { TagIndex } from '@dxos/schema';
 import { ContentBlock, Message } from '@dxos/types';
 

@@ -6,7 +6,9 @@ import * as Option from 'effect/Option';
 import React from 'react';
 
 import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

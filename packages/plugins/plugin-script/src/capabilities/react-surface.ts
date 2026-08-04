@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Script } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
 
 import { DeploymentDialog, ScriptProperties, TestContainer } from '#containers';
 import { meta } from '#meta';

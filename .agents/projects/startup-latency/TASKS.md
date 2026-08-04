@@ -7,6 +7,35 @@ feature they belong to), plus both CI budgets — `composer-app:check-boot-budge
 entries / 4.75 MB, today 20 / 4.44 MB) and `composer-app:check-startup-budget` (runtime, median
 modules-at-ready over 5 warm-cold repeats, budget 300, today 291)._
 
+## Open follow-ups
+
+The whole list, in priority order. Everything below this section is the record of how the work
+got here — checkpoints, measurements and findings, not work items.
+
+- [ ] **Post-merge check sweep** — the only item blocking PR #12415. Detail under
+      [Later / standing](#later--standing).
+- [ ] **Wire `check-boot-budget` into CI** — highest leverage. Three boot-graph fixes have already
+      been silently undone by unrelated refactors, because each is a property of an import EDGE and
+      nothing fails when a refactor relocates it. Detail under
+      [Later / standing](#later--standing).
+- [ ] **Flip the default `activatesOn` from `Startup` to `Idle`** (own PR, user-directed) — plus the
+      mandatory second half, `#isBaselineWave` becoming `Startup ∪ Idle`. Detail under [Later / standing](#later--standing).
+- [ ] **Collapse `ActivationSpec` to one mode** (own PR, user-directed) — dependency mode is a wave
+      with no name. Detail under [Later / standing](#later--standing).
+- [ ] **Move the `Idle` fire out of React into the activation scheduler** — one lifecycle event with
+      two firing sites is the symptom. Detail under [Later / standing](#later--standing).
+- [ ] **Eager-core UI laziness** — `ResetDialog` drags ~2 MB for a fatal-error dialog; sweep `main`'s
+      static closure for the same shape. Detail under
+      [Wave 3](#wave-3--eager-core-ui-laziness-audit).
+
+Deliberately NOT tracked as tasks: the measurement-discipline items (boot waterfall, lab TBT,
+time-to-first-meaningful-action, RUM, per-commit trend line) are one blocked thing, not five — they
+need a fixed CI runner that does not exist, so they live under
+[Phase 3](#phase-3--measurement-discipline--activation-optimization-directives-2026-07-31) as a
+single item. Storybook's demand-gating fidelity gap, the cold `Client.initialize()` cost, and the
+warm-reload race are **findings** — constraints to respect when reading results, with no action
+attached.
+
 ## Critical path of navToReady (warm-cold, in-container; attributed 2026-07-31)
 
 All ~250 chunks are modulepreloaded at ~32 ms — network is NOT on the path; the path is
@@ -47,8 +76,9 @@ Instrumentation (build first, keep afterwards):
       build emits per-chunk × per-package stats; node-side per-URL accounting in `trackNetwork`
       (the browser resource-timing buffer caps at 250 entries — never use it for totals);
       joined by `composer-app/scripts/analyze-startup.mjs`
-- [ ] Per-commit startup trend line — BENCHMARKS.md appends per local run; CI wiring (one row per
-      merge, fixed runner, **enabled-tier recorded per row**) still to be designed
+- Per-commit startup trend line — BENCHMARKS.md appends per local run; CI wiring (one row per
+  merge, fixed runner, **enabled-tier recorded per row**) still to be designed. Blocked on the same
+  fixed runner as everything else in Phase 3; tracked there, not here.
 
 Questions the instrumentation must answer (exit criteria in DESIGN.md):
 
@@ -227,28 +257,30 @@ definition pays only @effect/platform (tree-shaken via compute barrel) + date-fn
 - [x] Drop the static `export { XOperationHandlerSet } from './operations'` from `plugin.ts`
       stubs — 49 stubs stripped; CLI/stories import via new `./operations` subpath on the 10
       consumed plugins (magazine's `plugin.workerd.ts` re-export kept for the edge host)
-- [ ] Promote `audit-opdefs.py` to a CI budget check (fails on new heavy externals / closure
-      growth) — prerequisite hardening for the `handles` declaration field
-- [ ] **Non-enabled plugins load metadata only.** Verify the invariant: a registered-but-disabled
-      plugin contributes nothing to the boot fetch beyond its meta + `Plugin.lazy` code pointer —
-      at startup or ever. Plugin definitions themselves must be lightweight (metadata + module
-      pointers), same discipline as operation definitions. Known violation: all 97 `plugin.ts`
-      stubs statically re-export `XOperationHandlerSet from './operations'` (plugin-defs.tsx
-      imports every stub, so every registered plugin's operations graph enters `main`'s closure
-      whether enabled or not). Add a measured check: chunk-graph closure of each `plugin.ts`
-      stub ≈ meta only.
+- Promote `audit-opdefs.py` to a CI budget check (fails on new heavy externals / closure
+  growth) — prerequisite hardening for the `handles` declaration field. Unscheduled.
+- **Non-enabled plugins load metadata only.** Verify the invariant: a registered-but-disabled
+  plugin contributes nothing to the boot fetch beyond its meta + `Plugin.lazy` code pointer —
+  at startup or ever. Plugin definitions themselves must be lightweight (metadata + module
+  pointers), same discipline as operation definitions. Known violation: all 97 `plugin.ts`
+  stubs statically re-export `XOperationHandlerSet from './operations'` (plugin-defs.tsx
+  imports every stub, so every registered plugin's operations graph enters `main`'s closure
+  whether enabled or not). Add a measured check: chunk-graph closure of each `plugin.ts`
+  stub ≈ meta only.
 
 ### Wave 3 — eager-core UI laziness audit
 
 Components loaded before `main()` that should be lazy. Known from the chunk graph:
 
-- [ ] `ResetDialog` lazy (`main.tsx:32` static import drags `react-ui-form` → emoji-mart 479 KB,
-      motion, mdast/mermaid, ajv/zod — ~2 MB for a fatal-error dialog)
-- [ ] Sweep the rest of `main`'s 9 MB / 874-chunk static closure for same-shape offenders
-      (audit method: chunk-stats static closure of the entry, biggest facades first)
-- [ ] fast-check in production: `@effect/ai`'s `LanguageModel` → `Arbitrary` → fast-check
-      (298 KB) — investigate whether the Arbitrary path is test-only upstream, can be
-      externalized/stubbed in the build, or needs an upstream issue
+- **Eager-core UI laziness.** Three instances of one shape — a boot-reachable module pulling a
+  heavy facade it barely uses:
+  - `ResetDialog` lazy (`main.tsx:32` static import drags `react-ui-form` → emoji-mart 479 KB,
+    motion, mdast/mermaid, ajv/zod — ~2 MB for a fatal-error dialog)
+  - Sweep the rest of `main`'s 9 MB / 874-chunk static closure for same-shape offenders
+    (audit method: chunk-stats static closure of the entry, biggest facades first)
+  - fast-check in production: `@effect/ai`'s `LanguageModel` → `Arbitrary` → fast-check
+    (298 KB) — investigate whether the Arbitrary path is test-only upstream, can be
+    externalized/stubbed in the build, or needs an upstream issue
 
 ## Phase 3 — measurement discipline + activation optimization (directives 2026-07-31)
 
@@ -269,16 +301,19 @@ scenario (fresh identity) stays as a secondary diagnostic for testing flows. All
 numbers, lever comparisons, and CI thresholds key on warm-cold; its
 `milestone:first-editor-interactive` is the time-to-first-meaningful-action anchor.
 
-- [ ] Boot waterfall: stitch navigationStart → ready from existing marks + new milestones
-      (identity created, default space ready, ECHO available, first plank interactive); emit
-      from `collectStartupReport` as one timeline — decomposes the un-itemized ~5 s outside
-      the activation window
-- [ ] Lab TBT: longtask observer in the harness (sum blockage >50 ms between FCP and ready);
-      the INP-risk proxy and the direct measure of fan-out main-thread damage
-- [ ] Time-to-first-meaningful-action marks per entry path (returning: editor accepts input;
-      first-run: identity + home actionable)
-- [ ] RUM prerequisite: extend observability `composer.startup` with the waterfall marks +
-      web-vitals (LCP/INP/CLS) so field p75 exists before claiming wins
+- **Measurement discipline — one item, blocked on a fixed CI runner.** All five pieces below
+  share the same blocker, so they are tracked together rather than as five open tasks:
+  - Boot waterfall: stitch navigationStart → ready from existing marks + new milestones
+    (identity created, default space ready, ECHO available, first plank interactive); emit
+    from `collectStartupReport` as one timeline — decomposes the un-itemized ~5 s outside
+    the activation window
+  - Lab TBT: longtask observer in the harness (sum blockage >50 ms between FCP and ready);
+    the INP-risk proxy and the direct measure of fan-out main-thread damage
+  - Time-to-first-meaningful-action marks per entry path (returning: editor accepts input;
+    first-run: identity + home actionable)
+  - RUM prerequisite: extend observability `composer.startup` with the waterfall marks +
+    web-vitals (LCP/INP/CLS) so field p75 exists before claiming wins
+  - Per-commit startup trend line, tier-aware (the Phase 1 leftover)
 - [x] CI budget gate = our harness (not Lighthouse). Landed as two tasks, split by what a
       shared runner can actually decide: - `composer-app:check-boot-budget` — static. Entry + modulepreload closure of the built
       index.html; 30 entries / 4.75 MB (today 20 / 4.44 MB). Bytes catch leaks (margin is
@@ -294,21 +329,23 @@ numbers, lever comparisons, and CI thresholds key on warm-cold; its
       283 baseline was a single sample. It is still the only metric whose signal clears the
       in-container noise, and the only one that can see this class of regression at all —
       moving a module onto the startup pass changes nothing statically.
-- [ ] Cold `Client.initialize()` cost — proto-guard's `withSnapshot` bounded it at 2s and this
-      branch pushed past it, because the HALO adapters became construction-safe and their setup
-      moved out of the (untimed) constructor into `initialize()`. Measured in-container:
-      construct 3ms, first `initialize()` 4688ms, second (warm) 123ms. The bound was raised to
-      20s as a hang guard; the underlying cost is the `_open()` long pole already noted in the
-      critical path above, now fully inside the timed window. Composer forks `initialize()` so
-      its paint is unaffected, but node consumers await it directly.
-- [ ] **TODO (blocked: no fixed runner).** Gate on `profilerTotal` / `navToReady` / lab TBT.
-      Today they are recorded per run and trended, never failed on: repeats of one unchanged
-      commit spanned 3828-7330 ms profilerTotal (1.9x) and 6851-10576 ms navToReady purely from
-      container contention, while the same branch measured +/-1.7% on real hardware — the noise
-      is environmental, so a shared runner can never gate them. Needs a self-hosted or
-      consistently-sized runner first; revisit the modules-at-ready threshold at the same time.
-      Also still open from the original item: definition-closure budget (audit-opdefs), alert
-      thresholds below the pass line, and p75-style reporting over N runs.
+
+**Finding, not a task.** Cold `Client.initialize()` cost — proto-guard's `withSnapshot` bounded it at 2s and this
+branch pushed past it, because the HALO adapters became construction-safe and their setup
+moved out of the (untimed) constructor into `initialize()`. Measured in-container:
+construct 3ms, first `initialize()` 4688ms, second (warm) 123ms. The bound was raised to
+20s as a hang guard; the underlying cost is the `_open()` long pole already noted in the
+critical path above, now fully inside the timed window. Composer forks `initialize()` so
+its paint is unaffected, but node consumers await it directly.
+
+**Blocked, folded into the measurement item above.** Gate on `profilerTotal` / `navToReady` / lab TBT.
+Today they are recorded per run and trended, never failed on: repeats of one unchanged
+commit spanned 3828-7330 ms profilerTotal (1.9x) and 6851-10576 ms navToReady purely from
+container contention, while the same branch measured +/-1.7% on real hardware — the noise
+is environmental, so a shared runner can never gate them. Needs a self-hosted or
+consistently-sized runner first; revisit the modules-at-ready threshold at the same time.
+Also still open from the original item: definition-closure budget (audit-opdefs), alert
+thresholds below the pass line, and p75-style reporting over N runs.
 
 Activation optimization (each lever measured individually via harness + TBT):
 
@@ -331,9 +368,9 @@ Activation optimization (each lever measured individually via harness + TBT):
 - [x] Lever 4 — bounded wave concurrency + singleton-providers-first (2026-07-31): cap 16.
       Client's chunk import 2050 → 184 ms (uncontended slot); wall clock neutral in-container
       (Client `_open` absorbs the slack) but avoids import/parse oversubscription.
-- [ ] Lever 5 — SDK `_open()` split: 3.2 s of worker spawn + HALO identity + ECHO open
-      (marks `client.initialize:*` now on the waterfall); needs intra-SDK attribution next
-      (services host open vs identity load vs echo open).
+- Lever 5 (unscheduled, SDK-side) — `_open()` split: 3.2 s of worker spawn + HALO identity + ECHO open
+  (marks `client.initialize:*` now on the waterfall); needs intra-SDK attribution next
+  (services host open vs identity load vs echo open).
 - [x] Lever 6/PoC — DeferredStartup coarse gate (2026-07-31, user-directed): dependency-mode
       modules of non-critical plugins (`deferStartup` predicate in composer main.tsx; 14-plugin
       keep set) park until a DeferredStartup wave fired at host idle post-ready. Plugins defer
@@ -424,31 +461,33 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
 
 ### Later / standing
 
-- [ ] Critical-chain membership fixes (DESIGN.md appendix A P0): `observability.ClientReady` async body,
-      `ProcessManager` activate audit — can land independently of the waves
-- [ ] appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
-- [ ] Tier-aware per-commit trend line (Phase 1 leftover)
-- [ ] Warm-reload race root-cause — still gates any scheduling change (round barriers)
-- [ ] **Move the `Idle` fire out of React into the activation scheduler.** `useApp.tsx:322-339`
-      expresses an activation-lifecycle event as a render-lifecycle effect: startup fiber settles
-      → `setState(ready)` → re-render → `useEffect` → `requestIdleCallback` → fire. The manager
-      already knows when the startup pass settled. Two further problems: the `cancelIdleCallback`
-      cleanup only helps before the callback runs, so the effect looks unmount-safe and is not;
-      and `activateDemandGatedModules` must fire `Idle` independently because a headless harness
-      has no `useApp` — one lifecycle event with two firing sites is the symptom.
+Unscheduled — real but nobody is picking these up next, so they are not open tasks:
+
+- Critical-chain membership fixes (DESIGN.md appendix A P0): `observability.ClientReady` async body,
+  `ProcessManager` activate audit — can land independently of the waves
+- appGraphBuilder post-shell event — deliberately deferred until wave 1's win is measured
+- Warm-reload race root-cause — a **constraint**: it still gates any scheduling change that
+  introduces round barriers
+- **Move the `Idle` fire out of React into the activation scheduler.** `useApp.tsx:322-339`
+  expresses an activation-lifecycle event as a render-lifecycle effect: startup fiber settles
+  → `setState(ready)` → re-render → `useEffect` → `requestIdleCallback` → fire. The manager
+  already knows when the startup pass settled. Two further problems: the `cancelIdleCallback`
+  cleanup only helps before the callback runs, so the effect looks unmount-safe and is not;
+  and `activateDemandGatedModules` must fire `Idle` independently because a headless harness
+  has no `useApp` — one lifecycle event with two firing sites is the symptom.
   - Fire it from the scheduler when the startup pass settles. `useApp` then drops the effect
     entirely and the testing helper drops its `Idle` element, becoming purely "fire the starts".
   - The reason it landed in React — `requestIdleCallback` is browser-only, the manager also
     builds for node/workerd — is the same constraint `yieldToHost` solved in `module-loader.ts`:
     module-level Effect, feature-tested, `MessageChannel`/`setTimeout` fallback, `Effect.void`
     where neither exists, injected via the constructor with a default. Reuse that shape.
-- [ ] **Storybook cannot catch demand-gating regressions (fidelity gap, recorded 2026-08-03).**
-      `withPluginManager` fires every core+enabled plugin's start event unconditionally via
-      `activateConvergedModules`, because a story mounts exactly one surface and honouring real
-      demand would activate almost nothing. Consequence: a module start-gated behind a surface
-      nobody renders still passes in storybook but would fail in the app. Only the runtime
-      `modules-at-ready` budget covers that case — do not read green stories as evidence the
-      gating is correct.
+- **Finding, not a task — storybook cannot catch demand-gating regressions (recorded 2026-08-03).**
+  `withPluginManager` fires every core+enabled plugin's start event unconditionally via
+  `activateConvergedModules`, because a story mounts exactly one surface and honouring real
+  demand would activate almost nothing. Consequence: a module start-gated behind a surface
+  nobody renders still passes in storybook but would fail in the app. Only the runtime
+  `modules-at-ready` budget covers that case — do not read green stories as evidence the
+  gating is correct.
   - Note: `useApp` now fires `Idle` itself, so the `Idle` element of `activateConvergedModules`
     is redundant on the decorator path (idempotent, not a bug). Its real remaining job there is
     the per-plugin start events; simplify when fixing the race.
@@ -474,32 +513,32 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
       barrel, not the shipped one. 35 modules across 17 plugins were gated in `index.ts` and ungated
       in `node.ts`; realigned. Browser builds were always correct. Browser-runner follow-up is a TODO
       on `createTestApp`.
-- [ ] **Wire `check-boot-budget` into CI (2026-08-04, highest-leverage item left).** Three separate
-      boot-graph fixes have now been silently undone by unrelated refactors: `services/index.ts`
-      (the in-process host, -810 KB), the base merge reverting `DatePicker` / `TranslationsProvider`
-      to the `date-fns` barrels, and base's split-out `TranslationsContext` carrying the
-      `date-fns/locale` barrel with it (~1 MB, caught only because the split stranded an unused
-      import and tripped `no-unused-imports`). These fixes are properties of an IMPORT EDGE, so any
-      refactor that relocates the edge drops them and nothing fails — not the build, not the tests.
-      `check-boot-budget` is the only check that sees this class and CI does not run it. The Check
-      workflow's moon targets are `:lint :build`, `:check-module-structure`, `:test :test-browser`,
-      `:test-storybook`, `:test-workerd`, `:bundle`, `:e2e`, `cli:smoke` — adding a step after
-      `Bundle` is a small diff.
+- **Wire `check-boot-budget` into CI (2026-08-04, highest-leverage item left).** Three separate
+  boot-graph fixes have now been silently undone by unrelated refactors: `services/index.ts`
+  (the in-process host, -810 KB), the base merge reverting `DatePicker` / `TranslationsProvider`
+  to the `date-fns` barrels, and base's split-out `TranslationsContext` carrying the
+  `date-fns/locale` barrel with it (~1 MB, caught only because the split stranded an unused
+  import and tripped `no-unused-imports`). These fixes are properties of an IMPORT EDGE, so any
+  refactor that relocates the edge drops them and nothing fails — not the build, not the tests.
+  `check-boot-budget` is the only check that sees this class and CI does not run it. The Check
+  workflow's moon targets are `:lint :build`, `:check-module-structure`, `:test :test-browser`,
+  `:test-storybook`, `:test-workerd`, `:bundle`, `:e2e`, `cli:smoke` — adding a step after
+  `Bundle` is a small diff.
   - `DX_TRACE_BOOT_LEAK=1 moon run composer-app:bundle` prints the import path from the entry to any
     package that must not be boot-reachable; pair it with the budget failure message.
-- [ ] **Post-merge check sweep (2026-08-04).** Green: `oxfmt --check`, `:check-module-structure`,
-      full `:build`. Outstanding: `:lint` (re-run after the react-ui locale fix), `:test` (5 client
-      failures under triage — `client-service.test.ts` "should initialize" plus four
-      worker/coordinator + leader-lock tests; none reference the `@dxos/client/local` change, so
-      likely environment or pre-existing), `:test-browser`, `:test-storybook`, `:test-workerd`,
-      `:bundle` + `check-boot-budget`, and e2e. NOTE: no CI run has ever executed on this branch's
-      head — every result so far is local.
-- [ ] **Flip the default `activatesOn` from `Startup` to `Idle` (own PR, user-directed 2026-08-04).**
-      Today omitting `activatesOn` normalizes to `Startup`, so forgetting the annotation costs TTI
-      and blocks the `useApp` ready gate — startup is the dumping ground. Invert it: anything that
-      must run at boot states `activatesOn: ActivationEvents.Startup` explicitly, everything else
-      lands in the idle sweep. User's framing, accepted: idle becoming the dumping ground is the
-      cheaper failure (post-paint responsiveness) than startup being one.
+- **Post-merge check sweep (2026-08-04).** Green: `oxfmt --check`, `:check-module-structure`,
+  full `:build`. Outstanding: `:lint` (re-run after the react-ui locale fix), `:test` (5 client
+  failures under triage — `client-service.test.ts` "should initialize" plus four
+  worker/coordinator + leader-lock tests; none reference the `@dxos/client/local` change, so
+  likely environment or pre-existing), `:test-browser`, `:test-storybook`, `:test-workerd`,
+  `:bundle` + `check-boot-budget`, and e2e. NOTE: no CI run has ever executed on this branch's
+  head — every result so far is local.
+- **Flip the default `activatesOn` from `Startup` to `Idle` (own PR, user-directed 2026-08-04).**
+  Today omitting `activatesOn` normalizes to `Startup`, so forgetting the annotation costs TTI
+  and blocks the `useApp` ready gate — startup is the dumping ground. Invert it: anything that
+  must run at boot states `activatesOn: ActivationEvents.Startup` explicitly, everything else
+  lands in the idle sweep. User's framing, accepted: idle becoming the dumping ground is the
+  cheaper failure (post-paint responsiveness) than startup being one.
   - **Mandatory second half — move the baseline wave with the default.** `#isBaselineWave`
     (`activation-scheduler.ts:595`) returns true iff a module's events include `Startup`, and
     baseline is what makes a module pullable by `#pullDependencyProviders` (`:856`) ahead of its
@@ -519,14 +558,14 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
     a much larger idle wave is a long-task burst immediately after first paint.
   - Expect a broad harness sweep: tests that fire `Startup` and assert `getActive()` will see far
     less and need an explicit `Idle` fire (already hit in `ExcalidrawPlugin.test.ts`).
-- [ ] **Collapse `ActivationSpec` to one mode (own PR, user-directed 2026-08-03).** Dependency
-      mode is a wave with no name: Startup for the no-`requires` modules, "whatever wave my
-      providers landed in" for the rest. Replace with a single `activatesOn` defaulting to
-      `Startup`, and make pull **wave-scoped** — firing E activates E's modules and lets them
-      pull required providers that are in E or an already-fired wave. This subsumes the mode
-      filter in `#pullDependencyProviders` precisely (mutually-exclusive providers gated on
-      different events can no longer collide) and makes wave membership declared, not derived
-      from the capability graph.
+- **Collapse `ActivationSpec` to one mode (own PR, user-directed 2026-08-03).** Dependency
+  mode is a wave with no name: Startup for the no-`requires` modules, "whatever wave my
+  providers landed in" for the rest. Replace with a single `activatesOn` defaulting to
+  `Startup`, and make pull **wave-scoped** — firing E activates E's modules and lets them
+  pull required providers that are in E or an already-fired wave. This subsumes the mode
+  filter in `#pullDependencyProviders` precisely (mutually-exclusive providers gated on
+  different events can no longer collide) and makes wave membership declared, not derived
+  from the capability graph.
   - Blocker/first step: **count the chain-riders** — modules with no `activatesOn` whose
     `requires` is satisfied only by an event-mode provider. Those activate inside that event's
     wave today and would break under a `Startup` default; they need re-homing. 194 explicit

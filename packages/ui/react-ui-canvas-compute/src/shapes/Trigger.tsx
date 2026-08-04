@@ -5,7 +5,6 @@
 import React, { useEffect } from 'react';
 
 import * as Trigger from '@dxos/compute/Trigger';
-import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/Obj';

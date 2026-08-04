@@ -3,11 +3,7 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));

@@ -7,12 +7,13 @@
 import React, { type ComponentType, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer, SpaceInfoPanel, SpaceListPanel, TestingPanel } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ScriptOperation } from '@dxos/plugin-script';
+import * as ScriptOperation from '@dxos/plugin-script/ScriptOperation';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 
