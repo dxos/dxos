@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 
 import { GoogleMail } from '../../../../apis';
+import { GoogleApiError } from '../../../../errors';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../../services';
 import { type SyncStreamConfig } from '../../../../types';
 import { type AttachmentMetadata } from '../mapper';
@@ -88,10 +89,24 @@ export const fetchMessages = (
             .getMessage(config.userId, messageId)
             .pipe(Effect.withSpan('google-sync.fetch.message'));
           config.onRetrieved?.();
-          return message;
-        }),
+          return Option.some(message);
+        }).pipe(
+          // A message deleted between its id being enumerated (listed, or logged in `history.list`) and
+          // this fetch 404s permanently, so failing the run wedges the mailbox: the delta token only
+          // advances on a clean run, leaving every following run to re-read the same history page and die
+          // on the same id. Drop just that message; any other error still fails the run so the durable
+          // retry re-fetches it rather than stranding it once the cursor advances.
+          Effect.catchIf(
+            (error) => error instanceof GoogleApiError && error.code === 404,
+            (error) => {
+              log.warn('gmail sync: message not found, skipping', { messageId, error });
+              return Effect.succeed(Option.none<GoogleMail.Message>());
+            },
+          ),
+        ),
       { concurrency: GOOGLE_SYNC_CONFIG.fetchConcurrency },
     ),
+    Stream.filterMap(Function.identity),
   );
 };
 
