@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import {
