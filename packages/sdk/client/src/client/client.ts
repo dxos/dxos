@@ -198,12 +198,15 @@ export class Client {
   }
 
   /**
-   * Resolves once `initialize()` has completed. Never rejects — initialization errors surface
-   * from the `initialize()` call itself; consumers of a forked init (e.g. suspending React
-   * hooks) only need the completion signal.
+   * Resolves once `initialize()` has completed. Waits indefinitely unless `timeout` is given, in
+   * which case it rejects with `TimeoutError` — opt-in because most consumers only want the
+   * completion signal, and bounding the session is the caller's job (see the app entry point).
+   *
+   * This is the completion signal, not the error channel: a failing `initialize()` rejects at its
+   * own call site, and this promise stays pending.
    */
-  waitUntilInitialized(): Promise<void> {
-    return this._initializedTrigger.wait();
+  waitUntilInitialized({ timeout }: { timeout?: number } = {}): Promise<void> {
+    return this._initializedTrigger.wait({ timeout });
   }
 
   /**

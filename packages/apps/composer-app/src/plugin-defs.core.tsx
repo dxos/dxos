@@ -41,6 +41,8 @@ export type State = {
 };
 
 export type PluginConfig = State & {
+  /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
+  onFatalError?: (error: unknown) => void;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -61,6 +63,7 @@ export const getCorePlugins = ({
   services,
   observability,
   logStore,
+  onFatalError,
   isLocal,
   isTauri,
   isPopover,
@@ -76,6 +79,9 @@ export const getCorePlugins = ({
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
+      // The forked init is outside the render tree, so a failure or a stalled handshake reaches
+      // the user only if the entry point raises it — React never sees one.
+      onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
       onReset: ({ target }) =>
         Effect.sync(() => {
           localStorage.clear();

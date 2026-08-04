@@ -37,6 +37,23 @@ export type ClientPluginOptions = ClientOptions & {
   onClientInitialized?: (params: { client: Client }) => Effect.Effect<void, Error | never, Capability.Service | never>;
 
   /**
+   * Called when the forked `client.initialize()` fails or exceeds `initializeTimeout`.
+   *
+   * The initialization runs outside the render tree, so nothing surfaces a failure on its own —
+   * consumers suspended on the client simply keep waiting. Apps supply this to raise it as a
+   * fatal error (Composer shows the reset dialog).
+   */
+  onClientInitializationError?: (params: {
+    error: unknown;
+  }) => Effect.Effect<void, Error | never, Capability.Service | never>;
+
+  /**
+   * Bounds the wait on `client.initialize()` before `onClientInitializationError` fires.
+   * @default INITIALIZE_TIMEOUT
+   */
+  initializeTimeout?: number;
+
+  /**
    * Called when spaces are ready.
    * Plugin context is provided so capabilities are accessible.
    */

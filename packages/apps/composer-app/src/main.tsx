@@ -11,7 +11,7 @@ import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode, Suspense, lazy, useCallback } from 'react';
+import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -415,12 +415,19 @@ const main = async () => {
   profiler?.mark('plugins:start');
 
   const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
+  // The forked `client.initialize()` runs outside the render tree: a failure or a stalled worker
+  // handshake reaches no error boundary, leaving suspended consumers spinning. Plugins raise it
+  // here, and `Main` swaps the app for the same fatal dialog the app boundary would have shown.
+  let raiseFatalError: (error: unknown) => void = (error) =>
+    log.error('client initialization failed before render', { error: String(error) });
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
     services,
     observability,
     logStore,
+    onFatalError: (error) => raiseFatalError(error),
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isLocal: !isTauri && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
@@ -522,6 +529,11 @@ const main = async () => {
   };
 
   const Main = () => {
+    const [fatalError, setFatalError] = useState<Error>();
+    useEffect(() => {
+      raiseFatalError = (error) => setFatalError(error instanceof Error ? error : new Error(String(error)));
+    }, []);
+
     const App = useApp({
       fallback: Fallback,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
@@ -540,7 +552,9 @@ const main = async () => {
       debounce: 200,
     });
 
-    return <App />;
+    // Rendered instead of `App`, not thrown: `Main` sits above the app-level error boundary, so a
+    // throw here would escape React entirely and blank the page.
+    return fatalError ? <Fallback error={fatalError} /> : <App />;
   };
 
   const root = document.getElementById('root')!;

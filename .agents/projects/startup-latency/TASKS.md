@@ -861,3 +861,47 @@ surface-demand gating. Four items were genuinely new; three are now landed:
 Also noted for review, not changed: `plugin-spotlight` is the one handler set still using
 `OperationHandlerSet.make(...)` with inline bodies rather than `keyed`/`async` (Tauri spotlight
 window entry, not composer boot). #12438 fixes it via `OperationHandlerSet.async`.
+
+## Checkpoint 2026-08-04 (base merge; e2e/harness split; fatal client-init path)
+
+### Landed
+
+1. **Base merge** (`09cdc7c2f6`) — 96 conflicts from
+   `claude/resume-app-framework-activation-ycp7vv` (plugin-outliner -> plugin-tasks takeover,
+   `Plan` removal, space merge-preview). Post-merge fallout was one class: files taken from base
+   still imported the deleted `types` barrels. Also unwrapped base's inner
+   `export namespace ReviewCapabilities` (46 call sites read `X.X.member`) so the module is the
+   namespace, matching every other types module.
+2. **Startup harnesses off `e2e`** (`adc88e2e84`) — `playwright.config.ts` now `testIgnore`s
+   `startup.spec.ts` + `dev-startup.spec.ts`; the production harness gets
+   `playwright-startup.config.ts` and an `e2e-startup` moon task, mirroring the `e2e-dev` split.
+   They record benchmark rows, so nothing should gate on them.
+3. **Boot chunking extracted** (`adc88e2e84`) — `vite.config.ts` -> `src/vite/boot-chunking.ts`
+   behind a `bootChunking({ entry })` factory (memoized partition is instance state, not a
+   module-level binding). Rolldown's context narrowed to a `ModuleGraph` structural type so tests
+   drive it with a fake graph: 16 tests covering the DAG invariant, SCC cohesion, edge collapsing
+   through uncaptured modules, bucket sizing, id normalization, per-build memoization. Behaviour
+   unchanged (4253 modules -> 12 chunks). Carries a `TODO(wittjosiah): Factor out?` for moving it
+   to a shared vite-plugin package once a second app needs it.
+4. **Fatal client-init path restored** — the suspenseful-client change had made a failed or
+   stalled `initialize()` unobservable: the fork's `catchAll` only logged, `waitUntilInitialized()`
+   never settled, and no error boundary was ever reached. **Measured** React's behaviour on a
+   rejected thrown promise: ~90 re-renders in 500ms, boundary never reached, still suspended —
+   React retries and the retry re-suspends, so a per-wait timeout could never surface anything.
+   Therefore the bound lives at the top level, not in React:
+   - `Client.waitUntilInitialized({ timeout })` — opt-in, no default (indefinite otherwise).
+   - `plugin-client`'s fork wraps `initialize()` in `Effect.timeout(initializeTimeout)`
+     (default `INITIALIZE_TIMEOUT` = 30s, new in `client-protocol/timeouts.ts`) and calls the new
+     `onClientInitializationError` option.
+   - `composer-app` threads `onFatalError` through `PluginConfig`; `Main` renders `Fallback`
+     (the reset dialog) instead of `App`. Rendered, not thrown: `Main` sits ABOVE the app-level
+     error boundary, so a throw there escapes React and blanks the page.
+
+### Open
+
+- [ ] **Operation handler sets should all work the same** — keying is the default behaviour, not
+  a separate conditional util. Collapse `OperationHandlerSet.make`/`keyed`/`async` so there is one
+  shape. (`plugin-spotlight` is the last `make(...)`-with-inline-bodies holdout.)
+- [ ] **Expand the subpath lint across all packages** — enforce a consistent namespaced API
+  surface repo-wide, not just the plugins already migrated. Remainder blocked on the
+  export-namespace -> module-file refactor for plugin-space/client/graph.

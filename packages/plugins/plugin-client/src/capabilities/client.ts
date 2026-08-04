@@ -8,6 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { Client, ClientService } from '@dxos/client';
+import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import { EffectEx } from '@dxos/effect';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
@@ -22,7 +23,13 @@ type ClientCapabilityOptions = Omit<
 >;
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* ({ onClientInitialized, onSpacesReady, ...options }: ClientCapabilityOptions) {
+  Effect.fnUntraced(function* ({
+    onClientInitialized,
+    onClientInitializationError,
+    onSpacesReady,
+    initializeTimeout = INITIALIZE_TIMEOUT,
+    ...options
+  }: ClientCapabilityOptions) {
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
 
@@ -40,7 +47,9 @@ export default Capability.makeModule(
     // `client.waitUntilInitialized()`. Everything touching `client.halo`/`client.services`/
     // `client.spaces` (initialized-only getters) lives in this continuation.
     yield* Effect.gen(function* () {
-      yield* Effect.tryPromise(() => client.initialize());
+      // Bounded so a handshake that never completes becomes a failure the app can surface,
+      // rather than leaving every suspended consumer waiting on a promise that never settles.
+      yield* Effect.tryPromise(() => client.initialize()).pipe(Effect.timeout(initializeTimeout));
       performance.mark('milestone:client-initialize:end');
       log('client.initialize() returned successfully');
       if (onClientInitialized) {
@@ -101,9 +110,14 @@ export default Capability.makeModule(
       });
     }).pipe(
       // A failed client init is fatal to the session: every dependent surface stays suspended.
-      // Surface it loudly rather than leaving a silent hang.
+      // The fork is outside the render tree, so the app has to be told — React never sees it.
       Effect.catchAll((error) =>
-        Effect.sync(() => log.error('client initialization failed', { error: String(error) })),
+        Effect.gen(function* () {
+          log.error('client initialization failed', { error: String(error) });
+          if (onClientInitializationError) {
+            yield* onClientInitializationError({ error });
+          }
+        }),
       ),
       Effect.provideService(Capability.Service, capabilityManager),
       Effect.provideService(Plugin.Service, pluginManager),
