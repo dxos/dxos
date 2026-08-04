@@ -48,12 +48,15 @@
 
   /*
    * Outer rails frame the panels rather than belonging to them, so they read one step behind the
-   * L1/R1 sidebars they flank. They carry their own light-dark pair rather than aliasing a level:
-   * dark keeps the deck's depth, while light sits higher, because near white the same ladder step
-   * reads much heavier than it does near black.
+   * L1/R1 sidebars they flank. They carry their own light-dark pair rather than aliasing a level,
+   * because near white the same ladder step reads much heavier than it does near black.
+   *
+   * Dark chrome sits ABOVE the canvas: rail 875, sidebar 850, against a 900 canvas. The rail cannot
+   * take 900 even though that is the even step — it abuts the content area whenever the sidebar is
+   * closed, so matching the canvas would erase the edge between them.
    */
-  --color-l0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
-  --color-r0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
+  --color-l0-surface: light-dark(oklch(0.935 0.001 190), var(--color-neutral-875));
+  --color-r0-surface: light-dark(oklch(0.935 0.001 190), var(--color-neutral-875));
 
   /* Translucent dimming layer; tracks the lowest level rather than a raw neutral. */
   --color-scrim-surface: light-dark(
@@ -67,8 +70,10 @@
 
   --color-sidebar-surface: var(--dx-surface-chrome);
   --color-header-surface: var(--dx-surface-chrome);
-  --color-l1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
-  --color-r1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
+  /* Dark is neutral-850 — the ramp step nearest #1D1D1D (L 0.237 vs 0.231) — and no longer aliases
+     `chrome`, since the sidebars now read above the canvas rather than behind it. */
+  --color-l1-surface: light-dark(oklch(0.955 0.001 190), var(--color-neutral-850));
+  --color-r1-surface: light-dark(oklch(0.955 0.001 190), var(--color-neutral-850));
 
   /* Sidebar body text. Default sits one ramp stop below the current/selected emphasis. */
   --color-sidebar-fg: light-dark(var(--color-neutral-700), var(--color-neutral-250));
