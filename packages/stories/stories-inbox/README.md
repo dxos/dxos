@@ -64,6 +64,26 @@ moon run fixtures:pull -- inbox
 
 That takes the newest version. Pin one with `--at 20260804-181500`, and pull a teammate's with `--user <name>` (only decryptable if they pushed it to your key). `moon run fixtures:list` shows local versions, newest first.
 
+### Sanity check
+
+Before writing anything against a fresh archive, confirm the transfer worked and see what is in it:
+
+```bash
+moon run fixtures:test
+```
+
+It parses the newest `inbox` fixture, prints a summary — path, available versions, message count, distinct senders, date range — and asserts the fields every mail pipeline reads (`created`, `sender.email`, at least one text block). Running it first separates *"the transfer worked"* from *"my pipeline is wrong"*, which are easy to confuse when a test over a real corpus misbehaves.
+
+```
+fixture:  …/testing/fixtures/inbox-20260804-185124.json
+versions: 20260804-185124
+messages: 384
+senders:  134
+range:    2026-07-05T05:05:06.000Z … 2026-08-04T12:23:26.000Z
+```
+
+With no fixture present it skips and prints how to pull one, so it is safe to run anywhere — including CI, where it always skips. Point it at another fixture with `DX_FIXTURE_NAME=<name>`.
+
 Resolve it by name from any package with `@dxos/fixtures` (node-only):
 
 ```ts

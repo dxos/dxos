@@ -2,10 +2,20 @@ layer: library
 language: typescript
 tags:
   - ts-compile
+  - ts-test
 
-# Fixture transfer is a developer action against a private R2 bucket, never part of a build: the
-# tasks are `local` (no caching, no CI) and take their arguments after `--`.
 tasks:
+  # Sanity check over a pulled fixture; skips (rather than fails) wherever none is present.
+  # Uncached: the fixture lives outside the project (and outside git), so moon cannot see it change —
+  # a cached pass would report a corpus that is no longer there.
+  test:
+    options:
+      cache: false
+      mergeOutputs: replace
+    outputs: []
+
+  # Transfer is a developer action against a private R2 bucket, never part of a build: uncached,
+  # never in CI, arguments after `--`.
   push:
     command: node bin/fixtures.mjs push
     options:
