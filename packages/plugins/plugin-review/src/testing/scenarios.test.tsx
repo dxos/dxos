@@ -7,6 +7,8 @@ import * as Context from 'effect/Context';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { setupPluginManager } from '@dxos/app-framework/testing';
+import { PluginManagerProvider } from '@dxos/app-framework/ui';
 import { Space as HaloSpace, Identity } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { HaloProvider } from '@dxos/halo-react';
@@ -44,19 +46,24 @@ describe('review scenarios (headless)', () => {
     await client.destroy();
   });
 
-  // Mirrors plugin-client's ReactContext: ClientProvider plus the HALO services adapter, so
-  // `useIdentity` resolves inside the binding hook.
+  // Mirrors plugin-client's ReactContext: the plugin manager the binding hooks read capabilities
+  // from, ClientProvider, plus the HALO services adapter so `useIdentity` resolves inside the hook.
+  // No plugins are registered — the review-render-policy capability stays unregistered, so the
+  // scenarios run against the default policy.
+  const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <ClientProvider client={client}>
-      <HaloProvider
-        services={Context.empty().pipe(
-          Context.add(Identity.Service, makeIdentityService(client)),
-          Context.add(HaloSpace.Service, makeSpaceService(client)),
-        )}
-      >
-        <ViewStateProvider>{children}</ViewStateProvider>
-      </HaloProvider>
-    </ClientProvider>
+    <PluginManagerProvider value={pluginManager}>
+      <ClientProvider client={client}>
+        <HaloProvider
+          services={Context.empty().pipe(
+            Context.add(Identity.Service, makeIdentityService(client)),
+            Context.add(HaloSpace.Service, makeSpaceService(client)),
+          )}
+        >
+          <ViewStateProvider>{children}</ViewStateProvider>
+        </HaloProvider>
+      </ClientProvider>
+    </PluginManagerProvider>
   );
 
   for (const scenario of reviewScenarios) {

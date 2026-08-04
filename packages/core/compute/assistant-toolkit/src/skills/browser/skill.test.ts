@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { MemoizedAiService } from '@dxos/ai/testing';
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -18,7 +19,6 @@ import { log } from '@dxos/log';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
-import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Person } from '@dxos/types';
 
 import { DatabaseHandlers, DatabaseSkill } from '../database';

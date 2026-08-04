@@ -48,6 +48,21 @@ export type LayoutOptions = {
  * the start. The base left/right perimeter is owned by the scroll container (via
  * its `--gutter`); the layout adds any centring offset plus the top/bottom perimeter.
  */
+/**
+ * Width every column gets, before any tile is placed. Independent of the tiles themselves — which is
+ * what lets a caller key cached tile heights by the width they were measured at.
+ */
+export const getColumnWidth = ({
+  columnCount,
+  containerWidth,
+  gapPx,
+  maxColumnWidthPx,
+}: Pick<LayoutOptions, 'columnCount' | 'containerWidth' | 'gapPx' | 'maxColumnWidthPx'>): number => {
+  const columns = Math.max(1, Math.floor(columnCount));
+  const fillColumnWidth = (containerWidth - (columns - 1) * gapPx) / columns;
+  return maxColumnWidthPx && maxColumnWidthPx > 0 ? Math.min(fillColumnWidth, maxColumnWidthPx) : fillColumnWidth;
+};
+
 export const layout = ({
   heights,
   columnCount,
@@ -57,9 +72,7 @@ export const layout = ({
   centered = true,
 }: LayoutOptions): LayoutResult => {
   const columns = Math.max(1, Math.floor(columnCount));
-  const fillColumnWidth = (containerWidth - (columns - 1) * gapPx) / columns;
-  const columnWidth =
-    maxColumnWidthPx && maxColumnWidthPx > 0 ? Math.min(fillColumnWidth, maxColumnWidthPx) : fillColumnWidth;
+  const columnWidth = getColumnWidth({ columnCount, containerWidth, gapPx, maxColumnWidthPx });
 
   // Centre the (possibly capped) columns within the container, unless start-aligned.
   const usedWidth = columns * columnWidth + (columns - 1) * gapPx;

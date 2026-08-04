@@ -75,6 +75,11 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     ).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
+    // Reading a mailbox is a chain: the message replaces the message plank rather than growing the
+    // deck, and picking a different message drops the attachment that belonged to the last one.
+    AppAnnotation.DeckAnnotation.set({
+      levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
+    }),
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.

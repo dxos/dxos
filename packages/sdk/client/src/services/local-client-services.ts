@@ -26,11 +26,12 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
-import { type SwarmNetworkManagerOptions, type TransportFactory } from '@dxos/network-manager';
+import { type SwarmNetworkManagerOptions, type TransportFactory, createIceProvider } from '@dxos/network-manager';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
+import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platform';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
-import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { isBun } from '@dxos/util';
+import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
+import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
   new Promise((resolve) => {
@@ -85,24 +86,19 @@ const setupNetworking = async (
   transportFactory: TransportFactory;
 }> => {
   const { MemorySignalManager, MemorySignalManagerContext } = await import('@dxos/messaging');
-  const { createIceProvider, createRtcTransportFactory, MemoryTransportFactory } =
-    await import('@dxos/network-manager');
+  const { createRtcTransportFactory, MemoryTransportFactory } = await import('@dxos/network-manager');
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
+  const iceProviders = config.get('runtime.services.iceProviders');
+  const iceProvider = iceProviders && createIceProvider(iceProviders);
   if (signals || edgeFeatures?.signaling) {
     const {
       // EdgeSignalManager needs an EdgeConnection and is created in the services host; without edge
       // signaling fall back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
       signalManager = edgeFeatures?.signaling ? undefined : new MemorySignalManager(new MemorySignalManagerContext()),
-      // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
-      transportFactory = isBun()
-        ? MemoryTransportFactory
-        : createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          ),
+      // node-datachannel supports bun and node alike, so both use the RTC transport.
+      transportFactory = createRtcTransportFactory({ iceServers: config.get('runtime.services.ice') }, iceProvider),
     } = options;
 
     return {
@@ -188,13 +184,6 @@ export class LocalClientServices implements ClientServicesProvider {
 
     const { ClientServicesHost } = await import('@dxos/client-services');
     const { setIdentityTags } = await import('@dxos/messaging');
-    // Loaded with the host, not at module scope: this class is exported from the main-thread
-    // barrel, and the sqlite platform stack must only load when an in-process host opens.
-    const [{ layerFile, layerMemory, sqlExportLayer }, SqliteClient, SqlTransactionModule] = await Promise.all([
-      import('@dxos/sql-sqlite/platform'),
-      import('@dxos/sql-sqlite/SqliteClient'),
-      import('@dxos/sql-sqlite/SqlTransaction'),
-    ]);
 
     // Create SQLite runtime layer. The choice is driven by `runtime.client.storage.sqlite_mode`
     // in config — the presence of `createOpfsWorker` or `sqlitePath` options does not influence
@@ -246,7 +235,7 @@ export class LocalClientServices implements ClientServicesProvider {
     }
 
     this._runtime = ManagedRuntime.make(
-      SqlTransactionModule.layer.pipe(
+      SqlTransaction.layer.pipe(
         Layer.provideMerge(sqlExportLayer),
         Layer.provideMerge(sqliteLayer),
         Layer.provideMerge(Reactivity.layer),

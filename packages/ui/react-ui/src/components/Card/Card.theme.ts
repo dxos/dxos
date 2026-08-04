@@ -64,6 +64,15 @@ const action: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const actionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action-label min-w-0 flex-1 truncate', ...etc);
 
+// Holds the label and its annotation in one grid cell: `action` puts every child in column 2, so
+// siblings would otherwise stack onto separate rows.
+const actionContent: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+  mx('dx-card__action-content min-w-0 flex-1 flex items-baseline gap-2 overflow-hidden', ...etc);
+
+// Never shrinks: the label truncates around it, so a long subject cannot squeeze the annotation out.
+const actionAnnotation: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+  mx('dx-card__action-annotation shrink-0 text-xs text-description tabular-nums', ...etc);
+
 const link: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx(
     'dx-card__link col-span-3 grid grid-cols-subgrid [&>*:not(.dx-gutter)]:col-start-2 [&>*:not(.dx-gutter)>*]:col-start-2 group p-0! dx-button dx-focus-ring min-h-1!',
@@ -108,6 +117,8 @@ export const cardTheme: Theme<CardStyleProps> = {
   'poster-icon': posterIcon,
   action,
   'action-label': actionLabel,
+  'action-content': actionContent,
+  'action-annotation': actionAnnotation,
   link,
   'link-label': linkLabel,
 };

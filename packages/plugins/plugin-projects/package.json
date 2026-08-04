@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-projects",
-  "version": "0.1.0",
-  "private": true,
+  "version": "0.10.0",
   "description": "Projects \u2014 interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -40,8 +39,12 @@
       "default": "./dist/lib/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/ProjectsPlugin.tsx",
+      "source": {
+        "workerd": "./src/ProjectsPlugin.workerd.ts",
+        "default": "./src/ProjectsPlugin.tsx"
+      },
       "types": "./dist/types/src/ProjectsPlugin.d.ts",
+      "workerd": "./dist/lib/ProjectsPlugin.workerd.mjs",
       "default": "./dist/lib/ProjectsPlugin.mjs"
     },
     "#translations": {
@@ -56,6 +59,27 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./ProjectCapabilities": {
+      "source": "./src/types/ProjectCapabilities.ts",
+      "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
+      "import": "./dist/lib/ProjectCapabilities.mjs"
+    },
+    "./ProjectMcpOperation": {
+      "source": "./src/types/ProjectMcpOperation.ts",
+      "types": "./dist/types/src/types/ProjectMcpOperation.d.ts",
+      "import": "./dist/lib/ProjectMcpOperation.mjs"
+    },
+    "./ProjectOperation": {
+      "source": "./src/types/ProjectOperation.ts",
+      "types": "./dist/types/src/types/ProjectOperation.d.ts",
+      "import": "./dist/lib/ProjectOperation.mjs"
+    },
+    "./ProjectsEvents": {
+      "source": "./src/types/ProjectsEvents.ts",
+      "types": "./dist/types/src/types/ProjectsEvents.d.ts",
+      "import": "./dist/lib/ProjectsEvents.mjs"
+    },
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -70,29 +94,16 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./ProjectCapabilities": {
-      "source": "./src/types/ProjectCapabilities.ts",
-      "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
-      "import": "./dist/lib/ProjectCapabilities.mjs"
-    },
-    "./ProjectOperation": {
-      "source": "./src/types/ProjectOperation.ts",
-      "types": "./dist/types/src/types/ProjectOperation.d.ts",
-      "import": "./dist/lib/ProjectOperation.mjs"
-    },
-    "./ProjectsEvents": {
-      "source": "./src/types/ProjectsEvents.ts",
-      "types": "./dist/types/src/types/ProjectsEvents.d.ts",
-      "import": "./dist/lib/ProjectsEvents.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "ProjectCapabilities": [
         "dist/types/src/types/ProjectCapabilities.d.ts"
+      ],
+      "ProjectMcpOperation": [
+        "dist/types/src/types/ProjectMcpOperation.d.ts"
       ],
       "ProjectOperation": [
         "dist/types/src/types/ProjectOperation.d.ts"
@@ -129,6 +140,7 @@
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
@@ -146,5 +158,8 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "react": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

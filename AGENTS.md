@@ -8,31 +8,22 @@ This file is the shared, harness-agnostic entrypoint for coding agents.
 
 ## Start of session
 
-- **MANDATORY FIRST ACTION — check the branch before any file op. The branch, not
-  the directory, decides whether editing is safe.** The harness assigns this
-  session a branch and a worktree, but ~10% of the time it mis-instantiates them:
-  the assigned `claude/…` branch gets checked out at the _primary checkout_ while
-  the worktree path is left an empty `.claude`/`.moon` stub. Editing at the primary
-  checkout is still safe **as long as HEAD is your assigned branch** — your commits
-  land there, not on `main`. The bare-root path does NOT by itself mean `main`.
-  Before reading, editing, or running anything, run:
+- On the Claude harness, a global `SessionStart` hook injects a `SESSION CONTEXT`
+  block (cwd, toplevel, branch, verdict) — trust it and follow its directive. If
+  no such block is present (other harnesses), run this before any file op:
   ```
   git rev-parse --show-toplevel && git branch --show-current
   ```
-  - **On a `claude/…` (or any non-`main`) branch → proceed.** Edits are data-safe
-    even if `--show-toplevel` is the primary checkout instead of
-    `.../.claude/worktrees/<name>`. If the path is not the assigned worktree, say
-    so once: that only affects whether the Desktop UI tracks the session
-    (recoverable), not data safety. Do NOT run `git worktree add <path> <branch>`
-    to "fix" it — the branch is already checked out, so that command fails (and the
-    `git worktree add` guard denies it anyway). If UI pairing matters, ask the user
-    to work-in-place or restart the session; do not halt the task over it.
-  - **On `main` → STOP, write nothing, tell the user.** Only here do edits pollute
-    the shared branch irreversibly. Do not create a worktree or branch to escape
-    (the harness owns those) — ask the user how to proceed.
-- Confirm you understand these instructions and list the guidance files you are
-  aware of (this file, `.claude/CLAUDE.md`, relevant `.agents/skills/*`).
-- State the branch and the `--show-toplevel` path you are operating on.
+- **The branch, not the directory, decides whether editing is safe:**
+  - Non-`main` branch (normally `claude/…`) → proceed — even if the toplevel is
+    the primary checkout instead of the assigned worktree (a known harness
+    mis-instantiation; say so once — it affects only Desktop UI pairing, never
+    data safety). Never run `git worktree add` to "fix" it.
+  - `main` → STOP, write nothing, tell the user. Never create a worktree or
+    branch to escape — the harness owns those.
+- First reply: confirm these instructions, state the branch + toplevel path, and
+  list the guidance files in play (this file, `.claude/CLAUDE.md`, relevant
+  `.agents/skills/*`).
 - When asking a question, make it yes/no or give numbered options — never an
   unnumbered a-or-b.
 - If unsure how to implement something, ask rather than guess.

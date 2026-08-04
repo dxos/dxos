@@ -5,7 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { CreateObject, ReactSurface } from '#capabilities';
+import { CreateObject, PlanetCache, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -17,6 +17,7 @@ import * as TerraObject from './types/TerraObject';
 export const TerraPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(AppCapability.schema([Terra.Terra, TerraObject.TerraObject])),
+  Plugin.addModule(PlanetCache),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(

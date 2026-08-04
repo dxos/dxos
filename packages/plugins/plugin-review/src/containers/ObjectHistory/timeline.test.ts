@@ -6,13 +6,13 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Collection, Database, Text as EchoText, Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { WithProperties } from '@dxos/plugin-markdown/testing';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { Branch, Version } from '@dxos/versioning';

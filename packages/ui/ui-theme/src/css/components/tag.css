@@ -11,7 +11,15 @@
 
   .dx-tag--anchor {
     /* NOTE: Margin offsets padding so that border is flush with text. This should only apply to anchor tags inside of Codemirror. */
-    @apply inline-block cursor-pointer px-[4px] py-0.5;
+    @apply inline-block cursor-pointer px-[4px];
+    /* Vertical padding on an inline-block grows the line box, so a line carrying a chip would be
+       taller than its neighbours. The negative margin cancels that contribution, keeping editor
+       rows a uniform height whether or not an item has been converted to a link. */
+    padding-block: 2px;
+    margin-block: -2px;
+    /* `inline-block` makes this a block container, so an inherited hanging indent (list rows set a
+       negative `text-indent`) would shift the label out of its own box. */
+    text-indent: 0;
     /** TODO(burdon): Configure secondary color. */
     @apply bg-input-surface ring-inset ring ring-neutral-border rounded-sm;
     &:hover {

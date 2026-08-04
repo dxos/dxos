@@ -51,7 +51,7 @@ export const Markdown = Capability.lazyModule(
 export const MarkdownBinding = Capability.lazyModule(
   'MarkdownBinding',
   {
-    provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.ReviewCapabilities.HistoryProvider],
+    provides: [MarkdownCapabilities.EditorBindingHook, ReviewCapabilities.HistoryProvider],
     activatesOn: MarkdownEvents.Start,
   },
   () => import('./markdown-binding'),
@@ -77,7 +77,7 @@ export const CommentState = Capability.lazyModule(
 );
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
-  { provides: [ReviewCapabilities.ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
+  { provides: [ReviewCapabilities.ReviewRenderPolicy], activatesOn: ReviewEvents.Start },
   () => import('./review-state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {

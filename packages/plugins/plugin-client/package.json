@@ -122,6 +122,28 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Account": [
+        "dist/types/src/types/Account.d.ts"
+      ],
+      "AccountCache": [
+        "dist/types/src/types/AccountCache.d.ts"
+      ],
+      "ClientAction": [
+        "dist/types/src/types/ClientAction.d.ts"
+      ],
+      "ClientCapabilities": [
+        "dist/types/src/types/ClientCapabilities.d.ts"
+      ],
+      "ClientEvents": [
+        "dist/types/src/types/ClientEvents.d.ts"
+      ],
+      "ClientOptions": [
+        "dist/types/src/types/ClientOptions.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -196,27 +218,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "Account": [
-        "dist/types/src/types/Account.d.ts"
-      ],
-      "AccountCache": [
-        "dist/types/src/types/AccountCache.d.ts"
-      ],
-      "ClientAction": [
-        "dist/types/src/types/ClientAction.d.ts"
-      ],
-      "ClientCapabilities": [
-        "dist/types/src/types/ClientCapabilities.d.ts"
-      ],
-      "ClientEvents": [
-        "dist/types/src/types/ClientEvents.d.ts"
-      ],
-      "ClientOptions": [
-        "dist/types/src/types/ClientOptions.d.ts"
-      ]
-    }
   }
 }

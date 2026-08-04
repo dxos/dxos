@@ -15,12 +15,15 @@ yarn-error.log*
 debug-storybook.log
 .log*
 debug-storybook.log
-# vite-plugin-log dev file sink (default filename is `app.log`).
+# vite-plugin-log dev file sink (default filename is `app.log`), plus rotated captures.
 app.log
-# vite-plugin-log Vitest NDJSON sink (per-package `test.log`).
+app.log.*
+# vite-plugin-log Vitest NDJSON sink (per-package `test.log`), plus rotated captures.
 test.log
-# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`).
+test.log.*
+# vite-plugin-log Vitest browser NDJSON sink (per-package `test-browser.log`), plus rotated captures.
 test-browser.log
+test-browser.log.*
 
 # Vitest
 vitest-results.json

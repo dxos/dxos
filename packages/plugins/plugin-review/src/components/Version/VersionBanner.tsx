@@ -11,7 +11,7 @@ import { type Hue } from '@dxos/ui-theme';
 import { meta } from '../../meta';
 import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 
-type BranchView = ReviewCapabilities.ReviewCapabilities.BranchView;
+type BranchView = ReviewCapabilities.BranchView;
 
 /** The `base`/`diff`/`branch` view options, in banner display order. */
 const BRANCH_VIEWS: BranchView[] = ['base', 'diff', 'branch'];

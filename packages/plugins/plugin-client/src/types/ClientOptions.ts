@@ -9,6 +9,13 @@ import { type Client, type ClientOptions } from '@dxos/client';
 
 export type ClientPluginOptions = ClientOptions & {
   /**
+   * Whether the navigation handler consumes invitation codes from URL query params.
+   * Disable when another plugin (e.g. plugin-onboarding) owns the invitation URL flow.
+   * @default true
+   */
+  invitationUrlHandler?: boolean;
+
+  /**
    * Base origin for the invitation link.
    */
   shareableLinkOrigin?: string;

@@ -48,17 +48,18 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
         </Panel.Toolbar>
         <Panel.Content>
           {selectedObjects.length === 0 ? (
-            <Message.Root>
-              <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
-            </Message.Root>
+            <div className='p-trim-md'>
+              <Message.Root>
+                <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
+              </Message.Root>
+            </div>
           ) : (
             <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
-              <ScrollArea.Root orientation='vertical' centered>
+              <ScrollArea.Root orientation='vertical' centered padding>
                 <ScrollArea.Viewport ref={setViewport}>
                   <Mosaic.Stack
+                    classNames='py-trim-md gap-trim-md'
                     draggable={false}
-                    // TODO(wittjosiah): Expose gap as a prop.
-                    // gap={2}
                     items={selectedObjects}
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (

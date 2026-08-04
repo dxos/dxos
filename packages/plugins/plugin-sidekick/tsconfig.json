@@ -61,7 +61,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-outliner"
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

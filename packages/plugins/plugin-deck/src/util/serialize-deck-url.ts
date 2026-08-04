@@ -11,7 +11,7 @@ export type Representations = ReadonlyMap<string, PathResolution.RepresentedNode
 
 /** The open companion, if any, already reverse-mapped. */
 export type CompanionRepresentation = {
-  /** Id of the plank the companion is attached to (the deck's trailing plank). */
+  /** Id of the plank the companion shares a container with (the attended plank). */
   plankId: string;
   node: PathResolution.RepresentedNode;
 };

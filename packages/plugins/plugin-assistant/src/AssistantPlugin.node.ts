@@ -5,7 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AiContext } from '@dxos/assistant';
-import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
+import { Agent, Chat, McpServer, Memory } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
@@ -48,7 +48,6 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
         Instructions.Instructions,
         Agent.Agent,
         McpServer.McpServer,
-        Plan.Plan,
         Sequence.Sequence,
         Memory.Memory,
         Text.Text,

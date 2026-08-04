@@ -9,21 +9,21 @@ import { ViewState, createDefaultBackends } from '@dxos/react-ui-attention';
 
 import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
-describe('ReviewCapabilities.ReviewCapabilities.viewAspect', () => {
+describe('ReviewCapabilities.viewAspect', () => {
   const make = () => {
     const registry = Registry.make();
     return new ViewState.Manager({ registry, backends: createDefaultBackends(registry) });
   };
 
   test('declares a per-session (memory) aspect that defaults to empty', ({ expect }) => {
-    expect(ReviewCapabilities.ReviewCapabilities.viewAspect.key).toEqual('versioning-view');
-    expect(ReviewCapabilities.ReviewCapabilities.viewAspect.backend).toEqual('memory');
-    expect(ReviewCapabilities.ReviewCapabilities.viewAspect.defaultValue()).toEqual({});
+    expect(ReviewCapabilities.viewAspect.key).toEqual('versioning-view');
+    expect(ReviewCapabilities.viewAspect.backend).toEqual('memory');
+    expect(ReviewCapabilities.viewAspect.defaultValue()).toEqual({});
   });
 
   test('selection / view / mode round-trip per object id without clobbering', ({ expect }) => {
     const manager = make();
-    const { viewAspect } = ReviewCapabilities.ReviewCapabilities;
+    const { viewAspect } = ReviewCapabilities;
 
     manager.update(viewAspect, 'doc1', (prev) => ({ ...prev, mode: 'viewing' as const }));
     manager.update(viewAspect, 'doc1', (prev) => ({

@@ -29,6 +29,7 @@ import {
   inboxSyncTestServices,
   runGoogleSync,
   seedMailboxBinding,
+  seedSenderOrganizations,
 } from '../../../../testing/sync-fixture';
 import * as InboxOperation from '../../../../types/InboxOperation';
 import * as Mailbox from '../../../../types/Mailbox';
@@ -129,6 +130,12 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const dataset = generateGmailDataset({ count: 40, seed: 11, start, end });
 
     const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    // Contact extraction is now an allow-list: an unknown individual is not materialised. These
+    // fixtures generate random senders, so give each domain an Organization — the assertions below
+    // are about the pipeline wiring contacts through, not about the extraction policy (which has its
+    // own tests in `@dxos/extractor-lib`).
+    await seedSenderOrganizations(db, dataset);
 
     const { result, feedMessages } = await EffectEx.runPromise(
       Effect.gen(function* () {

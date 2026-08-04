@@ -98,7 +98,7 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
         <button
           type='button'
           aria-expanded={expanded}
-          className='flex items-center gap-1 w-full text-start py-0.5 hover:bg-hoverSurface'
+          className='flex items-center gap-1 w-full text-start py-0.5 hover:bg-hover-surface'
           style={indent}
           onClick={() => setExpanded((current) => !current)}
         >
@@ -129,8 +129,8 @@ const FileTreeNode = ({ node, depth, selectedPath, onSelect }: NodeProps) => {
         type='button'
         aria-pressed={isSelected}
         className={mx(
-          'flex items-center gap-1 w-full text-start py-0.5 hover:bg-hoverSurface',
-          isSelected && 'bg-activeSurface text-accentText',
+          'flex items-center gap-1 w-full text-start py-0.5 hover:bg-hover-surface',
+          isSelected && 'bg-activeSurface text-accent-text',
         )}
         style={indent}
         onClick={() => onSelect?.(node.path)}

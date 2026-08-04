@@ -47,7 +47,7 @@ export const Ruler = ({ viewport, headers, width, majorEvery = 4, classNames }: 
   return (
     <div
       className={mx(
-        'absolute top-0 left-0 right-0 border-b border-neutral-200 dark:border-neutral-700 bg-baseSurface select-none overflow-hidden',
+        'absolute top-0 left-0 right-0 border-b border-neutral-200 dark:border-neutral-700 bg-base-surface select-none overflow-hidden',
         classNames,
       )}
       style={{ height: headers.top }}

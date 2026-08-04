@@ -142,7 +142,7 @@ const SelectionStateStory = () => {
                   id={item.id}
                   item={item}
                   hover
-                  classNames={mx('px-3 py-2 cursor-pointer', item.id === selectedId && 'bg-hoverSurface font-medium')}
+                  classNames={mx('px-3 py-2 cursor-pointer', item.id === selectedId && 'bg-hover-surface font-medium')}
                   onClick={() => single(item.id)}
                 >
                   {item.label}

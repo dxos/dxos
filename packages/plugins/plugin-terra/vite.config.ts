@@ -15,6 +15,7 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
     Terra: 'src/types/Terra.ts',
+    TerraCapabilities: 'src/types/TerraCapabilities.ts',
     TerraObject: 'src/types/TerraObject.ts',
   },
   jsx: 'react',

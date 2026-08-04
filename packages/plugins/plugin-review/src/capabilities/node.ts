@@ -19,7 +19,7 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReviewState = Capability.lazyModule(
   'ReviewState',
-  { provides: [ReviewCapabilities.ReviewCapabilities.ReviewRenderPolicy] },
+  { provides: [ReviewCapabilities.ReviewRenderPolicy] },
   () => import('./review-state'),
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'));

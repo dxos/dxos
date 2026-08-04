@@ -22,11 +22,11 @@ import {
 import { type Resolver } from './Resolver';
 
 /** How to find an existing instance of a target type for create-or-update merge. */
-export const IdentitySpec = Schema.Struct({
+export const TargetIdentity = Schema.Struct({
   /** Candidate field name(s) used to build the {@link Resolver} input (e.g. `['email']`). */
   fields: Schema.Array(Schema.String),
 });
-export interface IdentitySpec extends Schema.Schema.Type<typeof IdentitySpec> {}
+export interface TargetIdentity extends Schema.Schema.Type<typeof TargetIdentity> {}
 
 /** A relation to create from the source object to an extracted target. */
 export const RelationSpec = Schema.Struct({
@@ -40,7 +40,7 @@ export const TargetSpec = Schema.Struct({
   /** ECHO typename to extract (drives the structured-output schema and getOrCreate). */
   type: Schema.String,
   /** How to find an existing instance for merge. Omit to always create. */
-  identity: Schema.optional(IdentitySpec),
+  identity: Schema.optional(TargetIdentity),
   /** Parent target type for containment via `Obj.setParent` (e.g. Segment → Trip). */
   parent: Schema.optional(Schema.String),
   /** Relations to create from the source to this target (e.g. Message → Trip). */

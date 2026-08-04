@@ -6,15 +6,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Type } from '@dxos/echo';
 import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 
-import * as ExternalProject from './ExternalProject';
-import * as Person from './Person';
+import * as Actor from './Actor';
 
-export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.1.0'))(
+export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.2.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotations({ title: 'Title' }),
@@ -45,7 +44,8 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       }),
       Schema.optional,
     ),
-    status: Schema.Literal('todo', 'in-progress', 'done').pipe(
+    // `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
+    status: Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled').pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
@@ -59,13 +59,16 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
               { id: 'todo', title: 'Todo', color: 'indigo' },
               { id: 'in-progress', title: 'In Progress', color: 'purple' },
               { id: 'done', title: 'Done', color: 'amber' },
+              { id: 'failed', title: 'Failed', color: 'red' },
+              { id: 'cancelled', title: 'Cancelled', color: 'gray' },
             ],
           },
         },
       }),
       Schema.optional,
     ),
-    assigned: Schema.optional(Ref.Ref(Person.Person).annotations({ title: 'Assigned' })),
+    /** Human or agent assignment: a HALO identity (DID), a Person ref, a bare email, or a display name. */
+    assignee: Schema.optional(Actor.Actor.annotations({ title: 'Assignee' })),
     estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
     description: Schema.optional(
       Schema.String.annotations({ title: 'Description' }).pipe(
@@ -75,7 +78,8 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         }),
       ),
     ),
-    project: Schema.optional(Ref.Ref(ExternalProject.ExternalProject).annotations({ title: 'Project' })),
+    // Containment is the ECHO parent edge, not a field: a TaskSet parents its root tasks and a
+    // task parents its sub-tasks (one tree; a sub-task's set membership is transitive).
   }).pipe(
     LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),

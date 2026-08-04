@@ -7,3 +7,5 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { meta } from './meta';
 
 export const ProjectsPlugin = Plugin.lazy(meta, () => import('#plugin'));
+
+export { ProjectOperationHandlerSet } from './operations';

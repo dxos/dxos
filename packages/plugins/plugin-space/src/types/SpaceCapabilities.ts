@@ -10,7 +10,7 @@ import type { ComponentType } from 'react';
 import * as Capability from '@dxos/app-framework/Capability';
 import { type Space } from '@dxos/client/echo';
 import type * as Operation from '@dxos/compute/Operation';
-import { type Collection, type Database, type Type } from '@dxos/echo';
+import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
@@ -18,7 +18,7 @@ import { type ComplexMap, type Position } from '@dxos/util';
 import { meta } from '#meta';
 
 import * as Settings from './Settings';
-import { type CreateObject, type ObjectViewerProps } from './SpaceSchema';
+import * as SpaceSchema from './SpaceSchema';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
@@ -37,13 +37,28 @@ export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 /** Persisted state (stored in KVS/localStorage). */
 export const State = Capability.makeSingleton<Atom.Writable<SpaceState>>()(`${meta.profile.key}.capability.state`);
 
+/**
+ * A proposed merge awaiting confirmation. `preview` is detached (never added to the database),
+ * so abandoning the review writes nothing. Keyed by the type article's URI so the companion
+ * only shows a preview raised by the plank it is companion to.
+ */
+export type MergePreview = {
+  typeUri: string;
+  typename: string;
+  objectIds: string[];
+  preview: Obj.Unknown;
+};
+
 /** Ephemeral space plugin state (not persisted). */
 export type SpaceEphemeralState = {
   awaiting: string | undefined;
   sdkMigrationRunning: Record<string, boolean>;
   navigableCollections: boolean;
-  viewersByObject: Record<string, ComplexMap<PublicKey, ObjectViewerProps>>;
+  viewersByObject: Record<string, ComplexMap<PublicKey, SpaceSchema.ObjectViewerProps>>;
   viewersByIdentity: ComplexMap<PublicKey, Set<string>>;
+  mergePreview: MergePreview | undefined;
+  /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
+  lastMergeAt: number | undefined;
 };
 
 /** Transient/ephemeral state (not persisted). */
@@ -81,7 +96,7 @@ export const Repair = Capability.makeSingleton<HandleRepair>()(`${meta.profile.k
 /** Typed creation entry contributed per typename by plugins that support creating objects. */
 export type CreateObjectEntry = Readonly<{
   id: string;
-  createObject: CreateObject;
+  createObject: SpaceSchema.CreateObject;
   /**
    * Effect Schema describing the create form inputs. To use a `Type.Type`
    * entity as the form schema, extract its schema first via `Type.getSchema(...)`.
@@ -95,6 +110,15 @@ export type CreateObjectEntry = Readonly<{
   customPanel?: ComponentType<CreateObjectCustomPanelProps>;
 }>;
 export const CreateObjectEntry = Capability.make<CreateObjectEntry>()(`${meta.profile.key}.capability.createObject`);
+
+/**
+ * The identity rule for a type — how to key an object for duplicate detection and how to merge
+ * two of them. Plugins that own a type contribute one (e.g. plugin-crm for Person); the type
+ * article only offers its Duplicates tab for types that have one.
+ */
+export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySpec<any>>()(
+  `${meta.profile.key}.capability.identitySpec`,
+);
 
 /** Props passed to a `CreateObjectEntry.customPanel`. */
 export type CreateObjectCustomPanelProps = {

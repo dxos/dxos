@@ -97,6 +97,10 @@ import { Icon } from '@dxos/react-ui';
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.
 See [`packages/ui/react-ui/src/components/Icon/Icon.tsx`](../../../packages/ui/react-ui/src/components/Icon/Icon.tsx).
 
+Nothing needs registering to use a new Phosphor icon — name it and it resolves. `dx--*` brand glyphs are
+`regular`-only. How resolution works (and why an icon might not appear) →
+[`packages/ui/react-ui/docs/icons.md`](../../../packages/ui/react-ui/docs/icons.md).
+
 ## Containers: Panel + ScrollArea
 
 `Panel.*` ([`packages/ui/react-ui/src/components/Panel/Panel.tsx`](../../../packages/ui/react-ui/src/components/Panel/Panel.tsx))

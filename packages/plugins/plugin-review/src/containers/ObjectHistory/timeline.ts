@@ -189,7 +189,7 @@ export const createTimelineModel = (
 export const commitToSelection = (
   object: History.VersionedObject,
   commit: Commit,
-): ReviewCapabilities.ReviewCapabilities.VersionSelection | undefined => {
+): ReviewCapabilities.VersionSelection | undefined => {
   if (commit.id === NOW_COMMIT_ID) {
     return { kind: 'current' };
   }

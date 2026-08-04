@@ -1,6 +1,6 @@
 ---
 name: task-planning
-description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$track` / `track:`, `$hydrate`, `$resume`, or `$project` sentinel. Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
+description: Use when work spans multiple steps, phases, or sessions, when resuming a task started earlier, when the user asks for a plan/roadmap/progress tracking, or when they use the `$project` sentinel (any verb — list, new, end, track, hydrate, resume — or a legacy `$track`/`$hydrate`/`$checkpoint`/`$resume`/`$rehydrate` form). Covers the project registry (`.agents/projects/registry.yml`), maintaining a durable TASKS.md + DESIGN.md per work-stream, and checkpointing/reloading project state across sessions and PRs.
 ---
 
 # Task Planning
@@ -52,64 +52,57 @@ ended: []
 
 ### The `$project` sentinel
 
-- `$project` (bare) or `$project list` — render the active projects as a
+Desktop clients don't expose custom slash commands, so the **single** task-planning
+sentinel is `$project VERB [ARGS]` anywhere in a normal message. A
+`UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it and injects the
+matching directive; when you see one, follow it and confirm in one short line.
+
+- `$project` (bare) or `$project list [all]` — render the active projects as a
   **numbered markdown table**: the first column is a 1-based row number, followed
   by `name`, `status`, `user`, `host`, and a one-line summary. **By default show
-  only the current user's projects** (`user` == `whoami`); `$project list all`
-  (or `$project all`) lists every user. Then tell the user they can reply with a
-  row number to resume that project. **A lone number in the user's next message
-  means "resume the project at that row"** — run the "Project handoff" → resume
-  steps for that entry (equivalent to `$resume <that name>`).
+  only the current user's projects** (`user` == `whoami`); `list all` lists every
+  user. Then tell the user they can reply with a row number to resume that
+  project. **A lone number in the user's next message means "resume the project
+  at that row"** — run the "Project handoff" → resume steps for that entry.
 - `$project new <name> [summary]` — add an `active` entry (`user` = `whoami`,
   `host` = `hostname -s`); scaffold `.agents/projects/<name>/{TASKS.md,DESIGN.md}`
   unless the docs already live somewhere (record that path instead). Confirm in
   one line.
 - `$project end <name>` — move the entry to `ended`, recording the final PR/status.
+- `$project track <text>` — record `<text>` as a follow-up in the active
+  `TASKS.md` (never a background task chip).
+- `$project hydrate` (alias `checkpoint`) — **checkpoint** the project before
+  stopping or opening a PR (see "Project handoff").
+- `$project resume [name]` (alias `rehydrate`) — **reload** project state at the
+  start of a session (see "Project handoff").
 
-`$resume` / `$hydrate` (see "Project handoff") key off this registry: **which
-project** is resolved by name (`$resume <name>`) or by the row number from the
-most recent `$project` table. With no argument, fall back to the single `active`
-entry for the current user; if more than one is active, ask which (list them
-numbered) — never a guess.
+Legacy forms (`$track <text>` / `track:` lines, `$hydrate`, `$checkpoint`,
+`$resume`, `$rehydrate`) still map to the same directives; nudge toward the
+`$project <verb>` form once.
+
+`resume` / `hydrate` key off the registry: **which project** is resolved by name
+(`$project resume <name>`) or by the row number from the most recent `$project`
+table. With no argument, fall back to the single `active` entry for the current
+user; if more than one is active, ask which (list them numbered) — never a guess.
 
 > The registry deliberately does **not** record a branch/worktree. Each session
 > runs in a fresh harness-assigned worktree, and a project's original branch is
 > typically already merged to `main`, so there is nothing stable to match. On
 > resume, **never warn about a worktree/branch "mismatch"** — a fresh worktree is
-> the expected state; just continue the work-stream from it.
+> the expected state — and **never leave the assigned worktree to chase the
+> project's old one**: do not `cd` into, edit in, or adopt another worktree or
+> branch as a working directory. If unmerged prior work lives elsewhere, report
+> where it is and ask the user; continuing the work-stream always happens in
+> this session's own worktree.
 
 ## When to Use
 
 - Work spans **3+ distinct steps**, multiple files, or phases.
 - The task will likely outlive one session (you'll resume it later).
 - The user asks for a plan, roadmap, or to track progress.
-- The user uses the **`$track` / `track:` sentinel** (see below) — always record
-  the item, never a task chip.
+- The user uses **`$project track <text>`** — always record the item, never a
+  task chip.
 - You are resuming work — read the existing `TASKS.md` first to reload state.
-
-### The `$track` sentinel
-
-Desktop clients don't expose custom slash commands, so an explicit
-track request is a sentinel in a normal message:
-
-- `$track <text>` anywhere in a message, or
-- a line beginning `track: <text>`.
-
-A `UserPromptSubmit` hook (`.claude/hooks/track.sh`) detects it and injects a
-directive to append `<text>` to the active `TASKS.md`. When you see that
-directive, add the item and confirm in one line.
-
-### The `$hydrate` / `$resume` sentinels
-
-The same hook detects two project-handoff sentinels (see "Project handoff"
-below for what each does):
-
-- `$hydrate` (also `$checkpoint`) — **checkpoint** the project before you stop or
-  open a PR: reconcile `TASKS.md`, refresh the resume pointer, account for
-  uncommitted work.
-- `$resume` (also `$rehydrate`) — **reload** state at the start of a session:
-  read `TASKS.md` + any linked doc, check `git status`, report where things
-  stand, then continue.
 
 **When NOT to use:**
 
@@ -160,12 +153,12 @@ Short paragraph of context — what this phase delivers and why.
 5. **Commit it** — `TASKS.md` is committed alongside the work it tracks. Do not
    leave it as an uncommitted local edit (see "commit nothing silently").
 
-## Project handoff (`$hydrate` / `$resume`)
+## Project handoff (`$project hydrate` / `$project resume`)
 
 `TASKS.md` is the handoff medium — no separate `HANDOFF.md` (keep plans in the
-original doc). The two sentinels are the explicit checkpoint/reload verbs.
+original doc). The two verbs are the explicit checkpoint/reload actions.
 
-### `$hydrate` — checkpoint before stopping or opening a PR
+### `$project hydrate` — checkpoint before stopping or opening a PR
 
 1. **Reconcile `TASKS.md`** — check off what's done; add a one-line status note to
    each in-progress item (what's blocked, what's next).
@@ -181,14 +174,17 @@ original doc). The two sentinels are the explicit checkpoint/reload verbs.
 5. **Confirm** the checkpoint in one short block (done / in-progress / next /
    uncommitted).
 
-### `$resume` — reload at the start of a session
+### `$project resume` — reload at the start of a session
 
-1. **Read** the active `TASKS.md` (and any doc it links); memory is already
+1. **Stay put** — resume continues the work-stream in **this session's assigned
+   worktree**; never `cd` into or adopt the project's previous worktree/branch.
+   If unmerged prior work lives elsewhere, report it and ask the user.
+2. **Read** the active `TASKS.md` (and any doc it links); memory is already
    loaded.
-2. **Check the tree** — `git status` + recent `git log`; surface uncommitted work
+3. **Check the tree** — `git status` + recent `git log`; surface uncommitted work
    and the last commits.
-3. **Report** a concise state: done / in-progress / **next action** / uncommitted.
-4. **Continue** with the next action, or wait for direction if the user gave any.
+4. **Report** a concise state: done / in-progress / **next action** / uncommitted.
+5. **Continue** with the next action, or wait for direction if the user gave any.
 
 ## Viewing
 

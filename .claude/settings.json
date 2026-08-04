@@ -26,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-branch.sh\"",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/guard-branch.sh\"",
             "statusMessage": "Checking branch/worktree safety"
           }
         ]
@@ -37,11 +37,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/response-mode.sh\""
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/response-mode.sh\""
           },
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/track.sh\""
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/track.sh\""
           }
         ]
       }

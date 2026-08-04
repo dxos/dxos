@@ -17,14 +17,14 @@ import * as ReviewCapabilities from '../types/ReviewCapabilities';
 export type UseVersioningResult = {
   document?: Markdown.Document;
   history?: History.History;
-  selection: ReviewCapabilities.ReviewCapabilities.VersionSelection;
-  setSelection: (selection: ReviewCapabilities.ReviewCapabilities.VersionSelection) => void;
+  selection: ReviewCapabilities.VersionSelection;
+  setSelection: (selection: ReviewCapabilities.VersionSelection) => void;
   /** Active branch view (base parent / diff overlay / branch draft); only meaningful with a branch selected. */
-  view: ReviewCapabilities.ReviewCapabilities.BranchView;
-  setView: (view: ReviewCapabilities.ReviewCapabilities.BranchView) => void;
+  view: ReviewCapabilities.BranchView;
+  setView: (view: ReviewCapabilities.BranchView) => void;
   /** Per-user editing posture for this document (Google-Docs-style). Missing entry = `editing`. */
-  mode: ReviewCapabilities.ReviewCapabilities.ReviewMode;
-  setMode: (mode: ReviewCapabilities.ReviewCapabilities.ReviewMode) => void;
+  mode: ReviewCapabilities.ReviewMode;
+  setMode: (mode: ReviewCapabilities.ReviewMode) => void;
   /** The branch being viewed (selection.kind === 'branch'). */
   activeBranch?: Branch.Branch;
   /** The branch whose fork point is being viewed (selection.kind === 'fork'). */
@@ -61,8 +61,8 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   // A markdown editor can render standalone without a provider (e.g. plugin-blogger, cards, previews),
   // so the hooks fall back to the aspect default and the version UI simply does not engage.
   const documentId = document?.id;
-  const perObject = useViewState(ReviewCapabilities.ReviewCapabilities.viewAspect, documentId);
-  const { update } = useViewStateActions(ReviewCapabilities.ReviewCapabilities.viewAspect, documentId);
+  const perObject = useViewState(ReviewCapabilities.viewAspect, documentId);
+  const { update } = useViewStateActions(ReviewCapabilities.viewAspect, documentId);
 
   // Subscribe to history mutations (checkpoints/branches added elsewhere).
   useObject(document, 'history');
@@ -74,17 +74,17 @@ export const useVersioning = (subject?: unknown): UseVersioningResult => {
   const mode = perObject.mode ?? 'editing';
 
   const setSelection = useCallback(
-    (next: ReviewCapabilities.ReviewCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),
+    (next: ReviewCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),
     [update],
   );
 
   const setView = useCallback(
-    (next: ReviewCapabilities.ReviewCapabilities.BranchView) => update((prev) => ({ ...prev, view: next })),
+    (next: ReviewCapabilities.BranchView) => update((prev) => ({ ...prev, view: next })),
     [update],
   );
 
   const setMode = useCallback(
-    (next: ReviewCapabilities.ReviewCapabilities.ReviewMode) => update((prev) => ({ ...prev, mode: next })),
+    (next: ReviewCapabilities.ReviewMode) => update((prev) => ({ ...prev, mode: next })),
     [update],
   );
 

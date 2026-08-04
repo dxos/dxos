@@ -62,6 +62,16 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "AttentionAction": [
+        "dist/types/src/types/AttentionAction.d.ts"
+      ],
+      "AttentionCapabilities": [
+        "dist/types/src/types/AttentionCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -99,15 +109,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "AttentionAction": [
-        "dist/types/src/types/AttentionAction.d.ts"
-      ],
-      "AttentionCapabilities": [
-        "dist/types/src/types/AttentionCapabilities.d.ts"
-      ]
-    }
   }
 }

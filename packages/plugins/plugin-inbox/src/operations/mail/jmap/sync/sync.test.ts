@@ -27,6 +27,7 @@ import {
   inboxJmapSyncTestServices,
   runJmapSync,
   seedMailboxBinding,
+  seedSenderOrganizations,
 } from '../../../../testing/sync-fixture';
 import * as InboxOperation from '../../../../types/InboxOperation';
 import * as Mailbox from '../../../../types/Mailbox';
@@ -131,6 +132,10 @@ describe('runJmapSync against a mock JMAP API', () => {
     const dataset = generateJmapDataset({ count: 40, seed: 11, start, end });
 
     const { db, mailbox, binding } = await seed();
+
+    // Contact extraction is an allow-list, and these fixtures generate random senders — see
+    // `seedSenderOrganizations`.
+    await seedSenderOrganizations(db, dataset);
 
     const { result, feedMessages } = await EffectEx.runPromise(
       Effect.gen(function* () {

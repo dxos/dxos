@@ -157,7 +157,7 @@ export const useReviewExtensions = ({
   // lose scroll/selection).
   // Clicking a change in the document makes it current for every review surface: the companion accents
   // the matching card (see `suggestionGroupKey`).
-  const { set: setReviewView } = useViewStateActions(ReviewCapabilities.ReviewCapabilities.viewAspect, object.id);
+  const { set: setReviewView } = useViewStateActions(ReviewCapabilities.viewAspect, object.id);
   const handleSelectSuggestion = useCallback(
     (hunk: DiffHunk, author: string) => {
       setReviewView({ suggestion: { author, from: hunk.from, to: hunk.to } });
@@ -174,7 +174,7 @@ export const useReviewExtensions = ({
   // branch — self is shown by `trackChanges`, not doubled here. Off the suggesting path the overlay
   // diffs sources directly against the editor document (which is main). Authors the user has hidden
   // are filtered at the source (never per-decoration), so bars and counts stay consistent.
-  const { hiddenAuthors } = useViewState(ReviewCapabilities.ReviewCapabilities.viewAspect, object.id);
+  const { hiddenAuthors } = useViewState(ReviewCapabilities.viewAspect, object.id);
   const overlaySources = useMemo(() => {
     const hidden = new Set(hiddenAuthors ?? []);
     return suggestionSources.filter(

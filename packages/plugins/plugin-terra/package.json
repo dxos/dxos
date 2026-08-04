@@ -51,7 +51,23 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Terra": {
+      "source": "./src/types/Terra.ts",
+      "types": "./dist/types/src/types/Terra.d.ts",
+      "import": "./dist/lib/Terra.mjs"
+    },
+    "./TerraCapabilities": {
+      "source": "./src/types/TerraCapabilities.ts",
+      "types": "./dist/types/src/types/TerraCapabilities.d.ts",
+      "import": "./dist/lib/TerraCapabilities.mjs"
+    },
+    "./TerraObject": {
+      "source": "./src/types/TerraObject.ts",
+      "types": "./dist/types/src/types/TerraObject.d.ts",
+      "import": "./dist/lib/TerraObject.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -61,24 +77,16 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./Terra": {
-      "source": "./src/types/Terra.ts",
-      "types": "./dist/types/src/types/Terra.d.ts",
-      "import": "./dist/lib/Terra.mjs"
-    },
-    "./TerraObject": {
-      "source": "./src/types/TerraObject.ts",
-      "types": "./dist/types/src/types/TerraObject.d.ts",
-      "import": "./dist/lib/TerraObject.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
       "Terra": [
         "dist/types/src/types/Terra.d.ts"
+      ],
+      "TerraCapabilities": [
+        "dist/types/src/types/TerraCapabilities.d.ts"
       ],
       "TerraObject": [
         "dist/types/src/types/TerraObject.d.ts"
@@ -103,12 +111,14 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-tabs": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "seedrandom": "catalog:",
     "simplex-noise": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

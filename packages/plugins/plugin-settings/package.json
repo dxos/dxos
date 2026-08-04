@@ -48,6 +48,13 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SettingsPath": [
+        "dist/types/src/types/SettingsPath.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -74,12 +81,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "typesVersions": {
-    "*": {
-      "SettingsPath": [
-        "dist/types/src/types/SettingsPath.d.ts"
-      ]
-    }
   }
 }

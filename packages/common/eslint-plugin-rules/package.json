@@ -14,10 +14,10 @@
   "exports": {
     ".": "./index.js"
   },
-  "publishConfig": {
-    "access": "public"
-  },
   "devDependencies": {
     "@typescript-eslint/parser": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

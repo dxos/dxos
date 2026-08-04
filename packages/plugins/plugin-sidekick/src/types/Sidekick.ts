@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Agent } from '@dxos/assistant-toolkit';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
-import * as Journal from '@dxos/plugin-outliner/Journal';
+import * as Journal from '@dxos/plugin-tasks/Journal';
 
 /**
  * Represents a Sidekick instance. Manages an Agent and a Journal.

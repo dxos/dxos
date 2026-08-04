@@ -50,10 +50,10 @@ const HistoryProviderPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'history-provider',
-    provides: [ReviewCapabilities.ReviewCapabilities.HistoryProvider],
+    provides: [ReviewCapabilities.HistoryProvider],
     activate: () =>
       Effect.succeed([
-        Capability.contribute(ReviewCapabilities.ReviewCapabilities.HistoryProvider, {
+        Capability.contribute(ReviewCapabilities.HistoryProvider, {
           id: Type.getTypename(TestDoc),
           getTarget: (object) => (Obj.instanceOf(TestDoc, object) ? object.content.target : undefined),
         }),

@@ -12,7 +12,9 @@ import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { blank } from '../templates';
+// Leaf import: the templates barrel pulls `inbox-research` (plugin-inbox/plugin-routine) into the
+// bundle, which a worker registering this handler cannot load.
+import { blank } from '../templates/blank';
 import * as ProjectCapabilities from '../types/ProjectCapabilities';
 import * as ProjectOperation from '../types/ProjectOperation';
 

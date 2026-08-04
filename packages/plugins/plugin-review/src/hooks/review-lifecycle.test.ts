@@ -12,9 +12,9 @@ import {
   deriveBinding,
 } from './review-lifecycle';
 
-const EDITING = ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy('editing');
-const SUGGESTING = ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy('suggesting');
-const VIEWING = ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy('viewing');
+const EDITING = ReviewCapabilities.defaultReviewRenderPolicy('editing');
+const SUGGESTING = ReviewCapabilities.defaultReviewRenderPolicy('suggesting');
+const VIEWING = ReviewCapabilities.defaultReviewRenderPolicy('viewing');
 
 /** Ambient editing on main with everything resolved — rows override what they test. */
 const BASE: LifecycleInputs = {

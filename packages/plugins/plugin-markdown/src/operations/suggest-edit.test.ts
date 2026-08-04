@@ -6,6 +6,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as AgentIdentity from '@dxos/compute/AgentIdentity';
 import * as Operation from '@dxos/compute/Operation';
@@ -14,8 +15,6 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
-
-import { WithProperties } from '#testing';
 
 import * as Markdown from '../types/Markdown';
 import * as MarkdownOperation from '../types/MarkdownOperation';

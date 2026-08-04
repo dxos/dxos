@@ -66,6 +66,7 @@
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:",
+    "dompurify": "catalog:",
     "effect": "catalog:",
     "json5": "catalog:",
     "motion": "catalog:",

@@ -13,7 +13,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { activateDemandGatedModules, type WithPluginManagerOptions } from '@dxos/app-framework/testing';
+import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
 import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -26,7 +26,6 @@ import {
   AgentSkill,
   DelegationHandlers,
   DelegationSkill,
-  Plan,
   PlanningHandlers,
   PlanningSkill,
 } from '@dxos/assistant-toolkit';
@@ -66,7 +65,9 @@ import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
 import { type ModuleLayout, StoryLayout } from '@dxos/storybook-testing';
+import { Outline, Task, TaskSet } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
 import { moduleSurfaces } from '../modules';
@@ -165,7 +166,10 @@ const buildPluginManagerOptions = ({
           AccessToken.AccessToken,
           Assistant.Chat,
           Collection.Collection,
-          Plan.Plan,
+          Outline.Outline,
+          Task.Task,
+          TaskSet.TaskSet,
+          Text.Text,
           Skill.Skill,
           Operation.PersistentOperation,
           Markdown.Document,

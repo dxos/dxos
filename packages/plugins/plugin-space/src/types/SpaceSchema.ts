@@ -56,6 +56,13 @@ export type SpacePluginOptions = {
   invitationProp?: string;
 
   /**
+   * Whether the navigation handler consumes invitation codes from URL query params.
+   * Disable when another plugin (e.g. plugin-onboarding) owns the invitation URL flow.
+   * @default true
+   */
+  invitationUrlHandler?: boolean;
+
+  /**
    * Whether to send observability events.
    */
   observability?: boolean;

@@ -14,7 +14,9 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
 
-import * as SpaceTypes from '../types/SpaceSchema';
+// `Module` suffix because the client's `SpaceSchema` (the Space entity schema) already holds the
+// bare name in this file.
+import * as SpaceSchemaModule from '../types/SpaceSchema';
 
 const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
@@ -45,7 +47,7 @@ export namespace SpaceOperation {
       icon: 'ph--plus--regular',
     },
     services: [Capability.Service, Plugin.Service],
-    input: SpaceTypes.SpaceForm,
+    input: SpaceSchemaModule.SpaceForm,
     output: Schema.Struct({
       id: Schema.String,
       subject: Schema.Array(Schema.String),
@@ -519,5 +521,56 @@ export namespace SpaceOperation {
       }),
     }),
     output: Schema.Void,
+  });
+
+  /** A duplicate tuple, addressed by id so the group crosses the operation boundary. */
+  export const DuplicateGroupResult = Schema.Struct({
+    keys: Schema.Array(Schema.String).annotations({ description: 'Identity keys shared by the members.' }),
+    objectIds: Schema.Array(Schema.String).annotations({ description: 'Members, in EntityId order.' }),
+  });
+
+  export type DuplicateGroupResult = Schema.Schema.Type<typeof DuplicateGroupResult>;
+
+  /**
+   * Groups objects of a type that share an identity key. The rule is the `IdentitySpec` the owning
+   * plugin contributes for that typename — the same rule the extractor uses to decide create vs
+   * merge, so a scan never disagrees with what extraction would have done.
+   */
+  export const FindDuplicates = Operation.make({
+    meta: {
+      key: makeKey('findDuplicates'),
+      name: 'Find Duplicates',
+      description: 'Group objects of a type that share an identity key (e.g. an email address).',
+      icon: 'ph--copy--regular',
+    },
+    services: [Capability.Service, Database.Service],
+    input: Schema.Struct({
+      typename: Schema.String.annotations({ description: 'ECHO typename to scan.' }),
+    }),
+    output: Schema.Struct({
+      groups: Schema.Array(DuplicateGroupResult).annotations({ description: 'Largest group first.' }),
+    }),
+  });
+
+  /** Merges a duplicate group into its lowest-EntityId member and removes the others. */
+  export const MergeDuplicates = Operation.make({
+    meta: {
+      key: makeKey('mergeDuplicates'),
+      name: 'Merge Duplicates',
+      description: 'Merge a duplicate group into a single object.',
+      icon: 'ph--arrows-merge--regular',
+    },
+    services: [Capability.Service, Database.Service],
+    input: Schema.Struct({
+      typename: Schema.String,
+      objectIds: Schema.Array(Schema.String).annotations({ description: 'Members of the group to merge.' }),
+      overrides: Schema.optional(Obj.Unknown).annotations({
+        description: 'User-edited preview; folded in last so confirmed edits win.',
+      }),
+    }),
+    output: Schema.Struct({
+      survivorId: Schema.String,
+      removedIds: Schema.Array(Schema.String),
+    }),
   });
 }

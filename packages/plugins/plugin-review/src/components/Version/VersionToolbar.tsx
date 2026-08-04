@@ -52,7 +52,7 @@ export const VersionToolbar = ({ versioning }: VersionToolbarProps) => {
       ? document?.history?.branches.find((branch) => branch.key === branchKey && branch.status === 'active')
       : undefined;
   }, [document, activeVersion]);
-  const tipSelection = useCallback((): ReviewCapabilities.ReviewCapabilities.VersionSelection => {
+  const tipSelection = useCallback((): ReviewCapabilities.VersionSelection => {
     const branch = branchOfActiveVersion();
     return branch ? { kind: 'branch', branchId: branch.id } : { kind: 'current' };
   }, [branchOfActiveVersion]);

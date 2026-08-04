@@ -39,7 +39,7 @@ export type VersionedEditor = {
   branchLoading: boolean;
   // Derived review state consumed by the extension/overlay layer and the view-mode dropdown.
   ambient: boolean;
-  policy: ReviewCapabilities.ReviewCapabilities.ReviewRenderConfig;
+  policy: ReviewCapabilities.ReviewRenderConfig;
   ambientSuggesting: boolean;
   suggestActive: boolean;
   compareActive: boolean;
@@ -103,11 +103,9 @@ export const useVersionedEditor = ({
   // overlays every author's suggestions plus comments per the per-user review mode. Any explicit
   // selection (branch/checkpoint/fork) keeps the advanced behaviour untouched — the policy is
   // consulted only on the ambient path. The policy capability is contributed by plugin-space (A2);
-  // absent (e.g. a bare story host) ⇒ the GDocs-parity default.
-  // Optional lookup: the absent-policy fallback below already covers hosts without a plugin
-  // manager (bare stories, headless hook tests), so the manager itself must not be required.
-  const [reviewRenderPolicy] = useOptionalCapabilities(ReviewCapabilities.ReviewCapabilities.ReviewRenderPolicy);
-  const renderPolicy = reviewRenderPolicy ?? ReviewCapabilities.ReviewCapabilities.defaultReviewRenderPolicy;
+  // absent (e.g. a host that does not install it) ⇒ the GDocs-parity default.
+  const [reviewRenderPolicy] = useOptionalCapabilities(ReviewCapabilities.ReviewRenderPolicy);
+  const renderPolicy = reviewRenderPolicy ?? ReviewCapabilities.defaultReviewRenderPolicy;
   const ambient = selection.kind === 'current';
   const policy = renderPolicy(mode);
   const ambientEditable = ambient ? policy.editable : true;

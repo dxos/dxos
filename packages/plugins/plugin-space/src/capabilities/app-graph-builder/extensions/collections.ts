@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { DeckSpec } from '@dxos/app-toolkit';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
@@ -40,6 +41,15 @@ import {
 //
 
 /** Creates collection-related extensions: collections section, collections, objects, and object actions. */
+
+/**
+ * A collection is always a navigation target; what differs is what navigating to it shows. When a
+ * plugin renders collections as their own article (stack, simple-layout) that article wins, otherwise
+ * the deck opens the collection's contents. Returning `undefined` leaves the ordinary open in place.
+ */
+const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): DeckSpec.DeckSpec | undefined =>
+  !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
+
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
 }: {
@@ -149,7 +159,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 get,
                 db: space.db,
                 object,
-                navigable: ephemeralState.navigableCollections,
+                navigable: true,
+                deck: collectionDeck(object, ephemeralState.navigableCollections),
                 canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
                 onRearrange: collectionRef?.target
                   ? AppNode.makeCollectionRearrangeCallback(collectionRef.target)
@@ -217,7 +228,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   get,
                   object,
                   db,
-                  navigable: ephemeralState.navigableCollections,
+                  navigable: true,
+                  deck: collectionDeck(object, ephemeralState.navigableCollections),
                   canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
                   onRearrange: AppNode.makeCollectionRearrangeCallback(collection),
                 }),

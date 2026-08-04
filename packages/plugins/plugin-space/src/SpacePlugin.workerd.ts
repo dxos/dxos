@@ -19,8 +19,11 @@ import {
   Task,
 } from '@dxos/types';
 
-import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
+
+// Declared here rather than imported from `#capabilities`: that barrel pulls the React surface
+// into worker bundles.
+const OperationHandler = AppCapability.operationHandler(() => import('./capabilities/operation-handler'));
 
 export const SpacePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(OperationHandler),

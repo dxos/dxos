@@ -8,11 +8,11 @@ import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DevtoolsPlugin } from '@dxos/plugin-devtools/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
 import { ReviewPlugin } from '@dxos/plugin-review/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
+import { TasksPlugin } from '@dxos/plugin-tasks/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { isTruthy } from '@dxos/util';
 
@@ -29,7 +29,7 @@ export const getDefaults = ({ isDev }: PluginConfig): string[] =>
 
     AssistantPlugin.meta.profile.key,
     MarkdownPlugin.meta.profile.key,
-    OutlinerPlugin.meta.profile.key,
+    TasksPlugin.meta.profile.key,
     ProjectsPlugin.meta.profile.key,
     ReviewPlugin.meta.profile.key,
     RoutinePlugin.meta.profile.key,
@@ -52,7 +52,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     DevtoolsPlugin(),
     InboxPlugin(),
     MarkdownPlugin(),
-    OutlinerPlugin(),
+    TasksPlugin(),
     PreviewPlugin(),
     ProjectsPlugin(),
     RoutinePlugin(),

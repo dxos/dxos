@@ -162,11 +162,16 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
             scroller: {
               className: mx(
                 'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pe-0! !pl-(--dx-grid-cell-editor-padding-inline)',
+                // Centre the text in the cell. CodeMirror aligns the scroller's items to the start,
+                // which left a single line sitting against the cell's top edge with the slack below.
+                'items-center!',
                 slots?.scroller?.className,
               ),
             },
             content: {
-              className: mx('break-normal!', slots?.content?.className),
+              // Natural height, so the line is something the scroller can centre — CodeMirror's
+              // content otherwise stretches to fill and there is no slack to distribute.
+              className: mx('break-normal! min-h-auto!', slots?.content?.className),
             },
           },
         }),
@@ -178,7 +183,10 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
     <div
       data-testid='grid.cell-editor'
       ref={parentRef}
-      className='absolute z-[1] dx-grid__cell-editor'
+      // `grid` (not block) so the editor stretches to the cell: the container's height comes from
+      // `minBlockSize`, and a percentage height resolves against `auto` — so the editor sized itself
+      // to its content and left a strip of dead cell below. A grid row still grows for a taller value.
+      className='absolute z-[1] grid dx-grid__cell-editor'
       style={{
         insetInlineStart: box?.insetInlineStart ?? '0px',
         insetBlockStart: box?.insetBlockStart ?? '0px',

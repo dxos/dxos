@@ -5,13 +5,14 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, EID } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { OperationTestLayer, WithProperties } from '#testing';
+import { OperationTestLayer } from '#testing';
 
 import * as MarkdownOperation from '../types/MarkdownOperation';
 

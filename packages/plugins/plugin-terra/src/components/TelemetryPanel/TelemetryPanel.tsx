@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { type KeyboardEvent } from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
 
@@ -31,6 +31,9 @@ export type TelemetryRow = {
 
 export type TelemetryPanelProps = {
   rows: readonly TelemetryRow[];
+  /** `TelemetryRow.id` of the highlighted row; rows are only clickable when `onSelect` is given. */
+  selectedId?: string;
+  onSelect?: (id: string) => void;
 };
 
 const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
@@ -42,7 +45,7 @@ const formatDegrees = (value: number): string => `${value.toFixed(1)}°`;
  * passes the result in as `rows`; this component only re-renders when that array changes, never on
  * every sim frame.
  */
-export const TelemetryPanel = ({ rows }: TelemetryPanelProps) => (
+export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelProps) => (
   <div className='flex flex-col w-fit max-h-72 bg-base-surface/70 backdrop-blur-sm rounded-md shadow-md border border-separator overflow-hidden'>
     <div className='px-3 pt-3 pb-2 text-sm font-medium'>Telemetry</div>
     <ScrollArea.Root orientation='vertical' classNames='max-h-64'>
@@ -61,7 +64,30 @@ export const TelemetryPanel = ({ rows }: TelemetryPanelProps) => (
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.id} className='border-t border-separator'>
+              <tr
+                key={row.id}
+                className={
+                  row.id === selectedId
+                    ? 'border-t border-separator bg-activeSurface text-accent-text'
+                    : onSelect
+                      ? 'border-t border-separator cursor-pointer'
+                      : 'border-t border-separator'
+                }
+                // Selectable rows are reachable by keyboard, not the pointer alone. `aria-selected`
+                // rather than `role='option'`: the row stays a row, which is what the table it
+                // belongs to needs it to be.
+                {...(onSelect && {
+                  'tabIndex': 0,
+                  'aria-selected': row.id === selectedId,
+                  'onKeyDown': (event: KeyboardEvent<HTMLTableRowElement>) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      onSelect(row.id);
+                    }
+                  },
+                })}
+                onClick={() => onSelect?.(row.id)}
+              >
                 <td className='px-3 py-1 max-w-24 truncate'>{row.name}</td>
                 <td className='px-3 py-1 max-w-24 truncate'>{row.kind}</td>
                 <td className='px-2 py-1 text-right'>{formatDegrees(row.lat)}</td>

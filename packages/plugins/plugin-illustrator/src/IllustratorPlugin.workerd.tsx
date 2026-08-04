@@ -10,7 +10,7 @@ import { meta } from '#meta';
 import * as Drawing from './types/Drawing';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.schema([Drawing.Drawing])),
+  Plugin.addModule(AppCapability.schema([Drawing.Drawing, Drawing.Canvas])),
   Plugin.make,
 );
 

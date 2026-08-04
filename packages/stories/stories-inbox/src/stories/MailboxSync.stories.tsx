@@ -97,8 +97,7 @@ const DefaultStory = () => (
       [StoryRole.Mailbox, StoryRole.Message],
       [StoryRole.Archive, StoryRole.Stats, StoryRole.SyncState],
       [StoryRole.Connector, StoryRole.Triggers],
-      [StoryRole.Trace],
-      [StoryRole.SwarmTrace],
+      [StoryRole.Trace, StoryRole.SwarmTrace],
     ]}
     compact
   />
