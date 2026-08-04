@@ -47,16 +47,10 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [instructionsSnapshot] = useObject(project.instructions);
   const instructions = Obj.getReactiveOrUndefined(instructionsSnapshot);
   const [artifacts] = useObject(project.artifacts);
-  // The Tasks section embeds plugin-tasks' section surface per linked TaskSet (never its
+  // The Tasks section embeds plugin-tasks' section surface for the linked TaskSet (never its
   // components — the boundary is surfaces/operations only).
-  const taskSetSnapshots = useObjects(project.taskSets);
-  const taskSets = useMemo(
-    () =>
-      taskSetSnapshots
-        .map((snapshot) => Obj.getReactiveOrUndefined(snapshot))
-        .filter((taskSet): taskSet is NonNullable<typeof taskSet> => !!taskSet),
-    [taskSetSnapshots],
-  );
+  const [taskSetSnapshot] = useObject(project.taskSet);
+  const taskSet = Obj.getReactiveOrUndefined(taskSetSnapshot);
 
   // Read once per project identity; the uncontrolled form owns edits after mount.
   const defaultValues = useMemo<Partial<HeaderValues>>(
@@ -143,16 +137,9 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                   </Form.Section>
                 )}
 
-                {taskSets.length > 0 && (
+                {taskSet && (
                   <Form.Section title={t('tasks.label')}>
-                    {taskSets.map((taskSet) => (
-                      <Surface.Surface
-                        key={taskSet.id}
-                        type={AppSurface.Section}
-                        data={{ subject: taskSet, attendableId }}
-                        limit={1}
-                      />
-                    ))}
+                    <Surface.Surface type={AppSurface.Section} data={{ subject: taskSet, attendableId }} limit={1} />
                   </Form.Section>
                 )}
 

@@ -592,6 +592,51 @@ export const isVisible = (op: PersistentOperation): boolean =>
   Option.getOrElse(Annotation.get(op, VisibleAnnotation), () => false);
 
 /**
+ * Projection marker for an operation exposed as an MCP tool to external agents.
+ * See plugin-projects `MILESTONE-5.md` §7.4 for the full contract.
+ */
+export const McpTool = Schema$.Struct({
+  /** Tool name as exposed to MCP clients; camelCase, domain-prefixed (e.g. `taskCreate`). */
+  name: Schema$.String,
+  /** Model-facing description; falls back to the operation's own description when absent. */
+  description: Schema$.optional(Schema$.String),
+  /**
+   * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
+   * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
+   */
+  safety: Schema$.Literal('read', 'write', 'destructive'),
+  /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
+  aspect: Schema$.optional(Schema$.String),
+});
+export type McpTool = Schema$.Schema.Type<typeof McpTool>;
+
+/**
+ * Annotation that opts an operation into MCP projection. The annotation rides through
+ * {@link serialize} into the persisted record, so a remote projector (edge mcp-space-service)
+ * discovers tools from the operation registry rather than a hand-maintained table.
+ *
+ * Projected operations must be remotely invocable: refs (not live objects) in, JSON snapshots
+ * out, schemas that survive serialization, and worker-safe handlers — MILESTONE-5.md §7.4.
+ */
+export const McpToolAnnotation = Annotation.make({
+  id: 'org.dxos.operation.mcp-tool',
+  schema: McpTool,
+});
+
+/**
+ * Pipeable combinator that opts an operation into MCP projection. Apply at the definition site:
+ * `Operation.make({ ... }).pipe(Operation.mcpTool({ name: 'taskComplete', safety: 'write' }))`.
+ */
+export const mcpTool = (props: McpTool) => annotate(McpToolAnnotation, props);
+
+/**
+ * Returns the MCP projection descriptor when the operation is annotated for it, else undefined.
+ * Reads from the persisted operation — the form the projector holds.
+ */
+export const getMcpTool = (op: PersistentOperation): McpTool | undefined =>
+  Option.getOrUndefined(Annotation.get(op, McpToolAnnotation));
+
+/**
  * Pipeable combinator that marks an operation idempotent — see {@link IdempotentAnnotation}. Apply at
  * the definition site: `Operation.make({ ... }).pipe(Operation.idempotent)`.
  */

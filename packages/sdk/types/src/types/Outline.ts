@@ -120,6 +120,7 @@ export const upsertChecklistItems = (markdown: string, items: readonly Checklist
   for (const item of pending.values()) {
     next.push(renderChecklistItem(item));
   }
+
   return next.join('\n');
 };
 

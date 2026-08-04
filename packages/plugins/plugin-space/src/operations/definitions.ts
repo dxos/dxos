@@ -13,7 +13,9 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
 
-import { SpaceForm } from '../types';
+// Direct module import: the `../types` barrel re-exports `capabilities.ts`, which pulls React UI
+// into any worker bundle that registers these operations.
+import { SpaceForm } from '../types/types';
 
 const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 

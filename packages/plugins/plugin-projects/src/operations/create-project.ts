@@ -13,7 +13,9 @@ import { SpaceOperation } from '@dxos/plugin-space';
 
 import { ProjectCapabilities, ProjectOperation } from '#types';
 
-import { blank } from '../templates';
+// Leaf import: the templates barrel pulls `inbox-research` (plugin-inbox/plugin-routine) into the
+// bundle, which a worker registering this handler cannot load.
+import { blank } from '../templates/blank';
 
 const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOperation.Create.pipe(
   Operation.withHandler(

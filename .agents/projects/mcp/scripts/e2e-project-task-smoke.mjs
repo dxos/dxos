@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 //
-// E2E smoke (task verbs): drives the plugin-tasks operations over MCP and asserts the results —
-// MILESTONE-5.md §8 phase-4 acceptance (`taskCreate → taskUpdate → taskComplete` + list).
+// E2E smoke (project + task verbs): drives the plugin-projects and plugin-tasks operations over MCP
+// and asserts the results — MILESTONE-5.md §8 phase-4 acceptance
+// (`projectCreate → taskCreate → taskUpdate → taskComplete` + list).
 //
 // Prereqs (TESTING.md): edge stack up with an @dxos pin that registers plugin-tasks
 // (operation-service TasksPlugin + TaskSet/Task types), Composer served at --app.
@@ -10,9 +11,9 @@
 //   node e2e-task-smoke.mjs --identity <hex> --space <spaceId> [--halo-space <id>]
 //     [--url http://localhost:8791] [--app http://localhost:5173] [--browser-assert]
 //
-// Steps: createObject(TaskSet) → taskCreate ×2 (one sub-task) → taskUpdate → taskComplete →
-//        taskAssign → taskList (assert states). With --browser-assert, additionally attach the
-//        TaskSet to the root collection and assert its name renders in Composer.
+// Steps: projectCreate (scaffolds instructions + artifacts + a task set) → taskCreate ×2 (one
+//        sub-task) → taskUpdate → taskAssign → taskComplete → taskList → projectList (assert
+//        states). With --browser-assert, additionally assert the project renders in Composer.
 // Exit 0 on success; 1 with a FAIL line on any step.
 //
 
@@ -127,15 +128,16 @@ await mcp(
   1,
 );
 
-// --- 1. Create the task set (container). ---
-step('create task set');
-const setName = `E2E Tasks ${new Date().toISOString()}`;
-const { object: taskSet } = await call('createObject', {
-  typename: 'org.dxos.type.taskSet',
-  properties: { name: setName },
-});
-const taskSetId = uriOf(taskSet);
-console.log('taskSet:', taskSetId);
+// --- 1. Create the project; its scaffold owns the task set the tasks file into. ---
+step('projectCreate');
+const projectName = `E2E Project ${new Date().toISOString()}`;
+const { project } = await call('projectCreate', { name: projectName });
+project?.id || fail('projectCreate', describeValue(project));
+const projectId = uriOf(project);
+const taskSetRef = project.taskSet?.['/'] ?? fail('projectCreate taskSet', describeValue(project.taskSet));
+// Refs come back space-relative; task verbs accept either form.
+const taskSetId = taskSetRef;
+console.log('project:', projectId, 'taskSet:', taskSetId);
 
 // --- 2. taskCreate: root task + sub-task (parent-edge containment). ---
 step('taskCreate');
@@ -167,17 +169,19 @@ byTitle['Ship the task verbs']?.status === 'in-progress' ||
 byTitle['Write the e2e']?.status === 'done' || fail('taskList sub', JSON.stringify(byTitle).slice(0, 400));
 console.log(`listed ${results.length} tasks; states verified.`);
 
-// --- 6. Optional: assert the task set renders in Composer. ---
+// --- 6. projectList / projectGet: the project is queryable and still owns its task set. ---
+step('projectList + projectGet');
+const { results: projects } = await call('projectList', { limit: 100 });
+projects.some((entry) => entry?.name === projectName) ||
+  fail('projectList', JSON.stringify(projects.map((entry) => entry?.name)).slice(0, 300));
+const { project: reloaded } = await call('projectGet', { id: projectId });
+reloaded?.taskSet?.['/'] === taskSetRef || fail('projectGet', describeValue(reloaded));
+console.log(`listed ${projects.length} projects; project graph verified.`);
+
+// --- 7. Optional: assert the project renders in Composer. ---
 if (args['browser-assert']) {
   step('browser assert');
-  // File the set in the root collection so the navtree shows it (createObject leaves it detached
-  // unless attach is supported by the running stack).
-  const collections = await call('queryObjects', { typename: 'org.dxos.type.collection', includeContent: true });
-  const rootCollection = collections.results?.[0] ?? fail('find collection', 'no root collection');
-  await call('updateObject', {
-    id: `echo:///${rootCollection.id}`,
-    properties: { objects: [...(rootCollection.objects ?? []), { '/': taskSetId }] },
-  });
+  // `projects.create` files the project through SpaceOperation.AddObject, so it is already in the graph.
   const { chromium } = await import('@playwright/test');
   const browser = await chromium.launch({ headless: args.headless });
   process.on('exit', () => browser.process()?.kill());
@@ -187,11 +191,11 @@ if (args['browser-assert']) {
     const collectionsNode = page.getByText('Collections', { exact: true }).first();
     await collectionsNode.waitFor({ timeout: 20000 });
     await collectionsNode.click();
-    await page.getByText(setName.slice(0, 20), { exact: false }).first().waitFor({ timeout: 30000 });
-    console.log('task set visible in Composer.');
+    await page.getByText(projectName.slice(0, 20), { exact: false }).first().waitFor({ timeout: 30000 });
+    console.log('project visible in Composer.');
   } finally {
     await browser.close();
   }
 }
 
-console.log('OK: task-verb e2e passed (createSet → create ×2 → update → assign → complete → list).');
+console.log('OK: project + task verb e2e passed (projectCreate → taskCreate ×2 → update → assign → complete → list).');

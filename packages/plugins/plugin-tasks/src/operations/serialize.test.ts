@@ -28,4 +28,25 @@ describe('operation serialization', () => {
 
     expect(failures).toEqual([]);
   });
+
+  // The projection marker must survive serialization: the edge reads it off the operation
+  // registry rather than a curated table (MILESTONE-5.md §7.4).
+  test('MCP-projected verbs carry their annotation through serialize', async ({ expect }) => {
+    const handlers = await TasksOperationHandlerSet.getHandlers();
+    const projected = handlers
+      .map((handler) => Operation.getMcpTool(Operation.serialize(handler)))
+      .filter((tool): tool is NonNullable<typeof tool> => tool !== undefined)
+      .map((tool) => tool.name)
+      .sort();
+
+    expect(projected).toEqual([
+      'outlineGet',
+      'outlineUpdate',
+      'taskAssign',
+      'taskComplete',
+      'taskCreate',
+      'taskList',
+      'taskUpdate',
+    ]);
+  });
 });
