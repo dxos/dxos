@@ -19,7 +19,7 @@
      * than halved. Dark keeps 1. The plain separator is the heaviest of the four and carries its
      * own factor, so it can be softened without touching the subdued and input variants. */
     --dx-separator-scale: 0.75;
-    --dx-separator-line-scale: 0.55;
+    --dx-separator-line-scale: 0.45;
     /* Wells (the input fill) sit on near-white in light, where a 0.05 step reads as a grey box. */
     --dx-well-scale: 0.5;
     touch-action: pan-x pan-y;
