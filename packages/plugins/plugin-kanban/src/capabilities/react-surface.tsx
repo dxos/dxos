@@ -15,7 +15,9 @@ import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/r
 import { Position } from '@dxos/util';
 
 import { KanbanArticle, KanbanProperties } from '#containers';
-import { Kanban, PivotColumnAnnotationId } from '#types';
+import { Kanban } from '#types';
+
+import * as KanbanSchema from '../types/KanbanSchema';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -37,7 +39,9 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'createInitialSchemaForm',
-        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, PivotColumnAnnotationId)),
+        filter: AppSurface.formInputBySchema(
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, KanbanSchema.PivotColumnAnnotationId),
+        ),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {

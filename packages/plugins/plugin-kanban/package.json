@@ -96,10 +96,20 @@
       "types": "./dist/types/src/types/KanbanEvents.d.ts",
       "import": "./dist/lib/KanbanEvents.mjs"
     },
+    "./KanbanLayout": {
+      "source": "./src/types/KanbanLayout.ts",
+      "types": "./dist/types/src/types/KanbanLayout.d.ts",
+      "import": "./dist/lib/KanbanLayout.mjs"
+    },
     "./KanbanOperation": {
       "source": "./src/types/KanbanOperation.ts",
       "types": "./dist/types/src/types/KanbanOperation.d.ts",
       "import": "./dist/lib/KanbanOperation.mjs"
+    },
+    "./KanbanSchema": {
+      "source": "./src/types/KanbanSchema.ts",
+      "types": "./dist/types/src/types/KanbanSchema.d.ts",
+      "import": "./dist/lib/KanbanSchema.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./operations": {
@@ -141,8 +151,14 @@
       "KanbanEvents": [
         "dist/types/src/types/KanbanEvents.d.ts"
       ],
+      "KanbanLayout": [
+        "dist/types/src/types/KanbanLayout.d.ts"
+      ],
       "KanbanOperation": [
         "dist/types/src/types/KanbanOperation.d.ts"
+      ],
+      "KanbanSchema": [
+        "dist/types/src/types/KanbanSchema.d.ts"
       ]
     }
   },

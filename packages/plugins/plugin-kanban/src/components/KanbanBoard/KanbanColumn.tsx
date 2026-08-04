@@ -8,9 +8,9 @@ import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { useKanbanItemEventHandler } from '#hooks';
-import { type ColumnStructure } from '#types';
 
 import * as KanbanConstants from '../../types/KanbanConstants';
+import * as KanbanLayout from '../../types/KanbanLayout';
 import { type KanbanColumnProps, useKanbanBoard } from './context';
 
 export { type KanbanColumnProps };
@@ -22,7 +22,7 @@ const KANBAN_COLUMN_NAME = 'KanbanBoard.Column';
  */
 export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
   ({ data: column, location, debug, draggable }, forwardedRef) => {
-    const { model } = useBoard<ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
+    const { model } = useBoard<KanbanLayout.ColumnStructure, Obj.Unknown>(KANBAN_COLUMN_NAME);
     const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
 
     const { title } = getPivotAttributes(column.columnValue);

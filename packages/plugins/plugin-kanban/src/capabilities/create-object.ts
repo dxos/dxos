@@ -11,13 +11,15 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { ViewModel } from '@dxos/schema';
 
-import { CreateKanbanSchema, Kanban } from '#types';
+import { Kanban } from '#types';
+
+import * as KanbanSchema from '../types/KanbanSchema';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Kanban.Kanban),
-      inputSchema: CreateKanbanSchema,
+      inputSchema: KanbanSchema.CreateKanbanSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = yield* Effect.promise(async () => {

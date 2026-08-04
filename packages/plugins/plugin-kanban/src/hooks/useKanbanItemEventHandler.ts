@@ -7,13 +7,12 @@ import { useMemo } from 'react';
 import type { DndContainerHandler, DndTileData } from '@dxos/react-ui-dnd';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 
-import { type ArrangedCards, type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback } from '#types';
-
 import * as KanbanConstants from '../types/KanbanConstants';
+import * as KanbanLayout from '../types/KanbanLayout';
 
-function findColumn<T extends BaseKanbanItem>(
+function findColumn<T extends KanbanLayout.BaseKanbanItem>(
   id: string,
-  arrangement: ArrangedCards<T>,
+  arrangement: KanbanLayout.ArrangedCards<T>,
 ): { columnValue: string; cards: T[] } | undefined {
   return arrangement.find(({ columnValue, cards }) => columnValue === id || cards.some((card) => card.id === id));
 }
@@ -21,23 +20,23 @@ function findColumn<T extends BaseKanbanItem>(
 /**
  * Builds the item drag-and-drop handler for a single column (reorder and move between columns).
  *
- * @template T - Item type (extends BaseKanbanItem).
+ * @template T - Item type (extends KanbanLayout.BaseKanbanItem).
  * @param column - Column structure for this tile.
  * @param columnFieldPath - Item property path for the pivot field (used when moving to another column).
  * @param model - Board model for getColumns / getItems.
  * @param change - Callback to persist arrangement and item field updates.
  * @returns DndContainerHandler for item tiles in this column.
  */
-export function useKanbanItemEventHandler<T extends BaseKanbanItem>({
+export function useKanbanItemEventHandler<T extends KanbanLayout.BaseKanbanItem>({
   column,
   columnFieldPath,
   model,
   change,
 }: {
-  column: ColumnStructure;
+  column: KanbanLayout.ColumnStructure;
   columnFieldPath: string | undefined;
-  model: BoardModel<ColumnStructure, T>;
-  change: KanbanChangeCallback<T>;
+  model: BoardModel<KanbanLayout.ColumnStructure, T>;
+  change: KanbanLayout.KanbanChangeCallback<T>;
 }): DndContainerHandler<T> {
   return useMemo<DndContainerHandler<T>>(
     () => ({
@@ -49,7 +48,7 @@ export function useKanbanItemEventHandler<T extends BaseKanbanItem>({
       onDrop: ({ source, target }) => {
         // 1. Snapshot current arrangement from model (read-only).
         const columns = model.getColumns();
-        const currentArrangement: ArrangedCards<T> = columns.map((col) => ({
+        const currentArrangement: KanbanLayout.ArrangedCards<T> = columns.map((col) => ({
           columnValue: col.columnValue,
           cards: model.getItems(col) ?? [],
         }));

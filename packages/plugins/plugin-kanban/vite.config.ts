@@ -22,6 +22,8 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
+    'KanbanSchema': 'src/types/KanbanSchema.ts',
+    'KanbanLayout': 'src/types/KanbanLayout.ts',
     'KanbanConstants': 'src/types/KanbanConstants.ts',
     'Kanban': 'src/types/Kanban.ts',
     'KanbanEvents': 'src/types/KanbanEvents.ts',

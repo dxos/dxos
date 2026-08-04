@@ -13,9 +13,10 @@ import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '#hooks';
-import { type Kanban, KanbanSettingsSchema, KanbanViewSettingsSchema } from '#types';
+import { type Kanban } from '#types';
 
 import * as KanbanConstants from '../../types/KanbanConstants';
+import * as KanbanSchema from '../../types/KanbanSchema';
 
 export type KanbanPropertiesProps = AppSurface.ObjectPropertiesProps<Kanban.Kanban>;
 
@@ -86,7 +87,7 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
 
   // Schema is picked by `kanban.spec.kind` — they have different shapes,
   // so cast for `Form.Root`'s single-schema prop.
-  const settingsSchema = (isView ? KanbanViewSettingsSchema : KanbanSettingsSchema) as any;
+  const settingsSchema = (isView ? KanbanSchema.KanbanViewSettingsSchema : KanbanSchema.KanbanSettingsSchema) as any;
 
   return (
     <Form.Section>

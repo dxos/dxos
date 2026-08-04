@@ -4,9 +4,10 @@
 
 import { type SelectOption } from '@dxos/echo/Format';
 
-import { type ArrangedCards, type BaseKanbanItem, type ColumnStructure, type Kanban } from '#types';
+import { type Kanban } from '#types';
 
 import * as KanbanConstants from '../types/KanbanConstants';
+import * as KanbanLayout from '../types/KanbanLayout';
 
 /**
  * Column order from a raw arrangement object (e.g. when working with arrangement only).
@@ -61,13 +62,13 @@ export const getOrderByColumnFromArrangement = (
  * @param effectiveOrder - Column order from arrangement (or previous merge).
  * @param effectiveByColumn - Per-column card id order + hidden flag from arrangement.
  * @param selectOptions - Defines valid column ids; any missing from order are appended.
- * @returns ColumnStructure array in display order.
+ * @returns KanbanLayout.ColumnStructure array in display order.
  */
 export const computeColumnStructure = (
   effectiveOrder: string[],
   effectiveByColumn: Record<string, { ids: string[]; hidden?: boolean }>,
   selectOptions: SelectOption[],
-): ColumnStructure[] => {
+): KanbanLayout.ColumnStructure[] => {
   const order = [...effectiveOrder];
   if (!order.includes(KanbanConstants.UNCATEGORIZED_VALUE)) {
     order.unshift(KanbanConstants.UNCATEGORIZED_VALUE);
@@ -98,7 +99,7 @@ export const computeColumnStructure = (
  * @param validColumnValues - Set of valid option ids.
  * @returns Items belonging to this column in display order.
  */
-export const orderItemsInColumn = <T extends BaseKanbanItem>(
+export const orderItemsInColumn = <T extends KanbanLayout.BaseKanbanItem>(
   items: T[],
   ids: string[],
   columnValue: string,
@@ -142,7 +143,7 @@ export const orderItemsInColumn = <T extends BaseKanbanItem>(
  * @param selectOptions - Defines valid column ids and their display order.
  * @returns Array of { columnValue, cards } in column order, with cards ordered as above.
  */
-export const computeItemArrangement = <T extends BaseKanbanItem = BaseKanbanItem>({
+export const computeItemArrangement = <T extends KanbanLayout.BaseKanbanItem = KanbanLayout.BaseKanbanItem>({
   object,
   items,
   pivotPath,
@@ -152,7 +153,7 @@ export const computeItemArrangement = <T extends BaseKanbanItem = BaseKanbanItem
   items: T[];
   pivotPath?: string;
   selectOptions: SelectOption[];
-}): ArrangedCards<T> => {
+}): KanbanLayout.ArrangedCards<T> => {
   const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
   const byColumn = getOrderByColumnFromArrangement(object?.arrangement);
 

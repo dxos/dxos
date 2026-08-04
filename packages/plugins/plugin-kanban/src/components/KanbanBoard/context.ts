@@ -9,9 +9,8 @@ import { type Obj } from '@dxos/echo';
 import { type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { type ColumnStructure, type KanbanChangeCallback } from '#types';
-
 import * as KanbanConstants from '../../types/KanbanConstants';
+import * as KanbanLayout from '../../types/KanbanLayout';
 
 const KANBAN_BOARD_NAME = 'KanbanBoard.Context';
 
@@ -26,7 +25,10 @@ export type KanbanCardProps = Pick<MosaicTileProps<Obj.Unknown>, 'location' | 'd
 /**
  * Column tile props. See note on {@link KanbanCardProps}.
  */
-export type KanbanColumnProps = Pick<MosaicTileProps<ColumnStructure>, 'location' | 'data' | 'debug' | 'draggable'>;
+export type KanbanColumnProps = Pick<
+  MosaicTileProps<KanbanLayout.ColumnStructure>,
+  'location' | 'data' | 'debug' | 'draggable'
+>;
 
 /**
  * Context value for the Kanban board.
@@ -36,7 +38,7 @@ export type KanbanBoardContextValue = {
   kanbanId: string;
   projection: ProjectionModel | undefined;
   columnFieldPath: string | undefined;
-  change: KanbanChangeCallback<Obj.Unknown>;
+  change: KanbanLayout.KanbanChangeCallback<Obj.Unknown>;
   pivotFieldId: string | undefined;
   getPivotAttributes: (columnValue: string) => { title: string; color: string };
   itemTile?: ComponentType<KanbanCardProps>; // TODO(burdon): Prop.
