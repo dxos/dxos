@@ -2,10 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-// Per-locale entry, not `date-fns/locale`: that barrel re-exports every locale (~1MB of
-// source) for the one default used here.
 import { type Locale } from 'date-fns';
-import { enUS as dtLocaleEnUs } from 'date-fns/locale/en-US';
 import React, { type ReactNode, Suspense, useEffect, useState } from 'react';
 import { I18nextProvider } from 'react-i18next';
 

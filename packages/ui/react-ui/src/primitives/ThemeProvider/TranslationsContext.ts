@@ -2,7 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import { enUS as dtLocaleEnUs } from 'date-fns/locale';
+// Per-locale entry, not `date-fns/locale`: that barrel re-exports every locale (~1MB of
+// source) for the one default used here.
+import { enUS as dtLocaleEnUs } from 'date-fns/locale/en-US';
 import { createContext, useContext } from 'react';
 import { useTranslation as useI18NextTranslation } from 'react-i18next';
 
