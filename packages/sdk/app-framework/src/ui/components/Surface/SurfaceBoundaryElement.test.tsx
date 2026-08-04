@@ -15,14 +15,14 @@ import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';
 import { render } from '../../../testing/react';
 import { BoundaryScopeContext, setSurfaceBoundaryRoles } from './boundary';
+import {
+  DX_SURFACE_BOUNDARY_TAG,
+  SURFACE_BOUNDARY_MOUNTED_EVENT,
+  SURFACE_BOUNDARY_UNMOUNTED_EVENT,
+  registerSurfaceBoundaryElement,
+} from './SurfaceBoundaryElement';
 import { SurfaceComponent } from './SurfaceComponent';
 import { SurfaceManager } from './SurfaceManager';
-import {
-  DX_SURFACE_ROOT_TAG,
-  SURFACE_ROOT_MOUNTED_EVENT,
-  SURFACE_ROOT_UNMOUNTED_EVENT,
-  registerSurfaceRootElement,
-} from './SurfaceRootElement';
 import { create, makeFilter } from './types';
 
 const RoleBound = Role.make<Record<string, unknown>>('org.dxos.test.role.bound');
@@ -56,11 +56,11 @@ const TestPlugin = Plugin.define(testMeta).pipe(
 
 const setup = async (harness: Awaited<ReturnType<typeof createTestApp>>) => {
   const surfaces = new SurfaceManager(harness.manager.capabilities);
-  registerSurfaceRootElement({ manager: harness.manager, surfaces });
+  registerSurfaceBoundaryElement({ manager: harness.manager, surfaces });
   setSurfaceBoundaryRoles([RoleBound.role]);
 };
 
-describe('SurfaceRootElement boundary dispatch', () => {
+describe('SurfaceBoundaryElement dispatch', () => {
   afterEach(async () => {
     setSurfaceBoundaryRoles([]);
     // Unmount now (idempotent for RTL's own auto-cleanup, which would otherwise run after this
@@ -77,7 +77,7 @@ describe('SurfaceRootElement boundary dispatch', () => {
     await setup(harness);
 
     const view = render(harness, <SurfaceComponent type={RoleBound} data={{ label: 'one' }} />);
-    expect(view.container.querySelector(DX_SURFACE_ROOT_TAG)).not.toBeNull();
+    expect(view.container.querySelector(DX_SURFACE_BOUNDARY_TAG)).not.toBeNull();
     // The inner React root commits asynchronously (microtask-scheduled).
     expect((await view.findByTestId('bound')).textContent).toBe('one');
   });
@@ -89,7 +89,7 @@ describe('SurfaceRootElement boundary dispatch', () => {
     const view = render(harness, <SurfaceComponent type={RoleBound} />);
     await view.findByTestId('inner');
     // Only the outer dispatch crossed a boundary.
-    expect(view.container.querySelectorAll(DX_SURFACE_ROOT_TAG).length).toBe(1);
+    expect(view.container.querySelectorAll(DX_SURFACE_BOUNDARY_TAG).length).toBe(1);
   });
 
   test('data updates propagate across the boundary by reference', async ({ expect }) => {
@@ -115,7 +115,7 @@ describe('SurfaceRootElement boundary dispatch', () => {
         <SurfaceComponent type={RoleBound} data={{ label: 'scoped' }} />
       </BoundaryScopeContext.Provider>,
     );
-    expect(view.container.querySelector(DX_SURFACE_ROOT_TAG)).toBeNull();
+    expect(view.container.querySelector(DX_SURFACE_BOUNDARY_TAG)).toBeNull();
     expect((await view.findByTestId('bound')).textContent).toBe('scoped');
   });
 
@@ -127,8 +127,8 @@ describe('SurfaceRootElement boundary dispatch', () => {
     let unmounted = 0;
     const onMounted = () => mounted++;
     const onUnmounted = () => unmounted++;
-    document.addEventListener(SURFACE_ROOT_MOUNTED_EVENT, onMounted);
-    document.addEventListener(SURFACE_ROOT_UNMOUNTED_EVENT, onUnmounted);
+    document.addEventListener(SURFACE_BOUNDARY_MOUNTED_EVENT, onMounted);
+    document.addEventListener(SURFACE_BOUNDARY_UNMOUNTED_EVENT, onUnmounted);
 
     try {
       const view = render(harness, <SurfaceComponent type={RoleBound} />);
@@ -142,8 +142,8 @@ describe('SurfaceRootElement boundary dispatch', () => {
         expect(unmounted).toBeGreaterThan(0);
       });
     } finally {
-      document.removeEventListener(SURFACE_ROOT_MOUNTED_EVENT, onMounted);
-      document.removeEventListener(SURFACE_ROOT_UNMOUNTED_EVENT, onUnmounted);
+      document.removeEventListener(SURFACE_BOUNDARY_MOUNTED_EVENT, onMounted);
+      document.removeEventListener(SURFACE_BOUNDARY_UNMOUNTED_EVENT, onUnmounted);
     }
   });
 
@@ -153,7 +153,7 @@ describe('SurfaceRootElement boundary dispatch', () => {
     setSurfaceBoundaryRoles([]);
 
     const view = render(harness, <SurfaceComponent type={RoleBound} data={{ label: 'direct' }} />);
-    expect(view.container.querySelector(DX_SURFACE_ROOT_TAG)).toBeNull();
+    expect(view.container.querySelector(DX_SURFACE_BOUNDARY_TAG)).toBeNull();
     expect((await view.findByTestId('bound')).textContent).toBe('direct');
   });
 });

@@ -90,14 +90,31 @@ Full inventories were gathered 2026-07-24 (session appendices; key figures):
 
 ## Architecture
 
-### `<dx-surface>` element
+### `<dx-surface-boundary>` element (today) → `<dx-surface>` (end state)
 
-Registered at boot via `registerSurfaceElement({ manager })`. Receives `role`
-as an attribute and `data`/`limit` as element **properties** (live objects,
-same-realm — reuse the `WebComponentWrapper` diff protocol). On connect:
-resolve candidates, mount per `kind`; on disconnect: teardown. Emits
-`dx-surface:mounted` / `dx-surface:unmounted` events so hosts drive
-placeholders without shared Suspense.
+Registered at boot via `registerSurfaceBoundaryElement({ manager, surfaces })`.
+Receives the dispatch role as the `data-role` attribute (`role` would collide
+with ARIA) and everything else — `data`, `limit`, `placeholder`, passthrough —
+as the `surfaceProps` **property** (live objects by reference, same-realm,
+mirroring the `WebComponentWrapper` protocol). On connect it creates its own
+React root rendering `BoundaryScopeContext` → `SurfaceRootProviders` →
+the dispatcher; on disconnect it tears that root down. Emits
+`dx-surface-boundary:mounted` / `:unmounted` events so hosts drive placeholders
+without a shared Suspense boundary across roots.
+
+Two custom elements exist today and are easy to confuse:
+
+- **`dx-surface`** (pre-existing, `SurfaceDebug.tsx`) — a zero-behavior
+  inspection wrapper around _every_ surface in dev builds; carries
+  `data-component`, backs `window.__DX__.surfaces()` and the highlight
+  overlay. React renders straight through it. Absent in production.
+- **`dx-surface-boundary`** (this project) — the real boundary described
+  above. Ships in production, for allowlisted roles only.
+
+**Planned:** merge the two into a single `<dx-surface>` with a pass-through
+mode and a boundary mode (Phase 3 in TASKS.md) — that unified element is the
+framework-neutral dispatcher this document's end state describes. Deferred
+deliberately so the boundary could be proven first.
 
 - **Light DOM only** (attention, CSS cascade, Tailwind, focus).
 - **Node-keyed identity**: hosts must preserve `key={node.id}` semantics —

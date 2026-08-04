@@ -13,48 +13,48 @@ import { SurfaceComponent } from './SurfaceComponent';
 import { type SurfaceManager } from './SurfaceManager';
 import { SurfaceRootProviders } from './SurfaceRootProviders';
 
-export const DX_SURFACE_ROOT_TAG = 'dx-surface-root';
+export const DX_SURFACE_BOUNDARY_TAG = 'dx-surface-boundary';
 
 // `role` would collide with the ARIA attribute, so the dispatch role rides on `data-role`.
 const ROLE_ATTR = 'data-role';
 
-export const SURFACE_ROOT_MOUNTED_EVENT = 'dx-surface-root:mounted';
-export const SURFACE_ROOT_UNMOUNTED_EVENT = 'dx-surface-root:unmounted';
+export const SURFACE_BOUNDARY_MOUNTED_EVENT = 'dx-surface-boundary:mounted';
+export const SURFACE_BOUNDARY_UNMOUNTED_EVENT = 'dx-surface-boundary:unmounted';
 
-export type SurfaceRootHost = {
+export type SurfaceBoundaryHost = {
   manager: PluginManager.PluginManager;
   surfaces: SurfaceManager;
 };
 
-export interface SurfaceRootElement extends HTMLElement {
+export interface SurfaceBoundaryElement extends HTMLElement {
   /** Everything besides the role: `data`, `limit`, `fallback`, `placeholder`, passthrough props. */
   surfaceProps: Record<string, any>;
 }
 
-let host: SurfaceRootHost | null = null;
+let host: SurfaceBoundaryHost | null = null;
 
-export const isSurfaceRootRegistered = (): boolean => host != null;
+export const isSurfaceBoundaryRegistered = (): boolean => host != null;
 
 /**
- * Registers the `<dx-surface-root>` custom element: a light-DOM boundary that hosts its own
+ * Registers the `<dx-surface-boundary>` custom element: a light-DOM boundary that hosts its own
  * React root wrapped in {@link SurfaceRootProviders}, so a surface subtree behaves as part of
  * the app without belonging to the app's React tree. Also injects the boundary renderer used
  * by the dispatcher for roles enabled via `setSurfaceBoundaryRoles`.
  */
-export const registerSurfaceRootElement = (nextHost: SurfaceRootHost): void => {
+export const registerSurfaceBoundaryElement = (nextHost: SurfaceBoundaryHost): void => {
   if (host && (host.manager !== nextHost.manager || host.surfaces !== nextHost.surfaces)) {
     log('surface root host re-registered with a different manager');
   }
   host = nextHost;
   setSurfaceBoundaryRenderer(SurfaceBoundary);
 
-  if (typeof customElements === 'undefined' || customElements.get(DX_SURFACE_ROOT_TAG)) {
+  if (typeof customElements === 'undefined' || customElements.get(DX_SURFACE_BOUNDARY_TAG)) {
     return;
   }
 
   customElements.define(
-    DX_SURFACE_ROOT_TAG,
-    class extends HTMLElement implements SurfaceRootElement {
+    DX_SURFACE_BOUNDARY_TAG,
+    class extends HTMLElement implements SurfaceBoundaryElement {
       static get observedAttributes() {
         return [ROLE_ATTR];
       }
@@ -153,9 +153,9 @@ export const registerSurfaceRootElement = (nextHost: SurfaceRootHost): void => {
  */
 const MountedSignal = ({ dispatch }: { dispatch: (type: string) => void }) => {
   useEffect(() => {
-    dispatch(SURFACE_ROOT_MOUNTED_EVENT);
+    dispatch(SURFACE_BOUNDARY_MOUNTED_EVENT);
     return () => {
-      dispatch(SURFACE_ROOT_UNMOUNTED_EVENT);
+      dispatch(SURFACE_BOUNDARY_UNMOUNTED_EVENT);
     };
     // The dispatch closure is recreated per render but targets the same element.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -169,7 +169,7 @@ const MountedSignal = ({ dispatch }: { dispatch: (type: string) => void }) => {
  * cross by reference, mirroring `WebComponentWrapper`'s property protocol.
  */
 const SurfaceBoundary = ({ role, ...surfaceProps }: SurfaceBoundaryProps) => {
-  const elementRef = useRef<SurfaceRootElement | null>(null);
+  const elementRef = useRef<SurfaceBoundaryElement | null>(null);
 
   useEffect(() => {
     if (elementRef.current) {
@@ -177,7 +177,7 @@ const SurfaceBoundary = ({ role, ...surfaceProps }: SurfaceBoundaryProps) => {
     }
   });
 
-  return React.createElement(DX_SURFACE_ROOT_TAG, {
+  return React.createElement(DX_SURFACE_BOUNDARY_TAG, {
     ref: elementRef,
     [ROLE_ATTR]: role,
     style: { display: 'contents' },

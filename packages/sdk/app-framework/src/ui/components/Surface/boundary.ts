@@ -6,7 +6,7 @@ import { type FC, createContext, useContext } from 'react';
 
 /**
  * Props handed to the boundary renderer when a role dispatches across a
- * `<dx-surface-root>` boundary instead of in-tree.
+ * `<dx-surface-boundary>` boundary instead of in-tree.
  */
 export type SurfaceBoundaryProps = {
   role: string;
@@ -16,7 +16,7 @@ export type SurfaceBoundaryProps = {
 };
 
 /**
- * The role currently being dispatched inside a `<dx-surface-root>`; the same role re-entering
+ * The role currently being dispatched inside a `<dx-surface-boundary>`; the same role re-entering
  * the dispatcher inside its own boundary must render in-tree or it would recurse forever.
  */
 export const BoundaryScopeContext = createContext<string | null>(null);
@@ -28,7 +28,7 @@ export const BoundaryScopeContext = createContext<string | null>(null);
  */
 export const useSurfaceBoundaryScope = (): string | null => useContext(BoundaryScopeContext);
 
-// Injected by `registerSurfaceRootElement` to avoid a module cycle between the dispatcher
+// Injected by `registerSurfaceBoundaryElement` to avoid a module cycle between the dispatcher
 // and the element that renders the dispatcher.
 let boundaryRenderer: FC<SurfaceBoundaryProps> | null = null;
 

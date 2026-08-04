@@ -532,7 +532,7 @@ const main = async () => {
     return <App />;
   };
 
-  // Roles listed here dispatch into `<dx-surface-root>` boundaries, each hosting its own
+  // Roles listed here dispatch into `<dx-surface-boundary>` boundaries, each hosting its own
   // React root (web-components project). Escape hatch: localStorage key set to 'off'.
   if (localStorage.getItem('dxos.org/surface-boundary') !== 'off') {
     Surface.setBoundaryRoles([AppSurface.StatusIndicator.role]);

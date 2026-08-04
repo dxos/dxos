@@ -17,13 +17,13 @@ import { Capability, Plugin } from '../../../core';
 import { withPluginManager } from '../../../testing';
 import { usePluginManager } from '../PluginManager';
 import { setSurfaceBoundaryRoles } from './boundary';
+import { DX_SURFACE_BOUNDARY_TAG, registerSurfaceBoundaryElement } from './SurfaceBoundaryElement';
 import { SurfaceComponent } from './SurfaceComponent';
 import { useSurfaceManager } from './SurfaceManagerContext';
-import { DX_SURFACE_ROOT_TAG, registerSurfaceRootElement } from './SurfaceRootElement';
 import { create, makeFilter } from './types';
 
 // End-to-end validation of web-component surface boundaries: the same React surface
-// definition renders into several `<dx-surface-root>` elements (each its own React root)
+// definition renders into several `<dx-surface-boundary>` elements (each its own React root)
 // alongside an in-tree copy, all sharing one atom registry and the contributed
 // `Capabilities.ReactContext` stack — state written in any root must appear in every root.
 
@@ -91,7 +91,7 @@ const DefaultStory = () => {
   // boundary branch is live on the initial dispatch; deterministic counter start.
   useState(() => {
     registry.set(counterAtom, 0);
-    registerSurfaceRootElement({ manager, surfaces });
+    registerSurfaceBoundaryElement({ manager, surfaces });
     setSurfaceBoundaryRoles([BoundaryRole.role]);
   });
   useEffect(() => () => setSurfaceBoundaryRoles([]), []);
@@ -107,7 +107,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/components/SurfaceRoot',
+  title: 'sdk/app-framework/components/SurfaceBoundary',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -125,7 +125,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     // Three boundary elements, each hosting its own React root; the in-tree copy has none.
-    await waitFor(() => expect(canvasElement.querySelectorAll(DX_SURFACE_ROOT_TAG).length).toBe(3));
+    await waitFor(() => expect(canvasElement.querySelectorAll(DX_SURFACE_BOUNDARY_TAG).length).toBe(3));
 
     // Every root committed (inner roots render async) and received the contributed
     // ReactContext stack.
