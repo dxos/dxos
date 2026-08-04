@@ -30,6 +30,8 @@ export type DeckPlankProps = ThemedClassName<{
   /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */
   active?: string[];
   path?: string[];
+  /** Exposé: render the content inert, so focus stops at the plank (see {@link PlankProps.exposed}). */
+  exposed?: boolean;
 }>;
 
 /**
@@ -38,19 +40,27 @@ export type DeckPlankProps = ThemedClassName<{
  * plank too — delegated to {@link CompanionPlank}, which supplies the companion's own header and content —
  * so the deck layout never special-cases companions.
  */
-export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
+export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, exposed, classNames }: DeckPlankProps) => {
   if (Attention.isLinkedSegment(id)) {
     return <CompanionPlank id={id} classNames={classNames} />;
   }
 
   return (
-    <DeckPlankInner id={id} part={part} fullscreen={fullscreen} active={active} path={path} classNames={classNames} />
+    <DeckPlankInner
+      id={id}
+      part={part}
+      fullscreen={fullscreen}
+      active={active}
+      path={path}
+      exposed={exposed}
+      classNames={classNames}
+    />
   );
 });
 
 DeckPlank.displayName = 'DeckPlank';
 
-const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
+const DeckPlankInner = ({ id, part, fullscreen = false, active, path, exposed, classNames }: DeckPlankProps) => {
   const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -159,6 +169,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
       fallback={PlankErrorFallback}
       placeholder={PLANK_LOADING}
       headless={headless}
+      exposed={exposed}
       onKeyDown={handleKeyDown}
       classNames={classNames}
     />

@@ -410,6 +410,13 @@ const FOLD_CONTENT_CLASSNAMES =
  */
 const EXPOSED_PLANK_CLASSNAMES = 'pointer-events-none after:ring-0';
 
+/*
+ * Where the caret goes when a plank is committed from the exposé. CodeMirror's editable host first —
+ * that is the caret in a document — then any focusable in the content, so a non-editor surface (a table,
+ * a form) still lands somewhere useful instead of nowhere.
+ */
+const EDITABLE_CONTENT_SELECTOR = '.cm-content, [contenteditable="true"], input, textarea, [tabindex="0"]';
+
 /**
  * Tile wrapping a {@link DeckPlank}, parameterized by the derived presentation: fullbleed renders an
  * absolutely-positioned plank with no resize affordance (today's solo look); sliding renders a
@@ -557,6 +564,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           id={id}
           part='main'
           active={deck.active}
+          exposed={exposed}
           classNames={mx(FOLD_CONTENT_CLASSNAMES, exposed && EXPOSED_PLANK_CLASSNAMES)}
         />
       )}
@@ -568,7 +576,9 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           // Keyboard selection reads on the frame rather than the plank: focus lands on the attendable
           // inside the tile, so the outline keys off the tile group containing focus — the same cue as
           // hover, which is what makes the arrow keys visible now that the plank ring is suppressed.
-          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors group-focus-within/tile:outline-focus-ring hover:outline-focus-ring'
+          // Deliberately NOT `outline-focus-ring`: that token is the primary blue, and the exposé is a
+          // neutral overview, so selection brightens the existing hairline instead of recolouring it.
+          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors group-focus-within/tile:outline-base-fg hover:outline-base-fg'
           aria-label={spineLabel}
           onClick={handleExposeSelect}
         />
@@ -1394,8 +1404,20 @@ export const DeckPlanks = () => {
         }
         event.preventDefault();
         captureRef.current();
-        void invokePromise(DeckOperation.ToggleExpose, { expose: false });
-        void invokePromise(LayoutOperation.ScrollIntoView, { subject });
+        void (async () => {
+          await invokePromise(DeckOperation.ToggleExpose, { expose: false });
+          await invokePromise(LayoutOperation.ScrollIntoView, { subject });
+          // Committing a plank means working in it, so the caret goes into the content rather than
+          // stopping on the plank. Ordered after both operations: the content is `inert` while exposed,
+          // and the plank focuses its own root off the scroll one-shot — focusing earlier would either
+          // hit an inert subtree or be overwritten by that root focus.
+          requestAnimationFrame(() => {
+            const tile = getTilesRef
+              .current()
+              .find((candidate) => candidate.getAttribute('data-object-id') === subject);
+            tile?.querySelector<HTMLElement>(EDITABLE_CONTENT_SELECTOR)?.focus({ preventScroll: true });
+          });
+        })();
         return;
       }
 

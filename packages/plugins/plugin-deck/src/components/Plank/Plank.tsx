@@ -53,6 +53,12 @@ export type PlankProps = ThemedClassName<{
   placeholder?: SurfaceProps['placeholder'];
   /** Render only the content surface, omitting the toolbar (e.g. fullscreen). */
   headless?: boolean;
+  /**
+   * Exposé: the plank is a tile to be picked, not a pane to be used, so its content is inert. Focus has
+   * to stop at the plank itself — that is what the arrow keys move and what carries attention — so this
+   * marks the content subtree rather than the root.
+   */
+  exposed?: boolean;
   // TODO(burdon): Why is this required?
   onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 }>;
@@ -83,6 +89,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
       fallback,
       placeholder,
       headless,
+      exposed,
       onKeyDown,
     },
     forwardedRef,
@@ -169,7 +176,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
             {controls}
           </Pane.Toolbar>
         )}
-        <Pane.Content>
+        <Pane.Content {...(exposed && { inert: true })}>
           <Surface.Surface
             key={node.id}
             type={AppSurface.Article}
