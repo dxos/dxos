@@ -19,11 +19,8 @@ import {
   Main,
   Message,
   Panel,
-  Popover,
   ScrollArea,
   Select,
-  Separator,
-  Status,
   Tag,
   Toolbar,
   useSidebars,
@@ -86,7 +83,7 @@ const NavigationCard = () => (
 );
 
 const ContactCard = () => (
-  <Card.Root>
+  <Card.Root fullWidth>
     <Card.Header>
       <Card.DragHandle />
       <Card.Title>Card on the canvas</Card.Title>
@@ -114,60 +111,19 @@ const ContactCard = () => (
         </Input.Root>
         <Input.Root>
           <Input.Label>Switch</Input.Label>
-          <Input.Switch />
+          <Input.Block>
+            <Input.Switch />
+          </Input.Block>
         </Input.Root>
         <Input.Root>
           <Input.Label>Checkbox</Input.Label>
-          <Input.Checkbox />
+          <Input.Block>
+            <Input.Checkbox />
+          </Input.Block>
         </Input.Root>
       </Card.Section>
       <Card.Row>
         <Card.Text variant='description'>Card.Text with the description variant.</Card.Text>
-      </Card.Row>
-    </Card.Body>
-  </Card.Root>
-);
-
-const MessageCard = () => (
-  <Card.Root>
-    <Card.Header>
-      <Card.Block>
-        <Avatar.Root>
-          <Avatar.Content fallback='DX' size={6} variant='circle' />
-        </Avatar.Root>
-      </Card.Block>
-      <Card.Title>Avatar, message, status</Card.Title>
-    </Card.Header>
-    <Card.Body>
-      <Card.Row fullWidth>
-        <Message.Root valence='warning'>
-          <Message.Title>Message.Root</Message.Title>
-          <Message.Content>A valence surface nested inside a card.</Message.Content>
-        </Message.Root>
-      </Card.Row>
-      <Card.Row fullWidth>
-        <Status progress={0.6} />
-      </Card.Row>
-      <Card.Row fullWidth>
-        <Separator />
-      </Card.Row>
-      <Card.Row>
-        <Popover.Root>
-          <Popover.Trigger asChild>
-            <Button>Open popover</Button>
-          </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content>
-              <Popover.Viewport>
-                <Input.Root>
-                  <Input.Label>Popover surface</Input.Label>
-                  <Input.TextInput placeholder='Input inside a popover' />
-                </Input.Root>
-              </Popover.Viewport>
-              <Popover.Arrow />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
       </Card.Row>
     </Card.Body>
   </Card.Root>
@@ -236,7 +192,7 @@ const AppFrame = () => {
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <ScrollArea.Root>
+            <ScrollArea.Root centered padding thin classNames='p-trim-md'>
               <ScrollArea.Viewport>
                 <NavigationCard />
               </ScrollArea.Viewport>
@@ -297,11 +253,16 @@ const AppFrame = () => {
             </Toolbar.Root>
           </Panel.Toolbar>
 
-          <Panel.Content asChild>
+          <Panel.Content>
+            <div className='p-trim-md'>
+              <Message.Root valence='warning'>
+                <Message.Title>Message.Root</Message.Title>
+                <Message.Content>A valence surface nested inside a card.</Message.Content>
+              </Message.Root>
+            </div>
             <ScrollArea.Root centered>
-              <ScrollArea.Viewport>
+              <ScrollArea.Viewport classNames='flex flex-col gap-trim-md'>
                 <ContactCard />
-                <MessageCard />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Panel.Content>
