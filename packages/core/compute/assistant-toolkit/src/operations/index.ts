@@ -4,6 +4,8 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
+import { RunInstructions } from './definitions';
+
 export * from './definitions';
 
-export const AgentHandlers = OperationHandlerSet.lazy(() => import('./run-instructions'));
+export const AgentHandlers = OperationHandlerSet.keyed([[RunInstructions, () => import('./run-instructions')]]);

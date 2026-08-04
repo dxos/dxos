@@ -2,23 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-toast'),
-  () => import('./adjust'),
-  () => import('./close'),
-  () => import('./open'),
-  () => import('./revert-workspace'),
-  () => import('./scroll-into-view'),
-  () => import('./set'),
-  () => import('./switch-workspace'),
-  () => import('./toggle-expose'),
-  () => import('./update-companion'),
-  () => import('./update-complementary'),
-  () => import('./update-dialog'),
-  () => import('./update-plank-size'),
-  () => import('./update-plank-sizes'),
-  () => import('./update-popover'),
-  () => import('./update-sidebar'),
-);
+import * as DeckOperation from '../types/DeckOperation';
+
+export const DeckOperationHandlerSet = OperationHandlerSet.keyed([
+  [LayoutOperation.AddToast, () => import('./add-toast')],
+  [DeckOperation.Adjust, () => import('./adjust')],
+  [LayoutOperation.Close, () => import('./close')],
+  [LayoutOperation.Open, () => import('./open')],
+  [LayoutOperation.RevertWorkspace, () => import('./revert-workspace')],
+  [LayoutOperation.ScrollIntoView, () => import('./scroll-into-view')],
+  [LayoutOperation.Set, () => import('./set')],
+  [LayoutOperation.SwitchWorkspace, () => import('./switch-workspace')],
+  [DeckOperation.ToggleExpose, () => import('./toggle-expose')],
+  [LayoutOperation.UpdateCompanion, () => import('./update-companion')],
+  [LayoutOperation.UpdateComplementary, () => import('./update-complementary')],
+  [LayoutOperation.UpdateDialog, () => import('./update-dialog')],
+  [DeckOperation.UpdatePlankSize, () => import('./update-plank-size')],
+  [DeckOperation.UpdatePlankSizes, () => import('./update-plank-sizes')],
+  [LayoutOperation.UpdatePopover, () => import('./update-popover')],
+  [LayoutOperation.UpdateSidebar, () => import('./update-sidebar')],
+]);

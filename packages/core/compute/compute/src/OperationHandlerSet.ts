@@ -27,20 +27,15 @@ export interface OperationHandlerSet {
 
   getHandlers(): Promise<Operation.WithHandler<Operation.Definition.Any>[]>;
 
-  /**
-   * The operation definitions this set can resolve, enumerable WITHOUT loading handler bodies.
-   * Implemented by {@link keyed} sets (and compositions of them); consumers that only need
-   * definitions (registry mirrors, pickers) read this instead of forcing {@link handlers}.
-   */
-  definitions?(): readonly Operation.Definition.Any[];
+  /** The operation definitions this set resolves, enumerable WITHOUT loading any handler body. */
+  definitions(): readonly Operation.Definition.Any[];
 
   /**
    * Resolves a single operation's handler, loading only that operation's module — the
    * per-operation counterpart to the load-everything {@link handlers}. Resolves `undefined` when
-   * the key is not in this set. Implemented by {@link keyed} sets and their compositions;
-   * {@link getHandler}/{@link getHandlerByKey} prefer this path when present.
+   * the key is not in this set.
    */
-  getHandlerFor?(key: string): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>;
+  getHandlerFor(key: string): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined>;
 }
 
 /**
@@ -57,6 +52,8 @@ export const empty: OperationHandlerSet = {
   [TypeId]: TypeId,
   handlers: Effect.succeed([]),
   getHandlers: () => Promise.resolve([]),
+  definitions: () => [],
+  getHandlerFor: () => Promise.resolve(undefined),
 };
 
 /**
@@ -70,37 +67,16 @@ export const empty: OperationHandlerSet = {
  * );
  * ```
  */
-export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any>[]): OperationHandlerSet => {
-  // Handlers are already materialized, so this set can answer per-key lookups directly. Without
-  // this, `resolveFromSets` consults keyed sets first and a later keyed contribution shadows an
-  // earlier `make` override — resolution must honor contribution order across both kinds.
-  return {
-    ...async(() => Promise.resolve(handlers)),
-    definitions: () => handlers,
-    getHandlerFor: (key) => {
-      const normalized = normalizeKey(key);
-      return Promise.resolve(handlers.find((handler) => normalizeKey(handler.meta.key) === normalized));
-    },
-  };
-};
-
-export const async = (
-  getHandlers: () => Promise<Operation.WithHandler<Operation.Definition.Any>[]>,
-): OperationHandlerSet => {
-  // NOTE: Re-runing async module imports has a big performance penalty in Chrome.
-  let promise: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
-  const getHandlersCached = () => {
-    if (!promise) {
-      promise = getHandlers();
-    }
-    return promise;
-  };
-  return {
-    [TypeId]: TypeId,
-    getHandlers,
-    handlers: Effect.promise(getHandlersCached),
-  };
-};
+export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any>[]): OperationHandlerSet => ({
+  [TypeId]: TypeId,
+  definitions: () => handlers,
+  getHandlerFor: (key) => {
+    const normalized = normalizeKey(key);
+    return Promise.resolve(handlers.find((handler) => normalizeKey(handler.meta.key) === normalized));
+  },
+  getHandlers: () => Promise.resolve(handlers),
+  handlers: Effect.succeed(handlers),
+});
 
 /**
  * Builds a set backed by an atom of contributed sets. The merged result is
@@ -136,8 +112,9 @@ export const reactive = (
     [TypeId]: TypeId,
     getHandlers,
     handlers: Effect.promise(getHandlers),
-    // Per-operation resolution over the CURRENT contributed sets: keyed contributions load only
-    // the matched operation's module; the load-everything paths above stay for enumerators.
+    definitions: () => registry.get(atom).flatMap((set) => set.definitions()),
+    // Per-operation resolution over the CURRENT contributed sets: only the matched operation's
+    // module loads; the load-everything paths above stay for enumerators.
     getHandlerFor: (key) => resolveFromSets(registry.get(atom), key),
   };
 };
@@ -149,32 +126,14 @@ export const reactive = (
  */
 export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
   assertArgument(sets.every(isOperationHandlerSet), 'sets', 'sets must be an array of OperationHandlerSet');
-  const base = async(() => Promise.all(sets.map((set) => set.getHandlers())).then((handlers) => handlers.flat()));
+  const getHandlers = () => Promise.all(sets.map((set) => set.getHandlers())).then((handlers) => handlers.flat());
   return {
-    ...base,
+    [TypeId]: TypeId,
+    definitions: () => sets.flatMap((set) => set.definitions()),
     getHandlerFor: (key) => resolveFromSets(sets, key),
-    ...(sets.every((set) => set.definitions) ? { definitions: () => sets.flatMap((set) => set.definitions!()) } : {}),
+    getHandlers,
+    handlers: Effect.promise(getHandlers),
   };
-};
-
-/**
- * Creates a new operation handler set from a list of lazy-loaded modules.
- *
- * Prefer {@link keyed}: an unkeyed lazy set can only answer a lookup by importing EVERY module,
- * so one invocation loads the whole plugin's handlers.
- *
- * @example
- * ```ts
- * const set = OperationHandlerSet.lazy(
- *   () => import('./my-handler'),
- *   () => import('./my-other-handler'),
- * );
- * ```
- */
-export const lazy = (
-  ...modules: (() => Promise<{ default: Operation.WithHandler<Operation.Definition.Any> }>)[]
-): OperationHandlerSet => {
-  return async(() => Promise.all(modules.map((module) => module().then(({ default: handler }) => handler))));
 };
 
 /** A {@link keyed} entry: the (statically imported, lightweight) definition + its handler module. */
@@ -222,55 +181,34 @@ export const keyed = (entries: readonly KeyedEntry[]): OperationHandlerSet => {
 };
 
 /**
- * Per-operation resolution across a list of sets: keyed sets answer from their index; unkeyed
- * sets are forced (their whole handler list loads) only when no keyed set matched first — so
- * per-operation granularity degrades per-set, not globally, during migration to {@link keyed}.
+ * Per-operation resolution across a list of sets, in contribution order so an earlier
+ * contribution overrides a later one.
  */
 const resolveFromSets = async (
   sets: readonly OperationHandlerSet[],
   key: string,
 ): Promise<Operation.WithHandler<Operation.Definition.Any> | undefined> => {
-  const normalized = normalizeKey(key);
   for (const set of sets) {
-    if (set.getHandlerFor) {
-      const handler = await set.getHandlerFor(key);
-      if (handler) {
-        return handler;
-      }
-    }
-  }
-  for (const set of sets) {
-    if (!set.getHandlerFor) {
-      const handlers = await set.getHandlers();
-      const handler = handlers.find((entry) => normalizeKey(entry.meta.key) === normalized);
-      if (handler) {
-        return handler;
-      }
+    const handler = await set.getHandlerFor(key);
+    if (handler) {
+      return handler;
     }
   }
   return undefined;
 };
 
-/**
- * Finds a handler in the set. Sets implementing {@link OperationHandlerSet.getHandlerFor}
- * resolve per-operation (only the matched handler's module loads); others force the full list.
- */
+/** Finds a handler in the set, loading only the matched operation's module. */
 const lookup = (
   set: OperationHandlerSet,
   key: string,
-  match: (handler: Operation.WithHandler<Operation.Definition.Any>) => boolean,
-): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => {
-  const attempt = set.getHandlerFor
-    ? Effect.promise(() => set.getHandlerFor!(key))
-    : Effect.map(set.handlers, (handlers) => handlers.find(match));
-  return Effect.gen(function* () {
-    const handler = yield* attempt;
+): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
+  Effect.gen(function* () {
+    const handler = yield* Effect.promise(() => set.getHandlerFor(key));
     if (handler) {
       return handler;
     }
     return yield* Effect.fail(new NoHandlerError(key));
   });
-};
 
 /**
  * Gets a handler for an operation by definition.
@@ -279,10 +217,7 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
   set: OperationHandlerSet,
   definition: Op,
 ): Effect.Effect<Operation.WithHandler<Op>, NoHandlerError> =>
-  lookup(set, definition.meta.key, (handler) => handler.meta.key === definition.meta.key) as Effect.Effect<
-    Operation.WithHandler<Op>,
-    NoHandlerError
-  >;
+  lookup(set, definition.meta.key) as Effect.Effect<Operation.WithHandler<Op>, NoHandlerError>;
 
 /**
  * Gets a handler for an operation by key.
@@ -292,13 +227,7 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
 export const getHandlerByKey = (
   set: OperationHandlerSet,
   key: string,
-): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => {
-  // Normalize both sides to plain NSID for comparison so callers can pass
-  // either a ToolId (plain NSID) or a full DXN string.
-  const normalizeKey = (k: string) => (DXN.isDXN(k) ? DXN.getName(k) : k);
-  const normalizedKey = normalizeKey(key);
-  return lookup(set, key, (handler) => normalizeKey(handler.meta.key) === normalizedKey);
-};
+): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => lookup(set, key);
 
 export class OperationHandlerProvider extends Context.Tag('@dxos/operation/OperationHandlerProvider')<
   OperationHandlerProvider,

@@ -4,9 +4,11 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
+import { GetContext, Relay } from './definitions';
+
 export * as AgentSkillOperations from './definitions';
 
-export const AgentSkillHandlers = OperationHandlerSet.lazy(
-  () => import('./get-context'),
-  () => import('./relay'),
-);
+export const AgentSkillHandlers = OperationHandlerSet.keyed([
+  [GetContext, () => import('./get-context')],
+  [Relay, () => import('./relay')],
+]);

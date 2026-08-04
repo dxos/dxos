@@ -4,9 +4,11 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
+import { GetCurrentDate, SetAlarm } from './definitions';
+
 export * as AlarmOperations from './definitions';
 
-export const AlarmHandlers = OperationHandlerSet.lazy(
-  () => import('./set-alarm'),
-  () => import('./get-current-date'),
-);
+export const AlarmHandlers = OperationHandlerSet.keyed([
+  [SetAlarm, () => import('./set-alarm')],
+  [GetCurrentDate, () => import('./get-current-date')],
+]);

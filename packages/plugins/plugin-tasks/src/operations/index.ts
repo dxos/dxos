@@ -4,15 +4,18 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const TasksOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./assign-task'),
-  () => import('./complete-task'),
-  () => import('./convert-to-task'),
-  () => import('./create-outline'),
-  () => import('./get-outline'),
-  () => import('./create-task'),
-  () => import('./list-tasks'),
-  () => import('./quick-entry'),
-  () => import('./update-outline'),
-  () => import('./update-task'),
-);
+import * as OutlineOperation from '../types/OutlineOperation';
+import * as TaskOperation from '../types/TaskOperation';
+
+export const TasksOperationHandlerSet = OperationHandlerSet.keyed([
+  [TaskOperation.AssignTask, () => import('./assign-task')],
+  [TaskOperation.CompleteTask, () => import('./complete-task')],
+  [OutlineOperation.ConvertToTask, () => import('./convert-to-task')],
+  [OutlineOperation.CreateOutline, () => import('./create-outline')],
+  [OutlineOperation.GetOutline, () => import('./get-outline')],
+  [TaskOperation.CreateTask, () => import('./create-task')],
+  [TaskOperation.ListTasks, () => import('./list-tasks')],
+  [OutlineOperation.QuickJournalEntry, () => import('./quick-entry')],
+  [OutlineOperation.UpdateOutline, () => import('./update-outline')],
+  [TaskOperation.UpdateTask, () => import('./update-task')],
+]);

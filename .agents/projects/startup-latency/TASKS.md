@@ -897,11 +897,16 @@ window entry, not composer boot). #12438 fixes it via `OperationHandlerSet.async
      (the reset dialog) instead of `App`. Rendered, not thrown: `Main` sits ABOVE the app-level
      error boundary, so a throw there escapes React and blanks the page.
 
+5. **Operation handler sets collapsed to one shape** — `definitions()` and `getHandlerFor()` are
+   now required members, so keying is the default rather than something sets opt into. `lazy` and
+   `async` are deleted; all 25 `lazy` call sites (123 modules) became `keyed`, so each now loads a
+   single operation's body per invocation instead of the whole plugin's. `delegation` needed its
+   operation definition split into `operations/definitions.ts` (it lived beside the handler, so
+   naming it statically would have pulled the body in). The keyed/unkeyed fallback in
+   `resolveFromSets`, the conditional in `lookup`, and `merge`'s conditional `definitions` spread
+   all go away.
+
 ### Open
 
-- [ ] **Operation handler sets should all work the same** — keying is the default behaviour, not
-  a separate conditional util. Collapse `OperationHandlerSet.make`/`keyed`/`async` so there is one
-  shape. (`plugin-spotlight` is the last `make(...)`-with-inline-bodies holdout.)
-- [ ] **Expand the subpath lint across all packages** — enforce a consistent namespaced API
-  surface repo-wide, not just the plugins already migrated. Remainder blocked on the
-  export-namespace -> module-file refactor for plugin-space/client/graph.
+Expanding the subpath lint across all packages is tracked as a `TODO(wittjosiah)` on
+`DXOS_SUBPATH_PACKAGES` in `dxos-subpath-imports.js`, beside the list it would replace.

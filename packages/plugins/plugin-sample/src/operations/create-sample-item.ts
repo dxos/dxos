@@ -4,7 +4,7 @@
 
 // Operation handler implementation.
 // Each handler file exports a default value so it can be lazy-loaded via
-// `OperationHandlerSet.lazy(() => import('./create-sample-item'))`.
+// `OperationHandlerSet.keyed([[SampleOperation.CreateSampleItem, () => import('./create-sample-item')]])`.
 // The handler receives the validated input and returns an Effect.
 
 import * as Effect from 'effect/Effect';

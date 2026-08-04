@@ -4,20 +4,36 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
+import {
+  ContextAdd,
+  ContextRemove,
+  Load,
+  ObjectCreate,
+  ObjectDelete,
+  ObjectUpdate,
+  Query,
+  RelationCreate,
+  RelationDelete,
+  SchemaAdd,
+  SchemaList,
+  TagAdd,
+  TagRemove,
+} from './definitions';
+
 export * as DatabaseOperations from './definitions';
 
-export const DatabaseHandlers = OperationHandlerSet.lazy(
-  () => import('./context-add'),
-  () => import('./context-remove'),
-  () => import('./load'),
-  () => import('./object-create'),
-  () => import('./object-delete'),
-  () => import('./object-update'),
-  () => import('./query'),
-  () => import('./relation-create'),
-  () => import('./relation-delete'),
-  () => import('./schema-add'),
-  () => import('./schema-list'),
-  () => import('./tag-add'),
-  () => import('./tag-remove'),
-);
+export const DatabaseHandlers = OperationHandlerSet.keyed([
+  [ContextAdd, () => import('./context-add')],
+  [ContextRemove, () => import('./context-remove')],
+  [Load, () => import('./load')],
+  [ObjectCreate, () => import('./object-create')],
+  [ObjectDelete, () => import('./object-delete')],
+  [ObjectUpdate, () => import('./object-update')],
+  [Query, () => import('./query')],
+  [RelationCreate, () => import('./relation-create')],
+  [RelationDelete, () => import('./relation-delete')],
+  [SchemaAdd, () => import('./schema-add')],
+  [SchemaList, () => import('./schema-list')],
+  [TagAdd, () => import('./tag-add')],
+  [TagRemove, () => import('./tag-remove')],
+]);

@@ -4,10 +4,12 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
+import { DeleteMemory, QueryMemories, SaveMemory } from './definitions';
+
 export * as MemoryOperations from './definitions';
 
-export const MemoryHandlers = OperationHandlerSet.lazy(
-  () => import('./save'),
-  () => import('./query'),
-  () => import('./delete'),
-);
+export const MemoryHandlers = OperationHandlerSet.keyed([
+  [SaveMemory, () => import('./save')],
+  [QueryMemories, () => import('./query')],
+  [DeleteMemory, () => import('./delete')],
+]);

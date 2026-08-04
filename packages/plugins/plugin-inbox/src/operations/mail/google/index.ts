@@ -5,6 +5,7 @@
 import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
+import * as InboxOperation from '../../../types/InboxOperation';
 import Send from './send';
 import Sync from './sync';
 
@@ -16,7 +17,7 @@ export const GmailFunctions: {
   Sync,
 };
 
-export const GmailHandlers = OperationHandlerSet.lazy(
-  () => import('./send'),
-  () => import('./sync'),
-);
+export const GmailHandlers = OperationHandlerSet.keyed([
+  [InboxOperation.GmailSend, () => import('./send')],
+  [InboxOperation.GoogleMailSync, () => import('./sync')],
+]);

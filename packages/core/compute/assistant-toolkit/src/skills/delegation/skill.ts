@@ -4,7 +4,7 @@
 
 import * as Skill from '@dxos/compute/Skill';
 
-import { DelegateTask } from './operations/delegate-task';
+import { DelegateTask } from './operations/definitions';
 
 const SKILL_KEY = 'org.dxos.skill.delegation';
 

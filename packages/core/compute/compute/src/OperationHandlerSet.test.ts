@@ -39,6 +39,8 @@ describe('OperationHandlerSet.reactive', () => {
     let resolveCount = 0;
     const trackingSet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => Promise.resolve(undefined),
       getHandlers: () => Promise.resolve([makeHandler(KEY_A, 'A')]),
       handlers: Effect.sync(() => {
         resolveCount++;
@@ -60,6 +62,8 @@ describe('OperationHandlerSet.reactive', () => {
     let callCount = 0;
     const flakySet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      definitions: () => [],
+      getHandlerFor: () => Promise.resolve(undefined),
       getHandlers: () => Promise.resolve([]),
       handlers: Effect.suspend(() => {
         callCount++;
@@ -130,25 +134,50 @@ describe('OperationHandlerSet.keyed', () => {
     expect(loads.a).toEqual(1);
   });
 
-  test('merge resolves from a keyed child without forcing unkeyed siblings', async ({ expect }) => {
-    let forced = 0;
-    const unkeyed = OperationHandlerSet.async(() => (forced++, Promise.resolve([makeHandler(KEY_B, 'B')])));
-    const keyed = OperationHandlerSet.keyed([
+  test('merge loads only the matched child', async ({ expect }) => {
+    const loads = { a: 0, b: 0 };
+    const setA = OperationHandlerSet.keyed([
       [
         Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
-        () => Promise.resolve({ default: makeHandler(KEY_A, 'A') }),
+        () => (loads.a++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
       ],
     ]);
-    const merged = OperationHandlerSet.merge(keyed, unkeyed);
+    const setB = OperationHandlerSet.keyed([
+      [
+        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_B } }),
+        () => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') })),
+      ],
+    ]);
+    const merged = OperationHandlerSet.merge(setA, setB);
 
-    const fromKeyed = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
-    expect(fromKeyed.meta.key).toEqual(KEY_A);
-    expect(forced).toEqual(0);
+    const fromA = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
+    expect(fromA.meta.key).toEqual(KEY_A);
+    expect(loads).toEqual({ a: 1, b: 0 });
 
-    // Unkeyed fallback still resolves (forcing only that set).
-    const fromUnkeyed = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_B));
-    expect(fromUnkeyed.meta.key).toEqual(KEY_B);
-    expect(forced).toBeGreaterThan(0);
+    const fromB = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_B));
+    expect(fromB.meta.key).toEqual(KEY_B);
+    expect(loads).toEqual({ a: 1, b: 1 });
+  });
+
+  test('merge enumerates definitions without loading any handler', async ({ expect }) => {
+    let loaded = 0;
+    const set = OperationHandlerSet.merge(
+      OperationHandlerSet.keyed([
+        [
+          Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
+          () => (loaded++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
+        ],
+      ]),
+      OperationHandlerSet.make(makeHandler(KEY_B, 'B')),
+    );
+
+    expect(
+      set
+        .definitions()
+        .map((definition) => definition.meta.key)
+        .sort(),
+    ).toEqual([KEY_A, KEY_B]);
+    expect(loaded).toEqual(0);
   });
 
   test('an earlier make-set override wins over a later keyed set for the same key', async ({ expect }) => {

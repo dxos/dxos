@@ -17,7 +17,7 @@ import { Outline, Task, TaskSet } from '@dxos/types';
 
 import { Agent, Chat } from '../../../types';
 import DelegationSkill from '../skill';
-import { DelegateTask } from './delegate-task';
+import { DelegateTask } from './definitions';
 import { DelegationHandlers } from './index';
 
 EntityId.dangerouslyDisableRandomness();

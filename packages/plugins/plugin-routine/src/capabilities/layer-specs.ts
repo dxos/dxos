@@ -69,12 +69,10 @@ const OperationHandlerProviderSpec = LayerSpec.make(
         };
         const liveSet: OperationHandlerSet.OperationHandlerSet = {
           [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+          definitions: () => currentSet().definitions(),
+          getHandlerFor: (key) => currentSet().getHandlerFor(key),
           getHandlers: () => currentSet().getHandlers(),
           handlers: Effect.suspend(() => currentSet().handlers),
-          getHandlerFor: async (key) => {
-            const set = currentSet();
-            return set.getHandlerFor ? set.getHandlerFor(key) : undefined;
-          },
         };
         return OperationHandlerSet.provide(liveSet);
       }),

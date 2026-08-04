@@ -4,6 +4,8 @@
 
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as DelegationOperations from './delegate-task';
+import { DelegateTask } from './definitions';
 
-export const DelegationHandlers = OperationHandlerSet.lazy(() => import('./delegate-task'));
+export * as DelegationOperations from './definitions';
+
+export const DelegationHandlers = OperationHandlerSet.keyed([[DelegateTask, () => import('./delegate-task')]]);

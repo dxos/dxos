@@ -9,6 +9,9 @@ import { createRequire } from 'node:module';
  * package once its exports map carries an entry per namespace segment — the fix keeps names the
  * exports map cannot resolve (flat re-exports such as errors) on the barrel import.
  */
+// TODO(wittjosiah): Expand across all @dxos packages, enforcing a consistent namespaced API
+//  surface repo-wide rather than an opt-in list. Each addition needs its exports map split per
+//  namespace first, which for the remainder means the export-namespace -> module-file refactor.
 const DXOS_SUBPATH_PACKAGES = new Set(['@dxos/app-framework', '@dxos/app-toolkit', '@dxos/compute']);
 
 /**
