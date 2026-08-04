@@ -294,7 +294,7 @@ proxy) with a regression test in `plugin-inbox/src/types/Mailbox.test.ts`.
 - **Edge execution**: `ProcessMailbox` uses only `Database.Service` and is edge-compatible by
   construction; the feed trigger kind is currently local-dispatcher-only.
 
-## 8. Real-mailbox fixtures — capture today, R2 storage design
+## 8. Real-mailbox fixtures — capture and secure storage
 
 ### 8.1 How real-user mailbox fixtures are captured today
 
@@ -315,33 +315,44 @@ proxy) with a regression test in `plugin-inbox/src/types/Mailbox.test.ts`.
 - **Gaps**: no sharing between machines/developers, no versioning, no auditable storage boundary
   for PII, and every consumer wires its own path convention.
 
-### 8.2 Design — save a mailbox archive to a secure R2 bucket
+### 8.2 Secure fixture storage — implemented (`scripts/fixtures.mjs`)
 
-Goal: a user saves their (raw, private) mailbox archive to a bucket once; any of their machines —
-and, with explicit grants, teammates — can run local tests against it. Never in CI, never in git.
+Goal: a developer captures their own (raw, PII-intact) mailbox once and can restore it on any of
+their machines — and share it with a teammate — for development and debugging. Never in CI, never
+in git.
 
-- **Bucket**: `dxos-test-fixtures` (private R2 bucket, no public access, default encryption,
-  object versioning + a lifecycle rule expiring non-current versions). Key scheme:
-  `mailbox/<user>/<name>-<yyyy-mm-dd>.json` (the ArchiveModule's existing fixture-name derivation).
-- **Auth**: R2's S3-compatible **scoped API tokens** — a read-only token for consumers
-  (`DX_FIXTURES_R2_TOKEN` + `DX_FIXTURES_R2_ENDPOINT` env), and per-user write tokens scoped to
-  the user's prefix for capture. Tokens live in the developer's shell env / 1Password, never in
-  the repo.
-- **Upload path (phased)**:
-  1. _Phase 1 — CLI_: a small script (`stories-inbox/scripts/fixture-upload.mjs`) that PUTs a
-     downloaded archive via the S3 API (or `wrangler r2 object put` for account holders). The
-     ArchiveModule keeps producing the file; the script moves it.
-  2. _Phase 2 — in-app_: an EDGE endpoint (authenticated by HALO identity) that issues short-lived
-     **presigned PUT URLs** for the caller's own prefix, so ArchiveModule grows a "Save to cloud"
-     button next to "Download starred" and the token never reaches the browser.
-- **Consumption**: extend the fixture resolution so `MAILBOX_FEED_FIXTURE` accepts an `r2://key`
-  (or plain https presigned URL) alongside a file path; a loader fetches with the read token and
-  caches into the git-ignored `fixtures/local/` so subsequent runs are offline. Tests gate on the
-  token's presence (`describe.skipIf(!process.env.DX_FIXTURES_R2_TOKEN)`) exactly like the Enron
-  dataset gate — CI has no token, so CI never sees the corpus.
-- **Privacy stance**: bucket contents are treated as sensitive PII regardless of scrubbing —
-  private bucket + scoped tokens is the boundary, scrubbing remains mandatory only for anything
-  that leaves it (committed fixtures, issue reports). An optional scrub pass (the m1–m3 rules) can
-  run at upload time for archives intended for sharing.
+**No HTTP endpoint.** The repo already has the shape one would copy (`/api/feedback-logs` streams a
+body straight into R2, `composer-app/src/functions/_worker.ts`), but that path is write-only and
+anonymous. Raw inboxes need authenticated _reads_ too, and standing up an authenticated read path
+for unredacted PII is a security surface not worth adding for a developer convenience. Cloudflare
+account membership already provides exactly the needed access control, via `wrangler`.
 
-Status: design only — no bucket, script, or loader is implemented in this PR.
+**Two independent controls**, so no single mistake exposes an inbox:
+
+1. The `test-fixtures` bucket is private and reachable only through `wrangler` — nothing to
+   misconfigure into public, no token that could reach a browser.
+2. Every object is encrypted with `age` **before it leaves the machine**, so bucket read access
+   alone yields ciphertext. The recipient key is shared (team-readable archives); the identity file
+   lives in 1Password.
+
+| Aspect          | Choice                                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Bucket / prefix | `test-fixtures`, keys under `mailbox/<user>/<name>-<yyyy-mm-dd>.json.age`                                                                                                      |
+| Auth            | Cloudflare account membership (`wrangler login`), `CLOUDFLARE_ACCOUNT_ID` when the token spans accounts                                                                        |
+| Encryption      | `age`, recipient in `DX_FIXTURES_AGE_RECIPIENT`, identity in `DX_FIXTURES_AGE_KEY` (both accept `op://` references, resolved via the 1Password CLI like `pnpm 1p-credentials`) |
+| Landing path    | `pull` refuses to write outside the git-ignored `stories-brain/fixtures/local/`, so an archive cannot be committed by a stray `git add -A`; `*.age` is git-ignored repo-wide   |
+
+**Flow.** ArchiveModule (star messages → "Download starred") → `pnpm fixtures push
+~/Downloads/mailbox-feed.json --name inbox` → elsewhere `pnpm fixtures pull` (newest by default, or
+an explicit key) → the existing `MAILBOX_FEED_FIXTURE` consumers read it. `pnpm fixtures list`
+enumerates the user's archives. Both directions validate the payload is an array of serialized
+messages, so pushing the wrong file fails at push rather than after a pull.
+
+**CI is excluded structurally, not by policy**: CI has neither Cloudflare credentials nor the age
+identity, so `pull` cannot succeed there. Fixture-backed tests stay gated on the file's presence
+(`describe.skipIf(!existsSync(FIXTURE))`) and skip — the same gate the Enron corpus uses.
+
+**Not built** (deliberately deferred): promoting `stories-brain`'s `loadFixtureMessages` to a
+node-only shared entry point so unit tests outside that private package can consume a pulled
+archive; the in-app "Save to cloud" button; and PII scrubbing for shareable fixtures (goal #2 —
+a separate concern from this storage path, which keeps PII intact by design).

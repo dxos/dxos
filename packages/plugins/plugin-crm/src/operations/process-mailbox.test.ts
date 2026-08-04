@@ -22,16 +22,16 @@ import { CrmOperationHandlerSet } from './index';
 const TestLayer = AssistantTestLayer({
   operationHandlers: CrmOperationHandlerSet,
   types: [
-    Mailbox.Mailbox,
-    Feed.Feed,
-    TagIndex.TagIndex,
-    Message.Message,
-    Person.Person,
-    Organization.Organization,
     Cursor.Cursor,
+    Feed.Feed,
+    Mailbox.Mailbox,
     Markdown.Document,
-    Text.Text,
+    Message.Message,
+    Organization.Organization,
+    Person.Person,
     ProfileOf.ProfileOf,
+    TagIndex.TagIndex,
+    Text.Text,
   ],
   disableLlmMemoization: true,
 });

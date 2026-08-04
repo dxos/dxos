@@ -29,6 +29,7 @@
     "create-worktree": "./scripts/create-worktree",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
+    "fixtures": "node scripts/fixtures.mjs",
     "gh-action": "./scripts/gh-action.mjs",
     "postinstall": "[ \"$CI\" != \"true\" ] && vite-node tools/toolbox/src/main.ts || true",
     "install-playwright": "playwright install",

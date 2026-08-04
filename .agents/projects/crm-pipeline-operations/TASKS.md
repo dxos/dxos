@@ -1,6 +1,6 @@
 # CRM Pipeline Operations — Tasks
 
-_Resume: watch PR #12441 Check to green; surface Composer preview URL. Last: implementation complete, PR opened._
+_Resume: PR #12441 — fixture push/pull scripts added; needs the `test-fixtures` R2 bucket + age key provisioned before first real use. Next: goal #2 (PII scrubbing), and promoting the stories-brain fixture loader for unit tests._
 
 ## Phase 1: Review & audit
 
@@ -47,6 +47,8 @@ a cross-plugin story, and design the real-fixture path.
 - [x] **stories-inbox ProcessMailbox story** — seeds the shared demo fixture + gate Organizations, runs the operation via OperationInvoker; play test asserts 3 persons/profiles/linked + cursor + idempotent re-run (12/12 green).
 - [x] **Review fixture capture; design R2 mechanism** — DESIGN.md §8: ArchiveModule star→export→import flow + `MAILBOX_FEED_FIXTURE` consumption reviewed; private `dxos-test-fixtures` R2 bucket design (scoped S3 tokens, phased CLI→presigned-URL upload, token-gated test consumption). Design only.
 - [x] **TESTPLAN** — `packages/plugins/plugin-crm/TESTPLAN.md`: storybook smoke, sync, toolbar path, feed-trigger template path, invariants.
+- [x] **Fixture acquisition + secure storage (goal #1)** — `scripts/fixtures.mjs` (`pnpm fixtures push|pull|list`): age-encrypted client-side, private `test-fixtures` R2 bucket under `mailbox/<user>/`, wrangler auth, writes only into the git-ignored `fixtures/local/`. Decisions: 1a age shared team key, 2a user provisions the bucket, 3a scripts+docs only, 4b on this PR. DESIGN.md §8.2 rewritten as implemented.
+- [ ] **PII scrubbing for shareable fixtures (goal #2)** — not started; separate from the storage path, which keeps PII intact by design.
 
 ### References
 
