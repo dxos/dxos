@@ -278,12 +278,12 @@ const AppFrame = () => {
           </Panel.Toolbar>
 
           <Panel.Content>
-            <div className='p-trim-md'>
-              <Message.Root valence='warning'>
+            <Message.Root valence='warning'>
+              <Message.Content>
                 <Message.Title>Message.Root</Message.Title>
-                <Message.Content>A valence surface nested inside a card.</Message.Content>
-              </Message.Root>
-            </div>
+                <Message.Body>A valence surface nested inside a card.</Message.Body>
+              </Message.Content>
+            </Message.Root>
             <ScrollArea.Root centered>
               <ScrollArea.Viewport classNames='flex flex-col gap-trim-md'>
                 <ContactCard />

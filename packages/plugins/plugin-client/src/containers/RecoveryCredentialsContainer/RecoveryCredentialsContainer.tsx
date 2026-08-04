@@ -49,7 +49,7 @@ export const RecoveryCredentialsContainer = () => {
             {recoveryCredentials.length < 1 ? (
               <Message.Root valence='error'>
                 <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
-                <Message.Content>{t('no-credentials.message')}</Message.Content>
+                <Message.Body>{t('no-credentials.message')}</Message.Body>
               </Message.Root>
             ) : (
               <Listbox.Root>

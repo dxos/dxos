@@ -19,23 +19,30 @@ type StoryArgs = {
   title: string;
   body: string;
   button?: boolean;
+  /** Wrap the title/body in `Message.Content` so the message carries its own inset. */
+  padded?: boolean;
 };
 
-const DefaultStory = ({ valence, title, body, button }: StoryArgs) => (
-  <div className='w-[30rem]'>
-    <Message.Root valence={valence}>
-      {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
-      {body && (
-        <Message.Content asChild classNames='gap-2'>
-          <div>
-            <p>{body}</p>
-            {button && <Button>Test</Button>}
-          </div>
-        </Message.Content>
-      )}
-    </Message.Root>
-  </div>
-);
+const DefaultStory = ({ valence, title, body, button, padded }: StoryArgs) => {
+  const Wrapper = padded ? Message.Content : React.Fragment;
+  return (
+    <div className='w-[30rem]'>
+      <Message.Root valence={valence}>
+        <Wrapper>
+          {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
+          {body && (
+            <Message.Body asChild classNames='gap-2'>
+              <div>
+                <p>{body}</p>
+                {button && <Button>Test</Button>}
+              </div>
+            </Message.Body>
+          )}
+        </Wrapper>
+      </Message.Root>
+    </div>
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-core/components/Message',
@@ -99,5 +106,15 @@ export const Error: Story = {
     title: 'Error',
     body: random.lorem.paragraphs(1),
     button: true,
+  },
+};
+
+export const Padded: Story = {
+  args: {
+    valence: 'neutral',
+    title: 'Padded',
+    body: random.lorem.paragraphs(1),
+    button: true,
+    padded: true,
   },
 };
