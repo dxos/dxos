@@ -23,6 +23,12 @@ export type MessageItem = {
   head: boolean;
   /** Last item of the transcript; suppresses the avatar rail's continuation line. */
   last: boolean;
+  /**
+   * In-memory text of an edit in progress, rendered in place of the stored body. Held here rather
+   * than written to the message so an incoming revision cannot overwrite what is being typed; it
+   * reaches the message only on submit.
+   */
+  draft?: string;
 };
 
 export type MessageDocumentItem = DividerItem | MessageItem;
@@ -35,6 +41,8 @@ export type MessageDocumentItemOptions = {
   /** A same-day gap exceeding this (ms) inserts an unlabeled divider. */
   gapDividerMs?: number;
   dtLocale?: Locale;
+  /** Message being edited, and the in-memory text standing in for its stored body. */
+  draft?: { id: string; text: string };
 };
 
 export const DEFAULT_GROUP_WINDOW_MS = 60_000;
@@ -67,6 +75,7 @@ export const buildMessageDocumentItems = (
     dayDivider = true,
     gapDividerMs = DEFAULT_GAP_DIVIDER_MS,
     dtLocale,
+    draft,
   }: MessageDocumentItemOptions = {},
 ): MessageDocumentItem[] => {
   const items: MessageDocumentItem[] = [];
@@ -96,7 +105,14 @@ export const buildMessageDocumentItems = (
 
     const sender = senderKey(message);
     const continues = runSender === sender && runLastTime !== undefined && time - runLastTime <= groupWindowMs;
-    items.push({ kind: 'message', id: message.id, message, head: !continues, last: false });
+    items.push({
+      kind: 'message',
+      id: message.id,
+      message,
+      head: !continues,
+      last: false,
+      ...(draft?.id === message.id ? { draft: draft.text } : {}),
+    });
     runSender = sender;
     runLastTime = time;
 
@@ -130,4 +146,4 @@ export const getMessageText = (message: MessageLike): string => {
  * so it costs no line and leaves no blank row to style away.
  */
 export const renderMessageDocumentItem: ChunkRenderer<MessageDocumentItem> = (item) =>
-  item.kind === 'divider' ? '' : `${getMessageText(item.message)}\n`;
+  item.kind === 'divider' ? '' : `${item.draft ?? getMessageText(item.message)}\n`;

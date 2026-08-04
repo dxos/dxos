@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EditorState, type Extension, Prec, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import {
+  EditorState,
+  type Extension,
+  Prec,
+  RangeSetBuilder,
+  StateEffect,
+  StateField,
+  type Transaction,
+} from '@codemirror/state';
 import {
   Decoration,
   type DecorationSet,
@@ -15,9 +23,8 @@ import {
 } from '@codemirror/view';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
-import { type ThemeMode } from '@dxos/react-ui';
 import { Domino } from '@dxos/ui';
-import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { type ChunkModel } from '../model';
 import { type MessageLike, type MessageMetadata, type MessageReaction, type MessageThreadSummary } from '../types';
@@ -71,8 +78,8 @@ export type MessageDocumentOptions = {
   /** Commit an edit; the host writes it back and clears the editing state. */
   onEditCommit?: (message: MessageLike, text: string) => void;
   onEditCancel?: (message: MessageLike) => void;
-  /** Nested edit editors need the host's theme, which they cannot read from React context. */
-  themeMode?: ThemeMode;
+  /** Every keystroke inside the edited message, so the host can hold the draft in memory. */
+  onDraftChange?: (message: MessageLike, text: string) => void;
   /** Copy for the thread row, so this package does not reach for a translation namespace mid-render. */
   labels?: { startThread: string; replyCount: (count: number) => string };
 };
@@ -245,69 +252,6 @@ class ThreadLinkWidget extends WidgetType {
   }
 }
 
-/**
- * The message body, swapped for an editor over the same text.
- *
- * A nested `EditorView` rather than an editable region of the transcript: the transcript document
- * is a rendering, so making part of it writable would have the user typing into something that the
- * next model sync overwrites.
- */
-class EditWidget extends WidgetType {
-  #view?: EditorView;
-
-  constructor(
-    private readonly _id: string,
-    private readonly _text: string,
-    private readonly _themeMode: ThemeMode | undefined,
-    private readonly _onCommit: (text: string) => void,
-    private readonly _onCancel: () => void,
-  ) {
-    super();
-  }
-
-  override eq(other: this) {
-    return this._id === other._id && this._text === other._text;
-  }
-
-  override toDOM() {
-    const root = Domino.of('div').classNames('plb-1').attributes({ 'data-testid': 'thread.document.editor' }).root;
-    this.#view = new EditorView({
-      parent: root,
-      doc: this._text,
-      extensions: [
-        // Ahead of the basic extensions and at the highest precedence: both bind Enter, and
-        // CodeMirror breaks precedence ties by extension order, so listing these second would let
-        // the default newline swallow the commit.
-        Prec.highest(
-          keymap.of([
-            { key: 'Enter', run: () => (this.#commit(), true) },
-            { key: 'Escape', run: () => (this._onCancel(), true) },
-          ]),
-        ),
-        createBasicExtensions({ lineWrapping: true }),
-        createThemeExtensions({ themeMode: this._themeMode }),
-      ],
-    });
-    // The caret has to leave the transcript for typing to reach the nested editor at all.
-    queueMicrotask(() => this.#view?.focus());
-    return root;
-  }
-
-  override destroy() {
-    this.#view?.destroy();
-    this.#view = undefined;
-  }
-
-  override ignoreEvent() {
-    return false;
-  }
-
-  #commit() {
-    const text = this.#view?.state.doc.toString() ?? this._text;
-    this._onCommit(text);
-  }
-}
-
 class AvatarMarker extends GutterMarker {
   constructor(private readonly _metadata: MessageMetadata) {
     super();
@@ -347,19 +291,7 @@ const formatTime = (timestamp?: string): string => {
  * is selectable across messages, and find matches it without stepping through tags.
  */
 const buildDecorations = (state: EditorState, options: MessageDocumentOptions): DecorationSet => {
-  const {
-    model,
-    getMetadata,
-    getReactions,
-    getQuote,
-    getThreadSummary,
-    onReact,
-    onThreadOpen,
-    onEditCommit,
-    onEditCancel,
-    themeMode,
-    labels,
-  } = options;
+  const { model, getMetadata, getReactions, getQuote, getThreadSummary, onReact, onThreadOpen, labels } = options;
   const { editingId, currentId } = state.field(messageDocumentState);
   const builder = new RangeSetBuilder<Decoration>();
   const { doc } = state;
@@ -397,26 +329,7 @@ const buildDecorations = (state: EditorState, options: MessageDocumentOptions): 
     const first = doc.lineAt(Math.min(range.from, doc.length));
     const last = doc.lineAt(Math.min(Math.max(range.to - 1, range.from), doc.length));
 
-    if (editingId === item.message.id) {
-      // Replaces the body's lines rather than sitting beside them, so the text is not shown twice.
-      // Emitted before this message's other chrome because the builder takes ranges in order and
-      // this one starts back at the first line, which the per-line decorations have moved past.
-      builder.add(
-        first.from,
-        last.to,
-        Decoration.replace({
-          widget: new EditWidget(
-            item.message.id,
-            doc.sliceString(first.from, last.to),
-            themeMode,
-            (text) => onEditCommit?.(item.message, text),
-            () => onEditCancel?.(item.message),
-          ),
-          block: true,
-        }),
-      );
-      continue;
-    }
+    const editing = editingId === item.message.id;
 
     const quote = getQuote?.(item.message);
     if (quote) {
@@ -433,11 +346,12 @@ const buildDecorations = (state: EditorState, options: MessageDocumentOptions): 
         from,
         from,
         Decoration.line({
-          class: current ? 'cm-message-row bg-activeSurface' : 'cm-message-row',
+          class: mx('cm-message-row', current && 'bg-activeSurface', editing && 'cm-message-row--editing'),
           attributes: {
             'data-testid': 'thread.document.message',
             'data-message-id': item.message.id,
             ...(current ? { 'aria-current': 'location' } : {}),
+            ...(editing ? { 'data-editing': 'true' } : {}),
           },
         }),
       );
@@ -446,6 +360,10 @@ const buildDecorations = (state: EditorState, options: MessageDocumentOptions): 
     // Anchored to the end of the message's last line: `range.to` is the first position of the
     // *next* chunk, which would hang a widget under the following message.
     const end = Math.min(Math.max(range.to - 1, range.from), doc.length);
+
+    if (editing) {
+      continue;
+    }
 
     const reactions = getReactions?.(item.message) ?? [];
     if (reactions.length > 0) {
@@ -485,12 +403,15 @@ const decorations = (options: MessageDocumentOptions): Extension =>
   StateField.define<DecorationSet>({
     create: (state) => buildDecorations(state, options),
     update: (value, transaction) => {
-      if (!transaction.docChanged && !transaction.effects.some((effect) => effect.is(messageDocumentChangedEffect))) {
+      // Rebuilt only when the model says its ranges moved. A document change alone is not that
+      // signal: while a message is being edited the user's keystrokes run ahead of the model, and
+      // rebuilding against ranges that no longer describe the document walks positions backwards,
+      // which the range builder rejects outright. Mapping is exactly right for that case — every
+      // decoration shifts with the change it did not cause.
+      if (!transaction.effects.some((effect) => effect.is(messageDocumentChangedEffect))) {
         return value.map(transaction.changes);
       }
 
-      // Rebuilt rather than mapped: an edit to one message moves the range of every message after
-      // it, and the widgets carry content that the edit may have changed.
       return buildDecorations(transaction.state, options);
     },
     provide: (field) => EditorView.decorations.from(field),
@@ -594,6 +515,170 @@ const hoverControls = (options: MessageDocumentOptions): Extension => {
   );
 };
 
+//
+// Editing
+//
+
+/** Line range of the message being edited, excluding the newline that separates it from the next. */
+const editRange = (
+  state: EditorState,
+  model: ChunkModel<MessageDocumentItem>,
+): { from: number; to: number } | undefined => {
+  const { editingId } = state.field(messageDocumentState);
+  if (!editingId) {
+    return undefined;
+  }
+
+  const index = model.chunks.findIndex((chunk) => chunk.kind === 'message' && chunk.message.id === editingId);
+  const range = index === -1 ? undefined : model.getRanges()[index];
+  if (!range) {
+    return undefined;
+  }
+
+  const { doc } = state;
+  const first = doc.lineAt(Math.min(range.from, doc.length));
+  const last = doc.lineAt(Math.min(Math.max(range.to - 1, range.from), doc.length));
+  return { from: first.from, to: last.to };
+};
+
+const isUserEdit = (transaction: Transaction): boolean =>
+  transaction.isUserEvent('input') ||
+  transaction.isUserEvent('delete') ||
+  transaction.isUserEvent('move') ||
+  transaction.isUserEvent('undo') ||
+  transaction.isUserEvent('redo');
+
+/**
+ * One message editable in place, in the transcript's own document — no nested editor, so the text
+ * keeps the transcript's markdown rendering, wrapping and metrics rather than approximating them.
+ *
+ * The draft lives in memory and reaches the message only on submit: while editing, the edited
+ * chunk renders the draft rather than the stored text, so an incoming revision of that message
+ * cannot overwrite what is being typed. Everything else keeps syncing — nothing about protecting a
+ * draft requires freezing the rest of the channel.
+ *
+ * `EditorState.readOnly` is deliberately NOT used: it drops user edits wholesale (see
+ * `createBasicExtensions`), which is the opposite of a document that is writable in one span.
+ */
+const editing = (options: MessageDocumentOptions): Extension => {
+  const { model, onEditCommit, onEditCancel, onDraftChange } = options;
+
+  const messageBeingEdited = (state: EditorState): MessageLike | undefined => {
+    const { editingId } = state.field(messageDocumentState);
+    const chunk = model.chunks.find((chunk) => chunk.kind === 'message' && chunk.message.id === editingId);
+    return chunk?.kind === 'message' ? chunk.message : undefined;
+  };
+
+  return [
+    // Contenteditable only while a message is being edited, so a chat log carries no stray caret.
+    EditorView.editable.compute([messageDocumentState], (state) => !!state.field(messageDocumentState).editingId),
+
+    // A transaction filter rather than `changeFilter`, whose suppressed ranges are half-open at the
+    // boundary: protecting `[to, length]` rejects an insertion *at* `to`, which is appending to the
+    // end of the message — the most ordinary edit there is. Judging the whole transaction against
+    // the row instead admits insertions at either end and still rejects a delete that would eat
+    // the separator and merge two messages.
+    EditorState.transactionFilter.of((transaction) => {
+      if (!transaction.docChanged || !isUserEdit(transaction)) {
+        // Model writes are how the transcript is populated at all, so they always pass.
+        return transaction;
+      }
+
+      const range = editRange(transaction.startState, model);
+      if (!range) {
+        return [];
+      }
+
+      let within = true;
+      transaction.changes.iterChangedRanges((fromA, toA) => {
+        if (fromA < range.from || toA > range.to) {
+          within = false;
+        }
+      });
+
+      return within ? transaction : [];
+    }),
+
+    Prec.highest(
+      keymap.of([
+        {
+          key: 'Enter',
+          run: (view) => {
+            const range = editRange(view.state, model);
+            const message = messageBeingEdited(view.state);
+            if (!range || !message) {
+              return false;
+            }
+
+            onEditCommit?.(message, view.state.doc.sliceString(range.from, range.to));
+            return true;
+          },
+        },
+        {
+          key: 'Escape',
+          run: (view) => {
+            const message = messageBeingEdited(view.state);
+            if (!message) {
+              return false;
+            }
+
+            onEditCancel?.(message);
+            return true;
+          },
+        },
+      ]),
+    ),
+
+    // Entering edit mode has to put the caret in the message: the user reached it from a toolbar
+    // button, not by clicking into the text, so nothing else would give them somewhere to type.
+    EditorView.updateListener.of((update) => {
+      const entered = update.transactions.some((transaction) =>
+        transaction.effects.some(
+          (effect) =>
+            effect.is(setMessageDocumentStateEffect) &&
+            effect.value.editingId &&
+            effect.value.editingId !== transaction.startState.field(messageDocumentState).editingId,
+        ),
+      );
+      if (entered) {
+        const range = editRange(update.state, model);
+        if (range) {
+          // Deferred: a dispatch cannot happen inside the update it is reacting to.
+          queueMicrotask(() => {
+            update.view.focus();
+            update.view.dispatch({ selection: { anchor: range.to } });
+          });
+        }
+      }
+    }),
+
+    EditorView.updateListener.of((update) => {
+      if (!update.docChanged || !update.transactions.some(isUserEdit)) {
+        return;
+      }
+
+      const range = editRange(update.state, model);
+      const message = messageBeingEdited(update.state);
+      if (!range || !message) {
+        return;
+      }
+
+      // The model's diff baseline is the text it last wrote, so a keystroke it did not make leaves
+      // it believing something false about the document. Rebasing first keeps the next sync from
+      // re-applying the user's own edit on top of itself; re-setting the chunks with the draft then
+      // moves the ranges back onto the document, which every decoration and the edit bounds read.
+      const text = update.state.doc.sliceString(range.from, range.to);
+      model.rebase(update.state.doc.toString());
+      model.set(
+        model.chunks.map((chunk) =>
+          chunk.kind === 'message' && chunk.message.id === message.id ? { ...chunk, draft: text } : chunk,
+        ),
+      );
+      onDraftChange?.(message, text);
+    }),
+  ];
+};
+
 /**
  * Selecting a message is how a host reveals what it refers to, so the whole row is the target —
  * as it is in the tile stack, where the click sits on the tile rather than on a control.
@@ -619,6 +704,7 @@ const selection = ({ model, onSelect }: MessageDocumentOptions): Extension =>
 export const messageDocumentChrome = (options: MessageDocumentOptions): Extension => [
   messageDocumentState,
   decorations(options),
+  editing(options),
   avatarGutter(options),
   hoverControls(options),
   selection(options),

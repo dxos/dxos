@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -185,13 +185,29 @@ const ThreadStory = () => {
   );
 };
 
-/** Edit in place: the body's lines are replaced by an editor over the same text. */
-const EditingStory = () => {
+/** Edit in place: the row itself becomes writable, with the draft held in memory until submit. */
+const EditingStory = ({ incoming }: { incoming?: boolean }) => {
   const [messages, setMessages] = useState(() => [
     at(DAY_1, alice, 'The original text.'),
-    at(DAY_1 + 120_000, bob, 'Another message, to show only one row is swapped.'),
+    at(DAY_1 + 120_000, bob, 'Another message, to show only one row is writable.'),
   ]);
   const [editingId, setEditingId] = useState<string>();
+
+  // Stands in for a peer revising the message you are editing, and for unrelated traffic: the
+  // draft must survive the first, and the second must keep arriving regardless.
+  useEffect(() => {
+    if (!incoming || !editingId) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      setMessages((current) => [
+        MessageType.make({ ...current[0], blocks: [{ _tag: 'text', text: 'Overwritten by a peer.' }] }),
+        ...current.slice(1),
+        at(DAY_1 + 240_000, bob, 'An unrelated message that arrived while you were typing.'),
+      ]);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [incoming, editingId]);
 
   return (
     <MessageDocument
@@ -351,25 +367,54 @@ export const Thread: Story = {
   },
 };
 
-/** Editing swaps one body for an editor; committing writes the new text back into the document. */
+/** The edited row becomes writable in place; committing writes the text back. */
 export const Editing: Story = {
-  render: EditingStory,
+  render: () => <EditingStory />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = () => canvasElement.querySelector<HTMLElement>('[data-editing="true"]');
+
+    hover(await canvas.findByText('The original text.'));
+    const edit = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip [data-testid="thread.document.edit"]');
+    await waitFor(() => expect(edit()).not.toBeNull());
+    await userEvent.click(edit()!);
+
+    // No nested editor: the message's own line is what became writable.
+    await waitFor(() => expect(row()).not.toBeNull());
+    await expect(canvas.queryByTestId('thread.document.editor')).toBeNull();
+    await expect(canvasElement.querySelector('.cm-content')?.getAttribute('contenteditable')).toBe('true');
+
+    await userEvent.click(await canvas.findByText('The original text.'));
+    await userEvent.keyboard('{End} Edited.{Enter}');
+    await waitFor(() => expect(row()).toBeNull());
+    await expect(await canvas.findByText(/The original text\. Edited\./)).toBeInTheDocument();
+    // The other message is untouched, so the writable span really was just the one row.
+    await expect(canvas.getByText(/Another message/)).toBeInTheDocument();
+  },
+};
+
+/**
+ * The draft is in memory until submit, so a peer revising the same message cannot overwrite what
+ * is being typed — while unrelated messages keep arriving, which is the thing suspending the sync
+ * would have cost.
+ */
+export const EditingWithIncoming: Story = {
+  render: () => <EditingStory incoming />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     hover(await canvas.findByText('The original text.'));
     const edit = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip [data-testid="thread.document.edit"]');
     await waitFor(() => expect(edit()).not.toBeNull());
     await userEvent.click(edit()!);
+    await waitFor(() => expect(canvasElement.querySelector('[data-editing="true"]')).not.toBeNull());
 
-    const editor = await canvas.findByTestId('thread.document.editor');
-    await expect(editor).toBeInTheDocument();
-    // The other message keeps its body: only the edited row is replaced.
-    await expect(canvas.getByText(/Another message/)).toBeInTheDocument();
+    await userEvent.click(await canvas.findByText('The original text.'));
+    await userEvent.keyboard('{End} mine');
 
-    await userEvent.click(within(editor).getByText('The original text.'));
-    await userEvent.keyboard(' Edited.{Enter}');
-    await waitFor(() => expect(canvas.queryByTestId('thread.document.editor')).toBeNull());
-    await expect(await canvas.findByText(/Edited\./)).toBeInTheDocument();
+    // The peer's revision of this message lands while typing and must lose to the draft.
+    await waitFor(() => expect(canvas.getByText(/An unrelated message that arrived/)).toBeInTheDocument());
+    await expect(canvas.queryByText(/Overwritten by a peer/)).toBeNull();
+    await expect(await canvas.findByText(/The original text\. mine/)).toBeInTheDocument();
   },
 };
 
