@@ -15,7 +15,7 @@ import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
 
@@ -123,7 +123,7 @@ export default Capability.makeModule(
       // Separate listing extension so the graph reacts when connections are added or removed.
       GraphBuilder.createExtension({
         id: 'connectionsSection',
-        url: { key: 'connections', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
+        url: { key: 'connections', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
         match: AppNodeMatcher.whenSpaceSettings,
         connector: (space) =>
           Effect.succeed([
@@ -220,7 +220,7 @@ export default Capability.makeModule(
       // Connection objects listed under the connections section node.
       GraphBuilder.createExtension({
         id: 'connectionListing',
-        url: { key: 'connection', kind: 'item', path: [SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
+        url: { key: 'connection', kind: 'item', path: [SpaceSchema.SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CONNECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

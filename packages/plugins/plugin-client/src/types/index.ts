@@ -1,8 +1,10 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2023 DXOS.org
 //
 
-export * from './account-cache';
-export * from './capabilities';
-export * from './events';
-export * from './schema';
+export * as Account from './Account';
+export * as AccountCache from './AccountCache';
+export * as ClientAction from './ClientAction';
+export * as ClientCapabilities from './ClientCapabilities';
+export * as ClientEvents from './ClientEvents';
+export * as ClientOptions from './ClientOptions';

@@ -14,7 +14,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
 
-import { SpaceForm } from '../types';
+import * as SpaceTypes from '../types/SpaceSchema';
 
 const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
@@ -45,7 +45,7 @@ export namespace SpaceOperation {
       icon: 'ph--plus--regular',
     },
     services: [Capability.Service, Plugin.Service],
-    input: SpaceForm,
+    input: SpaceTypes.SpaceForm,
     output: Schema.Struct({
       id: Schema.String,
       subject: Schema.Array(Schema.String),

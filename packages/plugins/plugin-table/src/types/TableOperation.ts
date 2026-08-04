@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Type, View } from '@dxos/echo';
-import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
+import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { meta } from '#meta';
@@ -18,7 +18,7 @@ export const CreateTableSchema = Schema.Struct({
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
     Schema.annotations({ title: 'Select type' }),
-    TypeInputOptionsAnnotation.set({
+    SpaceForm.TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
     }),

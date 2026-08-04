@@ -21,7 +21,6 @@ const PERSONAL_SPACE_LABEL: Label = ['personal-space.label', { ns: meta.profile.
 const UNNAMED_SPACE_LABEL: Label = ['unnamed-space.label', { ns: meta.profile.key }];
 
 export const SPACES = `${meta.profile.key}-spaces`;
-export { SHARED } from './types';
 
 //
 // Helpers

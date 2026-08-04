@@ -22,8 +22,8 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { SpaceHomeDashboard, SpaceHomeRecent } from '#containers';
 import { translations } from '#translations';
-import { SpaceHomeContent } from '#types';
 
+import * as SpaceSurface from '../../types/SpaceSurface';
 import { SpaceHomeArticle } from './SpaceHomeArticle';
 
 class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.test.task', '0.1.0'))(
@@ -66,7 +66,7 @@ const meta = {
         Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({
             id: 'story.spaceHomeRecent',
-            filter: Surface.makeFilter(SpaceHomeContent),
+            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
               return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
@@ -74,7 +74,7 @@ const meta = {
           }),
           Surface.create({
             id: 'story.spaceHomeDashboard',
-            filter: Surface.makeFilter(SpaceHomeContent),
+            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
               return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;

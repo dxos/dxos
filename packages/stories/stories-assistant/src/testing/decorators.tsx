@@ -50,7 +50,8 @@ import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
-import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -121,7 +122,7 @@ type DecoratorsProps = {
    * (supervisor + sub-agents).
    */
   scripted?: ScriptedLanguageModel.Script;
-} & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
+} & (Omit<ClientOptions.ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
 
 /**

@@ -21,11 +21,12 @@ import {
   ResetDialog,
   UsageContainer,
 } from '#containers';
-import { Account, type ClientPluginOptions } from '#types';
+import { ClientOptions } from '#types';
+import { Account } from '#types';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
 
-type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
+type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'onReset'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 

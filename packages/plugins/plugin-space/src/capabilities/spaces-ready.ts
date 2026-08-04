@@ -32,7 +32,7 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 import { SpaceOperation } from '#operations';
 import { SpaceCapabilities } from '#types';
 
-import { SHARED } from '../util';
+import * as SpaceSchema from '../types/SpaceSchema';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -78,13 +78,13 @@ export default Capability.makeModule(
         }
 
         const queryResults = yield* Effect.promise(() =>
-          personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
+          personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).run(),
         );
         if (!queryResults[0]) {
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space ids.
           try {
-            personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+            personalSpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [] }));
           } catch (err) {
             // The space may have been destroyed (e.g. during test teardown) between the query and the add.
             log.warn('Failed to initialize spaces order, space may be closing', { err });

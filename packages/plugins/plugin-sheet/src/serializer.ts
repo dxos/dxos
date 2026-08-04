@@ -3,11 +3,11 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type TypedObjectSerializer } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { Sheet } from '#types';
 
-export const serializer: TypedObjectSerializer<Sheet.Sheet> = {
+export const serializer: SpaceSchema.TypedObjectSerializer<Sheet.Sheet> = {
   serialize: async ({ object }): Promise<string> => {
     return JSON.stringify(object, null, 2);
   },

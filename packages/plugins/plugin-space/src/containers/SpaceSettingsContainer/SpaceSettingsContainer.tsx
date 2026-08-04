@@ -21,9 +21,11 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities, SpaceForm } from '#types';
+import { SpaceCapabilities } from '#types';
 
-const SpaceFormSchema = SpaceForm;
+import * as SpaceSchema from '../../types/SpaceSchema';
+
+const SpaceFormSchema = SpaceSchema.SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {

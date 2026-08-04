@@ -15,7 +15,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
-import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
@@ -154,14 +154,14 @@ export default Capability.makeModule(
       }),
 
       // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
-      // by plugin-space: type === SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
+      // by plugin-space: type === SpaceSchema.SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
       // conditional on the personal space and the welcome not being dismissed — read reactively via
       // the space properties atom so the actions appear/disappear live without a React re-render cycle.
       GraphBuilder.createExtension({
         id: 'spaceHomeActions',
         match: (node): Option.Option<Space> => {
           const space = (node.properties as { space?: unknown }).space;
-          return node.type === SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
+          return node.type === SpaceSchema.SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
         },
         actions: (space, get) => {
           const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;

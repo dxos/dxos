@@ -22,9 +22,10 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
+import { SpaceCapabilities } from '#types';
 
-import { SHARED, getSpaceDisplayName } from '../../../util';
+import * as SpaceSchema from '../../../types/SpaceSchema';
+import { getSpaceDisplayName } from '../../../util';
 import {
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
@@ -65,8 +66,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         Effect.succeed([
           {
             id: GraphPath.SPACE_HOME_SEGMENT,
-            type: SPACE_HOME_NODE_TYPE,
-            data: SPACE_HOME_NODE_TYPE,
+            type: SpaceSchema.SPACE_HOME_NODE_TYPE,
+            data: SpaceSchema.SPACE_HOME_NODE_TYPE,
             properties: {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
@@ -76,7 +77,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               droppable: false,
               space,
             },
-          } satisfies Node.NodeArg<typeof SPACE_HOME_NODE_TYPE>,
+          } satisfies Node.NodeArg<typeof SpaceSchema.SPACE_HOME_NODE_TYPE>,
         ]),
     }),
 
@@ -219,7 +220,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
+          const [spacesOrder] = get(
+            personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom,
+          );
           const [appGraph] = get(appGraphAtom);
           if (!appGraph) {
             return Effect.succeed([]);
@@ -359,7 +362,7 @@ const constructSpaceNode = ({
 
   return Node.make({
     id: space.id,
-    type: SPACE_TYPE,
+    type: SpaceSchema.SPACE_TYPE,
     cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {

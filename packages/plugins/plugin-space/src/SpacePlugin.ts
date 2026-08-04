@@ -40,12 +40,12 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type SpacePluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as SpaceSchema from './types/SpaceSchema';
 
-export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
+export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
   Plugin.addModule(CreateObject),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(NavigationTargetResolver),

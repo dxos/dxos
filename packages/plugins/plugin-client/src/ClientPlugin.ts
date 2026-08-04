@@ -24,9 +24,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type ClientPluginOptions } from '#types';
+import { ClientOptions } from '#types';
 
-export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
+export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(OperationHandler),

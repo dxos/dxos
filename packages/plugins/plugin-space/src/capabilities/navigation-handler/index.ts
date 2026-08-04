@@ -5,11 +5,11 @@
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { type SpacePluginOptions } from '#types';
+import * as SpaceSchema from '../../types/SpaceSchema';
 
 export type { NavigationHandlerOptions } from './navigation-handler';
 
 export const NavigationHandler = AppCapability.navigationHandler(() => import('./navigation-handler'), {
   requires: [Capabilities.OperationInvoker],
-  props: (options: SpacePluginOptions) => ({ invitationProp: options.invitationProp }),
+  props: (options: SpaceSchema.SpacePluginOptions) => ({ invitationProp: options.invitationProp }),
 });

@@ -9,9 +9,10 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { SpaceCapabilities, SpaceCapability, type SpacePluginOptions } from '#types';
+import { SpaceCapabilities, SpaceCapability } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
+import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
 export * from './app-graph-builder';
@@ -48,7 +49,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.section',
     'org.dxos.role.statusIndicator',
   ],
-  props: (options: SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
+  props: (options: SpaceSchema.SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
 });
 export const Repair = Capability.lazyModule(
   'Repair',
@@ -92,7 +93,7 @@ export const SpaceState = Capability.lazyModule(
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   provides: [SpaceOperationConfig],
-  props: (options: SpacePluginOptions) => ({
+  props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
     observability: options.observability,
   }),

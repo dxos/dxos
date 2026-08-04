@@ -6,7 +6,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { ClientCapabilities, type ClientPluginOptions } from '#types';
+import { ClientOptions } from '#types';
+import { ClientCapabilities } from '#types';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',
@@ -40,7 +41,7 @@ export const NavigationHandler = Capability.lazyModule(
   {
     requires: [Capabilities.OperationInvoker],
     provides: [AppCapabilities.NavigationHandler],
-    props: ({ invitationProp }: ClientPluginOptions) => ({ invitationProp }),
+    props: ({ invitationProp }: ClientOptions.ClientPluginOptions) => ({ invitationProp }),
   },
   () => import('./navigation-handler/navigation-handler'),
 );

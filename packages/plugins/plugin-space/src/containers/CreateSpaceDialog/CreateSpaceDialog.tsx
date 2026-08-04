@@ -17,11 +17,12 @@ import { Form } from '@dxos/react-ui-form';
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceForm } from '#types';
+
+import * as SpaceSchema from '../../types/SpaceSchema';
 
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
-type FormValues = Schema.Schema.Type<typeof SpaceForm>;
+type FormValues = Schema.Schema.Type<typeof SpaceSchema.SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
@@ -68,7 +69,7 @@ export const CreateSpaceDialog = () => {
         <Form.Root
           testId='create-space-form'
           autoFocus
-          schema={SpaceForm}
+          schema={SpaceSchema.SpaceForm}
           defaultValues={initialValues}
           fieldProvider={inputSurfaceLookup}
           onSave={handleCreateSpace}

@@ -7,15 +7,17 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { createKvsStore } from '@dxos/effect';
 
-import { AccountCache, ClientCapabilities } from '#types';
+import { ClientCapabilities } from '#types';
+
+import * as AccountCache from '../types/AccountCache';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       ClientCapabilities.AccountCache,
-      createKvsStore<AccountCache>({
+      createKvsStore<AccountCache.AccountCache>({
         key: 'composer.account',
-        schema: AccountCache,
+        schema: AccountCache.AccountCache,
         defaultValue: () => ({}),
       }),
     ),

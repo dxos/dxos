@@ -6,9 +6,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 
-import { SpaceCapabilities, type SpacePluginOptions } from '#types';
+import { SpaceCapabilities } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers';
+import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
 export const CreateObject = Capability.lazyModule(
@@ -35,7 +36,7 @@ export const UndoMappings = Capability.lazyModule(
   'UndoMappings',
   {
     provides: [Capabilities.UndoMapping, SpaceOperationConfig],
-    props: (options: SpacePluginOptions) => ({
+    props: (options: SpaceSchema.SpacePluginOptions) => ({
       createInvitationUrl: makeCreateInvitationUrl(options),
       observability: options.observability,
     }),

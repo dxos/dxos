@@ -14,7 +14,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SHARED } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Expando, Text } from '@dxos/schema';
 import { Position, isNonNullable } from '@dxos/util';
 
@@ -187,7 +187,7 @@ export default Capability.makeModule(
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
+          const [order] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom);
           if (order) {
             const snapshot = get(Obj.atom(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];

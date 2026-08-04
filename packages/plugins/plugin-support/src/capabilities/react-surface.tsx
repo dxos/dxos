@@ -16,7 +16,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Annotation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as DeckRole from '@dxos/plugin-deck/DeckRole';
-import { SpaceHomeContent } from '@dxos/plugin-space';
+import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { useClient } from '@dxos/react-client';
 import { Position } from '@dxos/util';
 
@@ -54,7 +54,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHomeWelcome',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         position: Position.first,
         component: ({ data }) => <SpaceHomeWelcome space={data.space} />,
       }),

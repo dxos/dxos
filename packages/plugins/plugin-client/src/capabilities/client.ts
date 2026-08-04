@@ -13,10 +13,11 @@ import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client
 import { log } from '@dxos/log';
 
 import { ClientEvents } from '#types';
-import { ClientCapabilities, type ClientPluginOptions } from '#types';
+import { ClientOptions } from '#types';
+import { ClientCapabilities } from '#types';
 
 type ClientCapabilityOptions = Omit<
-  ClientPluginOptions,
+  ClientOptions.ClientPluginOptions,
   'appKey' | 'shareableLinkOrigin' | 'invitationPath' | 'invitationParam' | 'onReset'
 >;
 

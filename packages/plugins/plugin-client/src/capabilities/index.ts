@@ -7,7 +7,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '#types';
+import { ClientOptions } from '#types';
+import { ClientCapabilities, ClientEvents } from '#types';
 
 export const AccountCache = Capability.lazyModule(
   'AccountCache',
@@ -74,7 +75,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     invitationPath = '/',
     invitationProp = 'deviceInvitationCode',
     onReset,
-  }: ClientPluginOptions) => {
+  }: ClientOptions.ClientPluginOptions) => {
     const createInvitationUrl = (invitationCode: string) => {
       const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
       baseUrl.searchParams.set(invitationProp, invitationCode);

@@ -14,10 +14,10 @@ import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
 
-import { type ClientPluginOptions } from '#types';
+import { ClientOptions } from '#types';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
-  Pick<ClientPluginOptions, 'onReset'> & {
+  Pick<ClientOptions.ClientPluginOptions, 'onReset'> & {
     capabilityManager: CapabilityManager.CapabilityManager;
     /**
      * Optional async action run before `client.reset()`. Throwing here aborts the

@@ -50,16 +50,7 @@ import {
 } from '#containers';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import {
-  HueAnnotationId,
-  IconAnnotationId,
-  Settings,
-  SPACE_HOME_NODE_TYPE,
-  SpaceCapabilities,
-  SpaceHomeContent,
-  type TypeInputOptions,
-  TypeInputOptionsAnnotationId,
-} from '#types';
+import { Settings, SpaceCapabilities } from '#types';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -68,6 +59,9 @@ import {
   JOIN_DIALOG,
   RENAME_POPOVER,
 } from '../constants';
+import * as SpaceForm from '../types/SpaceForm';
+import * as SpaceSchema from '../types/SpaceSchema';
+import * as SpaceSurface from '../types/SpaceSurface';
 
 type ReactSurfaceOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -78,14 +72,14 @@ export default Capability.makeModule(
     return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceHome',
-        filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
+        filter: AppSurface.literal(AppSurface.Article, SpaceSchema.SPACE_HOME_NODE_TYPE),
         component: ({ data, role }) => (
           <SpaceHomeArticle role={role} attendableId={data.attendableId} space={data.properties?.space} />
         ),
       }),
       Surface.create({
         id: 'spaceHomeRecent',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         component: ({ data }) => {
           const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
           return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
@@ -93,7 +87,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'spaceHomeDashboard',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         component: ({ data }) => {
           const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
           return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
@@ -276,7 +270,9 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'createInitialSpaceFormHue',
-        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, HueAnnotationId)),
+        filter: AppSurface.formInputBySchema(
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, SpaceSchema.HueAnnotationId),
+        ),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {
@@ -296,7 +292,9 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'createInitialSpaceFormIcon',
-        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, IconAnnotationId)),
+        filter: AppSurface.formInputBySchema(
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, SpaceSchema.IconAnnotationId),
+        ),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {
@@ -323,7 +321,8 @@ export default Capability.makeModule(
         id: 'typenameFormInput',
         filter: AppSurface.formInput(
           (data) =>
-            data.prop === 'typename' && !!SchemaEx.findAnnotation(data.schema.ast, TypeInputOptionsAnnotationId),
+            data.prop === 'typename' &&
+            !!SchemaEx.findAnnotation(data.schema.ast, SpaceForm.TypeInputOptionsAnnotationId),
         ),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
@@ -334,7 +333,10 @@ export default Capability.makeModule(
           const props = { ...inputProps, type: ast } as any as FormFieldRendererProps;
           const target = data.target;
           const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
-          const annotation = SchemaEx.findAnnotation<TypeInputOptions>(data.schema.ast, TypeInputOptionsAnnotationId)!;
+          const annotation = SchemaEx.findAnnotation<SpaceForm.TypeInputOptions>(
+            data.schema.ast,
+            SpaceForm.TypeInputOptionsAnnotationId,
+          )!;
           const options = useTypeOptions({ db, annotation });
 
           return <SelectField {...props} options={options} />;

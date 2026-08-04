@@ -14,8 +14,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
-import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -38,8 +38,8 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',
-        url: { key: 'routines', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
-        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
+        url: { key: 'routines', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
+        match: NodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
         connector: () => {
           return Effect.succeed([
             AppNode.makeSettingsPanel({

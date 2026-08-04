@@ -16,7 +16,7 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { SpaceHomeContent, SpaceHomePinBottom } from '@dxos/plugin-space';
+import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import { Panel } from '@dxos/react-ui';
 import { Position } from '@dxos/util';
 
@@ -52,12 +52,12 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'spaceHomePrompt',
-        filter: Surface.makeFilter(SpaceHomePinBottom),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
         component: ({ data }) => <SpaceHomePrompt space={data.space} />,
       }),
       Surface.create({
         id: 'spaceHomeSuggestions',
-        filter: Surface.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         position: Position.last,
         component: ({ data }) => {
           const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeSuggestions');
