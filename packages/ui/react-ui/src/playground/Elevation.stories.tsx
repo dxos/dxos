@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
+import { mx } from '@dxos/ui-theme';
 
 import {
   Avatar,
@@ -175,6 +176,28 @@ const SettingsDialog = ({ open, onOpenChange }: { open: boolean; onOpenChange: (
   </Dialog.Root>
 );
 
+/**
+ * The narrow outer rails. In the app these are separate elements beside the L1/R1 sidebars
+ * (`L0Menu`, the companion tab strip), and they are the only consumers of `dx-l0-surface` /
+ * `dx-r0-surface` — so without them here nothing guards the rails collapsing back onto the
+ * sidebar tone.
+ */
+const Rail = ({ side }: { side: 'l0' | 'r0' }) => (
+  <div
+    role='none'
+    className={mx(
+      'shrink-0 grid grid-rows-[1fr_min-content] place-items-center py-2 w-(--dx-rail-size)',
+      side === 'l0' ? 'dx-l0-surface' : 'dx-r0-surface',
+    )}
+  >
+    <div className='grid gap-1 place-items-center'>
+      <IconButton iconOnly icon='ph--house--regular' label='Home' variant='ghost' />
+      <IconButton iconOnly icon='ph--folder--regular' label='Collections' variant='ghost' />
+    </div>
+    <IconButton iconOnly icon='ph--gear--regular' label='Settings' variant='ghost' />
+  </div>
+);
+
 const AppFrame = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -182,7 +205,8 @@ const AppFrame = () => {
     <Main.Root defaultNavigationSidebarState='expanded' defaultComplementarySidebarState='expanded'>
       <Main.Overlay />
 
-      <Main.NavigationSidebar label='Navigation'>
+      <Main.NavigationSidebar label='Navigation' classNames='flex flex-row'>
+        <Rail side='l0' />
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -279,7 +303,8 @@ const AppFrame = () => {
         </Panel.Root>
       </Main.Content>
 
-      <Main.ComplementarySidebar label='Complementary'>
+      <Main.ComplementarySidebar label='Complementary' classNames='flex flex-row-reverse'>
+        <Rail side='r0' />
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
