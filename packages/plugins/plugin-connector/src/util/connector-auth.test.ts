@@ -16,11 +16,12 @@ import { AccessToken, Cursor } from '@dxos/link';
 import { Node } from '@dxos/plugin-graph';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { Connection, type ConnectorEntry } from '../types';
+import { Connection } from '../types';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { connectorAuthActions } from './connector-auth';
 
 // A connector is "offered" (gets a Connect entry) when it has an auth flow; oauth is the simplest.
-const authFlow: Partial<ConnectorEntry> = { oauth: { provider: OAuthProvider.GOOGLE, scopes: [] } };
+const authFlow: Partial<ConnectorSpec.ConnectorEntry> = { oauth: { provider: OAuthProvider.GOOGLE, scopes: [] } };
 
 const TestSync = Operation.make({
   meta: { key: DXN.make('org.dxos.test.connectorAuth.sync'), name: 'Test Sync' },
@@ -29,11 +30,14 @@ const TestSync = Operation.make({
 });
 
 /** A connector that keeps its bindings on a schedule, so reuse sets a sync Routine up for them. */
-const scheduledSync: Partial<ConnectorEntry> = {
+const scheduledSync: Partial<ConnectorSpec.ConnectorEntry> = {
   sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
 };
 
-const makeConnector = (id: string, extra: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
+const makeConnector = (
+  id: string,
+  extra: Partial<ConnectorSpec.ConnectorEntry> = {},
+): ConnectorSpec.ConnectorEntry => ({
   id,
   source: `${id}.example`,
   label: id.toUpperCase(),
@@ -120,7 +124,7 @@ describe('connectorAuthActions', () => {
     const { db, addConnection } = await setup();
     const connection = addConnection('b');
     const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
-    const connector: ConnectorEntry = makeConnector('b', scheduledSync);
+    const connector: ConnectorSpec.ConnectorEntry = makeConnector('b', scheduledSync);
 
     const actions = connectorAuthActions({
       connectorIds: ['b'],
@@ -159,7 +163,7 @@ describe('connectorAuthActions', () => {
     );
     const connection = db.add(Obj.make(Connection.Connection, { connectorId: 'b', accessToken: Ref.make(token) }));
     const target = db.add(Obj.make(AccessToken.AccessToken, { source: 'target.example', token: 'tok' }));
-    const connector: ConnectorEntry = makeConnector('b');
+    const connector: ConnectorSpec.ConnectorEntry = makeConnector('b');
 
     const actions = connectorAuthActions({
       connectorIds: ['b'],

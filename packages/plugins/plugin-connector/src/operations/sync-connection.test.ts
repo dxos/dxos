@@ -25,9 +25,10 @@ import { AccessToken, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { Connection, Connector, type ConnectorEntry, ConnectorOperation } from '#types';
+import { Connection, ConnectorOperation } from '#types';
 
 import { autoSyncConnection } from '../capabilities/connector-coordinator/auto-sync';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import SyncConnectionHandler from './sync-connection';
 
 describe('SyncConnection', () => {
@@ -150,7 +151,13 @@ describe('SyncConnection', () => {
    * A connector that keeps its bindings in sync on a schedule (`scheduled`) syncs by force-running
    * the Routine's trigger; one without a spec is invoked directly, which is the distinction under test.
    */
-  const makeConnector = ({ scheduled, auto }: { scheduled: boolean; auto?: boolean }): ConnectorEntry => ({
+  const makeConnector = ({
+    scheduled,
+    auto,
+  }: {
+    scheduled: boolean;
+    auto?: boolean;
+  }): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
     sync: {
@@ -167,7 +174,11 @@ describe('SyncConnection', () => {
    */
   const makeCapabilities = ({ scheduled, withMonitor }: { scheduled: boolean; withMonitor: boolean }) => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
-    manager.contribute({ module: 'test', interface: Connector, implementation: [makeConnector({ scheduled })] });
+    manager.contribute({
+      module: 'test',
+      interface: ConnectorSpec.Connector,
+      implementation: [makeConnector({ scheduled })],
+    });
     if (withMonitor) {
       manager.contribute({
         module: 'test',

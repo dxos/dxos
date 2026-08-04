@@ -12,8 +12,9 @@ import { Cursor } from '@dxos/link';
 import { type Node } from '@dxos/plugin-graph';
 
 import { meta } from '../meta';
-import { ConnectorCoordinator, type ConnectorEntry } from '../types';
 import * as Connection from '../types/Connection';
+import * as ConnectorCoordination from '../types/ConnectorCoordination';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { ensureSyncTrigger } from './sync-routine';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
@@ -21,13 +22,14 @@ const CONNECT_ICON = 'ph--plugs--regular';
 
 /** Connectors from `connectorIds` that expose an auth flow (oauth or credentialForm). */
 const offeredConnectors = (
-  allConnectors: readonly ConnectorEntry[],
+  allConnectors: readonly ConnectorSpec.ConnectorEntry[],
   connectorIds: readonly string[],
-): ConnectorEntry[] =>
+): ConnectorSpec.ConnectorEntry[] =>
   connectorIds
     .map((id) => allConnectors.find((connector) => connector.id === id))
     .filter(
-      (connector): connector is ConnectorEntry => !!connector && (!!connector.oauth || !!connector.credentialForm),
+      (connector): connector is ConnectorSpec.ConnectorEntry =>
+        !!connector && (!!connector.oauth || !!connector.credentialForm),
     );
 
 /** Existing connections for any of `connectorIds`, offered for reuse (binding a new target to them). */
@@ -40,7 +42,7 @@ const reusableConnections = (
   );
 
 export type ConnectorAuthActionsOptions = {
-  /** Stable ids of the {@link ConnectorEntry} entries the menu offers: existing connections from any
+  /** Stable ids of the {@link ConnectorSpec.ConnectorEntry} entries the menu offers: existing connections from any
    * of them are offered for reuse, and each (with an auth flow) gets a "Connect X" entry. */
   connectorIds: readonly string[];
   db: Database.Database;
@@ -48,7 +50,7 @@ export type ConnectorAuthActionsOptions = {
   /** Existing local object (e.g. an empty Mailbox) to wire up as the new connection's first sync
    * target, forwarded to the connector's `onTokenCreated` and the reuse binding. */
   existingTarget?: Ref.Ref<Obj.Unknown>;
-  allConnectors: readonly ConnectorEntry[];
+  allConnectors: readonly ConnectorSpec.ConnectorEntry[];
   allConnections: readonly Connection.Connection[];
 };
 
@@ -79,7 +81,7 @@ export const connectorAuthActions = ({
     return [];
   }
 
-  const connectAction = (connector: ConnectorEntry) =>
+  const connectAction = (connector: ConnectorSpec.ConnectorEntry) =>
     AppNode.makeToolbarAction({
       id: `connect-${connector.id}`,
       // The graph action label schema has no interpolation slots (unlike `t()`), so use a plain string.
@@ -88,7 +90,7 @@ export const connectorAuthActions = ({
       testId: `connectorPlugin.connect.${connector.id}`,
       data: () =>
         Effect.gen(function* () {
-          const coordinator = yield* Capability.get(ConnectorCoordinator);
+          const coordinator = yield* Capability.get(ConnectorCoordination.ConnectorCoordinator);
           yield* coordinator.createConnection({ db, spaceId, connectorId: connector.id, existingTarget });
         }),
     });
@@ -145,7 +147,10 @@ export const connectorAuthActions = ({
 export const CONNECTOR_AUTH_GROUP_ID = 'connectorAuth';
 
 /** Label for a connection's connector, falling back to the connection id when unregistered. */
-const connectorLabel = (allConnectors: readonly ConnectorEntry[], connection: Connection.Connection): string =>
+const connectorLabel = (
+  allConnectors: readonly ConnectorSpec.ConnectorEntry[],
+  connection: Connection.Connection,
+): string =>
   allConnectors.find((connector) => connector.id === connection.connectorId)?.label ??
   connection.connectorId ??
   connection.id;

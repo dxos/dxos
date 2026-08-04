@@ -11,13 +11,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import {
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 
@@ -39,8 +34,8 @@ export const GetDiscordChannels = Operation.make({
     icon: 'ph--hash--regular',
   },
   services: [Capability.Service],
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 /**
@@ -56,8 +51,8 @@ export const MaterializeDiscordTarget = Operation.make({
     description: 'Create the empty local Channel bound to a selected Discord channel.',
     icon: 'ph--hash--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**

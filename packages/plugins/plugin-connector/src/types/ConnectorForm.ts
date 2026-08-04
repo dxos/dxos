@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { ConnectorAnnotationId } from './annotations';
+import { ConnectorAnnotationId } from './ConnectorAnnotations';
 
 /**
  * Form schema for the create-Connection dialog. `{@link ConnectorAnnotationId}`

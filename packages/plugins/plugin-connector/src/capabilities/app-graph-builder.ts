@@ -18,10 +18,11 @@ import { SpaceOperation } from '@dxos/plugin-space';
 import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
 
 import { meta } from '#meta';
-import { Connector } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import { Connection, ConnectorAuthAnnotation, ConnectorOperation } from '../types';
+import { Connection, ConnectorOperation } from '../types';
+import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**
@@ -63,7 +64,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Hoisted so the connector-reading extensions below establish a reactive dependency instead of
     // reading the capability manager synchronously (graph-extension bodies must never sync-get).
-    const connectorAtom = yield* Capability.atom(Connector);
+    const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -158,7 +159,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Connector-auth ("Connect X") for any object whose type carries `ConnectorAuthAnnotation` —
+      // ConnectorSpec.Connector-auth ("Connect X") for any object whose type carries `ConnectorAnnotations.ConnectorAuthAnnotation` —
       // the single cross-plugin toolbar contribution. Opting in is purely declarative (annotate the
       // type); the connectorIds / bindTarget come from the annotation, and connected-state is derived
       // from bindTarget. Owning plugins inline their own sync/generate actions separately.
@@ -170,7 +171,9 @@ export default Capability.makeModule(
           }
           const type = Obj.getType(node.data);
           const schema = type ? Type.getSchema(type) : undefined;
-          const annotation = schema ? Option.getOrUndefined(ConnectorAuthAnnotation.get(schema)) : undefined;
+          const annotation = schema
+            ? Option.getOrUndefined(ConnectorAnnotations.ConnectorAuthAnnotation.get(schema))
+            : undefined;
           return annotation ? Option.some({ object: node.data, annotation }) : Option.none();
         },
         // A dropdown group, contributed via `actionGroups` so its type/nested actions are preserved.

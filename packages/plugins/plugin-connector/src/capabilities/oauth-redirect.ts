@@ -7,16 +7,15 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 
-import { ConnectorCoordinator } from '#types';
-
 import { OAUTH_REDIRECT_PATH } from '../constants';
+import * as ConnectorCoordination from '../types/ConnectorCoordination';
 
 /**
  * Startup module that finalizes redirect-flow OAuth callbacks.
  *
  * Captures `accessTokenId` and `accessToken` from `/redirect/oauth?…` and
  * rewrites `window.location` to `/` synchronously, so the deck's URL
- * handler doesn't try to interpret the redirect path. `ConnectorCoordinator`
+ * handler doesn't try to interpret the redirect path. `ConnectorCoordination.ConnectorCoordinator`
  * is a declared dependency, so it is already active by the time this module
  * runs; the finalize work still runs on a daemon fiber so Startup completes
  * immediately and the rest of the boot sequence isn't blocked.
@@ -53,7 +52,7 @@ export default Capability.makeModule(
     const tokens = readRedirectTokens();
     if (tokens) {
       log('oauth redirect: capturing tokens', { accessTokenId: tokens.accessTokenId });
-      const coordinator = yield* ConnectorCoordinator;
+      const coordinator = yield* ConnectorCoordination.ConnectorCoordinator;
       yield* Effect.forkDaemon(
         coordinator
           .finalizeRedirectFlow(tokens)

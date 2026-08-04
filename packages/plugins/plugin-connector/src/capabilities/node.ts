@@ -7,18 +7,18 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Connector } from '#types';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 
 export * from './connector-coordinator';
 
 export const AppGraphBuilder = Capability.lazyModule(
   'AppGraphBuilder',
-  { requires: [Connector], provides: [AppCapabilities.AppGraphBuilder] },
+  { requires: [ConnectorSpec.Connector], provides: [AppCapabilities.AppGraphBuilder] },
   () => import('./app-graph-builder'),
 );
 export const BuiltinConnectors = Capability.lazyModule(
   'BuiltinConnectors',
-  { provides: [Connector] },
+  { provides: [ConnectorSpec.Connector] },
   () => import('./connectors'),
 );
 export const CreateObject = Capability.lazyModule(

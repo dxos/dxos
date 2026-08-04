@@ -12,7 +12,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
-import { type ConnectorEntry, type SyncInput, type SyncOutput } from '../types';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { findSyncTriggerForBinding } from './sync-trigger';
 
 /**
@@ -40,7 +40,7 @@ export const createSyncRoutine = ({
 }: {
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<SyncInput, SyncOutput>;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
   spec: Trigger.Spec;
 }): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
   // Claimed synchronously, before the first yield point, so no caller can interleave between the
@@ -68,7 +68,7 @@ const createRoutine = ({
 }: {
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<SyncInput, SyncOutput>;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
   spec: Trigger.Spec;
 }): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
   Effect.gen(function* () {
@@ -103,7 +103,7 @@ export const ensureSyncTrigger = ({
   connector,
   cursor,
 }: {
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   cursor: Cursor.ExternalCursor;
 }): Effect.Effect<Trigger.Trigger | undefined, never, Database.Service> =>
   Effect.gen(function* () {

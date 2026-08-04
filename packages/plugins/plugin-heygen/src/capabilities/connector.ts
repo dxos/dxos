@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { Connector } from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { HEYGEN_CONNECTOR_ID, HEYGEN_SOURCE } from '../constants';
 
@@ -56,6 +56,6 @@ export const createHeyGenConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [createHeyGenConnectorEntry()]);
+    return Capability.contribute(ConnectorSpec.Connector, [createHeyGenConnectorEntry()]);
   }),
 );

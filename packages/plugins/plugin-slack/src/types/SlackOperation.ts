@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import * as Connection from '@dxos/plugin-connector/Connection';
-import { MaterializeTargetInput, MaterializeTargetOutput } from '@dxos/plugin-connector/types';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 
@@ -64,8 +64,8 @@ export const MaterializeSlackTarget = Operation.make({
     description: 'Create the empty local Channel bound to a selected Slack conversation.',
     icon: 'ph--slack-logo--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**

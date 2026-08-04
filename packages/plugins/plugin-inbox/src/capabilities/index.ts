@@ -8,8 +8,8 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
@@ -20,7 +20,7 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const Connector = Capability.lazyModule(
   'Connector',
-  { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
 export const ContactExtractor = Capability.inlineModule(

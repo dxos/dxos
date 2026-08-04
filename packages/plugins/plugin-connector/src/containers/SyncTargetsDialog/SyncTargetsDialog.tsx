@@ -16,14 +16,15 @@ import { Empty, Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { ConnectorCoordinator, type RemoteTarget } from '#types';
 
 import { type Connection } from '../../types';
+import * as ConnectorCoordination from '../../types/ConnectorCoordination';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { isCursorForConnection } from '../../util';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
-  availableTargets: ReadonlyArray<RemoteTarget>;
+  availableTargets: ReadonlyArray<ConnectorSpec.RemoteTarget>;
   /** Existing local object to attach to the first newly-selected target. */
   existingTarget?: Ref.Ref<Obj.Unknown>;
 };
@@ -31,7 +32,7 @@ export type SyncTargetsDialogProps = {
 /**
  * Dialog body for picking which remote targets are synced into a {@link Connection}.
  * On submit it reconciles the connection's external-sync cursors through
- * the {@link ConnectorCoordinator}.
+ * the {@link ConnectorCoordination.ConnectorCoordinator}.
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -85,7 +86,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
       const chosen = availableTargets
         .filter((target) => selected.has(target.id))
         .map((target) => ({ externalId: target.id, name: target.name }));
-      const coordinator = manager.capabilities.get(ConnectorCoordinator);
+      const coordinator = manager.capabilities.get(ConnectorCoordination.ConnectorCoordinator);
       await EffectEx.runAndForwardErrors(
         coordinator.setCursors({
           db,

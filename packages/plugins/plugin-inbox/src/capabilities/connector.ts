@@ -15,7 +15,8 @@ import { withAuthorization } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -76,7 +77,7 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
  * an actual 401/403 (an expired or revoked grant) is surfaced as "reauthenticate"; any other failure
  * after retries exhausted is reported as a distinct, less alarming message.
  */
-const testGoogleConnection: TestConnection = ({ accessToken }) =>
+const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
     const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
@@ -110,7 +111,7 @@ const testGoogleConnection: TestConnection = ({ accessToken }) =>
  * email so connections/mailboxes get a sensible default name. The sync target is
  * materialized separately (`materializeTarget`) when the binding is created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     const email = yield* getAccountEmail(
       yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
@@ -125,7 +126,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,

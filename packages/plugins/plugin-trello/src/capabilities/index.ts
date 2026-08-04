@@ -5,13 +5,13 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const Connector = Capability.lazyModule(
   'TrelloConnector',
-  { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

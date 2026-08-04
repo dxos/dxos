@@ -8,8 +8,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
@@ -40,7 +40,7 @@ export const AiService = Capability.lazyModule(
 );
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
-  { provides: [ConnectorCapability], activatesOn: ConnectorEvents.Start },
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connector'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));

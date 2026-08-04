@@ -75,12 +75,48 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Connection": {
+      "source": "./src/types/Connection.ts",
+      "types": "./dist/types/src/types/Connection.d.ts",
+      "import": "./dist/lib/Connection.mjs"
+    },
+    "./ConnectorAnnotations": {
+      "source": "./src/types/ConnectorAnnotations.ts",
+      "types": "./dist/types/src/types/ConnectorAnnotations.d.ts",
+      "import": "./dist/lib/ConnectorAnnotations.mjs"
+    },
+    "./ConnectorCoordination": {
+      "source": "./src/types/ConnectorCoordination.ts",
+      "types": "./dist/types/src/types/ConnectorCoordination.d.ts",
+      "import": "./dist/lib/ConnectorCoordination.mjs"
+    },
+    "./ConnectorEvents": {
+      "source": "./src/types/ConnectorEvents.ts",
+      "types": "./dist/types/src/types/ConnectorEvents.d.ts",
+      "import": "./dist/lib/ConnectorEvents.mjs"
+    },
+    "./ConnectorForm": {
+      "source": "./src/types/ConnectorForm.ts",
+      "types": "./dist/types/src/types/ConnectorForm.d.ts",
+      "import": "./dist/lib/ConnectorForm.mjs"
+    },
+    "./ConnectorOperation": {
+      "source": "./src/types/ConnectorOperation.ts",
+      "types": "./dist/types/src/types/ConnectorOperation.d.ts",
+      "import": "./dist/lib/ConnectorOperation.mjs"
+    },
+    "./ConnectorSpec": {
+      "source": "./src/types/ConnectorSpec.ts",
+      "types": "./dist/types/src/types/ConnectorSpec.d.ts",
+      "import": "./dist/lib/ConnectorSpec.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
       "import": "./dist/lib/components.mjs"
     },
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -95,23 +131,7 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    },
-    "./Connection": {
-      "source": "./src/types/Connection.ts",
-      "types": "./dist/types/src/types/Connection.d.ts",
-      "import": "./dist/lib/Connection.mjs"
-    },
-    "./ConnectorEvents": {
-      "source": "./src/types/ConnectorEvents.ts",
-      "types": "./dist/types/src/types/ConnectorEvents.d.ts",
-      "import": "./dist/lib/ConnectorEvents.mjs"
-    },
-    "./ConnectorOperation": {
-      "source": "./src/types/ConnectorOperation.ts",
-      "types": "./dist/types/src/types/ConnectorOperation.d.ts",
-      "import": "./dist/lib/ConnectorOperation.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -119,11 +139,23 @@
       "Connection": [
         "dist/types/src/types/Connection.d.ts"
       ],
+      "ConnectorAnnotations": [
+        "dist/types/src/types/ConnectorAnnotations.d.ts"
+      ],
+      "ConnectorCoordination": [
+        "dist/types/src/types/ConnectorCoordination.d.ts"
+      ],
       "ConnectorEvents": [
         "dist/types/src/types/ConnectorEvents.d.ts"
       ],
+      "ConnectorForm": [
+        "dist/types/src/types/ConnectorForm.d.ts"
+      ],
       "ConnectorOperation": [
         "dist/types/src/types/ConnectorOperation.d.ts"
+      ],
+      "ConnectorSpec": [
+        "dist/types/src/types/ConnectorSpec.d.ts"
       ]
     }
   },

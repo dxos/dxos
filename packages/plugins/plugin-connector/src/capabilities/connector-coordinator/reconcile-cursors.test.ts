@@ -17,8 +17,9 @@ import { AccessToken, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '#types';
+import { Connection } from '#types';
 
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { isCursorForConnection } from '../../util';
 import { type SyncTargetSelection, reconcileCursors } from './reconcile-cursors';
 
@@ -39,8 +40,8 @@ describe('reconcileCursors', () => {
   // production connectors (composer's invoker has no `databaseResolver`).
   const MaterializeExampleTarget = Operation.make({
     meta: { key: DXN.make('org.dxos.test.materializeExampleTarget') },
-    input: MaterializeTargetInput,
-    output: MaterializeTargetOutput,
+    input: ConnectorSpec.MaterializeTargetInput,
+    output: ConnectorSpec.MaterializeTargetOutput,
   });
 
   const materializeHandler = MaterializeExampleTarget.pipe(
@@ -72,7 +73,7 @@ describe('reconcileCursors', () => {
     output: Schema.Any,
   });
 
-  const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
+  const makeConnector = (overrides: Partial<ConnectorSpec.ConnectorEntry> = {}): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
     sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
@@ -92,7 +93,7 @@ describe('reconcileCursors', () => {
   const reconcile = (
     db: Database.Database,
     connection: Connection.Connection,
-    connector: ConnectorEntry,
+    connector: ConnectorSpec.ConnectorEntry,
     selected: ReadonlyArray<SyncTargetSelection>,
     existingTarget?: Ref.Ref<Obj.Unknown>,
   ) =>

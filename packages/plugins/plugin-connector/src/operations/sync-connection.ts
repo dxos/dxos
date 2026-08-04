@@ -14,7 +14,8 @@ import { Cursor } from '@dxos/link';
 
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
-import { Connector, ConnectorOperation } from '../types';
+import { ConnectorOperation } from '../types';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isCursorForConnection, syncBinding } from '../util';
 
 /** How many of a connection's bindings sync at once. */
@@ -30,7 +31,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       }
 
       const connection = yield* Database.load(connectionRef).pipe(Effect.provide(Database.layer(db)));
-      const connectors = (yield* Capability.getAll(Connector)).flat();
+      const connectors = (yield* Capability.getAll(ConnectorSpec.Connector)).flat();
       const connector = connectors.find((entry) => entry.id === connection.connectorId);
       if (!connector?.sync) {
         return { synced: 0 };

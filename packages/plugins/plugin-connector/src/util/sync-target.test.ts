@@ -22,8 +22,9 @@ import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
 import { Expando } from '@dxos/schema';
 
-import { Connection, Connector, type ConnectorEntry } from '#types';
+import { Connection } from '#types';
 
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { syncTarget } from './sync-target';
 
 describe('syncTarget', () => {
@@ -46,7 +47,7 @@ describe('syncTarget', () => {
     output: Schema.Any,
   });
 
-  const connector: ConnectorEntry = {
+  const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
@@ -78,7 +79,7 @@ describe('syncTarget', () => {
 
   const capabilities = () => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
-    manager.contribute({ module: 'test', interface: Connector, implementation: [connector] });
+    manager.contribute({ module: 'test', interface: ConnectorSpec.Connector, implementation: [connector] });
     manager.contribute({
       module: 'test',
       interface: Capabilities.ServiceResolver,

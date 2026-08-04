@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { type CredentialForm } from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { Jmap } from '../apis';
 import { JMAP_DEFAULT_HOST } from '../constants';
@@ -39,7 +39,7 @@ const JmapCredentialFormSchema = Schema.Struct({
 
 type JmapCredentialFormValues = Schema.Schema.Type<typeof JmapCredentialFormSchema>;
 
-export const jmapCredentialForm: CredentialForm<JmapCredentialFormValues> = {
+export const jmapCredentialForm: ConnectorSpec.CredentialForm<JmapCredentialFormValues> = {
   schema: JmapCredentialFormSchema,
   defaultValues: { host: JMAP_DEFAULT_HOST, email: '', token: '' },
   // Validate against the live session before the dialog closes so a wrong host/token fails inline

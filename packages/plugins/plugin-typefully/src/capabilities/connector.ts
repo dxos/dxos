@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import { Connector } from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 
@@ -67,6 +67,6 @@ export const createTypefullyConnectorEntry = () => ({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [createTypefullyConnectorEntry()]);
+    return Capability.contribute(ConnectorSpec.Connector, [createTypefullyConnectorEntry()]);
   }),
 );

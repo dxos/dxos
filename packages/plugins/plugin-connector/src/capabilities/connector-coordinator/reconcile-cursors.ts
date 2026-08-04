@@ -9,8 +9,9 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 
-import { Connection, type ConnectorEntry } from '#types';
+import { Connection } from '#types';
 
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { ensureSyncTrigger, isCursorForConnection } from '../../util';
 
 /** A user-chosen remote target to bind. */
@@ -22,7 +23,7 @@ export type ReconcileCursorsInput = {
   /** Live database the cursors are reconciled in. */
   db: Database.Database;
   connection: Connection.Connection;
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   selected: ReadonlyArray<SyncTargetSelection>;
   /** Bind this pre-existing object as the first newly-selected target instead of materializing one. */
   existingTarget?: Ref.Ref<Obj.Unknown>;

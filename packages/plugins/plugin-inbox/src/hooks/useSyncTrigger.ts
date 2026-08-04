@@ -10,7 +10,8 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
-import { type ConnectorEntry, createSyncRoutine, findBindingForTarget } from '@dxos/plugin-connector';
+import { createSyncRoutine, findBindingForTarget } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
@@ -32,7 +33,7 @@ export const useSyncTrigger = ({
 }: {
   db: Database.Database | undefined;
   subject: Obj.Unknown;
-  connectors?: readonly ConnectorEntry[][];
+  connectors?: readonly ConnectorSpec.ConnectorEntry[][];
 }): {
   syncEnabled: boolean | undefined;
   syncTrigger: Trigger.Trigger | undefined;

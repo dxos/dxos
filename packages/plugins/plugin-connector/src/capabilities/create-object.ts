@@ -8,13 +8,16 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { Connection, ConnectorCoordinator, CreateConnectionForm } from '#types';
+import { Connection } from '#types';
+
+import * as ConnectorCoordination from '../types/ConnectorCoordination';
+import * as ConnectorForm from '../types/ConnectorForm';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Connection.Connection),
-      inputSchema: CreateConnectionForm,
+      inputSchema: ConnectorForm.CreateConnectionForm,
       createObject: (props: { connectorId: string }, options) =>
         Effect.gen(function* () {
           const db = Database.isDatabase(options.target) ? options.target : Obj.getDatabase(options.target);
@@ -24,7 +27,7 @@ export default Capability.makeModule(
 
           // Read on demand (invoked from the create-object form submit, not module activation) so
           // this module doesn't need to declare a static dependency on the coordinator.
-          const coordinator = yield* Capability.get(ConnectorCoordinator);
+          const coordinator = yield* Capability.get(ConnectorCoordination.ConnectorCoordinator);
           const result = yield* coordinator.createConnection({
             db,
             spaceId: db.spaceId,

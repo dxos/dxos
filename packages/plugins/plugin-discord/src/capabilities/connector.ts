@@ -10,14 +10,9 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Format, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
-import {
-  ConnectionTestError,
-  Connector,
-  type CredentialForm,
-  type OnTokenCreated,
-  type TestConnection,
-} from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -78,7 +73,7 @@ const validateToken = (token: string) =>
     }),
   );
 
-const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
+const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
   schema: DiscordTokenForm,
   defaultValues: { token: '' },
   // Validates before the dialog closes so 401/format errors are shown inline.
@@ -119,7 +114,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
  * Connection.
  */
 const makeOnTokenCreated =
-  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
+  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): ConnectorSpec.OnTokenCreated =>
   ({ accessToken }) =>
     Effect.gen(function* () {
       if (accessToken.account) {
@@ -142,7 +137,7 @@ const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
  * A rejected token or transport failure surfaces as a user-facing error so the
  * connection UI can offer to reauthenticate.
  */
-const userTestConnection: TestConnection = ({ accessToken }) =>
+const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
     const rest = yield* DiscordREST;
     yield* rest.getMyUser();
@@ -156,7 +151,7 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
   );
 
 /**
- * Contributes two `Connector` entries for Discord:
+ * Contributes two `ConnectorSpec.Connector` entries for Discord:
  * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
  * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
  *
@@ -168,7 +163,7 @@ const userTestConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: DISCORD_PROVIDER_ID,
         source: DISCORD_SOURCE,

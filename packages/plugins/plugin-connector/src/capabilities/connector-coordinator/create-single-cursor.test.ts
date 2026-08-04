@@ -17,8 +17,9 @@ import { AccessToken, Cursor } from '@dxos/link';
 import { OperationInvoker } from '@dxos/operation';
 import { Expando } from '@dxos/schema';
 
-import { Connection, type ConnectorEntry, MaterializeTargetInput, MaterializeTargetOutput } from '#types';
+import { Connection } from '#types';
 
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { createSingleCursor } from './create-single-cursor';
 
 describe('createSingleCursor', () => {
@@ -36,8 +37,8 @@ describe('createSingleCursor', () => {
   // access-token account (real connectors, e.g. Gmail, materialize a Mailbox the same way).
   const MaterializeExampleTarget = Operation.make({
     meta: { key: DXN.make('org.dxos.test.createSingleCursor.materialize') },
-    input: MaterializeTargetInput,
-    output: MaterializeTargetOutput,
+    input: ConnectorSpec.MaterializeTargetInput,
+    output: ConnectorSpec.MaterializeTargetOutput,
   });
 
   const materializeHandler = MaterializeExampleTarget.pipe(
@@ -67,7 +68,7 @@ describe('createSingleCursor', () => {
     output: Schema.Any,
   });
 
-  const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
+  const makeConnector = (overrides: Partial<ConnectorSpec.ConnectorEntry> = {}): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
     sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },

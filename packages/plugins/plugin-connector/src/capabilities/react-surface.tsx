@@ -20,9 +20,11 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, Connector, ConnectorAnnotationId } from '#types';
+import { Connection } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -59,9 +61,11 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'connectorSelector',
-        filter: AppSurface.formInputByField((ast) => !!SchemaEx.findAnnotation<boolean>(ast, ConnectorAnnotationId)),
+        filter: AppSurface.formInputByField(
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, ConnectorAnnotations.ConnectorAnnotationId),
+        ),
         component: ({ data: { fieldPropertyAst }, ...inputProps }) => {
-          const connectors = useCapabilities(Connector).flat();
+          const connectors = useCapabilities(ConnectorSpec.Connector).flat();
           const options = useMemo(
             () => connectors.map((connector) => ({ value: connector.id, label: connector.label ?? connector.id })),
             [connectors],
