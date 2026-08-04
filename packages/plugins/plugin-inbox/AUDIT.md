@@ -17,13 +17,16 @@ details it.
 
 1. ✅ **Rename `GooglePeople` → `GoogleContacts`** — pure rename, no move. _(Done —
    PR #12300.)_
-2. **Extract `apis/` → `@dxos/google-apis` + `@dxos/jmap-apis`** — framework-free
-   wrappers (§3.5); lowest risk, internal imports only.
+2. ~~**Extract `apis/` → `@dxos/google-apis` + `@dxos/jmap-apis`**~~ — **folded into
+   step 4** (§8h D1): the wrappers move into the provider plugin as a framework-free
+   `src/apis/` subtree instead of standing up two extra packages, and graduate to their
+   own package only when a non-plugin consumer appears.
 3. ✅ **Extract `@dxos/react-ui-card`** — shared low-level card vocabulary `Row` +
    `CardTile` + `Avatar`, avatar/hue unified (§4c). _(Done — PR #12300; `ViewMode` +
    `Toolbar` → `@dxos/react-ui-menu` still to follow, §4d.)_
 4. **Split the headless provider plugins — `@dxos/plugin-google` / `@dxos/plugin-jmap`**
-   (§7). Pure sync/connector logic (no UI); extract as leaf plugins depending only on
+   (§7 for the seam analysis, **§8 for the target folder structure + landable steps**).
+   Pure sync/connector logic (no UI); extract as leaf plugins depending only on
    plugin-inbox. Defer the connector-id inversion (providers import ids from
    plugin-inbox `constants.ts`). See §7 for upstream deps + the three ownership
    decisions this defers.
@@ -306,14 +309,19 @@ flags as the one real code change (vs. mechanical file moves).
 
 **Still open:**
 
-1. **`apis` package naming** — `@dxos/google-apis` vs `@dxos/api-google`; one
-   package per provider, or a single `@dxos/mail-apis`?
+1. ~~**`apis` package naming**~~ — moot for now: §8h D1 keeps the wrappers inside the
+   provider plugin (`plugin-google/src/apis/`), so the package name is only decided if a
+   non-plugin consumer ever forces the extraction.
 2. **Does `react-ui-card` earn its own package** (Row+CardTile+Avatar, deps on
    react-ui + react-ui-mosaic), or split `Row`→`react-ui` and `CardTile`→`react-ui-mosaic`?
    And should the shared `Avatar` converge on react-ui `Avatar` or keep `DxAvatar`?
 3. **Sync-provider contract location** — the `MailSyncProvider` interface lives in
    plugin-inbox; does `plugin-calendar` define its own calendar-sync contract, or
    is there a shared `plugin-connector`-level sync abstraction to promote?
+   _(Interim answer: §8d publishes it as `@dxos/plugin-inbox/sync`; the promotion question
+   is unchanged and belongs to the §3.7 hoist.)_
+4. **Provider-plugin registry visibility** — §8h D5: user-installable entries, or hidden
+   plugins activated implicitly with plugin-inbox?
 
 ## 7. Provider-first split — `@dxos/plugin-google` / `@dxos/plugin-jmap` (headless)
 
@@ -414,3 +422,272 @@ for the contract.
 
 → **keep mail-side for the headless split**; revisit promotion during the §3.7 hoist —
 generalize only if calendar wants the same harness.
+
+## 8. Target folder structure for the provider split (2026-08-04)
+
+§7 says _what_ relocates and _why_. This section is the concrete plan: the three trees
+after the cut, the one new public export plugin-inbox must grow, the changes that are
+**not** file moves, and the order to land them.
+
+**Exemplar: `@dxos/plugin-trello`.** It is already the shape both provider plugins take —
+headless (`TrelloPlugin.ts`, no `.tsx`), `capabilities/{connector,operation-handler}.ts`,
+`operations/` + `services/` + `types/TrelloOperation.ts`, `Plugin.lazy` in `plugin.ts`, and
+crucially it **depends on the domain plugin it feeds** (`@dxos/plugin-kanban`). Provider →
+domain is therefore an established direction in this repo, not a new precedent
+(`packages/plugins/plugin-trello`). It differs in one respect: Trello owns its own operation
+_definitions_ (`TrelloOperation`), whereas Google/JMAP leave theirs in `InboxOperation`
+under §7.1 Option A.
+
+Legend: `←` moved in · `✂` moved out · `✚` new · `✄` split · `✎` edited in place · `⇢` relocated within the package.
+
+### 8a. `@dxos/plugin-inbox` after the split
+
+```
+packages/plugins/plugin-inbox/src/
+  apis/                          ✂ → plugin-google/src/apis, plugin-jmap/src/apis (2373 LOC, incl. apis/README.md rule)
+  services/                      ✄ google-* → plugin-google, jmap-* → plugin-jmap (823 LOC; dir disappears)
+  capabilities/
+    connector.ts                 ✂ deleted — all four Connector entries move (Gmail/JMAP/Calendar/Contacts)
+    jmap-credential-form.ts      ✂ → plugin-jmap/src/capabilities/credential-form.ts (+ its test)
+    …                            = app-graph-builder, react-surface, settings, skill-definition,
+                                   create-object, identity-specs, navigation-target-resolver, operation-handler
+  operations/
+    mail/mail-sync.ts            ⇢ src/sync/mail-sync.ts  (§8d — no longer an operation, it is the contract)
+    mail/google/                 ✂ → plugin-google/src/operations/mail      (3038 LOC)
+    mail/jmap/                   ✂ → plugin-jmap/src/operations/mail        (1945 LOC)
+    calendar/google/             ✂ → plugin-google/src/operations/calendar  (667 LOC)
+    contacts/google/             ✂ → plugin-google/src/operations/contacts  (364 LOC)
+    index.ts                     ✎ InboxOperationHandlerSet loses its 9 provider entries
+    util.ts                      ✄ parseFromHeader → src/sync/headers.ts (its only consumers are Google mappers)
+    …                            = add-mailbox, analyze/, classify-email, draft-email*, extractor/,
+                                   read-email, rename-filter, unsubscribe-sender
+  sync/                          ✚ the provider-facing contract, published as ./sync (§8d)
+    index.ts                     ✚ barrel
+    mail-sync.ts                 ← operations/mail/mail-sync.ts (harness + MailSyncProvider + MailSyncSource)
+    binding.ts                   ← readBindingOptions (+ on-arrival extractor hooks) from util/mailbox-sync.ts
+    headers.ts                   ← parseFromHeader from operations/util.ts
+    policy.ts                    ← MAIL_SYNC_CRON / MAIL_AUTO_SYNC from capabilities/connector.ts
+  types/
+    InboxCapabilities.ts         ✎ + MailSendOperation registry (§8e.2)
+    InboxOperation.ts            = unchanged — every provider op def stays here (§7.1 Option A)
+    Mailbox.ts                   = unchanged — still names GMAIL/JMAP connector ids (§7.2, deferred)
+    …                            = Calendar, DraftEvent, ExtractedFrom, Settings, SyncOptions,
+                                   SyncStreamConfig, SystemTags (canonical, provider-agnostic)
+  hooks/
+    useSendEmail.ts              ✎ resolve the send op from the capability, drop the JMAP-vs-Gmail ternary (§8e.2)
+    useTags.ts                   ✎ drop `GoogleMail.isSystemLabel` — the last apis import from UI (§8e.3)
+  testing/
+    gmail-fixtures.ts(+test)     ✂ → plugin-google/src/testing
+    jmap-fixtures.ts(+test)      ✂ → plugin-jmap/src/testing
+    otel-harness.ts              ✂ → plugin-google/src/testing (sole consumer is google sync-bench)
+    sync-fixture.ts              ✄ seedMailboxBinding stays; the two provider runners move (§8e.5)
+    index.ts / node.ts           ✎ drop the provider fixture + `Jmap`/`*Dataset` re-exports
+    …                            = builder, data, email-processor + its two tests
+  constants.ts                   ✄ GMAIL_SOURCE/GOOGLE_INTEGRATION_SOURCE/JMAP_MESSAGE_SOURCE/
+                                   JMAP_DEFAULT_HOST move; the 4 connector ids stay (Mailbox/Calendar
+                                   annotations still read them — §7.2); POPOVER/section types stay
+  errors.ts                      ✄ GoogleApiError, GmailSendMessageInvalidError,
+                                   AccessTokenNotPopulatedError, CalendarForeignKeyWrongTypeError,
+                                   Jmap{Api,SendMessageInvalid,SendIdentityNotFound}Error move;
+                                   MailSyncError + the classification/summary errors stay
+  components/ containers/ extensions/ skills/ util/ paths.ts translations.ts   = unchanged
+  moon.yml                       ✎ delete the stale `deploy-functions` task — it deploys
+                                   `src/functions/google/{gmail,calendar}/sync.ts`, paths that no
+                                   longer exist (dead before this refactor; dies with it)
+```
+
+Net: **~9200 LOC leaves** (apis + services + the four provider operation trees + fixtures),
+roughly a third of the plugin, with **zero change to `Mailbox` / `InboxOperation` / skills /
+UI surfaces** — the public API 17 consumers depend on.
+
+### 8b. `@dxos/plugin-google`
+
+One plugin covering all three Google domains (§8h D4): one OAuth story, one credentials
+service, one shared `google-api.ts` transport.
+
+```
+packages/plugins/plugin-google/
+  dx.config.ts       key `org.dxos.plugin.google`, icon ph--google-logo--regular, tags ['labs','connector']
+  PLUGIN.mdl         spec (Trello ships one; inbox's provider sections seed it)
+  moon.yml           layer: library · tags: ts-vite-build, ts-test, pack
+                     + check-module-structure: dx-trace-imports --export ./plugin --to "@dxos/react-ui"
+                       --to react --fail-on present   (headless is a guarantee, not a hope)
+  package.json       "private": true; deps per §7 table; NO react/react-ui runtime dep
+  src/
+    GooglePlugin.ts  headless: addOperationHandlerModule + SetupConnectors module + translations
+                     (+ addSchemaModule only if a Google-owned schema ever appears — none today)
+    plugin.ts        Plugin.lazy(meta, …) + `export { GoogleOperationHandlerSet } from './operations'`
+    index.ts         meta + types + constants (the narrow, headless-safe barrel)
+    meta.ts translations.ts
+    constants.ts     ← GOOGLE_INTEGRATION_SOURCE, GMAIL_SOURCE, GMAIL_CONNECTOR_ID,
+                       GOOGLE_CALENDAR_CONNECTOR_ID, GOOGLE_CONTACTS_CONNECTOR_ID
+                       (re-exported from plugin-inbox for now; canonical here after §3.1)
+    errors.ts        ← GoogleApiError, GmailSendMessageInvalidError, AccessTokenNotPopulatedError,
+                       CalendarForeignKeyWrongTypeError
+    apis/            ← src/apis/google/*  — framework-free (README.md rule moves with it)
+      README.md  google-api.ts  GoogleMail/  GoogleCalendar/  GoogleContacts/
+    services/        ← src/services/google-credentials.ts, google-mail-api.ts
+    capabilities/
+      index.ts
+      connector.ts   ← the 3 Google Connector entries + getAccountEmail / testGoogleConnection /
+                       onTokenCreated / isGoogleAuthRejection (reads MAIL_SYNC_CRON from #inbox sync)
+      mail-send.ts   ✚ contributes { connectorId: GMAIL_CONNECTOR_ID, operation: GmailSend } (§8e.2)
+      operation-handler.ts
+    operations/
+      index.ts       GoogleOperationHandlerSet (9 lazy entries)
+      mail/          ← operations/mail/google/*   (mapper, tags, materialize/, send/, sync/)
+      calendar/      ← operations/calendar/google/* (mapper, create/, list/, materialize/, sync/)
+      contacts/      ← operations/contacts/google/* (mapper, list-groups/, sync/)
+    testing/
+      index.ts  gmail-fixtures.ts  otel-harness.ts  gmail-sync-fixture.ts (from sync-fixture.ts)
+```
+
+The redundant `google/` path level drops, and the **domain axis is preserved as the top
+level** (`operations/{mail,calendar,contacts}`) so the later domain split (§4a) repoints
+imports without moving files again.
+
+### 8c. `@dxos/plugin-jmap`
+
+Same shape, single domain, no OAuth (host + email + Bearer token via the credential form).
+
+```
+packages/plugins/plugin-jmap/
+  dx.config.ts       key `org.dxos.plugin.jmap`, icon ph--envelope--regular, tags ['labs','connector']
+  PLUGIN.mdl  moon.yml (as above)  package.json ("private": true)
+  src/
+    JmapPlugin.ts    headless: addOperationHandlerModule + SetupConnectors + translations
+    plugin.ts  index.ts  meta.ts  translations.ts
+    constants.ts     ← JMAP_MAIL_CONNECTOR_ID, JMAP_DEFAULT_HOST, JMAP_MESSAGE_SOURCE
+    errors.ts        ← JmapApiError, JmapSendMessageInvalidError, JmapSendIdentityNotFoundError
+    apis/            ← src/apis/jmap/*  (README.md, Jmap/, JmapMail/ incl. query.ts + its test)
+    services/        ← src/services/jmap-credentials.ts, jmap-mail-api.ts
+    capabilities/
+      index.ts
+      connector.ts        ← the JMAP Connector entry
+      credential-form.ts  ← capabilities/jmap-credential-form.ts (+ test) — a schema form def, not React
+      mail-send.ts        ✚ { connectorId: JMAP_MAIL_CONNECTOR_ID, operation: JmapSend } (§8e.2)
+      operation-handler.ts
+    operations/
+      index.ts       JmapOperationHandlerSet (3 lazy entries)
+      mail/          ← operations/mail/jmap/*  (mapper, tags, materialize/, send/, sync/)
+    testing/
+      index.ts  jmap-fixtures.ts  jmap-sync-fixture.ts
+```
+
+### 8d. The one new public surface — `@dxos/plugin-inbox/sync`
+
+Providers cannot reach `src/operations/mail/mail-sync.ts` across a package boundary, so the
+harness needs a real export. It is also no longer an operation (no definition, no handler),
+which is why it becomes `src/sync/` rather than staying under `operations/`.
+
+- `package.json`: add `"#sync"` to `imports` and `"./sync"` to `exports`, both →
+  `src/sync/index.ts` (same shape as the existing `./types` / `./translations` entries).
+- Exports: `runMailSync`, `MailSyncProvider`(+`Service`), `MailSyncSource`,
+  `MailSyncSourceOptions`, `MailSyncStreams`, `MailSyncItem`, `ReconcileItem`,
+  `reconcileToChanges`, `createSyncProgressKey`, `readBindingOptions`, `parseFromHeader`,
+  `MAIL_SYNC_CRON`, `MAIL_AUTO_SYNC`, and `MailSyncError` (re-exported from `errors.ts`).
+- **Providers must import narrow subpaths, never the root barrel.** `@dxos/plugin-inbox`
+  (`.`) transitively reaches React components; `@dxos/plugin-inbox/{types,sync}` do not.
+  The CLI already documents exactly this hazard in `packages/devtools/cli/src/util/skills.ts`,
+  and each provider's `check-module-structure` task enforces it.
+- Everything else providers need is **already public**: `InboxOperation`, `Mailbox`,
+  `Calendar`, `SystemTags`, `SyncOptions`/`CalendarSyncOptions`, `SyncStreamConfig` via
+  `@dxos/plugin-inbox/types`.
+
+### 8e. The five changes that are not file moves
+
+1. **Connector split.** `capabilities/connector.ts` (200 LOC, four entries) is deleted from
+   plugin-inbox along with the `SetupConnectors` module in `InboxPlugin.tsx` and the
+   `Connector` entry in `capabilities/index.ts`. The Google helpers (`getAccountEmail`,
+   `testGoogleConnection`, `onTokenCreated`, `isGoogleAuthRejection`) go with the Google
+   entries; `MAIL_SYNC_CRON`/`MAIL_AUTO_SYNC` are mail policy and stay in plugin-inbox
+   (`src/sync/policy.ts`), read by both providers so they can't drift apart.
+2. **Send routing → a capability.** `hooks/useSendEmail.ts` hardcodes
+   `connectorId === JMAP_MAIL_CONNECTOR_ID ? JmapSend : GmailSend`. Add
+   `InboxCapabilities.MailSendOperation` (`{ connectorId, operation }`), contributed by each
+   provider's `capabilities/mail-send.ts`, and resolve by the connection's `connectorId`.
+   _Not a hard blocker_ — under §7.1 Option A both op defs and both connector ids stay in
+   plugin-inbox, so the ternary would still compile — but it is the same inversion §3.1 needs
+   later, it is ~20 LOC, and it removes the last place plugin-inbox decides which providers
+   exist.
+3. **`useTags` provider-agnostic label filter — a genuine blocker.**
+   `hooks/useTags.ts` calls `GoogleMail.isSystemLabel` from `apis/google`; after the move that
+   becomes plugin-inbox → plugin-google, the forbidden direction (§5). Fix: filter on the
+   canonical foreign key instead — a provider system label already maps onto a
+   `SYSTEM_TAG_SOURCE` tag, and a custom Gmail label carries `GMAIL_TAG_SOURCE`, so
+   "hide system tags" is `Obj.getMeta(tag).keys.some(key => key.source === SYSTEM_TAG_SOURCE)`
+   with no provider import. Rename `useGmailTags` → `useVisibleTags` (one other consumer,
+   `InboxStack`).
+4. **Handler-set partition.** `InboxOperationHandlerSet` drops its 9 provider entries;
+   `GoogleOperationHandlerSet` / `JmapOperationHandlerSet` take them. **The CLI must merge
+   both** — `packages/devtools/cli/src/util/skills.ts` registers `InboxSendSkill` (tools:
+   `GmailSend`) and `CalendarSkill` (tools: `GoogleCalendarSync`); without the merge those
+   skills fail at runtime with "tool not found", not at build time. Composer gets them via
+   each plugin's `addOperationHandlerModule`.
+5. **`testing/sync-fixture.ts` must split.** It imports `googleMailSyncProvider` **and**
+   `jmapMailSyncProvider` plus both services (180 LOC), so left in plugin-inbox it inverts
+   the dependency for both providers. Split: `seedMailboxBinding` + the shared seeding
+   helpers stay in plugin-inbox `./testing` (`operations/sync.test.ts` needs only those);
+   each provider's `runMailSync` wiring moves to its own `./testing`. `otel-harness.ts` is
+   generic but has exactly one consumer (`google/sync/sync-bench.test.ts`) → move it there
+   rather than promote it to `@dxos/effect/testing`.
+
+### 8f. Call sites outside the three packages
+
+| File                                                              | Change                                                                                      |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `packages/apps/composer-app/src/plugin-defs.tsx`                  | import + register `GooglePlugin()` / `JmapPlugin()` next to `InboxPlugin()` and `TrelloPlugin()` |
+| `packages/apps/composer-app/{package.json,tsconfig.json}`         | add both `workspace:*` deps + project references                                            |
+| `packages/apps/composer-app/src/playwright/plugins/inbox-http-mock.ts` | repoint `GmailDataset`/`generateGmailDataset` → `@dxos/plugin-google/testing`, `Jmap`/`JmapDataset`/`generateJmapDataset` → `@dxos/plugin-jmap/testing` |
+| `packages/devtools/cli/src/util/skills.ts`                        | merge `GoogleOperationHandlerSet` + `JmapOperationHandlerSet` into `operationHandlers` (§8e.4) |
+| `packages/stories/stories-inbox/src/stories/MailboxSync.stories.tsx` | register both provider plugins so the connectors resolve                                  |
+
+No other consumer touches a provider symbol: the 17 packages importing `@dxos/plugin-inbox`
+pull `Mailbox` (28×), `InboxOperation` (6×), `Calendar` (4×), `ExtractedFrom` (3×) — all of
+which stay (§7.1 Option A).
+
+### 8g. Landable steps
+
+Each step is independently green (`moon run <pkg>:build`, `moon run <pkg>:test`, and
+`moon run plugin-inbox:check-module-structure`).
+
+1. **Prepare in place** — create `src/sync/` + the `./sync` export; move `mail-sync.ts`,
+   `readBindingOptions`, `parseFromHeader`, and the sync policy constants into it; repoint
+   ~10 imports. One package, no new packages, fully reversible.
+2. **Invert the two UI couplings in place** (§8e.2, §8e.3) — still one package, so both are
+   plain refactors with the provider code still local to test against.
+3. **Extract `@dxos/plugin-jmap` first** (~2600 LOC, one domain, no OAuth) as the pilot:
+   scaffold from `plugin-trello`, move the tree, split `sync-fixture`, repoint composer-app /
+   CLI / story call sites. Everything learned here is reused verbatim by step 4.
+4. **Extract `@dxos/plugin-google`** (~6600 LOC, three domains) the same way.
+5. **Sweep plugin-inbox** — delete `capabilities/connector.ts`, the provider errors and
+   constants, the drained `services/` and `apis/` dirs, the stale `deploy-functions` moon
+   task; audit for dead exports and orphaned translation keys.
+6. **Then, unchanged:** roadmap 5 (§3.7 sync-infra hoist), 6 (§3.1 connector-id inversion —
+   at which point the provider constants become canonical in the provider plugins), 7–8
+   (domain split; each provider's `operations/{mail,calendar,contacts}` repoints from
+   plugin-inbox to plugin-mail/-calendar/-contacts without moving a file).
+
+JMAP-before-Google is deliberate: it is a third the size, single-domain, and has no OAuth
+helpers, so the packaging problems (headless `moon.yml` guard, `./sync` export shape,
+fixture split, registration sites) get solved on the cheaper package.
+
+### 8h. New decisions
+
+1. **`apis/` inside the provider plugin, not its own package.** → **Recommend inside**
+   (`plugin-google/src/apis/`, framework-free, README rule intact). It keeps roadmap step 2
+   from standing up two packages with exactly one consumer each; promote to
+   `@dxos/google-apis` only when something outside the plugin wants them. Also settles §6
+   open Q1 (naming) by deferring it.
+2. **Harness location.** → **`@dxos/plugin-inbox/sync` now** (§8d), promotion to
+   `@dxos/plugin-connector` deferred to the §3.7 hoist, per §7.3.
+3. **Send routing.** → **Capability registry now** (§8e.2), even though Option A makes the
+   ternary survive compilation.
+4. **One `plugin-google`, not three.** → **Recommend one** — the three Google connectors
+   share OAuth scopes, `google-api.ts`, `GoogleCredentials`, and `GoogleApiError`; splitting
+   by domain would triplicate all of it. Revisit only if Calendar/Contacts ship
+   independently.
+5. **Registry visibility — open.** Both plugins are UI-less and a Mailbox is inert without
+   one. Do they appear as user-installable entries in the registry (like `plugin-trello`,
+   `tags: ['labs','connector']`), or are they hidden and activated implicitly with
+   plugin-inbox? Affects `dx.config.ts` tags and whether each needs a `PLUGIN.mdl`.
