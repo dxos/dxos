@@ -6,7 +6,8 @@
 #
 # Grammar: `/project [VERB] [ARGS]`, on the FIRST LINE, where a slash command
 # must appear anyway.
-#   (bare) | list [all]   -> numbered table of the registry
+#   (bare)                -> status of the CURRENT project
+#   list [all]            -> numbered table of the registry
 #   new <name> [summary]  -> add an active entry + scaffold docs
 #   end <name>            -> move the entry to ended
 #   track <text>          -> record <text> in the active TASKS.md
@@ -29,6 +30,10 @@ set -euo pipefail
 
 input=$(cat)
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '')
+
+emit_info() {
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project` (bare) — report the CURRENT project, do NOT list the registry. Resolve it from .agents/projects/registry.yml: prefer the entry whose name matches this branch (strip the `claude/` prefix and the trailing `-<hash>` from `git branch --show-current`); otherwise the single `active` entry for the current user (`whoami`). If neither resolves, say so and suggest `/project list`. Then report, compactly: (1) worktree directory + branch; (2) the project name, status, and its `tasks`/`design` paths and `prs`; (3) tracked-file state — `git status --short` and whether the branch is ahead of origin, naming every uncommitted file rather than summarising; (4) the next action from the entry, taken from its `resume` field and condensed to one line. No numbered options unless something genuinely needs a decision.\n'
+}
 
 emit_list() {
   printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project list` — args: "%s". Operate on .agents/projects/registry.yml per the task-planning skill. Render the active projects as a markdown table whose FIRST column is a 1-based row number (# | name | status | user | host | one-line summary). BY DEFAULT show only projects whose `user` matches the current user (run `whoami`); if none match, say so and mention `/project list all` — do not show other users unasked. Args `all`: list every user. Then tell the user they can reply with a row number to resume that project — a lone number in their next message means "resume the project at that row" (same as `/project resume <name>`). Confirm in one short line.\n' "$1"
@@ -68,7 +73,10 @@ if [ -n "${raw:-}" ]; then
   rest=$(printf '%s' "$args" | sed -E 's/^[^[:space:]]+[[:space:]]*//')
 
   case "$verb" in
-    '' | list)
+    '')
+      emit_info
+      ;;
+    list)
       emit_list "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')"
       ;;
     new)
@@ -92,7 +100,7 @@ if [ -n "${raw:-}" ]; then
       fi
       ;;
     *)
-      printf 'TASK-PLANNING: `/project %s` — verb not recognized (valid: list | new <name> | end <name> | track <text> | hydrate | resume [name]). Ask which was meant.\n' "$verb"
+      printf 'TASK-PLANNING: `/project %s` — verb not recognized (valid: bare | list [all] | new <name> | end <name> | track <text> | hydrate | resume [name]). Ask which was meant.\n' "$verb"
       ;;
   esac
 fi

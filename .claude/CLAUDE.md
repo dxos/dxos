@@ -35,7 +35,9 @@
 - One command: `/project VERB [ARGS]`, leading the message; a `UserPromptSubmit`
   hook (`.claude/hooks/track.sh`) reads the raw text before the command expands
   and injects the matching directive — follow the directive, not the expansion.
-  - `/project` / `/project list [all]` — numbered table of the registry
+  - `/project` (bare) — status of the CURRENT project: worktree + branch, the
+    registry entry's status/docs/PRs, uncommitted files, and the next action.
+  - `/project list [all]` — numbered table of the registry
     (`.agents/projects/registry.yml`); reply with a row number to resume.
   - `/project new <name> [summary]` / `/project end <name>` — manage entries;
     each project has a `TASKS.md` + `DESIGN.md`.

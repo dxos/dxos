@@ -13,7 +13,7 @@ Follow that directive — it is the authoritative one, generated from the verb y
 were actually given.
 
 If no such directive appeared, the verb was not recognised; ask which of
-`list | new <name> | end <name> | track <text> | hydrate | resume [name]` was
+`(bare) | list [all] | new <name> | end <name> | track <text> | hydrate | resume [name]` was
 meant rather than guessing.
 
 Details of the file format, registry schema and handoff steps are in the

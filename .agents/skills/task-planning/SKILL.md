@@ -61,13 +61,19 @@ short line.
 The directive, not the command body, is authoritative — it is generated from the
 verb actually given, and it arrives whether or not the expansion does.
 
-- `/project` (bare) or `/project list [all]` — render the active projects as a
-  **numbered markdown table**: the first column is a 1-based row number, followed
-  by `name`, `status`, `user`, `host`, and a one-line summary. **By default show
-  only the current user's projects** (`user` == `whoami`); `list all` lists every
-  user. Then tell the user they can reply with a row number to resume that
-  project. **A lone number in the user's next message means "resume the project
-  at that row"** — run the "Project handoff" → resume steps for that entry.
+- `/project` (bare) — report the **current** project, not the registry. Resolve
+  it by branch (strip `claude/` and the trailing `-<hash>`), else the single
+  `active` entry for the current user; if neither resolves, say so and suggest
+  `/project list`. Report worktree + branch, the entry's status / `tasks` /
+  `design` / `prs`, tracked-file state (`git status --short`, ahead-of-origin,
+  naming every uncommitted file), and the next action from `resume` in one line.
+- `/project list [all]` — render the active projects as a **numbered markdown
+  table**: the first column is a 1-based row number, followed by `name`,
+  `status`, `user`, `host`, and a one-line summary. **By default show only the
+  current user's projects** (`user` == `whoami`); `list all` lists every user.
+  Then tell the user they can reply with a row number to resume that project.
+  **A lone number in the user's next message means "resume the project at that
+  row"** — run the "Project handoff" → resume steps for that entry.
 - `/project new <name> [summary]` — add an `active` entry (`user` = `whoami`,
   `host` = `hostname -s`); scaffold `.agents/projects/<name>/{TASKS.md,DESIGN.md}`
   unless the docs already live somewhere (record that path instead). Confirm in
