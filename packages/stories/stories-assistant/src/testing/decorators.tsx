@@ -13,7 +13,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { type WithPluginManagerOptions } from '@dxos/app-framework/testing';
+import { activateDemandGatedModules, type WithPluginManagerOptions } from '@dxos/app-framework/testing';
 import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -275,6 +275,12 @@ const PluginManagerHost = ({
       implementation: capability.implementation,
       module: 'org.dxos.app-framework.with-plugin-manager.lazy',
     });
+
+    // A story mounts one surface, so no demand ever reaches the modules gated behind it. The
+    // `withPluginManager` path does this for us; this lazy path builds its own manager and so
+    // must do it too, or Idle-gated contributions (assistant settings) never land and the first
+    // strict `useAtomCapability` read throws.
+    EffectEx.runDetached(activateDemandGatedModules(manager));
 
     return () => {
       manager.capabilities.remove(capability.interface, capability.implementation);
