@@ -361,10 +361,10 @@ Activation optimization (each lever measured individually via harness + TBT):
       module → headless invocation hit NoHandlerError (pre-existing on branch, surfaced by
       plugin-assistant tests). Sets moved to the eager OperationHandler module (lazy-bodied,
       cheap); skills stay gated; tests updated to the demand-gate design.
-- [ ] Lever 7 — streaming start: begin round 1 as plugin definitions register instead of
+- [x] Lever 7 — streaming start: begin round 1 as plugin definitions register instead of
       after the full enable set (Client could start ~1.4 s earlier — now the largest
       module-side block on the critical path).
-- [ ] Graduate the PoC: replace the coarse DeferredStartup gate with precise demand events
+- [x] Graduate the PoC: replace the coarse DeferredStartup gate with precise demand events
       per module class; fix the LayerSpec snapshot coupling (generateHomeSuggestions
       ServiceNotAvailable); audit post-idle UX (late surfaces, remount behavior of deferred
       ReactRoot/ReactContext); tune the 14-plugin keep set.
@@ -474,6 +474,26 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
       barrel, not the shipped one. 35 modules across 17 plugins were gated in `index.ts` and ungated
       in `node.ts`; realigned. Browser builds were always correct. Browser-runner follow-up is a TODO
       on `createTestApp`.
+- [ ] **Wire `check-boot-budget` into CI (2026-08-04, highest-leverage item left).** Three separate
+      boot-graph fixes have now been silently undone by unrelated refactors: `services/index.ts`
+      (the in-process host, -810 KB), the base merge reverting `DatePicker` / `TranslationsProvider`
+      to the `date-fns` barrels, and base's split-out `TranslationsContext` carrying the
+      `date-fns/locale` barrel with it (~1 MB, caught only because the split stranded an unused
+      import and tripped `no-unused-imports`). These fixes are properties of an IMPORT EDGE, so any
+      refactor that relocates the edge drops them and nothing fails — not the build, not the tests.
+      `check-boot-budget` is the only check that sees this class and CI does not run it. The Check
+      workflow's moon targets are `:lint :build`, `:check-module-structure`, `:test :test-browser`,
+      `:test-storybook`, `:test-workerd`, `:bundle`, `:e2e`, `cli:smoke` — adding a step after
+      `Bundle` is a small diff.
+  - `DX_TRACE_BOOT_LEAK=1 moon run composer-app:bundle` prints the import path from the entry to any
+    package that must not be boot-reachable; pair it with the budget failure message.
+- [ ] **Post-merge check sweep (2026-08-04).** Green: `oxfmt --check`, `:check-module-structure`,
+      full `:build`. Outstanding: `:lint` (re-run after the react-ui locale fix), `:test` (5 client
+      failures under triage — `client-service.test.ts` "should initialize" plus four
+      worker/coordinator + leader-lock tests; none reference the `@dxos/client/local` change, so
+      likely environment or pre-existing), `:test-browser`, `:test-storybook`, `:test-workerd`,
+      `:bundle` + `check-boot-budget`, and e2e. NOTE: no CI run has ever executed on this branch's
+      head — every result so far is local.
 - [ ] **Flip the default `activatesOn` from `Startup` to `Idle` (own PR, user-directed 2026-08-04).**
       Today omitting `activatesOn` normalizes to `Startup`, so forgetting the annotation costs TTI
       and blocks the `useApp` ready gate — startup is the dumping ground. Invert it: anything that
