@@ -6,10 +6,8 @@ import React, {
   type ComponentPropsWithoutRef,
   type ForwardedRef,
   type PropsWithChildren,
-  createContext,
   forwardRef,
   useCallback,
-  useContext,
   useMemo,
   useState,
 } from 'react';
@@ -31,6 +29,8 @@ import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
+
+import { StackContext, useStack, useStackContext } from './StackContext';
 
 //
 // Types
@@ -58,7 +58,7 @@ export type StackContextValue = {
   onDelete: (id: string) => void;
 };
 
-type StackContextType = StackContextValue & {
+export type StackContextType = StackContextValue & {
   /** Container id used to scope Mosaic drag/drop. */
   id: string;
   eventHandler: DndContainerHandler;
@@ -66,19 +66,6 @@ type StackContextType = StackContextValue & {
   viewport: HTMLElement | null;
   setViewport: (element: HTMLElement | null) => void;
 };
-
-const StackContext = createContext<StackContextType | undefined>(undefined);
-
-const useStackContext = (consumer: string): StackContextType => {
-  const context = useContext(StackContext);
-  if (!context) {
-    throw new Error(`\`${consumer}\` must be used within \`Stack.Root\`.`);
-  }
-  return context;
-};
-
-/** Section-level callbacks consumed by stack sections. */
-export const useStack = (): StackContextValue => useStackContext('useStack');
 
 //
 // Root

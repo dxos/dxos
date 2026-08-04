@@ -375,5 +375,3 @@ export const Picker = {
 };
 
 export type { PickerInputProps, PickerItemProps, PickerRootProps };
-
-export { usePickerInputContext, usePickerItemContext } from './context';

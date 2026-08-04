@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
@@ -12,6 +11,7 @@ import { type Density, type Elevation } from '@dxos/ui-types';
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';
+import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext';
 
 type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> & {
   variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive' | 'valence';
@@ -21,15 +21,6 @@ type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button
   /** Render a trailing caret indicating the button opens a menu. */
   caretDown?: boolean;
 };
-
-type ButtonGroupContextValue = { inGroup?: boolean };
-
-const BUTTON_GROUP_NAME = 'ButtonGroup';
-const BUTTON_NAME = 'Button';
-
-const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupContextValue>(BUTTON_GROUP_NAME, {
-  inGroup: false,
-});
 
 const Button = memo(
   forwardRef<HTMLButtonElement, ButtonProps>(
@@ -109,6 +100,6 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
 
 ButtonGroup.displayName = BUTTON_GROUP_NAME;
 
-export { Button, BUTTON_GROUP_NAME, ButtonGroup, useButtonGroupContext };
+export { Button, ButtonGroup };
 
 export type { ButtonGroupProps, ButtonProps };

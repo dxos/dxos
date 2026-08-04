@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useEffect, useLayoutEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
@@ -11,20 +10,10 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useDebugLog } from '../DebugOverlay';
+import { MobileLayoutProvider } from './MobileLayoutContext';
 
-const MOBILE_LAYOUT_NAME = 'MobileLayout';
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
 const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
-
-//
-// Context
-//
-
-type MobileLayoutContextValue = {
-  keyboardOpen: boolean;
-};
-
-const [MobileLayoutProvider, useMobileLayout] = createContext<MobileLayoutContextValue>(MOBILE_LAYOUT_NAME);
 
 //
 // Root
@@ -117,8 +106,6 @@ export const MobileLayout = {
   Root: MobileLayoutRoot,
   Panel: MobileLayoutPanel,
 };
-
-export { useMobileLayout };
 
 export type { MobileLayoutPanelProps, MobileLayoutRootProps };
 

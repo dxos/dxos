@@ -6,7 +6,6 @@ import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-sc
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { bind } from 'bind-event-listener';
@@ -23,11 +22,9 @@ import React, {
   useState,
 } from 'react';
 
-import { type AllowedAxis, composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type DndContainerData,
-  type DndContainerHandler,
-  type DndDraggingState,
   type DndLocation,
   type DndTileData,
   getSourceData,
@@ -36,43 +33,16 @@ import {
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
+import {
+  MOSAIC_CONTAINER_NAME,
+  MosaicContainerContextProvider,
+  type MosaicContainerContextValue,
+  type MosaicContainerState,
+} from './MosaicContainerContext';
 
 //
 // Container
 //
-
-const MOSAIC_CONTAINER_NAME = 'Mosaic.Container';
-
-type MosaicContainerState = { type: 'idle' } | { type: 'active'; bounds?: DOMRect };
-
-type MosaicContainerContextValue<TData = any, Location = DndLocation> = {
-  id: string;
-  eventHandler: DndContainerHandler<TData>;
-  orientation?: AllowedAxis;
-  dragging?: DndDraggingState;
-  scrolling?: boolean;
-  state: MosaicContainerState;
-
-  /** Active drop location. */
-  activeLocation?: Location;
-  setActiveLocation: (location: Location | undefined) => void;
-
-  /** ID of the current (aria-current) item. */
-  currentId?: string;
-  /** Set the current item by ID. */
-  setCurrentId: (id: string | undefined) => void;
-
-  /** IDs of selected (aria-selected) items. */
-  selectedIds?: ReadonlySet<string>;
-  /** Request to set or unset selection on an item by ID. */
-  setSelected: (id: string, selected: boolean) => void;
-
-  /** Register a scroll-to-item callback (provided by Stack/VirtualStack). */
-  registerScrollTo: (fn: ((id: string) => void) | undefined) => void;
-};
-
-const [MosaicContainerContextProvider, useMosaicContainerContext] =
-  createContext<MosaicContainerContextValue>('MosaicContainer');
 
 // State attribute: [&:has(>_[data-mosaic-container-state=active])]
 const MOSAIC_CONTAINER_STATE_ATTR = 'mosaic-container-state';
@@ -348,6 +318,6 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
 
 MosaicContainer.displayName = MOSAIC_CONTAINER_NAME;
 
-export { MosaicContainer, useMosaicContainerContext };
+export { MosaicContainer };
 
-export type { MosaicContainerProps, MosaicContainerState };
+export type { MosaicContainerProps };

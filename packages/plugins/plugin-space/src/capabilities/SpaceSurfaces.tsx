@@ -11,10 +11,10 @@ import React, { type Ref } from 'react';
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppAnnotation, type AppCapabilities } from '@dxos/app-toolkit';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj, Type, type View } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
-import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
+import { getTypeURIFromQuery } from '@dxos/schema';
 
 import {
   MembersContainer,
@@ -32,6 +32,8 @@ import {
 } from '#containers';
 import { SpaceOperation } from '#operations';
 import { type Settings, SpaceCapabilities } from '#types';
+
+import { tryGetViewForObject } from './try-get-view';
 
 export type SpaceHomeSectionProps = {
   space: Space;
@@ -116,16 +118,6 @@ export const SpaceSchemaSurface = () => {
   }
 
   return <SchemaContainer space={space} />;
-};
-
-/**
- * Resolves the view backing an object through its type's `ViewAnnotation` path. The
- * `objectProperties` filter and both consuming surfaces must agree, so they share this.
- */
-export const tryGetViewForObject = (subject: Obj.Unknown): View.View | undefined => {
-  const type = Obj.getType(subject);
-  const path = type ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[]) : [];
-  return path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(subject, path) : undefined;
 };
 
 export type SelectedObjectsSurfaceProps = {

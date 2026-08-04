@@ -9,44 +9,18 @@ import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 
+import { OPTIONS } from './trigger-kind-icon';
+
 /** Trigger spec kinds surfaced as selectable variants. Matches the discriminants of `Trigger.Spec`. */
 export type TriggerKind = 'timer' | 'feed' | 'subscription' | 'webhook' | 'email';
 
-type TriggerKindOption = {
+export type TriggerKindOption = {
   kind: TriggerKind;
   icon: string;
   disabled?: boolean;
 };
 
 // Ordered as presented; labels and descriptions are resolved from translations keyed by `kind`.
-const OPTIONS: readonly TriggerKindOption[] = [
-  {
-    kind: 'timer',
-    icon: 'ph--clock-countdown--regular',
-  },
-  {
-    kind: 'feed',
-    icon: 'ph--cards-three--regular',
-  },
-  {
-    kind: 'subscription',
-    icon: 'ph--funnel--regular',
-  },
-  {
-    kind: 'webhook',
-    icon: 'ph--webhooks-logo--regular',
-    disabled: true,
-  },
-  {
-    kind: 'email',
-    icon: 'ph--envelope--regular',
-    disabled: true,
-  },
-];
-
-/** Icon for a trigger kind, shared by the picker rows and the selected-variant editor header. */
-export const getTriggerKindIcon = (kind: TriggerKind): string =>
-  OPTIONS.find((option) => option.kind === kind)?.icon ?? 'ph--lightning--regular';
 
 export type TriggerKindSelectorProps = {
   onChange: (kind: TriggerKind) => void;

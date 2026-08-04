@@ -5,4 +5,5 @@
 export * from './stream';
 export * from './testing';
 
+export * from './create-controller';
 export * from './MarkdownStream';
