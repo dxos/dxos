@@ -71,7 +71,7 @@ space session, open questions) and §9 (milestones M6–M9).
       `IdentityRecovery` (agents/prisma/schema.prisma:27) + `verifyWebauthnSignature`
       (sdk/edge-crypto/src/webauthn.ts:24) + hub `lookupAccount`; `@simplewebauthn/server` comes
       OUT of hub-service. (2) RP ID stays **composer.space** via Related Origin Requests —
-      `composer.space/.well-known/webauthn` (application/json) lists `https://auth.dxos.org`, so
+      `composer.space/.well-known/webauthn` (application/json) lists `https://auth.dxos.network`, so
       existing passkeys work with NO re-registration. (3) My audit was WRONG that no server-side
       passkey verification exists: `db-service/src/worker/api-handler/recovery.ts:199` does it
       today (in EDGE, not the hub). (4) Passkeys were never being deprecated; the two `TODO`s mean
