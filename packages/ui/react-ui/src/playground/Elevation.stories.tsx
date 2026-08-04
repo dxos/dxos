@@ -66,7 +66,7 @@ const ComplementaryToggle = ({ close }: { close?: boolean }) => {
 };
 
 const NavigationCard = () => (
-  <Card.Root>
+  <Card.Root fullWidth>
     <Card.Header>
       <Card.Block>
         <Icon icon='ph--folder--regular' />
@@ -216,7 +216,7 @@ const AppFrame = () => {
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <ScrollArea.Root centered padding thin classNames='p-trim-md'>
+            <ScrollArea.Root centered thin classNames='py-trim-sm'>
               <ScrollArea.Viewport>
                 <NavigationCard />
               </ScrollArea.Viewport>

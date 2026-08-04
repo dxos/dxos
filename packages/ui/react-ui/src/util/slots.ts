@@ -36,8 +36,10 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
   // Spread supplied props.
   ...props,
 
-  // Prefer explicit role, then defaults role, then 'none'.
-  role: role ?? defaults.role ?? 'none',
+  // No `role='none'` default. On a div it is a no-op, so the only elements it ever reached were the
+  // semantic ones — `Card.Header` renders a <header>, `Main.Content` a <main> — where it stripped
+  // the landmark. A part that genuinely wants its element ignored passes the role itself.
+  ...((role ?? defaults.role) ? { role: role ?? defaults.role } : null),
 
   // Merge styles.
   style: { ...defaults.style, ...style } as CSSProperties,

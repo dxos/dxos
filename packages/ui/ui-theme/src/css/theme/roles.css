@@ -23,7 +23,11 @@
    * whatever surface it sits on: a subtle inset well in light mode, a raised fill in dark mode that
    * reads lighter than the topmost surface. Do not map it to an elevation level.
    */
-  --color-input-bg: light-dark(var(--color-neutral-250), var(--color-neutral-700));
+  /*
+   * Light is not a ramp stop: neutral-250 sat 0.14 below the near-white canvas, so a default button
+   * read as a dark slab next to an input fill 0.025 below it. Dark keeps neutral-700.
+   */
+  --color-input-bg: light-dark(oklch(0.885 0.001 190), var(--color-neutral-700));
   --color-input-fg: var(--color-base-fg);
 
   /* Focus indicators are a global affordance, not a per-surface property. */
