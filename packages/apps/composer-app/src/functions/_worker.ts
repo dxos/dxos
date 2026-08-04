@@ -9,6 +9,7 @@ import { LOG_STORE_MAX_BYTES } from '../util/constants';
 
 type Env = {
   ASSETS: Fetcher;
+  APPLE_TEAM_ID?: string;
   ENVIRONMENT?: string;
   FEEDBACK_LOGS?: R2Bucket;
   SIGNOZ_INGEST_URL?: string;
@@ -208,11 +209,12 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
 const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.org'];
 
 /**
- * The native app, as `<team id>.<bundle id>` — matches `src-tauri/Entitlements.plist`, whose
- * `associated-domains` list is the other half of this handshake: a domain is only claimed when the app
- * names it *and* the domain serves the app back here.
+ * The native app's bundle id. Qualified by `APPLE_TEAM_ID` (wrangler.jsonc) into the `<team id>.<bundle
+ * id>` form that `src-tauri/Entitlements.plist` also carries — its `associated-domains` list is the other
+ * half of this handshake: a domain is only claimed when the app names it *and* the domain serves the app
+ * back here.
  */
-const APP_ID = '9428WC5MR8.org.dxos.composer';
+const BUNDLE_ID = 'org.dxos.composer';
 
 /**
  * The well-known documents that verify this domain, keyed by path.
@@ -225,21 +227,34 @@ const APP_ID = '9428WC5MR8.org.dxos.composer';
  * composer.space and composer.dxos.org — is verified by the same documents. That is what replaced the
  * standalone `composer-dxos-org` Worker.
  */
-const WELL_KNOWN_DOCUMENTS: Record<string, unknown> = {
+const WELL_KNOWN_DOCUMENTS: Record<string, (env: Env) => object | undefined> = {
   // Universal Links (`applinks`) and passkeys (`webcredentials`) for the native app.
-  '/.well-known/apple-app-site-association': {
-    applinks: { details: [{ appIDs: [APP_ID], components: [{ '/': '/*' }] }] },
-    webcredentials: { apps: [APP_ID] },
+  '/.well-known/apple-app-site-association': (env) => {
+    if (!env.APPLE_TEAM_ID) {
+      return undefined;
+    }
+
+    const appId = `${env.APPLE_TEAM_ID}.${BUNDLE_ID}`;
+    return {
+      applinks: { details: [{ appIDs: [appId], components: [{ '/': '/*' }] }] },
+      webcredentials: { apps: [appId] },
+    };
   },
   // WebAuthn Related Origin Requests: origins permitted to assert the `composer.space` relying party.
-  '/.well-known/webauthn': { origins: WEBAUTHN_RELATED_ORIGINS },
+  '/.well-known/webauthn': () => ({ origins: WEBAUTHN_RELATED_ORIGINS }),
 };
 
 /** Serve a well-known verification document. */
-const handleWellKnown = (request: Request, document: unknown): Response => {
+const handleWellKnown = (request: Request, document: object | undefined): Response => {
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     // RFC 9110 §15.5.6 requires a 405 to advertise the methods the resource does support.
     return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+  }
+
+  // Fail loudly on missing config: a document built around an undefined team id would parse, and
+  // silently un-verify the domain.
+  if (!document) {
+    return new Response('Verification document not configured', { status: 503 });
   }
 
   const body = JSON.stringify(document);
@@ -354,7 +369,7 @@ const handler: ExportedHandler<Env> = {
     // Domain-verification documents (must precede the SPA fallback).
     const wellKnown = WELL_KNOWN_DOCUMENTS[url.pathname];
     if (wellKnown) {
-      return handleWellKnown(request, wellKnown);
+      return handleWellKnown(request, wellKnown(env));
     }
 
     // API routes.

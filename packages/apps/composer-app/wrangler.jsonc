@@ -13,7 +13,11 @@
   "main": "./out/composer/_worker.js",
   "compatibility_date": "2024-04-05",
   // Default / local-dev bindings (wrangler dev); per-env deploys use the `env` sections below.
-  "vars": { "ENVIRONMENT": "dev", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+  "vars": {
+    "APPLE_TEAM_ID": "9428WC5MR8",
+    "ENVIRONMENT": "dev",
+    "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+  },
   "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
   "assets": {
     "directory": "./out/composer",
@@ -29,22 +33,38 @@
   "env": {
     "production": {
       "name": "composer",
-      "vars": { "ENVIRONMENT": "production", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "vars": {
+        "APPLE_TEAM_ID": "9428WC5MR8",
+        "ENVIRONMENT": "production",
+        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+      },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" }],
     },
     "staging": {
       "name": "composer-staging",
-      "vars": { "ENVIRONMENT": "staging", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "vars": {
+        "APPLE_TEAM_ID": "9428WC5MR8",
+        "ENVIRONMENT": "staging",
+        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+      },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" }],
     },
     "labs": {
       "name": "composer-labs",
-      "vars": { "ENVIRONMENT": "labs", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "vars": {
+        "APPLE_TEAM_ID": "9428WC5MR8",
+        "ENVIRONMENT": "labs",
+        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+      },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
     },
     "main": {
       "name": "composer-main",
-      "vars": { "ENVIRONMENT": "main", "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud" },
+      "vars": {
+        "APPLE_TEAM_ID": "9428WC5MR8",
+        "ENVIRONMENT": "main",
+        "SIGNOZ_INGEST_URL": "https://ingest.eu.signoz.cloud",
+      },
       "r2_buckets": [{ "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" }],
     },
   },

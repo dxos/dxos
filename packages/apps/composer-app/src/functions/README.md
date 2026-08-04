@@ -34,6 +34,9 @@ Worker, whose reason for existing was serving the association file. Two conseque
   Apple does not follow redirects when fetching the association file.
 - A domain also has to be listed in `src-tauri/Entitlements.plist` (`associated-domains`) for the app to
   claim it; serving the document alone is not enough.
+- The app id is `<APPLE_TEAM_ID>.org.dxos.composer`, with the team id coming from the `APPLE_TEAM_ID` var
+  in `wrangler.jsonc` — repeated per environment, since vars are not inherited. A deploy missing it
+  answers 503 rather than serving a document that would un-verify the domain.
 
 Android App Links need an `assetlinks.json` entry alongside them, declaring `org.dxos.composer` and the
 signing certificate's SHA-256 fingerprints (`keytool -list -v -keystore <keystore>`). Not written yet —
