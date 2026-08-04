@@ -70,15 +70,29 @@ survey). Decisions feeding this ordering: **first-party channels ship on feeds**
 enter as processed signals via connectors**, not replicated feeds; **Matrix is a
 long-term investigation**, not a dependency. Phases are sequenced by product
 pull — email drives scale-out and first-party channels inherit it — rather than
-by event-sourcing semantics. Dependency chain 1 → 2 → 3 → 4, one PR each; 5 and
-6 are demand-gated.
+by event-sourcing semantics. Dependency chain 1 → 2 → 3, one PR each; 4 is
+independent of 3 and sequenced after it by priority (reordered 2026-08-04, jdw:
+the concern is the size of the local replica, not truncation of the total
+feed); 5 and 6 are demand-gated.
 
-1. **Version/order axis (correctness).** Wire `insertionId` through the codec +
-   index path so live objects stop leaning on `KEY_QUEUE_POSITION` (null unless
-   `assignQueuePositions` is on — flagged by Dmytro and CodeRabbit). The client
-   must always hold a total provisional order (`position`, else Lamport
-   `(sequence, actorId)`, else `insertionId`) before server positions arrive;
-   document the reorder-on-position-arrival semantics.
+1. **Version/order axis (correctness).** The reconciliation _algorithm_ already
+   exists — `FeedObjectCore.reconcile` does version-based whole-object LWW —
+   but its version _input_ is `KEY_QUEUE_POSITION`, null unless
+   `assignQueuePositions` is on (default off, `echo-host.ts`). Without it both
+   order tests (`#strictlyNewer`/`#strictlyOlder`) answer "can't tell", giving
+   two concrete failure modes: while an append is pending, a genuinely newer
+   concurrent remote write is ignored (silent lost update); in the clean state,
+   a stale out-of-order block is adopted and the object rolls backwards.
+   `insertionId` exists today only as the feed store's SQLite autoincrement PK,
+   used for server-side query cursors — it never reaches hydrated objects. The
+   phase is plumbing, not new reconciliation logic: expose a version on every
+   block through the codec + index read path so the client always holds a
+   total order, with tiers that mean different things — server `position`
+   (authoritative global order) → Lamport `(sequence, actorId)` (causal
+   cross-replica order before roundtrip) → `insertionId` (per-replica arrival
+   order, provisional) — and document reorder-on-position-arrival semantics
+   (positions re-sort display order only; latest-per-id is unaffected).
+   Flagged by Dmytro and CodeRabbit; ship gate for first-party chat.
 2. **Consumer cursors, read state, and push.** Implement the stubbed
    `Feed.cursor`/`Feed.next` (Effect streams) on the phase-1 axis. A durable
    high-water cursor per consumer serves three uses: trigger-dispatcher dedup
@@ -88,29 +102,40 @@ by event-sourcing semantics. Dependency chain 1 → 2 → 3 → 4, one PR each; 
    filter, and graduate `FeedHandle` from 1s polling to the sync protocol's
    existing subscription mechanism pushed through EDGE — chat latency is the
    forcing function.
-3. **Retention + epoch chaining.** Implement `Feed.setRetention`; compaction by
-   rewriting a prefix into a snapshot block (self-contained state — unlike a
-   pure event log); and the epoch-chaining convention: an unbounded logical
-   stream (mailbox, channel) is a chain of per-era feeds with only the head
-   feed live. Breaks the ~10k blocks/feed ceiling; prerequisite for phase 4.
-4. **Sparse feeds: partial-history paging (email-scale).** The local block set
-   becomes a set of position ranges — one durable replicated tail plus
-   evictable cached ranges under an LRU budget. Remote range queries against
-   non-replicated history (the `FeedQuery` protocol already carries
+3. **Sparse feeds: partial replication + backend-served full queries
+   (email-scale).** Promoted ahead of retention (2026-08-04, jdw): what matters
+   is bounding the local replica, not truncating the total feed. The local
+   block set becomes a set of position ranges — one durable replicated tail
+   plus evictable cached ranges under an LRU budget. Remote range queries
+   against non-replicated history (the `FeedQuery` protocol already carries
    `before`/`after`/position-range/`reverse`); domain-order paging bounded by a
    position watermark, with the live tail patching rendered pages (late
-   arrivals, edits, tombstones). Driven by email archive browsing; first-party
-   channels inherit device-exceeding scale for free. **Open design point
-   (2026-08-04): aggregation over sparse history.** Mailbox's conversation view
+   arrivals, edits, tombstones); the `patchUp` contract (a range response
+   includes the latest block for any id whose head lies outside the range)
+   keeps latest-per-id sound. **In scope: backend-computed full queries,
+   including aggregates** (decided 2026-08-04). The mailbox conversation view
    is an aggregate (`group threadId` / `count` / `max created` / `items`,
    `MailboxArticle.tsx`) over the local index, which assumes dense history —
    with evicted ranges, per-thread `count` undercounts and a thread whose
    latest activity lies wholly in an evicted range drops out of the
-   `lastMessageAt` ordering. Recent pages stay correct (the tail is dense); deep
-   pages must either hydrate the target range first and aggregate locally over
-   the now-dense cache, be served as backend-computed aggregates alongside the
-   domain-key index, or report explicitly-partial counts. Decide per aggregate
-   in phase 4.
+   `lastMessageAt` ordering. Split by regime: the local index serves the dense
+   tail (recent pages, offline); anything reaching beyond it — deep pages,
+   whole-history aggregates — is a backend-computed query over the full feed
+   (domain-key index + aggregate execution on EDGE), with
+   hydrate-range-then-aggregate-locally as the offline/caching path. Driven by
+   email archive browsing; first-party channels inherit device-exceeding scale
+   for free.
+4. **Retention + epoch chaining (total-feed truncation).** Demoted behind
+   sparse feeds (2026-08-04): truncating the feed itself only matters when the
+   _total_ feed's growth becomes a storage/replication problem (the ~10k
+   blocks/feed ceiling; superseded-block accumulation from whole-object
+   re-append). Implement `Feed.setRetention`; compaction by rewriting a prefix
+   into a snapshot block (self-contained state — unlike a pure event log); and
+   the epoch-chaining convention: an unbounded logical stream (mailbox,
+   channel) is a chain of per-era feeds with only the head feed live.
+   Interaction rule, sharper now that sparse replicas (phase 3) exist first: a
+   tombstone must not be compacted away while any replica could still hold the
+   live object.
 5. **Delta blocks (demand-gated).** Partial-object update blocks + field-level
    LWW merge at the index; block vocabulary grows from {snapshot, tombstone} to
    {create, patch, delete}; per-object rollback/replay of the fold on position
@@ -138,7 +163,8 @@ swap rather than a rewrite.
 
 - **First-party chat.** Channels on feeds at current scale: edit/delete/react
   via live objects (#12235), notifications via subscription triggers, read
-  state via phase 2, scale via phases 3–4. Needs one new primitive — an
+  state via phase 2, scale via phase 3 (sparse feeds; retention in phase 4 if
+  total-feed growth bites). Needs one new primitive — an
   ephemeral presence/typing channel over EDGE messaging, explicitly not feed
   blocks. Becomes its own project when work starts.
 - **Large-source ingestion** (e.g. whole Discord servers): source-cursor
@@ -148,13 +174,13 @@ swap rather than a rewrite.
 - **Pluggable feed backend (`FeedBackend`).** Promote the implicit sync seam —
   `SyncClient`'s injected `sendMessage`, with the server role played by whoever
   answers `QueryRequest`/`AppendRequest` — to an explicit backend interface
-  (`query`/`append`/`subscribe`), so the phase-4 read-through machinery can
+  (`query`/`append`/`subscribe`), so the phase-3 read-through machinery can
   pair the Feed API with a non-EDGE backend (Matrix, IMAP, Discord) unchanged.
   Per-backend adapter obligations live here, not in the feed phases: mapping
   external ordering onto monotonic positions, send idempotency across outbox
   retries (block identity → external message id), and serving `patchUp` (the
   latest block for any id whose head lies outside a fetched range) from the
-  external API. Out of scope for this project — phase 4's only obligation is to
+  external API. Out of scope for this project — phase 3's only obligation is to
   define `query`/`patchUp`/watermark semantics against the interface rather
   than against EDGE specifics, keeping the seam clean.
 - **Matrix shelf.** The open-chat survey and Matrix integration analysis are

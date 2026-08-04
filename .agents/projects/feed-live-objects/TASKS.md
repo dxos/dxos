@@ -120,15 +120,22 @@ previously mutated in memory silently.
 
 ## Roadmap phases (see DESIGN.md "Roadmap"; revised 2026-07-29)
 
-Sequenced by product pull: email drives scale-out (phases 3–4), first-party
-chat channels inherit it. Dependency chain 1 → 2 → 3 → 4, one PR each; 5 and 6
-demand-gated.
+Sequenced by product pull: email drives scale-out (phase 3), first-party
+chat channels inherit it. Dependency chain 1 → 2 → 3, one PR each; 4
+(retention) is independent and sequenced after 3 by priority (reordered
+2026-08-04 — local-replica size is the concern, not total-feed truncation);
+5 and 6 demand-gated.
 
 ### Phase 1 — version/order axis (NEXT)
 
-Correctness-shaped: v1 live objects lean on `KEY_QUEUE_POSITION`, null unless
-`assignQueuePositions` is on (Dmytro asked for `insertionId`; CodeRabbit
-flagged the default-off guarantee). Also the chat ship gate.
+Correctness-shaped: the `FeedObjectCore.reconcile` LWW algorithm exists but its
+version input (`KEY_QUEUE_POSITION`) is null unless `assignQueuePositions` is
+on (default off), so by default the order tests answer "can't tell" — a newer
+concurrent remote write is ignored while an append is pending, and a stale
+out-of-order block rolls the object backwards in the clean state. `insertionId`
+today is only the feed store's SQLite autoincrement PK (server-side cursors),
+never client-exposed. Plumbing, not new logic. (Dmytro asked for `insertionId`;
+CodeRabbit flagged the default-off guarantee.) Also the chat ship gate.
 
 - [ ] Wire `insertionId` through `EchoFeedCodec` and the index path so every
       hydrated feed object carries a version axis.
@@ -154,19 +161,11 @@ flagged the default-off guarantee). Also the chat ship gate.
 - [ ] Constraint from chat: do NOT design out per-`threadId` high-water marks
       (per-thread unread); cursor model should permit keyed sub-cursors later.
 
-### Phase 3 — retention + epoch chaining
+### Phase 3 — sparse feeds (partial replication + backend-served full queries)
 
-- [ ] Implement `Feed.setRetention` (`RetentionOptions`), building on
-      `FeedStore.deleteOldestBlocks`.
-- [ ] Compaction: rewrite a prefix into a snapshot block; define block
-      identity rules for the rewritten range (idempotency tuple preservation).
-- [ ] Epoch-chaining convention + helper: logical stream = chain of per-era
-      feeds, only head live; era index object; document for mailbox + channel
-      use.
-- [ ] Interaction check: retention vs tombstones (a tombstone must not be
-      compacted away while any replica could still hold the live object).
-
-### Phase 4 — sparse feeds (email-scale partial history)
+Promoted ahead of retention (2026-08-04): bound the local replica, not the
+total feed. Email-scale partial history; backend answers anything the dense
+local tail cannot.
 
 - [ ] Range-map bookkeeping: local block set = replicated tail + evictable
       cached dense ranges; loose (ref-resolved) blocks never enter the map.
@@ -177,15 +176,32 @@ flagged the default-off guarantee). Also the chat ship gate.
 - [ ] Watermarked domain-order paging: backend domain-key index (EDGE);
       cursor = `(domainKey, id, positionWatermark)`; live tail patches
       rendered pages.
+- [ ] Backend-computed full queries incl. aggregates (decided 2026-08-04):
+      queries reaching beyond the dense tail — deep pages, whole-history
+      aggregates like mailbox's thread aggregate (`group threadId` / `count` /
+      `max created` / `items`) — execute on the backend over the full feed;
+      local index serves the tail; hydrate-range-then-aggregate-locally is the
+      offline/caching path. See DESIGN.md roadmap item 3.
 - [ ] Eviction: LRU under a per-feed/space budget; pinned ranges (tail
       always); define ref-into-evicted-range behavior (deref goes remote).
-- [ ] Aggregation semantics over sparse history (raised 2026-08-04): mailbox's
-      thread aggregate (`group threadId` / `count` / `max created` / `items`)
-      runs on the local index and assumes dense history. Decide per aggregate:
-      serve from backend vs hydrate-range-then-aggregate locally vs report
-      partial counts (`count` over held ranges + has-more). See DESIGN.md.
 - [ ] Define against the `FeedBackend` interface shape, not EDGE specifics
       (companion workstream — keeps external backends a swap).
+
+### Phase 4 — retention + epoch chaining (total-feed truncation)
+
+Demoted behind sparse feeds (2026-08-04): matters when the _total_ feed's
+growth becomes a storage/replication problem, not for local-replica size.
+
+- [ ] Implement `Feed.setRetention` (`RetentionOptions`), building on
+      `FeedStore.deleteOldestBlocks`.
+- [ ] Compaction: rewrite a prefix into a snapshot block; define block
+      identity rules for the rewritten range (idempotency tuple preservation).
+- [ ] Epoch-chaining convention + helper: logical stream = chain of per-era
+      feeds, only head live; era index object; document for mailbox + channel
+      use.
+- [ ] Interaction check: retention vs tombstones (a tombstone must not be
+      compacted away while any replica — including sparse ones from phase 3 —
+      could still hold the live object).
 
 ### Demand-gated
 
