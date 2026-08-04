@@ -658,7 +658,9 @@ export const scrollCommentIntoView = (
   }
 
   const { from, to } = view.state.selection.main;
-  const needsSelectionUpdate = from !== range.from || to !== range.from;
+  // Never collapse a live selection: an attention change in the comments companion can land while the
+  // user is selecting text, and moving the caret would silently retarget the comment they create next.
+  const needsSelectionUpdate = from === to && from !== range.from;
   view.dispatch({
     selection: needsSelectionUpdate ? { anchor: range.from } : undefined,
     effects: [
