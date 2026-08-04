@@ -58,9 +58,5 @@ jobs:
           path: |
             packages/apps/composer-app/out/composer
             preview-meta
-          # Keeps the preview bundle identical to the deployed one (deploy-apps.yml sets this too):
-          # without it the action drops dot-prefixed paths, so a `.well-known` asset would 404 into the
-          # SPA fallback on previews alone.
-          include-hidden-files: true
           retention-days: 3
           if-no-files-found: error
