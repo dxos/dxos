@@ -120,7 +120,9 @@
   );
 
   /* Well: an inset region on its host (group, input, focus). */
-  --color-group-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.05) c h);
+  --color-group-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-well-scale) * 0.05) c h
+  );
   --color-input-surface: var(--color-group-surface);
   --color-focus-surface: var(--color-group-surface);
 
@@ -154,7 +156,8 @@
    * mirror it in light.
    */
   --color-separator: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.166) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-separator-line-scale) * 0.166)
+      c h
   );
   --color-input-separator: oklch(
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.115) c h

@@ -145,7 +145,9 @@
     --color-scrollbar-thumb: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.23) c h);
     --color-scrollbar-thumb-hover: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.3) c h);
     --color-scrollbar-thumb-active: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.34) c h);
-    --color-separator: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.166) c h);
+    --color-separator: oklch(
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-separator-line-scale) * 0.166) c h
+    );
     --color-input-separator: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-separator-scale) * 0.115) c h
     );
@@ -190,7 +192,7 @@
   .dx-popover-surface,
   .dx-main-sidebar {
     --color-toolbar-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.025) c h);
-    --color-group-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.05) c h);
+    --color-group-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-well-scale) * 0.05) c h);
     --color-group-alt-surface: oklch(from var(--surface-bg) calc(l + var(--dx-lift) * 0.08) c h);
 
     /* Re-declared for the same reason as the state aliases above. */

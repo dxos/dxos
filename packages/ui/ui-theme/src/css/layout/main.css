@@ -90,10 +90,21 @@
 
     &[data-side='is'] {
       --surface-bg: var(--color-l1-surface);
+
+      /* Collapsed, the sidebar is exactly the rail's width and the rail overlays it, so the only
+         pixels that show are the rail's own. Wearing the rail's tone keeps the edges and the rail's
+         border from revealing a second surface behind it. */
+      &[data-state='collapsed'] {
+        --surface-bg: var(--color-l0-surface);
+      }
     }
 
     &[data-side='ie'] {
       --surface-bg: var(--color-r1-surface);
+
+      &[data-state='collapsed'] {
+        --surface-bg: var(--color-r0-surface);
+      }
     }
     color: var(--color-sidebar-fg);
 
