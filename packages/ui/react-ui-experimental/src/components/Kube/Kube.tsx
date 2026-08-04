@@ -5,19 +5,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 import * as THREE from 'three';
-
-export const defaultConfig = {
-  radius: 800,
-  minDistance: 150,
-  particleCount: 400,
-  maxParticleCount: 600,
-  maxConnections: 20, // Only honoured when `limitConnections` is true (see `animate`).
-  limitConnections: false,
-  showLines: true,
-  velocityX: 0.1,
-  velocityY: 0.1,
-  velocityZ: 0.1,
-};
+import { defaultConfig } from './kube-config';
 
 /**
  * KUBE
