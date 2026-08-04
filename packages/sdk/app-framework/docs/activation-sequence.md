@@ -66,7 +66,7 @@ sequenceDiagram
 
     Sch->>Client: ClientPlugin activates
     Client-)Client: initialize() forked off the pass
-    Note over Client: Startup completing no longer implies<br/>an initialized client — hooks suspend
+    Note over Client: Startup completing no longer implies<br/>an initialized client — hooks suspend.<br/>Bounded by INITIALIZE_TIMEOUT — failure raises<br/>the fatal dialog at the entry point
     Sch-->>PM: Startup settled
     end
 
@@ -96,7 +96,7 @@ sequenceDiagram
 
     User->>Browser: interacts (invoke operation)
     Browser->>PM: operation dispatch
-    Note over PM: handler sets registered at Idle are a<br/>definition→loader map; the BODY loads here,<br/>per invocation
+    Note over PM: handler sets registered at Idle are a<br/>definition→loader map — the BODY loads here,<br/>per invocation
 ```
 
 ## Why the split
