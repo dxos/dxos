@@ -411,11 +411,13 @@ const FOLD_CONTENT_CLASSNAMES =
 const EXPOSED_PLANK_CLASSNAMES = 'pointer-events-none after:ring-0';
 
 /*
- * Where the caret goes when a plank is committed from the exposé. CodeMirror's editable host first —
- * that is the caret in a document — then any focusable in the content, so a non-editor surface (a table,
- * a form) still lands somewhere useful instead of nowhere.
+ * Where the caret goes when a plank is committed from the exposé: editable targets only, in DOM order.
+ *
+ * Deliberately no `[tabindex="0"]` catch-all — `Pane.Root` carries `tabIndex={0}` and is itself a
+ * descendant of the tile, so it matched first and the "caret" landed back on the plank frame. A plank
+ * whose surface has nothing editable simply keeps the root focus it already has.
  */
-const EDITABLE_CONTENT_SELECTOR = '.cm-content, [contenteditable="true"], input, textarea, [tabindex="0"]';
+const EDITABLE_CONTENT_SELECTOR = '.cm-content, [contenteditable="true"], input:not([type="hidden"]), textarea';
 
 /**
  * Tile wrapping a {@link DeckPlank}, parameterized by the derived presentation: fullbleed renders an
@@ -578,7 +580,9 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           // hover, which is what makes the arrow keys visible now that the plank ring is suppressed.
           // Deliberately NOT `outline-focus-ring`: that token is the primary blue, and the exposé is a
           // neutral overview, so selection brightens the existing hairline instead of recolouring it.
-          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors group-focus-within/tile:outline-base-fg hover:outline-base-fg'
+          // No hover cue: sharing the selected treatment lit the tile under the pointer as well, which
+          // reads as two selections. `cursor-pointer` already says the tile is clickable.
+          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors group-focus-within/tile:outline-base-fg'
           aria-label={spineLabel}
           onClick={handleExposeSelect}
         />
@@ -1406,7 +1410,10 @@ export const DeckPlanks = () => {
         captureRef.current();
         void (async () => {
           await invokePromise(DeckOperation.ToggleExpose, { expose: false });
-          await invokePromise(LayoutOperation.ScrollIntoView, { subject });
+          // Awaited for ordering (the plank focuses its root off this one-shot, which would otherwise
+          // land after the caret) but not depended on: scrolling and placing the caret are independent,
+          // so a host without a layout handler still gets the caret. The invoker logs its own failures.
+          await invokePromise(LayoutOperation.ScrollIntoView, { subject }).catch(() => undefined);
           // Committing a plank means working in it, so the caret goes into the content rather than
           // stopping on the plank. Ordered after both operations: the content is `inert` while exposed,
           // and the plank focuses its own root off the scroll one-shot — focusing earlier would either
@@ -1418,6 +1425,36 @@ export const DeckPlanks = () => {
             tile?.querySelector<HTMLElement>(EDITABLE_CONTENT_SELECTOR)?.focus({ preventScroll: true });
           });
         })();
+        return;
+      }
+
+      // Shift+arrow rearranges instead of navigating: the plank travels and the selection rides along, so
+      // a deck can be reordered without leaving the overview. Exposé only — in the deck the arrows are
+      // already scoped to plank-level focus, and a shifted arrow there is a text selection.
+      if (exposeRef.current && event.shiftKey && !(event.metaKey || event.ctrlKey || event.altKey)) {
+        const direction: DeckOperation.PartAdjustment | undefined =
+          event.key === 'ArrowLeft' ? 'increment-start' : event.key === 'ArrowRight' ? 'increment-end' : undefined;
+        if (!direction) {
+          return;
+        }
+        const { planks: reorderable, attendedPlankId: attended } = navigationRef.current;
+        const held = document.activeElement?.closest('[role="listitem"]')?.getAttribute('data-object-id');
+        const id = (held && reorderable.includes(held) ? held : undefined) ?? attended;
+        if (!id) {
+          return;
+        }
+        event.preventDefault();
+        // The tiles are laid out by the exposé, so a reorder has to animate from the geometry they are
+        // currently at rather than from wherever the deck would have put them.
+        captureRef.current();
+        void invokePromise(DeckOperation.Adjust, { id, type: direction }).then(() => {
+          // The row re-renders in the new order; re-focus the plank so the selection follows the move
+          // rather than being left behind on whatever now occupies the old position.
+          requestAnimationFrame(() => {
+            const tile = getTilesRef.current().find((candidate) => candidate.getAttribute('data-object-id') === id);
+            tile?.querySelector<HTMLElement>(Attention.ATTENDABLE_SELECTOR)?.focus({ preventScroll: true });
+          });
+        });
         return;
       }
 

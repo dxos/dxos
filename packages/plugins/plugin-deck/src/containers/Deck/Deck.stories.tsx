@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -368,6 +368,8 @@ type DefaultStoryProps = {
   companionPlanks?: number[];
   /** Open the launcher fixture as the first plank (the mailbox-shaped path). */
   launcher?: boolean;
+  /** Start in the exposé (the overview that lays every plank out at once). */
+  expose?: boolean;
   /**
    * Layout experiments to switch on (see `Settings`). They are settings rather than props, so the story
    * seeds them into the settings atom the deck actually reads.
@@ -386,6 +388,7 @@ const DefaultStory = ({
   sidebarState = 'closed',
   companionPlanks = NO_COMPANIONS,
   launcher = false,
+  expose = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: DefaultStoryProps) => {
   const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
@@ -423,12 +426,13 @@ const DefaultStory = ({
     updateState((current) => ({
       ...current,
       sidebarState,
+      expose,
       decks: {
         ...current.decks,
         [current.activeDeck]: { ...current.decks[current.activeDeck], active, companionPlanks: open },
       },
     }));
-  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, updateState]);
+  }, [items, count, sidebarState, companionPlanks, launcher, launcherNode, expose, updateState]);
 
   return (
     <Deck.Root settings={settings} pluginManager={pluginManager} state={state} deck={deck} updateState={updateState}>
@@ -480,6 +484,68 @@ export const TwoPlanks: Story = {
 export const ManyPlanks: Story = {
   args: {
     count: 6,
+  },
+};
+
+/**
+ * The exposé: every plank at once as shrunk-to-fit tiles, for picking one with the keyboard.
+ *
+ * Test:
+ * 1. The content is inert — the exposé is a picker, so nothing inside a plank can take focus (which is
+ *    also what stops the tile's selection cue lighting up on two tiles at once).
+ * 2. Arrow left/right moves the selection, and exactly one tile is ever selected.
+ * 3. Shift+arrow reorders the deck, carrying the selection along with the plank.
+ * 4. Enter commits: the exposé closes and the caret lands in the committed plank's content.
+ */
+export const Expose: Story = {
+  tags: ['test'],
+  args: { count: 4, expose: true },
+  play: async ({ canvasElement }) => {
+    // The plugin manager activates asynchronously, so the deck mounts well after the story's first paint.
+    await within(canvasElement).findAllByTestId('story.article', {}, { timeout: 30_000 });
+
+    const tiles = () => [...canvasElement.querySelectorAll<HTMLElement>('[role="listitem"][data-object-id]')];
+    const order = () => tiles().map((tile) => tile.getAttribute('data-object-id')!);
+    // `:focus-within` is what the selection cue keys off, so asserting on it tests the same condition the
+    // outline does rather than a parallel notion of "selected".
+    const selected = () =>
+      tiles()
+        .filter((tile) => tile.matches(':focus-within'))
+        .map((tile) => tile.getAttribute('data-object-id')!);
+
+    await waitFor(() => expect(tiles()).toHaveLength(4));
+
+    // 1. Nothing inside a plank can hold focus while exposed.
+    for (const tile of tiles()) {
+      await expect(tile.querySelector('[inert]')).not.toBeNull();
+    }
+
+    // 2. The selection walks the row, one tile at a time.
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(selected()).toHaveLength(1));
+    const first = selected()[0];
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(selected()[0]).not.toEqual(first));
+    await expect(selected()).toHaveLength(1);
+
+    // 3. Shift+arrow moves the plank itself, one position toward the start, selection included.
+    const held = selected()[0];
+    const before = order();
+    await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+    await waitFor(() => expect(order()).not.toEqual(before));
+    await expect(order().indexOf(held)).toEqual(before.indexOf(held) - 1);
+    await waitFor(() => expect(selected()).toEqual([held]));
+
+    // 4. Enter leaves the exposé with the held plank attended and the caret in its content. Asserting on
+    // `.cm-content` rather than "focus is somewhere in the tile": the plank root is inside the tile too,
+    // so the looser check passes on the pre-existing focus and proves nothing about the caret.
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(tiles().some((tile) => tile.querySelector('[inert]'))).toBe(false));
+    await waitFor(() => {
+      const active = document.activeElement as HTMLElement | null;
+      expect(active?.closest('[data-object-id]')?.getAttribute('data-object-id')).toEqual(held);
+      expect(active?.classList.contains('cm-content')).toBe(true);
+    });
   },
 };
 
