@@ -17,11 +17,11 @@ export type CardStyleProps = {
 };
 
 // TODO(burdon): Add gap.
-const subgrid = 'col-span-3 grid grid-cols-subgrid items-center';
+const subgrid = 'col-span-3 grid grid-cols-subgrid gap-1 items-center';
 
 const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) p-1',
+    'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) p-1 gap-1',
     'group/card relative shrink-0 overflow-hidden',
     border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
