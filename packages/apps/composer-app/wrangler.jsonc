@@ -1,11 +1,8 @@
 {
   // Cloudflare Workers (Static Assets) config for Composer. Migrated from Pages advanced mode: `_worker.js`
-  // is the Worker entry (main), static assets are served via the ASSETS binding, and the Worker runs first
-  // for everything but hashed build output (feedback-logs, RSS proxy, OTel -> SigNoz, the WebAuthn Related
-  // Origin Requests manifest, the composer.dxos.org redirect); other routes fall through to the assets with
-  // SPA fallback.
-  // Cloudflare-side: the production Worker carries both composer.space and composer.dxos.org as custom
-  // domains — the latter is what routes its well-known files and redirect here.
+  // is the Worker entry (main), static assets are served via the ASSETS binding, and the `run_worker_first`
+  // paths run the Worker first (feedback-logs, RSS proxy, OTel -> SigNoz, the WebAuthn Related Origin
+  // Requests manifest) while every other route is asset-first with SPA fallback.
   // Deployed by .github/workflows/scripts/deploy-env.mjs via `wrangler deploy --config <this> --env <env>`.
   // `_worker.js` lives in the asset dir (the PR preview deploy — a `versions upload` against `env.main` —
   // also consumes it there), so it is kept out of the asset upload with a generated `.assetsignore`.
@@ -23,11 +20,8 @@
     "binding": "ASSETS",
     // Unmatched routes return index.html (client-side router owns them)...
     "not_found_handling": "single-page-application",
-    // ...but the asset layer answers every unlisted path itself (SPA fallback included) and cannot match
-    // on hostname, so a navigation to composer.dxos.org would be served the app instead of redirected
-    // unless the Worker runs first. This subsumes the routes that individually needed it (/api/*,
-    // /.well-known/webauthn). Hashed build output is exempt: never a navigation, and ~99% of requests.
-    "run_worker_first": ["/*", "!/assets/*"],
+    // ...except these, which must reach the Worker before the SPA fallback swallows them.
+    "run_worker_first": ["/api/*", "/.well-known/webauthn"],
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
   // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker
