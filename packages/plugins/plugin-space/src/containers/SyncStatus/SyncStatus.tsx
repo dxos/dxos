@@ -13,7 +13,7 @@ import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
 import { createClientSaveTracker, getIcon, getStatus, getStatusStyle } from '#components';
-import { useEdgeStatus, useStalled } from '#hooks';
+import { useEdgeStatus } from '#hooks';
 import { meta } from '#meta';
 
 export const SyncStatus = () => {
@@ -42,13 +42,7 @@ export const SyncStatusIndicator = ({
   const needsToUpload = summary.differentDocuments > 0 || summary.missingOnRemote > 0;
   const needsToDownload = summary.differentDocuments > 0 || summary.missingOnLocal > 0;
 
-  // Documents left to reconcile; a change means replication advanced, so the stall timer restarts.
-  const outstanding = summary.differentDocuments + summary.missingOnLocal + summary.missingOnRemote;
-  // Bytes on the wire prove liveness while the document counts hold steady (e.g. one large document).
-  const transferring = edgeStatus.rateBytesUp + edgeStatus.rateBytesDown > 0;
-  const stalled = useStalled({ active: !offline && outstanding > 0 && !transferring, progress: outstanding });
-
-  const status = getStatus({ offline, saved, stalled, needsToUpload, needsToDownload });
+  const status = getStatus({ offline, saved, needsToUpload, needsToDownload });
   const icon = getIcon(status);
 
   return (
