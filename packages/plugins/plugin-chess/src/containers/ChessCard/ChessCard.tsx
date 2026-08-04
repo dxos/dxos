@@ -5,14 +5,14 @@
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
-import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
+import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import { Card } from '@dxos/react-ui';
 
 import { Chessboard } from '#components';
 
 import * as Chess from '../../types/Chess';
 
-export type ChessCardProps = GameVariantSurfaceProps;
+export type ChessCardProps = GameCapabilities.GameVariantSurfaceProps;
 
 export const ChessCard = ({ variant }: ChessCardProps) => {
   if (!Obj.instanceOf(Chess.State, variant)) {

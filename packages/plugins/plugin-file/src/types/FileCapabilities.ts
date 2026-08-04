@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namespace
-
 import { type Atom } from '@effect-atom/atom';
+import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
+import { ACCEPTED_MIME } from './FileLimits';
 import * as Settings from './Settings';
 
 /**
@@ -36,3 +36,15 @@ export const Backend = Capability.make<Backend>()(`${meta.profile.key}.capabilit
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );
+
+export namespace FileAction {
+  export const UploadAnnotationId = Symbol.for(`${meta.profile.key}.annotation.upload`);
+
+  export const CreateFileSchema = Schema.Struct({
+    file: Schema.instanceOf(File).annotations({
+      [UploadAnnotationId]: ACCEPTED_MIME,
+    }),
+  });
+
+  export type CreateFileForm = Schema.Schema.Type<typeof CreateFileSchema>;
+}

@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 import { ViewState } from '@dxos/react-ui-attention/types';
 import { type Text } from '@dxos/schema';
+import { AnchoredTo, Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -103,3 +104,15 @@ export namespace ReviewCapabilities {
   }>;
   export const HistoryProvider = Capability.make<HistoryProvider>()(`${meta.profile.key}.capability.historyProvider`);
 }
+
+export interface ThreadModel {
+  root: Thread.Thread;
+}
+
+export type CommentState = {
+  /** Object toolbar state. */
+  toolbar: Record<string, boolean>;
+  /** In-memory draft threads. */
+  drafts: Record<string, AnchoredTo.AnchoredTo[]>;
+  current?: string | undefined;
+};

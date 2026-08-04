@@ -9,13 +9,15 @@ import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { File, FileAction, FileOperation } from '#types';
+import { File, FileOperation } from '#types';
+
+import * as FileCapabilities from '../types/FileCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(File.File),
-      inputSchema: FileAction.CreateFileSchema,
+      inputSchema: FileCapabilities.FileAction.CreateFileSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {
           const { object } = yield* Operation.invoke(FileOperation.Create, { ...props, db: options.db });

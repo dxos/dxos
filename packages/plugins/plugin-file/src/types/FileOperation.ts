@@ -13,14 +13,14 @@ import { ContentBlock, File } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { FileAction } from './types';
+import * as FileCapabilities from './FileCapabilities';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create File', icon: 'ph--file--regular' },
   services: [Capability.Service],
-  input: Schema.extend(FileAction.CreateFileSchema, Schema.Struct({ db: Database.Database })),
+  input: Schema.extend(FileCapabilities.FileAction.CreateFileSchema, Schema.Struct({ db: Database.Database })),
   output: Schema.Struct({
     object: Type.getSchema(File.File),
   }),

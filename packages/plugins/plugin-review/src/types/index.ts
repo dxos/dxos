@@ -10,4 +10,3 @@ export * as ReviewEvents from './ReviewEvents';
 export * as Settings from './Settings';
 export * from './AgentIdentity';
 export * from './ReviewCapabilities';
-export * from './types';

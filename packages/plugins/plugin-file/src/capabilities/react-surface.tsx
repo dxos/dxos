@@ -15,7 +15,9 @@ import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 import { FileInput } from '#components';
 import { FileArticle, FileSettings } from '#containers';
 import { meta } from '#meta';
-import { File, FileAction, type Settings } from '#types';
+import { File, type Settings } from '#types';
+
+import * as FileCapabilities from '../types/FileCapabilities';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -32,7 +34,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'createForm',
         filter: AppSurface.formInputBySchema(
-          (ast) => !!SchemaEx.findAnnotation<Record<string, string[]>>(ast, FileAction.UploadAnnotationId),
+          (ast) =>
+            !!SchemaEx.findAnnotation<Record<string, string[]>>(ast, FileCapabilities.FileAction.UploadAnnotationId),
         ),
         component: ({ data, ...props }) => {
           const ast = data.fieldPropertyAst;

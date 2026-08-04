@@ -3,7 +3,6 @@
 //
 
 export * from './sheet-range-types';
-export * from './types';
 export * from './util';
 
 export * as Sheet from './Sheet';

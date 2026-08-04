@@ -18,6 +18,7 @@ export default defineConfig({
     testing: 'src/testing/index.ts',
     translations: 'src/translations.ts',
     types: 'src/types/index.ts',
+    Settings: 'src/types/Settings.ts',
     Tldraw: 'src/types/Tldraw.ts',
     TldrawCapabilities: 'src/types/TldrawCapabilities.ts',
     TldrawEvents: 'src/types/TldrawEvents.ts',

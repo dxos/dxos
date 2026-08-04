@@ -22,6 +22,7 @@ export default defineConfig({
     'templates': 'src/templates/index.ts',
     'translations': 'src/translations.ts',
     'types': 'src/types/index.ts',
+    'Settings': 'src/types/Settings.ts',
     'testing': 'src/testing/index.ts',
     'Notebook': 'src/types/Notebook.ts',
     'ScriptCapabilities': 'src/types/ScriptCapabilities.ts',

@@ -81,6 +81,31 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Notebook": {
+      "source": "./src/types/Notebook.ts",
+      "types": "./dist/types/src/types/Notebook.d.ts",
+      "import": "./dist/lib/Notebook.mjs"
+    },
+    "./ScriptCapabilities": {
+      "source": "./src/types/ScriptCapabilities.ts",
+      "types": "./dist/types/src/types/ScriptCapabilities.d.ts",
+      "import": "./dist/lib/ScriptCapabilities.mjs"
+    },
+    "./ScriptEvents": {
+      "source": "./src/types/ScriptEvents.ts",
+      "types": "./dist/types/src/types/ScriptEvents.d.ts",
+      "import": "./dist/lib/ScriptEvents.mjs"
+    },
+    "./ScriptOperation": {
+      "source": "./src/types/ScriptOperation.ts",
+      "types": "./dist/types/src/types/ScriptOperation.d.ts",
+      "import": "./dist/lib/ScriptOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./containers": {
       "source": "./src/containers/index.ts",
@@ -92,6 +117,7 @@
       "types": "./dist/types/src/operations/index.d.ts",
       "import": "./dist/lib/operations.mjs"
     },
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -116,28 +142,7 @@
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
       "import": "./dist/lib/types.mjs"
-    },
-    "./Notebook": {
-      "source": "./src/types/Notebook.ts",
-      "types": "./dist/types/src/types/Notebook.d.ts",
-      "import": "./dist/lib/Notebook.mjs"
-    },
-    "./ScriptCapabilities": {
-      "source": "./src/types/ScriptCapabilities.ts",
-      "types": "./dist/types/src/types/ScriptCapabilities.d.ts",
-      "import": "./dist/lib/ScriptCapabilities.mjs"
-    },
-    "./ScriptEvents": {
-      "source": "./src/types/ScriptEvents.ts",
-      "types": "./dist/types/src/types/ScriptEvents.d.ts",
-      "import": "./dist/lib/ScriptEvents.mjs"
-    },
-    "./ScriptOperation": {
-      "source": "./src/types/ScriptOperation.ts",
-      "types": "./dist/types/src/types/ScriptOperation.d.ts",
-      "import": "./dist/lib/ScriptOperation.mjs"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -153,6 +158,9 @@
       ],
       "ScriptOperation": [
         "dist/types/src/types/ScriptOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
       ]
     }
   },

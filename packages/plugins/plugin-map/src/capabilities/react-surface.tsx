@@ -16,8 +16,9 @@ import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/r
 import { Position } from '@dxos/util';
 
 import { MapSurface, MapViewEditor } from '#containers';
-import { LocationAnnotationId, Map } from '#types';
+import { Map } from '#types';
 
+import * as MapCapabilities from '../types/MapCapabilities';
 import * as MapRole from '../types/MapRole';
 
 export default Capability.makeModule(() =>
@@ -63,7 +64,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         // TODO(burdon): Why this title?
         id: 'surface.createInitialSchemaForm',
-        filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, LocationAnnotationId)),
+        filter: AppSurface.formInputBySchema(
+          (ast) => !!SchemaEx.findAnnotation<boolean>(ast, MapCapabilities.LocationAnnotationId),
+        ),
         component: ({ data, ...inputProps }) => {
           const ast = data.fieldPropertyAst;
           if (!ast) {

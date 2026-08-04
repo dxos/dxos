@@ -8,4 +8,3 @@ export * as MapCapabilities from './MapCapabilities';
 export * as MapEvents from './MapEvents';
 export * as MapOperation from './MapOperation';
 export * as MapRole from './MapRole';
-export * from './types';

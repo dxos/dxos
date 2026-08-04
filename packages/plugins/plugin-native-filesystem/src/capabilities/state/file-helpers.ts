@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type FilesystemEntry, type FilesystemFile, isFilesystemFile } from '#types';
+import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 
 /** Collect all markdown file ids from a tree of entries. */
-export const collectMarkdownFileIds = (entries: FilesystemEntry[]): string[] => {
+export const collectMarkdownFileIds = (entries: NativeFilesystemCapabilities.FilesystemEntry[]): string[] => {
   const ids: string[] = [];
   for (const entry of entries) {
     if ('children' in entry) {
       ids.push(...collectMarkdownFileIds(entry.children));
-    } else if (isFilesystemFile(entry) && entry.type === 'markdown') {
+    } else if (NativeFilesystemCapabilities.isFilesystemFile(entry) && entry.type === 'markdown') {
       ids.push(entry.id);
     }
   }
@@ -18,12 +18,14 @@ export const collectMarkdownFileIds = (entries: FilesystemEntry[]): string[] => 
 };
 
 /** Collect all markdown files from a tree of entries. */
-export const collectMarkdownFiles = (entries: FilesystemEntry[]): FilesystemFile[] => {
-  const files: FilesystemFile[] = [];
+export const collectMarkdownFiles = (
+  entries: NativeFilesystemCapabilities.FilesystemEntry[],
+): NativeFilesystemCapabilities.FilesystemFile[] => {
+  const files: NativeFilesystemCapabilities.FilesystemFile[] = [];
   for (const entry of entries) {
     if ('children' in entry) {
       files.push(...collectMarkdownFiles(entry.children));
-    } else if (isFilesystemFile(entry) && entry.type === 'markdown') {
+    } else if (NativeFilesystemCapabilities.isFilesystemFile(entry) && entry.type === 'markdown') {
       files.push(entry);
     }
   }

@@ -11,8 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';
-
+import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 import { loadWorkspace, refreshWorkspace } from '../../util';
 import { createDirectoryWatcher } from './directory-watcher';
 import * as FilesystemManager from './FilesystemManager';
@@ -24,7 +23,7 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
     const client = yield* ClientCapabilities.Client;
 
-    const stateAtom = Atom.make<NativeFilesystemState>({
+    const stateAtom = Atom.make<NativeFilesystemCapabilities.NativeFilesystemState>({
       workspaces: [],
       currentFile: undefined,
     }).pipe(Atom.keepAlive);

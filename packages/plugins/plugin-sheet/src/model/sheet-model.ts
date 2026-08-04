@@ -39,7 +39,9 @@ import {
   mapFormulaIndicesToRefs,
   mapFormulaRefsToIndices,
 } from '#types';
-import { type Sheet, type SheetAction } from '#types';
+import { type Sheet } from '#types';
+
+import * as SheetCapabilities from '../types/SheetCapabilities';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.
@@ -200,7 +202,7 @@ export class SheetModel extends Resource {
     return idx;
   }
 
-  dropRow(rowIndex: string): SheetAction.RestoreAxis {
+  dropRow(rowIndex: string): SheetCapabilities.SheetAction.RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
       to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
@@ -216,7 +218,7 @@ export class SheetModel extends Resource {
     return { axis: 'row', index, axisIndex: rowIndex, axisMeta: this._sheet.rowMeta[rowIndex], values };
   }
 
-  dropColumn(colIndex: string): SheetAction.RestoreAxis {
+  dropColumn(colIndex: string): SheetCapabilities.SheetAction.RestoreAxis {
     const range = {
       from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
       to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
@@ -232,7 +234,7 @@ export class SheetModel extends Resource {
     return { axis: 'col', index, axisIndex: colIndex, axisMeta: this._sheet.rowMeta[colIndex], values };
   }
 
-  restoreRow({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
+  restoreRow({ index, axisIndex, axisMeta, values }: SheetCapabilities.SheetAction.RestoreAxis): void {
     Obj.update(this._sheet, (obj) => {
       obj.rows.splice(index, 0, axisIndex);
       values.forEach((value, col) => {
@@ -248,7 +250,7 @@ export class SheetModel extends Resource {
     this.reset();
   }
 
-  restoreColumn({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
+  restoreColumn({ index, axisIndex, axisMeta, values }: SheetCapabilities.SheetAction.RestoreAxis): void {
     Obj.update(this._sheet, (obj) => {
       obj.columns.splice(index, 0, axisIndex);
       values.forEach((value, row) => {

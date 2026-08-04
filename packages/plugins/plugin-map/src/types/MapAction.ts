@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 
-import { LocationAnnotationId } from './types';
+import * as MapCapabilities from './MapCapabilities';
 
 export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -21,7 +21,7 @@ export const CreateMap = Schema.Struct({
   ),
   locationFieldName: Schema.String.pipe(
     Schema.annotations({
-      [LocationAnnotationId]: true,
+      [MapCapabilities.LocationAnnotationId]: true,
       title: 'Location property',
     }),
     Schema.optional,

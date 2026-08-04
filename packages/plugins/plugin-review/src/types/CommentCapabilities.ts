@@ -14,7 +14,7 @@ import { type Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type CommentState } from '../types';
+import * as ReviewCapabilities from './ReviewCapabilities';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
   `${meta.profile.key}.capability.settings`,
@@ -25,7 +25,9 @@ export type CommentConfig = AppCapabilities.CommentConfig;
 export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfig> = AppCapabilities.CommentConfig;
 
 /** Comment state (drafts, toolbar state, current selection). */
-export const State = Capability.makeSingleton<Atom.Writable<CommentState>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<ReviewCapabilities.CommentState>>()(
+  `${meta.profile.key}.capability.state`,
+);
 
 /**
  * Runs one comment-thread agent turn against a thread/subject pair.
