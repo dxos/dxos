@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-import * as Schema from 'effect/Schema';
 import React, {
   type PropsWithChildren,
   useCallback,
@@ -14,7 +12,7 @@ import React, {
   useSyncExternalStore,
 } from 'react';
 
-import { LogLevel, logFileRegistry } from '@dxos/log';
+import { logFileRegistry } from '@dxos/log';
 import {
   ErrorStack,
   Icon,
@@ -32,7 +30,7 @@ import {
   parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
-import { ViewState, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
+import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -40,12 +38,9 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
 import { formatLogEntry, packageName } from './format';
-import { DEFAULT_MAX_LINES, type LogRow, logBuffer } from './log-buffer';
+import { DEFAULT_MAX_LINES, logBuffer } from './log-buffer';
+import { LoggerProvider, copyToClipboard, levelColor, logLevelsAspect, useLoggerContext } from './LoggerContext';
 import { type LevelName, LEVELS, composeFilter } from './recorder';
-
-export { LEVELS, composeFilter, startLogRecording } from './recorder';
-export type { LevelName, LogRecorder } from './recorder';
-export { type LogRow, logBuffer } from './log-buffer';
 
 //
 // Shared
@@ -53,60 +48,6 @@ export { type LogRow, logBuffer } from './log-buffer';
 
 /** Per-file level overrides are global to the logger, not scoped to an attention context. */
 const LOG_LEVELS_CONTEXT = 'logger';
-
-/**
- * Per-file log level overrides, keyed by source path. Persisted (localStorage) via react-ui-attention
- * view state so the levels a developer dials in survive reloads; requires a `ViewStateProvider` ancestor
- * to persist (degrades to session defaults without one).
- */
-export const logLevelsAspect = ViewState.define<Record<string, LevelName>>({
-  key: 'debug-logger-levels',
-  backend: 'local',
-  schema: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Literal(...LEVELS) })),
-  defaultValue: () => ({}),
-});
-
-export const levelColor = (level: LogLevel) =>
-  level > LogLevel.WARN
-    ? 'text-error-text'
-    : level > LogLevel.INFO
-      ? 'text-warning-text'
-      : level > LogLevel.VERBOSE
-        ? 'text-info-text'
-        : 'text-success-text';
-
-// Guard clipboard writes so rejected or unavailable writes surface rather than dangling as unhandled rejections.
-export const copyToClipboard = (text: string): void => {
-  void navigator.clipboard?.writeText(text)?.catch((err) => console.warn('clipboard write failed', err));
-};
-
-//
-// Context
-//
-
-type LoggerContextValue = {
-  rows: LogRow[];
-  filter: string;
-  setFilter: (filter: string) => void;
-  textFilter: string;
-  setTextFilter: (value: string) => void;
-  recording: boolean;
-  setRecording: (fn: (value: boolean) => boolean) => void;
-  files: string[];
-  fileLevels: Map<string, LevelName>;
-  setFileLevel: (file: string, level: LevelName | undefined) => void;
-  clearFileLevels: () => void;
-  expanded: Set<number>;
-  toggleExpand: (id: number) => void;
-  current: number | undefined;
-  setCurrent: (id: number) => void;
-  checked: Set<number>;
-  toggleChecked: (id: number) => void;
-  clear: () => void;
-  copyAll: () => void;
-};
-
-const [LoggerProvider, useLoggerContext] = createContext<LoggerContextValue>('Logger');
 
 //
 // Root
@@ -637,8 +578,6 @@ export const Logger = {
   Levels: LoggerLevels,
   Filter: LoggerFilter,
 };
-
-export { useLoggerContext };
 
 export type {
   LoggerContentProps,

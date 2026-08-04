@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import {
@@ -14,40 +13,13 @@ import {
 } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  type ReorderActive,
-  type ReorderListController,
-  type UseListDisclosureReturn,
-  type UseListNavigationReturn,
-  useListDisclosure,
-  useListNavigation,
-  useReorderAutoScroll,
-  useReorderList,
-} from '../../aspects';
+import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../aspects';
 import { listTheme } from '../List.theme';
+import { type ListItemRecord, OrderedListProvider, useOrderedListContext } from './OrderedListContext';
 
 const styles = listTheme.styles();
 
-export type ListItemRecord = any;
-
-const ORDERED_LIST_NAME = 'OrderedList';
-
-type OrderedListContextValue<T extends ListItemRecord> = {
-  reorder: ReorderListController<T>;
-  disclosure: UseListDisclosureReturn;
-  navigation: UseListNavigationReturn;
-  readonly?: boolean;
-  active: ReorderActive<T>;
-  /**
-   * Stable id accessor reused by items that want to look up their record (e.g. the
-   * `OrderedListItem` <-> `useReorderItem` plumbing).
-   */
-  getId: (item: T) => string;
-};
-
-const [OrderedListProvider, useOrderedListContext] = createContext<OrderedListContextValue<any>>(ORDERED_LIST_NAME);
-
-export { useOrderedListContext };
+export type { ListItemRecord };
 
 export type OrderedListRootProps<T extends ListItemRecord> = ThemedClassName<{
   items: readonly T[];

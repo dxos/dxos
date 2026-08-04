@@ -2,19 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
-export interface DensityContextValue {
-  density?: Density;
-}
+import { DensityContext } from './DensityContext';
 
 export type DensityProviderProps = PropsWithChildren<{
   density?: Density;
 }>;
-
-export const DensityContext = createContext<DensityContextValue>({ density: 'md' });
 
 /**
  * Provides density through React context only — controls opt in by reading it and emitting

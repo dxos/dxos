@@ -7,7 +7,6 @@ import React, { useCallback, useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { type SpaceCapabilities } from '@dxos/plugin-space';
-import { Column } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { ThreadCapabilities, buildChannelFormSchema } from '#types';
@@ -41,12 +40,12 @@ export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities
       onSave={handleSave}
       testId='create-channel-form'
     >
-      <Column.Center>
+      <Form.Viewport>
         <Form.Content>
           <Form.FieldSet />
           <Form.Submit />
         </Form.Content>
-      </Column.Center>
+      </Form.Viewport>
     </Form.Root>
   );
 };
