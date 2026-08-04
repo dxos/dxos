@@ -2,11 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type HTMLAttributes, type PropsWithChildren } from 'react';
-
-import { type ClassNameValue, Icon, type Size } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
-
 import { type TreeNodeData } from './Tree';
 
 // Kept out of `Tree.tsx`: react-refresh only fast-refreshes a module whose

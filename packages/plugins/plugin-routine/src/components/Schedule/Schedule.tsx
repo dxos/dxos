@@ -18,14 +18,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-import {
-  MAX_MIN_INTERVAL_SECONDS,
-  clampSchedule,
-  describeCron,
-  fromCron,
-  scheduleIntervalSeconds,
-  scheduleToCron,
-} from './cron';
+import { MAX_MIN_INTERVAL_SECONDS, clampSchedule, fromCron, scheduleIntervalSeconds, scheduleToCron } from './cron';
 import { describeSchedule } from './describe-schedule';
 
 //

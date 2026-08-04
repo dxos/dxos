@@ -2,63 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { EditorSelection, type Extension, Transaction } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
-import * as Stream from 'effect/Stream';
-import React, {
-  type ReactNode,
-  type RefObject,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from 'react';
-import { createPortal } from 'react-dom';
+import { type RefObject } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';
-import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
-import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
-  type AutoScrollProps,
-  PROMPT_ELEMENT,
-  ThemeExtensionsOptions,
-  type XmlTagsOptions,
-  type XmlWidgetState,
-  type XmlWidgetStateManager,
   crawlerLineEffect,
-  createBasicExtensions,
-  createThemeExtensions,
-  createTurnSource,
-  decorateMarkdown,
-  documentSlots,
-  extendedMarkdown,
-  fader,
-  lineSpacing,
   navigateNextEffect,
   navigatePreviousEffect,
-  scroller,
-  turnFolding,
-  typewriter,
-  typewriterBypass,
-  xmlBlockDecoration,
-  xmlFormatting,
   xmlTagContextEffect,
-  xmlTagResetEffect,
-  xmlTags,
   xmlTagUpdateEffect,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
-import { isTruthy } from '@dxos/util';
 
-import { footer, setFooterVisibleEffect } from './footer';
 import { type DocumentRange, type MarkdownStreamController } from './MarkdownStream';
-import { type StreamerOptions, createStreamer } from './stream';
 
 // Kept out of `MarkdownStream.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

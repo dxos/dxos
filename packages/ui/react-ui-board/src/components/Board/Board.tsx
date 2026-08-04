@@ -4,10 +4,8 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
-  type MutableRefObject,
   type PropsWithChildren,
   forwardRef,
   useCallback,
@@ -41,7 +39,7 @@ import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { BoardCell, type BoardCellProps } from './BoardCell';
-import { BoardContextProvider, type BoardContextValue, type SelectionMode, useBoardContext } from './BoardContext';
+import { BoardContextProvider, type SelectionMode, useBoardContext } from './BoardContext';
 import {
   type Bounds,
   type DropResolver,

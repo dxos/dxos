@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type Ref, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';

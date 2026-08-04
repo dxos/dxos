@@ -2,16 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
-import { mx } from '@dxos/ui-theme';
-
-import { meta } from '#meta';
 
 // Kept out of `SchemaContainer.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

@@ -2,10 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useRef } from 'react';
 
-import { DebugOverlayProvider, useDebugLog } from './DebugOverlayContext';
+import { DebugOverlayProvider } from './DebugOverlayContext';
 
 export const DEBUG_OVERLAY_NAME = 'DebugOverlay';
 

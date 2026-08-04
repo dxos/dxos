@@ -2,34 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type ComponentPropsWithRef,
-  type FocusEvent,
-  type PropsWithChildren,
-  forwardRef,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { log } from '@dxos/log';
-import { useDefaultValue } from '@dxos/react-hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
-
-import {
-  ATTENDABLE_ATTRIBUTE,
-  ATTENDABLE_SELECTOR,
-  type Attention,
-  AttentionManager,
-  getAttendables,
-} from '../../types/Attention';
+import { ATTENDABLE_ATTRIBUTE, type Attention, AttentionManager } from '../../types/Attention';
 
 // Kept out of `AttentionProvider.tsx`: react-refresh only fast-refreshes a module whose exports are
 // all components, so the context and hooks exported beside them force a full page reload on every edit.

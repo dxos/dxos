@@ -2,31 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, forwardRef, useCallback, useContext, useState } from 'react';
-
-import { invariant } from '@dxos/invariant';
-import {
-  Input,
-  ThemedClassName,
-  ToggleGroup,
-  ToggleGroupItem,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
-
-import { meta } from '#meta';
-
-import {
-  MAX_MIN_INTERVAL_SECONDS,
-  clampSchedule,
-  describeCron,
-  fromCron,
-  scheduleIntervalSeconds,
-  scheduleToCron,
-} from './cron';
-import { Days, type Day, type ScheduleValue } from './Schedule';
+import { describeCron } from './cron';
+import { type Day, Days, type ScheduleValue } from './Schedule';
 
 // Kept out of `Schedule.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

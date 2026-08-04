@@ -30,11 +30,10 @@
 //   - `packages/ui/react-ui-list/AUDIT.md` for why this layering exists.
 //   - https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/listbox_role
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import React, { forwardRef } from 'react';
 
-import { LIST_NAME, ListProvider, type ListProps, type ListScopedProps } from './ListContext';
+import { LIST_NAME, type ListProps, ListProvider, type ListScopedProps } from './ListContext';
 
 const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<ListProps>, forwardedRef) => {
   const {

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useEffect, useLayoutEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
@@ -11,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useDebugLog } from '../DebugOverlay';
-import { MobileLayoutProvider, useMobileLayout } from './MobileLayoutContext';
+import { MobileLayoutProvider } from './MobileLayoutContext';
 
 export const MOBILE_LAYOUT_NAME = 'MobileLayout';
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';

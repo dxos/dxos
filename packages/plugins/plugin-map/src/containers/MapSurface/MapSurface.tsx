@@ -8,7 +8,6 @@ import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/a
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type Obj } from '@dxos/echo';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
-import { type APIKey } from '@dxos/schema';
 
 import { MapCapabilities } from '#types';
 

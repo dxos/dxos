@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { completionStatus } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
-import React, { type KeyboardEvent } from 'react';
+import { EditorView } from '@codemirror/view';
+import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';

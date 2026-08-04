@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, createContext, useCallback, useContext, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useState } from 'react';
 
 import {
   type CellAddress,
@@ -10,7 +10,6 @@ import {
   type CompleteCellRange,
   type ComputeGraph,
 } from '@dxos/compute-hyperformula';
-import { raise } from '@dxos/debug';
 import {
   Grid,
   type GridContentProps,

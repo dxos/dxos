@@ -2,65 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import React, {
-  type ComponentPropsWithoutRef,
-  type MutableRefObject,
-  type PropsWithChildren,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { type MutableRefObject } from 'react';
 
-import { invariant } from '@dxos/invariant';
-import {
-  IconButton,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  usePx,
-  useTranslation,
-} from '@dxos/react-ui';
-import {
-  type DndContainerHandler,
-  type DndPlaceholderData,
-  getSourceData,
-  useContainerId,
-  useDndRootContext,
-} from '@dxos/react-ui-dnd';
-import { cardDefaultInlineSize, mx } from '@dxos/ui-theme';
-
-import { translationKey } from '#translations';
-
-import { BoardCell, type BoardCellProps } from './BoardCell';
-import {
-  type Bounds,
-  type DropResolver,
-  type GridConstraints,
-  type GridMode,
-  type GridPosition,
-  type Layout,
-  pushToFit,
-} from './engine';
-import {
-  type GridCellSize,
-  type Rect,
-  anchoredScroll,
-  boardPad,
-  cellRect,
-  getColumnCount,
-  getRowCount,
-  gridBounds,
-  viewportCenterAnchor,
-} from './geometry';
+import { type GridConstraints, type GridMode, type GridPosition, type Layout } from './engine';
+import { type GridCellSize } from './geometry';
 
 // Kept out of `Board.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

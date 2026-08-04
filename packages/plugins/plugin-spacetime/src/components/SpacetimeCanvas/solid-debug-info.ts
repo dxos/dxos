@@ -3,7 +3,6 @@
 //
 
 import type { Manifold } from 'manifold-3d';
-import React from 'react';
 
 import { type SolidDebugInfo } from './DebugPanel';
 

@@ -32,7 +32,7 @@ import {
   EditorToolbar as NaturalEditorToolbar,
   type EditorToolbarProps as NaturalEditorToolbarProps,
 } from '../EditorToolbar';
-import { type EditorController, createEditorController, noopController } from './controller';
+import { type EditorController, noopController } from './controller';
 import { EditorContextProvider, type EditorContextValue, useEditorContext } from './EditorContext';
 import { EditorView as NaturalEditorContent, type EditorViewProps as NaturalEditorContentProps } from './EditorView';
 

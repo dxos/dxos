@@ -3,14 +3,13 @@
 //
 
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { GameboardContextProvider, type GameboardContextValue, useGameboardContext } from './GameboardContext';
+import { GameboardContextProvider, type GameboardContextValue } from './GameboardContext';
 import { Piece, type PieceProps } from './Piece';
 import { Square, type SquareProps } from './Square';
 import { type GameboardModel, type Move, type PieceRecord, isLocation, isPiece } from './types';

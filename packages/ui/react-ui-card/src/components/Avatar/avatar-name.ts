@@ -2,9 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
-
-import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
 import { type Actor } from '@dxos/types';
 import { toHue } from '@dxos/util';
 

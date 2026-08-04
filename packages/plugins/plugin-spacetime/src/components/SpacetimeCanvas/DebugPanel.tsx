@@ -2,10 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Manifold } from 'manifold-3d';
 import React from 'react';
-
-import { extractSolidDebugInfo } from './solid-debug-info';
 
 const n = (value: number, decimals = 2) => value.toFixed(decimals);
 

@@ -3,22 +3,11 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { Editor, type EditorController, type UseTextEditorProps } from '@dxos/react-ui-editor';
-import {
-  type BasicExtensionsOptions,
-  type SubmitOptions,
-  createBasicExtensions,
-  createMarkdownExtensions,
-  createThemeExtensions,
-  decorateMarkdown,
-  formattingKeymap,
-  submit,
-  xmlFormatting,
-} from '@dxos/ui-editor';
-import { isTruthy } from '@dxos/util';
+import { type BasicExtensionsOptions, type SubmitOptions } from '@dxos/ui-editor';
 
 import { type ReferencesOptions } from './references';
 import { useChatExtensions } from './useChatExtensions';

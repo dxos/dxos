@@ -2,19 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import React, { memo, useCallback, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
 import { AppSpace } from '@dxos/app-toolkit';
-import { Annotation } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { WelcomeDismissedAnnotation } from '../../annotations';
 import { useWelcomeDismissed } from './use-welcome-dismissed';
 
 const WELCOME_SLIDE = {

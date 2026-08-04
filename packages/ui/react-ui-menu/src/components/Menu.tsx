@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type MouseEvent, type PropsWithChildren, createContext, useCallback, useContext, useMemo } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
-import { log } from '@dxos/log';
 import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -17,20 +15,16 @@ import {
   type MenuContextValue,
   type MenuGroupContext,
   type MenuItem,
-  type MenuItems,
-  type MenuItemsAccessor,
   type MenuItemsMap,
   isSeparator,
 } from '../types';
 import { executeMenuAction } from '../util';
 import { ActionLabel } from './ActionLabel';
 import {
-  MENU_NAME,
   MenuContextProvider,
   MenuDropdownContext,
   type MenuScopedProps,
   menuContextDefaults,
-  useMenu,
   useMenuItems,
   useMenuScope,
   useMenuScoped,

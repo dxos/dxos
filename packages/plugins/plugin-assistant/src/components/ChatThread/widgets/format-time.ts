@@ -2,15 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
-
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { type XmlWidgetProps } from '@dxos/ui-editor';
-
-import { meta } from '#meta';
-
-import { type MessageThreadContext } from '../sync';
-
 // Kept out of `BranchWidget.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on
 // every edit.

@@ -3,15 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
-import { FactViewer } from '@dxos/react-ui-rdf';
-
-import { BrainCapabilities } from '#types';
 
 import { type FactStoreRegistry } from '../../capabilities';
 

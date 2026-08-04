@@ -2,14 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { useDefaultValue } from '@dxos/react-hooks';
 
-import { createDefaultBackends } from '../../core';
 import { Selection, ViewState } from '../../types';
 
 // Kept out of `ViewStateProvider.tsx`: react-refresh only fast-refreshes a module whose exports are

@@ -3,12 +3,6 @@
 //
 
 /* eslint-disable react/no-unknown-property */
-import { GizmoHelper, GizmoViewport, OrbitControls } from '@react-three/drei';
-import { Canvas, type ThreeEvent, useThree } from '@react-three/fiber';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import * as THREE from 'three';
-
-import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
 import { type Voxel } from '#types';
 

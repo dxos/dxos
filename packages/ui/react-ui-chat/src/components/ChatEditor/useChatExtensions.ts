@@ -3,13 +3,10 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import React, { forwardRef, useMemo } from 'react';
+import { useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { Editor, type EditorController, type UseTextEditorProps } from '@dxos/react-ui-editor';
+import { useThemeContext } from '@dxos/react-ui';
 import {
-  type BasicExtensionsOptions,
-  type SubmitOptions,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -21,7 +18,6 @@ import {
 import { isTruthy } from '@dxos/util';
 
 import { type ChatEditorProps } from './ChatEditor';
-import { type ReferencesOptions } from './references';
 
 // Kept out of `ChatEditor.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

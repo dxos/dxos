@@ -2,13 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
-
-import { Icon, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
-
-import { meta } from '#meta';
-
 import { type TriggerKind, type TriggerKindOption } from './TriggerKindSelector';
 
 // Kept out of `TriggerKindSelector.tsx`: react-refresh only fast-refreshes a module whose

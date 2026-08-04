@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import { keySymbols } from '@dxos/keyboard';
-import { type TFunction, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type MenuActionProperties, type MenuItemChrome } from '@dxos/ui-types';
 

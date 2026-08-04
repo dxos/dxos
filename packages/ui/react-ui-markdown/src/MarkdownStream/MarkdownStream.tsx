@@ -31,7 +31,6 @@ import {
   type XmlTagsOptions,
   type XmlWidgetState,
   type XmlWidgetStateManager,
-  crawlerLineEffect,
   createBasicExtensions,
   createThemeExtensions,
   createTurnSource,
@@ -40,8 +39,6 @@ import {
   extendedMarkdown,
   fader,
   lineSpacing,
-  navigateNextEffect,
-  navigatePreviousEffect,
   scroller,
   turnFolding,
   typewriter,
@@ -51,7 +48,6 @@ import {
   xmlTagContextEffect,
   xmlTagResetEffect,
   xmlTags,
-  xmlTagUpdateEffect,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';

@@ -5,12 +5,11 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { type ElementDragPayload, monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/types';
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 
-import { DndRootContextProvider, useDndRootContext } from './DndRootContext';
+import { DndRootContextProvider } from './DndRootContext';
 import { resolveDrop } from './resolve-drop';
 import { type DndContainerHandler, type DndData, type DndTileData } from './types';
 

@@ -7,14 +7,12 @@ import React, { forwardRef } from 'react';
 // TODO(thure): This needed to be imported in the package.json specifically to pacify TS2742. See if this is resolved with typescript@5.5.x.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import _floater from 'react-floater';
-import { type Props, type TooltipRenderProps } from 'react-joyride';
+import { type TooltipRenderProps } from 'react-joyride';
 // TODO(thure): This needed to be imported in the package.json specifically to pacify TS2742. See if this is resolved with typescript@5.5.x.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import _typefest from 'type-fest';
 
 import { Button, Icon, IconButton } from '@dxos/react-ui';
-
-import { floaterProps } from './floater-props';
 
 // TODO(burdon): Add info link to docs.
 export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(

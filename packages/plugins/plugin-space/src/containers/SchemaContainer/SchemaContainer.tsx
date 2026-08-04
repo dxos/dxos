@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Type } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';

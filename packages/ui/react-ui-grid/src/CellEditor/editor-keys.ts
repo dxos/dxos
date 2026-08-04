@@ -4,20 +4,8 @@
 
 import { completionStatus } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
-import React, { type KeyboardEvent } from 'react';
-
-import { useThemeContext } from '@dxos/react-ui';
-import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
-import {
-  type ThemeExtensionsOptions,
-  createBasicExtensions,
-  createThemeExtensions,
-  filterChars,
-} from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
-
-import { type GridEditBox } from '../Grid';
+import { keymap } from '@codemirror/view';
+import { type KeyboardEvent } from 'react';
 
 // Kept out of `CellEditor.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { JSONPath } from 'jsonpath-plus';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useState } from 'react';
 
@@ -12,7 +11,7 @@ import { type ComposableProps } from '@dxos/ui-types';
 
 import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter';
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
-import { SyntaxProvider, type SyntaxScopedProps, createSyntaxScope, useSyntaxContext } from './SyntaxContext';
+import { SyntaxProvider, type SyntaxScopedProps, useSyntaxContext } from './SyntaxContext';
 
 //
 // Context

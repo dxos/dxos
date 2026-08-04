@@ -2,17 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
-
-import { ScrollArea } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
-import { MarkdownView } from '@dxos/react-ui-markdown';
-
-import { usePostContentAtom } from '#atoms';
-import { Subscription } from '#types';
-
-import { formatDate, getImageUrl } from '../../util';
-
 // Kept out of `PostContent.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on
 // every edit.

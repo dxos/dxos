@@ -6,9 +6,7 @@ import React from 'react';
 
 import { DxAvatar, type DxAvatarProps } from '@dxos/lit-ui/react';
 import { type Actor } from '@dxos/types';
-import { toHue } from '@dxos/util';
 
-import { hashString } from '../../util';
 import { avatarName } from './avatar-name';
 import { nameToHue } from './avatar-name';
 

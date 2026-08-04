@@ -2,14 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ControlPosition } from 'leaflet';
 import React from 'react';
 
 import { IconButton, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
-
-import { controlPositions } from './control-positions';
 
 export type ControlAction = 'toggle' | 'start' | 'zoom-in' | 'zoom-out';
 

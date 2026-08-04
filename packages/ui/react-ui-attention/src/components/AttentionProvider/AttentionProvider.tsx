@@ -3,7 +3,6 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
@@ -13,9 +12,6 @@ import React, {
   forwardRef,
   useCallback,
   useContext,
-  useEffect,
-  useMemo,
-  useState,
 } from 'react';
 
 import { log } from '@dxos/log';
@@ -23,20 +19,8 @@ import { useDefaultValue } from '@dxos/react-hooks';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  ATTENDABLE_ATTRIBUTE,
-  ATTENDABLE_SELECTOR,
-  type Attention,
-  AttentionManager,
-  getAttendables,
-} from '../../types/Attention';
-import {
-  ATTENTION_NAME,
-  ATTENTION_SOURCE_ATTRIBUTE,
-  AttentionContextProvider,
-  useAttentionAttributes,
-  useAttentionContext,
-} from './attention-context';
+import { ATTENDABLE_SELECTOR, AttentionManager, getAttendables } from '../../types/Attention';
+import { AttentionContextProvider, useAttentionAttributes } from './attention-context';
 
 type RootAttentionProviderProps = PropsWithChildren<{
   attention?: AttentionManager;

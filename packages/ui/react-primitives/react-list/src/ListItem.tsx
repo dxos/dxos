@@ -2,34 +2,22 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { CheckboxProps } from '@radix-ui/react-checkbox';
 import { type CollapsibleContentProps, type CollapsibleTriggerProps } from '@radix-ui/react-collapsible';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, {
-  type ComponentProps,
-  type ComponentPropsWithoutRef,
-  type ComponentRef,
-  type Dispatch,
-  type ForwardRefExoticComponent,
-  type RefAttributes,
-  type SetStateAction,
-  forwardRef,
-} from 'react';
+import React, { type ComponentProps, type ForwardRefExoticComponent, forwardRef } from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
 import { LIST_NAME, type ListScopedProps, useListContext } from './ListContext';
 import {
   LIST_ITEM_NAME,
-  ListItemProvider,
-  type ListItemData,
   type ListItemElement,
   type ListItemHeadingProps,
   type ListItemProps,
+  ListItemProvider,
   type ListItemScopedProps,
   useListItemContext,
 } from './ListItemContext';
