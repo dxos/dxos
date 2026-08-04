@@ -20,7 +20,10 @@ test.describe('Board', () => {
 
   test.beforeEach(async ({ browser }) => {
     ({ page } = await setupPage(browser, { url: STORY_URL }));
-    await page.getByTestId('board-column').first().waitFor({ state: 'visible' });
+    // Generous, and explicit: storybook compiles the story on first request, so whichever test runs
+    // first pays it. Waiting here attributes a slow story load to this locator rather than reporting a
+    // bare `beforeEach` timeout.
+    await page.getByTestId('board-column').first().waitFor({ state: 'visible', timeout: 45_000 });
     board = new BoardManager(page.locator('body'));
   });
 

@@ -225,32 +225,50 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const isAttended = hasAttention || isAncestor || isRelated;
   const currentId = isAttended ? state.current : undefined;
 
+  // Passive attention (a thread taking focus): record it as current and bring the plank into view, but
+  // leave the anchored content alone — focus lands on a thread for reasons the reader did not ask for
+  // (a newly created draft autofocusing, a re-render restoring focus), and moving the document caret
+  // there would retarget the comment they create next.
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
-      const thread = Relation.getSource(anchor) as Thread.Thread;
-      const threadId = Obj.getURI(thread);
+      const threadId = Obj.getURI(Relation.getSource(anchor) as Thread.Thread);
+      if (state.current === threadId) {
+        return;
+      }
 
-      if (state.current !== threadId) {
-        registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
+      // Scroll plank into view (deck handler).
+      void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
+    },
+    [state.current, invokePromise, registry, stateAtom, attendableId],
+  );
 
-        // Scroll plank into view (deck handler).
-        void invokePromise(LayoutOperation.ScrollIntoView, { subject: attendableId });
+  // A deliberate click additionally reveals and highlights the thread in the anchored content. Not
+  // gated on `state.current`: the editor tracks its own current comment (by cursor proximity), so it
+  // can already differ from the app's — gating here would leave the previous comment highlighted.
+  const handleActivate = useCallback(
+    (anchor: AnchoredTo.AnchoredTo) => {
+      handleAttend(anchor);
+      if (!anchor.anchor) {
+        return;
+      }
 
-        // Scroll within content to anchor (comment config per typename).
-        if (anchor.anchor && attendableId) {
-          const typename = Obj.getTypename(subject);
-          const commentConfig = commentConfigs.find(({ id }) => id === typename);
-          if (commentConfig?.scrollToAnchor) {
-            void invokePromise(commentConfig.scrollToAnchor, {
-              subject: attendableId,
-              cursor: anchor.anchor,
-              id: threadId,
-            });
-          }
-        }
+      const threadId = Obj.getURI(Relation.getSource(anchor) as Thread.Thread);
+
+      // Scroll within content to anchor (comment config per typename). Fall back to the object URI:
+      // this is what tells the editor which thread is current, so skipping it when the companion has
+      // no attendable id leaves the previous comment highlighted while the app selection moves on.
+      const typename = Obj.getTypename(subject);
+      const commentConfig = commentConfigs.find(({ id }) => id === typename);
+      if (commentConfig?.scrollToAnchor) {
+        void invokePromise(commentConfig.scrollToAnchor, {
+          subject: attendableId ?? subjectId,
+          cursor: anchor.anchor,
+          id: threadId,
+        });
       }
     },
-    [state.current, invokePromise, registry, stateAtom, attendableId, subject, commentConfigs],
+    [handleAttend, invokePromise, attendableId, subjectId, subject, commentConfigs],
   );
 
   const handleComment = useCallback(
@@ -429,6 +447,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               identityDid={identity?.did}
               current={currentId === threadId}
               onAttend={handleAttend}
+              onActivate={handleActivate}
               onComment={handleComment}
               onResolve={handleResolve}
               onMessageDelete={handleMessageDelete}

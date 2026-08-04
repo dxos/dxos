@@ -42,6 +42,11 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
   getMetadata: (message: Message.Message) => MessageMetadata;
   onAttend?: (anchor: AnchoredTo.AnchoredTo) => void;
+  /**
+   * Called when the thread is deliberately activated (clicked). Distinct from `onAttend` (passive
+   * focus): only a click asks the anchored content to reveal and highlight this thread.
+   */
+  onActivate?: (anchor: AnchoredTo.AnchoredTo) => void;
   onComment?: (anchor: AnchoredTo.AnchoredTo, message: string) => void;
   onResolve?: (anchor: AnchoredTo.AnchoredTo) => void;
   onMessageDelete?: (anchor: AnchoredTo.AnchoredTo, messageId: string) => void;
@@ -64,6 +69,7 @@ export const CommentThread = ({
   current,
   getMetadata,
   onAttend,
+  onActivate,
   onComment,
   onResolve,
   onMessageDelete,
@@ -85,6 +91,7 @@ export const CommentThread = ({
   );
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
+  const handleActivate = useCallback(() => onActivate?.(anchor), [onActivate, anchor]);
   const handleResolve = useCallback(() => onResolve?.(anchor), [onResolve, anchor]);
   const handleMessageDelete = useCallback(
     (messageId: string) => onMessageDelete?.(anchor, messageId),
@@ -154,10 +161,16 @@ export const CommentThread = ({
 
   const header = detached ? (
     <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
-      <Thread.Header detached current={current} title={thread.name} onSelect={handleAttend} controls={headerControls} />
+      <Thread.Header
+        detached
+        current={current}
+        title={thread.name}
+        onSelect={handleActivate}
+        controls={headerControls}
+      />
     </Tooltip.Trigger>
   ) : (
-    <Thread.Header current={current} title={thread.name} onSelect={handleAttend} controls={headerControls} />
+    <Thread.Header current={current} title={thread.name} onSelect={handleActivate} controls={headerControls} />
   );
 
   return (
@@ -173,7 +186,7 @@ export const CommentThread = ({
         id={threadUri}
         classNames='pt-2 border-b border-subdued-separator last:border-none'
         current={current}
-        onClickCapture={handleAttend}
+        onClickCapture={handleActivate}
         onFocusCapture={handleAttend}
       >
         {header}
