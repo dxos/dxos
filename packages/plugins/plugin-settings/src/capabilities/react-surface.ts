@@ -9,9 +9,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
-import { DefaultSettingsSurface } from './DefaultSettingsSurface';
+import { DefaultSettings } from '#containers';
 
-// `DefaultSettingsSurface` is registered with `position: Position.last` so a
+// `DefaultSettings` is registered with `position: Position.last` so a
 // plugin-specific surface (matching by prefix) always wins under the settings
 // article's `limit={1}` dispatch.
 export default Capability.makeModule(() =>
@@ -21,7 +21,8 @@ export default Capability.makeModule(() =>
         id: 'defaultPluginSettings',
         position: Position.last,
         filter: AppSurface.settings(AppSurface.Article),
-        component: DefaultSettingsSurface,
+        component: DefaultSettings,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),

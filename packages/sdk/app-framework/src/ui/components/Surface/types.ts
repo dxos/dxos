@@ -167,7 +167,9 @@ export type ReactDefinition<T extends Record<string, any> = any> = Readonly<{
   id: string;
   role: string | string[];
   position?: Position.Position;
-  component: ComponentFunction<T>;
+  component: (props: any) => ReactNode;
+  /** Maps the surface props onto the component's props; see {@link TypedReactDefinition.props}. */
+  props?: (props: ComponentProps<T>) => Record<string, any>;
   filter?: (data: Record<string, unknown>, role?: string) => data is T;
 }>;
 
@@ -198,11 +200,31 @@ export type Definition<T extends Record<string, any> = any> = ReactDefinition<T>
 /**
  * Typed React surface definition — role is derived from the filter's bindings.
  */
-export type TypedReactDefinition<T extends Record<string, any> = any> = Readonly<{
+export type TypedReactDefinition<
+  T extends Record<string, any> = any,
+  P extends Record<string, any> = ComponentProps<T>,
+> = Readonly<{
   id: string;
   filter: Filter<T>;
-  component: ComponentFunction<T>;
   position?: Position.Position;
+  component: (props: P) => ReactNode;
+  /**
+   * Maps the surface props onto the component's own props, so a plain container can be registered
+   * directly instead of being wrapped in an adapter that unpacks `data`.
+   *
+   * Prefer this over an inline `component: ({ data }) => <Container … />`: an arrow in a config
+   * object is not a named module export, so react-refresh cannot track it and every edit to the
+   * component remounts it (and a JSX-bearing capability module is a full-reload boundary besides).
+   *
+   * @example
+   * Surface.create({
+   *   id: 'defaultPluginSettings',
+   *   filter: AppSurface.settings(AppSurface.Article),
+   *   component: DefaultSettings,
+   *   props: ({ data: { subject } }) => ({ subject }),
+   * });
+   */
+  props?: (props: ComponentProps<T>) => P;
 }>;
 
 /**
@@ -248,11 +270,15 @@ export const isValidLocalId = (id: string): boolean => /^[a-zA-Z][a-zA-Z0-9]*$/.
 /**
  * Creates a React surface definition from a typed filter.
  */
-export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T>;
-export function create<T extends Record<string, any> = any>(definition: TypedReactDefinition<T>): ReactDefinition<T> {
-  const { id, filter, component, position } = definition;
+export function create<T extends Record<string, any> = any, P extends Record<string, any> = ComponentProps<T>>(
+  definition: TypedReactDefinition<T, P>,
+): ReactDefinition<T>;
+export function create<T extends Record<string, any> = any, P extends Record<string, any> = ComponentProps<T>>(
+  definition: TypedReactDefinition<T, P>,
+): ReactDefinition<T> {
+  const { id, filter, component, props, position } = definition;
   const { role, guard } = expandBindings(filter);
-  return { kind: 'react', id, role, position, component, filter: guard };
+  return { kind: 'react', id, role, position, component, props, filter: guard };
 }
 
 /**

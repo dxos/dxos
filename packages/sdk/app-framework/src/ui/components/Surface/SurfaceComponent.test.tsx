@@ -48,6 +48,41 @@ const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.make,
 );
 
+// Exercises `props`: `Plain` takes its own props, so registering it needs no adapter component.
+const RoleSubject = Role.make<{ subject: string }>('org.dxos.test.role.subject');
+const RoleEnvelope = Role.make<{ subject: string }>('org.dxos.test.role.envelope');
+
+const Plain = ({ label }: { label: string }) => <span data-testid='mapped'>{label}</span>;
+
+const mappedPropsMeta = Plugin.makeMeta({
+  key: DXN.make('org.dxos.plugin.test.surfaceMappedProps'),
+  name: 'SurfaceMappedPropsTest',
+});
+
+const MappedPropsPlugin = Plugin.define(mappedPropsMeta).pipe(
+  Plugin.addModule({
+    id: 'surfaces',
+    activatesOn: ActivationEvents.SetupReactSurface,
+    activate: () =>
+      Effect.succeed(
+        Capability.contributes(Capabilities.ReactSurface, [
+          create({
+            id: 'mapped',
+            filter: makeFilter(RoleSubject),
+            component: Plain,
+            props: ({ data: { subject } }) => ({ label: subject }),
+          }),
+          create({
+            id: 'envelope',
+            filter: makeFilter(RoleEnvelope),
+            component: ({ data: { subject } }) => <span data-testid='envelope'>{subject}</span>,
+          }),
+        ]),
+      ),
+  }),
+  Plugin.make,
+);
+
 const invalidIdMeta = Plugin.makeMeta({
   key: DXN.make('org.dxos.plugin.test.surfaceInvalidId'),
   name: 'SurfaceInvalidIdTest',
@@ -85,6 +120,19 @@ describe('SurfaceComponent dispatch', () => {
     await using harness = await createTestApp({ plugins: [InvalidIdPlugin()] });
     const view = render(harness, <SurfaceComponent type={RoleA} />);
     expect(view.queryByTestId('invalid')).toBeNull();
+  });
+
+  test('`props` maps the surface props onto a plain component', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [MappedPropsPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleSubject} data={{ subject: 'mapped' }} />);
+    // The component receives only `{ label }`, never the surface's `data` envelope.
+    expect((await view.findByTestId('mapped')).textContent).toBe('mapped');
+  });
+
+  test('a surface without `props` still receives the full surface props', async ({ expect }) => {
+    await using harness = await createTestApp({ plugins: [MappedPropsPlugin()] });
+    const view = render(harness, <SurfaceComponent type={RoleEnvelope} data={{ subject: 'envelope' }} />);
+    expect((await view.findByTestId('envelope')).textContent).toBe('envelope');
   });
 });
 
