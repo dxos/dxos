@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
 
-import { Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Popover, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 
@@ -31,7 +31,7 @@ export type ObjectPickerContentProps = ThemedClassName<
   }
 >;
 
-const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>(
+const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>(
   (
     {
       options,
