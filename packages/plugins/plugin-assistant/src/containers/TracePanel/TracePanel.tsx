@@ -106,7 +106,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         {...composableProps(props, {
           ...attentionAttrs,
           classNames: mx(
-            'h-full grid divide-y divide-separator',
+            'h-full grid divide-y divide-subdued-separator',
             !tracePanelDebug && selectedCommit
               ? 'grid-rows-[minmax(0,160px)_1fr_minmax(0,206px)]'
               : 'grid-rows-[minmax(0,160px)_1fr]',
@@ -124,7 +124,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                 <Syntax.Root data={spanTree}>
                   <Syntax.Content>
                     <Syntax.Viewport>
-                      <Syntax.Code className='text-xs' />
+                      <Syntax.Code classNames='text-xs' />
                     </Syntax.Viewport>
                   </Syntax.Content>
                 </Syntax.Root>
@@ -146,7 +146,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
-                <Syntax.Code className='text-xs' />
+                <Syntax.Code classNames='text-xs' />
               </Syntax.Viewport>
             </Syntax.Content>
           </Syntax.Root>

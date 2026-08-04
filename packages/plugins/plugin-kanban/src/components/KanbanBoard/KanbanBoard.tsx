@@ -159,6 +159,4 @@ export const KanbanBoard = {
   Card: KanbanCard,
 };
 
-export { useKanbanBoard };
-
 export type { KanbanBoardRootProps as KanbanBoardProps, KanbanCardProps, KanbanColumnProps };

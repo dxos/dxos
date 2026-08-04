@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useClient } from '@dxos/react-client';
 import { Select, useTranslation } from '@dxos/react-ui';
@@ -15,10 +15,11 @@ import { meta } from '#meta';
 import * as FileCapabilities from '../../types/FileCapabilities';
 import * as Settings from '../../types/Settings';
 
-export type FileSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type FileSettingsProps = AppSurface.SettingsData;
 
-export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) => {
+export const FileSettings = ({ subject }: FileSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const client = useClient();
   const backends = useCapabilities(FileCapabilities.Backend);
   // No explicit choice defers to the Blob registry's own configured default (edge when
@@ -29,8 +30,8 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
   const activeStorage = active?.storage ?? Settings.DEFAULT_BACKEND_STORAGE;
 
   const handleChange = useCallback(
-    (value: string) => onSettingsChange?.((current) => ({ ...current, backend: value })),
-    [onSettingsChange],
+    (value: string) => updateSettings((current) => ({ ...current, backend: value })),
+    [updateSettings],
   );
 
   return (
@@ -38,8 +39,7 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
       schema={Settings.Settings}
       values={settings}
       variant='settings'
-      readonly={!onSettingsChange}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>
@@ -48,7 +48,7 @@ export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) 
               label={t('settings.backend.label')}
               description={active?.description ?? t('settings.backend.description')}
             >
-              <Select.Root value={activeStorage} onValueChange={handleChange} disabled={!onSettingsChange}>
+              <Select.Root value={activeStorage} onValueChange={handleChange}>
                 <Select.TriggerButton placeholder={t('settings.backend.placeholder')} />
                 <Select.Portal>
                   <Select.Content>

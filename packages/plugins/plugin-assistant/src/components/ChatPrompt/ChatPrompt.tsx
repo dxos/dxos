@@ -131,7 +131,7 @@ export const ChatPrompt = ({
       className={mx(
         'flex flex-col w-full dx-density-md',
         outline &&
-          'bg-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
+          'dx-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
       )}
     >

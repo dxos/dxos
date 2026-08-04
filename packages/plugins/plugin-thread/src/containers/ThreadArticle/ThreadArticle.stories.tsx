@@ -47,7 +47,7 @@ const DefaultStory = () => {
     return <Loading data={{ identity: !!identity, space: !!space, thread: !!thread }} />;
   }
 
-  return <ThreadArticle space={space} thread={thread} />;
+  return <ThreadArticle thread={thread} />;
 };
 
 const meta = {

@@ -8,21 +8,14 @@ import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/a
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Obj } from '@dxos/echo';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
-import { type APIKey } from '@dxos/schema';
 
 import * as MapCapabilities from '../../types/MapCapabilities';
 // Import the lazy wrapper (ComponentType<any>) so JSX assignment is not blocked by the
 // compound GeoControlProps & MapArticleProps intersection that TS cannot unify directly.
 import { MapArticle } from '../index';
+import { buildTileUrl } from './build-tile-url';
 
 // MapTiler raster style used when an API key for `maptiler.com` is configured.
-const MAPTILER_STYLE = 'streets-v2';
-
-/** Build a MapTiler tile URL when a `maptiler.com` API key is configured; otherwise undefined (default OSM). */
-export const buildTileUrl = (apiKeys?: readonly APIKey[]): string | undefined => {
-  const key = apiKeys?.find((entry) => entry.domain === 'maptiler.com');
-  return key?.apiKey ? `https://api.maptiler.com/maps/${MAPTILER_STYLE}/{z}/{x}/{y}.png?key=${key.apiKey}` : undefined;
-};
 
 export type MapSurfaceProps = {
   subject: Obj.Any;

@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export { DebugOverlay, useDebugLog } from './DebugOverlay';
+export { useDebugLog } from './DebugOverlayContext';
+export { DebugOverlay } from './DebugOverlay';

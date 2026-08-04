@@ -2,30 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { Icon } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
-import { createFunctionAnchors } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-
-export const GptRealtimeShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('gpt-realtime'),
-  }),
-);
-
-export type GptRealtimeShape = Schema.Schema.Type<typeof GptRealtimeShape>;
-
-export type CreateGptRealtimeProps = CreateShapeProps<GptRealtimeShape>;
-
-export const createGptRealtime = (props: CreateGptRealtimeProps) =>
-  createShape<GptRealtimeShape>({ type: 'gpt-realtime', size: { width: 256, height: 256 }, ...props });
+import { type GptRealtimeShape } from './gpt-realtime-def';
 
 export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeShape>) => {
   const [isLive, setIsLive] = useState(false);
@@ -152,24 +136,6 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
       />
     </div>
   );
-};
-
-export const gptRealtimeShape: ShapeDef<GptRealtimeShape> = {
-  type: 'gpt-realtime',
-  name: 'GPT Realtime',
-  icon: 'ph--pulse--regular',
-  component: GptRealtimeComponent,
-  createShape: createGptRealtime,
-  // TODO(dmaretskyi): Can we fetch the schema dynamically?
-  getAnchors: (shape) =>
-    createFunctionAnchors(
-      shape,
-      Schema.Struct({
-        audio: Schema.Any,
-      }),
-      Schema.Struct({}),
-    ),
-  resizable: true,
 };
 
 const DEFAULT_AI_SERVICE_URL = 'http://localhost:8788';

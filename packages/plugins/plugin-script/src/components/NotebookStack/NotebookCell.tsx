@@ -177,7 +177,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full bg-group-surface text-description border-y border-subdued-separator', valueStyles)}>
+    <div className={mx('flex w-full dx-group-surface text-description border-y border-subdued-separator', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

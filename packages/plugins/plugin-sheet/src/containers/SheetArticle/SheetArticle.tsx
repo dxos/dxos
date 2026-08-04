@@ -4,29 +4,40 @@
 
 import React from 'react';
 
+import { useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type ComputeGraphRegistry } from '@dxos/compute-hyperformula';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { ComputeGraphContextProvider, Sheet as SheetComponent, useComputeGraph } from '#components';
 
 import type * as Sheet from '../../types/Sheet';
+import * as SheetCapabilities from '../../types/SheetCapabilities';
 
 export type SheetArticleProps = AppSurface.ObjectArticleProps<
   Sheet.Sheet,
   {
-    space: Space;
-    registry: ComputeGraphRegistry;
     ignoreAttention?: boolean;
   }
 >;
 
-export const SheetArticle = ({ registry, ...props }: SheetArticleProps) => (
-  <ComputeGraphContextProvider registry={registry}>
-    <SheetArticleInner {...props} />
-  </ComputeGraphContextProvider>
-);
+/**
+ * Resolves the compute-graph registry capability and the sheet's space, then scopes the article to
+ * that registry. A sheet outside a space has no graph to evaluate against.
+ */
+export const SheetArticle = ({ subject, ...props }: SheetArticleProps) => {
+  const registry = useCapability(SheetCapabilities.ComputeGraphRegistry);
+  const space = getSpace(subject);
+  if (!space) {
+    return null;
+  }
+
+  return (
+    <ComputeGraphContextProvider registry={registry}>
+      <SheetArticleInner {...props} subject={subject} space={space} />
+    </ComputeGraphContextProvider>
+  );
+};
 
 const SheetArticleInner = ({
   role,
@@ -34,7 +45,7 @@ const SheetArticleInner = ({
   attendableId,
   space,
   ignoreAttention,
-}: Omit<SheetArticleProps, 'registry'>) => {
+}: SheetArticleProps & { space: Space }) => {
   const graph = useComputeGraph(space);
   if (!graph) {
     return null;

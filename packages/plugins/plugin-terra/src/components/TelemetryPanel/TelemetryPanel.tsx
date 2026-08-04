@@ -68,7 +68,7 @@ export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelPro
                 key={row.id}
                 className={
                   row.id === selectedId
-                    ? 'border-t border-separator bg-activeSurface text-accent-text'
+                    ? 'border-t border-separator bg-current-surface text-accent-text'
                     : onSelect
                       ? 'border-t border-separator cursor-pointer'
                       : 'border-t border-separator'

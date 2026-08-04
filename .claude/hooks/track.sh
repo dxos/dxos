@@ -2,65 +2,90 @@
 #
 # Copyright 2026 DXOS.org
 #
-# UserPromptSubmit hook for the unified `$project` sentinel (task-planning skill).
+# UserPromptSubmit hook for the `/project` command (task-planning skill).
 #
-# Grammar: `$project [VERB] [ARGS]` anywhere in the message.
-#   (bare) | list [all]   -> numbered table of the registry
+# Grammar: `/project [VERB] [ARGS]`, on the FIRST LINE, where a slash command
+# must appear anyway.
+#   (bare)                -> status of the CURRENT project
+#   list [all]            -> numbered table of the registry
+#   tasks [all|<phase>]   -> open items from the current project's TASKS.md
 #   new <name> [summary]  -> add an active entry + scaffold docs
 #   end <name>            -> move the entry to ended
 #   track <text>          -> record <text> in the active TASKS.md
 #   hydrate | checkpoint  -> checkpoint the current project
 #   resume [name]         -> reload a project and report (rehydrate = alias)
-# Legacy sentinels ($track, $hydrate, $checkpoint, $resume, $rehydrate, and
-# `track:` lines) map to the same directives with a nudge toward the new form.
-# Stateless: emits one directive per matching sentinel and nothing otherwise.
+#
+# This event carries the RAW typed text and fires before the command expands, so
+# the directive is emitted deterministically rather than depending on the agent
+# to act on the expansion (same recipe as hooks/mode.sh — see .claude/README.md).
+#
+# Anchoring to the first line is load-bearing. The predecessor `$project`
+# sentinel matched anywhere in the message, so prose ABOUT the command fired it —
+# observed 2026-08-04, when a message asking to convert "$project" ran
+# `$project list`. The legacy `$track` / `$hydrate` / `$checkpoint` / `$resume` /
+# `$rehydrate` / `track:` forms shared that flaw and went with it.
+#
+# Stateless: emits one directive per invocation and nothing otherwise.
 
 set -euo pipefail
 
 input=$(cat)
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '')
 
-legacy_note=''
+emit_info() {
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project` (bare) — report the CURRENT project, do NOT list the registry. Resolve it from .agents/projects/registry.yml: prefer the entry whose name matches this branch (strip the `claude/` prefix and the trailing `-<hash>` from `git branch --show-current`); otherwise the single `active` entry for the current user (`whoami`). If neither resolves, say so and suggest `/project list`. Then report, compactly: (1) worktree directory + branch; (2) the project name, status, and its `tasks`/`design` paths and `prs`; (3) tracked-file state — `git status --short` and whether the branch is ahead of origin, naming every uncommitted file rather than summarising. Render EVERY file path in the report as a repo-relative markdown link so it is clickable: the `tasks`/`design` docs and each uncommitted file, e.g. `[TASKS.md](.agents/projects/<name>/TASKS.md)`. (4) the next action from the entry, taken from its `resume` field and condensed to one line. No numbered options unless something genuinely needs a decision.\n'
+}
+
+emit_tasks() {
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project tasks` — args: "%s". Read the CURRENT project'\''s TASKS.md (resolve the project exactly as for bare `/project`: by branch name, else the single `active` entry for the current user; the path is the entry'\''s `tasks` field). Report the OPEN work only — every unchecked `- [ ]` item, grouped under its `##` phase, each as one line: the bold headline plus the shortest note that makes it actionable. Number them 1..N across the whole list so the user can refer to one, and link the file itself. Then give a one-line count of what is done vs open, and name the next action. Do NOT reproduce completed `- [x]` items unless the args ask for `all`; if the args name a phase, restrict to it. If the entry has no `tasks` file, say so and suggest `/project`.\n' "$1"
+}
 
 emit_list() {
-  printf 'TASK-PLANNING PROJECT DIRECTIVE: `$project list` — args: "%s". Operate on .agents/projects/registry.yml per the task-planning skill. Render the active projects as a markdown table whose FIRST column is a 1-based row number (# | name | status | user | host | one-line summary). BY DEFAULT show only projects whose `user` matches the current user (run `whoami`); if none match, say so and mention `$project list all` — do not show other users unasked. Args `all`: list every user. Then tell the user they can reply with a row number to resume that project — a lone number in their next message means "resume the project at that row" (same as `$project resume <name>`). Confirm in one short line.\n' "$1"
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project list` — args: "%s". Operate on .agents/projects/registry.yml per the task-planning skill. Render the active projects as a markdown table whose FIRST column is a 1-based row number (# | name | status | user | host | one-line summary). BY DEFAULT show only projects whose `user` matches the current user (run `whoami`); if none match, say so and mention `/project list all` — do not show other users unasked. Args `all`: list every user. Then tell the user they can reply with a row number to resume that project — a lone number in their next message means "resume the project at that row" (same as `/project resume <name>`). Confirm in one short line.\n' "$1"
 }
 
 emit_new() {
-  printf 'TASK-PLANNING PROJECT DIRECTIVE: `$project new` — args: "%s". Per the task-planning skill, add an active entry to .agents/projects/registry.yml (user = `whoami`, host = `hostname -s`) and scaffold .agents/projects/<name>/{TASKS,DESIGN}.md unless the docs already live elsewhere (record that path instead). Confirm in one line.\n' "$1"
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project new` — args: "%s". Per the task-planning skill, add an active entry to .agents/projects/registry.yml (user = `whoami`, host = `hostname -s`) and scaffold .agents/projects/<name>/{TASKS,DESIGN}.md unless the docs already live elsewhere (record that path instead). Confirm in one line.\n' "$1"
 }
 
 emit_end() {
-  printf 'TASK-PLANNING PROJECT DIRECTIVE: `$project end` — args: "%s". Per the task-planning skill, move the entry to `ended` in .agents/projects/registry.yml, recording the final PR/status. Confirm in one line.\n' "$1"
+  printf 'TASK-PLANNING PROJECT DIRECTIVE: `/project end` — args: "%s". Per the task-planning skill, move the entry to `ended` in .agents/projects/registry.yml, recording the final PR/status. Confirm in one line.\n' "$1"
 }
 
 emit_track() {
-  printf 'TASK-PLANNING DIRECTIVE: `$project track`%s. Record this follow-up in the TASKS.md of the current unit of work (package or directory) per the task-planning skill — do NOT use a background task chip. Item: "%s". Confirm in one short line.\n' "$legacy_note" "$1"
+  printf 'TASK-PLANNING DIRECTIVE: `/project track`. Record this follow-up in the TASKS.md of the current unit of work (package or directory) per the task-planning skill — do NOT use a background task chip. Item: "%s". Confirm in one short line.\n' "$1"
 }
 
 emit_hydrate() {
-  printf 'TASK-PLANNING HYDRATE: `$project hydrate`%s. Follow the task-planning skill "Project handoff" -> hydrate: identify the CURRENT project (the single `active` .agents/projects/registry.yml entry for the current user; if more than one, ask which), reconcile its TASKS.md (check off done, note next step on in-progress items), update its `resume:` field + the doc resume pointer, push decisions into its DESIGN.md and durable direction to memory, run git status and account for EVERY uncommitted file, then confirm the checkpoint in one short block (done / in-progress / next / uncommitted).\n' "$legacy_note"
+  printf 'TASK-PLANNING HYDRATE: `/project hydrate`. Follow the task-planning skill "Project handoff" -> hydrate: identify the CURRENT project (the single `active` .agents/projects/registry.yml entry for the current user; if more than one, ask which), reconcile its TASKS.md (check off done, note next step on in-progress items), update its `resume:` field + the doc resume pointer, push decisions into its DESIGN.md and durable direction to memory, run git status and account for EVERY uncommitted file, then confirm the checkpoint in one short block (done / in-progress / next / uncommitted).\n'
 }
 
 emit_resume() {
-  printf 'TASK-PLANNING RESUME: `$project resume`%s. Follow the task-planning skill "Project handoff" -> resume: pick the project from .agents/projects/registry.yml — %s. Stay in this session'\''s assigned worktree: NEVER cd into, edit in, or adopt another project'\''s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'\''s `tasks` (TASKS.md) + `design` doc (memory is already loaded), check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), then continue with the next action unless the user directed otherwise.\n' \
-    "$legacy_note" "$1"
+  printf 'TASK-PLANNING RESUME: `/project resume`. Follow the task-planning skill "Project handoff" -> resume: pick the project from .agents/projects/registry.yml — %s. Stay in this session'\''s assigned worktree: NEVER cd into, edit in, or adopt another project'\''s worktree or branch — if the prior work lives on an unmerged branch elsewhere, report that and ask the user instead of following it. Read the project'\''s `tasks` (TASKS.md) + `design` doc (memory is already loaded), check git status + recent git log, report a concise state (done / in-progress / next action / uncommitted), then continue with the next action unless the user directed otherwise.\n' "$1"
 }
 
-# --- unified `$project` sentinel ---------------------------------------------
+# First line only — a slash command leads the message, and restricting the match
+# here is what stops a later line that merely quotes `/project …` from firing.
+first_line=$(printf '%s' "$prompt" | head -1)
 
-# Boundary rule: `$project` must not be followed by an identifier char, so
-# `$projects` is prose, while `$project`, `$project list`, and `($project)` fire.
-raw=$(printf '%s\n' "$prompt" | grep -ioE '\$project($|[^a-zA-Z0-9_][^[:cntrl:]]*)' | head -1 || true)
+# Boundary rule: `/project` must not be followed by an identifier char, so
+# `/projects` is prose while `/project` and `/project list` fire.
+raw=$(printf '%s\n' "$first_line" | grep -ioE '^[[:space:]]*/project($|[^a-zA-Z0-9_][^[:cntrl:]]*)' | head -1 || true)
 
 if [ -n "${raw:-}" ]; then
-  args=$(printf '%s' "$raw" | sed -E 's/^\$project[[:space:]]*//I')
+  args=$(printf '%s' "$raw" | sed -E 's|^[[:space:]]*/project[[:space:]]*||I')
   verb=$(printf '%s' "$args" | awk '{print tolower($1)}' | tr -cd 'a-z')
   rest=$(printf '%s' "$args" | sed -E 's/^[^[:space:]]+[[:space:]]*//')
 
   case "$verb" in
-    '' | list)
+    '')
+      emit_info
+      ;;
+    list)
       emit_list "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')"
+      ;;
+    tasks)
+      emit_tasks "$(printf '%s' "$rest" | tr -cd 'a-zA-Z0-9 -')"
       ;;
     new)
       emit_new "$rest"
@@ -83,39 +108,9 @@ if [ -n "${raw:-}" ]; then
       fi
       ;;
     *)
-      printf 'TASK-PLANNING: `$project %s` — verb not recognized (valid: list | new <name> | end <name> | track <text> | hydrate | resume [name]). If the user intended a command, ask which; if the mention was just prose, ignore this directive.\n' "$verb"
+      printf 'TASK-PLANNING: `/project %s` — verb not recognized (valid: bare | list [all] | tasks [all] | new <name> | end <name> | track <text> | hydrate | resume [name]). Ask which was meant.\n' "$verb"
       ;;
   esac
-fi
-
-# --- legacy sentinels (map to the unified grammar with a nudge) ---------------
-
-legacy_note=' (legacy sentinel — the current form is `$project <verb>`; mention this once)'
-
-task=$(printf '%s\n' "$prompt" \
-  | grep -ioE '(\$track[[:space:]]+|^[[:space:]]*track:)[[:space:]]*.*' \
-  | head -1 \
-  | sed -E 's/^[[:space:]]*(\$track|track:)[[:space:]]*//I' || true)
-if [ -n "${task:-}" ]; then
-  emit_track "$task"
-fi
-
-# Same boundary rule as `$project`: punctuation after the word is fine
-# (`$hydrate,`), identifier continuations are not (`$hydrated`).
-if printf '%s\n' "$prompt" | grep -iqE '\$(hydrate|checkpoint)($|[^a-zA-Z0-9_])'; then
-  emit_hydrate
-fi
-
-if printf '%s\n' "$prompt" | grep -iqE '\$(resume|rehydrate)($|[^a-zA-Z0-9_])'; then
-  resume_name=$(printf '%s\n' "$prompt" \
-    | grep -ioE '\$(resume|rehydrate)[[:space:]]+[a-z0-9][a-z0-9-]*' \
-    | head -1 \
-    | sed -E 's/^.*\$(resume|rehydrate)[[:space:]]+//I' || true)
-  if [ -n "${resume_name:-}" ]; then
-    emit_resume "by name \"$resume_name\""
-  else
-    emit_resume 'the single active entry for the current user (ask if more than one)'
-  fi
 fi
 
 exit 0

@@ -21,9 +21,10 @@ import { translationKey } from '#translations';
 
 import { type MenuAction, type MenuItem, type MenuItemGroup, isMenuGroup, isSeparator } from '../types';
 import { executeMenuAction } from '../util';
-import { ActionLabel, actionLabel } from './ActionLabel';
+import { actionLabel } from './action-label';
+import { ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
-import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext';
 
 export type ToolbarMenuDropdownMenuActionGroup = DropdownMenuItemGroupProperties;
 

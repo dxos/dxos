@@ -80,9 +80,33 @@
     .dark & {
       @apply backdrop-blur-lg;
     }
-    background-color: var(--color-sidebar-surface);
+    /*
+     * The sidebars ARE L1/R1 — nothing else applies `dx-l1-surface`, so this is where those tokens
+     * have to land or they have no effect at all. Aspect derivation for the subtree keys off
+     * `--surface-bg` (see surface.css); the chrome default covers a sidebar rendered without a side.
+     */
+    --surface-bg: var(--dx-surface-chrome);
+    background-color: var(--surface-bg);
+
+    &[data-side='is'] {
+      --surface-bg: var(--color-l1-surface);
+
+      /* Collapsed, the sidebar is exactly the rail's width and the rail overlays it, so the only
+         pixels that show are the rail's own. Wearing the rail's tone keeps the edges and the rail's
+         border from revealing a second surface behind it. */
+      &[data-state='collapsed'] {
+        --surface-bg: var(--color-l0-surface);
+      }
+    }
+
+    &[data-side='ie'] {
+      --surface-bg: var(--color-r1-surface);
+
+      &[data-state='collapsed'] {
+        --surface-bg: var(--color-r0-surface);
+      }
+    }
     color: var(--color-sidebar-fg);
-    --surface-bg: var(--color-sidebar-surface);
 
     /* Current / selected items read one stop brighter than default body text. */
     & :is([aria-current]:not([aria-current='false']), [aria-selected='true']) {

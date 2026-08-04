@@ -40,11 +40,8 @@ import {
 import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
-import {
-  PreviewComponent,
-  type PreviewComponentProps,
-  parseEmbedLabel,
-} from '../components/PreviewComponent/PreviewComponent';
+import { parseEmbedLabel } from '../components/PreviewComponent/parse-embed-label';
+import { PreviewComponent, type PreviewComponentProps } from '../components/PreviewComponent/PreviewComponent';
 import * as Markdown from '../types/Markdown';
 import { setFallbackName } from '../util';
 

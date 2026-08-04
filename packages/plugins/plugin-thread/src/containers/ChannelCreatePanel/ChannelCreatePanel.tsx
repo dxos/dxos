@@ -42,12 +42,12 @@ export const ChannelCreatePanel = ({ target, onCreateObject }: SpaceCapabilities
       onSave={handleSave}
       testId='create-channel-form'
     >
-      <Column.Center>
+      <Form.Viewport>
         <Form.Content>
           <Form.FieldSet />
           <Form.Submit />
         </Form.Content>
-      </Column.Center>
+      </Form.Viewport>
     </Form.Root>
   );
 };

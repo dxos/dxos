@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/fixtures"
+    },
+    {
       "path": "../../common/effect"
     },
     {

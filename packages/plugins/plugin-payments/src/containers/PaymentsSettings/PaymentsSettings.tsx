@@ -4,6 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -20,13 +21,14 @@ type Status = {
   text?: string;
 };
 
-export type PaymentsSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
+export type PaymentsSettingsProps = AppSurface.SettingsData;
 
-export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSettingsProps) => {
+export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const paymentsUrl = settings.paymentsUrl?.trim();
 
   const handleBuyPremium = useCallback(async () => {
@@ -34,6 +36,7 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
       setStatus({ kind: 'error', text: t('no-payments-url.message') });
       return;
     }
+
     setStatus({ kind: 'pending' });
     try {
       const result = await buyPremium(client, paymentsUrl);
@@ -49,6 +52,7 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
       setStatus({ kind: 'error', text: t('no-payments-url.message') });
       return;
     }
+
     setStatus({ kind: 'pending' });
     try {
       const { url } = await createStripeCheckout(client, paymentsUrl, 100);
@@ -66,9 +70,8 @@ export const PaymentsSettings = ({ settings, onSettingsChange }: PaymentsSetting
     <Form.Root
       variant='settings'
       schema={Settings.Settings}
-      readonly={!onSettingsChange}
       values={settings}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>

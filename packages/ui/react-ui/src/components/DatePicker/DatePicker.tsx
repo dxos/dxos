@@ -22,6 +22,7 @@ import { type ThemedClassName } from '../../util';
 import { Calendar, type DateRange } from '../Calendar';
 import { Icon } from '../Icon';
 import { Popover } from '../Popover';
+import { DatePickerProvider, useDatePickerContext } from './DatePickerContext';
 
 //
 // Public API.
@@ -38,17 +39,6 @@ type ValueByMode = {
   single: Date | undefined;
   range: DateRange | undefined;
 };
-
-type DatePickerContextValue = {
-  mode: DatePickerMode;
-  value: ValueByMode[DatePickerMode];
-  setValue: (next: ValueByMode[DatePickerMode]) => void;
-  withTime: boolean;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
-
-const [DatePickerProvider, useDatePickerContext] = createContext<DatePickerContextValue>('DatePicker');
 
 //
 // Root.
@@ -275,7 +265,5 @@ export const DatePicker = {
   Content: DatePickerContent,
   Calendar: DatePickerCalendar,
 };
-
-export { useDatePickerContext };
 
 export type { ValueByMode };

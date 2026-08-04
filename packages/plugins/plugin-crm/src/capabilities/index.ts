@@ -5,6 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
@@ -16,6 +17,12 @@ export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates'),
+);
+
+export const MailboxAction = Capability.lazyModule(
+  'MailboxAction',
+  { provides: [InboxCapabilities.MailboxAction] },
+  () => import('./mailbox-action'),
 );
 
 export const ProjectTemplates = Capability.lazyModule(

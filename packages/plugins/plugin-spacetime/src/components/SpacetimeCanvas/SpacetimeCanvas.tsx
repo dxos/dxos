@@ -27,7 +27,8 @@ import {
 } from '../../tools';
 import * as Model from '../../types/Model';
 import type * as Scene from '../../types/Scene';
-import { type DebugInfo, DebugPanel, extractSolidDebugInfo } from './DebugPanel';
+import { type DebugInfo, DebugPanel } from './DebugPanel';
+import { extractSolidDebugInfo } from './solid-debug-info';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;

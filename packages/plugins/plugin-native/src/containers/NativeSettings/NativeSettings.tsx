@@ -29,9 +29,13 @@ type UpdateActions = {
   onRelaunch: () => Promise<void>;
 };
 
-type UpdateRow = { description: string; button: ReactNode };
+type UpdateRow = {
+  description: string;
+  button: ReactNode;
+};
 
-export const NativeSettings = (_props: NativeSettingsProps) => {
+/** Update status comes from the update-manager capability, so this panel takes no settings props. */
+export const NativeSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const manager = useCapability(NativeCapabilities.UpdateManager);
   const status = useAtomValue(manager.status);

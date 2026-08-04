@@ -5,6 +5,8 @@
 .claude/scheduled_tasks.lock
 
 # Response-verbosity toggle state — per-user runtime, not repo policy.
+.claude/.mode
+# Transitional: pre-rename state file, deleted on first mode.sh run.
 .claude/.response-mode
 
 # Logs
@@ -215,3 +217,8 @@ node_modules
 .dxos-introspect/
 
 .superpowers/
+
+# Development fixtures: real, PII-bearing corpora pulled by `moon run fixtures:pull`, plus any
+# encrypted archive staged for upload (see tools/fixtures). Never commit.
+/testing/fixtures/
+*.age

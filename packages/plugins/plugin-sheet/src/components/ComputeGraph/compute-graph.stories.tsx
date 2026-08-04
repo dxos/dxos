@@ -18,7 +18,7 @@ import { withComputeGraphDecorator } from '#testing';
 
 import { useSheetModel } from '../../model';
 import * as Sheet from '../../types/Sheet';
-import { useComputeGraph } from './ComputeGraphContextProvider';
+import { useComputeGraph } from './ComputeGraphContext';
 
 const FUNCTION_NAME = 'TEST';
 

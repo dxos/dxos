@@ -8,6 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import {
   AppGraphBuilder,
   AutomationTemplates,
+  MailboxAction,
   OperationHandler,
   ProjectTemplates,
   SkillDefinition,
@@ -26,6 +27,8 @@ export const CrmPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(AppCapability.schema([ProfileOf.ProfileOf])),
   Plugin.addModule(AutomationTemplates),
+  // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
+  Plugin.addModule(MailboxAction),
   Plugin.addModule(ProjectTemplates),
   Plugin.addModule(
     AppCapability.pluginAsset({

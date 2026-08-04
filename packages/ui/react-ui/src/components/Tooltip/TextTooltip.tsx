@@ -12,7 +12,8 @@ import React, {
   useRef,
 } from 'react';
 
-import { Tooltip, type TooltipScopedProps, type TooltipTriggerProps } from './Tooltip';
+import { Tooltip, type TooltipTriggerProps } from './Tooltip';
+import { type TooltipScopedProps } from './TooltipContext';
 
 export type TextTooltipProps = PropsWithChildren<
   {

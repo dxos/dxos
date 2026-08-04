@@ -107,7 +107,7 @@ const DefaultStory = () => {
 
   return (
     <Panel.Root classNames='border-is border-separator'>
-      <Panel.Content className='px-3 grid grid-cols-2 gap-3'>
+      <Panel.Content classNames='px-3 grid grid-cols-2 gap-3'>
         {/* Rendered directly: the `article` role is shared with plugin-space's catch-all RecordArticle
             (position:last), so a raw `Surface type={Article}` here is ambiguous and resolves to the
             fallback — the deck disambiguates via the app-graph node, which a story has no equivalent of. */}
