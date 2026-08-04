@@ -492,11 +492,22 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
       replaced — 2b only swapped the model underneath that one.
 - [x] Quote row and thread row as block widgets, from host-supplied `getQuote`
       / `getThreadSummary` — the package still never follows a ref itself.
-- [x] Edit in place: a nested `EditorView` replacing the message's own lines,
-      not an editable region of the transcript. The document is a rendering, so
-      a writable part of it would have the user typing into something the next
-      model sync overwrites. Its Enter binding needs `Prec.highest` AND first
-      position, or the default newline swallows the commit.
+- [x] Edit in place, in the document itself — no nested editor, so the text
+      keeps the transcript's own markdown rendering and metrics rather than
+      approximating them. jdw's rule: while editing, your content is never
+      replaced from underneath you. The draft is held in memory and reaches the
+      message only on submit, so a peer revising that message loses to the
+      draft, while unrelated messages keep arriving — protecting a draft never
+      required freezing the rest of the channel.
+      Three things it turned on: `readOnly` is unusable (its own filter drops
+      every user edit); `changeFilter` cannot express the bounds, because its
+      suppressed ranges are half-open and protecting the tail rejects an
+      insertion at the _end_ of the message; and decorations must be mapped,
+      not rebuilt, while typing — the keystrokes run ahead of the model, and
+      rebuilding against stale ranges walks positions backwards.
+      11 unit tests pin the semantics (bounds, separator, draft-vs-peer,
+      commit/cancel), which is what caught that the browser failure was the
+      component's `readOnly`, not the extension.
 - [x] **Accessibility question settled**: every line carries `data-message-id`
       and a `thread.document.message` testid, and the current message carries
       `aria-current="location"` — what a tile got from being its own element.
@@ -507,6 +518,7 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
 - [x] Channel and thread stories cover the Discord asymmetry (channel offers
       start-thread and withholds reply; a thread offers reply and withholds
       start-thread). 9 plays total.
+- [x] 10 plays and 41 unit tests in the package.
 - [ ] Not yet done, and needed before 2d: the composer. `Thread.Textbox` →
       `ChatEditor`, plus the reply banner, is still 2d's work.
 
