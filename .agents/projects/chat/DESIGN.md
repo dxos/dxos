@@ -148,6 +148,66 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
   immutable blocks would be wrong). Nearest prior art: plugin-calls swarm
   presence, already integrated in `ChannelArticle`.
 
+### Rendering substrate
+
+Decided by jdw (round 13), superseding the "keep parallel" lean in Open
+questions: assistant chat, transcription and channel chat converge on **one
+CodeMirror-backed document model**, so the two can actually be integrated
+later rather than merely resembling each other. The near-term win is streaming
+(the assistant's typewriter/append path) and a single vocabulary of widgets —
+NOT virtualization, which `Thread.Messages` already has via TanStack.
+
+The shared piece is a **keyed, ordered, reconciling chunk document**: chunks
+(messages) render to lines, and a `set(chunks)` reconcile computes a minimal
+line-range diff. Two existing models are special cases of it:
+
+- `MessageSyncer` (plugin-assistant) is append-only by contract — it tracks a
+  completed-block index and a trailing char count, and requires each streaming
+  render to be a string-extension of the last. Anything else forces a full
+  document replacement.
+- `TranscriptModel` (react-ui-transcription) has append/update/delete, which is
+  the right shape, but replays a batch against line counts from the _previous_
+  sync and populates them only inside `sync()` — so a delete followed by an
+  update in one batch lands on the wrong lines.
+
+Channel chat needs the general case: edits rewrite in place, deletes tombstone
+out of the middle, reactions and thread-summary rows attach under an existing
+message, and a feed merge can insert a message _between_ two others. The model
+therefore reconciles from a **declarative list**, not from imperative
+append/update/delete calls — ECHO hands us a query result set, not a change
+stream, which is the same reason the round-6 graph regression happened.
+
+Everything else decomposes into three small per-consumer pieces over one model
+and one view — a renderer (`chunk => lines`, a pure function, not an
+extension), a widget registry, and an extension set:
+
+|               | renderer emits                                                 | distinctive extensions                                      |
+| ------------- | -------------------------------------------------------------- | ----------------------------------------------------------- |
+| Assistant     | `<prompt>`, markdown, `<reasoning>`, `<toolCall>`, `<surface>` | `typewriter`, `turnFolding`, `xmlBlockDecoration`           |
+| Transcription | speaker lines                                                  | timestamp `gutter`                                          |
+| Channel       | markdown text + dividers                                       | grouping decorations, avatar gutter, `hoverTooltip` toolbar |
+
+Message text stays **plain markdown lines** in the document; only headings,
+avatars, dividers, reactions, thread links, quotes and the edit affordance are
+decorations or widgets. That is what buys wrapping, cross-message selection and
+find for free, and it keeps widget density (and CodeMirror's height estimation)
+manageable.
+
+Placement (jdw, option 2): the model lives in `@dxos/react-ui-thread`
+alongside the chat UI, and `plugin-assistant` and `react-ui-transcription`
+import it from there. This inverts the usual layering — a headless CM model
+exported from a React chat-UI package, pulling `react-ui-mosaic`/`-dnd`/
+`-pickers`/`-menu` in as transitive deps for consumers that touch none of them
+— accepted because `react-ui-transcription` is expected to dissolve into
+`react-ui-thread` later, which resolves the direction. `react-ui-markdown` is
+NOT a consumer: `MarkdownStream` is text-level (`setContent`/`append`) and has
+no chunk notion.
+
+`react-ui-thread` is the permanent home of this work and does not go away. Its
+existing React tile stack (`Thread.*`/`Message.*`) stays until review/comments
+port over in stage 3 — plugin-review renders comment and suggestion threads on
+`Thread.Root/Content/Textbox/Status` and `Message.Tile/Root`.
+
 ### Backend layers
 
 - `ChannelBackendProvider` (exists, plugin-level): `kind`/`makeConfig`/
@@ -173,15 +233,20 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
    `@dxos/types`; nothing to lift): schema fixes (`parentMessage` → Ref,
    annotations evaluation), thread-first UX, message actions, Reaction type.
    Detail in TASKS.md.
-2. **Stage 2 — rename `plugin-thread` → `plugin-chat`** once the model is
-   proven. Mechanical, own PR, no compatibility shims; blast radius includes
-   the plugin id and the shared `threadTranslations` imported by
-   plugin-review.
-3. **Stage 3 — review unification**: per-document comments channels,
+2. **Stage 2 — CodeMirror rendering substrate** (see Rendering substrate).
+   Port before replace: build the model, move the assistant and transcription
+   onto it with their UI untouched, then build the channel transcript and
+   switch the channel containers to it. Detail in TASKS.md.
+3. **Stage 2e — rename `plugin-thread` → `plugin-chat`.** Mechanical, own PR,
+   no compatibility shims; blast radius includes the plugin id and the shared
+   `threadTranslations` imported by plugin-review. Deliberately sequenced
+   AFTER stage 2's substrate work (2a–2d) — it touches the same files a
+   rebuilt UI replaces, so renaming first buys nothing.
+4. **Stage 3 — review unification**: per-document comments channels,
    `threadId = anchor`, delete the `Thread` type with a migration
    (ref-array messages → feed messages). **Sequence explicitly with
    `document-revisions` (burdon), which is active in plugin-review.**
-4. **Post-stage-3 follow-ups**: notifications (subscription triggers) and
+5. **Post-stage-3 follow-ups**: notifications (subscription triggers) and
    presence/typing (ephemeral EDGE primitive).
 
 **Ship gate:** prototype freely on the landed #12235 surface, but feed
@@ -200,8 +265,13 @@ device capacity (phases 3–4).
 - Orphaned anchors (anchored text deleted): render-as-orphaned, as review
   does today.
 - `resolved` on the root message vs elsewhere — validate in stage 3.
-- Assistant `Chat` / `Channel` convergence (leaning: keep parallel; converge
-  only if the assistant needs channel features).
+- ~~Assistant `Chat` / `Channel` convergence (leaning: keep parallel).~~
+  RESOLVED (jdw, round 13): converge on a shared rendering substrate now so
+  the data models can be integrated later — see Rendering substrate. The
+  _data_ convergence (one `Chat`/`Channel` type) remains open.
+- Accessibility and per-tile semantics on a text surface: tiles are real DOM
+  with roles today, and `onMessageSelect`/`aria-current`/the e2e testids need
+  re-expression as decorations. Prototype before committing to stage 2c.
 - Per-thread read-state granularity: finer than the per-feed cursor feed
   phase 2 defines — feed phase 2 should not design out per-`threadId`
   high-water marks (flagged in feed-live-objects TASKS).

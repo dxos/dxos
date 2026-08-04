@@ -11,10 +11,11 @@ DONE: no new plugin — all work lands in `plugin-thread` (stage 1), renamed to
 `plugin-chat` when proven (stage 2), review unification last (stage 3).
 **Stage 1 is COMPLETE** except for two items that need a human or a two-peer
 harness (manual offline/propagation, two-client storybook); thread
-deep-linking, parked in stage 1, landed in round 9. Rounds 2–12 of jdw's
+deep-linking, parked in stage 1, landed in round 9. Rounds 2–13 of jdw's
 review are folded in below, each marked with the round that asked for it;
 where a round revised an earlier decision the superseded entry says so.
-NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
+NEXT: stage 2 — the CodeMirror rendering substrate. Round 13 inserted this
+ahead of the rename, which moved to stage 2e.
 
 ## Decisions log
 
@@ -411,7 +412,70 @@ NEXT: stage 2 — the `plugin-thread` → `plugin-chat` rename.
 - [ ] Edited indicator: decide the signal (compare `created` against the block
       append time?) — deferred with the edit affordance shipped without it.
 
-## Stage 2 — rename plugin-thread → plugin-chat
+## Stage 2 — CodeMirror rendering substrate (jdw round 13)
+
+Goal: assistant chat, transcription and channel chat on ONE document model, so
+the two chats can be integrated later. Streaming and a shared widget vocabulary
+are the win — NOT virtualization, which `Thread.Messages` already has via
+TanStack. **Port before replace**: 2a and 2b change no UI at all.
+
+Everything lands in `@dxos/react-ui-thread`, which is now the permanent home of
+this stack. Its React tile components stay put until stage 3 moves
+plugin-review off them. See DESIGN.md § Rendering substrate for the model, the
+per-consumer decomposition, and the placement trade-off jdw accepted.
+
+### 2a — the model (no consumers yet)
+
+- [ ] Keyed, ordered, reconciling chunk document in `@dxos/react-ui-thread`:
+      `ChunkModel<T>` + `ChunkRenderer<T>` + the CM sync extension (today's
+      `EditorChunkDocument` + its `ViewPlugin`). Reconcile from a declarative
+      `set(chunks)` — ECHO reports a result set, not a change stream.
+- [ ] Keep a monotonic-append fast path so the assistant's typewriter cadence
+      is preserved exactly; that is the most visible thing a regression breaks.
+- [ ] Unit tests are the deliverable alongside the code: insert-in-middle,
+      delete-then-update in one batch, rename/edit in place, reset on identity
+      change, and the append fast path.
+
+### 2b — port the existing UIs onto it (still no visible change)
+
+- [ ] `MessageSyncer` (plugin-assistant `ChatThread/sync.ts`) → the model.
+      Guard: `sync.test.ts` (331 lines) + the assistant plays. Note it lives in
+      plugin-assistant, NOT react-ui-markdown — `MarkdownStream` is text-level
+      (`setContent`/`append`) and never becomes a consumer.
+- [ ] `TranscriptModel` (react-ui-transcription) → the model. This also fixes
+      real bugs: `sync()` replays a batch against line counts from the previous
+      sync, and `_chunkLineCounts` is populated only inside `sync()`, so a
+      delete followed by an update in one batch lands on the wrong lines.
+- [ ] Assistant chat UI and transcription UI untouched in this step.
+
+### 2c — the channel transcript UI (new, in react-ui-thread)
+
+- [ ] Prototype FIRST, before committing to the rest: grouping + hover toolbar + reactions on one story, to settle the accessibility/per-tile-semantics
+      question (DESIGN.md Open questions) and measure widget density.
+- [ ] Read-only CM transcript component: theme + markdown + `xmlTags` +
+      `scroller({ overScroll, autoScroll })` — the last replaces the
+      hand-rolled `ResizeObserver` sticky-scroll in `Thread.Messages`.
+- [ ] Message text stays plain markdown lines; only chrome is decoration.
+      Heading → line decoration (`xmlBlockDecoration` precedent); avatar rail →
+      gutter (transcription's timestamp gutter precedent); day/gap dividers →
+      block widgets, reusing `groupMessages`' logic in the renderer; reactions,
+      thread-link and quote rows → block widgets.
+- [ ] Hover toolbar via `hoverTooltip` (`review/suggest.ts` precedent) — this
+      gets the round-7 overlay-not-layout requirement for free.
+- [ ] Edit-in-place: replace the message's line range with a nested editor
+      widget, committing through the existing `Obj.update` path.
+
+### 2d — switch the channel containers over
+
+- [ ] `MessageThread` renders the transcript instead of `Thread.Messages`.
+- [ ] `Thread.Textbox` → `ChatEditor` (`@dxos/react-ui-chat`) so input is one
+      component too; today it is `useTextEditor` with a different assembly.
+- [ ] Port the 16 storybook plays onto widget DOM testids. This is where the
+      schedule risk is, not in the rendering.
+
+## Stage 2e — rename plugin-thread → plugin-chat
+
+Sequenced AFTER 2a–2d: it touches the same files a rebuilt UI replaces.
 
 - [ ] Package rename `@dxos/plugin-thread` → `@dxos/plugin-chat` (moon
       project, package.json, imports repo-wide — no shims).
