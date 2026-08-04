@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 

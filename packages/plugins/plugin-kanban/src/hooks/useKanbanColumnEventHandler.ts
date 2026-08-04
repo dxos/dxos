@@ -9,7 +9,9 @@ import type { BoardModel } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 import { arrayMove } from '@dxos/util';
 
-import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback, UNCATEGORIZED_VALUE } from '#types';
+import { type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback } from '#types';
+
+import * as KanbanConstants from '../types/KanbanConstants';
 
 /**
  * Builds the column drag-and-drop handler for the kanban board (reorder columns).
@@ -46,8 +48,8 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
         const columnValue = model.getColumnId(data);
         return (
           model.isColumn(source.data) &&
-          columnValue !== UNCATEGORIZED_VALUE &&
-          (source as DndTileData<ColumnStructure>).id !== UNCATEGORIZED_VALUE
+          columnValue !== KanbanConstants.UNCATEGORIZED_VALUE &&
+          (source as DndTileData<ColumnStructure>).id !== KanbanConstants.UNCATEGORIZED_VALUE
         );
       },
       onDrop: ({ source, target }) => {
@@ -56,7 +58,7 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
         }
         const sourceColumnData = source.data as ColumnStructure;
         const sourceColumnId = model.getColumnId(sourceColumnData);
-        if (sourceColumnId === UNCATEGORIZED_VALUE) {
+        if (sourceColumnId === KanbanConstants.UNCATEGORIZED_VALUE) {
           return;
         }
 
@@ -98,7 +100,9 @@ export function useKanbanColumnEventHandler<T extends BaseKanbanItem>({
 
         // Persist column order to kanban.arrangement so the board UI reflects the new order.
         change.kanban((kanban) => {
-          kanban.arrangement.order = reorderedColumnIds.filter((columnId) => columnId !== UNCATEGORIZED_VALUE);
+          kanban.arrangement.order = reorderedColumnIds.filter(
+            (columnId) => columnId !== KanbanConstants.UNCATEGORIZED_VALUE,
+          );
         });
       },
     }),

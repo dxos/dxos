@@ -8,7 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Relation, Type } from '@dxos/echo';
 
-import { Sheet, compareIndexPositions } from '#types';
+import { Sheet } from '#types';
+
+import * as SheetUtil from '../types/SheetUtil';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -20,7 +22,9 @@ export default Capability.makeModule(() =>
           return 0;
         }
 
-        return !anchorA.anchor || !anchorB.anchor ? 0 : compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
+        return !anchorA.anchor || !anchorB.anchor
+          ? 0
+          : SheetUtil.compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
       },
     }),
   ),

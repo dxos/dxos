@@ -10,7 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';

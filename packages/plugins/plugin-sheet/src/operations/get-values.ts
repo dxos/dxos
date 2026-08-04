@@ -8,7 +8,8 @@ import { addressFromA1Notation, addressToA1Notation, isFormula } from '@dxos/com
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
-import { SheetOperation, addressFromIndex, addressToIndex, mapFormulaIndicesToRefs } from '../types';
+import { SheetOperation } from '../types';
+import * as SheetUtil from '../types/SheetUtil';
 
 const handler: Operation.WithHandler<typeof SheetOperation.GetValues> = SheetOperation.GetValues.pipe(
   Operation.withHandler(
@@ -36,7 +37,7 @@ const handler: Operation.WithHandler<typeof SheetOperation.GetValues> = SheetOpe
         for (const key of Object.keys(sheet.cells)) {
           const cellValue = sheet.cells[key]?.value;
           if (cellValue !== undefined && cellValue !== null) {
-            const { row, col } = addressFromIndex(sheet, key);
+            const { row, col } = SheetUtil.addressFromIndex(sheet, key);
             if (row < minRow) {
               minRow = row;
             }
@@ -65,10 +66,12 @@ const handler: Operation.WithHandler<typeof SheetOperation.GetValues> = SheetOpe
       for (let row = fromRow; row <= toRow; row++) {
         const rowValues: (unknown | null)[] = [];
         for (let col = fromCol; col <= toCol; col++) {
-          const idx = addressToIndex(sheet, { row, col });
+          const idx = SheetUtil.addressToIndex(sheet, { row, col });
           const rawValue = sheet.cells[idx]?.value ?? null;
           const value =
-            rawValue !== null && isFormula(String(rawValue)) ? mapFormulaIndicesToRefs(sheet, rawValue) : rawValue;
+            rawValue !== null && isFormula(String(rawValue))
+              ? SheetUtil.mapFormulaIndicesToRefs(sheet, rawValue)
+              : rawValue;
           rowValues.push(value);
         }
         values.push(rowValues);

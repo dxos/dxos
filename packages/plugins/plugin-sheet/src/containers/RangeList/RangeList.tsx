@@ -11,8 +11,9 @@ import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { rangeFromIndex } from '#types';
 import { Sheet } from '#types';
+
+import * as SheetUtil from '../../types/SheetUtil';
 
 export type RangeListProps = {
   sheet: Sheet.Sheet;
@@ -63,7 +64,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                   >
                     <div className='flex grow items-center truncate px-2'>
                       {t('range.title', {
-                        position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
+                        position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
                         key: t(`range-key.${range.key}.label`),
                         value: t(`range-value.${range.value}.label`),
                       })}

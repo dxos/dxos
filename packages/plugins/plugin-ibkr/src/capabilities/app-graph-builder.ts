@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Selection } from '@dxos/react-ui-attention';
 

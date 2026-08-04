@@ -12,7 +12,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';

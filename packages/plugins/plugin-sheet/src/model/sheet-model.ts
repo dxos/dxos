@@ -28,20 +28,10 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import {
-  MAX_COLS,
-  MAX_ROWS,
-  ReadonlyException,
-  addressFromIndex,
-  addressToIndex,
-  initialize,
-  insertIndices,
-  mapFormulaIndicesToRefs,
-  mapFormulaRefsToIndices,
-} from '#types';
 import { type Sheet } from '#types';
 
 import * as SheetCapabilities from '../types/SheetCapabilities';
+import * as SheetUtil from '../types/SheetUtil';
 
 // TODO(burdon): Move to compute.
 // Map sheet types to system types.
@@ -123,9 +113,9 @@ export class SheetModel extends Resource {
    * Initialize sheet and engine.
    */
   protected override async _open(): Promise<void> {
-    log('initialize', { id: this.id });
+    log('SheetUtil.initialize', { id: this.id });
     Obj.update(this._sheet, (obj) => {
-      initialize(obj);
+      SheetUtil.initialize(obj);
     });
 
     this._graph.update.on((event) => {
@@ -157,9 +147,9 @@ export class SheetModel extends Resource {
     this._node.graph.hf.clearSheet(this._node.sheetId);
     Object.entries(this._sheet.cells).forEach(([key, { value }]) => {
       invariant(this._node);
-      const { col, row } = addressFromIndex(this._sheet, key);
+      const { col, row } = SheetUtil.addressFromIndex(this._sheet, key);
       if (isFormula(value)) {
-        const binding = this._graph.mapFunctionBindingFromId(mapFormulaIndicesToRefs(this._sheet, value));
+        const binding = this._graph.mapFunctionBindingFromId(SheetUtil.mapFormulaIndicesToRefs(this._sheet, value));
         if (binding) {
           value = this._graph.mapFormulaToNative(binding);
         } else {
@@ -187,7 +177,7 @@ export class SheetModel extends Resource {
   insertRows(i: number, n = 1): string[] {
     let idx: string[] = [];
     Obj.update(this._sheet, (obj) => {
-      idx = insertIndices(obj.rows, i, n, MAX_ROWS);
+      idx = SheetUtil.insertIndices(obj.rows, i, n, SheetUtil.MAX_ROWS);
     });
     this.reset();
     return idx;
@@ -196,7 +186,7 @@ export class SheetModel extends Resource {
   insertColumns(i: number, n = 1): string[] {
     let idx: string[] = [];
     Obj.update(this._sheet, (obj) => {
-      idx = insertIndices(obj.columns, i, n, MAX_COLS);
+      idx = SheetUtil.insertIndices(obj.columns, i, n, SheetUtil.MAX_COLS);
     });
     this.reset();
     return idx;
@@ -204,8 +194,8 @@ export class SheetModel extends Resource {
 
   dropRow(rowIndex: string): SheetCapabilities.SheetAction.RestoreAxis {
     const range = {
-      from: addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
-      to: addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
+      from: SheetUtil.addressFromIndex(this._sheet, `${this._sheet.columns[0]}@${rowIndex}`),
+      to: SheetUtil.addressFromIndex(this._sheet, `${this._sheet.columns[this._sheet.columns.length - 1]}@${rowIndex}`),
     };
     const values = this.getCellValues(range).flat();
     const index = this._sheet.rows.indexOf(rowIndex);
@@ -220,8 +210,8 @@ export class SheetModel extends Resource {
 
   dropColumn(colIndex: string): SheetCapabilities.SheetAction.RestoreAxis {
     const range = {
-      from: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
-      to: addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
+      from: SheetUtil.addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[0]}`),
+      to: SheetUtil.addressFromIndex(this._sheet, `${colIndex}@${this._sheet.rows[this._sheet.rows.length - 1]}`),
     };
     const values = this.getCellValues(range).flat();
     const index = this._sheet.columns.indexOf(colIndex);
@@ -281,7 +271,7 @@ export class SheetModel extends Resource {
     this._node.graph.hf.setCellContents(toSimpleCellAddress(this._node.sheetId, topLeft), values);
     Obj.update(this._sheet, (obj) => {
       this._iterRange(range, (cell) => {
-        const idx = addressToIndex(this._sheet, cell);
+        const idx = SheetUtil.addressToIndex(this._sheet, cell);
         delete obj.cells[idx];
       });
     });
@@ -292,7 +282,7 @@ export class SheetModel extends Resource {
     this._node.graph.hf.cut(toModelRange(this._node.sheetId, range));
     Obj.update(this._sheet, (obj) => {
       this._iterRange(range, (cell) => {
-        const idx = addressToIndex(this._sheet, cell);
+        const idx = SheetUtil.addressToIndex(this._sheet, cell);
         delete obj.cells[idx];
       });
     });
@@ -311,7 +301,7 @@ export class SheetModel extends Resource {
         for (const change of changes) {
           if (change instanceof ExportedCellChange) {
             const { address, newValue } = change;
-            const idx = addressToIndex(this._sheet, { row: address.row, col: address.col });
+            const idx = SheetUtil.addressToIndex(this._sheet, { row: address.row, col: address.col });
             obj.cells[idx] = { value: newValue };
           }
         }
@@ -340,7 +330,7 @@ export class SheetModel extends Resource {
    * Get value from sheet.
    */
   getCellValue(cell: CellAddress): CellScalarValue {
-    const idx = addressToIndex(this._sheet, cell);
+    const idx = SheetUtil.addressToIndex(this._sheet, cell);
     return this._sheet.cells[idx]?.value ?? null;
   }
 
@@ -354,7 +344,7 @@ export class SheetModel extends Resource {
     }
 
     if (isFormula(value)) {
-      return this._graph.mapFunctionBindingFromId(mapFormulaIndicesToRefs(this._sheet, value));
+      return this._graph.mapFunctionBindingFromId(SheetUtil.mapFormulaIndicesToRefs(this._sheet, value));
     } else {
       return String(value);
     }
@@ -400,20 +390,20 @@ export class SheetModel extends Resource {
   setValue(cell: CellAddress, value: CellScalarValue): void {
     invariant(this._node);
     if (this._options.readonly) {
-      throw new ReadonlyException();
+      throw new SheetUtil.ReadonlyException();
     }
 
     // Reallocate if > current bounds.
     let refresh = false;
     if (cell.row >= this._sheet.rows.length) {
       Obj.update(this._sheet, (obj) => {
-        insertIndices(obj.rows, cell.row, 1, MAX_ROWS);
+        SheetUtil.insertIndices(obj.rows, cell.row, 1, SheetUtil.MAX_ROWS);
       });
       refresh = true;
     }
     if (cell.col >= this._sheet.columns.length) {
       Obj.update(this._sheet, (obj) => {
-        insertIndices(obj.columns, cell.col, 1, MAX_COLS);
+        SheetUtil.insertIndices(obj.columns, cell.col, 1, SheetUtil.MAX_COLS);
       });
       refresh = true;
     }
@@ -429,14 +419,14 @@ export class SheetModel extends Resource {
     ]);
 
     // Insert into sheet.
-    const idx = addressToIndex(this._sheet, cell);
+    const idx = SheetUtil.addressToIndex(this._sheet, cell);
     if (value === undefined || value === null) {
       Obj.update(this._sheet, (obj) => {
         delete obj.cells[idx];
       });
     } else {
       if (isFormula(value)) {
-        value = this._graph.mapFunctionBindingToId(mapFormulaRefsToIndices(this._sheet, value));
+        value = this._graph.mapFunctionBindingToId(SheetUtil.mapFormulaRefsToIndices(this._sheet, value));
       }
 
       Obj.update(this._sheet, (obj) => {
@@ -493,7 +483,7 @@ export class SheetModel extends Resource {
   mapFormulaIndicesToRefs(formula: string): string {
     assertArgument(isFormula(formula), 'formula');
     return formula.replace(/([a-zA-Z0-9]+)@([a-zA-Z0-9]+)/g, (idx) => {
-      return addressToA1Notation(addressFromIndex(this._sheet, idx));
+      return addressToA1Notation(SheetUtil.addressFromIndex(this._sheet, idx));
     });
   }
 

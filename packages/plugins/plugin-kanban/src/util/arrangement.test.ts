@@ -9,8 +9,9 @@ import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
-import { Kanban, UNCATEGORIZED_VALUE } from '#types';
+import { Kanban } from '#types';
 
+import * as KanbanConstants from '../types/KanbanConstants';
 import {
   computeColumnStructure,
   computeItemArrangement,
@@ -19,7 +20,7 @@ import {
 } from './arrangement';
 
 const selectOptions = [
-  { id: UNCATEGORIZED_VALUE, title: 'Uncategorized', color: 'neutral' },
+  { id: KanbanConstants.UNCATEGORIZED_VALUE, title: 'Uncategorized', color: 'neutral' },
   { id: 'a', title: 'A', color: 'blue' },
   { id: 'b', title: 'B', color: 'green' },
 ];
@@ -133,19 +134,19 @@ describe('arrangement utils', () => {
   describe('computeColumnStructure', () => {
     test('uncategorized first, then effectiveOrder, then missing selectOptions', ({ expect }) => {
       const effectiveOrder = ['b'];
-      const effectiveByColumn = { [UNCATEGORIZED_VALUE]: { ids: ['x'] }, b: { ids: ['y'] } };
+      const effectiveByColumn = { [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: ['x'] }, b: { ids: ['y'] } };
       const result = computeColumnStructure(effectiveOrder, effectiveByColumn, selectOptions);
-      expect(result.map((col) => col.columnValue)).toEqual([UNCATEGORIZED_VALUE, 'b', 'a']);
+      expect(result.map((col) => col.columnValue)).toEqual([KanbanConstants.UNCATEGORIZED_VALUE, 'b', 'a']);
       expect(result[0].ids).toEqual(['x']);
       expect(result[1].ids).toEqual(['y']);
       expect(result[2].ids).toEqual([]);
     });
 
     test('does not duplicate uncategorized when already in effectiveOrder', ({ expect }) => {
-      const effectiveOrder = [UNCATEGORIZED_VALUE, 'a'];
+      const effectiveOrder = [KanbanConstants.UNCATEGORIZED_VALUE, 'a'];
       const effectiveByColumn = {};
       const result = computeColumnStructure(effectiveOrder, effectiveByColumn, selectOptions);
-      expect(result.map((col) => col.columnValue)).toEqual([UNCATEGORIZED_VALUE, 'a', 'b']);
+      expect(result.map((col) => col.columnValue)).toEqual([KanbanConstants.UNCATEGORIZED_VALUE, 'a', 'b']);
     });
   });
 
@@ -160,7 +161,7 @@ describe('arrangement utils', () => {
         arrangement: {
           order: ['a', 'b'],
           columns: {
-            [UNCATEGORIZED_VALUE]: { ids: [idUc1] },
+            [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: [idUc1] },
             a: { ids: [idA2, idA1] },
             b: { ids: [] },
           },
@@ -173,7 +174,7 @@ describe('arrangement utils', () => {
         pivotPath: 'status',
         selectOptions,
       });
-      const colUncat = result.find((c) => c.columnValue === UNCATEGORIZED_VALUE);
+      const colUncat = result.find((c) => c.columnValue === KanbanConstants.UNCATEGORIZED_VALUE);
       const colA = result.find((c) => c.columnValue === 'a');
       const colB = result.find((c) => c.columnValue === 'b');
       expect(colUncat?.cards.map((c) => c.id)).toEqual([idUc1]);
@@ -195,7 +196,7 @@ describe('arrangement utils', () => {
         items,
         selectOptions,
       });
-      const colUncat = result.find((c) => c.columnValue === UNCATEGORIZED_VALUE);
+      const colUncat = result.find((c) => c.columnValue === KanbanConstants.UNCATEGORIZED_VALUE);
       const colA = result.find((c) => c.columnValue === 'a');
       expect(colUncat?.cards.length).toBe(2);
       expect(colA?.cards.length).toBe(0);
@@ -211,7 +212,7 @@ describe('arrangement utils', () => {
         items: [],
         selectOptions,
       });
-      expect(result.map((c) => c.columnValue)).toEqual([UNCATEGORIZED_VALUE, 'a', 'b']);
+      expect(result.map((c) => c.columnValue)).toEqual([KanbanConstants.UNCATEGORIZED_VALUE, 'a', 'b']);
     });
   });
 });

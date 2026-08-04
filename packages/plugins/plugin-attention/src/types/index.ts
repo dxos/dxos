@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './capabilities';
-export * from './types';
+export * as AttentionAction from './AttentionAction';
+export * as AttentionCapabilities from './AttentionCapabilities';

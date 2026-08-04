@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, URI } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 
 import { type SelectionRange, getSelectionRanges } from '../model/selection';

@@ -7,7 +7,7 @@ import { useCallback } from 'react';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Selection } from '@dxos/react-ui-attention';
 
 import { type ProcessorRequestContext } from '../processor';

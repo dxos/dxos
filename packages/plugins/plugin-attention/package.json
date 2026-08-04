@@ -45,6 +45,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AttentionAction": {
+      "source": "./src/types/AttentionAction.ts",
+      "types": "./dist/types/src/types/AttentionAction.d.ts",
+      "import": "./dist/lib/AttentionAction.mjs"
+    },
+    "./AttentionCapabilities": {
+      "source": "./src/types/AttentionCapabilities.ts",
+      "types": "./dist/types/src/types/AttentionCapabilities.d.ts",
+      "import": "./dist/lib/AttentionCapabilities.mjs"
+    },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -94,5 +104,15 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {
+      "AttentionAction": [
+        "dist/types/src/types/AttentionAction.d.ts"
+      ],
+      "AttentionCapabilities": [
+        "dist/types/src/types/AttentionCapabilities.d.ts"
+      ]
+    }
   }
 }

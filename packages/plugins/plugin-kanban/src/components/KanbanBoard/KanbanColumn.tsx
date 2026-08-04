@@ -8,8 +8,9 @@ import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 
 import { useKanbanItemEventHandler } from '#hooks';
-import { type ColumnStructure, UNCATEGORIZED_VALUE } from '#types';
+import { type ColumnStructure } from '#types';
 
+import * as KanbanConstants from '../../types/KanbanConstants';
 import { type KanbanColumnProps, useKanbanBoard } from './context';
 
 export { type KanbanColumnProps };
@@ -25,7 +26,7 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
     const { columnFieldPath, change, onCardAdd, getPivotAttributes, itemTile } = useKanbanBoard(KANBAN_COLUMN_NAME);
 
     const { title } = getPivotAttributes(column.columnValue);
-    const uncategorized = column.columnValue === UNCATEGORIZED_VALUE;
+    const uncategorized = column.columnValue === KanbanConstants.UNCATEGORIZED_VALUE;
     const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
     const eventHandler = useKanbanItemEventHandler({
@@ -60,7 +61,8 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
         <Board.Column.Footer
           onAdd={
             onCardAdd
-              ? () => onCardAdd(column.columnValue === UNCATEGORIZED_VALUE ? undefined : column.columnValue)
+              ? () =>
+                  onCardAdd(column.columnValue === KanbanConstants.UNCATEGORIZED_VALUE ? undefined : column.columnValue)
               : undefined
           }
         />

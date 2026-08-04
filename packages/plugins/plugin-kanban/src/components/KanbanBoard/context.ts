@@ -9,7 +9,9 @@ import { type Obj } from '@dxos/echo';
 import { type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { type ColumnStructure, type KanbanChangeCallback, UNCATEGORIZED_ATTRIBUTES, UNCATEGORIZED_VALUE } from '#types';
+import { type ColumnStructure, type KanbanChangeCallback } from '#types';
+
+import * as KanbanConstants from '../../types/KanbanConstants';
 
 const KANBAN_BOARD_NAME = 'KanbanBoard.Context';
 
@@ -49,6 +51,8 @@ export const [KanbanBoardContext, useKanbanBoard] = createContext<KanbanBoardCon
   change: { kanban: () => {}, setItemField: () => {} },
   pivotFieldId: undefined,
   getPivotAttributes: (id: string) =>
-    id === UNCATEGORIZED_VALUE ? UNCATEGORIZED_ATTRIBUTES : { title: id, color: 'neutral' },
+    id === KanbanConstants.UNCATEGORIZED_VALUE
+      ? KanbanConstants.UNCATEGORIZED_ATTRIBUTES
+      : { title: id, color: 'neutral' },
   itemTile: (() => null) as ComponentType<KanbanCardProps>,
 });

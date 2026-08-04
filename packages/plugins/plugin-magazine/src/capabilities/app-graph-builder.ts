@@ -14,7 +14,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Selection } from '@dxos/react-ui-attention';

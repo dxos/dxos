@@ -15,8 +15,8 @@ import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import * as Kanban from '@dxos/plugin-kanban/Kanban';
+import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -286,11 +286,15 @@ export const reconcileBoardCards: (
         const merged = columnsMerge.value as Record<string, { ids: string[]; hidden?: boolean }>;
         // Remote columns are only Trello lists — never include UNCATEGORIZED. mergeDeep(remote-wins)
         // would drop the initial `{ hidden: true }` bucket from findOrCreateKanbanForBoard.
-        const uncategorizedIds = merged[UNCATEGORIZED_VALUE]?.ids ?? prev[UNCATEGORIZED_VALUE]?.ids ?? [];
-        const uncategorizedHidden = merged[UNCATEGORIZED_VALUE]?.hidden ?? prev[UNCATEGORIZED_VALUE]?.hidden ?? true;
+        const uncategorizedIds =
+          merged[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? prev[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? [];
+        const uncategorizedHidden =
+          merged[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden ??
+          prev[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden ??
+          true;
         kanban.arrangement.columns = {
           ...merged,
-          [UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
+          [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
         };
       });
     } else if (columnsMerge.source === 'local') {
@@ -482,7 +486,7 @@ export const makeEmptyKanbanForBoard = (boardId: string, name: string): Kanban.K
     name,
     arrangement: {
       order: [],
-      columns: { [UNCATEGORIZED_VALUE]: { ids: [], hidden: true } },
+      columns: { [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: [], hidden: true } },
     },
     spec: { kind: 'items' as const, pivotField: TRELLO_PIVOT_FIELD, items: [] },
   });

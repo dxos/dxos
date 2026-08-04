@@ -14,7 +14,7 @@ import * as NotFound from '@dxos/app-toolkit/NotFound';
 import * as Operation from '@dxos/compute/Operation';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph } from '@dxos/plugin-graph';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 

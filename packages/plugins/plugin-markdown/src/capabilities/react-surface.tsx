@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface, useAtomCapability, useCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';

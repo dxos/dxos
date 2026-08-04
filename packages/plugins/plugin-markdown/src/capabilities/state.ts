@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
 import { MarkdownCapabilities } from '#types';
 

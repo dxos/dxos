@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph } from '@dxos/plugin-graph';
 
 import { NavTreeCapabilities } from '#types';

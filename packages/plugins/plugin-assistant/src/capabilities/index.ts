@@ -7,7 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';

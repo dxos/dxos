@@ -7,7 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import * as MapEvents from '@dxos/plugin-map/MapEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';

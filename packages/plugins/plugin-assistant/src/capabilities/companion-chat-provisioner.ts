@@ -13,7 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect } from '@dxos/plugin-deck';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';

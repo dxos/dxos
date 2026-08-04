@@ -80,17 +80,6 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
-    "./translations": {
-      "source": "./src/translations.ts",
-      "types": "./dist/types/src/translations.d.ts",
-      "import": "./dist/lib/translations.mjs"
-    },
     "./Sheet": {
       "source": "./src/types/Sheet.ts",
       "types": "./dist/types/src/types/Sheet.d.ts",
@@ -111,7 +100,28 @@
       "types": "./dist/types/src/types/SheetOperation.d.ts",
       "import": "./dist/lib/SheetOperation.mjs"
     },
-    "./package.json": "./package.json"
+    "./SheetRange": {
+      "source": "./src/types/SheetRange.ts",
+      "types": "./dist/types/src/types/SheetRange.d.ts",
+      "import": "./dist/lib/SheetRange.mjs"
+    },
+    "./SheetUtil": {
+      "source": "./src/types/SheetUtil.ts",
+      "types": "./dist/types/src/types/SheetUtil.d.ts",
+      "import": "./dist/lib/SheetUtil.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "import": "./dist/lib/translations.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
@@ -127,6 +137,12 @@
       ],
       "SheetOperation": [
         "dist/types/src/types/SheetOperation.d.ts"
+      ],
+      "SheetRange": [
+        "dist/types/src/types/SheetRange.d.ts"
+      ],
+      "SheetUtil": [
+        "dist/types/src/types/SheetUtil.d.ts"
       ]
     }
   },

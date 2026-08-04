@@ -14,6 +14,8 @@ export default defineConfig({
     plugin: 'src/plugin.ts',
     testing: 'src/testing.ts',
     types: 'src/types/index.ts',
+    AttentionAction: 'src/types/AttentionAction.ts',
+    AttentionCapabilities: 'src/types/AttentionCapabilities.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

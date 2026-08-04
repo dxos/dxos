@@ -7,13 +7,9 @@ import { useMemo } from 'react';
 import type { DndContainerHandler, DndTileData } from '@dxos/react-ui-dnd';
 import type { BoardModel } from '@dxos/react-ui-mosaic';
 
-import {
-  type ArrangedCards,
-  type BaseKanbanItem,
-  type ColumnStructure,
-  type KanbanChangeCallback,
-  UNCATEGORIZED_VALUE,
-} from '#types';
+import { type ArrangedCards, type BaseKanbanItem, type ColumnStructure, type KanbanChangeCallback } from '#types';
+
+import * as KanbanConstants from '../types/KanbanConstants';
 
 function findColumn<T extends BaseKanbanItem>(
   id: string,
@@ -85,7 +81,9 @@ export function useKanbanItemEventHandler<T extends BaseKanbanItem>({
         // 4. Update card's pivot field to target column value.
         if (columnFieldPath !== undefined) {
           const newValue =
-            targetColumnInWorking.columnValue === UNCATEGORIZED_VALUE ? undefined : targetColumnInWorking.columnValue;
+            targetColumnInWorking.columnValue === KanbanConstants.UNCATEGORIZED_VALUE
+              ? undefined
+              : targetColumnInWorking.columnValue;
           change.setItemField(movedCard, columnFieldPath, newValue);
         }
 

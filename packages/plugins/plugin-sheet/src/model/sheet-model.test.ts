@@ -10,8 +10,9 @@ import { TestBuilder, testFunctionPlugins } from '@dxos/compute-hyperformula/tes
 import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
-import { Sheet, mapFormulaIndicesToRefs, mapFormulaRefsToIndices } from '#types';
+import { Sheet } from '#types';
 
+import * as SheetUtil from '../types/SheetUtil';
 import { SheetModel } from './sheet-model';
 import { createTestGrid } from './testing';
 
@@ -109,8 +110,8 @@ describe('SheetModel', () => {
       expect(isFormula(text)).to.be.true;
       expect(isFormula(raw)).to.be.true;
       expect(typeof value).to.eq('number');
-      expect(mapFormulaRefsToIndices(sheet, text as string)).to.eq(raw);
-      expect(mapFormulaIndicesToRefs(sheet, raw as string)).to.eq(text);
+      expect(SheetUtil.mapFormulaRefsToIndices(sheet, text as string)).to.eq(raw);
+      expect(SheetUtil.mapFormulaIndicesToRefs(sheet, raw as string)).to.eq(text);
     }
   });
 });

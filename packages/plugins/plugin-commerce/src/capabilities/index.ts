@@ -4,7 +4,7 @@
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {

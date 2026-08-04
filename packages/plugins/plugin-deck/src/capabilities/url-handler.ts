@@ -21,7 +21,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 

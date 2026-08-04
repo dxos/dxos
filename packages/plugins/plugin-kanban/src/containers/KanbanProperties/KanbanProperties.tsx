@@ -13,7 +13,9 @@ import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
 import { useProjectionModel } from '#hooks';
-import { type Kanban, KanbanSettingsSchema, KanbanViewSettingsSchema, UNCATEGORIZED_VALUE } from '#types';
+import { type Kanban, KanbanSettingsSchema, KanbanViewSettingsSchema } from '#types';
+
+import * as KanbanConstants from '../../types/KanbanConstants';
 
 export type KanbanPropertiesProps = AppSurface.ObjectPropertiesProps<Kanban.Kanban>;
 
@@ -43,7 +45,7 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
     [fieldProjections],
   );
 
-  const hideUncategorized = object.arrangement.columns[UNCATEGORIZED_VALUE]?.hidden ?? false;
+  const hideUncategorized = object.arrangement.columns[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden ?? false;
 
   const handleValuesChanged = useCallback(
     (values: Partial<{ columnFieldId: string; hideUncategorized: boolean }>) => {
@@ -54,11 +56,11 @@ export const KanbanProperties = ({ subject: object }: KanbanPropertiesProps) => 
       }
       if (values.hideUncategorized !== undefined) {
         updateKanban((kanban) => {
-          const existing = kanban.arrangement.columns[UNCATEGORIZED_VALUE];
+          const existing = kanban.arrangement.columns[KanbanConstants.UNCATEGORIZED_VALUE];
           if (existing) {
             existing.hidden = values.hideUncategorized;
           } else {
-            kanban.arrangement.columns[UNCATEGORIZED_VALUE] = {
+            kanban.arrangement.columns[KanbanConstants.UNCATEGORIZED_VALUE] = {
               ids: [],
               hidden: values.hideUncategorized,
             };
