@@ -20,12 +20,12 @@
    * paper on a desk rather than paper in a well (see AUDIT.md D1/D2).
    *
    * Level      Dark   Light  Roles
-   *   sunken   n-950  n-300  deck gaps, wells, scrim base, L0/R0 outer rails
-   *   chrome   n-925  n-250  sidebars, topbar, statusbar, L1/R1 sidebars
-   *   base     n-900  n-200  document canvas, attention zone
-   *   raised   n-850  n-125  cards, side panels
-   *   overlay  n-800  n-75   dialogs, sheets, drawers
-   *   popup    n-775  n-50   popover, menu, toast, tooltip
+   *   sunken   n-950  0.905  deck gaps, wells, scrim base, L0/R0 outer rails
+   *   chrome   n-925  0.935  sidebars, topbar, statusbar, L1/R1 sidebars
+   *   base     n-900  0.965  document canvas, attention zone
+   *   raised   n-850  0.982  cards, side panels
+   *   overlay  n-800  0.992  dialogs, sheets, drawers
+   *   popup    n-775  1.000  popover, menu, toast, tooltip
    *
    * Toolbars, groups and inputs are deliberately NOT levels: they are aspects derived from
    * whichever surface hosts them (see "Aspects" below), so a toolbar in a card and a toolbar on the
@@ -33,12 +33,12 @@
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
-  --dx-surface-sunken: light-dark(var(--color-neutral-300), var(--color-neutral-950));
-  --dx-surface-chrome: light-dark(var(--color-neutral-250), var(--color-neutral-925));
-  --dx-surface-base: light-dark(var(--color-neutral-200), var(--color-neutral-900));
-  --dx-surface-raised: light-dark(var(--color-neutral-125), var(--color-neutral-850));
-  --dx-surface-overlay: light-dark(var(--color-neutral-75), var(--color-neutral-800));
-  --dx-surface-popup: light-dark(var(--color-neutral-50), var(--color-neutral-775));
+  --dx-surface-sunken: light-dark(var(--color-neutral-150), var(--color-neutral-950));
+  --dx-surface-chrome: light-dark(var(--color-neutral-100), var(--color-neutral-925));
+  --dx-surface-base: light-dark(oklch(0.965 0.001 190), var(--color-neutral-900));
+  --dx-surface-raised: light-dark(oklch(0.982 0.001 190), var(--color-neutral-850));
+  --dx-surface-overlay: light-dark(oklch(0.992 0.001 190), var(--color-neutral-800));
+  --dx-surface-popup: light-dark(oklch(1 0 0), var(--color-neutral-775));
 
   /**
    * Level: sunken
@@ -140,6 +140,24 @@
   );
   --color-scrollbar-thumb-active: oklch(
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.34) c h
+  );
+
+  /*
+   * Separators. Fixed neutrals collided with the surfaces they divide once the ladder inverted:
+   * in light mode `separator` was neutral-200, the same value as the base canvas, and
+   * `subdued-separator` matched the sidebar exactly — both invisible. The offsets below reproduce
+   * the dark-mode appearance they had (0.166 / 0.115 / 0.089 / 0.064 above the base surface) and
+   * mirror it in light.
+   */
+  --color-separator: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.166) c h);
+  --color-input-separator: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.115) c h
+  );
+  --color-subdued-separator: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.089) c h
+  );
+  --color-primary-separator: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.064) c h
   );
 
   /* State aspects — same host-derived mechanism; see the offsets above. */
