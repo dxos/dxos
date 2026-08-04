@@ -22,45 +22,18 @@ import React, {
 
 import { useId } from '@dxos/react-hooks';
 
-import { LIST_NAME, type ListScopedProps, useListContext } from './List';
+import { LIST_NAME, type ListScopedProps, useListContext } from './ListContext';
 
-const LIST_ITEM_NAME = 'ListItem';
-
-type ListItemScopedProps<P> = P & { __listItemScope?: Scope };
-
-interface ListItemData {
-  id: string;
-  labelId?: string;
-  selected?: CheckboxProps['checked'];
-  open?: boolean;
-}
-
-type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & RefAttributes<HTMLLIElement> &
-  ComponentPropsWithoutRef<'li'> & {
-    defaultOpen?: boolean;
-    onOpenChange?: (nextOpen: boolean) => void;
-  } & {
-    onSelectedChange?: CheckboxProps['onCheckedChange'];
-    defaultSelected?: CheckboxProps['defaultChecked'];
-  };
-
-type ListItemElement = ComponentRef<'li'>;
-
-const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
-
-type ListItemContextValue = {
-  headingId: string;
-  open: boolean;
-  selected: CheckboxProps['checked'];
-  setSelected: Dispatch<SetStateAction<CheckboxProps['checked']>>;
-};
-
-const [ListItemProvider, useListItemContext] = createListItemContext<ListItemContextValue>(LIST_ITEM_NAME);
-
-type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<'p'>, 'id'>> &
-  RefAttributes<HTMLParagraphElement> & {
-    asChild?: boolean;
-  };
+import {
+  LIST_ITEM_NAME,
+  ListItemProvider,
+  type ListItemData,
+  type ListItemElement,
+  type ListItemHeadingProps,
+  type ListItemProps,
+  type ListItemScopedProps,
+  useListItemContext,
+} from './ListItemContext';
 
 const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
@@ -151,20 +124,6 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
 
 ListItem.displayName = LIST_ITEM_NAME;
 
-export {
-  LIST_ITEM_NAME,
-  ListItem,
-  ListItemCollapsibleContent,
-  ListItemHeading,
-  ListItemOpenTrigger,
-  createListItemScope,
-  useListItemContext,
-};
+export { ListItem, ListItemCollapsibleContent, ListItemHeading, ListItemOpenTrigger };
 
-export type {
-  ListItemCollapsibleContentProps,
-  ListItemHeadingProps,
-  ListItemOpenTriggerProps,
-  ListItemProps,
-  ListItemScopedProps,
-};
+export type { ListItemCollapsibleContentProps, ListItemOpenTriggerProps };
