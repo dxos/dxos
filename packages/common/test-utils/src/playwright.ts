@@ -96,6 +96,11 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
       : [['list']],
     use: {
       trace: 'retain-on-failure',
+      // Playwright's default is no limit, so a single locator that never resolves absorbs the whole
+      // per-test budget and reports a bare `Test timeout` naming nothing. Bounding actions makes such a
+      // test fail in seconds, against the locator that actually hung, instead of costing a full minute
+      // — which is what repeatedly pushed the e2e job past its cap.
+      actionTimeout: 30_000,
     },
     projects,
   };

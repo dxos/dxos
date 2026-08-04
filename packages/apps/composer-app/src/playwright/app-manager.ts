@@ -62,7 +62,11 @@ export class AppManager {
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
-    await this.isAuthenticated({ timeout: 15_000 });
+    // Wait for boot explicitly, and generously: it measures ~11s on CI and far longer on a loaded
+    // machine (CI firefox measures ~16s). The old 15s probe swallowed its own failure, so on a slow boot the first action absorbed
+    // the remaining test budget instead — reporting a bare `Test timeout` that named nothing. Waiting
+    // here fails against this locator, so a boot problem reads as a boot problem.
+    await this.page.getByTestId('treeView.userAccount').waitFor({ timeout: 45_000 });
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
