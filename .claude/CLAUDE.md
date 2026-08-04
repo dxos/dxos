@@ -11,6 +11,11 @@
   `concise` aliases `terse`; `natural`/`default`/`off` alias `normal`. The legacy
   `$mode <MODE>` sentinel still works anywhere in a message; the verb is required
   in both forms, so prose about the modes cannot flip them.
+- **Bare `/mode` changes nothing and re-orients**: reply with the worktree and
+  branch, the instruction files actually consulted (including skills loaded this
+  session), the current mode, and the two modes as numbered options. This is how
+  the user asks for the worktree line again — it is a first-reply rule and is
+  deliberately not re-injected every turn.
 - A `UserPromptSubmit` hook (`.claude/hooks/mode.sh`) does the work: that event
   carries the **raw typed text**, so it catches `/mode …` before the command
   expands and writes the state deterministically — the expansion itself could

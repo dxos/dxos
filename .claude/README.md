@@ -156,9 +156,17 @@ the state change deterministic rather than dependent on the agent complying.
 `UserPromptSubmit` carries the **raw typed text**, so this hook sees `/mode terse`
 before the command expands — the state write keeps the sentinel's determinism
 while the user gets autocomplete. `.claude/commands/mode.md` exists only to
-register the name and report the result; it deliberately does not set anything.
+register the name and shape the reply; it deliberately does not set anything.
 This is the general recipe for a command that must change state: grep the raw
 text on `UserPromptSubmit`, and let the command body be a thin acknowledgement.
+
+The two halves split cleanly by whether state changes. **`/mode <MODE>`** is the
+hook's job — it fires before the model, and the body only confirms. **Bare
+`/mode`** matches nothing, so the hook is inert and the body does all the work:
+it reports worktree, branch, consulted instruction files, current mode, and the
+modes as numbered options. That makes it the re-orientation command, and the
+supported way to ask for the worktree line, which §C keeps as a first-reply rule
+rather than a per-turn injection.
 
 The two mode values are `terse` and `normal` (the default when the state file is
 absent). `concise` aliases `terse`; `natural`, `default` and `off` alias

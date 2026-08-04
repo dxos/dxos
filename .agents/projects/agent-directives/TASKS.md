@@ -76,6 +76,12 @@ default state. That single gap is why "be terse" never survived.
       fallback. Verified against eight prompts: the four `/mode` forms and the
       legacy sentinel fire; mid-message `/mode terse`, a `src/mode normal` path,
       and a bare `$terse` are inert.
+- [x] **Bare `/mode` re-orients** — matches no mode word, so the hook is inert and
+      the command body does the work: worktree + branch, the instruction files
+      actually consulted (skills included), current mode, and the two modes as
+      numbered options. This is the answer to the reversal above — the worktree
+      line stays a first-reply rule, and `/mode` is how the user asks for it
+      again, on demand rather than on every turn.
 
 ### Decisions (settled 2026-08-03)
 
