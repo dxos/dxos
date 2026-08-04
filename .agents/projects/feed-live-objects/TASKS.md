@@ -1,11 +1,22 @@
 # Live feed objects + subscription triggers — TASKS
 
+_Resume: start phase 1 — wire `insertionId` through `EchoFeedCodec` + the index
+path, then rebase `FeedObjectCore`'s baseline onto it. Uncommitted: none. Last:
+docs-only roadmap revision merged (#12391); no phase-1 code exists yet._
+
 PR **#12235** (branch `t3code/edb619e9`). See DESIGN.md for architecture.
 
 ## Status
 
-**PR #12235 MERGED** to `main` as `7b270f2e`. Remaining work is the phased
-roadmap below (see DESIGN.md "Roadmap (post-#12235)"), each phase its own PR.
+**All three PRs merged**: #12235 (implementation, `7b270f2e`), #12368 and #12391
+(roadmap docs). Remaining work is the phased roadmap below (see DESIGN.md
+"Roadmap"), each phase its own PR.
+
+**Phase 1 not started** — verified at `fcdd424a`: `insertionId` appears only in
+`feed/src/feed-store.ts` (server-side block identity) and is still absent from
+`echo-protocol`/`echo-db`; `feed-object-core.ts` continues to derive its version
+baseline from `KEY_QUEUE_POSITION` via `positionOf`, with the standing comment
+that `insertionId` "would be an always-present alternative".
 
 ## Done
 
