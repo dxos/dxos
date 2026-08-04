@@ -15,9 +15,10 @@ deep-linking, parked in stage 1, landed in round 9. Rounds 2–13 of jdw's
 review are folded in below, each marked with the round that asked for it;
 where a round revised an earlier decision the superseded entry says so.
 NEXT: stage 2 — the CodeMirror rendering substrate. Round 13 inserted this
-ahead of the rename, which moved to stage 2e. 2a (model) and 2b (assistant +
-transcription ported, no UI change) are DONE; 2c has a working prototype and
-two open questions before 2d switches the channel containers over.
+ahead of the rename, which moved to stage 2e. 2a (model), 2b (assistant +
+transcription ported, no UI change) and 2c (the `MessageDocument` prototype,
+including the accessibility and density questions) are DONE. NEXT: 2d — switch
+the channel containers over and port the 16 plugin-thread plays.
 
 ## Decisions log
 
@@ -486,13 +487,28 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
       reaction toggle, and per-message actions in the toolbar. Hover needs a
       hand-dispatched `mousemove` — `userEvent.hover` does not give CodeMirror
       the pointer coordinates it reads (same helper as `Suggest.stories`).
-- [ ] Remaining before 2d: quote row, thread-summary row, and edit-in-place
-      (replace the message's line range with a nested editor widget, committing
-      through the existing `Obj.update` path).
-- [ ] Still open, and the reason 2d is not started: accessibility and per-tile
-      semantics on a text surface — `onMessageSelect`, `aria-current` and the
-      e2e testids have no expression yet, and widget density is unmeasured on a
-      real channel. Both are DESIGN.md open questions.
+- [x] Named `MessageDocument`, NOT a transcript: it renders threads of messages,
+      and `react-ui-transcription`'s view is a different thing this never
+      replaced — 2b only swapped the model underneath that one.
+- [x] Quote row and thread row as block widgets, from host-supplied `getQuote`
+      / `getThreadSummary` — the package still never follows a ref itself.
+- [x] Edit in place: a nested `EditorView` replacing the message's own lines,
+      not an editable region of the transcript. The document is a rendering, so
+      a writable part of it would have the user typing into something the next
+      model sync overwrites. Its Enter binding needs `Prec.highest` AND first
+      position, or the default newline swallows the commit.
+- [x] **Accessibility question settled**: every line carries `data-message-id`
+      and a `thread.document.message` testid, and the current message carries
+      `aria-current="location"` — what a tile got from being its own element.
+      Selection is a `domEventHandlers` mousedown that does not consume the
+      event, so text selection keeps working.
+- [x] **Density question settled**: 500 messages render under 120 `.cm-line`
+      nodes, so widget density is bounded by the viewport, not by history.
+- [x] Channel and thread stories cover the Discord asymmetry (channel offers
+      start-thread and withholds reply; a thread offers reply and withholds
+      start-thread). 9 plays total.
+- [ ] Not yet done, and needed before 2d: the composer. `Thread.Textbox` →
+      `ChatEditor`, plus the reply banner, is still 2d's work.
 
 ### 2d — switch the channel containers over
 
