@@ -101,8 +101,15 @@ export default {
       }
     };
 
+    // Namespace subpaths are PascalCase by convention (`Chess`, `ChessEvents`, `SpaceSchema`);
+    // lowercase keys are module entrypoints (`translations`, `testing`, `plugin`) whose namespace
+    // object is NOT the named export of the same name. Matching those purely lexically rewrote
+    // `import { translations }` to a namespace import of a different runtime value, and every
+    // plugin carries such a key — so the hazard was standing rather than hypothetical.
+    const isNamespaceSegment = (segment) => /^[A-Z]/.test(segment);
+
     const resolveExportToSegment = (pkgName, exportName) =>
-      loadExportsForPackage(pkgName).has(exportName) ? exportName : null;
+      isNamespaceSegment(exportName) && loadExportsForPackage(pkgName).has(exportName) ? exportName : null;
 
     return {
       ImportDeclaration: (node) => {
@@ -123,6 +130,12 @@ export default {
         }
         const hasNamedImports = node.specifiers.some((spec) => spec.type === 'ImportSpecifier');
         if (!hasNamedImports) {
+          return;
+        }
+        // The fix replaces the whole declaration and only re-emits `ImportSpecifier`s, so a default
+        // or namespace binding alongside them would be silently deleted — an autofix that
+        // introduces a compile error. Leave the mixed form to a human.
+        if (node.specifiers.some((spec) => spec.type !== 'ImportSpecifier')) {
           return;
         }
 

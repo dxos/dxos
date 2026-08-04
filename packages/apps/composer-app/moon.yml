@@ -43,7 +43,12 @@ tasks:
     options:
       cache: false
     deps:
-      - bundle
+      # The env must ride the dep, not just this task: PWA is a build-time decision, so a bundle
+      # built without it precaches ~30 MB during the runs and contaminates the warm-cold numbers
+      # the budget gates on — while the spec's own guard reads this task's env and passes.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
   # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
   # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
@@ -125,10 +130,16 @@ tasks:
   # `check-startup-budget` is the gated counterpart, running one scenario repeatedly.
   e2e-startup:
     command: pnpm exec playwright test --config=src/playwright/playwright-startup.config.ts
+    # The spec hard-fails without this, so running the task bare has to set it.
+    env:
+      DX_PWA: 'false'
     deps:
       - prebuild
-      # `vite preview` serves `out/composer`, so the harness measures whatever `bundle` last emitted.
-      - bundle
+      # `vite preview` serves `out/composer`, and PWA is a build-time decision — so the flag rides
+      # the dep too, or the harness measures a service worker precaching ~30 MB mid-run.
+      - target: bundle
+        env:
+          DX_PWA: 'false'
   # Dev-server harness — `dev-*.spec.ts` under `vite serve`. Separate because dev is a materially
   # different runtime, not just a slower one: each plugin definition is its own request, so plugin
   # registration streams in over a window the bundled build never exposes.

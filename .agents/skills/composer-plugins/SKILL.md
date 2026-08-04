@@ -484,7 +484,7 @@ selected by the `#plugin` conditions: `src/FooPlugin.tsx` (browser default), `sr
 `src/FooPlugin.workerd.ts`. **Only add a variant the plugin genuinely supports** — a front-end-only
 plugin has none, and its `#plugin` collapses to a single resolution (`plugin-deck`, `plugin-navtree`).
 
-**`lazy` defers evaluation, not bundling.** `Capability.lazy`, `OperationHandlerSet.lazy` and
+**`lazy` defers evaluation, not bundling.** `Capability.lazy`, `OperationHandlerSet.keyed` and
 `React.lazy` all postpone the import at runtime while a bundler still walks it, so a barrel that
 merely _lists_ a React surface pulls React — and the `react-ui` graph behind it — into every
 consumer. Runtime laziness never keeps UI out of a node build; a node-conditioned barrel does.
@@ -607,6 +607,6 @@ moon run plugin-foo:test-storybook
 - `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
-- Never rely on `Capability.lazy` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency
+- Never rely on `Capability.lazy` / `OperationHandlerSet.keyed` / `React.lazy` to keep a dependency
   out of a bundle — they defer evaluation, not bundling. See **Non-Browser Variants**.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.

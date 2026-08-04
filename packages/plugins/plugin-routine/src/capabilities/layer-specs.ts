@@ -30,7 +30,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Registry } from '@dxos/echo';
 import { EdgeOperationInvoker, EdgeProcessManager, EdgeTriggerManager } from '@dxos/edge-compute';
-import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

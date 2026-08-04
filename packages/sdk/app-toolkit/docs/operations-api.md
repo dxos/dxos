@@ -70,17 +70,21 @@ Invokes an operation from within an Effect context (e.g., inside another handler
 yield * Operation.invoke(SpaceOperation.AddObject, { object, target: collection });
 ```
 
-### `OperationHandlerSet.lazy(...imports)`
+### `OperationHandlerSet.keyed(entries)`
 
-Registers handler modules for lazy loading. Each module must `export default` a handler.
+Pairs each operation definition with its handler module. The definitions stay in the eager graph
+(they are lightweight), so the framework can route an invocation and then load only that
+operation's module. Each module must `export default` a handler.
 
 ```typescript
-import { OperationHandlerSet } from '@dxos/operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const MyOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create-item'),
-  () => import('./delete-item'),
-);
+import * as MyOperation from '../types/MyOperation';
+
+export const MyOperationHandlerSet = OperationHandlerSet.keyed([
+  [MyOperation.CreateItem, () => import('./create-item')],
+  [MyOperation.DeleteItem, () => import('./delete-item')],
+]);
 ```
 
 ## App-Toolkit Helper: `AppPlugin.addOperationHandlerModule`
@@ -114,7 +118,7 @@ src/operations/
   definitions.ts         # All Operation.make() definitions
   create-item.ts         # Handler for CreateItem (export default)
   delete-item.ts         # Handler for DeleteItem (export default)
-  index.ts               # OperationHandlerSet.lazy() + re-export definitions
+  index.ts               # OperationHandlerSet.keyed() + re-export definitions
 ```
 
 ## Examples

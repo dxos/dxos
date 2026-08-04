@@ -31,6 +31,14 @@ describe('dxos-subpath-imports', () => {
         { code: "import { foo } from '@dxos/echo';", filename },
         // A subpath that is neither the barrel nor the aggregate is left alone.
         { code: "import { anything } from '@dxos/plugin-chess/plugin';", filename },
+        // A lowercase exports key is a module entrypoint, not a namespace: rewriting this to
+        // `import * as translations from '.../translations'` would bind a different runtime value.
+        { code: "import { translations } from '@dxos/plugin-chess';", filename },
+        // A default binding alongside named ones: the fix re-emits only named specifiers, so
+        // rewriting would delete `Def` and produce code that does not compile.
+        { code: "import Def, { Chess } from '@dxos/plugin-chess/types';", filename },
+        // Same for a namespace binding.
+        { code: "import * as All from '@dxos/plugin-chess/types';", filename },
       ],
       invalid: [
         {
