@@ -49,15 +49,10 @@ import {
 export const createDatabaseExtensions = Effect.fnUntraced(function* () {
   const capabilities = yield* Capability.Service;
   const pluginManager = yield* Plugin.Service;
-  // Fired once from the schema-actions evaluation below; repeat evaluations are no-ops.
-  let createEntriesRequested = false;
-  const requestCreateObjectEntries = () => {
-    if (createEntriesRequested) {
-      return;
-    }
-    createEntriesRequested = true;
+  // Fired from the schema-actions evaluation below, which re-runs reactively; the scheduler
+  // short-circuits a dispatch with nothing left to activate, so repeats cost a lookup.
+  const requestCreateObjectEntries = () =>
     EffectEx.runDetached(pluginManager.activate(SpaceEvents.CreateObjectRequested));
-  };
 
   return yield* Effect.all([
     // System section group — created alongside database/settings so the group always

@@ -2788,6 +2788,42 @@ describe('PluginManager', () => {
       }),
     );
 
+    it.effect('re-dispatching a fired event does not pay for a second dispatch', () =>
+      Effect.gen(function* () {
+        const DemandEvent = ActivationEvent.make('org.dxos.test.demand');
+        const demandKey = ActivationEvent.eventKey(DemandEvent);
+        let activations = 0;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'on-demand',
+              provides: [String],
+              activatesOn: DemandEvent,
+              activate: () =>
+                Effect.sync(() => {
+                  activations++;
+                  return [Capability.contribute(String, { string: 'demand' })];
+                }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* manager.start();
+
+        const marks = () => performance.getEntriesByName(`milestone:dispatch:${demandKey}:requested`).length;
+        assert.strictEqual(yield* manager.activate(DemandEvent), true);
+        assert.strictEqual(activations, 1);
+        const afterFirst = marks();
+
+        // Demand events fire from reactive paths that re-evaluate freely: the repeat must not
+        // re-activate the module (it never did) and must not emit a second dispatch either.
+        assert.strictEqual(yield* manager.activate(DemandEvent), false);
+        assert.strictEqual(activations, 1);
+        assert.strictEqual(marks(), afterFirst);
+      }),
+    );
+
     it.effect('publishes the event-level Startup message only after the dependency pass', () =>
       Effect.gen(function* () {
         const messages: Array<{ event: string; module?: string }> = [];

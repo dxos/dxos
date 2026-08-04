@@ -202,6 +202,22 @@ export class ActivationScheduler {
         return false;
       }
 
+      // Re-dispatching a fired event is already a no-op — an active module is never re-selected —
+      // but the instrumentation below is not free (two marks, a devtools track entry, a forked
+      // warning timer), and demand events are fired from reactive paths that re-evaluate freely.
+      // Bail before paying for a dispatch that has nothing to activate. The module scan is still
+      // required: modules register after the fact under streaming start, so a fired event can
+      // have newly-eligible modules. A fired event implies the wait below already completed once,
+      // so the scan is safe this early.
+      if (this.#state.eventFired(key)) {
+        const activatingEvents = yield* this.#activatingEvents;
+        const activatingModules = yield* this.#activatingModules;
+        if (this.#getModulesForActivation(key, activatingEvents, activatingModules).length === 0) {
+          log('no modules to activate', { key, ...params });
+          return false;
+        }
+      }
+
       // Dispatch-latency split: `requested` → `initialized` is registration wait; `initialized`
       // → the wave's `event:` measure is provider-join wait (in-flight round-1 loads).
       performance.mark(`milestone:dispatch:${key}:requested`);
