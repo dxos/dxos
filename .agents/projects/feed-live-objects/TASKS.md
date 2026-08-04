@@ -160,6 +160,12 @@ CodeRabbit flagged the default-off guarantee.) Also the chat ship gate.
       mechanism to replace `FeedHandle`'s 1s polling; keep polling fallback.
 - [ ] Constraint from chat: do NOT design out per-`threadId` high-water marks
       (per-thread unread); cursor model should permit keyed sub-cursors later.
+- [ ] Constraint from phase 3 (sparse): cursor semantics must be position
+      arithmetic, never local-block presence — "processed through position N"
+      and unread `head - cursor` must survive ranges being evicted and
+      re-hydrated (presence-based dedup would re-fire on re-hydration).
+      Consumer cursors become an input to phase-3 eviction (a cursor behind
+      the eviction boundary pins the range or forces remote catch-up).
 
 ### Phase 3 — sparse feeds (partial replication + backend-served full queries)
 

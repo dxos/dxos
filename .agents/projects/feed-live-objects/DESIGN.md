@@ -101,7 +101,15 @@ feed); 5 and 6 are demand-gated.
    content-signature diffing. Add the `SubscriptionSpec.options.mutationTypes`
    filter, and graduate `FeedHandle` from 1s polling to the sync protocol's
    existing subscription mechanism pushed through EDGE — chat latency is the
-   forcing function.
+   forcing function. Relation to phase 3 (recorded 2026-08-04): 2 consumes the
+   feed's _future_, 3 accesses its _past_, and 3 leans on 2 three ways — the
+   push channel is what patches rendered pages from the live tail; cursor
+   semantics must be position arithmetic rather than local-block presence, so
+   dedup and unread (`head - cursor`) survive ranges being evicted and
+   re-hydrated (presence-based mechanisms would re-fire); and consumer cursors
+   feed eviction policy (a cursor behind the eviction boundary pins the range
+   or forces remote catch-up). Doing 2 first means 3 changes what is on disk
+   without changing what any consumer observes.
 3. **Sparse feeds: partial replication + backend-served full queries
    (email-scale).** Promoted ahead of retention (2026-08-04, jdw): what matters
    is bounding the local replica, not truncating the total feed. The local
