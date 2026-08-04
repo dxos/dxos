@@ -1,22 +1,23 @@
 # Live feed objects + subscription triggers — TASKS
 
-_Resume: start phase 1 — wire `insertionId` through `EchoFeedCodec` + the index
-path, then rebase `FeedObjectCore`'s baseline onto it. Uncommitted: none. Last:
-docs-only roadmap revision merged (#12391); no phase-1 code exists yet._
+_Resume: start stage 1 — backend-computed queries (paging/filters/aggregates
+over the full feed; results hydrate via the identity map). Uncommitted: none.
+Last: roadmap re-staged 2026-08-04 around the query-shaped model; no stage
+code exists yet._
 
 PR **#12235** (branch `t3code/edb619e9`). See DESIGN.md for architecture.
 
 ## Status
 
 **All three PRs merged**: #12235 (implementation, `7b270f2e`), #12368 and #12391
-(roadmap docs). Remaining work is the phased roadmap below (see DESIGN.md
-"Roadmap"), each phase its own PR.
+(roadmap docs). Remaining work is the staged roadmap below (see DESIGN.md
+"Roadmap"), each stage its own PR.
 
-**Phase 1 not started** — verified at `fcdd424a`: `insertionId` appears only in
-`feed/src/feed-store.ts` (server-side block identity) and is still absent from
-`echo-protocol`/`echo-db`; `feed-object-core.ts` continues to derive its version
-baseline from `KEY_QUEUE_POSITION` via `positionOf`, with the standing comment
-that `insertionId` "would be an always-present alternative".
+**No stage code exists** — verified at `fcdd424a`: `insertionId` appears only in
+`feed/src/feed-store.ts` (server-side block identity / query cursors) and is
+absent from `echo-protocol`/`echo-db`; `feed-object-core.ts` derives its version
+baseline from `KEY_QUEUE_POSITION` via `positionOf` (null by default). Relevant
+to stages 2–3 (server-version exposure, write versioning).
 
 ## Done
 
@@ -118,104 +119,94 @@ previously mutated in memory silently.
       all of them go through `Obj.update` or `useObject`'s updater. So the
       opt-out-free change reaches no existing mutation path.
 
-## Roadmap phases (see DESIGN.md "Roadmap"; revised 2026-07-29)
+## Roadmap stages (see DESIGN.md "Roadmap"; re-staged 2026-08-04)
 
-Sequenced by product pull: email drives scale-out (phase 3), first-party
-chat channels inherit it. Dependency chain 1 → 2 → 3, one PR each; 4
-(retention) is independent and sequenced after 3 by priority (reordered
-2026-08-04 — local-replica size is the concern, not total-feed truncation);
-5 and 6 demand-gated.
+Primary focus: scaling feeds. The feed is the replication method, not an order
+consumers see — display is domain-order everywhere (email and chat alike), and
+deep history is served by backend-computed queries, so the client never
+cursors the remote feed (range-map / `patchUp` / range-hydration dropped).
+Stages 1 → 2 are the critical path, strictly ordered; 3 gates chat writes; the
+rest is pull-triggered, not scheduled.
 
-### Phase 1 — version/order axis (NEXT)
+### Stage 1 — backend-computed queries (NEXT)
 
-Correctness-shaped: the `FeedObjectCore.reconcile` LWW algorithm exists but its
-version input (`KEY_QUEUE_POSITION`) is null unless `assignQueuePositions` is
-on (default off), so by default the order tests answer "can't tell" — a newer
-concurrent remote write is ignored while an append is pending, and a stale
-out-of-order block rolls the object backwards in the clean state. `insertionId`
-today is only the feed store's SQLite autoincrement PK (server-side cursors),
-never client-exposed. Plumbing, not new logic. (Dmytro asked for `insertionId`;
-CodeRabbit flagged the default-off guarantee.) Also the chat ship gate.
+Additive — no replication change, no data-loss surface; ships while replicas
+are still full. Gate: mailbox browses/aggregates beyond local history.
 
-- [ ] Wire `insertionId` through `EchoFeedCodec` and the index path so every
-      hydrated feed object carries a version axis.
-- [ ] `FeedObjectCore` baseline: `position` when present, else Lamport
-      `(sequence, actorId)`, else `insertionId` — never null.
-- [ ] Document reorder-on-position-arrival semantics (positions re-sort only;
-      per-object latest unaffected).
-- [ ] Tests: offline appends order stably pre-position; order converges on
-      position assignment; cross-tab concurrent `Obj.update` baseline check.
-
-### Phase 2 — consumer cursors, read state, push
-
-- [ ] Implement stubbed `Feed.cursor`/`Feed.next`/`nextOption` as Effect
-      streams over the phase-1 axis.
-- [ ] Durable per-consumer high-water cursor: decide storage home (consumer's
-      own object vs feed metadata) and API (`Feed.getCursor`/`advance`).
-- [ ] Rebase the trigger dispatcher onto cursors; delete the unbounded
-      `processedVersions` map.
-- [ ] `SubscriptionSpec.options.mutationTypes` filter checked before
-      `fire(...)`.
-- [ ] EDGE push: use the sync protocol's existing Subscribe/subscription
-      mechanism to replace `FeedHandle`'s 1s polling; keep polling fallback.
-- [ ] Constraint from chat: do NOT design out per-`threadId` high-water marks
-      (per-thread unread); cursor model should permit keyed sub-cursors later.
-- [ ] Constraint from phase 3 (sparse): cursor semantics must be position
-      arithmetic, never local-block presence — "processed through position N"
-      and unread `head - cursor` must survive ranges being evicted and
-      re-hydrated (presence-based dedup would re-fire on re-hydration).
-      Consumer cursors become an input to phase-3 eviction (a cursor behind
-      the eviction boundary pins the range or forces remote catch-up).
-
-### Phase 3 — sparse feeds (partial replication + backend-served full queries)
-
-Promoted ahead of retention (2026-08-04): bound the local replica, not the
-total feed. Email-scale partial history; backend answers anything the dense
-local tail cannot.
-
-- [ ] Range-map bookkeeping: local block set = replicated tail + evictable
-      cached dense ranges; loose (ref-resolved) blocks never enter the map.
-- [ ] Remote range queries against non-replicated history (protocol fields
-      exist: `before`/`after`/`begin_position`/`end_position`/`reverse`).
-- [ ] `patchUp` contract: a range response includes the latest block for any
-      id whose head lies outside the range (keeps latest-per-id sound).
-- [ ] Watermarked domain-order paging: backend domain-key index (EDGE);
-      cursor = `(domainKey, id, positionWatermark)`; live tail patches
-      rendered pages.
-- [ ] Backend-computed full queries incl. aggregates (decided 2026-08-04):
-      queries reaching beyond the dense tail — deep pages, whole-history
-      aggregates like mailbox's thread aggregate (`group threadId` / `count` /
-      `max created` / `items`) — execute on the backend over the full feed;
-      local index serves the tail; hydrate-range-then-aggregate-locally is the
-      offline/caching path. See DESIGN.md roadmap item 3.
-- [ ] Eviction: LRU under a per-feed/space budget; pinned ranges (tail
-      always); define ref-into-evicted-range behavior (deref goes remote).
+- [ ] Backend query execution over the full feed: paging, filters, and
+      aggregates (mailbox thread aggregate: `group threadId` / `count` /
+      `max created` / `items`).
+- [ ] Client routing: queries reaching beyond local history go to the
+      backend; results hydrate through the `FeedObjectCore` identity map
+      (live objects, patched in place by tail replication).
+- [ ] Pagination via the backend's existing opaque `token|insertionId`
+      cursor.
 - [ ] Define against the `FeedBackend` interface shape, not EDGE specifics
       (companion workstream — keeps external backends a swap).
 
-### Phase 4 — retention + epoch chaining (total-feed truncation)
+### Stage 2 — partial replication (bounded tail) + query seam
 
-Demoted behind sparse feeds (2026-08-04): matters when the _total_ feed's
-growth becomes a storage/replication problem, not for local-replica size.
+Depends on stage 1: nothing may be evicted locally until the backend can
+answer for it.
 
-- [ ] Implement `Feed.setRetention` (`RetentionOptions`), building on
-      `FeedStore.deleteOldestBlocks`.
-- [ ] Compaction: rewrite a prefix into a snapshot block; define block
-      identity rules for the rewritten range (idempotency tuple preservation).
-- [ ] Epoch-chaining convention + helper: logical stream = chain of per-era
-      feeds, only head live; era index object; document for mailbox + channel
-      use.
-- [ ] Interaction check: retention vs tombstones (a tombstone must not be
-      compacted away while any replica — including sparse ones from phase 3 —
-      could still hold the live object).
+- [ ] Replication floor: sync pulls a tail window rather than from position 0
+      (today `sync-client.ts` pulls everything).
+- [ ] Local eviction of pre-floor blocks (building on
+      `FeedStore.deleteOldestBlocks`); LRU cache for backend results.
+- [ ] Local-index semantics over partial history: latest-per-id sound because
+      a recently-touched object's head is in the tail; wholly-behind-the-floor
+      means "not local → ask the backend". Define ref-into-evicted-history
+      behavior (deref goes remote).
+- [ ] Local/remote query seam: a query spanning tail + deep history splits at
+      a position watermark — no double-count or drop at the boundary; local
+      side sees not-yet-synced writes.
+- [ ] Expose a monotonic server version on blocks/results reaching the client
+      (seam bookkeeping; also fixes the clean-state rollback in `reconcile`).
+- [ ] Document the offline trade: tail + stale result cache; deep history is
+      online-only (accepted).
 
-### Demand-gated
+### Stage 3 — multi-writer lost-update protection (write versioning)
 
-- [ ] **Phase 5 — delta blocks.** Partial-object updates + field-level LWW +
-      per-object fold replay on reorder; self-containedness rule so patches
-      never strand a sparse replica without a base snapshot.
-- [ ] **Phase 6 — app-defined projections.** Deterministic folds with
-      rematerialization keyed on a reducer/schema hash.
+Chat-writes gate: message edits and reactions are multi-writer mutations of a
+single object. Scope is per-object write ordering, NOT display order — the old
+version-axis ideas of a feed-wide provisional total order and
+reorder-on-position-arrival are dropped (display is domain-order everywhere;
+latest-per-id never depended on them). Deferrable behind stages 1–2 because
+today's production feeds are effectively single-writer connectors.
+
+- [ ] `reconcile` compares the stage-2 server version for same-id blocks —
+      fixes the pending-append lost update (a genuinely newer concurrent
+      remote write is currently ignored, "prefer local").
+- [ ] Per-object tiebreaker for concurrent offline writers: Lamport
+      `(sequence, actorId)`.
+- [ ] Tests: cross-tab concurrent `Obj.update`; offline appends from two
+      writers converge on sync.
+
+### Deferred (pull triggers, not a schedule)
+
+- [ ] **Consumer cursors, read state, EDGE push** — trigger: first-party chat
+      features. Chat does NOT depend on feed order for display (domain order,
+      like email); the pull-forward is (a) unread — needs a monotonic
+      _delivery_ watermark, and server position is the right axis because
+      client timestamps skew (a timestamp cursor would mark never-seen late
+      arrivals as read); (b) push latency — replace `FeedHandle`'s 1s polling
+      via the sync protocol's subscription through EDGE; (c) dispatcher dedup
+      hygiene — delete the unbounded `processedVersions` map. Implement the
+      stubbed `Feed.cursor`/`Feed.next` and the `mutationTypes` filter on
+      `SubscriptionSpec.options`. Constraints: cursors are position
+      arithmetic, never local-block presence (eviction-proof under stage 2);
+      keep per-`threadId` keyed sub-cursors possible.
+- [ ] **Retention + epoch chaining (total-feed truncation)** — trigger: the
+      _total_ feed's growth becomes an EDGE storage/replication problem.
+      `Feed.setRetention` (on `FeedStore.deleteOldestBlocks`); prefix →
+      snapshot compaction (block identity rules, idempotency tuple
+      preservation); per-era feed chaining (only head live; era index object).
+      Tombstones must not be compacted while any replica could hold the live
+      object.
+- [ ] **Delta blocks** — trigger: write amplification. Partial-object updates + field-level LWW; self-containedness rule so patches never strand a
+      partial replica without a base snapshot.
+- [ ] **App-defined projections** — exploratory; demand-gated. Deterministic
+      folds with rematerialization keyed on a reducer/schema hash.
 
 ### Cross-cutting
 
