@@ -10,7 +10,7 @@ import { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
-import { CommandConfig } from '@dxos/cli-util';
+import { CommandConfig, type CommandServices } from '@dxos/cli-util';
 import { type Client, ClientService, ConfigService } from '@dxos/client';
 import { Operation } from '@dxos/compute';
 
@@ -66,16 +66,18 @@ export const useCliApp = (client: Client) => {
       ),
     );
 
-    // Plugins carry the services their own commands need, so take their layers rather than
-    // hand-listing services here and finding out at runtime which one is missing.
-    const layer = Layer.mergeAll(
+    // Annotated so a service this host owes is a build error naming it, rather than a
+    // "Service not found" the first time someone runs the command that needed it.
+    const hostLayer: Layer.Layer<CommandServices, never, never> = Layer.mergeAll(
       ClientService.fromClient(client),
       ConfigService.fromConfig(client.config),
       Layer.succeed(Plugin.Service, manager),
       Layer.succeed(Capability.Service, manager.capabilities),
       operationLayer,
-      ...contributed,
     );
+
+    // Plugins carry anything further their own commands need.
+    const layer = Layer.mergeAll(hostLayer, ...contributed);
 
     return { command, layer };
   }, [client, manager, commands, contributed]);

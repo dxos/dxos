@@ -36,6 +36,9 @@
       "path": "../../core/protocols"
     },
     {
+      "path": "../../sdk/app-framework"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {

@@ -80,6 +80,10 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
  */
 export const ReactSurface = Capability$.make<ReactSurface>('org.dxos.app-framework.capability.reactSurface');
 
+// The requirement channel stays open: a command's services are supplied partly by the contributing
+// plugin and partly by the host — `CommandConfig` carries the host's global flags and is provided by
+// its root command — so no single side can discharge them all. `CommandServices` in @dxos/cli-util
+// names what a host owes; hosts should type their layer with it.
 export type AnyCommand = Command$.Command<any, any, any, any>;
 
 /**

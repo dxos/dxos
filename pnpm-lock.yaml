@@ -7795,6 +7795,9 @@ importers:
 
   packages/devtools/cli-util:
     dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit

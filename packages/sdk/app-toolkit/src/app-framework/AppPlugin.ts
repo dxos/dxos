@@ -155,7 +155,7 @@ export function addSchemaModule<T = void>(
 }
 
 export type CommandModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
-  commands: ReadonlyArray<Command$.Command<any, any, any, any>>;
+  commands: ReadonlyArray<Capabilities.AnyCommand>;
 };
 
 /**
