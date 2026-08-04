@@ -125,8 +125,8 @@ Primary focus: scaling feeds. The feed is the replication method, not an order
 consumers see — display is domain-order everywhere (email and chat alike), and
 deep history is served by backend-computed queries, so the client never
 cursors the remote feed (range-map / `patchUp` / range-hydration dropped).
-Stages 1 → 2 are the critical path, strictly ordered; 3 gates chat writes; the
-rest is pull-triggered, not scheduled.
+Stages 1 → 2 are the critical path, strictly ordered; 3 gates chat writes;
+4 serves chat unread; the rest is pull-triggered, not scheduled.
 
 ### Stage 1 — backend-computed queries (NEXT)
 
@@ -182,20 +182,29 @@ today's production feeds are effectively single-writer connectors.
 - [ ] Tests: cross-tab concurrent `Obj.update`; offline appends from two
       writers converge on sync.
 
+### Stage 4 — consumer cursors, read state, push (motivated by chat unread)
+
+Chat does NOT depend on feed order for display (domain order, like email);
+this stage exists for read state, latency, and dedup hygiene.
+
+- [ ] Durable per-consumer high-water cursor: a monotonic _delivery_
+      watermark ("seen through here") on the server-position axis — client
+      timestamps skew (a timestamp cursor would mark never-seen late arrivals
+      as read). Decide storage home (consumer's own object vs feed metadata)
+      and API (`Feed.getCursor`/`advance`); unread = `head - cursor`.
+- [ ] Implement the stubbed `Feed.cursor`/`Feed.next` as Effect streams.
+- [ ] EDGE push: replace `FeedHandle`'s 1s polling via the sync protocol's
+      subscription mechanism; keep polling fallback.
+- [ ] Rebase the trigger dispatcher onto cursors; delete the unbounded
+      `processedVersions` map.
+- [ ] `mutationTypes` filter on `SubscriptionSpec.options`, checked before
+      `fire(...)`.
+- [ ] Constraints: cursors are position arithmetic, never local-block
+      presence (eviction-proof under stage 2); keep per-`threadId` keyed
+      sub-cursors possible (per-thread unread).
+
 ### Deferred (pull triggers, not a schedule)
 
-- [ ] **Consumer cursors, read state, EDGE push** — trigger: first-party chat
-      features. Chat does NOT depend on feed order for display (domain order,
-      like email); the pull-forward is (a) unread — needs a monotonic
-      _delivery_ watermark, and server position is the right axis because
-      client timestamps skew (a timestamp cursor would mark never-seen late
-      arrivals as read); (b) push latency — replace `FeedHandle`'s 1s polling
-      via the sync protocol's subscription through EDGE; (c) dispatcher dedup
-      hygiene — delete the unbounded `processedVersions` map. Implement the
-      stubbed `Feed.cursor`/`Feed.next` and the `mutationTypes` filter on
-      `SubscriptionSpec.options`. Constraints: cursors are position
-      arithmetic, never local-block presence (eviction-proof under stage 2);
-      keep per-`threadId` keyed sub-cursors possible.
 - [ ] **Retention + epoch chaining (total-feed truncation)** — trigger: the
       _total_ feed's growth becomes an EDGE storage/replication problem.
       `Feed.setRetention` (on `FeedStore.deleteOldestBlocks`); prefix →

@@ -78,8 +78,8 @@ backend-computed queries, so the client never cursors through the remote feed
 dropped: a backend query already answers latest-per-id from its own index).
 Primary focus is scaling feeds: stages 1 → 2 are the critical path and strictly
 ordered (nothing may be evicted locally until the backend can answer for it);
-stage 3 is the multi-writer write-correctness gate; everything else waits on an
-explicit pull trigger, not a schedule.
+stages 3–4 are the chat enablers (write correctness, then unread); everything
+else waits on an explicit pull trigger, not a schedule.
 
 1. **Backend-computed queries (remote queries).** The backend executes full
    queries — paging, filters, and aggregates (the mailbox thread aggregate:
@@ -122,20 +122,22 @@ explicit pull trigger, not a schedule.
    why this can follow the scale stages rather than precede them. (Original
    flag: Dmytro asked for `insertionId` exposure; CodeRabbit flagged the
    default-off `KEY_QUEUE_POSITION` guarantee.)
+4. **Consumer cursors, read state, EDGE push — motivated by chat unread.**
+   Chat does NOT depend on feed order for display (domain order, like email);
+   what it needs is (a) read state — unread requires a monotonic _delivery_
+   watermark ("seen through here"), and server position is the right axis
+   because client timestamps skew (a timestamp cursor would mark never-seen
+   late arrivals as read); (b) push latency — replace `FeedHandle`'s 1s
+   polling with the sync protocol's subscription mechanism through EDGE;
+   (c) dispatcher dedup hygiene — the unbounded `processedVersions` map.
+   Implement the stubbed `Feed.cursor`/`Feed.next` and the `mutationTypes`
+   filter on `SubscriptionSpec.options`. Constraints: cursor semantics are
+   position arithmetic, never local-block presence (eviction-proof under
+   stage 2); do not design out per-`threadId` keyed sub-cursors (per-thread
+   unread).
 
 Deferred — each behind an explicit pull trigger:
 
-- **Consumer cursors, read state, EDGE push** — trigger: first-party chat
-  features. Refined 2026-08-04: chat does NOT depend on feed order for display
-  (domain order, like email); the pull-forward is (a) read state — unread
-  needs a monotonic _delivery_ watermark ("seen through here"), and server
-  position is the right axis because client timestamps skew (a timestamp
-  cursor would mark never-seen late arrivals as read); (b) push latency —
-  replace `FeedHandle`'s 1s polling with the sync protocol's subscription
-  mechanism through EDGE; (c) dispatcher dedup hygiene — the unbounded
-  `processedVersions` map. Constraints preserved: cursor semantics are
-  position arithmetic, never local-block presence (eviction-proof under
-  stage 2); do not design out per-`threadId` keyed sub-cursors.
 - **Retention + epoch chaining (total-feed truncation)** — trigger: the
   _total_ feed's growth becomes an EDGE storage/replication problem
   (superseded-block accumulation from whole-object re-append; the ~10k
