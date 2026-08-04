@@ -161,7 +161,9 @@
   );
 
   /* State aspects — same host-derived mechanism; see the offsets above. */
-  --color-hover-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.08) c h);
+  --color-hover-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.08) c h
+  );
   --color-hover-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   /*
@@ -170,13 +172,15 @@
    * controls (buttons) keep --color-hover-surface.
    */
   --color-hover-surface-subtle: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.02) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.02) c h
   );
 
   /* current (aria-current) */
-  --color-current-surface: oklch(from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.1) c h);
+  --color-current-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.1) c h
+  );
   --color-current-surface-hover: oklch(
-    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * 0.12) c h
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-state-scale) * 0.12) c h
   );
   --color-current-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 

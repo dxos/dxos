@@ -9,6 +9,12 @@
      * Aspects multiply their offset by this instead of branching on light-dark(), which resolves
      * unreliably when nested inside a relative-color expression. */
     --dx-lift: -1;
+    /*
+     * Lightness is not perceptually symmetric: subtracting 0.10 L from a near-white surface reads
+     * far heavier than adding 0.10 to a near-black one, so the state offsets that are a whisper in
+     * dark became grey slabs in light. State aspects scale their offset by this; dark keeps 1.
+     */
+    --dx-state-scale: 0.5;
     touch-action: pan-x pan-y;
     font-synthesis: none;
     font-variation-settings:
@@ -22,6 +28,7 @@
   .dark {
     color-scheme: dark;
     --dx-lift: 1;
+    --dx-state-scale: 1;
   }
 
   button {
