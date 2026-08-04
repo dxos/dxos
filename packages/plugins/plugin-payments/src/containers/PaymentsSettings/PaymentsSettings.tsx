@@ -21,16 +21,16 @@ type Status = {
 };
 
 export type PaymentsSettingsProps = {
-  /** The plugin's contributed settings atom, read and written through the atom registry. */
-  atom: AppCapabilities.Settings['atom'];
+  /** The plugin's contributed settings entry; its atom is read and written through the atom registry. */
+  subject: AppCapabilities.Settings;
 };
 
-export const PaymentsSettings = ({ atom }: PaymentsSettingsProps) => {
+export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
   const client = useClient();
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(atom);
+  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const paymentsUrl = settings.paymentsUrl?.trim();
 
   const handleBuyPremium = useCallback(async () => {

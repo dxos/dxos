@@ -9,8 +9,9 @@ import React, { useMemo } from 'react';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import { type Settings } from '#types';
+import { Settings } from '#types';
 
 import { PaymentsSettings } from './PaymentsSettings';
 
@@ -18,11 +19,18 @@ type StoryProps = {
   settings: Settings.Settings;
 };
 
-// The container reads and writes the plugin's settings atom, so the story owns one per render.
+// The container reads and writes the contributed settings entry, so the story owns one per render.
 const DefaultStory = ({ settings }: StoryProps) => {
-  const atom = useMemo(() => Atom.make<Settings.Settings>(settings).pipe(Atom.keepAlive), [settings]);
+  const subject = useMemo(
+    () => ({
+      prefix: pluginMeta.profile.key,
+      schema: Settings.Settings,
+      atom: Atom.make<Settings.Settings>(settings).pipe(Atom.keepAlive),
+    }),
+    [settings],
+  );
 
-  return <PaymentsSettings atom={atom} />;
+  return <PaymentsSettings subject={subject} />;
 };
 
 const meta = {

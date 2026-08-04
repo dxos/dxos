@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: PaymentsSettings,
-        props: ({ data: { subject } }) => ({ atom: subject.atom }),
+        props: ({ data: { subject } }) => ({ subject }),
       }),
     ]),
   ),
