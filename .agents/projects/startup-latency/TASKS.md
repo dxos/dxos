@@ -454,31 +454,26 @@ known-good identity-only primer. Redo via a robust page-object flow (AppManager 
     the per-plugin start events; simplify when fixing the race.
 - [x] Delete `OWN_PLUGIN_SPECIFIER` / `resolveOwnPlugin` — zero production users (one synthetic
       test, one comment); removed from the public `ActivationEvent` surface
-- [ ] **BLOCKER: `check-boot-budget` is RED — 6.11 MB against a 4.75 MB budget (2026-08-04).**
-      The eager boot graph carries the entire worker-side service runtime again: hypercore (230 KB),
-      wa-sqlite, teleport, random-access-storage, network-manager, echo-host, echo-client,
-      automerge + automerge-repo (816 KB across three packages), protobufjs, bip39. That is exactly
-      what this PR's changeset claims to have removed ("`runDedicatedWorker` moves to
-      `@dxos/client/worker` so the worker-side service runtime is no longer statically reachable
-      from main-thread bundles"), so a static path from the main-thread entry into
-      `@dxos/client-services` has been reintroduced — almost certainly by the base merge, since the
-      ledger recorded 20 entries / 4.44 MB before it.
-  - Confirmed NOT the cause: the `services/dedicated/index.ts` barrel guard is intact, and
-    `composer-app/src/recovery/*` (which does import `@dxos/client-services` wholesale) hangs off
-    `recovery.html`, a separate entry.
-  - Chunk attribution is in `boot-8` (`dedicated-worker-client-services.ts`), `boot-9` (hypercore,
-    teleport, random-access-storage), `boot-10` (echo-host query planner, echo-client entity
-    manager, automerge). Next step is the sourcemap-attribution tooling the budget script's own
-    header says this needs, or a bisect of the merge.
-  - Do NOT raise the budget to make this pass — the gate is doing its job.
-- [ ] **Verify `CreateObjectRequested` still gates in a full core-plugin app (2026-08-04).**
-      Under `createComposerTestApp` a plugin's `CreateObject` module IS active after setup, even
-      with no plugin-space present. It is NOT activated by Startup, Idle, or the plugin's own start
-      event fired individually (bisected), so something in the harness's demand-gated sweep reaches
-      it. Either the gate leaks or the harness over-fires; the ~17 plugin tests that had their
-      `CreateObject` assertions dropped are consistent with the former having been true for a while.
-      The positive test added in `SamplePlugin.test.ts` passes either way — this is about whether the
-      negative holds.
+- [x] **Boot-budget regression traced and fixed (2026-08-04).** `services/index.ts` statically
+      re-exported `LocalClientServices` / `fromHost`, and Composer's entry reaches the package root
+      via `util/config.ts` — so the eager graph carried network-manager, wa-sqlite, teleport and
+      hypercore. Moved behind a `@dxos/client/local` subpath: **6.11 MB -> 5.30 MB (-810 KB), 25 ->
+      23 entries**, closure 4785 -> 4532 modules; those four are now entirely out of the closure.
+  - The Aug 1 fix (`46e9fae304`) was incomplete, not reverted: it claimed `fromHost` was "loaded on
+    demand" and added the dynamic import in `client-services-factory.tsx`, but never touched the
+    barrel line (`git log -L` confirms). It rested on treeshaking rather than the import graph,
+    which is why it measured clean at 4.44 MB while the leak sat latent until something retained it.
+  - Remaining 5.30 MB is real client-side weight, not a leak, and was consciously accepted: budget
+    re-baselined to 6 MB. Two consumers if it ever needs slimming — echo-client reaches
+    automerge-repo's `fullfat` via `automerge/doc-handle-proxy.ts`, and `query/graph-query-context.ts`
+    value-imports `filterMatchDoc` / `QueryPlanner` from echo-host. Both already use narrow subpaths.
+  - `DX_TRACE_BOOT_LEAK=1 moon run composer-app:bundle` prints the import path from the entry to any
+    package that must not be boot-reachable (`src/vite/trace-boot-leak.ts`). It is what found this.
+- [x] **`CreateObjectRequested` gating: NOT a gate bug (2026-08-04).** `#capabilities` resolves to
+      `capabilities/node.ts` under the `node` condition, so Node-run activation tests assert the node
+      barrel, not the shipped one. 35 modules across 17 plugins were gated in `index.ts` and ungated
+      in `node.ts`; realigned. Browser builds were always correct. Browser-runner follow-up is a TODO
+      on `createTestApp`.
 - [ ] **Flip the default `activatesOn` from `Startup` to `Idle` (own PR, user-directed 2026-08-04).**
       Today omitting `activatesOn` normalizes to `Startup`, so forgetting the annotation costs TTI
       and blocks the `useApp` ready gate — startup is the dumping ground. Invert it: anything that

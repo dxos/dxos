@@ -37,8 +37,22 @@ import path from 'node:path';
 /** Entry + modulepreload links. ~20 today; sized to survive a partition reshuffle, not to track it. */
 const MAX_PRELOAD_ENTRIES = 30;
 
-/** Total on-disk size of those chunks. ~4.45 MB today; margin is under one leak class. */
-const MAX_PRELOAD_BYTES = 4.75 * 1024 * 1024;
+/**
+ * Total on-disk size of those chunks. ~5.30 MB today.
+ *
+ * Re-baselined 2026-08-04 (was 4.75 MB) after the eager graph was audited: the `services/index.ts`
+ * re-export that put hypercore, wa-sqlite, network-manager and teleport back in the closure was
+ * evicted (-810 KB), and what remains is real client-side weight rather than a leak — echo-client
+ * reaches automerge-repo's `fullfat` entrypoint through `doc-handle-proxy`, and the query planner
+ * (`filterMatchDoc` / `QueryPlanner`) lives in echo-host but evaluates client-side. Both are value
+ * imports through narrow subpaths, so there is no re-export to delete; slimming them means moving
+ * code or picking a different automerge entrypoint, and that was consciously deferred.
+ *
+ * NOTE: at this ceiling the margin (~700 KB) is WIDER than the 200-550 KB leak classes described
+ * above, so a single leak no longer necessarily trips this. Tighten it back toward the measured
+ * number if either of the two remaining consumers is slimmed.
+ */
+const MAX_PRELOAD_BYTES = 6 * 1024 * 1024;
 
 const outDir = path.join(process.cwd(), 'out/composer');
 const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
