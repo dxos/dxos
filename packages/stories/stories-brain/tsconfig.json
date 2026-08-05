@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/fixtures"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -108,6 +111,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"

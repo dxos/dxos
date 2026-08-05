@@ -93,7 +93,7 @@ const Header = () => {
   const { t } = useTranslation(meta.profile.key);
   const { repo, pulls, unavailable } = useComponentContext();
   return (
-    <header className='flex items-center justify-between gap-1 px-4 py-3 bg-modal-surface border-b border-subdued-separator'>
+    <header className='flex items-center justify-between gap-1 px-4 py-3 dx-modal-surface border-b border-subdued-separator'>
       <a
         href={`https://github.com/${repo}`}
         target='_blank'

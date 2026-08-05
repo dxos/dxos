@@ -240,7 +240,7 @@ export const CellGrid = <T,>({
   }, [registry, atoms, headers]);
 
   return (
-    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden bg-base-surface', classNames)}>
+    <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden dx-base-surface', classNames)}>
       {/*
         Canvases are nudged up + left 1 CSS pixel so the gridlines (drawn at the TOP
         and LEFT edges of each cell) sit on top of the frozen header dividers — the

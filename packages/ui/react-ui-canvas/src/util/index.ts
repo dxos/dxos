@@ -3,4 +3,5 @@
 //
 
 export * from './svg';
+export * from './svg-path';
 export * from './util';

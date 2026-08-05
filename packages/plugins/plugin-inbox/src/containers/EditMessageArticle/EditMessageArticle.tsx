@@ -86,7 +86,7 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   );
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar>
         <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
           <Menu.Toolbar />

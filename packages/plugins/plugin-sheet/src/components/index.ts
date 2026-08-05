@@ -3,4 +3,5 @@
 //
 
 export * from './ComputeGraph';
+export { useSheetContext } from './SheetRoot';
 export * from './Sheet';

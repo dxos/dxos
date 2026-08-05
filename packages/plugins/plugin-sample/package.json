@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sample",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Pedagogical reference plugin demonstrating all common DXOS plugin patterns",
   "homepage": "https://dxos.org",

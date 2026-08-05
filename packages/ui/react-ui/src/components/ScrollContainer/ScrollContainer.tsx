@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -25,6 +24,7 @@ import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';
+import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -35,21 +35,6 @@ export interface ScrollController {
   scrollToTop: (behavior?: ScrollBehavior) => void;
   scrollToBottom: (behavior?: ScrollBehavior) => void;
 }
-
-type ScrollContainerContextValue = {
-  controller?: ScrollController;
-  pinned?: boolean;
-  overflow?: boolean;
-  /** Called by Viewport to register/unregister the scroll element. */
-  setViewport: (el: HTMLDivElement | null) => void;
-  /** Called by Viewport on wheel events to update pinned state. */
-  setPinned: (value: boolean) => void;
-  /** Called by Viewport on scroll events to update overflow state. */
-  setOverflow: (value: boolean) => void;
-};
-
-const [ScrollContainerProvider, useScrollContainerContext] =
-  createContext<ScrollContainerContextValue>('ScrollContainer');
 
 //
 // Root
@@ -327,8 +312,6 @@ ScrollContainerScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
 //
 // ScrollContainer
 //
-
-export { useScrollContainerContext };
 
 export const ScrollContainer = {
   Root: ScrollContainerRoot,

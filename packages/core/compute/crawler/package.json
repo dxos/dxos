@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crawler",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Incremental source crawl + configurable stage pipeline that builds the semantic fact graph.",
   "homepage": "https://dxos.org",

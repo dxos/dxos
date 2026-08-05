@@ -1,6 +1,6 @@
 {
   "name": "@dxos/pipeline-rdf",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Pipeline stages that extract attributed propositions from text into an RDF fact store and answer SPARQL queries over them.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

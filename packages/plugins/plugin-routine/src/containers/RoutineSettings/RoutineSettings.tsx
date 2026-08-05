@@ -4,30 +4,35 @@
 
 import React from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
-export type RoutineSettingsProps = AppSurface.SpaceArticleProps;
-
 /**
  * Space-level routine settings. Individual routines are now first-class objects (configured in their
  * article + per-object companion), so this page exposes the space-wide kill-switch for trigger
  * execution. Per-trigger local/edge routing is set on each trigger via its `remote` flag.
+ *
+ * The page is reached from space settings, so the space comes from context rather than surface data.
  */
-export const RoutineSettings = ({ space }: RoutineSettingsProps) => {
+export const RoutineSettings = () => {
   const { t } = useTranslation(meta.profile.key);
-  const [properties, changeProperties] = useObject(space.properties);
-  const enabled = !(properties.triggersDisabled ?? false);
+  const space = useActiveSpace();
+  const [properties, changeProperties] = useObject(space?.properties);
+  const enabled = !(properties?.triggersDisabled ?? false);
 
   const handleToggle = (value: boolean) => {
     changeProperties((current) => {
       current.triggersDisabled = !value;
     });
   };
+
+  if (!space) {
+    return null;
+  }
 
   return (
     <Form.Root variant='settings'>

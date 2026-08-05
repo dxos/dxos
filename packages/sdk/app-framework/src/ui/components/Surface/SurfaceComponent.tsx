@@ -137,7 +137,10 @@ const SurfaceContextProvider = memo(
 
     // Handle React component surfaces.
     const Component = definition.component;
-    const component = <Component id={id} role={role} data={data} limit={limit} {...rest} />;
+    // `props` lets a definition register a plain container and map the surface props onto its own,
+    // instead of wrapping it in an adapter component (see `TypedReactDefinition.props`).
+    const surfaceProps = { id, role, data, limit, ...rest };
+    const component = <Component {...(definition.props?.(surfaceProps) ?? surfaceProps)} />;
     const profiled =
       onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
         <Profiler id={profilerId} onRender={onProfilerRender}>

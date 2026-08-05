@@ -6,7 +6,8 @@ name: Publish
 #
 #   - push to main (automatic → @latest): maintain the Changesets "Version Packages" PR; merging that PR
 #     (a push with the versions bumped and no changesets left) publishes the bumped packages to npm @latest
-#     with provenance. The human gate is merging the PR — nobody runs changeset/publish locally.
+#     with provenance. The human gate is merging the PR — nobody runs changeset/publish locally, and the
+#     PR is maintained by dxos-bot's PAT so Check runs on it like any other PR.
 #   - manual workflow_dispatch (→ @next): cut a SNAPSHOT pre-release — `changeset version --snapshot next`
 #     then `changeset publish --tag next`. Ephemeral versions, no commit, no git tags, no `pre` mode.
 #
@@ -23,7 +24,9 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write # Create the Version Packages PR + git tags (@latest flow).
+  # Both write scopes are dormant — the @latest flow writes as GH_DXOS_BOT_PAT — but are kept so reverting
+  # the changesets step to GITHUB_TOKEN stays a one-line change.
+  contents: write # Version Packages branch + git tags (@latest flow).
   pull-requests: write # Maintain the Version Packages PR.
   id-token: write # npm trusted-publisher OIDC + provenance.
 
@@ -43,6 +46,10 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          # changesets/action pushes over a `~/.netrc` it writes from `github-token`, and a persisted
+          # checkout credential outranks netrc (`http.extraheader` is an explicit Authorization header),
+          # which would silently put the Version PR's commits back on GITHUB_TOKEN.
+          persist-credentials: false
 
       # This repo does not use Changesets `pre` mode — the @next channel uses snapshot releases instead.
       # A stray `.changeset/pre.json` would silently turn a stable publish into a pre-release, so fail fast.
@@ -86,12 +93,16 @@ jobs:
         if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
+          # dxos-bot's PAT, not GITHUB_TOKEN: GitHub's recursion guard parks every `pull_request` run a
+          # GITHUB_TOKEN update triggers in `action_required`, so a GITHUB_TOKEN-owned Version PR reports
+          # zero check runs until a human approves each one by hand. The action reads
+          # `process.env.GITHUB_TOKEN` ahead of this input, so that env var must stay unset here.
+          github-token: ${{ secrets.GH_DXOS_BOT_PAT }}
           version: pnpm changeset:version
           publish: pnpm changeset:publish
           commit: 'Version packages'
           title: 'Version packages'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: 'true' # provenance via OIDC; trusted publisher means no NPM_TOKEN.
 
       # @next (dispatch): publish the snapshot versions under the `next` dist-tag. --no-git-tag: snapshots

@@ -94,19 +94,6 @@ export default meta;
 
 type Story = StoryObj<StoryArgs & Variant>;
 
-export const Density: Story = {
-  render: () => (
-    <div className='flex flex-col gap-4'>
-      {(['lg', 'md', 'sm', 'xs'] as const).map((density) => (
-        <Input.Root key={density}>
-          <Input.Label>{`density="${density}"`}</Input.Label>
-          <Input.TextInput density={density} placeholder={`This is a density:${density} input`} />
-        </Input.Root>
-      ))}
-    </div>
-  ),
-};
-
 export const Subdued: Story = {
   args: {
     kind: 'text',

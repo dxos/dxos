@@ -18,6 +18,10 @@ import { Markdown } from '#types';
 import { getContentSnippet } from '../../util';
 import { snippet as snippetExtension } from './snippet';
 
+/** Cap for the snippet preview: slightly taller than the card is wide, so a long document clips
+ * under the fade instead of growing an unbounded card. Relative to the card's inline size. */
+const SNIPPET_MAX_HEIGHT = '110cqi';
+
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
@@ -27,14 +31,22 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
   // NOTE: Newline is added so that Fade does not obscure the last line.
-  const snippet = useMemo(() => getSnippet(subject) + '\n', [subject, docContent, textContent]);
-  const extensions = useMemo(() => [snippetExtension({ height: 300, scale: 0.8 })], []);
+  // An empty document has no snippet at all, so it renders no preview box rather than an empty one
+  // (concatenating the newline unconditionally made this always truthy).
+  const snippet = useMemo(() => {
+    const text = getSnippet(subject);
+    return text ? text + '\n' : undefined;
+  }, [subject, docContent, textContent]);
+  const extensions = useMemo(() => [snippetExtension({ maxHeight: SNIPPET_MAX_HEIGHT, scale: 0.8 })], []);
   const info = getInfo(subject);
 
   return (
     <Card.Body>
       {snippet && (
-        <Card.Section className='aspect-video relative'>
+        // The preview grows with the document and stops at `SNIPPET_MAX_HEIGHT`, so a short note
+        // gets a short card. `dx-inline-size-container` is what makes that cap relative to the
+        // card's own width (and is the CodeMirror-safe container — see `size.css`).
+        <Card.Section classNames='dx-inline-size-container relative'>
           <Card.Row fullWidth>
             {/* Re-seed the readonly snippet when the content changes (the editor takes `initialValue`
                 at mount only). Keyed on the snippet so agent/remote edits are reflected. */}
@@ -79,7 +91,8 @@ const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, m
 
 const getInfo = (subject: Markdown.Document | Text.Text) => {
   const text = (Obj.instanceOf(Markdown.Document, subject) ? subject.content?.target?.content : subject.content) ?? '';
-  return { words: text.split(' ').length };
+  // Split on runs of whitespace and drop empties, so an empty document counts 0 rather than 1.
+  return { words: text.split(/\s+/).filter(Boolean).length };
 };
 
 MarkdownCard.displayName = 'MarkdownCard';

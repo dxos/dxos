@@ -1,0 +1,133 @@
+# @dxos/plugin-support
+
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [f9ba47a]
+- Updated dependencies [4e64123]
+- Updated dependencies [c035062]
+- Updated dependencies [5585ec8]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [46ec569]
+- Updated dependencies [5b05d75]
+- Updated dependencies [b5ecf54]
+- Updated dependencies [3f6ac61]
+- Updated dependencies [091ebe4]
+- Updated dependencies [a77e1a2]
+- Updated dependencies [a256a87]
+- Updated dependencies [eec72c5]
+- Updated dependencies [bce1dbc]
+- Updated dependencies [e7f0d9e]
+- Updated dependencies [ed992c2]
+- Updated dependencies [68e61ca]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ebb6383]
+- Updated dependencies [fe63f19]
+- Updated dependencies [a19443b]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [6df314a]
+- Updated dependencies [962c8cd]
+- Updated dependencies [2048cb3]
+- Updated dependencies [856c4f0]
+- Updated dependencies [382d00d]
+- Updated dependencies [382d00d]
+- Updated dependencies [46ec569]
+- Updated dependencies [f8637f1]
+- Updated dependencies [b8c0825]
+- Updated dependencies [4e64123]
+- Updated dependencies [6a03a30]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [7b270f2]
+- Updated dependencies [7b270f2]
+- Updated dependencies [af5fbf4]
+- Updated dependencies [717edc0]
+- Updated dependencies [d547045]
+- Updated dependencies [6439417]
+- Updated dependencies [410a019]
+- Updated dependencies [d958118]
+- Updated dependencies [30ae5eb]
+- Updated dependencies [1dad41e]
+- Updated dependencies [e65432c]
+- Updated dependencies [f6a01e3]
+- Updated dependencies [c9651f1]
+- Updated dependencies [9cde1c6]
+- Updated dependencies [5e7839e]
+- Updated dependencies [923d5be]
+- Updated dependencies [85893fe]
+- Updated dependencies [9f7d5ad]
+- Updated dependencies [9ded6b9]
+- Updated dependencies [6067460]
+- Updated dependencies [717edc0]
+- Updated dependencies [12fd785]
+- Updated dependencies [51aaffe]
+- Updated dependencies [801b77f]
+- Updated dependencies [1a989ed]
+- Updated dependencies [d547045]
+- Updated dependencies [bda1a02]
+- Updated dependencies [832d150]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [f10b1ce]
+- Updated dependencies [f7d7735]
+- Updated dependencies [717edc0]
+- Updated dependencies [5f08a6a]
+- Updated dependencies [37874ce]
+- Updated dependencies [848ba1b]
+- Updated dependencies [f15c632]
+- Updated dependencies [3761762]
+- Updated dependencies [c9da903]
+- Updated dependencies [55bb048]
+- Updated dependencies [bdf9f68]
+- Updated dependencies [4bb7e3b]
+- Updated dependencies [179afc6]
+- Updated dependencies [4df6cf3]
+- Updated dependencies [41141d8]
+- Updated dependencies [7b270f2]
+- Updated dependencies [686fac1]
+- Updated dependencies [ed992c2]
+- Updated dependencies [41d1e4a]
+- Updated dependencies [25272e3]
+- Updated dependencies [0e3a1a9]
+- Updated dependencies [37c17cc]
+- Updated dependencies [08a3eea]
+- Updated dependencies [bb63d91]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [5585ec8]
+- Updated dependencies [ac51564]
+- Updated dependencies [499dde4]
+  - @dxos/echo@0.11.0
+  - @dxos/plugin-assistant@0.11.0
+  - @dxos/app-graph@0.11.0
+  - @dxos/async@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/app-toolkit@0.11.0
+  - @dxos/plugin-client@0.11.0
+  - @dxos/client@0.11.0
+  - @dxos/plugin-deck@0.11.0
+  - @dxos/compute@0.11.0
+  - @dxos/util@0.11.0
+  - @dxos/client-protocol@0.11.0
+  - @dxos/app-framework@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/react-ui-form@0.11.0
+  - @dxos/react-ui-attention@0.11.0
+  - @dxos/ui-theme@0.11.0
+  - @dxos/log@0.11.0
+  - @dxos/echo-react@0.11.0
+  - @dxos/react-ui-masonry@0.11.0
+  - @dxos/plugin-space@0.11.0
+  - @dxos/react-ui-markdown@0.11.0
+  - @dxos/react-client@0.11.0
+  - @dxos/config@0.11.0
+  - @dxos/observability@0.11.0
+  - @dxos/react-ui-menu@0.11.0
+  - @dxos/plugin-status-bar@0.11.0
+  - @dxos/react-hooks@0.11.0
+  - @dxos/keyboard@0.11.0
+  - @dxos/plugin-observability@0.11.0
+  - @dxos/brand@0.11.0
+  - @dxos/effect@0.11.0
+  - @dxos/debug@0.11.0

@@ -30,7 +30,8 @@ import { type Anchor, createAnchorMap, resizeAnchors } from '../anchors';
 import { styles } from '../styles';
 import { type TextBoxProps } from '../TextBox';
 import { AnchorComponent } from './Anchor';
-import { type ShapeComponentProps, shapeAttrs } from './Shape';
+import { type ShapeComponentProps } from './Shape';
+import { shapeAttrs } from './shape-defs';
 
 // Border around frame for preview snapshot.
 const previewBorder = 8;

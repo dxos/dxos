@@ -197,7 +197,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
         {onTaskUpdate ? (
           <IconButton
             variant='ghost'
-            density='xs'
+            density='sm'
             icon={done ? 'ph--check--regular' : 'ph--circle--regular'}
             iconOnly
             label={done ? 'Mark todo' : 'Mark done'}
@@ -223,7 +223,7 @@ const TaskListItem = composable<HTMLLIElement, { task: Task.Task }>(({ task, ...
           {onTaskDelete && (
             <IconButton
               variant='ghost'
-              density='xs'
+              density='sm'
               icon='ph--x--regular'
               iconOnly
               label='Delete task'

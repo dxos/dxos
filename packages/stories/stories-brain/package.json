@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories-brain",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "description": "Cross-cutting storybook stories for semantic facts (brain).",
   "homepage": "https://dxos.org",
@@ -17,6 +17,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/crawler": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
@@ -50,6 +51,7 @@
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/fixtures": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-transcription": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

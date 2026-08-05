@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { formatTime } from './BranchWidget';
+import { formatTime } from './format-time';
 
 const NOW = new Date('2026-07-29T12:00:00Z').getTime();
 

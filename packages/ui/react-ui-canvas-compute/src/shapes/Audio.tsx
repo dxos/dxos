@@ -2,29 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
-
-export const AudioShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('audio'),
-  }),
-);
-
-export type AudioShape = Schema.Schema.Type<typeof AudioShape>;
-
-export type CreateAudioProps = CreateShapeProps<AudioShape>;
-
-export const createAudio = (props: CreateAudioProps) =>
-  createShape<AudioShape>({ type: 'audio', size: { width: 64, height: 64 }, ...props });
+import { type AudioShape } from './audio-def';
 
 export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
   const { runtime } = useComputeNodeState(shape);
@@ -44,13 +29,4 @@ export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
       />
     </div>
   );
-};
-
-export const audioShape: ShapeDef<AudioShape> = {
-  type: 'audio',
-  name: 'Audio',
-  icon: 'ph--microphone--regular',
-  component: AudioComponent,
-  createShape: createAudio,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('output')]: { x: 1, y: 0 } }),
 };

@@ -13,6 +13,11 @@ import { meta } from '#meta';
 
 import { type ChatEvent } from '../Chat/events';
 
+type AudioInputDevice = {
+  deviceId: string;
+  label: string;
+};
+
 export type ChatActionsProps = ThemedClassName<
   PropsWithChildren<{
     docId?: string;
@@ -22,11 +27,6 @@ export type ChatActionsProps = ThemedClassName<
     onEvent?: (event: ChatEvent) => void;
   }>
 >;
-
-type AudioInputDevice = {
-  deviceId: string;
-  label: string;
-};
 
 export const ChatActions = ({
   classNames,
@@ -179,7 +179,6 @@ export const ChatActions = ({
                   ))}
 
                   <DropdownMenu.Separator />
-
                   <DropdownMenu.CheckboxItem
                     checked={entityExtraction}
                     onCheckedChange={handleEntityExtractionChange}
@@ -210,9 +209,10 @@ export const ChatActions = ({
       )}
 
       <IconButton
-        // disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
+        disabled={!processing} // TODO(dmaretskyi): Set processing state correctly on rehydrated agents.
         variant='ghost'
-        icon='ph--x--regular'
+        classNames={processing && 'text-error-text'}
+        icon={processing ? 'ph--square--duotone' : 'ph--square--regular'}
         iconOnly
         label={t('cancel-processing.button')}
         onClick={() => {

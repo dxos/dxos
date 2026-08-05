@@ -2,30 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, type Ref, forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { ChatStatusProvider, useChatStatusContext } from './ChatStatusContext';
 import { formatElapsed } from './format';
 
 const TICK_MS = 1_000;
-
-//
-// Context
-//
-
-type ChatStatusContextValue = {
-  /** Whole seconds elapsed since ChatStatus.Root mounted. Only advances while `running` is true. */
-  elapsed: number;
-  /** Whether the ChatStatus.Root tick is currently active. Toggled via the ChatStatusController. */
-  running: boolean;
-};
-
-const [ChatStatusProvider, useChatStatusContext] = createContext<ChatStatusContextValue>('ChatStatus');
-
-export { useChatStatusContext };
 
 //
 // Controller

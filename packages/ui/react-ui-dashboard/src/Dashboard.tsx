@@ -124,7 +124,7 @@ const DashboardStat = slottable<HTMLDivElement>(({ children, asChild, ...props }
   const Comp = asChild ? Slot : Primitive.div;
   return (
     <Comp
-      {...composableProps(props, { classNames: 'flex min-w-0 flex-col gap-1 rounded-sm bg-group-surface p-2' })}
+      {...composableProps(props, { classNames: 'flex min-w-0 flex-col gap-1 rounded-sm dx-group-surface p-2' })}
       ref={forwardedRef}
     >
       {children}

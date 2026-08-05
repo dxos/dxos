@@ -2,34 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Scope, createContextScope } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React from 'react';
 
 import { useId } from '@dxos/react-hooks';
 
-const INPUT_NAME = 'Input';
-
-type Valence = 'success' | 'info' | 'warning' | 'error' | 'neutral';
-
-type InputScopedProps<P> = P & { __inputScope?: Scope };
-
-type InputRootProps = PropsWithChildren<{
-  id?: string;
-  validationValence?: Valence;
-  descriptionId?: string;
-  errorMessageId?: string;
-}>;
-
-const [createInputContext, createInputScope] = createContextScope(INPUT_NAME, []);
-
-type InputContextValue = {
-  id: string;
-  descriptionId: string;
-  errorMessageId: string;
-  validationValence: Valence;
-};
-
-const [InputProvider, useInputContext] = createInputContext<InputContextValue>(INPUT_NAME);
+import { INPUT_NAME, InputProvider, type InputRootProps, type InputScopedProps, type Valence } from './InputContext';
 
 const InputRoot = ({
   __inputScope,
@@ -51,6 +28,6 @@ const InputRoot = ({
 
 InputRoot.displayName = INPUT_NAME;
 
-export { INPUT_NAME, InputRoot, createInputScope, useInputContext };
+export { InputRoot };
 
 export type { InputRootProps, InputScopedProps, Valence };
