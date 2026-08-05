@@ -125,13 +125,24 @@ pathological artifact.
   API). It was the leading hypothesis, but a CI diagnostic over the real on-disk output found no
   file above 4 MB in `composer-app/out`. Still worth confirming for `storybook-react`/`tasks`.
 
-**The real anomaly — `composer-app/out` is 384 MB across 17 954 files** (measured in CI, run
-`31054215273`; vite's build table had suggested only 122.8 MB / 4834 files, because it omits
-files copied from `public/` — chiefly the tldraw assets `prebuild` copies in, plus sourcemaps).
-For comparison `todomvc/out` is 26 MB / 62 files and hydrates fine. So the remaining candidates
-are **total action size** or **file count**, not per-blob size. This also bounds how fast the
-artifact could ever hydrate even if the upload succeeded — 384 MB per runner is not a good deal
-against the 21 s it takes to rebuild.
+**The real anomaly — `composer-app/out` is 384 MB across 17 954 files** (measured in CI with
+`du`/`find`, run `31054215273`). For comparison `todomvc/out` is 26 MB / 62 files and hydrates
+fine. So the remaining candidates are **total action size** or **file count**, not per-blob size.
+This also bounds how fast the artifact could ever hydrate even if the upload succeeded: 384 MB
+per runner is a poor trade against the 21 s it takes to rebuild.
+
+**Composition is not yet known** — and two guesses have already proved wrong, so measure rather
+than infer:
+
+- Summing vite's build table gives only 122.8 MB / 4834 files. Do not trust it; it does not
+  enumerate everything that lands in the output directory.
+- The tldraw assets `composer-app:prebuild` copies in are **not** the bulk:
+  `@tldraw/assets@3.0.0` in `node_modules` totals only 1.7 MB.
+
+The refined diagnostic in the `e2e-bundle` job (`Report bundle output composition`) reports
+subdirectories, largest files and totals by extension, which should settle it. The specific
+question worth answering: do sourcemaps dominate? Playwright does not need them, so excluding
+them from the e2e bundle would shrink both the build and the artifact.
 
 Worth asking whether `composer-app:bundle` should emit sourcemaps at all in the e2e path;
 Playwright does not need them, and they are a large fraction of those bytes.
