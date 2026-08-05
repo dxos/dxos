@@ -1,6 +1,6 @@
 # Model-fixture tests — Tasks
 
-_Resume: Phase 0 decisions all resolved (see DESIGN.md §Decisions). Start Phase 1 (define the `model-fixture` vitest tag + move env-gating into the tag config). Uncommitted: registry.yml + this project's DESIGN.md/TASKS.md — about to PR the scaffold. Last: recovery inventory of 12 deleted suites verified._
+_Resume: Phases 1–4 DONE and pushed on PR #12475 (branch `claude/model-fixture-tests-phases-b32q1r`; base main). Verified: model-fixture suites skip by default; migrated fixtures replay green from `.store/conversations/<suite>/<hash>.json`; format-check clean; the non-required `model-fixture` workflow triggers on the PR. Env flags: `DX_RUN_MODEL_FIXTURE_TESTS` (replay) / `DX_UPDATE_MODEL_FIXTURES` (regenerate). Engine consolidated into the `LanguageModelFixture` namespace (src/testing/model-fixture/). NEXT: Phase 5 (recover the 12 deleted suites) — restore per-suite with compile verification, regenerating Group A fixtures via live LLM; keep each restored file behind the tag so a missing fixture never breaks the default build._
 
 Rework the memoized-LLM test framework. Spec + current-state audit + resolved
 decisions + recovery inventory live in [DESIGN.md](./DESIGN.md). Five subgoals,
@@ -26,10 +26,10 @@ tag config; tag skipped by default.
 
 ### Tasks
 
-- [ ] **Define the vitest tag** with env-gating (regenerate / replay / skip) in the tag config, one place.
-- [ ] **Convert the 5 consumers** (`memoization`, `functions`, `request`, `AgentService`, `xml-response`) from `skipIf` to the tag.
-- [ ] **Add the moon tag** to the owning packages' `moon.yml` for task-level selection.
-- [ ] **Verify default-skip** — `moon run <pkg>:test` still skips these with no env set.
+- [x] **Define the vitest tag** with env-gating (regenerate / replay / skip) in the tag config, one place.
+- [x] **Convert the 5 consumers** (`memoization`, `functions`, `request`, `AgentService`, `xml-response`) from `skipIf` to the tag.
+- [x] **Add the moon tag** to the owning packages' `moon.yml` for task-level selection.
+- [x] **Verify default-skip** — `moon run <pkg>:test` still skips these with no env set.
 
 ## Phase 3: Rename memoized-llm → model-fixture (subgoal 3)
 
@@ -37,10 +37,10 @@ Do the rename before Phase 4 touches storage. No compat shims.
 
 ### Tasks
 
-- [ ] **Rename engine** — `MemoizedAiService` / `MemoizedLanguageModel` and the `memoization/` dir.
-- [ ] **Rename the seam + flags** — `TestAiService` wiring, `DX_RUN_LLM_TESTS` / `ALLOW_LLM_GENERATION` (decide new names).
-- [ ] **Update docs** — `ai/TESTING.md`, `ai/DESIGN.md`, `regenerate-memoized-llm` skill, CLAUDE.md/memory references.
-- [ ] **Update every call site** in the same change (repo rule).
+- [x] **Rename engine** — `MemoizedAiService` / `MemoizedLanguageModel` and the `memoization/` dir.
+- [x] **Rename the seam + flags** — `TestAiService` wiring, `DX_RUN_LLM_TESTS` / `ALLOW_LLM_GENERATION` (decide new names).
+- [x] **Update docs** — `ai/TESTING.md`, `ai/DESIGN.md`, `regenerate-memoized-llm` skill, CLAUDE.md/memory references.
+- [x] **Update every call site** in the same change (repo rule).
 
 ## Phase 2: Separate non-required workflow (subgoal 2)
 
@@ -48,10 +48,10 @@ A standalone workflow file running only model-fixture tests on PRs, non-required
 
 ### Tasks
 
-- [ ] **Add `.github/workflows/model-fixture.yml`** selecting by `model-fixture` moon tag + vitest tag query; PR-triggered.
-- [ ] **Keep it non-required** — reports on the PR but is not in the required-checks set, so it never blocks merge.
-- [ ] **Fixtures are committed** (Phase 0) — no build step needed for the workflow to replay.
-- [ ] **Verify on a PR** — workflow runs, reports, does not gate merge.
+- [x] **Add `.github/workflows/model-fixture.yml`** selecting by `model-fixture` moon tag + vitest tag query; PR-triggered.
+- [x] **Keep it non-required** — reports on the PR but is not in the required-checks set, so it never blocks merge.
+- [x] **Fixtures are committed** (Phase 0) — no build step needed for the workflow to replay.
+- [x] **Verify on a PR** — workflow runs, reports, does not gate merge.
 
 ## Phase 4: Hash-addressed fixture store (subgoal 4)
 
@@ -60,11 +60,11 @@ dir scan for candidate/diff on miss/regeneration.
 
 ### Tasks
 
-- [ ] **Implement the store** — write/read `<suite>/<hash>.json`; hash = request hash (Phase 0 decision).
-- [ ] **Replay = O(1) lookup** by hash; **miss/regenerate = scan the `<suite>` dir** for closest-match/diff.
-- [ ] **Migrate the 5 caches** from `*.conversations.json` into the new layout.
-- [ ] **Delete the old reader/writer** and the `*.conversations.json` files.
-- [ ] **Regenerate to validate** — `ALLOW_LLM_GENERATION` path (new flag) round-trips through the store.
+- [x] **Implement the store** — write/read `<suite>/<hash>.json`; hash = request hash (Phase 0 decision).
+- [x] **Replay = O(1) lookup** by hash; **miss/regenerate = scan the `<suite>` dir** for closest-match/diff.
+- [x] **Migrate the 5 caches** from `*.conversations.json` into the new layout.
+- [x] **Delete the old reader/writer** and the `*.conversations.json` files.
+- [x] **Regenerate to validate** — `ALLOW_LLM_GENERATION` path (new flag) round-trips through the store.
 
 ## Phase 5: Recover deleted suites (subgoal 5)
 
