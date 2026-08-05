@@ -115,7 +115,7 @@ export class EchoEdgeReplicator implements EdgeAutomergeReplicator {
     this._connections.clear();
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'replication' })
+  @trace.span({ name: 'EchoEdgeReplicator.connectToSpace', showInBrowserTimeline: true, op: 'replication' })
   async connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
     using _guard = await this._mutex.acquire();
@@ -142,7 +142,7 @@ export class EchoEdgeReplicator implements EdgeAutomergeReplicator {
     }
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'replication' })
+  @trace.span({ name: 'EchoEdgeReplicator._openConnection', showInBrowserTimeline: true, op: 'replication' })
   private async _openConnection(ctx: Context, spaceId: SpaceId, reconnects: number = 0): Promise<void> {
     invariant(this._context);
     invariant(!this._connections.has(spaceId));

@@ -27,6 +27,7 @@ import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_ALL_KEY, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions, resolveOtlpUrl } from './otel';
+import { toOtelLinks } from './span-links';
 import { TagInjectorSpanProcessor } from './span-processors';
 
 export class OtelTraces {
@@ -112,7 +113,7 @@ export class OtelTraces {
             })
           : otelContext.active();
 
-        const span = tracer.startSpan(options.name, options, parentCtx);
+        const span = tracer.startSpan(options.name, { ...options, links: toOtelLinks(options.links) }, parentCtx);
 
         const sc = span.spanContext();
         const spanContext =

@@ -143,7 +143,7 @@ export class IdentityManager {
     return this._identity;
   }
 
-  @Trace.span({ showInBrowserTimeline: true })
+  @Trace.span({ name: 'IdentityManager.open', showInBrowserTimeline: true })
   async open(ctx: Context): Promise<void> {
     log('opening identity manager');
 

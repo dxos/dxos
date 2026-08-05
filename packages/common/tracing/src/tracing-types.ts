@@ -54,6 +54,14 @@ export type StartSpanOptions = {
    * When `undefined`, the backend uses the current time.
    */
   startTime?: number;
+
+  /**
+   * W3C trace contexts of spans this span is RELATED to (OTEL span links).
+   * Links express "spawned by / correlated with" without joining that trace —
+   * the new span stays a root (or child of `parentContext`) in its own
+   * operation-sized trace. Backends without link support may ignore these.
+   */
+  links?: TraceContextData[];
 };
 
 /**

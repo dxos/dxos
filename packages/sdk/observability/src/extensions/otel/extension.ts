@@ -11,7 +11,7 @@ import * as Ref from 'effect/Ref';
 
 import { type Config, resolveTelemetryTag } from '@dxos/config';
 import { LogLevel, log } from '@dxos/log';
-import { isNode, isNonNullable } from '@dxos/util';
+import { SESSION_ID, isNode, isNonNullable } from '@dxos/util';
 
 import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
@@ -113,7 +113,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
-      'session.id': crypto.randomUUID(),
+      // Shared SESSION_ID: the edge-client sends the same value on every HTTP request /
+      // WS upgrade, and edge stamps it as `ctx.sessionId` — one attribute query joins a
+      // session's client and edge spans across traces (SC-2).
+      'session.id': SESSION_ID,
       'deployment.environment': environment,
       'dxos.process.type': detectProcessType(),
       ...(clientTag ? { 'ctx.tag': clientTag } : {}),

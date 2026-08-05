@@ -11,6 +11,17 @@ import { Context } from './context';
 export const TRACE_SPAN_ATTRIBUTE = 'dxos.trace-span';
 
 /**
+ * Context attribute key for a trace LINK (related-to, not caused-by).
+ * Stores {@link TraceContextData} of a span that new spans should reference via an
+ * OTEL span link instead of a parent edge. Used for recurring/background work whose
+ * spans must start their own traces (bounded, operation-sized) while staying
+ * navigable back to the operation that spawned them — parenting them instead would
+ * accrete unrelated activity onto the spawning trace for the context's lifetime.
+ * See `trace.detach()` in @dxos/tracing.
+ */
+export const TRACE_LINK_ATTRIBUTE = 'dxos.trace-link';
+
+/**
  * W3C Trace Context wire format for propagating trace identity.
  * Stored on DXOS {@link Context} attributes and carried across RPC boundaries.
  *

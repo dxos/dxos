@@ -43,6 +43,7 @@
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "@dxos/eslint-plugin-rules/require-span-name": "error",
     "@dxos/eslint-plugin-rules/translation-key-format": "warn",
     "eslint/curly": ["error", "all"],
     "eslint/no-async-promise-executor": "off",
@@ -175,5 +176,13 @@
     "vitest": {
       "typecheck": false
     }
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx", "**/testing/**"],
+      "rules": {
+        "@dxos/eslint-plugin-rules/require-span-name": "off"
+      }
+    }
+  ]
 }

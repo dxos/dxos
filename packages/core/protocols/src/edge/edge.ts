@@ -14,6 +14,16 @@ import { SpaceId } from '@dxos/keys';
 export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
 
 /**
+ * HTTP header / WS-upgrade query param carrying the client's session id (one value per
+ * process/tab lifetime; the same value is the OTEL `session.id` resource attribute on
+ * client spans). Edge stamps it as `ctx.sessionId` on every span so one session's edge
+ * activity is joinable across its many operation-sized traces (SC-2 in
+ * docs/design/tracing-improvement-spec.md in the dxos repo).
+ */
+export const EDGE_SESSION_ID_HEADER = 'X-DXOS-Session-Id';
+export const EDGE_SESSION_ID_QUERY_PARAM = 'sessionId';
+
+/**
  * HTTP header sent on every Edge request to provide a BYOK (Bring Your Own Key) for AI services.
  */
 export const BYOK_HEADER = 'X-BYOK';

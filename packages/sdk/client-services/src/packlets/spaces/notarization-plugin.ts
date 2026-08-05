@@ -17,6 +17,7 @@ import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type NotarizationService, type NotarizeRequest } from '@dxos/protocols/proto/dxos/mesh/teleport/notarization';
 import { type ExtensionContext, RpcExtension } from '@dxos/teleport';
+import { trace } from '@dxos/tracing';
 import { ComplexMap, ComplexSet, entry } from '@dxos/util';
 
 const DEFAULT_RETRY_TIMEOUT = 1_000;
@@ -26,6 +27,9 @@ const DEFAULT_SUCCESS_DELAY = 1_000;
 const DEFAULT_NOTARIZE_TIMEOUT = 10_000;
 
 const DEFAULT_ACTIVE_EDGE_POLLING_INTERVAL = 3_000;
+
+/** Uniquifies per-round manual span ids across concurrent spaces. */
+let edgePollRound = 0;
 
 const MAX_EDGE_RETRIES = 2;
 
@@ -302,8 +306,26 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
    */
   private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>): void {
     scheduleMicroTask(this._ctx, async () => {
+      // Per-round root span (golden flow G5): recurring polling must start its own
+      // operation-sized trace instead of riding a long-lived ctx; the HTTP call below
+      // carries this span as `traceparent`, parenting the edge notarization server span.
+      const spanId = `notarize-edge-round-${this._spaceId}-${++edgePollRound}`;
+      // Detached per-round ctx MUST be disposed after the round: derive() registers a
+      // dispose hook on the long-lived `_ctx`, and an undisposed hook per poll round is
+      // an unbounded leak (Context warns at 300 callbacks; this polls every few seconds).
+      const detachedCtx = trace.detach(this._ctx);
+      const roundCtx =
+        trace.spanStart({
+          name: 'NotarizationPlugin._notarizePendingEdgeCredentials',
+          id: spanId,
+          instance: this,
+          methodName: '_notarizePendingEdgeCredentials',
+          parentCtx: detachedCtx,
+          op: 'notarization.round',
+          attributes: { spaceId: this._spaceId },
+        }) ?? detachedCtx;
       try {
-        const response = await client.getCredentialsForNotarization(this._ctx, this._spaceId, {
+        const response = await client.getCredentialsForNotarization(roundCtx, this._spaceId, {
           retry: { count: MAX_EDGE_RETRIES },
         });
 
@@ -325,6 +347,11 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         log.info('notarized edge credentials', { count: decodedCredentials.length });
       } catch (error: any) {
         handleEdgeError(error);
+      } finally {
+        trace.spanEnd(spanId);
+        if (detachedCtx !== this._ctx) {
+          void detachedCtx.dispose();
+        }
       }
     });
   }

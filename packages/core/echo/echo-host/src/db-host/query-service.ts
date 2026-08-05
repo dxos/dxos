@@ -224,7 +224,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     return queryEntry;
   }
 
-  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
+  @trace.span({ name: 'QueryServiceImpl._executeQueries', showInBrowserTimeline: true, showInRemoteTracing: false })
   private async '_executeQueries'(_ctx: Context) {
     const hint = this.#pendingHint;
     this.#pendingHint = null;

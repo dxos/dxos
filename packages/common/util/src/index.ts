@@ -47,6 +47,7 @@ export * from './safe-await';
 export * from './safe-instanceof';
 export * from './safe-parse';
 export * from './safe-stringify';
+export * from './session-id';
 export * from './sliding-window-summary';
 export * from './sort';
 export * from './string';

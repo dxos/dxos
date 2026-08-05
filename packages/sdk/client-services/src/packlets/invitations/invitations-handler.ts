@@ -116,6 +116,7 @@ export class InvitationsHandler {
     const invitationCtx = ctx;
     ctx =
       _trace.spanStart({
+        name: 'InvitationsHandler.handleInvitationFlow',
         id: hostSpanId,
         instance: this,
         methodName: 'handleInvitationFlow',
@@ -286,6 +287,7 @@ export class InvitationsHandler {
     const invitationCtx = ctx;
     ctx =
       _trace.spanStart({
+        name: 'InvitationsHandler.acceptInvitation',
         id: guestSpanId,
         instance: this,
         methodName: 'acceptInvitation',

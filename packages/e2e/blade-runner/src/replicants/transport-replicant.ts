@@ -40,7 +40,7 @@ export class TransportReplicant {
   constructor(private readonly env: ReplicantEnv) {}
 
   // TODO(myklola): Refactor to a smaller methods.
-  @trace.span()
+  @trace.span({ name: 'TransportReplicant.run' })
   async run({
     swarmPeerId,
     transport,

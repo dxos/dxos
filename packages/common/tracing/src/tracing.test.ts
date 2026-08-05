@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
+import { Context, TRACE_LINK_ATTRIBUTE, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 
 import { trace } from './api';
 import { TRACE_PROCESSOR } from './trace-processor';
@@ -86,6 +86,38 @@ describe('manual spans', () => {
     expect(span!.ended).toBe(false);
     trace.spanEnd('op-1');
     expect(span!.ended).toBe(true);
+  });
+
+  test('detach demotes the current span to a link: next span is a root carrying the link', ({ expect }) => {
+    const { backend, spans } = createMockBackend();
+    TRACE_PROCESSOR.tracingBackend = backend;
+
+    const spawningSpan: TraceContextData = {
+      traceparent: '00-dddd0000dddd0000dddd0000dddd0000-eeee0000eeee0000-01',
+    };
+    const opCtx = new Context({ attributes: { [TRACE_SPAN_ATTRIBUTE]: spawningSpan } });
+
+    const detached = trace.detach(opCtx);
+    expect(detached.getAttribute(TRACE_SPAN_ATTRIBUTE)).toBeUndefined();
+    expect(detached.getAttribute(TRACE_LINK_ATTRIBUTE)?.traceparent).toBe(spawningSpan.traceparent);
+
+    const roundCtx = trace.spanStart({ id: 'round-1', instance: {}, methodName: 'round', parentCtx: detached });
+
+    const rootSpan = spans.find((record) => record.options.name.endsWith('.round'));
+    expect(rootSpan).toBeDefined();
+    // Root (no parent), but linked back to the spawning span.
+    expect(rootSpan!.options.parentContext).toBeUndefined();
+    expect(rootSpan!.options.links?.[0]?.traceparent).toBe(spawningSpan.traceparent);
+
+    // The link is consumed: descendants of the round ctx parent normally and carry no link.
+    expect(roundCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE)?.traceparent).toBe(rootSpan!.spanContext.traceparent);
+    expect(roundCtx?.getAttribute(TRACE_LINK_ATTRIBUTE)).toBeUndefined();
+    trace.spanEnd('round-1');
+  });
+
+  test('detach without an active span is a no-op', ({ expect }) => {
+    const ctx = Context.default();
+    expect(trace.detach(ctx)).toBe(ctx);
   });
 
   test('spanStart with showInRemoteTracing:false creates no remote span and returns parentCtx unchanged', ({

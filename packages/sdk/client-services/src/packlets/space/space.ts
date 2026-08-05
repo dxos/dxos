@@ -166,7 +166,7 @@ export class Space extends Resource {
     return Array.from(this._controlPipeline.spaceState.feeds.values());
   }
 
-  @trace.span({ op: 'lifecycle' })
+  @trace.span({ name: 'Space._open', op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     log('opening...');
 

@@ -216,7 +216,7 @@ export class Transcriber extends Resource {
       : [];
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ name: 'Transcriber._mergeAudioChunks', showInBrowserTimeline: true })
   private async _mergeAudioChunks(chunks: AudioChunk[]): Promise<string> {
     const file = new WaveFile();
     const wavConfig = this._recorder.wavConfig;
@@ -231,7 +231,7 @@ export class Transcriber extends Resource {
     return file.toBase64();
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ name: 'Transcriber._fetchTranscription', showInBrowserTimeline: true })
   private async _fetchTranscription(audio: string): Promise<WhisperSegment[]> {
     if (audio.length === 0) {
       throw new Error('No audio to send for transcribing');

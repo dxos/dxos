@@ -230,7 +230,7 @@ export class DataSpace {
   }
 
   @synchronized
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'DataSpace.open', showInBrowserTimeline: true, op: 'lifecycle' })
   async open(ctx: Context): Promise<void> {
     if (this._state === SpaceState.SPACE_CLOSED) {
       await this._open(ctx);
@@ -264,7 +264,7 @@ export class DataSpace {
   }
 
   @synchronized
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'DataSpace.close', showInBrowserTimeline: true, op: 'lifecycle' })
   async close(ctx: Context): Promise<void> {
     await this._close(ctx);
   }
@@ -332,7 +332,7 @@ export class DataSpace {
     });
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'DataSpace.initializeDataPipeline', showInBrowserTimeline: true, op: 'lifecycle' })
   async initializeDataPipeline(ctx: Context): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
       throw new SystemError({ message: 'Invalid operation' });
@@ -405,7 +405,7 @@ export class DataSpace {
     await this._callbacks.afterReady?.();
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'DataSpace._initializeAndReadControlPipeline', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _initializeAndReadControlPipeline(ctx: Context): Promise<void> {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
       ctx,

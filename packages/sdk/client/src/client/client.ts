@@ -438,7 +438,7 @@ export class Client {
     return this;
   }
 
-  @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
+  @trace.span({ name: 'Client._open', showInBrowserTimeline: true, op: 'lifecycle' })
   private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);

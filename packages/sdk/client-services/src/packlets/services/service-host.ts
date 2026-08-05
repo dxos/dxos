@@ -464,7 +464,7 @@ export class ClientServicesHost {
   }
 
   @synchronized
-  @Trace.span()
+  @Trace.span({ name: 'ClientServicesHost.open' })
   async open(ctx: Context = new Context()): Promise<void> {
     if (this.#open) {
       return;
@@ -632,7 +632,7 @@ export class ClientServicesHost {
   }
 
   @synchronized
-  @Trace.span()
+  @Trace.span({ name: 'ClientServicesHost.close' })
   async close(ctx: Context = Context.default()): Promise<void> {
     if (!this.#open) {
       return;
@@ -763,7 +763,7 @@ export class ClientServicesHost {
   /**
    * Opens the identity-bound services once an identity is available.
    */
-  @Trace.span()
+  @Trace.span({ name: 'ClientServicesHost._initialize' })
   private async _initialize(ctx: Context): Promise<void> {
     log('_initialize: start');
     const identity = this.identityManager.identity ?? failUndefined();
