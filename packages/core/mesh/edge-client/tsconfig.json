@@ -36,7 +36,16 @@
       "path": "../../../common/test-utils"
     },
     {
+      "path": "../../../common/timeframe"
+    },
+    {
       "path": "../../../common/util"
+    },
+    {
+      "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-protocol"
     },
     {
       "path": "../../halo/credentials"

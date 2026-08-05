@@ -16,6 +16,8 @@ import {
   MeshEchoReplicatorLayer,
 } from '@dxos/echo-host';
 import {
+  type EdgeApiClientService,
+  EdgeApiService,
   type EdgeConnection,
   EdgeConnectionService,
   type EdgeHttpClient,
@@ -93,6 +95,9 @@ export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime.Client.EdgeFeatures;
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
+  // Derived Effect-native edge client, provided alongside `edgeHttpClient` while consumers migrate
+  // group-by-group (currently backs the agents endpoints via `EdgeAgentManager`).
+  edgeApiClient?: EdgeApiClientService;
 };
 
 /**
@@ -161,7 +166,8 @@ export const ServiceContextLayer = (
 
   // Edge: the feed syncer sits above the core for its `EchoHostService` requirement; the edge
   // replicator sits below — it needs only the edge inputs, resolved via `serviceOption` inside the
-  // core. Edge inputs are provided internally so they never surface as stack requirements.
+  // core. Edge inputs (including the optional derived `EdgeApiService`) are provided internally so
+  // they never surface as stack requirements.
   return FeedSyncerLayer({
     peerId: '',
     syncNamespaces: [FeedProtocol.WellKnownNamespaces.data, FeedProtocol.WellKnownNamespaces.trace],
@@ -174,13 +180,25 @@ export const ServiceContextLayer = (
           ? EchoEdgeReplicatorLayer()
           : Layer.empty,
     ),
-    Layer.provideMerge(
-      Layer.mergeAll(
-        Layer.succeed(EdgeConnectionService, edgeConnection),
-        Layer.succeed(EdgeHttpClientService, edgeHttpClient),
-      ),
-    ),
+    Layer.provideMerge(edgeInputLayer(edgeConnection, edgeHttpClient, options.edgeApiClient)),
   );
+};
+
+/**
+ * Provides the edge inputs internally so they never appear in the stack's declared requirements.
+ */
+const edgeInputLayer = (
+  edgeConnection: EdgeConnection,
+  edgeHttpClient: EdgeHttpClient,
+  edgeApiClient: EdgeApiClientService | undefined,
+): Layer.Layer<EdgeConnectionService | EdgeHttpClientService> => {
+  const base = Layer.mergeAll(
+    Layer.succeed(EdgeConnectionService, edgeConnection),
+    Layer.succeed(EdgeHttpClientService, edgeHttpClient),
+  );
+  // `EdgeApiService` is consumed via `serviceOption` (optional), so it is only merged in when a
+  // derived client exists and does not appear in the declared requirements.
+  return edgeApiClient ? Layer.provideMerge(base, Layer.succeed(EdgeApiService, edgeApiClient)) : base;
 };
 
 /**
