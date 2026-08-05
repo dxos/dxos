@@ -302,6 +302,116 @@ already use.
   path bindings can be checked against the bound schema at contribution time
   (the `resolveLayoutField` precedent already does dotted-path resolution).
 
+## Experiment 1 — `MailboxController`: split `MailboxArticle` into controller + template
+
+A time-boxed (2–4 day) probe of the Option A claim, on the hardest real
+container: `plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx`
+(~670 lines). The output is knowledge, not a merge: does *everything* non-JSX
+move out of React, what bridge points remain, and what does it cost/buy?
+
+### Why this container is the right subject
+
+It contains every pathology the abstraction targets — ~15 hooks, a derived
+query pipeline (filter text → debounce → `QueryBuilder` → scopes →
+aggregate → pagination → post-filters), an action switchboard
+(`InboxStackAction`), an atom family per tile, a `MenuBuilder` menu, DOM refs,
+and conditional chrome — and two facts make it cheaper than it looks:
+
+- **The pagination store is already framework-free.** `createPaginationStore`
+  (`echo-react/src/usePagination.ts`) is a plain external store
+  (`subscribe`/`getSnapshot`); `usePagination` is just the
+  `useSyncExternalStore` wrapper. Wrapping it in an atom is mechanical.
+- **Half the file is already atoms or pure functions.** `sortDescending` is an
+  `AtomState`; `tagsAtom`/`starredAtom`/`systemTagIds` are atom families over
+  `TagIndex`; `applyPostFilters`/`reconcileDrafts`/`isThreadGroup` are pure
+  module-scope functions; the menu is already authored as an atom computation
+  (`useMenuBuilder((get) => …)`). The React hooks are mostly thin wrappers
+  around atom construction (`useTags`, `useSystemTagUri`, `useTaggedIds`,
+  `useMessageTagsAtomFamily`).
+
+### Shape
+
+New `mailbox-controller.ts` (rule: **no React import** — enforce by review or
+a lint boundary), exporting:
+
+```ts
+createMailboxController(ctx: {
+  registry: Registry;            // atom registry
+  mailbox: Mailbox.Mailbox;
+  systemTag?: SystemTags.SystemTagId;
+  filterProp?: string;
+  invoke: OperationInvoker;      // capabilities passed in, never resolved inside
+  graph: Graph; settings: Atom<InboxSettings>; showItem: …;
+}) => {
+  state: {                       // named scope of atoms, not positional props
+    filterText: Atom.Writable<string>;
+    items: Atom<InboxStackItem[]>;      // debounce → query → aggregate → post-filters
+    loading: Atom<boolean>; showEmptyState: Atom<boolean>;
+    tagsAtom: MessageTagsFamily; starredAtom: …; searchQuery: Atom<string|undefined>;
+    pagination: PaginationHandle;       // atom-wrapped createPaginationStore
+  };
+  menu: Atom<ActionGraphProps>;  // the existing MenuBuilder computation, verbatim
+  dispatch: (msg: MailboxMsg) => void;  // InboxStackAction ∪ navigate/clear-filter/save-filter/compose
+}
+```
+
+`MailboxArticle.tsx` shrinks to construction (`useController(...)`) plus a
+pure template: `Panel.Root` → `Menu.Root` toolbar → `<If
+test={state.showEmptyState}>` → `InboxStack` bound to `state.*` and
+`dispatch`. Build the minimal `If`/`Show` control-flow component as part of
+the experiment so the template has no conditional braces.
+
+### The four bridge points to instrument (the experiment's real product)
+
+1. **DOM anchors.** `filterEditorRef` (focus on select-tag) and
+   `filterSaveButtonRef` (popover anchor) are DOM refs inside logic. Probe:
+   template registers named anchors (`anchors.set('save-filter', el)`);
+   dispatch arms reference anchors by name. This answers "how does a
+   renderer-neutral controller name DOM locations" (QML answers: by id).
+2. **JSX inside the menu model.** The search box is embedded in the menu as
+   `render: () => filterElement` — logic holding layout. Invert: the menu
+   action declares `slot: 'filter'`; the template supplies the slot's element.
+3. **Debounce as an atom.** No `Atom.debounce` exists in-repo; the derived
+   debounced-filter atom needs a small utility (timer-based `Atom.make` with
+   `get.setSelf`). Deliverable, not blocker.
+4. **Pagination atom.** `Pagination.atom(db, query)` over the existing store;
+   lifecycle owned by the registry. Candidate for `echo` proper if it works.
+
+`useArticleKeyboardNavigation` and `useSelection` (attention) stay React-side
+in v1, reading controller atoms.
+
+### Hypotheses and measurements
+
+- **H1 — separability.** The component ends with zero
+  `useState`/`useEffect`/`useMemo`/`useCallback`. Measure: hook count and LOC
+  split (expect ≈550 controller / ≈70 template). The `systemTagIdsKey` +
+  eslint-disable memo dance should disappear (atom nodes compare by value).
+- **H2 — headless testability.** A vitest test with `Registry.make()` (the
+  `plugin-manager.test.ts` recipe) + an ECHO test layer: seed messages/tags →
+  set `filterText` → advance debounce → assert `items`; `dispatch({type:
+  'star'})` → assert the tag index. No DOM, no `renderHook`.
+- **H3 — performance.** React Profiler / `SurfaceMetrics` commit counts for
+  (a) typing in the filter, (b) toggling a star, (c) a page fetch. Must be ≤
+  current; expect a win on (a) — today every keystroke re-renders the whole
+  article (toolbar, menu) because `filterText` is `useState` at the root.
+- **H4 — renderer neutrality (stretch).** Drive the controller from a Node
+  script (print `items` as filter changes) — the cheap proof — or a Solid
+  story over `effect-atom-solid` if appetite allows.
+
+### Order of work (riskiest first) and exit
+
+1. Pagination atom wrapper → 2. filter/debounce/query atoms → 3. `dispatch` →
+4. menu atom + slot inversion → 5. template + `If`. Behavior comments in the
+file (flash-empty prevention, seeded stores, draft reconciliation) are
+load-bearing — port them with the code; `applyPostFilters`/`reconcileDrafts`
+move unchanged. Regression: existing inbox e2e/storybook coverage plus H2's
+new headless tests.
+
+Exit criteria: H1–H3 measured and written up; the four bridge findings
+(anchors, slots, debounce, pagination atom) folded back into this spec's
+Recommendation step 1; a go/no-go on extracting a second, simple container
+(`TaskSetArticle`) to test that the pattern generalizes downward as well as up.
+
 ## Open questions
 
 1. Should the authoring form of templates be a typed builder
