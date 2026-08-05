@@ -277,8 +277,8 @@ export const __testing = {
 
 export type ServiceOptions = {
   upstream: AiService.Service;
-  /** Path the fixture store reads/writes for this suite. */
-  storePath: string;
+  /** Absolute path of the running test file; the store derives the `<suite>` segment and `.store` root from it. */
+  testFilePath: string;
   allowGeneration: boolean;
   /**
    * Patterns matching run-specific identifiers (e.g. {@link SPACE_ID_PATTERN}) to canonicalize for
@@ -293,7 +293,7 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
     Layer.provide(
       layer({
         modelName: model,
-        storePath: options.storePath,
+        testFilePath: options.testFilePath,
         allowGeneration: options.allowGeneration,
         dynamicValuePatterns: options.dynamicValuePatterns,
       }),
@@ -302,19 +302,10 @@ export const makeService = (options: ServiceOptions): AiService.Service => ({
 });
 
 /**
- * Derives the fixture store path for a suite from its test-file path. Kept as the single place the
- * path convention lives so the store layout can evolve in one edit.
- */
-const defaultStorePath = (filepath: string): string =>
-  filepath.endsWith('.eval.ts')
-    ? filepath.replace('.eval.ts', '.conversations.json')
-    : filepath.replace('.test.ts', '.conversations.json');
-
-/**
  * AiService layer that records model turns to the fixture store and replays them offline.
- * Requires {@link TestContextService} to derive the store path from the running test file.
+ * Requires {@link TestContextService} to derive the `<suite>` store segment from the running test file.
  *
- * @param options.storePath [default: derived from the test file path].
+ * @param options.testFilePath [default: the running test file path].
  * @param options.allowGeneration [default: `DX_UPDATE_MODEL_FIXTURES=1`] — whether to hit the live model on a miss.
  */
 export const layerTest = (options: Partial<Omit<ServiceOptions, 'upstream'>> = {}) =>
@@ -325,7 +316,7 @@ export const layerTest = (options: Partial<Omit<ServiceOptions, 'upstream'>> = {
       const upstream = yield* AiService.AiService;
       return makeService({
         upstream,
-        storePath: options.storePath ?? defaultStorePath(ctx.task.file.filepath),
+        testFilePath: options.testFilePath ?? ctx.task.file.filepath,
         allowGeneration: options.allowGeneration ?? isUpdateEnabled(),
         dynamicValuePatterns: options.dynamicValuePatterns,
       });
@@ -337,7 +328,7 @@ export const isUpdateEnabled = (): boolean => ['1', 'true'].includes(process.env
 
 export interface LayerOptions {
   modelName: string;
-  storePath: string;
+  testFilePath: string;
   allowGeneration: boolean;
 
   /**
@@ -358,7 +349,7 @@ export const layer = (
       return yield* make({
         upstreamModel,
         modelName: options.modelName,
-        storePath: options.storePath,
+        testFilePath: options.testFilePath,
         allowGeneration: options.allowGeneration,
         dynamicValuePatterns: options.dynamicValuePatterns,
       });
@@ -368,14 +359,14 @@ export const layer = (
 type MakeProps = {
   upstreamModel: LanguageModel.Service;
   modelName: string;
-  storePath: string;
+  testFilePath: string;
   allowGeneration: boolean;
   dynamicValuePatterns?: readonly RegExp[];
 };
 
 export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? []);
-  const store = new FixtureStore(options.storePath, dynamicMatcher);
+  const store = new FixtureStore(options.testFilePath, dynamicMatcher);
 
   return LanguageModel.make({
     generateText: Effect.fn('LanguageModelFixture.generateText')(function* (params) {
@@ -538,39 +529,112 @@ const converstationMatches = (
   return true;
 };
 
-// TODO(dmaretskyi): Currently this doesn't clean the old memoized convesations and the memoization files can grow quickly.
-// To solve this, we can separate convesations for each test, put the time the conversation was last used, and then delete the ones that are unused.
-// We will only edit the files when DX_UPDATE_MODEL_FIXTURES=1 is specified.
-class FixtureStore {
-  #path: string;
-  #dynamicMatcher: RegExp | undefined;
+/** Store directory under the repo root: `.store/conversations/<suite>/<hash>.json`. */
+const STORE_DIR = '.store';
+const CONVERSATIONS_DIR = 'conversations';
 
-  constructor(path: string, dynamicMatcher?: RegExp) {
-    this.#path = path;
+/**
+ * Canonical string the replay matcher compares and the store hashes over: the parameters plus the
+ * time/dynamic-normalized prompt. Two conversations match iff their match keys are equal, so hashing
+ * this key makes O(1) lookup and today's equality match agree by construction (DESIGN.md decision 3).
+ */
+const matchKey = (conversation: FixtureConversation, dynamicMatcher: RegExp | undefined): string =>
+  jsonStableStringify({
+    parameters: conversation.parameters,
+    prompt: normalizePromptForMatching(cloneForMatching(conversation.prompt), dynamicMatcher),
+  }) ?? '';
+
+const hashKey = async (key: string): Promise<string> => {
+  const { createHash } = await import('node:crypto');
+  return createHash('sha256').update(key).digest('hex');
+};
+
+const decodeConversation = (data: string): FixtureConversation =>
+  Schema.decodeSync(Schema.parseJson(FixtureConversation))(data);
+
+const encodeConversation = (conversation: FixtureConversation): string =>
+  Schema.encodeSync(Schema.parseJson(FixtureConversation, { space: 2 }))(conversation);
+
+/**
+ * Resolves the suite directory for a test file: `<repo-root>/.store/conversations/<suite>`, where
+ * `<suite>` is the repo-relative test path flattened to one segment (path-flatten, no hand slugs).
+ * The repo root is the nearest ancestor with a `pnpm-workspace.yaml`.
+ */
+const resolveSuiteDir = async (testFilePath: string): Promise<string> => {
+  const { dirname, join, relative, sep } = await import('node:path');
+  const { access } = await import('node:fs/promises');
+  let current = dirname(testFilePath);
+  let repoRoot = current;
+  while (true) {
+    try {
+      await access(join(current, 'pnpm-workspace.yaml'));
+      repoRoot = current;
+      break;
+    } catch {
+      const parent = dirname(current);
+      if (parent === current) {
+        break;
+      }
+      current = parent;
+    }
+  }
+  const suite = relative(repoRoot, testFilePath)
+    .replace(/\.(test|eval)\.ts$/, '')
+    .split(sep)
+    .join('_');
+  return join(repoRoot, STORE_DIR, CONVERSATIONS_DIR, suite);
+};
+
+/**
+ * Hash-addressed fixture store: one `<hash>.json` per conversation under the suite directory. Replay
+ * is an O(1) read by request hash; a miss (or a fixture whose stored hash used a different dynamic
+ * matcher, e.g. one migrated without patterns) falls back to scanning the suite dir and matching
+ * structurally under the live matcher.
+ */
+class FixtureStore {
+  #testFilePath: string;
+  #dynamicMatcher: RegExp | undefined;
+  #dirPromise: Promise<string> | undefined;
+
+  constructor(testFilePath: string, dynamicMatcher?: RegExp) {
+    this.#testFilePath = testFilePath;
     this.#dynamicMatcher = dynamicMatcher;
   }
 
   /**
-   * @returns A stored converstation that starts with the same parameters and messages as the prompted conversation.
+   * @returns A stored conversation whose parameters and normalized prompt match the prompted one.
    */
   getFixtureConversation(prompted: FixtureConversation): Effect.Effect<Option.Option<FixtureConversation>> {
-    return Effect.gen(this, function* () {
-      const stored = yield* this.#loadStore();
-      return Function.pipe(
-        stored.conversations,
-        Array.findFirst((x) => converstationMatches(x, prompted, this.#dynamicMatcher)),
-      );
+    return Effect.promise(async () => {
+      const { readFile } = await import('node:fs/promises');
+      const { join } = await import('node:path');
+      const dir = await this.#dir();
+      const file = join(dir, `${await hashKey(matchKey(prompted, this.#dynamicMatcher))}.json`);
+      try {
+        return Option.some(decodeConversation(await readFile(file, 'utf-8')));
+      } catch (err: any) {
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
+      // Fallback for hashes computed under a different matcher (e.g. migrated fixtures).
+      for (const stored of await this.#readAll(dir)) {
+        if (converstationMatches(stored, prompted, this.#dynamicMatcher)) {
+          return Option.some(stored);
+        }
+      }
+      return Option.none();
     });
   }
 
   /**
-   * @returns A stored converstation that is the closest match to the prompted conversation.
+   * @returns The stored conversation closest to the prompted one, for the miss diagnostic.
    */
   getClosestMatch(prompted: FixtureConversation): Effect.Effect<Option.Option<FixtureConversation>> {
-    return Effect.gen(this, function* () {
-      const stored = yield* this.#loadStore();
+    return Effect.promise(async () => {
+      const all = await this.#readAll(await this.#dir());
       return Function.pipe(
-        stored.conversations,
+        all,
         Array.sortBy(
           Order.mapInput(Order.number, (x) =>
             gitDiffDistance(
@@ -584,48 +648,67 @@ class FixtureStore {
     });
   }
 
-  /**
-   * Saves the conversation to the store.
-   * @param conversation The conversation to save.
-   */
   formatConversation(conversation: FixtureConversation): string {
     return formatFixtureConversation(conversation, this.#dynamicMatcher);
   }
 
   saveFixtureConversation(conversation: FixtureConversation): Effect.Effect<void> {
-    return Effect.gen(this, function* () {
-      const store = yield* this.#loadStore();
-      store.conversations.push(conversation);
-      yield* this.#saveStore(store);
+    // Per-conversation files make writes independent, so concurrent tests in one suite no longer race
+    // on a shared file (the read-modify-write hazard of the old single-file store).
+    return Effect.promise(async () => {
+      const { writeFile, mkdir } = await import('node:fs/promises');
+      const { join } = await import('node:path');
+      const dir = await this.#dir();
+      await mkdir(dir, { recursive: true });
+      const file = join(dir, `${await hashKey(matchKey(conversation, this.#dynamicMatcher))}.json`);
+      await writeFile(file, encodeConversation(conversation));
     });
   }
 
-  #loadStore(): Effect.Effect<ConversationStore> {
-    return Effect.promise(async () => {
-      // Avoids importing FS in browser. We can use effect's fs layer instead.
-      const { readFile } = await import('node:fs/promises');
-      try {
-        const data = await readFile(this.#path, 'utf-8');
-        return Schema.decodeSync(Schema.parseJson(ConversationStore))(data);
-      } catch (err: any) {
-        if (err.code === 'ENOENT') {
-          return { conversations: [] };
-        } else {
-          throw err;
-        }
+  async #dir(): Promise<string> {
+    this.#dirPromise ??= resolveSuiteDir(this.#testFilePath);
+    return this.#dirPromise;
+  }
+
+  async #readAll(dir: string): Promise<FixtureConversation[]> {
+    const { readdir, readFile } = await import('node:fs/promises');
+    const { join } = await import('node:path');
+    let names: string[];
+    try {
+      names = await readdir(dir);
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return [];
       }
-    });
-  }
-
-  #saveStore(store: ConversationStore): Effect.Effect<void> {
-    // TODO(dmaretskyi): Figure out how to make this thread-safe.
-    return Effect.promise(async () => {
-      // Avoids importing FS in browser. We can use effect's fs layer instead.
-      const { writeFile } = await import('node:fs/promises');
-      await writeFile(this.#path, Schema.encodeSync(Schema.parseJson(ConversationStore))(store));
-    });
+      throw err;
+    }
+    const conversations: FixtureConversation[] = [];
+    for (const name of names) {
+      if (name.endsWith('.json')) {
+        conversations.push(decodeConversation(await readFile(join(dir, name), 'utf-8')));
+      }
+    }
+    return conversations;
   }
 }
+
+/**
+ * One-off migration from the legacy single-file `<test>.conversations.json` store into the
+ * hash-addressed `.store/conversations/<suite>/<hash>.json` layout. Hashes without dynamic patterns —
+ * the few suites that used them are matched structurally by the replay fallback above. Not part of
+ * the public API; used once to migrate the committed caches, then retained for any future migration.
+ */
+export const __migrate = async (testFilePath: string, legacyCachePath: string): Promise<number> => {
+  const { readFile } = await import('node:fs/promises');
+  const legacy = Schema.decodeSync(
+    Schema.parseJson(Schema.Struct({ conversations: Schema.Array(FixtureConversation) })),
+  )(await readFile(legacyCachePath, 'utf-8'));
+  const store = new FixtureStore(testFilePath, undefined);
+  for (const conversation of legacy.conversations) {
+    await Effect.runPromise(store.saveFixtureConversation(conversation));
+  }
+  return legacy.conversations.length;
+};
 
 const ConversationParameters = Schema.Struct({
   model: Schema.String,
@@ -649,11 +732,6 @@ const FixtureConversation = Schema.Struct({
   response: Schema.Array(Schema.Unknown),
 }).annotations({ identifier: 'FixtureConversation' });
 type FixtureConversation = Schema.Schema.Type<typeof FixtureConversation>;
-
-const ConversationStore = Schema.Struct({
-  conversations: Schema.Array(FixtureConversation).pipe(Schema.mutable),
-}).pipe(Schema.mutable);
-type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
 
 /**
  * Formats the conversation for diffing and displaying to the developer.

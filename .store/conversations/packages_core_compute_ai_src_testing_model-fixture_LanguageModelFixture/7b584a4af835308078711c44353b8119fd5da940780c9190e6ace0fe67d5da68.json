@@ -1,0 +1,85 @@
+{
+  "parameters": {
+    "model": "dxn:com.anthropic.model.claude-sonnet-4-6.default",
+    "stream": false,
+    "tools": [
+      {
+        "name": "read-object",
+        "description": "Read an object",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "objectId"
+          ],
+          "properties": {
+            "objectId": {
+              "type": "string",
+              "description": "A Universally Unique Lexicographically Sortable Identifier",
+              "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "prompt": {
+    "content": [
+      {
+        "role": "user",
+        "content": "What does object 01KZ0NG2QE3TVX1K5G2P6W1B68 contain? You must use the read-object tool to answer this question.",
+        "options": {}
+      }
+    ]
+  },
+  "response": [
+    {
+      "type": "response-metadata",
+      "id": "msg_011CddWuLUvFX4XWrEU7xgqT",
+      "modelId": "claude-sonnet-4-6",
+      "timestamp": "1970-01-01T00:00:00.000Z",
+      "metadata": {}
+    },
+    {
+      "type": "text",
+      "text": "Sure! Let me read that object right away.",
+      "metadata": {}
+    },
+    {
+      "type": "tool-call",
+      "id": "toolu_016bTqwoyUV3RN7DNpyBP9kJ",
+      "name": "read-object",
+      "params": {
+        "objectId": "01KZ0NG2QE3TVX1K5G2P6W1B68"
+      },
+      "providerExecuted": false,
+      "metadata": {}
+    },
+    {
+      "type": "finish",
+      "reason": "tool-calls",
+      "usage": {
+        "inputTokens": 657,
+        "outputTokens": 87,
+        "totalTokens": 744,
+        "cachedInputTokens": 0
+      },
+      "metadata": {
+        "anthropic": {
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 657,
+            "output_tokens": 87,
+            "server_tool_use": null,
+            "service_tier": "standard"
+          }
+        }
+      }
+    }
+  ]
+}

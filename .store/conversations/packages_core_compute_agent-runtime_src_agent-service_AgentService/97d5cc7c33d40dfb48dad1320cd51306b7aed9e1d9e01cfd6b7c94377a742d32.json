@@ -1,0 +1,171 @@
+{
+  "parameters": {
+    "model": "dxn:com.anthropic.model.claude-opus-4-8.default",
+    "stream": true,
+    "tools": [
+      {
+        "name": "research",
+        "description": "Research an organization",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "website"
+          ],
+          "properties": {
+            "website": {
+              "type": "string",
+              "description": "The website of the organization to research"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "prompt": {
+    "content": [
+      {
+        "role": "system",
+        "content": "## Skills Definitions\n\n<skill>\n  \n</skill>",
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "Research {\"id\":\"01JGFJJZ00G0WKQSJGMAKCNTDX\",\"@type\":\"dxn:org.dxos.type.organization:0.1.0\",\"@meta\":{\"keys\":[]},\"name\":\"Cyberdyne Systems\",\"website\":\"https://cyberdyne.com\"}",
+        "options": {
+          "anthropic": {
+            "cacheControl": {
+              "ttl": "5m",
+              "type": "ephemeral"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "response": [
+    {
+      "type": "response-metadata",
+      "id": "msg_011CddXkLo8qQXxwgKvUq3U5",
+      "modelId": "claude-opus-4-8",
+      "timestamp": "2026-08-02T07:31:06.165Z",
+      "metadata": {}
+    },
+    {
+      "type": "reasoning-start",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "reasoning-delta",
+      "id": "0",
+      "delta": "",
+      "metadata": {
+        "anthropic": {
+          "type": "thinking",
+          "signature": "Er0CCokBCBAYAipAPPss7hS+QH31c6DXxn4rwjx8nK64Iozql3yDFBkaSSOj+Y8dNXByk+n6G04Oq2Xx2i5CJ3Sz1/BLIe2QL7NY/TIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDAhUVrozkIPa6PYr2xoM1PsYFYqAcIWSjS6sIjCtaXBdQooEdRdpg+veBY8beQcWZoO5nZ6OybEdjHjcG7MJlh79cDBAp3ZB7JHQK7MqYfpxFShBd6GlanuIlqJVRYLAawUrXSU8v5FjJamjEgvd9IZVUdq9nRJHaEnEskEOUCAH0TQMM71dc8uc8o+WeM9dncawIO3xsAzOaTEGrRP0Osss870Pq++TJndtEYvUIw0YAQ=="
+        }
+      }
+    },
+    {
+      "type": "reasoning-end",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "text-start",
+      "id": "1",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "1",
+      "delta": "I'll research Cyberdyne Systems for you.",
+      "metadata": {}
+    },
+    {
+      "type": "text-end",
+      "id": "1",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-start",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "name": "research",
+      "providerExecuted": false,
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "delta": "",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "delta": "{\"w",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "delta": "ebsite\": \"ht",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "delta": "tp",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "delta": "s:/",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "delta": "/cyberd",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "delta": "yne.com\"}",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-end",
+      "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+      "metadata": {}
+    },
+    {
+      "type": "finish",
+      "reason": "tool-calls",
+      "usage": {
+        "inputTokens": 504,
+        "outputTokens": 93,
+        "totalTokens": 597
+      },
+      "metadata": {
+        "anthropic": {
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 504,
+            "output_tokens": 4,
+            "server_tool_use": null,
+            "service_tier": "standard"
+          }
+        }
+      }
+    }
+  ]
+}

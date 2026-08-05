@@ -1,0 +1,214 @@
+{
+  "parameters": {
+    "model": "dxn:com.anthropic.model.claude-opus-4-8.default",
+    "stream": true,
+    "tools": [
+      {
+        "name": "research",
+        "description": "Research an organization",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "website"
+          ],
+          "properties": {
+            "website": {
+              "type": "string",
+              "description": "The website of the organization to research"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "prompt": {
+    "content": [
+      {
+        "role": "system",
+        "content": "## Skills Definitions\n\n<skill>\n  \n</skill>",
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "Research {\"id\":\"01JGFJJZ00G0WKQSJGMAKCNTDX\",\"@type\":\"dxn:org.dxos.type.organization:0.1.0\",\"@meta\":{\"keys\":[]},\"name\":\"Cyberdyne Systems\",\"website\":\"https://cyberdyne.com\"}",
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "reasoning",
+            "text": "",
+            "options": {}
+          },
+          {
+            "type": "text",
+            "text": "I'll research Cyberdyne Systems for you.",
+            "options": {}
+          },
+          {
+            "type": "tool-call",
+            "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+            "name": "research",
+            "params": {
+              "website": "https://cyberdyne.com"
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_017Ry2tkKHPUz384sk7vCNjQ",
+            "name": "research",
+            "isFailure": true,
+            "result": "Tool result is missing from the conversation. This is likely a bug in the agent framework. Retry tool call; try calling tools one by one.",
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "Research {\"id\":\"01JGFJJZ00G0WKQSJGMAKCNTDX\",\"@type\":\"dxn:org.dxos.type.organization:0.1.0\",\"@meta\":{\"keys\":[]},\"name\":\"Cyberdyne Systems\",\"website\":\"https://cyberdyne.com\"}",
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "I'll research Cyberdyne Systems for you.",
+            "options": {}
+          },
+          {
+            "type": "tool-call",
+            "id": "toolu_01NFtuJCxcJXjUQBJhTDBvUp",
+            "name": "research",
+            "params": {
+              "website": "https://cyberdyne.com"
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_01NFtuJCxcJXjUQBJhTDBvUp",
+            "name": "research",
+            "isFailure": false,
+            "result": "\n      Cyberdyne Systems is a company that builds AI agents.\n      They are based in San Francisco, California.\n      They were founded in 1984.\n      They are a public company.\n      They are listed on the NASDAQ under the symbol CYBR.\n      They are a member of the S&P 500 index.\n    ",
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {
+          "anthropic": {
+            "cacheControl": {
+              "ttl": "5m",
+              "type": "ephemeral"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "response": [
+    {
+      "type": "response-metadata",
+      "id": "msg_011CddXkmLWKUTw2hsQjxREX",
+      "modelId": "claude-opus-4-8",
+      "timestamp": "1970-01-01T00:00:00.000Z",
+      "metadata": {}
+    },
+    {
+      "type": "text-start",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": "Here's what",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": " I found about **Cyberdyne Systems**:\n\n## Company Overview\n- **Industry:** AI agents development\n- **Headquarters:** San Francisco,",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": " California\n- **Founded:** 1984\n- **Company Type:** Public company\n\n## Financial/Market Information\n- **Stock Exchange:** NASDAQ\n- **",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": "Ticker Symbol:** CYBR\n- **Index Membership:** S&P 500\n\nCyberdyne Systems is an",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": " established company specializing in building AI agents. As a publicly-traded company on the NASDAQ and",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": " a member of the prestigious S&P 500 index, they represent a significant player in the AI technology space. Let me know if you'd like me",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": " to look into anything else!",
+      "metadata": {}
+    },
+    {
+      "type": "text-end",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "finish",
+      "reason": "stop",
+      "usage": {
+        "inputTokens": 917,
+        "outputTokens": 233,
+        "totalTokens": 1150
+      },
+      "metadata": {
+        "anthropic": {
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 917,
+            "output_tokens": 4,
+            "server_tool_use": null,
+            "service_tier": "standard"
+          }
+        }
+      }
+    }
+  ]
+}

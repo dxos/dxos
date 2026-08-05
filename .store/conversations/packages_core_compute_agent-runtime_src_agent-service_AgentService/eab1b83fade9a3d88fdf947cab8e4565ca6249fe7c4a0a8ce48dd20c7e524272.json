@@ -1,0 +1,162 @@
+{
+  "parameters": {
+    "model": "dxn:com.anthropic.model.claude-opus-4-8.default",
+    "stream": true,
+    "tools": [
+      {
+        "name": "research",
+        "description": "Research an organization",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "website"
+          ],
+          "properties": {
+            "website": {
+              "type": "string",
+              "description": "The website of the organization to research"
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "prompt": {
+    "content": [
+      {
+        "role": "system",
+        "content": "## Skills Definitions\n\n<skill>\n  \n</skill>",
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "Research {\"id\":\"01JGFJJZ00G0WKQSJGMAKCNTAJ\",\"@type\":\"dxn:org.dxos.type.organization:0.1.0\",\"@meta\":{\"keys\":[]},\"name\":\"Cyberdyne Systems\",\"website\":\"https://cyberdyne.com\"}",
+        "options": {
+          "anthropic": {
+            "cacheControl": {
+              "ttl": "5m",
+              "type": "ephemeral"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "response": [
+    {
+      "type": "response-metadata",
+      "id": "msg_011CddXj1Ed3rpwKm8YVgBQF",
+      "modelId": "claude-opus-4-8",
+      "timestamp": "2026-08-02T07:30:51.107Z",
+      "metadata": {}
+    },
+    {
+      "type": "text-start",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": "I",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": "'ll research Cyberdyne Systems for you.",
+      "metadata": {}
+    },
+    {
+      "type": "text-end",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-start",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "name": "research",
+      "providerExecuted": false,
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "{\"we",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "bsit",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "e\": \"ht",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "tp",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "s://cybe",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "rdyne.c",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "delta": "om\"}",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-end",
+      "id": "toolu_01DSxWjmaCLaLt8yfYufQd1a",
+      "metadata": {}
+    },
+    {
+      "type": "finish",
+      "reason": "tool-calls",
+      "usage": {
+        "inputTokens": 505,
+        "outputTokens": 72,
+        "totalTokens": 577
+      },
+      "metadata": {
+        "anthropic": {
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 505,
+            "output_tokens": 1,
+            "server_tool_use": null,
+            "service_tier": "standard"
+          }
+        }
+      }
+    }
+  ]
+}

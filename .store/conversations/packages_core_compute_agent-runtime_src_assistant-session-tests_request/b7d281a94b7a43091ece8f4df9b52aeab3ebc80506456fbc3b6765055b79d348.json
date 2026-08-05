@@ -1,0 +1,105 @@
+{
+  "parameters": {
+    "model": "dxn:com.anthropic.model.claude-opus-4-8.default",
+    "stream": true,
+    "tools": []
+  },
+  "prompt": {
+    "content": [
+      {
+        "role": "assistant",
+        "content": "This is the continuation of a conversation that was compacted to preserve context-window space. Summary of what happened in this conversation previously: <summary>The user asked how many apples are in the basket. I responded that there are 10 apples in the basket.</summary>",
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "What did we talk about?",
+        "options": {
+          "anthropic": {
+            "cacheControl": {
+              "ttl": "5m",
+              "type": "ephemeral"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "response": [
+    {
+      "type": "response-metadata",
+      "id": "msg_011CddXjFrwNvzvvRHjWa7jB",
+      "modelId": "claude-opus-4-8",
+      "timestamp": "1970-01-01T00:00:00.000Z",
+      "metadata": {}
+    },
+    {
+      "type": "reasoning-start",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "reasoning-delta",
+      "id": "0",
+      "delta": "",
+      "metadata": {
+        "anthropic": {
+          "type": "thinking",
+          "signature": "EuQCCokBCBAYAipAJgFciVLEIER3spO7lmXR8YHlbruLkjlFn5TE7zeuMWBPeKBQNsYRCWtB/OtVUSVXMeEJAG6uozrx2N6Qhe2s3zIPY2xhdWRlLW9wdXMtNC04OABCCHRoaW5raW5nWiRlOTk3NGY0Mi0xMmMzLTRlYWUtOTA5OS01OGNiNGE1MzQyY2YSDG8D6w+b2XCS/R6ALBoMrweQhApyiNOQ8wzlIjD9y5lE2YzTR5/fSj8gWTm0GKOTARd+d/7jQ21+QGv13mbcvb/4qp4fPrQhWRJ9ncwqhwEZolLNwAIC/HJi5T1RPenZaq7zOat44mRLC9YXUcV+8tHVz/OwY5oPMuNMdpwbwJCANqti8uEFrXl5/bI21nqpbHCJ81gTO/GZUj9X6qZZAZlIPDjmQPSBUKa+5Kn/NL5MKThBpBxM+Ql/Wx/9PvOmmUpR8U35lHHu9Aj/PUheXOPPUjkaAK4YAQ=="
+        }
+      }
+    },
+    {
+      "type": "reasoning-end",
+      "id": "0",
+      "metadata": {}
+    },
+    {
+      "type": "text-start",
+      "id": "1",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "1",
+      "delta": "Based on our earlier conversation, you asked me how many apples are in the basket, and I told you there are 10 apples in the basket.\n\nIs there anything else you'd",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "1",
+      "delta": " like to know, or was there something specific about that you wanted to revisit?",
+      "metadata": {}
+    },
+    {
+      "type": "text-end",
+      "id": "1",
+      "metadata": {}
+    },
+    {
+      "type": "finish",
+      "reason": "stop",
+      "usage": {
+        "inputTokens": 114,
+        "outputTokens": 110,
+        "totalTokens": 224
+      },
+      "metadata": {
+        "anthropic": {
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 0
+            },
+            "cache_creation_input_tokens": 0,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 114,
+            "output_tokens": 3,
+            "server_tool_use": null,
+            "service_tier": "standard"
+          }
+        }
+      }
+    }
+  ]
+}
