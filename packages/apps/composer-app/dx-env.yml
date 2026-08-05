@@ -18,7 +18,6 @@ DX_EDGE_BASE_URL:
   path: runtime.services.edge.url
   type: string
 
-
 DX_SANDBOX_SERVICE_URL:
   path: runtime.services.sandbox.url
   type: string

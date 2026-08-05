@@ -46,10 +46,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
 
       // Send offer to backend and get answer. AI is served through edge's /ai/* proxy;
       // the configured edge URL uses a ws(s) scheme, so swap it for http(s).
-      const aiServiceUrl = new URL(
-        '/ai/rtc-connect',
-        config.values.runtime?.services?.edge?.url ?? DEFAULT_EDGE_URL,
-      );
+      const aiServiceUrl = new URL('/ai/rtc-connect', config.values.runtime?.services?.edge?.url ?? DEFAULT_EDGE_URL);
       aiServiceUrl.protocol = aiServiceUrl.protocol.replace('ws', 'http');
       const response = await fetch(aiServiceUrl, {
         method: 'POST',
