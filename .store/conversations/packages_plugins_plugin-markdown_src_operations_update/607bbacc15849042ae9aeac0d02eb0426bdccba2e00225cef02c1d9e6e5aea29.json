@@ -1,0 +1,505 @@
+{
+  "parameters": {
+    "model": "dxn:com.anthropic.model.claude-sonnet-4-6.default",
+    "stream": true,
+    "tools": [
+      {
+        "name": "create",
+        "description": "Creates a new markdown document and adds it to the space.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "name",
+            "content"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "open",
+        "description": "Opens and reads the contents of a new markdown document.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "doc"
+          ],
+          "properties": {
+            "doc": {
+              "type": "string",
+              "description": "The URI of the referenced object. Protocols accepted:\n- echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. \n- space ID, object ID tuple (spaceID:objectID)\n- Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)\n- dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.\n\nURIs can be prepended with an @ symbol for compatibility with in-text references.",
+              "examples": [
+                "echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "dxn:org.dxos.type.calendar:0.1.0",
+                "@dxn:org.dxos.type.calendar:0.1.0"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "update",
+        "description": "Applies a set of edits to the markdown document.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "doc",
+            "edits"
+          ],
+          "properties": {
+            "doc": {
+              "type": "string",
+              "description": "The URI of the referenced object. Protocols accepted:\n- echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. \n- space ID, object ID tuple (spaceID:objectID)\n- Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)\n- dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.\n\nURIs can be prepended with an @ symbol for compatibility with in-text references.",
+              "examples": [
+                "echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "dxn:org.dxos.type.calendar:0.1.0",
+                "@dxn:org.dxos.type.calendar:0.1.0"
+              ]
+            },
+            "edits": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "newString"
+                ],
+                "properties": {
+                  "oldString": {
+                    "type": "string",
+                    "description": "The text to find in the document. Set to undefined to append the newString to the end of the document."
+                  },
+                  "newString": {
+                    "type": "string",
+                    "description": "The text to replace it with."
+                  },
+                  "replaceAll": {
+                    "type": "boolean",
+                    "description": "If true, replaces all occurrences. Defaults to false (first occurrence only)."
+                  }
+                },
+                "additionalProperties": false
+              },
+              "description": "The edits to apply to the document. Each edit finds oldString and replaces it with newString; omit oldString to append newString to the end."
+            },
+            "branchId": {
+              "type": "string",
+              "description": "Apply the edits to this draft branch (the id returned by createBranch) instead of the live document."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "create-branch",
+        "description": "Creates a draft branch of the document. Edit the branch content with the update operation\nby passing the returned branch id as branchId, then merge it back for review.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "doc",
+            "name"
+          ],
+          "properties": {
+            "doc": {
+              "type": "string",
+              "description": "The URI of the referenced object. Protocols accepted:\n- echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. \n- space ID, object ID tuple (spaceID:objectID)\n- Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)\n- dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.\n\nURIs can be prepended with an @ symbol for compatibility with in-text references.",
+              "examples": [
+                "echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "dxn:org.dxos.type.calendar:0.1.0",
+                "@dxn:org.dxos.type.calendar:0.1.0"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "description": "Branch name."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "merge-branch",
+        "description": "Merges an active branch back into its parent document content (3-way merge;\nconflicting hunks are left in the text with git-style markers).",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "doc",
+            "branchId"
+          ],
+          "properties": {
+            "doc": {
+              "type": "string",
+              "description": "The URI of the referenced object. Protocols accepted:\n- echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. \n- space ID, object ID tuple (spaceID:objectID)\n- Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)\n- dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.\n\nURIs can be prepended with an @ symbol for compatibility with in-text references.",
+              "examples": [
+                "echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "dxn:org.dxos.type.calendar:0.1.0",
+                "@dxn:org.dxos.type.calendar:0.1.0"
+              ]
+            },
+            "branchId": {
+              "type": "string",
+              "description": "The id of the branch to merge."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "create-checkpoint",
+        "description": "Records a named checkpoint of the current document content that can be viewed or restored later.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "doc",
+            "name"
+          ],
+          "properties": {
+            "doc": {
+              "type": "string",
+              "description": "The URI of the referenced object. Protocols accepted:\n- echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. \n- space ID, object ID tuple (spaceID:objectID)\n- Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)\n- dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.\n\nURIs can be prepended with an @ symbol for compatibility with in-text references.",
+              "examples": [
+                "echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "dxn:org.dxos.type.calendar:0.1.0",
+                "@dxn:org.dxos.type.calendar:0.1.0"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "description": "Checkpoint name."
+            },
+            "message": {
+              "type": "string",
+              "description": "Optional description of this checkpoint."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "get-selection",
+        "description": "Returns the user's current text selection in the markdown document as anchor/text pairs (empty when nothing is selected).",
+        "inputSchema": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "doc": {
+              "type": "string",
+              "description": "The URI of the referenced object. Protocols accepted:\n- echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. \n- space ID, object ID tuple (spaceID:objectID)\n- Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)\n- dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.\n\nURIs can be prepended with an @ symbol for compatibility with in-text references.",
+              "examples": [
+                "echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "dxn:org.dxos.type.calendar:0.1.0",
+                "@dxn:org.dxos.type.calendar:0.1.0"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "prompt": {
+    "content": [
+      {
+        "role": "system",
+        "content": "## Skills Definitions\n\n<skill>\n  You can create, read and update markdown documents.\n  When asked to edit or update documents return updates as a set of compact diff string pairs.\n  For each diff, respond with the smallest possible matching span.\n  \n  Example:\n  ```diff\n  - \"There is a tyop in this sentence.\"\n  + \"There is a typo in this sentence.\"\n  - \"This id good.\"\n  + \"This sentence is really good.\"\n  ```\n  \n  You can also work on a document without touching the live copy by branching it:\n  - When asked to edit in a branch (or to propose changes for review), first create a branch\n    with the create-branch tool, then apply the edits with the update tool passing the returned\n    branchId. Leave the branch unmerged so the changes can be reviewed. Do not merge unless asked.\n  - Merge a branch back into the document with the merge-branch tool once its changes are approved.\n  - Record a named checkpoint of the current content with the create-checkpoint tool.\n  \n  When the user refers to \"the selection\" or \"the selected text\", call the get-selection tool\n  once (no arguments) to retrieve exactly what they have selected before acting on it; it\n  already reports the current selection across open documents, so do not call it per document.\n  An empty result means nothing is selected — ask what text they mean rather than guessing.\n</skill>\n\n## Context Objects\n\n          <object>\n            <dxn>echo://BDJXMULPW5FB55UZ7KP5HLDHVTXUTHE2U/01JGFJJZ00G0WKQSJGMAKCNTVG</dxn>\n            <typename>org.dxos.type.document</typename>\n<label>Shopping list</label>\n          </object>",
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "Add milk to the shopping list.",
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "Let me first open the shopping list to see its current contents.",
+            "options": {}
+          },
+          {
+            "type": "tool-call",
+            "id": "toolu_013eVUZfHRBNsXfXdGJ6TiGD",
+            "name": "open",
+            "params": {
+              "doc": "echo://BDJXMULPW5FB55UZ7KP5HLDHVTXUTHE2U/01JGFJJZ00G0WKQSJGMAKCNTVG"
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_013eVUZfHRBNsXfXdGJ6TiGD",
+            "name": "open",
+            "isFailure": false,
+            "result": {
+              "content": "# Shopping list"
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "tool-call",
+            "id": "toolu_01VpW3mN3waKYWUEwcV6GLRJ",
+            "name": "update",
+            "params": {
+              "doc": "echo://BDJXMULPW5FB55UZ7KP5HLDHVTXUTHE2U/01JGFJJZ00G0WKQSJGMAKCNTVG",
+              "edits": [
+                {
+                  "oldString": "# Shopping list",
+                  "newString": "# Shopping list\n\n- Milk"
+                }
+              ]
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_01VpW3mN3waKYWUEwcV6GLRJ",
+            "name": "update",
+            "isFailure": false,
+            "result": {
+              "newContent": "# Shopping list\n\n- Milk"
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": "Done! I've added **Milk** to your shopping list. 🥛",
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "Add bread to the shopping list.",
+        "options": {
+          "anthropic": {
+            "cacheControl": {
+              "ttl": "5m",
+              "type": "ephemeral"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "response": [
+    {
+      "type": "response-metadata",
+      "id": "msg_011CdjN7WcvHQ7d2RSCstXX9",
+      "modelId": "claude-sonnet-4-6",
+      "timestamp": "2026-08-05T09:28:19.541Z",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-start",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "name": "update",
+      "providerExecuted": false,
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "{\"doc\": \"e",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "cho://BDJ",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "XM",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "ULPW",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "5FB55",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "UZ7KP5H",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "LDHVT",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "XUTHE",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "2U/01JGFJJZ",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "00G0WKQSJGM",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "AKCNTVG\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": ", \"edits\": ",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "[{",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "\"oldString\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": ":\"- Milk\",\"n",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "ewString",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "\":\"-",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": " Milk\\n",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "- Bre",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "delta": "ad\"}]}",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-end",
+      "id": "toolu_01Qcbg1gq5xQ2QUjnTpMnYeM",
+      "metadata": {}
+    },
+    {
+      "type": "finish",
+      "reason": "tool-calls",
+      "usage": {
+        "inputTokens": 3,
+        "outputTokens": 143,
+        "totalTokens": 146
+      },
+      "metadata": {
+        "anthropic": {
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 29
+            },
+            "cache_creation_input_tokens": 29,
+            "cache_read_input_tokens": 4198,
+            "input_tokens": 3,
+            "output_tokens": 5,
+            "server_tool_use": null,
+            "service_tier": "standard"
+          }
+        }
+      }
+    }
+  ]
+}

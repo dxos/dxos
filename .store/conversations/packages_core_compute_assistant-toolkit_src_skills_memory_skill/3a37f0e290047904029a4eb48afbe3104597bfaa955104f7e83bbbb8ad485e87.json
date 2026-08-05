@@ -1,0 +1,249 @@
+{
+  "parameters": {
+    "model": "dxn:com.anthropic.model.claude-sonnet-4-6.default",
+    "stream": true,
+    "tools": [
+      {
+        "name": "save-memory",
+        "description": "Saves a new memory to the database. Use this to persist knowledge, facts, preferences, or any information that should be remembered across conversations.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "title",
+            "content"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "description": "Short descriptive title for the memory."
+            },
+            "content": {
+              "type": "string",
+              "description": "The content of the memory. Can be a fact, preference, instruction, or any knowledge worth persisting."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "query-memories",
+        "description": "Search for stored memories using full-text search. Returns memories matching the query terms. Use this to recall previously saved knowledge, facts, or preferences.",
+        "inputSchema": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "text": {
+              "type": "string",
+              "description": "Full-text search query. Omit to list all memories."
+            },
+            "limit": {
+              "type": "number",
+              "description": "Maximum number of results to return."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      {
+        "name": "delete-memory",
+        "description": "Deletes a memory from the database. Use this to remove outdated or incorrect memories.",
+        "inputSchema": {
+          "type": "object",
+          "required": [
+            "memory"
+          ],
+          "properties": {
+            "memory": {
+              "type": "string",
+              "description": "The URI of the referenced object. Protocols accepted:\n- echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4. \n- space ID, object ID tuple (spaceID:objectID)\n- Only object ID that is assumed to be in the current space (01KG7R1ZXWFMWQ4DA1Q6TN1DG4)\n- dxn:org.dxos.type.calendar:0.1.0 -- named entity from the registry. Absoutely make sure it actually exists in the registry.\n\nURIs can be prepended with an @ symbol for compatibility with in-text references.",
+              "examples": [
+                "echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "@echo://01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G:01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "01KG7R1ZXWFMWQ4DA1Q6TN1DG4",
+                "dxn:org.dxos.type.calendar:0.1.0",
+                "@dxn:org.dxos.type.calendar:0.1.0"
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "prompt": {
+    "content": [
+      {
+        "role": "system",
+        "content": "## Skills Definitions\n\n<skill>\n  You have the ability to save and recall memories.\n  Memories are persistent knowledge units stored in the database.\n  Use memories to remember facts, user preferences, decisions, and any knowledge that should persist across conversations.\n  \n  When the user asks you to remember something, save it as a memory with a descriptive title.\n  When the user asks about something you might have stored, query your memories first.\n  You can also delete outdated or incorrect memories.\n</skill>",
+        "options": {}
+      },
+      {
+        "role": "user",
+        "content": "Remember that my favorite programming language is TypeScript.",
+        "options": {
+          "anthropic": {
+            "cacheControl": {
+              "ttl": "5m",
+              "type": "ephemeral"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "response": [
+    {
+      "type": "response-metadata",
+      "id": "msg_011CdjMkTjTNBAMXQhjJbyd1",
+      "modelId": "claude-sonnet-4-6",
+      "timestamp": "2026-08-05T09:23:34.713Z",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-start",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "name": "save-memory",
+      "providerExecuted": false,
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "{\"tit",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "le\": \"Fa",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "vorite P",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "rogr",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "amming Lang",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "uage\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": ", \"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "cont",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "en",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "t\": \"Th",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "e user's",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": " favor",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "ite progra",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "mming langu",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "age i",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "s TypeScri",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "delta": "pt.\"}",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-end",
+      "id": "toolu_01CxBbQbr1vbwaCVcTGqtmZE",
+      "metadata": {}
+    },
+    {
+      "type": "finish",
+      "reason": "tool-calls",
+      "usage": {
+        "inputTokens": 3,
+        "outputTokens": 82,
+        "totalTokens": 85
+      },
+      "metadata": {
+        "anthropic": {
+          "usage": {
+            "cache_creation": {
+              "ephemeral_1h_input_tokens": 0,
+              "ephemeral_5m_input_tokens": 1305
+            },
+            "cache_creation_input_tokens": 1305,
+            "cache_read_input_tokens": 0,
+            "input_tokens": 3,
+            "output_tokens": 52,
+            "server_tool_use": null,
+            "service_tier": "standard"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -74,11 +74,14 @@ the new store + tag.
 ### Tasks
 
 - [x] **Git-dig complete** — seeded from all 3-week `*.conversations.json`, widened to every deleted `*.test.ts` referencing the memoized layer. 12 suites; 3 false positives excluded.
-- [ ] **Recover Group A — 6 e2e scenarios** from `addbdf5fae^` (`assistant-e2e/src/testing/`): `crm-mailbox`, `database`, `markdown`, `planning`, `smoke`, `web-search`. Fixtures dropped in `531def85fd` → **regenerate**, don't restore.
-- [ ] **Recover Group B — 6 skill/op suites** from `be35baf312^`: `skills/{agent,database,memory,planning}/skill.test.ts`, `plugin-magazine/.../curate-magazine.skill.test.ts`, `plugin-markdown/operations/update.test.ts`.
-- [ ] **Reconcile against existing coverage** — Group B skills now have deterministic unit tests; Group A has evals. Recover as fixture-replay _alongside_, not replacing.
-- [ ] **Port each onto the new store + tag**; regenerate fixtures via `LanguageModelFixtureUpdate`.
-- [ ] **Confirm** they run in the model-fixture workflow and skip by default locally.
+- [x] **Recovered 7 suites** onto the new tag + store, forced to **sonnet** (`com.anthropic.model.claude-sonnet-4-6.default`) to hold regen cost, fixtures regenerated live and replay green:
+  - Group B (4): `assistant-toolkit skills/{memory,database}/skill.test.ts`, `plugin-magazine/.../curate-magazine.skill.test.ts`, `plugin-markdown/operations/update.test.ts`.
+  - Group A (3): `assistant-e2e/src/testing/{database,smoke,web-search}.test.ts`.
+- [x] **Recover _alongside_, not replacing** — the deterministic per-operation/unit tests stay; these add LLM fixture-replay coverage on top.
+- [ ] **Deferred (5), reasons:**
+  - `assistant-toolkit skills/{planning,agent}/skill.test.ts` — tested the removed `Plan` type (now an `Outline` model in `@dxos/types`; `Chat.ensurePlan`/`Chat.plan`/`Plan.hasIncompleteTasks` gone). Faithful recovery needs a semantic rewrite; the current `planning/operations/plan-reminder.test.ts` already covers today's behavior.
+  - Group A `crm-mailbox`/`markdown` — import `@dxos/plugin-crm` / `@dxos/plugin-markdown`, which are not `assistant-e2e` deps (would need new devDeps + cycle check).
+  - Group A `planning` — regeneration failed on a malformed object reference (`Unable to parse object reference`); the outline/plan drift likely reaches this scenario too.
 - [ ] **(Optional/backlog)** deeper dig outside the 3-week window — `blueprints/*`, `conductor/gpt`, `trace-timeline`, `database/agent-firewall`.
 
 ## References
