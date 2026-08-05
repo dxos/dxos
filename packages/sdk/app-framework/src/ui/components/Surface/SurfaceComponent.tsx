@@ -272,19 +272,23 @@ export const SurfaceComponent = memo(
     }
 
     return (
-      <Suspense fallback={placeholder}>
+      <>
         {candidates.map((definition) => (
-          <SurfaceContextProvider
-            key={definition.id}
-            id={definition.id}
-            role={effectiveRole}
-            data={data}
-            limit={limit}
-            definition={definition}
-            {...rest}
-          />
+          // One boundary per candidate: role-gated modules activate on demand, so candidates keep
+          // arriving after the first have painted, and a shared boundary lets a newly-suspending
+          // sibling replace its already-mounted neighbours with the placeholder.
+          <Suspense key={definition.id} fallback={placeholder}>
+            <SurfaceContextProvider
+              id={definition.id}
+              role={effectiveRole}
+              data={data}
+              limit={limit}
+              definition={definition}
+              {...rest}
+            />
+          </Suspense>
         ))}
-      </Suspense>
+      </>
     );
   },
   // The generic call signature is reattached here because `memo` erases it from the inferred type.
