@@ -332,6 +332,26 @@ export const Conversation: Story = {
     await waitFor(() =>
       expect(canvasElement.querySelector('[data-testid="thread.message.reaction-option"]')).not.toBeNull(),
     );
+
+    // And it stays on that row as the transcript scrolls under it: the anchor moves with the
+    // document, and the editor scrolls without re-rendering the component that placed the toolbar.
+    const offset = () => {
+      const toolbar = canvasElement.querySelector('[data-testid="thread.document.toolbar"]')!;
+      return Math.round(
+        toolbar.getBoundingClientRect().top -
+          row(canvasElement, /A single message of my own/).getBoundingClientRect().top,
+      );
+    };
+    const anchored = offset();
+    const scrolled = scroller.scrollTop;
+    scroller.scrollTop = scrolled + 60;
+    // Asserted, so the check below cannot pass by the scroller having refused to move.
+    // Asserted, so the check below cannot pass by the scroller having refused to move.
+    await waitFor(() => expect(scroller.scrollTop).not.toBe(scrolled));
+    // Checked on the very next frame, not awaited into place: a later re-render puts the toolbar
+    // back either way, and what the reader sees is the frames in between.
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    await expect(offset()).toBe(anchored);
   },
 };
 

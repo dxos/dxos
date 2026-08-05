@@ -3,7 +3,7 @@
 //
 
 import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { DensityProvider, type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -177,12 +177,40 @@ export const MessageDocument = ({
 
   // A run's head carries the avatar and heading in a block above its first line, and the toolbar
   // belongs to the whole row — so it anchors to the head's top, not to the body line's. Measured
-  // from the mounted portal because only the DOM knows how tall the heading laid out.
+  // from the DOM because only it knows how tall the heading laid out, and re-measured as the
+  // transcript scrolls: the anchor moves with the document, and the editor scrolls without
+  // re-rendering this component, so a position read once at hover time comes adrift of its message.
+  const toolbarRef = useRef<HTMLDivElement>(null);
   const headRoot = hover && portals.find((portal) => portal.kind === 'head' && portal.message.id === hover.message.id);
-  const toolbarTop =
-    headRoot && frameRef.current
-      ? headRoot.root.getBoundingClientRect().top - frameRef.current.getBoundingClientRect().top
-      : (hover?.top ?? 0);
+  useLayoutEffect(() => {
+    const frame = frameRef.current;
+    if (!hover || !frame) {
+      return;
+    }
+
+    const { scrollDOM } = view ?? {};
+    // A continuation has no head of its own, so its own first line is the anchor.
+    const anchor =
+      headRoot?.root ??
+      scrollDOM?.querySelector<HTMLElement>(`.cm-line[data-message-id="${CSS.escape(hover.message.id)}"]`);
+    const position = () => {
+      const toolbar = toolbarRef.current;
+      if (!toolbar || !anchor) {
+        return;
+      }
+
+      const { top } = anchor.getBoundingClientRect();
+      toolbar.style.top = `${top - frame.getBoundingClientRect().top}px`;
+      // Scrolled past its message, the toolbar would sit over an unrelated one; it belongs to the
+      // row, so it leaves with it.
+      const bounds = scrollDOM?.getBoundingClientRect();
+      toolbar.style.visibility = bounds && (top < bounds.top || top > bounds.bottom) ? 'hidden' : 'visible';
+    };
+
+    position();
+    scrollDOM?.addEventListener('scroll', position, { passive: true });
+    return () => scrollDOM?.removeEventListener('scroll', position);
+  }, [hover, headRoot, view]);
 
   const { getReactions, getQuote, getThreadSummary, getActions } = handlers;
   useEffect(() => {
@@ -244,8 +272,8 @@ export const MessageDocument = ({
         // row's edit state onto it.
         <HoverControls
           key={hover.message.id}
+          ref={toolbarRef}
           message={hover.message}
-          top={toolbarTop}
           editing={editingId === hover.message.id}
           onEdit={() => handlers.onAction?.('edit', hover.message)}
           onExitEdit={() => view?.dispatch({ effects: commitMessageEditEffect.of(null) })}
@@ -260,19 +288,10 @@ export const MessageDocument = ({
  * behind the overflow menu. Reusing the component is the point: a second implementation would
  * drift from it, and these actions already live in the action graph.
  */
-const HoverControls = ({
-  message,
-  top,
-  editing,
-  onEdit,
-  onExitEdit,
-}: {
-  message: MessageLike;
-  top: number;
-  editing: boolean;
-  onEdit: () => void;
-  onExitEdit: () => void;
-}) => {
+const HoverControls = forwardRef<
+  HTMLDivElement,
+  { message: MessageLike; editing: boolean; onEdit: () => void; onExitEdit: () => void }
+>(({ message, editing, onEdit, onExitEdit }, forwardedRef) => {
   // One state atom per hovered row, so edit mode and the picker reset when the pointer moves on —
   // and seeded from the host, so mounting over a row that is already being edited agrees with it
   // from the first render. Anything else has to detect that agreement in an effect, which under
@@ -307,13 +326,13 @@ const HoverControls = ({
   return (
     // Straddling the row's top edge at the end of the row, where Discord puts it — the corner
     // least likely to cover text. `sm` is already the design system's tightest density.
-    <div className='absolute z-1 end-2 -translate-y-1/2' style={{ top }} data-testid='thread.document.toolbar'>
+    <div className='absolute z-1 end-2 -translate-y-1/2' data-testid='thread.document.toolbar' ref={forwardedRef}>
       <DensityProvider density='sm'>
         <Message.Controls message={message as MessageType.Message} state={state} />
       </DensityProvider>
     </div>
   );
-};
+});
 
 type MessageChromeProps = {
   portal: MessagePortal;
