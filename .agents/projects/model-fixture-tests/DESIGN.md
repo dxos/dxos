@@ -71,7 +71,7 @@ DX_RUN_LLM_TESTS ∈ {1,true}`.
    No compatibility shims — update every call site in the same change.
 4. **Hash-addressed fixture store.** Relocate fixtures from per-file
    `*.conversations.json` to:
-   ```
+   ```text
    <repo-root>/.store/conversations/<suite>/<hash>.json
    ```
    - `<suite>` = the test-suite path flattened to **one path segment** (a single

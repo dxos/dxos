@@ -41,18 +41,18 @@ moon run plugin-commerce:lint -- --fix
 
 ### Memoized LLM test
 
-The blueprint test replays a **recorded** conversation (`*.conversations.json`) so CI runs offline
-and deterministically — no API key, no network. To re-record after changing the prompt, blueprint,
-or tool schemas:
+The blueprint test replays a **recorded** conversation from the hash-addressed model-fixture store
+(`.store/conversations/<suite>/<hash>.json`) so CI runs offline and deterministically — no API key,
+no network. To re-record after changing the prompt, blueprint, or tool schemas:
 
 ```bash
 DX_UPDATE_MODEL_FIXTURES=1 moon run plugin-commerce:test -- generate-template
 ```
 
-This calls the real model over `edge-remote` (~2 min) and rewrites the committed
-`generate-template.blueprint.conversations.json`. Commit the regenerated fixture. Replay matching is
+This calls the real model over `edge-remote` (~2 min) and writes the regenerated fixture(s) under
+`.store/conversations/<suite>/<hash>.json`. Commit the regenerated fixtures. Replay matching is
 date-independent: message timestamps and the system-prompt date line are normalised in the
-memoization layer, so a fixture recorded on one day replays on any later day.
+fixture layer, so a fixture recorded on one day replays on any later day.
 
 ### Live fixtures
 

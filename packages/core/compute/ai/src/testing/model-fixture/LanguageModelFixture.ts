@@ -325,7 +325,8 @@ export const layerTest = (options: Partial<Omit<ServiceOptions, 'upstream'>> = {
   );
 
 /** @returns true if fixture regeneration is enabled via `DX_UPDATE_MODEL_FIXTURES`. */
-export const isUpdateEnabled = (): boolean => ['1', 'true'].includes(process.env.DX_UPDATE_MODEL_FIXTURES ?? '0');
+export const isUpdateEnabled = (): boolean =>
+  ['1', 'true'].includes((process.env.DX_UPDATE_MODEL_FIXTURES ?? '0').trim().toLowerCase());
 
 export interface LayerOptions {
   modelName: string;
@@ -510,7 +511,7 @@ const getConversationFromOptions = (
   };
 };
 
-const converstationMatches = (
+const conversationMatches = (
   haystack: FixtureConversation,
   needle: FixtureConversation,
   dynamicMatcher: RegExp | undefined,
@@ -565,7 +566,7 @@ const resolveSuiteDir = async (testFilePath: string): Promise<string> => {
   const { dirname, join, relative, sep } = await import('node:path');
   const { access } = await import('node:fs/promises');
   let current = dirname(testFilePath);
-  let repoRoot = current;
+  let repoRoot: string | undefined;
   while (true) {
     try {
       await access(join(current, 'pnpm-workspace.yaml'));
@@ -579,9 +580,18 @@ const resolveSuiteDir = async (testFilePath: string): Promise<string> => {
       current = parent;
     }
   }
+  if (repoRoot === undefined) {
+    // A silent fallback would write fixtures next to the test file and make replay miss the
+    // committed store — fail loudly instead.
+    throw new Error(`Could not locate the repo root (pnpm-workspace.yaml) above ${testFilePath}.`);
+  }
+  // Percent-encode literal underscores before joining path separators with `_`, so `_` is
+  // unambiguously the separator and the flattened segment is injective — `a/b` and `a_b` must not
+  // collide. No current path segment contains `_`, so committed fixture directories are unaffected.
   const suite = relative(repoRoot, testFilePath)
     .replace(/\.(test|eval)\.ts$/, '')
     .split(sep)
+    .map((segment) => segment.replace(/_/g, '%5f'))
     .join('_');
   return join(repoRoot, STORE_DIR, CONVERSATIONS_DIR, suite);
 };
@@ -620,7 +630,7 @@ class FixtureStore {
       }
       // Fallback for hashes computed under a different matcher (e.g. migrated fixtures).
       for (const stored of await this.#readAll(dir)) {
-        if (converstationMatches(stored, prompted, this.#dynamicMatcher)) {
+        if (conversationMatches(stored, prompted, this.#dynamicMatcher)) {
           return Option.some(stored);
         }
       }
@@ -686,7 +696,13 @@ class FixtureStore {
     const conversations: FixtureConversation[] = [];
     for (const name of names) {
       if (name.endsWith('.json')) {
-        conversations.push(decodeConversation(await readFile(join(dir, name), 'utf-8')));
+        try {
+          conversations.push(decodeConversation(await readFile(join(dir, name), 'utf-8')));
+        } catch (err) {
+          // A single stale/foreign fixture must not fail replay for the whole suite; skip it so the
+          // caller still reaches the "no fixture found" diagnostic.
+          log.warn('skipping undecodable model fixture', { file: join(dir, name), err });
+        }
       }
     }
     return conversations;

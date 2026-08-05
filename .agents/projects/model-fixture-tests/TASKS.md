@@ -64,7 +64,7 @@ dir scan for candidate/diff on miss/regeneration.
 - [x] **Replay = O(1) lookup** by hash; **miss/regenerate = scan the `<suite>` dir** for closest-match/diff.
 - [x] **Migrate the 5 caches** from `*.conversations.json` into the new layout.
 - [x] **Delete the old reader/writer** and the `*.conversations.json` files.
-- [x] **Regenerate to validate** — `ALLOW_LLM_GENERATION` path (new flag) round-trips through the store.
+- [x] **Regenerate to validate** — `DX_UPDATE_MODEL_FIXTURES` path round-trips through the store.
 
 ## Phase 5: Recover deleted suites (subgoal 5)
 

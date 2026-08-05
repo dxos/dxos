@@ -5,9 +5,9 @@
 > This package is slated for removal once its remaining scenarios (`inbox-enable`, `local-ai`,
 > `sandbox` — see below) are ported to an eval or dropped. Do not add new tests here.
 
-Gated agent e2e tests: `agentTest` wraps a prompt as a memoized-replay vitest test, off by default
-so PR CI stays fast (`runMemoizedTests()`, opt in with `DX_RUN_MODEL_FIXTURE_TESTS=1` or
-`DX_UPDATE_MODEL_FIXTURES=1` to regenerate memoized conversations).
+Gated agent e2e tests: `agentTest` wraps a prompt as a fixture-replay vitest test carrying the
+`model-fixture` tag, off by default so PR CI stays fast (opt in with `DX_RUN_MODEL_FIXTURE_TESTS=1`,
+or `DX_UPDATE_MODEL_FIXTURES=1` to regenerate the model fixtures).
 
 Each test file follows a strict uniform structure. A test consists of **only a prompt** — no setup
 code, assertions, or manual DB manipulation:

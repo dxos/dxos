@@ -5,7 +5,7 @@ description: Test assistant conversations, agents, and skills using AssistantTes
 
 # Testing assistant conversations, agents, and skills
 
-This guide matches patterns in `packages/core/assistant-toolkit` and related packages (`assistant`, `plugin-markdown`, `plugin-assistant`). For **regenerating** `*.conversations.json` only, prefer the focused skill `regenerate-model-fixture`.
+This guide matches patterns in `packages/core/assistant-toolkit` and related packages (`assistant`, `plugin-markdown`, `plugin-assistant`). For **regenerating** model fixtures only, prefer the focused skill `regenerate-model-fixture`.
 
 ## AssistantTestLayer
 
@@ -43,7 +43,7 @@ Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
 
 Default test AI goes through **`LanguageModelFixture.layerTest`**, which:
 
-- Writes/reads **`<test-file>.conversations.json`** next to the test (path from `TestContextService`).
+- Writes/reads hash-addressed fixtures under **`.store/conversations/<suite>/<hash>.json`** (suite path from `TestContextService`).
 - **Without** `DX_UPDATE_MODEL_FIXTURES`: replays only; **missing** matching prompt → error telling you to regenerate.
 - **With** `DX_UPDATE_MODEL_FIXTURES=1` (or `true`): calls the real model when no match exists and **updates** the JSON.
 
@@ -63,15 +63,15 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
    DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test
    ```
 
-   Or all memoized-LLM packages: `DX_UPDATE_MODEL_FIXTURES=1 moon run '#memoized-llm:test'`.
+   Or all memoized-LLM packages: `DX_UPDATE_MODEL_FIXTURES=1 moon run '#model-fixture:test'`.
 
-3. **Commit** updated `*.conversations.json` files.
+3. **Commit** updated `.store/conversations/**` files.
 
-Packages that participate are tagged **`memoized-llm`** in their `moon.yml` (e.g. `assistant-toolkit`, `assistant`, `ai`, `plugin-markdown`, `plugin-assistant`).
+Packages that participate are tagged **`model-fixture`** in their `moon.yml` (e.g. `assistant-toolkit`, `assistant`, `ai`, `plugin-markdown`, `plugin-assistant`).
 
 ### Timeouts
 
-LLM conversation tests should use a longer timeout to account for generation. Pattern: `{ timeout: 60_000 }` or `LanguageModelFixture.isGenerationEnabled() ? 240_000 : 30_000`. Note that `LanguageModelFixture` is only needed as an import for the timeout helper — the layer already handles memoization internally.
+LLM conversation tests should use a longer timeout to account for generation. Pattern: `{ timeout: 60_000 }` or `LanguageModelFixture.isUpdateEnabled() ? 240_000 : 30_000`. Note that `LanguageModelFixture` is only needed as an import for the timeout helper — the layer already handles memoization internally.
 
 ### `TestHelpers.provideTestContext`
 
@@ -121,5 +121,5 @@ Include every ECHO type instances may have: skill metadata types, domain objects
 
 - [ ] `AssistantTestLayer` (or WithTriggers) with correct `operationHandlers` and `types`.
 - [ ] `Effect.provide(TestLayer)` + `TestHelpers.provideTestContext` for memoized LLM tests.
-- [ ] New/changed prompts → regenerate with `DX_UPDATE_MODEL_FIXTURES=1` + `1p-credentials`, commit `*.conversations.json`.
-- [ ] Package has `memoized-llm` tag if tests use memoization (for CI grouping).
+- [ ] New/changed prompts → regenerate with `DX_UPDATE_MODEL_FIXTURES=1` + `1p-credentials`, commit `.store/conversations/**`.
+- [ ] Package has `model-fixture` tag if tests use memoization (for CI grouping).
