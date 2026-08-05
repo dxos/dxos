@@ -32,7 +32,7 @@ To run e2e job:
 | :-- | :-- | :-- |
 | `test` | Vitest + browser Vitest (`:test`, `:test-browser` via uploader; same workflow triggers as the rest of **Check**). | `test-results/**/results.xml` |
 | `storybook` | Storybook tests (`:test-storybook` via uploader). Runs on its own runner in parallel with `test`. | `test-results/**/results.xml` |
-| `e2e` | Playwright e2e (`:e2e` via uploader). Job runs only for `main` / `rc-*` / `hotfix-*` / `release-please-*` refs, or `workflow_dispatch` with `e2e` (see [`check.yml`](check.yml)). | `test-results/playwright/report/*.xml` |
+| `e2e` | Playwright e2e (`:e2e` via uploader), sharded into one matrix job per browser (`chromium` / `firefox` / `webkit` via `PLAYWRIGHT_BROWSER`). Job runs only for `main` / `changeset-release/*` refs, or `workflow_dispatch` with `e2e` (see [`check.yml`](check.yml)). | `test-results/playwright/report/*.xml` |
 
 **unit/browser/storybook** go through Trunk on typical PRs; **e2e** only when the `e2e` job runs (not on ordinary topic-branch PRs). Exact `moon` commands and `env` are in [`check.yml`](check.yml).
 

@@ -416,20 +416,31 @@ jobs:
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
       inputs.e2e
+    # One shard per Playwright browser: the serial three-browser suite measured 43m+, so splitting by
+    # browser bounds each shard at roughly a third of that. Every shard runs the same tests, so the
+    # split is near-even by construction — no duration bookkeeping needed. `fail-fast: false` keeps one
+    # browser's failure from cancelling the other shards' signal (and their traces).
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    # Headroom over the 60m test cap plus ~10m of bundling: the step timeout fails the job cleanly with
+    # Headroom over the 40m test cap plus ~10m of bundling: the step timeout fails the job cleanly with
     # traces attached, whereas hitting this cap cancels it and proves nothing.
-    timeout-minutes: 90
+    timeout-minutes: 60
     env:
       DX_ENVIRONMENT: ci
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
+      # Selects this shard's Playwright project; also a moon task hash input, so each shard gets its
+      # own remote-cache entry.
+      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -451,8 +462,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # Only this shard's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm run install-playwright
+        run: pnpm run install-playwright ${{ matrix.browser }}
 
       # A manual `e2e` dispatch takes the "All" path on any branch: affected-scoping resolves to nothing
       # when the diff touches no project (e.g. a CI-only change), which would bundle and test nothing.
@@ -475,10 +487,8 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
-        timeout-minutes: 45
+        timeout-minutes: 30
         uses: trunk-io/analytics-uploader@v1
-        env:
-          PLAYWRIGHT_BROWSER: all
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -488,12 +498,11 @@ jobs:
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
-        # The full three-browser suite measures 43m+ and a handful of retries takes it past 45m, so the
-        # cap was cancelling runs in which every test passed. Interim headroom until e2e shards by browser.
-        timeout-minutes: 60
+        # The serial three-browser suite measured 43m+; a single browser's shard plus retries stays well
+        # under this, and the step (not job) timeout fails cleanly with traces attached.
+        timeout-minutes: 40
         uses: trunk-io/analytics-uploader@v1
         env:
-          PLAYWRIGHT_BROWSER: all
           # A manual dispatch must execute the suite: re-running the same commit otherwise replays a remote
           # cache hit in seconds, which reports green without running a test and emits no JUnit XML.
           MOON_CACHE: ${{ inputs.e2e && 'off' || 'read-write' }}
@@ -508,7 +517,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.browser }}
           path: test-results/playwright
           retention-days: 7
 
