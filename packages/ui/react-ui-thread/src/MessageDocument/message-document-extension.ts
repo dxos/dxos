@@ -11,16 +11,7 @@ import {
   StateField,
   type Transaction,
 } from '@codemirror/state';
-import {
-  Decoration,
-  type DecorationSet,
-  EditorView,
-  GutterMarker,
-  WidgetType,
-  gutter,
-  hoverTooltip,
-  keymap,
-} from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, GutterMarker, WidgetType, gutter, keymap } from '@codemirror/view';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
 import { Domino } from '@dxos/ui';
@@ -80,6 +71,8 @@ export type MessageDocumentOptions = {
   onEditCancel?: (message: MessageLike) => void;
   /** Every keystroke inside the edited message, so the host can hold the draft in memory. */
   onDraftChange?: (message: MessageLike, text: string) => void;
+  /** The message under the pointer, for the host's floating toolbar. */
+  onHoverChange?: (hover: MessageHover | undefined) => void;
   /** Copy for the thread row, so this package does not reach for a translation namespace mid-render. */
   labels?: { startThread: string; replyCount: (count: number) => string };
 };
@@ -448,71 +441,50 @@ const avatarGutter = ({ model, getMetadata }: MessageDocumentOptions): Extension
   });
 
 //
-// Hover controls
+// Hover reporting
 //
 
-const ACTION_ICONS: Record<MessageAction, string> = {
-  react: 'ph--smiley--regular',
-  reply: 'ph--arrow-bend-up-left--regular',
-  thread: 'ph--chats-circle--regular',
-  edit: 'ph--pencil-simple--regular',
-  delete: 'ph--trash--regular',
-};
-
-const createToolbar = (
-  actions: MessageAction[],
-  message: MessageLike,
-  onAction?: (action: MessageAction, message: MessageLike) => void,
-): HTMLElement => {
-  const row = Domino.of('div').classNames('flex gap-1 p-1 dx-panel bg-base-surface');
-  for (const action of actions) {
-    row.append(
-      Domino.of('div')
-        .classNames('dx-button aspect-square')
-        .attributes({
-          'role': 'button',
-          'data-density': 'sm',
-          'data-testid': `thread.document.${action}`,
-          'title': action,
-        })
-        .append(Domino.svg(ACTION_ICONS[action]))
-        .on('click', () => onAction?.(action, message)),
-    );
-  }
-
-  return row.root;
-};
+/** Where the toolbar for a hovered message should sit, in coordinates local to the editor. */
+export type MessageHover = { message: MessageLike; top: number };
 
 /**
- * Hover controls for the message under the pointer.
+ * Reports which message the pointer is over, so the host can float a toolbar there.
  *
- * A tooltip rather than an inline decoration so the toolbar overlays the message instead of taking
- * a column: the row keeps the full width of the transcript, and a long message wraps across all of
- * it rather than into the space the controls would otherwise have reserved.
+ * The controls are built in React from `@dxos/react-ui-menu` like every other toolbar in the app,
+ * rather than as hand-rolled DOM inside a CodeMirror tooltip — the actions belong in the action
+ * graph, and a tooltip anchors to a text position, which puts the toolbar wherever the anchor
+ * happens to land rather than over the row it acts on.
  */
-const hoverControls = (options: MessageDocumentOptions): Extension => {
-  const { model, getActions, onAction } = options;
-  return hoverTooltip(
-    (view, pos) => {
-      const index = model.chunks.findIndex((chunk) => chunk === model.getChunkAt(pos));
-      const item = model.chunks[index];
+const hoverReporting = ({ model, onHoverChange }: MessageDocumentOptions): Extension => {
+  if (!onHoverChange) {
+    return [];
+  }
+
+  return EditorView.domEventHandlers({
+    mousemove: (event, view) => {
+      const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+      const item = pos === null ? undefined : model.getChunkAt(pos);
       if (item?.kind !== 'message') {
-        return null;
+        onHoverChange(undefined);
+        return false;
       }
 
-      const actions = getActions?.(item) ?? [];
-      if (actions.length === 0) {
-        return null;
+      const index = model.chunks.indexOf(item);
+      const range = model.getRanges()[index];
+      const coords = range && view.coordsAtPos(range.from);
+      if (!coords) {
+        return false;
       }
 
-      return {
-        pos: model.getRanges()[index].from,
-        above: true,
-        create: () => ({ dom: createToolbar(actions, item.message, onAction) }),
-      };
+      // Local to the editor's own box, so the overlay can be positioned without measuring twice.
+      onHoverChange({ message: item.message, top: coords.top - view.dom.getBoundingClientRect().top });
+      return false;
     },
-    { hoverTime: 75 },
-  );
+    mouseleave: () => {
+      onHoverChange(undefined);
+      return false;
+    },
+  });
 };
 
 //
@@ -706,7 +678,7 @@ export const messageDocumentChrome = (options: MessageDocumentOptions): Extensio
   decorations(options),
   editing(options),
   avatarGutter(options),
-  hoverControls(options),
+  hoverReporting(options),
   selection(options),
   EditorView.theme({
     '.cm-avatar-gutter': { width: '2.5rem', paddingLeft: '0.5rem' },

@@ -6,12 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { getStoryMetadata } from '../testing';
+import { createMessages, getStoryMetadata } from '../testing';
 import { type MessageLike, type MessageReaction, type MessageThreadSummary } from '../types';
 import { type MessageAction } from './message-document-extension';
 import { type MessageItem } from './message-document-items';
@@ -77,7 +78,20 @@ const useFixture = () =>
     [],
   );
 
+/** The same generated conversation `Thread.stories`' `Default` renders, on the document stack. */
 const DefaultStory = () => {
+  const messages = useMemo(() => createMessages(12), []);
+  return (
+    <MessageDocument
+      classNames='bs-full'
+      messages={messages}
+      getMetadata={getStoryMetadata}
+      getActions={() => ['react', 'thread']}
+    />
+  );
+};
+
+const ReactionsStory = () => {
   const messages = useFixture();
   const [reactions, setReactions] = useState<Record<string, MessageReaction[]>>(() => ({
     [messages[0].id]: [{ emoji: '👍', count: 2, self: false }],
@@ -258,7 +272,7 @@ const DensityStory = () => {
 const meta = {
   title: 'ui/react-ui-thread/MessageDocument',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withMosaic()],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -269,18 +283,21 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Every message body reaches the document as plain text, and only once. */
+/** Bodies, headings and avatars all reach the DOM. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(await canvas.findByText(/First message in a burst/)).toBeInTheDocument();
-    await expect(await canvas.findByText(/A new day/)).toBeInTheDocument();
-    await expect(canvas.getAllByText(/Bob replies five seconds later/)).toHaveLength(1);
+    await waitFor(() => expect(canvasElement.querySelectorAll('.cm-line').length).toBeGreaterThan(0));
+    // The body is plain text in the document, not a widget — the thing that buys wrapping,
+    // cross-message selection and find.
+    await expect(canvasElement.querySelector('.cm-line')?.textContent?.length).toBeGreaterThan(0);
+    // One avatar per run, in the gutter.
+    await expect(canvasElement.querySelectorAll('.cm-avatar-gutter .cm-gutterElement').length).toBeGreaterThan(0);
   },
 };
 
 /** A run shows one heading, not one per message; a new sender or a divider starts another. */
 export const Grouping: Story = {
+  render: ReactionsStory,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByText(/First message in a burst/);
@@ -292,6 +309,7 @@ export const Grouping: Story = {
 
 /** The day divider is labeled; the same-day gap divider is not. */
 export const Dividers: Story = {
+  render: ReactionsStory,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText(/Wednesday, July 1/)).toBeInTheDocument();
@@ -301,6 +319,7 @@ export const Dividers: Story = {
 
 /** Folded pills render under their message and toggle the local identity's reaction. */
 export const Reactions: Story = {
+  render: ReactionsStory,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const pill = await canvas.findByText('👍 2');
@@ -316,10 +335,11 @@ export const Reactions: Story = {
  * reserving a column — so the assertion looks for a `.cm-tooltip`, not a sibling of the text.
  */
 export const HoverToolbar: Story = {
+  render: ReactionsStory,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = (action: MessageAction) =>
-      canvasElement.querySelector<HTMLElement>(`.cm-tooltip [data-testid="thread.document.${action}"]`);
+      canvasElement.querySelector<HTMLElement>(`[data-testid="thread.document.${action}"]`);
 
     hover(await canvas.findByText(/Bob replies five seconds later/));
     await waitFor(() => expect(button('thread')).not.toBeNull());
@@ -360,10 +380,9 @@ export const Thread: Story = {
     );
 
     hover(await canvas.findByText(/Should we cut the release/));
-    await waitFor(() =>
-      expect(canvasElement.querySelector('.cm-tooltip [data-testid="thread.document.reply"]')).not.toBeNull(),
-    );
-    await expect(canvasElement.querySelector('.cm-tooltip [data-testid="thread.document.thread"]')).toBeNull();
+    await waitFor(() => expect(canvasElement.querySelector('[data-testid="thread.document.reply"]')).not.toBeNull());
+    // Threads do not nest, so a thread withholds start-thread where the channel offers it.
+    await expect(canvasElement.querySelector('[data-testid="thread.document.thread"]')).toBeNull();
   },
 };
 
@@ -375,7 +394,7 @@ export const Editing: Story = {
     const row = () => canvasElement.querySelector<HTMLElement>('[data-editing="true"]');
 
     hover(await canvas.findByText('The original text.'));
-    const edit = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip [data-testid="thread.document.edit"]');
+    const edit = () => canvasElement.querySelector<HTMLElement>('[data-testid="thread.document.edit"]');
     await waitFor(() => expect(edit()).not.toBeNull());
     await userEvent.click(edit()!);
 
@@ -403,7 +422,7 @@ export const EditingWithIncoming: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     hover(await canvas.findByText('The original text.'));
-    const edit = () => canvasElement.querySelector<HTMLElement>('.cm-tooltip [data-testid="thread.document.edit"]');
+    const edit = () => canvasElement.querySelector<HTMLElement>('[data-testid="thread.document.edit"]');
     await waitFor(() => expect(edit()).not.toBeNull());
     await userEvent.click(edit()!);
     await waitFor(() => expect(canvasElement.querySelector('[data-editing="true"]')).not.toBeNull());

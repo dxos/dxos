@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import {
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
   documentSlots,
-  extendedMarkdown,
   lineSpacing,
   scroller,
 } from '@dxos/ui-editor';
@@ -21,7 +21,9 @@ import { ChunkModel, chunkSync } from '../model';
 import { translationKey } from '../translations';
 import { type MessageLike } from '../types';
 import {
+  type MessageAction,
   type MessageDocumentOptions,
+  type MessageHover,
   messageDocumentChangedEffect,
   messageDocumentChrome,
   setMessageDocumentStateEffect,
@@ -71,6 +73,10 @@ export const MessageDocument = ({
   // items are rebuilt, which is driven by everything except typing.
   const draftRef = useRef<{ id: string; text: string }>(undefined);
 
+  // Which row the pointer is over, and where its toolbar goes. Reported by the chrome, rendered
+  // here so the controls are ordinary `react-ui-menu` actions rather than hand-built DOM.
+  const [hover, setHover] = useState<MessageHover | undefined>(undefined);
+
   // Read through a ref so the editor is not rebuilt when a caller passes fresh callback identities
   // on every render, which is the common case and would otherwise remount on each keystroke.
   const handlersRef = useDynamicRef(handlers);
@@ -96,6 +102,7 @@ export const MessageDocument = ({
       onDraftChange: (message, text) => {
         draftRef.current = { id: message.id, text };
       },
+      onHoverChange: setHover,
     }),
     [model, t, handlersRef],
   );
@@ -107,8 +114,10 @@ export const MessageDocument = ({
         // filter, which would defeat the one writable row. Editability is governed by the chrome,
         // which turns it on only for the message being edited.
         createBasicExtensions({ lineWrapping: true, search: true }),
-        createThemeExtensions({ themeMode, slots: documentSlots, syntaxHighlighting: true }),
-        extendedMarkdown({}),
+        // No syntax highlighting: a message body is prose, not source, and highlighting it wraps
+        // every paragraph in a themed span. `extendedMarkdown` is likewise for XML tag widgets,
+        // which this document does not use — its chrome comes from the model's ranges.
+        createThemeExtensions({ themeMode, slots: documentSlots }),
         decorateMarkdown(),
         lineSpacing(),
         messageDocumentChrome(options),
@@ -162,7 +171,81 @@ export const MessageDocument = ({
     getActions,
   ]);
 
-  return <div className={mx('dx-container', classNames)} ref={parentRef} />;
+  const hoveredActions = hover
+    ? (handlers.getActions?.({
+        kind: 'message',
+        id: hover.message.id,
+        message: hover.message,
+        head: true,
+        last: false,
+      }) ?? [])
+    : [];
+
+  return (
+    // Relative, because the toolbar is positioned against the editor's own box: it overlays the
+    // hovered row rather than taking a column beside it, so a long message keeps the full width.
+    <div className='relative grid grid-rows-1 min-bs-0'>
+      <div className={mx('dx-container', classNames)} ref={parentRef} />
+      {hover && hoveredActions.length > 0 && (
+        <MessageToolbar
+          key={hover.message.id}
+          top={hover.top}
+          actions={hoveredActions}
+          onAction={(action) => handlers.onAction?.(action, hover.message)}
+        />
+      )}
+    </div>
+  );
+};
+
+/** Icon and label per action, on the same translation keys the tile stack's controls use. */
+const ACTIONS: Record<MessageAction, { icon: string; label: string }> = {
+  react: { icon: 'ph--smiley--regular', label: 'add-reaction.label' },
+  reply: { icon: 'ph--arrow-bend-up-left--regular', label: 'reply-message.label' },
+  thread: { icon: 'ph--chats-circle--regular', label: 'start-thread.label' },
+  edit: { icon: 'ph--pencil-simple--regular', label: 'edit-message.label' },
+  delete: { icon: 'ph--trash--regular', label: 'delete-message.label' },
+};
+
+type MessageToolbarProps = {
+  top: number;
+  actions: MessageAction[];
+  onAction: (action: MessageAction) => void;
+};
+
+/** Floating controls for the hovered message, on the same menu primitives as the tile stack. */
+const MessageToolbar = ({ top, actions, onAction }: MessageToolbarProps) => {
+  const { t } = useTranslation(translationKey);
+  const onActionRef = useDynamicRef(onAction);
+  const menuActions = useMenuBuilder(() => {
+    const builder = MenuBuilder.make().root({ label: ['message-controls.title', { ns: translationKey }] });
+    for (const action of actions) {
+      builder.action(
+        action,
+        {
+          label: [ACTIONS[action].label, { ns: translationKey }],
+          icon: ACTIONS[action].icon,
+          iconOnly: true,
+          testId: `thread.document.${action}`,
+        },
+        () => onActionRef.current(action),
+      );
+    }
+
+    return builder.build();
+  }, [actions, onActionRef, t]);
+
+  return (
+    // `alwaysActive`: the toolbar belongs to the hovered row, not to whichever plank holds
+    // attention, so it must not disable itself when the transcript is unattended.
+    <Menu.Root {...menuActions} alwaysActive iconSize={4}>
+      <Menu.Toolbar
+        classNames='absolute inline-end-2 w-auto rounded-sm border border-separator bg-baseSurface z-10'
+        style={{ top }}
+        density='sm'
+      />
+    </Menu.Root>
+  );
 };
 
 MessageDocument.displayName = 'MessageDocument';
