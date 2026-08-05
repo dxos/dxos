@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useLayoutEffect } from 'react';
+import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect } from 'react';
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
@@ -97,11 +97,20 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
 
   const ComposedContext = composeContexts(reactContexts);
   return (
-    <ComposedContext>
-      {reactRoots.map(({ id, root: Component }) => (
-        <Component key={id} />
-      ))}
-    </ComposedContext>
+    // Contexts nest, so one suspending provider necessarily withholds everything below it; the
+    // boundary here at least keeps that from unwinding past the app's providers.
+    <Suspense fallback={null}>
+      <ComposedContext>
+        {reactRoots.map(({ id, root: Component }) => (
+          // One boundary per root: roots read capabilities whose providers activate in a later
+          // wave, and `useCapability` suspends on that. A shared boundary would let one late root
+          // withhold every other root's already-renderable content — the blank shell this fixes.
+          <Suspense key={id} fallback={null}>
+            <Component />
+          </Suspense>
+        ))}
+      </ComposedContext>
+    </Suspense>
   );
 };
 

@@ -106,6 +106,14 @@ export interface CapabilityManager {
   waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T>;
 
   /**
+   * Promise form of {@link waitFor}, memoized per interface so repeated calls return the SAME
+   * reference — React dedupes suspended renders by thrown-promise identity, so a fresh promise per
+   * render would re-suspend forever.
+   * @returns A promise settling once at least one capability is contributed.
+   */
+  waitForPromise<T>(interfaceDef: Capability.InterfaceDef<T>): Promise<T>;
+
+  /**
    * Get capabilities grouped by the module that contributed them.
    * @returns An atom containing a record from module ID to capability implementations.
    */
@@ -132,6 +140,9 @@ class CapabilityManagerImpl implements CapabilityManager {
   private readonly _registeredIdentifiers = new Set<string>();
 
   private readonly _contributionsViews = new Map<string, Capability.Contributions<unknown>>();
+
+  /** In-flight {@link waitForPromise} results, keyed by interface identifier. */
+  private readonly _waitPromises = new Map<string, Promise<unknown>>();
 
   private readonly _capabilityEntries = Atom.family<string, Atom.Writable<CapabilityEntry<unknown>[]>>(() => {
     return Atom.make<CapabilityEntry<unknown>[]>([]).pipe(Atom.keepAlive);
@@ -258,6 +269,20 @@ class CapabilityManagerImpl implements CapabilityManager {
       cancel();
       return result;
     });
+  }
+
+  waitForPromise<T>(interfaceDef: Capability.InterfaceDef<T>): Promise<T> {
+    const existing = this._waitPromises.get(interfaceDef.identifier);
+    if (existing) {
+      return existing as Promise<T>;
+    }
+    const promise = Effect.runPromise(this.waitFor(interfaceDef)).finally(() => {
+      // Drop it once settled so a capability that is removed and re-contributed can be waited on
+      // again; until then every suspended reader shares this one reference.
+      this._waitPromises.delete(interfaceDef.identifier);
+    });
+    this._waitPromises.set(interfaceDef.identifier, promise);
+    return promise;
   }
 
   atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>> {
