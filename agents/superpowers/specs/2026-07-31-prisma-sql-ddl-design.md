@@ -272,12 +272,17 @@ implicitly true already, so it is a no-op.
 
 ### Carve-outs
 
-Not expressible in Prisma; these stay hand-written in the `.sql` and are explicitly not
-Prisma-managed:
+Not expressible in Prisma, so they are written by hand:
 
 - The 2 `fts5` virtual tables — `ftsIndex` (`fts-index.ts`) and `emails` (`fts5.test.ts`).
   Prisma has no virtual-table model.
 - `crawl_run`'s `id INTEGER PRIMARY KEY CHECK (id = 1)` singleton constraint.
+
+These need no special ordering convention. Every migration is hand-maintained — prisma is run once
+per package to produce the initial SQL and never again — so a carve-out is either written into the
+initial migration alongside the generated statements, or added as the next numbered file. The
+manifest in `index.ts` fixes the order either way, and `schema.prisma` simply does not describe
+them; that is what makes them carve-outs.
 
 ### Drift
 

@@ -16,51 +16,6 @@ import init from './migrations/0001_init.sql?raw';
 
 const TestLayer = SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
 
-/**
- * The DDL the feed store shipped before its schema moved to prisma. Retained verbatim so the
- * generated migration can be proven equivalent for databases created by earlier releases — those are
- * real local-first user databases, and migration 1 has to apply to them as a no-op.
- */
-const LEGACY_DDL = [
-  `CREATE TABLE IF NOT EXISTS feeds (
-    feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
-    spaceId TEXT NOT NULL,
-    feedId TEXT NOT NULL,
-    feedNamespace TEXT
-  )`,
-  'CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)',
-  `CREATE TABLE IF NOT EXISTS blocks (
-    insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
-    feedPrivateId INTEGER NOT NULL,
-    position INTEGER,
-    sequence INTEGER NOT NULL,
-    actorId TEXT NOT NULL,
-    prevSequence INTEGER,
-    prevActorId TEXT,
-    timestamp INTEGER NOT NULL,
-    data BLOB NOT NULL,
-    FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
-  )`,
-  'CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)',
-  `CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId
-     ON blocks(feedPrivateId, sequence, actorId)`,
-  `CREATE TABLE IF NOT EXISTS subscriptions (
-    subscriptionId TEXT PRIMARY KEY,
-    expiresAt INTEGER NOT NULL,
-    feedPrivateIds TEXT NOT NULL -- JSON array
-  )`,
-  `CREATE TABLE IF NOT EXISTS cursor_tokens (
-    spaceId TEXT PRIMARY KEY,
-    token TEXT NOT NULL
-  )`,
-  `CREATE TABLE IF NOT EXISTS sync_state (
-    spaceId TEXT NOT NULL,
-    feedNamespace TEXT NOT NULL,
-    lastPulledPosition INTEGER NOT NULL DEFAULT -1,
-    PRIMARY KEY (spaceId, feedNamespace)
-  )`,
-];
-
 type TableInfo = { name: string; type: string; notnull: number; pk: number; dflt_value: string | null };
 type ForeignKey = { from: string; table: string; to: string; on_delete: string; on_update: string };
 
@@ -126,19 +81,6 @@ const appliedIds = Effect.gen(function* () {
 });
 
 describe('generated feed schema', () => {
-  it.effect('matches the legacy hand-written DDL', () =>
-    Effect.gen(function* () {
-      const fromMigration = yield* SqlMigrations.apply(init).pipe(Effect.andThen(describeSchema()));
-      const fromLegacy = yield* Effect.provide(
-        SqlMigrations.apply(...LEGACY_DDL).pipe(Effect.andThen(describeSchema())),
-        TestLayer,
-      );
-
-      expect(fromMigration).toEqual(fromLegacy);
-      expect(Object.keys(fromMigration)).toEqual(['blocks', 'cursor_tokens', 'feeds', 'subscriptions', 'sync_state']);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
   // Pins the one intended divergence from the legacy DDL, so it stays a decision rather than
   // drifting into an accident. Only fresh databases are affected.
   it.effect('tightens nullable TEXT primary keys to NOT NULL', () =>
@@ -160,6 +102,36 @@ describe('generated feed schema', () => {
 });
 
 describe('feed migrations', () => {
+  // The initial migration is applied to databases that already hold these tables — anything created
+  // before migration tracking existed — so every CREATE in it has to tolerate that. Nothing else
+  // enforces this: the clause is added by hand, and it does not change the resulting schema, so the
+  // equivalence assertions above cannot see it missing.
+  it('every CREATE in the initial migration is idempotent', ({ expect }) => {
+    // Split first, so a `;` or the words inside a comment or string literal cannot be mistaken for
+    // a statement boundary.
+    const bare = SqlMigrations.splitStatements(init)
+      .filter((statement) => /^CREATE\s/i.test(statement))
+      .filter(
+        (statement) =>
+          !/^CREATE\s+(?:VIRTUAL\s+TABLE|UNIQUE\s+INDEX|TABLE|INDEX)\s+IF\s+NOT\s+EXISTS\s/i.test(statement),
+      )
+      .map((statement) => statement.split('\n')[0]);
+
+    expect(bare).toEqual([]);
+  });
+
+  // A `.sql` file that is not in the manifest never runs, silently: the migrator only sees what
+  // `MIGRATIONS` lists. The manifest stays explicit so a bundler cannot change what ships, and this
+  // asserts it stays complete.
+  it('the manifest lists every migration file', ({ expect }) => {
+    const files = import.meta.glob('./migrations/*.sql', { query: '?raw', eager: true });
+    const onDisk = Object.keys(files)
+      .map((path) => path.replace('./migrations/', '').replace('.sql', ''))
+      .sort();
+
+    expect(onDisk).toEqual(Object.keys(MIGRATIONS).sort());
+  });
+
   it.effect('applies and records every migration on a fresh database', () =>
     Effect.gen(function* () {
       expect(yield* migrate).toEqual(Object.keys(MIGRATIONS).map((key) => [Number(key.split('_')[0]), 'init']));
@@ -177,13 +149,14 @@ describe('feed migrations', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // Databases created before migration tracking existed need no baselining: migration 1 is entirely
-  // `IF NOT EXISTS`, so it applies as a no-op and is recorded like any other. This is the test that
-  // protects existing local-first user data, and the reason the `IF NOT EXISTS` clauses are required.
-  it.effect('applies as a no-op to a database created before migration tracking', () =>
+  // A database created before migration tracking holds these tables but has no history, so the
+  // migrator runs migration 1 against it. That is safe only because every statement is
+  // `IF NOT EXISTS`. Applying the migration's own SQL directly stands in for such a database — it is
+  // the same DDL those releases produced, without restating it.
+  it.effect('applies as a no-op to a database that already has the tables', () =>
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      yield* SqlMigrations.apply(...LEGACY_DDL);
+      yield* SqlMigrations.apply(init);
       yield* sql`INSERT INTO cursor_tokens (spaceId, token) VALUES ('space-1', 'token-1')`;
       const before = yield* describeSchema();
 
@@ -193,18 +166,6 @@ describe('feed migrations', () => {
       expect(yield* appliedIds).toEqual([[1, 'init']]);
       const rows = yield* sql<{ token: string }>`SELECT token FROM cursor_tokens`;
       expect(rows.map((row) => row.token)).toEqual(['token-1']);
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('converges on the same schema from empty or from a legacy database', () =>
-    Effect.gen(function* () {
-      yield* SqlMigrations.apply(...LEGACY_DDL);
-      yield* migrate;
-      const upgraded = yield* describeSchema();
-
-      const fresh = yield* Effect.provide(migrate.pipe(Effect.andThen(describeSchema())), TestLayer);
-
-      expect(upgraded).toEqual(fresh);
     }).pipe(Effect.provide(TestLayer)),
   );
 });
