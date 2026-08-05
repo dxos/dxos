@@ -12,7 +12,9 @@ CI job that runs moon — handing them off for a focused investigation.
    compute but emit many files (asset copies, typedoc HTML, rolldown bundles) are net losses.
 2. **Four tasks never hydrate at all**, re-executing in every job despite producing
    byte-identical hashes. The lookup key is right, so the artifact is absent — an upload-side
-   failure. `docs:bundle` is explained (two checked-in mp4s exceed 4 MB); the others are not.
+   failure. `docs:bundle` is explained (two checked-in mp4s exceed moon's 4 MB per-blob limit).
+   `composer-app:bundle` is **not** the same cause — measured, it has no file over 4 MB, but its
+   output is **384 MB across 17 954 files**, so total size or file count is the open candidate.
 3. Consequence: per-job wall time is dominated by cache hydration, not by real work —
    **920–1121 s of hydration against 20–95 s of execution**, at only 3.0–3.7× effective
    parallelism on 8-core runners.
@@ -112,8 +114,9 @@ pathological artifact.
 - _Task configuration_ — `tasks:bundle` and `todomvc:bundle` are structurally identical
   (`deps: [shell:bundle]`, both inheriting `command`/`outputs: [out]` from `.moon/tasks/tag-vite.yml`,
   both emitting to `out/<name>`), yet todomvc hydrates and tasks does not.
-- _Total artifact size_ — `testbench-app` (25 MB, 533 files) and `devtools-extension` (20 MB,
-  542 files) both hydrate fine.
+- _Artifact size at the 20–25 MB scale_ — `testbench-app` (25 MB, 533 files) and
+  `devtools-extension` (20 MB, 542 files) both hydrate fine, so size alone is not disqualifying
+  at that magnitude. It is still a live candidate at composer's magnitude — see below.
 
 - _A single blob over 4 MB_ — **measured and ruled out for `composer-app`.** moon aborts an
   action's upload when one blob exceeds 4 MB, which would make every later run a guaranteed miss
