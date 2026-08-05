@@ -647,10 +647,12 @@ describe('ManagerImpl', () => {
       yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
 
       // `isOfType` inside the map narrows `event.data` to the OperationEnd payload without a cast.
-      const outcomes = capturedTraceMessages
+      const ends = capturedTraceMessages
         .flatMap((message) => Trace.flatten(message))
-        .flatMap((event) => (Trace.isOfType(Trace.OperationEnd, event) ? [event.data.outcome] : []));
-      expect(outcomes).toEqual(['incomplete']);
+        .flatMap((event) => (Trace.isOfType(Trace.OperationEnd, event) ? [event.data] : []));
+      expect(ends.map((end) => end.outcome)).toEqual(['incomplete']);
+      // `error` is for failures only — an incomplete (run-again) end must not carry one.
+      expect(ends[0].error).toBeUndefined();
     }, Effect.provide(CapturingTraceTestLayer)),
   );
 
