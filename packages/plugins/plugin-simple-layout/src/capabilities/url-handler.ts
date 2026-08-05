@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -48,10 +49,26 @@ export default Capability.makeModule(
 
     const getState = () => registry.get(stateAtom);
 
-    /** Dispatch all NavigationHandler contributions with a given URL. */
+    /**
+     * Dispatch all NavigationHandler contributions with a given URL.
+     *
+     * `catchAllCause`, not `catchAll`: a handler that invokes an operation fails as a DEFECT
+     * (`Process.fromOperation` uses `Effect.orDie`), which the Fail channel does not carry. On the
+     * `?token&type=login` boot the redeem races the forked client init, so the defect is the COMMON
+     * path — and left to escape it fails this module's activation, taking URL handling down for the
+     * whole session.
+     */
     const dispatchNavigationHandlers = (url: URL) =>
       Effect.all(
-        navigationHandlers.get().map((handler) => handler(url)),
+        navigationHandlers
+          .get()
+          .map((handler) =>
+            handler(url).pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
+              ),
+            ),
+          ),
         { concurrency: 'unbounded' },
       );
 

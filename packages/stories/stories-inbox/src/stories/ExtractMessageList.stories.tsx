@@ -55,6 +55,8 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
     provides: [Capabilities.LayerSpec],
     activate: () =>
       Effect.succeed([

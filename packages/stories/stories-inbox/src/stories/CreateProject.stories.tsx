@@ -8,6 +8,7 @@ import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -36,6 +37,8 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
     provides: [Capabilities.LayerSpec],
     activate: () =>
       Effect.succeed([

@@ -47,16 +47,7 @@ export const Client = Capability.lazyModule(
   },
   () => import('./client'),
 );
-export const LayerSpecs = Capability.lazyModule(
-  'LayerSpecs',
-  {
-    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
-    // idle registration lands after the snapshot and the service is simply absent.
-    activatesOn: ActivationEvents.Startup,
-    provides: [Capabilities.LayerSpec],
-  },
-  () => import('./layer-specs'),
-);
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), { name: 'LayerSpecs' });
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {

@@ -21,16 +21,10 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 // the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
 // pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
 // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
-export const FactStore = Capability.lazyModule(
-  'FactStore',
-  {
-    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
-    // idle registration lands after the snapshot and the service is simply absent.
-    activatesOn: ActivationEvents.Startup,
-    provides: [BrainCapabilities.FactStoreRegistry, Capabilities.LayerSpec],
-  },
-  () => import('./fact-store'),
-);
+export const FactStore = AppCapability.layerSpec(() => import('./fact-store'), {
+  name: 'FactStore',
+  provides: [BrainCapabilities.FactStoreRegistry],
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.plugin.brain.surface.facts'],
 });

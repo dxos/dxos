@@ -15,16 +15,10 @@ import * as RoutineCapabilities from '../types/RoutineCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const LayerSpecs = Capability.lazyModule(
-  'LayerSpecs',
-  {
-    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
-    // idle registration lands after the snapshot and the service is simply absent.
-    activatesOn: ActivationEvents.Startup,
-    provides: [Capabilities.LayerSpec, Capabilities.TraceSink],
-  },
-  () => import('./layer-specs'),
-);
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
+  name: 'LayerSpecs',
+  provides: [Capabilities.TraceSink],
+});
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent'],

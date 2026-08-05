@@ -96,6 +96,25 @@ export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Cap
   { activatesOn: ActivationEvents.Startup },
 );
 
+/**
+ * Module maker contributing a {@link Capabilities.LayerSpec}.
+ *
+ * LayerSpecs are RESTART-SCOPED: the process manager takes a one-shot snapshot of the collection
+ * during boot and bakes it into a single Effect runtime. The list cannot be dynamic — rebuilding
+ * the runtime for a late contribution would destroy every live service on it — so a LayerSpec
+ * contributed after that snapshot (including by a plugin enabled post-boot) is ignored until the
+ * next full boot, and the process manager logs an error naming the module.
+ *
+ * The gate is therefore baked in rather than left to the author: every contributor must be on the
+ * startup pass, and they must all be there together. Multi requires never gate, so getting this
+ * wrong does not fail loudly at the contribution site — it surfaces hops away as a missing service.
+ */
+export const layerSpec: Maker<typeof Capabilities.LayerSpec> = Capability$.moduleMaker(
+  'LayerSpec',
+  Capabilities.LayerSpec,
+  { activatesOn: ActivationEvents.Startup },
+);
+
 /** Module maker contributing undo operation mappings. */
 export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.moduleMaker(
   'UndoMappings',

@@ -63,6 +63,29 @@ export default Capability.makeModule(
     // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
     // contributed by plugins enabled later do not join the stack (same as the event window).
     const layerSpecs = layerSpecContributions.get();
+
+    // The snapshot is restart-scoped — the stack below bakes into one runtime, and rebuilding it
+    // for a late arrival would tear down every live service on it. A LayerSpec contributed after
+    // this point is therefore silently absent, and the failure surfaces hops away as a missing
+    // service (which is exactly how it has bitten us). Name it here instead.
+    const layerSpecModulesAtSnapshot = new Set(
+      Object.keys(atomRegistry.get(capabilityManager.atomByModule(Capabilities.LayerSpec))),
+    );
+    const cancelLayerSpecWatch = atomRegistry.subscribe(
+      capabilityManager.atomByModule(Capabilities.LayerSpec),
+      (byModule) => {
+        for (const moduleId of Object.keys(byModule)) {
+          if (!layerSpecModulesAtSnapshot.has(moduleId)) {
+            layerSpecModulesAtSnapshot.add(moduleId);
+            log.error('LayerSpec contributed after the runtime was built — it is ignored until the next boot', {
+              module: moduleId,
+              fix: 'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
+            });
+          }
+        }
+      },
+    );
+    yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
     const traceSinkFactories = traceSinkContributions.get();
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
     const remoteTraceMonitors = remoteTraceMonitorContributions.get();

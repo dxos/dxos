@@ -24,36 +24,12 @@ export const AgentHydrator = Capability.lazyModule(
   { requires: [Capabilities.ProcessManagerRuntime], provides: [], activatesOn: AssistantEvents.Start },
   () => import('./agent-hydrator'),
 );
-export const AgentRuntime = Capability.lazyModule(
-  'AgentRuntime',
-  {
-    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
-    // idle registration lands after the snapshot and the service is simply absent.
-    activatesOn: ActivationEvents.Startup,
-    provides: [Capabilities.LayerSpec],
-  },
-  () => import('./agent-service'),
-);
-export const AiContext = Capability.lazyModule(
-  'AiContext',
-  {
-    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
-    // idle registration lands after the snapshot and the service is simply absent.
-    activatesOn: ActivationEvents.Startup,
-    provides: [Capabilities.LayerSpec],
-  },
-  () => import('./ai-context'),
-);
-export const AiService = Capability.lazyModule(
-  'AiService',
-  {
-    // Snapshotted once by the process manager during boot; see the sibling modules above.
-    activatesOn: ActivationEvents.Startup,
-    requires: [AppCapabilities.AiModelResolver],
-    provides: [Capabilities.LayerSpec],
-  },
-  () => import('./ai-service'),
-);
+export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service'), { name: 'AgentRuntime' });
+export const AiContext = AppCapability.layerSpec(() => import('./ai-context'), { name: 'AiContext' });
+export const AiService = AppCapability.layerSpec(() => import('./ai-service'), {
+  name: 'AiService',
+  requires: [AppCapabilities.AiModelResolver],
+});
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
