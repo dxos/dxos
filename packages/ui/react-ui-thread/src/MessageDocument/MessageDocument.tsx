@@ -8,10 +8,10 @@ import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } 
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import {
+  compactSlots,
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  compactSlots,
   lineSpacing,
   scroller,
 } from '@dxos/ui-editor';
