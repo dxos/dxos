@@ -39,6 +39,21 @@ export const setupPluginManager = ({
     ...options,
   });
 
+  // The framework capabilities a real host contributes, mirroring `createTestApp`. Without these
+  // no MODULE provides `AtomRegistry`, so any module requiring it fails the dependency pass's
+  // missing-provider check with nothing to wait for — reached as soon as a requiring module sits
+  // on the startup pass (attention, graph, the process manager).
+  pluginManager.capabilities.contribute({
+    interface: Capabilities.PluginManager,
+    implementation: pluginManager,
+    module: 'org.dxos.app-framework.plugin-manager',
+  });
+  pluginManager.capabilities.contribute({
+    interface: Capabilities.AtomRegistry,
+    implementation: pluginManager.registry,
+    module: 'org.dxos.app-framework.atom-registry',
+  });
+
   if (capabilities) {
     // Fixtures hand us `Contribution`s (from `Capability.contribute`); expand them to the raw
     // interface/implementation entries the manager ingests — the same path module activation uses.
