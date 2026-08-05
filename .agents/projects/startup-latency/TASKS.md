@@ -19,10 +19,21 @@ got here — checkpoints, measurements and findings, not work items.
       main/changeset-release/dispatch, so the check runs post-merge and does NOT gate the PR that
       introduces the regression — which is the case it was motivated by. Promoting it to its own
       always-on job is a small diff when that becomes worth the bundle minutes.
-- [ ] **Flip the default `activatesOn` from `Startup` to `Idle`** (own PR, user-directed) — plus the
-      mandatory second half, `#isBaselineWave` becoming `Startup ∪ Idle`. Detail under [Later / standing](#later--standing).
-- [ ] **Collapse `ActivationSpec` to one mode** (own PR, user-directed) — dependency mode is a wave
-      with no name. Detail under [Later / standing](#later--standing).
+- [x] **Flip the default `activatesOn` from `Startup` to `Idle`** — landed with the mandatory
+      second half (`#isBaselineWave` is now `Startup ∪ Idle`). `Idle` moved to
+      `core/activation-event.ts` beside `Startup` because `normalizeActivation` defaults to it and
+      core cannot import `common` without closing a cycle. 237 of ~460 modules changed wave; the
+      full repo test suite showed **no activation-related fallout outside app-framework's own
+      tests** (the two `react-ui-form` failures were a `better-sqlite3` native-load flake — with
+      `MOON_CACHE=off` both defaults pass 64/64). Test fallout was one shape: `start()` forks the
+      idle wave rather than awaiting it, so assertions need an `Idle` barrier first.
+- [x] **Collapse `ActivationSpec` to one mode** — the headline was already done: `ActivationSpec`
+      carries no `mode` discriminator, `#pullDependencyProviders` is already wave-scoped, and the
+      `requires?`-optional fold-in had landed (both `as Requires` casts are gone). Shipped the
+      cleanup it was meant to unlock: deleted the duplicate `ActivationEvents.PluginStart` wrapper
+      (one caller, now on `ActivationEvent.pluginStart`) and the startup harness's dead `mode` axis
+      — it read `spec.mode ?? 'unknown'` on a field that no longer exists, so a documented
+      classification axis had been recording `unknown` for every module in every startup report.
 - [x] **Move the `Idle` fire out of React into the activation scheduler** — already landed; the
       ledger entry described the pre-fix state. `ActivationScheduler.#activateWhenIdle` forks a
       tracked daemon behind `whenIdle` (`core/plugin-manager/idle.ts`), the feature-tested
@@ -30,8 +41,10 @@ got here — checkpoints, measurements and findings, not work items.
       idle effect. `activateDemandGatedModules` keeps its `Idle` element deliberately: the daemon is
       forked, so a caller asserting as soon as `start()` returns would otherwise race it — the fire
       is an ordering barrier, idempotent against the wave guard.
-- [ ] **Eager-core UI laziness** — `ResetDialog` drags ~2 MB for a fatal-error dialog; sweep `main`'s
-      static closure for the same shape. Detail under
+- [ ] **Eager-core UI laziness** — swept and attributed; `ResetDialog` is already lazy and
+      emoji-mart is gone. Two edges remain, each ~250 KB and neither fixable from our own imports:
+      fast-check via `@effect/ai`'s `Prompt` -> `effect/Arbitrary`, and the `react-aria` umbrella
+      via `react-aria-components`. Detail under
       [Wave 3](#wave-3--eager-core-ui-laziness-audit).
 
 Deliberately NOT tracked as tasks: the measurement-discipline items (boot waterfall, lab TBT,
@@ -278,15 +291,30 @@ definition pays only @effect/platform (tree-shaken via compute barrel) + date-fn
 
 Components loaded before `main()` that should be lazy. Known from the chunk graph:
 
-- **Eager-core UI laziness.** Three instances of one shape — a boot-reachable module pulling a
-  heavy facade it barely uses:
-  - `ResetDialog` lazy (`main.tsx:32` static import drags `react-ui-form` → emoji-mart 479 KB,
-    motion, mdast/mermaid, ajv/zod — ~2 MB for a fatal-error dialog)
-  - Sweep the rest of `main`'s 9 MB / 874-chunk static closure for same-shape offenders
-    (audit method: chunk-stats static closure of the entry, biggest facades first)
-  - fast-check in production: `@effect/ai`'s `LanguageModel` → `Arbitrary` → fast-check
-    (298 KB) — investigate whether the Arbitrary path is test-only upstream, can be
-    externalized/stubbed in the build, or needs an upstream issue
+- **Eager-core UI laziness.** Swept 2026-08-05 against the built `index.html` closure
+  (23 entries / 5.30 MB). One of the three is done; the other two are now attributed to an exact
+  edge instead of a suspicion:
+  - `ResetDialog` — **DONE.** It is `lazy()` at `main.tsx:59` (the ledger's "main.tsx:32 static
+    import" was stale). Confirmed by effect, not by reading: **emoji-mart is entirely absent**
+    from the boot closure — 0 chunks, 0 sourcemap paths.
+  - **fast-check — REAL, 247 KB, bridge identified.** `boot-1` is _entirely_ fast-check (222
+    sources) + pure-rand (16) + shared effect modules. Verified as emitted runtime code, not a
+    sourcemap artifact — `Symbol.for('fast-check/PreconditionFailure')`, `cloneMethod` and
+    `toStringMethod` are all present as code. The bridge is **`@effect/ai`'s `Prompt.js`, which
+    imports `effect/Arbitrary`** (the original guess, now confirmed). Ruled out along the way:
+    `effect/Schema` does NOT pull it (Schema.js/SchemaAST.js reference only the annotation _ids_),
+    the `effect` barrel is NOT boot-reachable, and no first-party file imports `effect` bare or
+    `Arbitrary` at all — so this is not fixable by changing our own imports. Options are a build
+    alias/stub for `effect/Arbitrary`, or keeping `@effect/ai` off the boot path.
+  - **react-aria — REAL, 177 sources, via the umbrella package.** `react-aria@3.48.0` (the
+    barrel that re-exports everything) is pulled by `react-aria-components`, which is what the
+    known `Input -> SegmentedInput -> DatePicker` chain reaches. Needs the component refactor
+    already recorded; no first-party file imports `react-aria` directly.
+  - Unrelated find, worth its own item: `echo-query/dist/query-lite/index.d.ts` is **412 KB**
+    because fast-check's entire API got inlined into it. Types only — the JS bundle beside it is
+    21 KB with zero fast-check — so it costs consumers' typecheck time, not boot bytes.
+  - `fast-check` / `effect/Arbitrary` / `react-aria` are now `trace-boot-leak` TARGETS, so the
+    next `DX_TRACE_BOOT_LEAK=1` bundle prints the entry-to-package import path for each.
 
 ## Phase 3 — measurement discipline + activation optimization (directives 2026-07-31)
 
