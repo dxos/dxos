@@ -84,6 +84,11 @@ the new store + tag.
   - Group A `planning` — regeneration failed on a malformed object reference (`Unable to parse object reference`); the outline/plan drift likely reaches this scenario too.
 - [ ] **(Optional/backlog)** deeper dig outside the 3-week window — `blueprints/*`, `conductor/gpt`, `trace-timeline`, `database/agent-firewall`.
 
+## Reviewer follow-ups (not blocking this PR)
+
+- [ ] **`query` tool `in`-example bug** (`assistant-toolkit .../database/operations/definitions.ts`) — the description's example shows nested object refs (`{"/": "echo://…"}`) for `in`, but the param decodes only plain URI strings, so the model copies the wrong shape and the call fails (recorded faithfully in the database-skill fixtures). Needs its own PR: fixing the description changes the hashed tool parameters and invalidates fixtures across every toolkit suite, so it must land with a coordinated regen.
+- [ ] **`toolChoice as any` / `params.tools as never[]`** (`LanguageModelFixture.ts` record path) — external `@effect/ai` generic-variance at the untyped-tool-list → typed-`Toolkit` boundary; only runs under `DX_UPDATE_MODEL_FIXTURES`. A true source fix means reconstructing tool types from the stored JSON schemas.
+
 ## References
 
 - [DESIGN.md](./DESIGN.md) — spec + current-state audit + open decisions.
