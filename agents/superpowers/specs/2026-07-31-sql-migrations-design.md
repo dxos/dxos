@@ -1,8 +1,9 @@
 # Versioned SQLite migrations
 
 Date: 2026-07-31 (revised 2026-08-05)
-Status: `feed` converted, green in dxos and verified in a real Durable Object via edge
-(dxos#12449, edge#790); 8 packages remain.
+Status: complete — all 9 packages converted (dxos#12449, edge#790). The audit's 41 production DDL
+statements in TypeScript literals are now 0; every schema lives in `src/migrations/*.sql` with a
+per-store history table.
 
 Move SQLite DDL out of TypeScript string literals into numbered `.sql` migration files, recorded in
 a per-store history table and applied by `@effect/sql`'s migrator.
@@ -226,11 +227,15 @@ miniflare config, plus `@effect/sql-sqlite-do` in the catalog.
 ## Phasing
 
 1. ~~Plumbing — `SqlMigrations`, `SqlTransaction.clientLayer`, and their tests.~~ **Done.**
-2. ~~`feed`, as the proving ground — richest schema (autoincrement PKs, a foreign key, a composite
-   PK, a `BLOB`, a non-trivial default), and the only package edge exercises in a DO.~~ **Done.**
-3. `pipeline-rdf`, `crawler`, `pipeline-discord` — server-side, disposable data.
-4. The five remaining client-DB packages, `index-core` last.
-5. Durable Object coverage in dxos CI.
+2. ~~`feed`, as the proving ground.~~ **Done.**
+3. ~~`pipeline-rdf`, `crawler`, `pipeline-discord`.~~ **Done.**
+4. ~~The five remaining client-DB packages, `index-core` last.~~ **Done.** `objectMeta`'s drift is
+   handled by a code migration (0002) that probes `PRAGMA table_info` and adds exactly the missing
+   columns — plain `.sql` cannot express it (no `ADD COLUMN IF NOT EXISTS`), and an unconditional
+   ALTER fails on fresh databases where 0001 just created the column. Indexes move to 0003 because
+   they reference columns 0002 guarantees. Vintage tests pin fresh / oldest / partially-migrated
+   databases converging on the code-derived shape with data preserved.
+5. Durable Object coverage in dxos CI — still open.
 
 ## Open questions
 
