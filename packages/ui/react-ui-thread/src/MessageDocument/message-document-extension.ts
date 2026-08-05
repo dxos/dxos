@@ -12,7 +12,6 @@ import {
   type Transaction,
 } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, WidgetType, keymap } from '@codemirror/view';
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
 import { Domino } from '@dxos/ui';
 import { mx } from '@dxos/ui-theme';
@@ -33,6 +32,9 @@ export const messageDocumentChangedEffect = StateEffect.define<null>();
 export type MessageDocumentState = { editingId?: string; currentId?: string; hoveredId?: string };
 
 export const setMessageDocumentStateEffect = StateEffect.define<MessageDocumentState>();
+
+/** Commit the edit in progress from outside the document — the toolbar's ✓, which is not a keystroke. */
+export const commitMessageEditEffect = StateEffect.define<null>();
 
 const messageDocumentState = StateField.define<MessageDocumentState>({
   create: () => ({}),
@@ -124,9 +126,7 @@ class PortalWidget extends WidgetType {
     this.#root = root;
     // The rail indent, so chrome lines up with the text column — except the head, which renders
     // `Message.Root` and so brings the rail column with it; indenting that would double it.
-    if (this._kind !== 'head') {
-      root.className = 'cm-message-chrome';
-    }
+    root.className = this._kind === 'head' ? 'cm-message-part' : 'cm-message-part cm-message-chrome';
     this._notify.mounted({
       id: this._id,
       root,
@@ -170,130 +170,6 @@ class DividerWidget extends WidgetType {
   }
 }
 
-class ReactionsWidget extends WidgetType {
-  constructor(
-    private readonly _reactions: MessageReaction[],
-    private readonly _onReact?: (emoji: string) => void,
-  ) {
-    super();
-  }
-
-  override eq(other: this) {
-    return (
-      this._reactions.length === other._reactions.length &&
-      this._reactions.every(
-        (reaction, index) =>
-          reaction.emoji === other._reactions[index].emoji &&
-          reaction.count === other._reactions[index].count &&
-          reaction.self === other._reactions[index].self,
-      )
-    );
-  }
-
-  override toDOM() {
-    const row = Domino.of('div').classNames('cm-message-chrome flex flex-wrap gap-1 pb-1');
-    for (const { emoji, count, self } of this._reactions) {
-      row.append(
-        Domino.of('button')
-          .classNames('dx-tag dx-tag--button')
-          .attributes({
-            'type': 'button',
-            'aria-pressed': self ? 'true' : 'false',
-            'data-testid': 'thread.document.pill',
-          })
-          .data('emoji', emoji)
-          .text(`${emoji} ${count}`)
-          .on('click', () => this._onReact?.(emoji)),
-      );
-    }
-
-    return row.root;
-  }
-
-  // The pills are interactive, so the editor must not treat a click on them as a click on the text.
-  override ignoreEvent() {
-    return false;
-  }
-}
-
-/** Compact reference to the message a reply targets, above the reply's own body. */
-class QuoteWidget extends WidgetType {
-  constructor(private readonly _quote: MessageQuote) {
-    super();
-  }
-
-  override eq(other: this) {
-    return this._quote.authorName === other._quote.authorName && this._quote.text === other._quote.text;
-  }
-
-  override toDOM() {
-    return (
-      Domino.of('div')
-        .classNames('cm-message-chrome flex items-center gap-1.5 pb-0.5 text-xs text-description min-w-0')
-        .attributes({ 'data-testid': 'thread.document.quote' })
-        // Appended one at a time: `append` fixes its children to a single element type, and this row
-        // mixes an SVG with spans.
-        .append(Domino.svg('ph--arrow-bend-up-left--regular').classNames('shrink-0 h-[1em] w-[1em] text-subdued'))
-        .append(
-          Domino.of('span')
-            .classNames('shrink-0 font-medium')
-            .text(this._quote.authorName ?? ''),
-        )
-        .append(Domino.of('span').classNames('truncate min-w-0').text(this._quote.text)).root
-    );
-  }
-}
-
-/** Thread affordance beneath a message: its name, reply count and last activity. */
-class ThreadLinkWidget extends WidgetType {
-  constructor(
-    private readonly _summary: MessageThreadSummary,
-    private readonly _label: string,
-    private readonly _onOpen?: () => void,
-  ) {
-    super();
-  }
-
-  override eq(other: this) {
-    return (
-      this._summary.name === other._summary.name &&
-      this._summary.replyCount === other._summary.replyCount &&
-      this._summary.lastActivity === other._summary.lastActivity &&
-      this._label === other._label
-    );
-  }
-
-  override toDOM() {
-    const { name, lastActivity } = this._summary;
-    const row = Domino.of('button')
-      .classNames(
-        'cm-message-chrome flex items-center gap-1.5 py-1 text-xs text-accent-text rounded-sm dx-focus-ring min-w-0',
-      )
-      .attributes({ 'type': 'button', 'data-testid': 'thread.document.open-thread' })
-      .append(Domino.svg('ph--chats-circle--regular'));
-    if (name) {
-      row.append(Domino.of('span').classNames('truncate min-w-0 font-medium').text(name));
-    }
-    row.append(Domino.of('span').classNames('shrink-0').text(this._label));
-    if (lastActivity) {
-      const date = new Date(lastActivity);
-      if (!Number.isNaN(date.getTime())) {
-        row.append(
-          Domino.of('span')
-            .classNames('shrink-0 text-description')
-            .text(formatDistanceToNow(date, { addSuffix: true })),
-        );
-      }
-    }
-
-    return row.on('click', () => this._onOpen?.()).root;
-  }
-
-  override ignoreEvent() {
-    return false;
-  }
-}
-
 /** Keyboard affordances beneath a message being edited. */
 class EditHintWidget extends WidgetType {
   constructor(private readonly _text: string) {
@@ -308,15 +184,6 @@ class EditHintWidget extends WidgetType {
     return Domino.of('div').classNames('cm-message-chrome pt-1 text-xs text-description').text(this._text).root;
   }
 }
-
-/** Relative time, as the tile heading shows it. */
-const formatTime = (timestamp?: string): string => {
-  if (!timestamp) {
-    return '';
-  }
-  const date = new Date(timestamp);
-  return Number.isNaN(date.getTime()) ? '' : formatDistanceToNow(date, { addSuffix: true });
-};
 
 //
 // Decorations
@@ -334,7 +201,7 @@ const buildDecorations = (
   options: MessageDocumentOptions,
   portals: PortalNotifier,
 ): DecorationSet => {
-  const { model, getMetadata, getReactions, getQuote, getThreadSummary, onReact, onThreadOpen, labels } = options;
+  const { model, getReactions, getQuote, getThreadSummary, labels } = options;
   const { editingId, currentId, hoveredId } = state.field(messageDocumentState);
   const builder = new RangeSetBuilder<Decoration>();
   const { doc } = state;
@@ -598,6 +465,18 @@ const editing = (options: MessageDocumentOptions): Extension => {
     return chunk?.kind === 'message' ? chunk.message : undefined;
   };
 
+  /** Reports whether there was an edit to commit, which is also what the Enter binding answers. */
+  const commit = (state: EditorState): boolean => {
+    const range = editRange(state, model);
+    const message = messageBeingEdited(state);
+    if (!range || !message) {
+      return false;
+    }
+
+    onEditCommit?.(message, state.doc.sliceString(range.from, range.to));
+    return true;
+  };
+
   return [
     // Contenteditable only while a message is being edited, so a chat log carries no stray caret.
     EditorView.editable.compute([messageDocumentState], (state) => !!state.field(messageDocumentState).editingId),
@@ -628,20 +507,22 @@ const editing = (options: MessageDocumentOptions): Extension => {
       return within ? transaction : [];
     }),
 
+    // The toolbar's ✓ is not a keystroke, so it commits through an effect rather than by reaching
+    // into the document itself — the row's bounds are the extension's to know.
+    EditorView.updateListener.of((update) => {
+      const asked = update.transactions.some((transaction) =>
+        transaction.effects.some((effect) => effect.is(commitMessageEditEffect)),
+      );
+      if (asked) {
+        commit(update.view.state);
+      }
+    }),
+
     Prec.highest(
       keymap.of([
         {
           key: 'Enter',
-          run: (view) => {
-            const range = editRange(view.state, model);
-            const message = messageBeingEdited(view.state);
-            if (!range || !message) {
-              return false;
-            }
-
-            onEditCommit?.(message, view.state.doc.sliceString(range.from, range.to));
-            return true;
-          },
+          run: (view) => commit(view.state),
         },
         {
           key: 'Escape',
@@ -729,6 +610,17 @@ const selection = ({ model, onSelect }: MessageDocumentOptions): Extension =>
     },
   });
 
+const EDIT_BOX_PADDING = '0.5rem';
+const EDIT_BOX_RADIUS = '0.25rem';
+
+/** The box around an edited row, as shadows: a border would add to the line's metrics and move the text. */
+const EDIT_BOX_EDGE = {
+  start: 'inset 1px 0 0 var(--color-separator)',
+  end: 'inset -1px 0 0 var(--color-separator)',
+  top: 'inset 0 1px 0 var(--color-separator)',
+  bottom: 'inset 0 -1px 0 var(--color-separator)',
+};
+
 /** Everything the transcript draws over its document. */
 export const messageDocumentChrome = (options: MessageDocumentOptions): Extension => {
   const portals: PortalNotifier = {
@@ -746,26 +638,36 @@ export const messageDocumentChrome = (options: MessageDocumentOptions): Extensio
     // tile stack's second grid column does.
     EditorView.theme({
       '.cm-message-row': { paddingInlineStart: 'var(--dx-rail-size)' },
+      // A formatting context, so the spacing the tile components carry as vertical margins (the
+      // quote's `mb`, the reaction and thread rows' `mt`) is contained instead of collapsing
+      // through: a collapsed margin sits outside every box, and an unpainted strip between them is
+      // what makes one hovered message read as a stack of separate bands.
+      '.cm-message-part': { display: 'flow-root' },
       '.cm-message-chrome': { paddingInlineStart: 'var(--dx-rail-size)' },
-      // The edited row is boxed like an input, which is what says it is one.
+      // The edited row is boxed like an input, which is what says it is one — but nothing in the box
+      // may move the text: it has to stay on the column every other message is on, so that becoming
+      // editable is a change of appearance rather than of position. Hence the inline start pulled
+      // back by exactly the padding it adds, and edges drawn as inset shadows, which take no space.
       '.cm-message-row--editing': {
         backgroundColor: 'var(--color-input-surface)',
-        borderInline: '1px solid var(--color-separator)',
-        marginInlineStart: 'var(--dx-rail-size)',
-        paddingInlineStart: '0.5rem',
-        paddingInlineEnd: '0.5rem',
+        boxShadow: `${EDIT_BOX_EDGE.start}, ${EDIT_BOX_EDGE.end}`,
+        marginInlineStart: `calc(var(--dx-rail-size) - ${EDIT_BOX_PADDING})`,
+        paddingInline: EDIT_BOX_PADDING,
       },
+      // First and last carry the box's rounded ends, so a message spanning several lines reads as one
+      // input rather than a stack of them; a single-line message is both, and needs all four edges.
       '.cm-message-row--editing-first': {
-        borderBlockStart: '1px solid var(--color-separator)',
-        borderStartStartRadius: '0.25rem',
-        borderStartEndRadius: '0.25rem',
-        paddingBlockStart: '0.25rem',
+        boxShadow: `${EDIT_BOX_EDGE.start}, ${EDIT_BOX_EDGE.end}, ${EDIT_BOX_EDGE.top}`,
+        borderStartStartRadius: EDIT_BOX_RADIUS,
+        borderStartEndRadius: EDIT_BOX_RADIUS,
       },
       '.cm-message-row--editing-last': {
-        borderBlockEnd: '1px solid var(--color-separator)',
-        borderEndStartRadius: '0.25rem',
-        borderEndEndRadius: '0.25rem',
-        paddingBlockEnd: '0.25rem',
+        boxShadow: `${EDIT_BOX_EDGE.start}, ${EDIT_BOX_EDGE.end}, ${EDIT_BOX_EDGE.bottom}`,
+        borderEndStartRadius: EDIT_BOX_RADIUS,
+        borderEndEndRadius: EDIT_BOX_RADIUS,
+      },
+      '.cm-message-row--editing-first.cm-message-row--editing-last': {
+        boxShadow: Object.values(EDIT_BOX_EDGE).join(', '),
       },
     }),
   ];

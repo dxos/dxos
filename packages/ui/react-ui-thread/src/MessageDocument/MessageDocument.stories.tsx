@@ -336,6 +336,17 @@ export const Conversation: Story = {
 };
 
 /**
+ * Where a message's text actually starts, measured from the text itself rather than from its line
+ * box — the box is what the edit chrome is allowed to change.
+ */
+const textOrigin = (canvasElement: HTMLElement, match: RegExp): { left: number; top: number } => {
+  const range = canvasElement.ownerDocument.createRange();
+  range.selectNodeContents(row(canvasElement, match));
+  const { left, top } = range.getBoundingClientRect();
+  return { left: Math.round(left), top: Math.round(top) };
+};
+
+/**
  * The edited row becomes an input in place: boxed, with the key hints beneath it, and committing
  * writes the text back. Cancelling restores the stored body.
  */
@@ -359,6 +370,7 @@ export const Editing: Story = {
       await userEvent.click(edit()!);
     };
 
+    const before = textOrigin(canvasElement, /First message in a burst/);
     await openMenu(/First message in a burst/);
 
     // The row is boxed and says what the keys do — the affordance that it is editable at all.
@@ -369,11 +381,17 @@ export const Editing: Story = {
     // Only that row: the rest of the transcript is untouched.
     await expect(canvasElement.querySelectorAll('.cm-message-row--editing').length).toBe(1);
 
-    // Enter commits, and the box and hint go with it.
+    // The box is drawn around the text, not in front of it: becoming editable must not shift the
+    // body off the column the messages above and below it sit on.
+    await expect(textOrigin(canvasElement, /First message in a burst/)).toEqual(before);
+
+    // Enter commits, and the box, the hint and the toolbar's save/cancel go with it — the pointer
+    // has not moved, so nothing else would take the controls out of edit mode.
     await userEvent.keyboard(' Edited.{Enter}');
     await waitFor(() => expect(editingRow()).toBeNull());
     await expect(await canvas.findByText(/First message in a burst\. Edited\./)).toBeInTheDocument();
     await expect(canvas.queryByText(/Enter to save/)).toBeNull();
+    await waitFor(() => expect(canvasElement.querySelector('[data-testid="thread.message.save"]')).toBeNull());
 
     // Escape throws the draft away and leaves the stored text alone.
     await openMenu(/Second message, 10s later/);

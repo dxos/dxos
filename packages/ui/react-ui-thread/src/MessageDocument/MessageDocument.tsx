@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -27,6 +27,7 @@ import {
   type MessageDocumentOptions,
   type MessageHover,
   type MessagePortal,
+  commitMessageEditEffect,
   messageDocumentChangedEffect,
   messageDocumentChrome,
   setMessageDocumentStateEffect,
@@ -239,10 +240,15 @@ export const MessageDocument = ({
         createPortal(<MessageChrome portal={portal} handlers={handlers} />, portal.root, portal.id),
       )}
       {hover && (
+        // Keyed, so moving to another row builds fresh controls rather than carrying the previous
+        // row's edit state onto it.
         <HoverControls
+          key={hover.message.id}
           message={hover.message}
           top={toolbarTop}
+          editing={editingId === hover.message.id}
           onEdit={() => handlers.onAction?.('edit', hover.message)}
+          onExitEdit={() => view?.dispatch({ effects: commitMessageEditEffect.of(null) })}
         />
       )}
     </div>
@@ -254,19 +260,46 @@ export const MessageDocument = ({
  * behind the overflow menu. Reusing the component is the point: a second implementation would
  * drift from it, and these actions already live in the action graph.
  */
-const HoverControls = ({ message, top, onEdit }: { message: MessageLike; top: number; onEdit: () => void }) => {
+const HoverControls = ({
+  message,
+  top,
+  editing,
+  onEdit,
+  onExitEdit,
+}: {
+  message: MessageLike;
+  top: number;
+  editing: boolean;
+  onEdit: () => void;
+  onExitEdit: () => void;
+}) => {
   // One state atom per hovered row, so edit mode and the picker reset when the pointer moves on.
-  const state = useMemo(makeMessageState, [message.id]);
-  // `Message.Controls` answers Edit by flipping this atom — it has no callback — because in the
-  // tile stack the same component renders the body. Here the body is the document, so the flip has
-  // to be forwarded as the host's edit action.
-  const { editing } = useAtomValue(state);
+  const state = useMemo(makeMessageState, []);
+  // `Message.Controls` answers Edit by flipping this atom — it has no callback — because in the tile
+  // stack the same component renders the body. Here the body is the document, so the two have to be
+  // reconciled in both directions, and which side moved is what says which way: what the atom last
+  // held tells a flip the user made from one the host pushed in.
+  const { editing: controlsEditing } = useAtomValue(state);
+  const setState = useAtomSet(state);
+  const controlsRef = useRef(false);
   const onEditRef = useDynamicRef(onEdit);
+  const onExitEditRef = useDynamicRef(onExitEdit);
   useEffect(() => {
-    if (editing) {
-      onEditRef.current();
+    if (controlsEditing === controlsRef.current) {
+      return;
     }
-  }, [editing, onEditRef]);
+
+    controlsRef.current = controlsEditing;
+    (controlsEditing ? onEditRef : onExitEditRef).current();
+  }, [controlsEditing, onEditRef, onExitEditRef]);
+
+  // The host is where edit mode actually ends: committing with the keyboard never reaches the
+  // toolbar, which left ✓/✗ showing until the pointer moved to another row.
+  useEffect(() => {
+    controlsRef.current = editing;
+    setState((current) => (current.editing === editing ? current : { ...current, editing }));
+  }, [editing, setState]);
+
   return (
     // Straddling the row's top edge at the end of the row, where Discord puts it — the corner
     // least likely to cover text. `sm` is already the design system's tightest density.
