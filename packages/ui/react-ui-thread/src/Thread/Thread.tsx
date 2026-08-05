@@ -27,13 +27,12 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
-import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { type Extension } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { command } from '../command';
@@ -520,20 +519,20 @@ export type ThreadTextboxProps = MessageMetadata & {
   disabled?: boolean;
   extensions?: Extension;
   /**
-   * Called with the composer content on send. Return `true` to accept (the
-   * editor is cleared and remounted), `false` to reject.
+   * Called with the composer content on send. Return `true` to accept, which clears the editor.
    */
   onSend?: (text: string) => boolean;
 };
 
-/** Message composer pinned at the foot of a thread. */
-const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
+/**
+ * Message composer pinned at the foot of a thread: `Message.Textbox` plus what a thread adds to it —
+ * the slash-command and mention highlighting, the thread's placeholder, and the focus handle the
+ * header's caret activates.
+ */
+const ThreadTextbox = ({ placeholder, extensions, ...props }: ThreadTextboxProps) => {
   const { t } = useTranslation(translationKey);
-  const { themeMode } = useThemeContext();
   const { registerComposerFocus } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
-  const messageRef = useRef('');
-  const [count, setCount] = useState(0);
 
   // Expose the composer's focus to Thread.Root so the header caret can focus it.
   useEffect(() => {
@@ -541,43 +540,14 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
     return () => registerComposerFocus(undefined);
   }, [registerComposerFocus]);
 
-  const editorExtensions = useMemo(
-    () =>
-      [
-        createBasicExtensions({ placeholder: placeholder ?? t('message.placeholder') }),
-        createThemeExtensions({ themeMode }),
-        listener({ onChange: ({ text }) => (messageRef.current = text) }),
-        command,
-        extensions,
-      ].filter(Boolean) as Extension[],
-    [themeMode, placeholder, t, extensions, count],
-  );
-
-  // The editor keymap captures this callback once (`useTextEditor` does not rebuild on prop
-  // changes), so it must stay identity-stable yet always call the CURRENT `onSend` — the host's
-  // closure changes between renders (e.g. it carries the reply target), and a stale capture would
-  // silently send without it. Same latest-ref pattern as `EditorView`'s `onChange`.
-  const onSendRef = useRef(onSend);
-  onSendRef.current = onSend;
-  const handleSend = useCallback(() => {
-    const text = messageRef.current;
-    if (!text?.length || !onSendRef.current) {
-      return;
-    }
-    if (onSendRef.current(text)) {
-      messageRef.current = '';
-      setCount((value) => value + 1);
-    }
-  }, []);
+  const composerExtensions = useMemo(() => [command, extensions].filter(Boolean) as Extension[], [extensions]);
 
   return (
     <Message.Textbox
       ref={composerRef}
-      {...metadata}
-      autoFocus={autoFocus}
-      disabled={disabled}
-      extensions={editorExtensions}
-      onSend={handleSend}
+      {...props}
+      placeholder={placeholder ?? t('message.placeholder')}
+      extensions={composerExtensions}
     />
   );
 };

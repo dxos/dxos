@@ -45,6 +45,9 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-chat"
+    },
+    {
       "path": "../react-ui-dnd"
     },
     {

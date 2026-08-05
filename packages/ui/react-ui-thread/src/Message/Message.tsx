@@ -26,15 +26,17 @@ import {
   Popover,
   Tag,
   type ThemedClassName,
+  useDynamicRef,
   useOnTransition,
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import { ChatEditor, type ChatEditorController } from '@dxos/react-ui-chat';
+import { useTextEditor } from '@dxos/react-ui-editor';
 import { type ActionGroupBuilder, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { EmojiPickerContent } from '@dxos/react-ui-pickers';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
-import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
+import { type Extension, createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 import {
   hoverableControlItem,
   hoverableControls,
@@ -865,39 +867,25 @@ MessageThreadLink.displayName = 'Message.ThreadLink';
 // Textbox
 //
 
-export type MessageTextboxProps = {
+export type MessageTextboxProps = MessageMetadata & {
+  placeholder?: string;
+  autoFocus?: boolean;
   disabled?: boolean;
-  onSend?: () => void;
-  onClear?: () => void;
+  extensions?: Extension;
+  /** Called with the composer's content; returning `true` accepts it and clears the editor. */
+  onSend?: (text: string) => boolean;
   onEditorFocus?: () => void;
-} & MessageMetadata &
-  UseTextEditorProps;
-
-const keyBindings = ({ onSend, onClear }: Pick<MessageTextboxProps, 'onSend' | 'onClear'>) => [
-  {
-    key: 'Enter',
-    run: () => {
-      if (onSend) {
-        onSend();
-        return true;
-      }
-      return false;
-    },
-  },
-  {
-    key: 'Meta+Backspace',
-    run: () => {
-      if (onClear) {
-        onClear();
-        return true;
-      }
-      return false;
-    },
-  },
-];
+};
 
 export type MessageTextboxHandle = { focus: () => void };
 
+/**
+ * Message composer: the sender's own row, with `ChatEditor` as its input.
+ *
+ * The input is the app's one chat input rather than a private assembly of editor extensions — the
+ * same component the assistant chat submits through, so Enter/Shift-Enter, references and the
+ * submit-and-clear contract are defined once.
+ */
 const MessageTextbox = forwardRef<MessageTextboxHandle, MessageTextboxProps>(
   (
     {
@@ -906,43 +894,37 @@ const MessageTextbox = forwardRef<MessageTextboxHandle, MessageTextboxProps>(
       authorName,
       authorImgSrc,
       authorAvatarProps,
+      placeholder,
+      autoFocus,
       disabled,
       extensions,
       onSend,
-      onClear,
       onEditorFocus,
-      ...editorProps
     },
     forwardedRef,
   ) => {
-    const { parentRef, focusAttributes, view } = useTextEditor(
-      () => ({
-        id,
-        extensions: [
-          keymap.of(keyBindings({ onSend, onClear })),
-          listener({
-            onFocus: ({ focusing }) => {
-              if (focusing) {
-                onEditorFocus?.();
-              }
-            },
-          }),
-          extensions,
-        ].filter(isTruthy),
-        ...editorProps,
-      }),
-      [id, extensions],
-    );
+    const editorRef = useRef<ChatEditorController>(null);
+    useImperativeHandle(forwardedRef, () => ({ focus: () => editorRef.current?.focus() }), []);
 
-    useImperativeHandle(forwardedRef, () => ({ focus: () => view?.focus() }), [view]);
+    // Identity-stable, because the extensions capture it: a new `onSubmit` rebuilds them, and a
+    // rebuilt extension set remounts the editor — losing whatever was half-typed. The host's own
+    // closure does change between renders (it carries the reply target), so the call must be late.
+    const onSendRef = useDynamicRef(onSend);
+    const handleSubmit = useCallback((text: string) => onSendRef.current?.(text) ?? false, [onSendRef]);
 
     return (
       <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
-        <div
-          ref={parentRef}
-          className={mx('py-0.5 me-1 rounded-xs dx-focus-ring', disabled && 'opacity-50')}
-          {...focusAttributes}
-        />
+        <div onFocusCapture={onEditorFocus}>
+          <ChatEditor
+            ref={editorRef}
+            classNames={mx('py-0.5 me-1 rounded-xs', disabled && 'opacity-50')}
+            autoFocus={autoFocus}
+            lineWrapping
+            placeholder={placeholder}
+            extensions={extensions}
+            onSubmit={handleSubmit}
+          />
+        </div>
       </MessageRoot>
     );
   },

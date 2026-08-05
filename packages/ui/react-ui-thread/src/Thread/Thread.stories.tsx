@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -116,7 +116,26 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+/** The composer is `ChatEditor`: Enter sends and clears it, Shift-Enter opens a line instead. */
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Waited for: the editor mounts in an effect, so it is not in the DOM on the play's first tick.
+    const composer = () => canvasElement.querySelector<HTMLElement>('#composer .cm-content');
+    const placeholder = () => canvasElement.querySelector('#composer .cm-placeholder')?.textContent;
+    await waitFor(() => expect(placeholder()).toBe('Enter message...'));
+
+    await userEvent.click(composer()!);
+    await userEvent.keyboard('First line{Shift>}{Enter}{/Shift}second line');
+    await expect(composer()!.textContent).toContain('second line');
+
+    await userEvent.keyboard('{Enter}');
+    // Accepted, so the message lands and the composer is emptied for the next one — which the
+    // placeholder coming back is the observable form of.
+    await expect(await canvas.findByText(/First line/)).toBeVisible();
+    await waitFor(() => expect(placeholder()).toBe('Enter message...'));
+  },
+};
 
 export const MixedSenders: Story = {
   render: MixedSendersStory,
