@@ -4,7 +4,14 @@
 
 /* eslint-disable no-console */
 
-import { type Browser, type BrowserContext, type Page, type PlaywrightTestConfig, devices } from '@playwright/test';
+import {
+  type Browser,
+  type BrowserContext,
+  type Page,
+  type PlaywrightTestConfig,
+  type ReporterDescription,
+  devices,
+} from '@playwright/test';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -46,9 +53,17 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     throw new Error('packageDirName not found');
   }
 
+  // Under the Knapsack Pro wrapper each fetched batch is a separate `playwright test` process:
+  // a fixed report filename would be overwritten by every batch and Playwright clears outputDir
+  // at run start, deleting earlier batches' traces — so both must be unique per invocation.
+  const knapsack = !!(
+    process.env.KNAPSACK_PRO_TEST_SUITE_TOKEN_PLAYWRIGHT || process.env.KNAPSACK_PRO_TEST_SUITE_TOKEN
+  );
+  const runName = knapsack ? `${packageDirName}-${process.pid}-${Date.now()}` : packageDirName;
+
   const workspaceRoot = findWorkspaceRoot(packageDir);
-  const testResultOuputDir = join(workspaceRoot, 'test-results/playwright/output', packageDirName);
-  const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
+  const testResultOuputDir = join(workspaceRoot, 'test-results/playwright/output', runName);
+  const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${runName}.json`);
 
   const browser = process.env.PLAYWRIGHT_BROWSER || (process.env.CI ? 'all' : 'chromium');
   const projects = [
@@ -86,18 +101,23 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     // Opt out of parallel tests on CI.
     workers: process.env.CI ? 1 : 4,
     // Reporter to use. See https://playwright.dev/docs/test-reporters.
-    reporter: process.env.CI
-      ? [
-          ['list'],
-          [
-            'json',
-            {
-              outputFile: reporterOutputFile,
-            },
-          ],
-          ['junit', { outputFile: reporterOutputFile.replace(/\.json$/, '.xml') }],
-        ]
-      : [['list']],
+    reporter: [
+      ...(process.env.CI
+        ? ([
+            ['list'],
+            [
+              'json',
+              {
+                outputFile: reporterOutputFile,
+              },
+            ],
+            ['junit', { outputFile: reporterOutputFile.replace(/\.json$/, '.xml') }],
+          ] satisfies ReporterDescription[])
+        : ([['list']] satisfies ReporterDescription[])),
+      // Feeds per-file timings and failures back to the Knapsack Pro queue; required in every
+      // batch invocation or the wrapper aborts on a missing batch.json.
+      ...(knapsack ? ([['@knapsack-pro/playwright/reporters/batch']] satisfies ReporterDescription[]) : []),
+    ],
     use: {
       trace: 'retain-on-failure',
       // Playwright's default is no limit, so a stuck locator would absorb the whole per-test budget and

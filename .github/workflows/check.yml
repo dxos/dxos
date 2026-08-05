@@ -441,6 +441,9 @@ jobs:
       # Selects this shard's Playwright project; also a moon task hash input, so each shard gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      KNAPSACK_PRO_TOKEN: ${{ secrets.KNAPSACK_PRO_TOKEN }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -497,7 +500,7 @@ jobs:
           run: moon run :e2e --affected remote --concurrency=1
 
       - name: Test All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
+        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e) && env.KNAPSACK_PRO_TOKEN == '' }}
         # The serial three-browser suite measured 43m+; a single browser's shard plus retries stays well
         # under this, and the step (not job) timeout fails cleanly with traces attached.
         timeout-minutes: 40
@@ -513,11 +516,116 @@ jobs:
           quarantine: true
           run: moon exec --on-failure continue :e2e --concurrency=1
 
+      # When the Knapsack Pro token is present, composer-app runs in the `e2e-knapsack` job instead —
+      # keep this target list in sync with the `e2e`-tagged projects minus composer-app.
+      - name: Test All (composer via Knapsack)
+        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e) && env.KNAPSACK_PRO_TOKEN != '' }}
+        timeout-minutes: 40
+        uses: trunk-io/analytics-uploader@v1
+        env:
+          # A manual dispatch must execute the suite: re-running the same commit otherwise replays a remote
+          # cache hit in seconds, which reports green without running a test and emits no JUnit XML.
+          MOON_CACHE: ${{ inputs.e2e && 'off' || 'read-write' }}
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: >-
+            moon exec --on-failure continue
+            todomvc:e2e rpc-tunnel-e2e:e2e plugin-kanban:e2e plugin-sheet:e2e
+            lit-grid:e2e react-ui-mosaic:e2e react-ui-table:e2e
+            --concurrency=1
+
       - name: Upload Traces
         uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report-${{ matrix.browser }}
+          path: test-results/playwright
+          retention-days: 7
+
+  # Composer-app's Playwright suite through Knapsack Pro queue mode (DX-1116 Option B trial): the 4
+  # nodes pull test files from a shared queue ordered by recorded duration, so imbalance self-corrects
+  # mid-run instead of being fixed up front. Trial scope is composer only (11 of 21 e2e specs, all
+  # three browsers in one run) — the remaining 1-4 spec suites stay on the per-browser matrix above.
+  # Token-gated: without KNAPSACK_PRO_TOKEN every step below skips and the `e2e` matrix keeps
+  # composer, so fork PRs and pre-token runs lose nothing.
+  e2e-knapsack:
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      inputs.e2e
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [0, 1, 2, 3]
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    env:
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
+      # All three browser projects in one run — the queue distributes per test file, and a file's
+      # projects run together in whichever node pulls it.
+      PLAYWRIGHT_BROWSER: all
+      # Exposed so step conditions can branch on token presence without referencing
+      # secrets directly (secrets are not allowed in if: expressions).
+      KNAPSACK_PRO_TOKEN: ${{ secrets.KNAPSACK_PRO_TOKEN }}
+    steps:
+      - name: Checkout
+        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Setup
+        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
+        run: pnpm run install-playwright
+
+      # Bundling runs here at full moon concurrency; the queue-mode invocations below bypass moon, so
+      # deps must be materialized first (the same targets the composer-app:e2e task depends on).
+      - name: Bundle
+        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
+        run: moon run composer-app:bundle test-utils:build vite-plugin-icons:build
+
+      - name: Clean stale test results
+        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
+        run: rm -rf test-results
+
+      - name: Test composer-app (queue mode)
+        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
+        timeout-minutes: 30
+        uses: trunk-io/analytics-uploader@v1
+        env:
+          KNAPSACK_PRO_TEST_SUITE_TOKEN_PLAYWRIGHT: ${{ secrets.KNAPSACK_PRO_TOKEN }}
+          KNAPSACK_PRO_CI_NODE_TOTAL: 4
+          KNAPSACK_PRO_CI_NODE_INDEX: ${{ matrix.node }}
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: >-
+            cd packages/apps/composer-app &&
+            pnpm exec knapsack-pro-playwright --config=src/playwright/playwright.config.ts
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v7
+        if: ${{ always() && env.KNAPSACK_PRO_TOKEN != '' }}
+        with:
+          name: playwright-report-knapsack-${{ matrix.node }}
           path: test-results/playwright
           retention-days: 7
 
@@ -604,7 +712,7 @@ jobs:
   # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three
   # reports can no longer go out green while e2e is still running.
   report:
-    needs: [test, storybook, workerd, e2e]
+    needs: [test, storybook, workerd, e2e, e2e-knapsack]
     if: always() && github.event_name == 'schedule'
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -646,6 +754,12 @@ jobs:
         with:
           name: e2e
           result: ${{ needs.e2e.result }}
+      - name: Send e2e-knapsack report
+        if: always()
+        uses: ./.github/actions/test-report
+        with:
+          name: e2e-knapsack
+          result: ${{ needs.e2e-knapsack.result }}
 
   # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
   # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.
