@@ -285,19 +285,6 @@ export default Capability.makeModule(
     };
 
     window.addEventListener('popstate', onPopState);
-    // Anchor the restore's deadline to graph readiness rather than to boot. The space nodes the URL
-    // resolves against cannot exist until a builder has contributed, and `client.initialize()` is
-    // forked off the startup pass — so on a reload the builder (gated on the client being
-    // initialized) lands well after this module activates, and `RESOLVE_TIMEOUT` was counting down
-    // against client initialization instead of against node materialization, dropping space home to
-    // not-found. Waits on the CAPABILITY rather than a client event, so this plugin stays free of a
-    // client dependency, and FORKED because this module sits on the startup pass — awaiting it here
-    // would hold the whole pass (and the boot loader) until the client is up.
-    yield* Effect.forkScoped(
-      manager.capabilities
-        .waitFor(AppCapabilities.AppGraphBuilder)
-        .pipe(Effect.andThen(provideServices(handleNavigation()))),
-    );
     if ('navigation' in window) {
       window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
     }
@@ -395,12 +382,31 @@ export default Capability.makeModule(
       }
     };
 
-    const unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
-    const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
-      syncUrl(),
+    // Installed by the restore fiber below rather than here: the outbound sync writes the CURRENT
+    // deck over the URL, and the restore no longer completes during activation, so running it now
+    // would replace the URL being restored from with the empty pre-restore deck.
+    let unsubscribeState: (() => void) | undefined;
+    let unsubscribeCompanionVariant: (() => void) | undefined;
+    const startUrlSync = () => {
+      unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
+      unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () => syncUrl());
+      // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
+      syncUrl('replace');
+    };
+
+    // Anchor the restore's deadline to graph readiness rather than to boot. The space nodes the URL
+    // resolves against cannot exist until a builder has contributed, and `client.initialize()` is
+    // forked off the startup pass — so on a reload the builder (gated on the client being
+    // initialized) lands well after this module activates, and `RESOLVE_TIMEOUT` was counting down
+    // against client initialization instead of against node materialization, dropping space home to
+    // not-found. Waits on the CAPABILITY rather than a client event, so this plugin stays free of a
+    // client dependency, and FORKED because this module sits on the startup pass — awaiting it here
+    // would hold the whole pass, and the boot loader with it, until the client is up.
+    yield* Effect.forkScoped(
+      manager.capabilities
+        .waitFor(AppCapabilities.AppGraphBuilder)
+        .pipe(Effect.andThen(provideServices(handleNavigation())), Effect.andThen(Effect.sync(startUrlSync))),
     );
-    // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
-    syncUrl('replace');
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
@@ -408,8 +414,8 @@ export default Capability.makeModule(
         if ('navigation' in window) {
           window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
-        unsubscribeState();
-        unsubscribeCompanionVariant();
+        unsubscribeState?.();
+        unsubscribeCompanionVariant?.();
         unlistenDeepLink?.();
       }),
     );
