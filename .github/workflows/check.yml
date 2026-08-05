@@ -584,7 +584,7 @@ jobs:
           quarantine: true
           run: >-
             moon exec --on-failure continue
-            todomvc:e2e rpc-tunnel-e2e:e2e plugin-kanban:e2e plugin-sheet:e2e
+            todomvc:e2e rpc-tunnel-e2e:e2e plugin-kanban:e2e plugin-script:e2e plugin-sheet:e2e
             lit-grid:e2e react-ui-mosaic:e2e react-ui-table:e2e
             --concurrency=1
 
