@@ -110,7 +110,7 @@ describe('OperationHandlerSet.keyed', () => {
         () => (loads++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
       ],
     ]);
-    expect(set.definitions!().map((definition) => definition.meta.key)).toEqual([KEY_A]);
+    expect(set.definitions().map((definition) => definition.meta.key)).toEqual([KEY_A]);
     expect(loads).toEqual(0);
   });
 
