@@ -77,7 +77,7 @@ export type MessageDocumentOptions = {
   onPortalMount?: (portal: MessagePortal) => void;
   onPortalUnmount?: (id: string, root: HTMLElement) => void;
   /** Copy for the thread row, so this package does not reach for a translation namespace mid-render. */
-  labels?: { startThread: () => string; replyCount: (count: number) => string };
+  labels?: { startThread: () => string; replyCount: (count: number) => string; editing: () => string };
 };
 
 //
@@ -294,6 +294,21 @@ class ThreadLinkWidget extends WidgetType {
   }
 }
 
+/** Keyboard affordances beneath a message being edited. */
+class EditHintWidget extends WidgetType {
+  constructor(private readonly _text: string) {
+    super();
+  }
+
+  override eq(other: this) {
+    return this._text === other._text;
+  }
+
+  override toDOM() {
+    return Domino.of('div').classNames('cm-message-chrome pt-1 text-xs text-description').text(this._text).root;
+  }
+}
+
 /** Relative time, as the tile heading shows it. */
 const formatTime = (timestamp?: string): string => {
   if (!timestamp) {
@@ -386,8 +401,12 @@ const buildDecorations = (
           class: mx(
             'cm-message-row',
             current && 'bg-active-surface',
-            hovered && !current && 'bg-hover-surface',
+            hovered && !current && !editing && 'bg-hover-surface',
+            // First and last carry the box's rounded ends, so a message spanning several lines
+            // reads as one input rather than a stack of them.
             editing && 'cm-message-row--editing',
+            editing && line === first.number && 'cm-message-row--editing-first',
+            editing && line === last.number && 'cm-message-row--editing-last',
           ),
           attributes: {
             'data-testid': 'thread.document.message',
@@ -404,6 +423,12 @@ const buildDecorations = (
     const end = Math.min(Math.max(range.to - 1, range.from), doc.length);
 
     if (editing) {
+      // What the keys do, under the box — the affordance that says the row is an input.
+      builder.add(
+        end,
+        end,
+        Decoration.widget({ widget: new EditHintWidget(labels?.editing() ?? ''), block: true, side: 1 }),
+      );
       continue;
     }
 
@@ -722,6 +747,26 @@ export const messageDocumentChrome = (options: MessageDocumentOptions): Extensio
     EditorView.theme({
       '.cm-message-row': { paddingInlineStart: 'var(--dx-rail-size)' },
       '.cm-message-chrome': { paddingInlineStart: 'var(--dx-rail-size)' },
+      // The edited row is boxed like an input, which is what says it is one.
+      '.cm-message-row--editing': {
+        backgroundColor: 'var(--color-input-surface)',
+        borderInline: '1px solid var(--color-separator)',
+        marginInlineStart: 'var(--dx-rail-size)',
+        paddingInlineStart: '0.5rem',
+        paddingInlineEnd: '0.5rem',
+      },
+      '.cm-message-row--editing-first': {
+        borderBlockStart: '1px solid var(--color-separator)',
+        borderStartStartRadius: '0.25rem',
+        borderStartEndRadius: '0.25rem',
+        paddingBlockStart: '0.25rem',
+      },
+      '.cm-message-row--editing-last': {
+        borderBlockEnd: '1px solid var(--color-separator)',
+        borderEndStartRadius: '0.25rem',
+        borderEndEndRadius: '0.25rem',
+        paddingBlockEnd: '0.25rem',
+      },
     }),
   ];
 };

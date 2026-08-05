@@ -156,6 +156,41 @@ const ConversationStory = () => {
   );
 };
 
+/** Editing one of my own messages in place, with the box and key hints that say the row is an input. */
+const EditingStory = () => {
+  const [messages, setMessages] = useState(() => createGroupedMessages());
+  const [editingId, setEditingId] = useState<string | undefined>(() => undefined);
+
+  return (
+    <Thread.Root
+      getMetadata={getStoryMetadata}
+      identityDid={STORY_IDENTITY.identityDid}
+      editable
+      onMessageDelete={() => {}}
+    >
+      <MessageDocument
+        classNames='h-full'
+        messages={messages}
+        editingId={editingId}
+        getMetadata={getStoryMetadata}
+        getActions={() => ['edit']}
+        onAction={(action, message) => action === 'edit' && setEditingId(message.id)}
+        onEditCancel={() => setEditingId(undefined)}
+        onEditCommit={(message, text) => {
+          setMessages((current) =>
+            current.map((candidate) =>
+              candidate.id === message.id
+                ? ({ ...candidate, blocks: [{ _tag: 'text', text }] } as MessageType.Message)
+                : candidate,
+            ),
+          );
+          setEditingId(undefined);
+        }}
+      />
+    </Thread.Root>
+  );
+};
+
 const meta = {
   title: 'ui/react-ui-thread/MessageDocument',
   render: DefaultStory,
@@ -297,5 +332,55 @@ export const Conversation: Story = {
     await waitFor(() =>
       expect(canvasElement.querySelector('[data-testid="thread.message.reaction-option"]')).not.toBeNull(),
     );
+  },
+};
+
+/**
+ * The edited row becomes an input in place: boxed, with the key hints beneath it, and committing
+ * writes the text back. Cancelling restores the stored body.
+ */
+export const Editing: Story = {
+  render: EditingStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editingRow = () => canvasElement.querySelector<HTMLElement>('.cm-message-row--editing');
+
+    // Enter edit mode the way a user does: hover the row, open the overflow menu, pick Edit —
+    // edit is not a toolbar icon, it lives behind the three dots.
+    // Queried off the document: the menu content is portaled to the body, outside the canvas.
+    const edit = () => canvasElement.ownerDocument.querySelector<HTMLElement>('[data-testid="thread.message.edit"]');
+    const openMenu = async (match: RegExp) => {
+      hover(row(canvasElement, match));
+      const more = () =>
+        canvasElement.querySelector<HTMLElement>('[data-testid="thread.document.toolbar"] [aria-haspopup="menu"]');
+      await waitFor(() => expect(more()).not.toBeNull());
+      await userEvent.click(more()!);
+      await waitFor(() => expect(edit()).not.toBeNull());
+      await userEvent.click(edit()!);
+    };
+
+    await openMenu(/First message in a burst/);
+
+    // The row is boxed and says what the keys do — the affordance that it is editable at all.
+    await waitFor(() => expect(editingRow()).not.toBeNull());
+    await expect(canvasElement.querySelector('.cm-message-row--editing-first')).not.toBeNull();
+    await expect(canvasElement.querySelector('.cm-message-row--editing-last')).not.toBeNull();
+    await expect(await canvas.findByText(/Enter to save/)).toBeInTheDocument();
+    // Only that row: the rest of the transcript is untouched.
+    await expect(canvasElement.querySelectorAll('.cm-message-row--editing').length).toBe(1);
+
+    // Enter commits, and the box and hint go with it.
+    await userEvent.keyboard(' Edited.{Enter}');
+    await waitFor(() => expect(editingRow()).toBeNull());
+    await expect(await canvas.findByText(/First message in a burst\. Edited\./)).toBeInTheDocument();
+    await expect(canvas.queryByText(/Enter to save/)).toBeNull();
+
+    // Escape throws the draft away and leaves the stored text alone.
+    await openMenu(/Second message, 10s later/);
+    await waitFor(() => expect(editingRow()).not.toBeNull());
+    await userEvent.keyboard(' discarded{Escape}');
+    await waitFor(() => expect(editingRow()).toBeNull());
+    await expect(canvas.queryByText(/discarded/)).toBeNull();
+    await expect(await canvas.findByText(/Second message, 10s later/)).toBeInTheDocument();
   },
 };
