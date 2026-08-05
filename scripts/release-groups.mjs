@@ -40,7 +40,9 @@ const MAX_BODY = 120_000;
 
 const BUMP_ORDER = ['patch', 'minor', 'major'];
 
-const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
+// stderr is captured, not inherited, so git's own diagnostics don't precede this script's error line.
+const git = (...args) =>
+  execFileSync('git', args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
 function argValue(flag) {
   const index = process.argv.indexOf(flag);
@@ -203,7 +205,7 @@ function buildBody({ group, version, tag, members, packages, date }) {
   return body.slice(0, MAX_BODY - notice.length) + notice;
 }
 
-async function api(method, path, body) {
+async function api(method, path, body, { allow404 = false } = {}) {
   if (!TOKEN) {
     throw new Error('GITHUB_TOKEN (or GH_TOKEN) is required to create releases; pass --no-release to skip');
   }
@@ -216,28 +218,34 @@ async function api(method, path, body) {
     },
     body: body && JSON.stringify(body),
   });
+  if (allow404 && response.status === 404) {
+    return undefined;
+  }
   if (!response.ok) {
     throw new Error(`${method} ${path} → ${response.status} ${await response.text()}`);
   }
-  return response.json();
+  return response.status === 204 ? undefined : response.json();
 }
 
 /** Re-runs after a partial failure must converge, so an existing release is updated rather than duplicated. */
-async function upsertRelease({ tag, body }) {
-  const existing = await fetch(`https://api.github.com/repos/${REPO}/releases/tags/${encodeURIComponent(tag)}`, {
-    headers: { Authorization: `Bearer ${TOKEN}`, Accept: 'application/vnd.github+json' },
+async function upsertRelease({ tag, body, sha }) {
+  // Only a 404 means "no such release" — letting any other error fall through to the create path would
+  // turn a transient 5xx into a 422 `already_exists` and break the converging re-run.
+  const existing = await api('GET', `/repos/${REPO}/releases/tags/${encodeURIComponent(tag)}`, undefined, {
+    allow404: true,
   });
-  if (existing.ok) {
-    const { id } = await existing.json();
-    await api('PATCH', `/repos/${REPO}/releases/${id}`, { name: tag, body });
+  if (existing) {
+    await api('PATCH', `/repos/${REPO}/releases/${existing.id}`, { name: tag, body });
     console.log(`Updated release ${tag}`);
     return;
   }
-  await api('POST', `/repos/${REPO}/releases`, { tag_name: tag, name: tag, body });
+  // `target_commitish` pins the release to REF: when the tag ref is missing, GitHub creates it from the
+  // default branch head instead, which would silently name a different commit than the one published.
+  await api('POST', `/repos/${REPO}/releases`, { tag_name: tag, name: tag, body, target_commitish: sha });
   console.log(`Created release ${tag}`);
 }
 
-function pushTags(tags) {
+async function pushTags(tags) {
   // One push carrying both refs: the per-ref push loop this replaces is what GitHub's backend rejected.
   const remote = process.env.GH_TOKEN ? `https://x-access-token:${process.env.GH_TOKEN}@github.com/${REPO}` : 'origin';
   const refs = tags.map((tag) => `refs/tags/${tag}`);
@@ -250,56 +258,62 @@ function pushTags(tags) {
         throw err;
       }
       console.warn(`Tag push failed (attempt ${attempt}); retrying...`);
-      execFileSync('sleep', [String(2 ** attempt)]);
+      await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 1000));
     }
   }
-}
-
-const config = JSON.parse(readFileSync(join(ROOT, '.changeset/config.json'), 'utf8'));
-const packages = readWorkspacePackages();
-const sha = git('rev-parse', REF);
-const date = git('show', '-s', '--format=%cs', sha);
-
-const releases = [];
-for (const members of config.fixed ?? []) {
-  const group = labelGroup(members);
-  const versions = new Set(members.map((name) => packages.get(name)?.version).filter(Boolean));
-  if (versions.size !== 1) {
-    throw new Error(`Group ${group.id} is not in lockstep: found versions ${[...versions].join(', ')}`);
-  }
-  const version = [...versions][0];
-  const tag = `${group.tagPrefix}${version}`;
-  releases.push({ group, version, tag, body: buildBody({ group, version, tag, members, packages, date }) });
-}
-
-if (releases.length !== 2 || new Set(releases.map(({ group }) => group.id)).size !== 2) {
-  throw new Error(`Expected one core and one plugins group, got: ${releases.map(({ tag }) => tag).join(', ')}`);
-}
-
-if (DRY_RUN) {
-  for (const { tag, body } of releases) {
-    console.log(`\n${'='.repeat(80)}\n${tag} at ${sha} (${body.length} chars)\n${'='.repeat(80)}\n${body}`);
-  }
-  process.exit(0);
 }
 
 try {
-  const created = [];
+  const config = JSON.parse(readFileSync(join(ROOT, '.changeset/config.json'), 'utf8'));
+  const packages = readWorkspacePackages();
+  const sha = git('rev-parse', REF);
+  const date = git('show', '-s', '--format=%cs', sha);
+
+  const releases = [];
+  for (const members of config.fixed ?? []) {
+    const group = labelGroup(members);
+    // Fail before any tag or release exists: a member missing from the workspace would otherwise surface as
+    // a TypeError inside buildBody, after `changeset publish` has already pushed to npm.
+    const missing = members.filter((name) => !packages.get(name));
+    if (missing.length) {
+      throw new Error(`Group ${group.id} lists packages absent from the workspace: ${missing.join(', ')}`);
+    }
+    const versions = new Set(members.map((name) => packages.get(name).version));
+    if (versions.size !== 1) {
+      throw new Error(`Group ${group.id} is not in lockstep: found versions ${[...versions].join(', ')}`);
+    }
+    const version = [...versions][0];
+    const tag = `${group.tagPrefix}${version}`;
+    releases.push({ group, version, tag, body: buildBody({ group, version, tag, members, packages, date }) });
+  }
+
+  if (releases.length !== 2 || new Set(releases.map(({ group }) => group.id)).size !== 2) {
+    throw new Error(`Expected one core and one plugins group, got: ${releases.map(({ tag }) => tag).join(', ')}`);
+  }
+
+  if (DRY_RUN) {
+    for (const { tag, body } of releases) {
+      console.log(`\n${'='.repeat(80)}\n${tag} at ${sha} (${body.length} chars)\n${'='.repeat(80)}\n${body}`);
+    }
+    process.exit(0);
+  }
+
   for (const { tag } of releases) {
     if (git('tag', '-l', tag)) {
-      console.log(`Tag ${tag} already exists locally; leaving it as-is`);
-      continue;
+      console.log(`Tag ${tag} already exists locally`);
+    } else {
+      git('tag', '-a', tag, '-m', tag, sha);
+      console.log(`Tagged ${sha.slice(0, 9)} as ${tag}`);
     }
-    git('tag', '-a', tag, '-m', tag, sha);
-    created.push(tag);
   }
-  if (created.length) {
-    pushTags(created);
-  }
+  // Every group tag is pushed, including ones that already existed locally: a previous run may have created
+  // a tag and failed before it reached the remote. Pushing a ref the remote already has is a no-op, while a
+  // tag that disagrees with the remote is rejected rather than silently moved.
+  await pushTags(releases.map(({ tag }) => tag));
 
   if (!NO_RELEASE) {
     for (const { tag, body } of releases) {
-      await upsertRelease({ tag, body });
+      await upsertRelease({ tag, body, sha });
     }
   }
 } catch (err) {
