@@ -646,13 +646,6 @@ jobs:
         if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
         run: pnpm run install-playwright
 
-      # The queue-mode invocations below bypass moon, so deps must be materialized first (the same
-      # targets the composer-app:e2e task depends on). Normally a fast hydration from the remote
-      # cache warmed by `e2e-bundle`; executes for real only on a cache miss.
-      - name: Bundle
-        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
-        run: moon run composer-app:bundle test-utils:build vite-plugin-icons:build
-
       - name: Clean stale test results
         if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
         run: rm -rf test-results
@@ -670,9 +663,9 @@ jobs:
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
-          run: >-
-            cd packages/apps/composer-app &&
-            pnpm exec knapsack-pro-playwright --config=src/playwright/playwright.config.ts
+          # Through moon so the bundle and library builds hydrate from the cache `e2e-bundle` warmed —
+          # the deps of a task are the only thing that materializes its outputs on a fresh runner.
+          run: moon run composer-app:e2e-knapsack
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7
