@@ -11,7 +11,7 @@ import {
   createBasicExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  documentSlots,
+  compactSlots,
   lineSpacing,
   scroller,
 } from '@dxos/ui-editor';
@@ -117,7 +117,10 @@ export const MessageDocument = ({
         // No syntax highlighting: a message body is prose, not source, and highlighting it wraps
         // every paragraph in a themed span. `extendedMarkdown` is likewise for XML tag widgets,
         // which this document does not use — its chrome comes from the model's ranges.
-        createThemeExtensions({ themeMode, slots: documentSlots }),
+        // `compactSlots`, not `documentSlots`: the latter centres the content in a 50rem column,
+        // which strands the avatar gutter against the far-left edge of the scroller instead of
+        // beside the message it belongs to. A channel wants the transcript's full width anyway.
+        createThemeExtensions({ themeMode, slots: compactSlots }),
         decorateMarkdown(),
         lineSpacing(),
         messageDocumentChrome(options),

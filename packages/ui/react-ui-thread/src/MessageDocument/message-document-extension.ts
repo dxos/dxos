@@ -257,7 +257,7 @@ class AvatarMarker extends GutterMarker {
   override toDOM() {
     const { authorAvatarProps, authorName } = this._metadata;
     return Domino.of('div')
-      .classNames('flex items-center justify-center is-6 bs-6 rounded-full text-xs bg-groupSurface')
+      .classNames('flex items-center justify-center is-6 bs-6 rounded-full text-xs bg-group-surface')
       .attributes({ 'data-hue': authorAvatarProps?.hue, 'title': authorName })
       .text(authorAvatarProps?.emoji ?? authorName?.slice(0, 1) ?? '?').root;
   }
