@@ -262,8 +262,8 @@ export const MessageDocument = ({
   return (
     // The toolbar lives here rather than inside the editor, so leaving the editor must not dismiss
     // it — the pointer has to be able to travel onto it. Hover is cleared when it leaves both.
-    <div className='relative grid grid-rows-1 min-h-0' ref={frameRef} onMouseLeave={handleMouseLeave}>
-      <div className={mx('dx-container', classNames)} ref={parentRef} />
+    <div className={mx('relative grid grid-rows-1 min-h-0', classNames)} ref={frameRef} onMouseLeave={handleMouseLeave}>
+      <div className='dx-container' ref={parentRef} />
       {portals.map((portal) =>
         createPortal(<MessageChrome portal={portal} handlers={handlers} />, portal.root, portal.id),
       )}

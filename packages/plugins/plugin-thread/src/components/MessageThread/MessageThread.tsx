@@ -2,15 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
 import { type Identity, type Space } from '@dxos/halo';
-import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
-import { type MessageLike, type ObjectTileComponent, Thread, type ThreadRootProps } from '@dxos/react-ui-thread';
+import { type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
+import {
+  type MessageLike,
+  MessageDocument,
+  type MessageDocumentProps,
+  type MessageQuote,
+  Thread,
+  type ThreadRootProps,
+} from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
-import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -48,9 +53,9 @@ export type MessageThreadProps = ThemedClassName<{
   /** Placeholder for the composer; defaults to the channel message placeholder. */
   placeholder?: string;
   /** Folded reactions for a message (omit to render none). */
-  getReactions?: ThreadRootProps['getReactions'];
+  getReactions?: MessageDocumentProps['getReactions'];
   /** Folded thread branching from a message (omit to hide the affordance). */
-  getThreadSummary?: ThreadRootProps['getThreadSummary'];
+  getThreadSummary?: MessageDocumentProps['getThreadSummary'];
   /** Whether a message may be deleted (omit to allow every message). */
   canDelete?: ThreadRootProps['canDelete'];
   /** Toggle the local identity's reaction (omit to hide reactions). */
@@ -70,10 +75,15 @@ export type MessageThreadProps = ThemedClassName<{
 }>;
 
 /**
- * Pure message-thread UI: message list + composer textbox + activity
- * indicator, built on the `@dxos/react-ui-thread` primitives. Does not load
- * data or invoke operations — the caller passes messages and an `onSend`
- * callback. Used by `ChannelArticle`, `ChannelThreadArticle` and `ThreadArticle`.
+ * Pure message-thread UI: the message document + composer textbox + activity indicator, built on the
+ * `@dxos/react-ui-thread` primitives. Does not load data or invoke operations — the caller passes
+ * messages and an `onSend` callback. Used by `ChannelArticle`, `ChannelThreadArticle` and
+ * `ThreadArticle`.
+ *
+ * Messages render as one CodeMirror document rather than a stack of tiles, which is what the
+ * assistant chat and the transcription view render into as well. Everything a message carries around
+ * its body — heading, quote, reactions, thread row, hover toolbar — is still the tile stack's own
+ * component, portaled into a widget.
  */
 export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
   (
@@ -105,8 +115,6 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
   ) => {
     const { t } = useTranslation(meta.profile.key);
 
-    const components = useMemo(() => ({ Object: ObjectTile }), []);
-
     const textboxMetadata = useMemo(() => getMessageMetadata(id, identity), [id, identity]);
 
     const getMetadata = useCallback(
@@ -126,13 +134,48 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
       [members],
     );
 
+    // The document does not follow refs itself, so a reply's target is resolved here — the same
+    // place that already knows how to name a sender.
+    const getQuote = useCallback(
+      (message: MessageLike): MessageQuote | undefined => {
+        const parent = message.parentMessage?.target;
+        if (!parent) {
+          return undefined;
+        }
+
+        const text = parent.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join(' ');
+        return { authorName: getMetadata(parent).authorName, text };
+      },
+      [getMetadata],
+    );
+
+    // Which message is an input, and what it becomes when committed. The document holds the draft
+    // until then, so an incoming revision of that message cannot overwrite what is being typed.
+    const [editingId, setEditingId] = useState<string | undefined>(undefined);
+    // Written back through the live object the caller passed, looked up by id: what the document
+    // reports is whichever shape it was rendering, which may be a snapshot.
+    const handleEditCommit = useCallback(
+      (edited: MessageLike, text: string) => {
+        const message = messages.find((candidate) => candidate.id === edited.id);
+        if (message) {
+          Obj.update(message, (message) => {
+            const block = message.blocks.find((block) => block._tag === 'text');
+            if (block?._tag === 'text') {
+              block.text = text;
+            }
+          });
+        }
+        setEditingId(undefined);
+      },
+      [messages],
+    );
+
     return (
       <Thread.Root
         getMetadata={getMetadata}
         getReactions={getReactions}
         getThreadSummary={getThreadSummary}
         canDelete={canDelete}
-        components={components}
         identityDid={identity?.did}
         editable={editable ?? false}
         onMessageReact={onMessageReact}
@@ -142,7 +185,20 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
         onMessageReply={onMessageReply}
       >
         <Thread.Content id={id} current={current} classNames={['dx-container h-full', classNames]} ref={forwardedRef}>
-          <Thread.Messages id={id} messages={messages} />
+          <MessageDocument
+            classNames='grow min-h-0'
+            messages={messages}
+            editingId={editingId}
+            getMetadata={getMetadata}
+            getReactions={getReactions}
+            getQuote={getQuote}
+            getThreadSummary={getThreadSummary}
+            onAction={(action, message) => action === 'edit' && setEditingId(message.id)}
+            onReact={(message, emoji) => onMessageReact?.(message.id, emoji)}
+            onThreadOpen={(message) => onThreadOpen?.(message.id)}
+            onEditCommit={handleEditCommit}
+            onEditCancel={() => setEditingId(undefined)}
+          />
           {!readOnly && (
             <>
               {replyTo && onCancelReply && <Thread.ReplyBanner replyTo={replyTo} onCancel={onCancelReply} />}
@@ -160,22 +216,3 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
     );
   },
 );
-
-/**
- * Object/reference message-block tile, injected into `Thread.Root` so that
- * `@dxos/react-ui-thread` stays free of `@dxos/app-framework`. Renders the
- * referenced subject via an app-framework `Surface` (the card role).
- */
-const ObjectTile: ObjectTileComponent = ({ subject }) => {
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{subject.id}</span>, [subject]);
-  return (
-    <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
-      <Surface.Surface
-        type={AppSurface.CardContent}
-        limit={1}
-        data={{ subject } satisfies AppSurface.ObjectCardData}
-        fallback={Fallback}
-      />
-    </Card.Root>
-  );
-};

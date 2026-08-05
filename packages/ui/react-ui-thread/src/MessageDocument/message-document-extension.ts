@@ -57,7 +57,7 @@ export type MessageQuote = { authorName?: string; text: string };
 export type MessageDocumentOptions = {
   model: ChunkModel<MessageDocumentItem>;
   getMetadata: (message: MessageLike) => MessageMetadata;
-  getReactions?: (message: MessageLike) => MessageReaction[];
+  getReactions?: (message: MessageLike) => readonly MessageReaction[];
   /** The message a reply targets; omitted (or undefined) renders no quote. */
   getQuote?: (message: MessageLike) => MessageQuote | undefined;
   /** Folded thread beneath a message; omitted renders no thread row. */
@@ -127,6 +127,9 @@ class PortalWidget extends WidgetType {
     // The rail indent, so chrome lines up with the text column — except the head, which renders
     // `Message.Root` and so brings the rail column with it; indenting that would double it.
     root.className = this._kind === 'head' ? 'cm-message-part' : 'cm-message-part cm-message-chrome';
+    // Which message this belongs to, the way the body lines carry it: chrome is a sibling of the
+    // text rather than a child of it, so nothing else relates the two.
+    root.dataset.messageId = this._message.id;
     this._notify.mounted({
       id: this._id,
       root,
@@ -181,7 +184,10 @@ class EditHintWidget extends WidgetType {
   }
 
   override toDOM() {
-    return Domino.of('div').classNames('cm-message-chrome pt-1 text-xs text-description').text(this._text).root;
+    return Domino.of('div')
+      .classNames('cm-message-chrome pt-1 text-xs text-description')
+      .attributes({ 'data-testid': 'thread.message.edit-hint' })
+      .text(this._text).root;
   }
 }
 

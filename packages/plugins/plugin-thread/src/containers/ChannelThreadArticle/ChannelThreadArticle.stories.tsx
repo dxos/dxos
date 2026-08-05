@@ -15,7 +15,7 @@ import { Channel } from '@dxos/types';
 import { useThreads } from '#hooks';
 import { translations } from '#translations';
 
-import { SEEDED, STORY_TIMEOUT, channelStoryDecorators } from '../testing';
+import { SEEDED, STORY_TIMEOUT, channelStoryDecorators, control, hoverUntil } from '../testing';
 import { ChannelThreadArticle } from './ChannelThreadArticle';
 
 /** Opens the seeded fixture's only thread, so the story needs no id wired in from args. */
@@ -96,8 +96,9 @@ export const ThreadAffordances: Story = {
       await expect(await canvas.findByText(SEEDED.reply)).toBeVisible();
     }, STORY_TIMEOUT);
 
-    await expect((await canvas.findAllByTestId('thread.message.reply')).length).toBeGreaterThan(0);
-    await expect(canvas.queryAllByTestId('thread.message.start-thread')).toHaveLength(0);
+    // The toolbar follows the pointer, so which message is asked is part of the assertion.
+    await hoverUntil(canvasElement, SEEDED.reply, 'thread.message.reply');
+    await expect(control(canvasElement, 'thread.message.start-thread')).toBeNull();
   },
 };
 
@@ -110,7 +111,7 @@ export const QuoteReply: Story = {
       await expect(await canvas.findByText(SEEDED.reply)).toBeVisible();
     }, STORY_TIMEOUT);
 
-    await userEvent.click((await canvas.findAllByTestId('thread.message.reply'))[0]);
+    await userEvent.click(await hoverUntil(canvasElement, SEEDED.reply, 'thread.message.reply'));
     await expect(await canvas.findByTestId('thread.reply-banner')).toBeVisible();
 
     const placeholder = await canvas.findByText(/reply in thread/i, {}, STORY_TIMEOUT);

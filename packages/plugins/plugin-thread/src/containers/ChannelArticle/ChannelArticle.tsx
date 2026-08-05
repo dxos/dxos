@@ -12,7 +12,8 @@ import { Obj } from '@dxos/echo';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { type Channel, type Message as MessageType } from '@dxos/types';
+import { type MessageLike } from '@dxos/react-ui-thread';
+import { type Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useChannelMessaging } from '#hooks';
@@ -64,7 +65,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const roots = useMemo(() => selectRoots(messages), [messages]);
 
   const getThreadSummary = useCallback(
-    (message: MessageType.Message) => {
+    (message: MessageLike) => {
       const summary = selectThreadByTarget(threads, message.id);
       return summary && { replyCount: summary.replies.length, name: summary.name, lastActivity: summary.lastActivity };
     },

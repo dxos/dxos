@@ -29,6 +29,7 @@ export type {
   MessageDocumentItem,
   MessageDocumentItemOptions,
   MessageDocumentProps,
+  MessageQuote,
   MessageItem,
 } from './MessageDocument';
 export { command } from './command';
