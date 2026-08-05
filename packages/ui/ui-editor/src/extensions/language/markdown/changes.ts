@@ -106,7 +106,7 @@ export const adjustChanges = () => {
 
 export const createLink = (url: URL, label: string): string => {
   // Check if image.
-  // Example: https://dxos.network/dxos-logotype-blue.png
+  // Example: https://media.dxos.network/dxos-logotype-blue.png
   const { host, pathname } = url;
   const [, extension] = pathname.split('.');
   const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'];
