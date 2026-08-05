@@ -57,6 +57,7 @@ export const addViewMode =
         applyActive: true,
         selectCardinality: 'single',
         value,
+        testId: 'editor.toolbar.viewMode',
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         for (const item of items) {

@@ -3,22 +3,21 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useIdentity, useMembers } from '@dxos/halo-react';
 import { CallsCapabilities } from '@dxos/plugin-calls/types';
-import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { type Channel } from '@dxos/types';
+import { type Channel, type Message as MessageType } from '@dxos/types';
 
 import { MessageThread } from '#components';
-import { useMessages, useStatus } from '#hooks';
+import { useChannelMessaging } from '#hooks';
 import { meta } from '#meta';
-import { ThreadCapabilities, ThreadOperation, resolveProvider } from '#types';
+import { ThreadOperation, selectRoots, selectThreadByTarget } from '#types';
 
 // Stable fallbacks so `useAtomValue` always receives an atom when plugin-calls isn't present.
 const NOT_JOINED = Atom.make(false);
@@ -43,17 +42,80 @@ export type ChannelArticleProps = AppSurface.ObjectArticleProps<
  * "Start video call" action switches the article to the call surface and the chat moves to a companion.
  */
 export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly }: ChannelArticleProps) => {
-  const identity = useIdentity();
-  const space = channel ? getSpace(channel) : undefined;
-  const members = useMembers(space?.id);
   const id = channel ? Obj.getURI(channel) : undefined;
-  const activity = useStatus(space, id);
   const { invokePromise } = useOperationInvoker();
+  const {
+    space,
+    identity,
+    members,
+    messages,
+    threads,
+    activity,
+    readOnly,
+    canCreateThread,
+    getReactions,
+    canDelete,
+    onReact,
+    onDelete,
+  } = useChannelMessaging(channel);
 
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
-  const provider = channel ? resolveProvider(providers, channel.backend.kind) : undefined;
-  const messages = useMessages(channel);
-  const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
+  // Thread-first: this list renders roots only, each carrying a summary of the thread that branches
+  // from it; opening one adds the thread's own plank beside this one.
+  const roots = useMemo(() => selectRoots(messages), [messages]);
+
+  const getThreadSummary = useCallback(
+    (message: MessageType.Message) => {
+      const summary = selectThreadByTarget(threads, message.id);
+      return summary && { replyCount: summary.replies.length, name: summary.name, lastActivity: summary.lastActivity };
+    },
+    [threads],
+  );
+
+  // A thread has its own navtree node under this channel, so it opens as a plank rather than in
+  // place — which is also what makes it addressable and keeps the channel view roots-only.
+  const openThread = useCallback(
+    (threadId: string) => {
+      const anchor = attendableId ?? id;
+      if (!anchor) {
+        return;
+      }
+      void invokePromise(LayoutOperation.Open, {
+        subject: [`${anchor}/${threadId}`],
+        pivotId: anchor,
+        disposition: 'add',
+        navigation: 'immediate',
+      });
+    },
+    [attendableId, id, invokePromise],
+  );
+
+  /** A message's thread is opened by the thread's own id, which the fold resolves from the message. */
+  const handleOpenThread = useCallback(
+    (messageId: string) => {
+      const summary = selectThreadByTarget(threads, messageId);
+      if (summary) {
+        openThread(summary.threadId);
+      }
+    },
+    [threads, openThread],
+  );
+
+  // Starting a thread creates it before opening it: a thread nobody created is not a thread, so
+  // without this the plank would open onto something the channel does not list. The operation
+  // returns the thread rooted at that message, whether it created one or found one already there.
+  const handleStartThread = useCallback(
+    async (messageId: string) => {
+      const message = messages.find((message) => message.id === messageId);
+      if (!channel || !message) {
+        return;
+      }
+      const { data } = await invokePromise(ThreadOperation.CreateThread, { channel, message });
+      if (data) {
+        openThread(data.threadId);
+      }
+    },
+    [channel, messages, invokePromise, openThread],
+  );
 
   const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
   const callManager = useCapabilities(CallsCapabilities.Manager)[0];
@@ -117,16 +179,24 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
         </Panel.Content>
       ) : (
-        <Panel.Content asChild>
+        <Panel.Content classNames='flex min-h-0'>
           <MessageThread
             id={id}
-            classNames='dx-document'
-            identity={identity ?? undefined}
+            classNames='dx-document grow min-w-0'
+            identity={identity}
             members={members}
-            messages={messages}
+            messages={roots}
             activity={activity}
             onSend={handleSend}
             readOnly={readOnly}
+            editable={!readOnly}
+            getReactions={getReactions}
+            getThreadSummary={getThreadSummary}
+            canDelete={canDelete}
+            onMessageReact={onReact}
+            onMessageDelete={onDelete}
+            onThreadOpen={handleOpenThread}
+            onThreadCreate={canCreateThread ? handleStartThread : undefined}
           />
         </Panel.Content>
       )}

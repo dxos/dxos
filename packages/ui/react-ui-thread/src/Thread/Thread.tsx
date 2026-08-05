@@ -27,13 +27,12 @@ import {
   type ThemedClassName,
   composable,
   composableProps,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message as MessageType } from '@dxos/types';
-import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
+import { type Extension } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { command } from '../command';
@@ -61,10 +60,18 @@ export type ThreadRootProps = PropsWithChildren<
 const ThreadRoot = ({
   children,
   getMetadata,
+  getReactions,
+  getThreadSummary,
+  canDelete,
+  quickReactions,
   components,
   identityDid,
   editable,
   onMessageDelete,
+  onMessageReact,
+  onThreadOpen,
+  onThreadCreate,
+  onMessageReply,
   onAcceptProposal,
   onAcceptChange,
   onRejectChange,
@@ -83,12 +90,20 @@ const ThreadRoot = ({
   return (
     <ThreadContextProvider
       getMetadata={getMetadata}
+      getReactions={getReactions}
+      getThreadSummary={getThreadSummary}
+      canDelete={canDelete}
+      quickReactions={quickReactions}
       components={components ?? {}}
       identityDid={identityDid}
       editable={editable}
       registerComposerFocus={registerComposerFocus}
       focusComposer={focusComposer}
       onMessageDelete={onMessageDelete}
+      onMessageReact={onMessageReact}
+      onThreadOpen={onThreadOpen}
+      onThreadCreate={onThreadCreate}
+      onMessageReply={onMessageReply}
       onAcceptProposal={onAcceptProposal}
       onAcceptChange={onAcceptChange}
       onRejectChange={onRejectChange}
@@ -360,6 +375,9 @@ export type ThreadMessagesProps = ThemedClassName<{
 const DEFAULT_GROUP_WINDOW_MS = 60_000;
 const DEFAULT_GAP_DIVIDER_MS = 3 * 60 * 60 * 1000;
 
+/** Distance (px) from the foot within which the reader counts as "at the bottom" for auto-scroll. */
+const STICKY_THRESHOLD = 32;
+
 /** Virtualized stack of message tiles (via Mosaic), within an internal scroll area. */
 const ThreadMessages = ({
   messages,
@@ -373,10 +391,40 @@ const ThreadMessages = ({
 }: ThreadMessagesProps) => {
   const { dtLocale } = useTranslation(translationKey);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
+  const [content, setContent] = useState<HTMLDivElement | null>(null);
   const items = useMemo(
     () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
     [messages, groupWindowMs, dayDivider, gapDividerMs, dtLocale],
   );
+
+  // Chat convention: the newest message stays in view, but only while the reader is already at the
+  // foot — scrolling up to read history must not be yanked back by an arriving message.
+  const sticky = useRef(true);
+  useEffect(() => {
+    if (!viewport) {
+      return;
+    }
+    const handleScroll = () => {
+      sticky.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= STICKY_THRESHOLD;
+    };
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', handleScroll);
+  }, [viewport]);
+
+  // Observing the content height (rather than reacting to `items`) re-pins across the virtualizer's
+  // post-mount measurement passes, which settle the height over several frames.
+  useEffect(() => {
+    if (!viewport || !content) {
+      return;
+    }
+    const observer = new ResizeObserver(() => {
+      if (sticky.current) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [viewport, content]);
   // Per-instance id keeps concurrent threads (incl. the same thread mounted twice) distinct in the DnD registry.
   const instanceId = useId();
   const eventHandler = useMemo<DndContainerHandler>(
@@ -393,14 +441,18 @@ const ThreadMessages = ({
       eventHandler={eventHandler}
     >
       <ScrollArea.Root classNames={mx('col-span-2 flex-1 min-h-0', classNames)} orientation='vertical'>
-        <ScrollArea.Viewport ref={setViewport}>
+        {/* `flex flex-col` + the stack's `mt-auto` seat a short thread at the foot of the viewport,
+            so a new channel fills downward from the composer rather than from the top. */}
+        <ScrollArea.Viewport classNames='flex flex-col' ref={setViewport}>
           <Mosaic.VirtualStack
+            classNames='mt-auto'
             Tile={ThreadItemAdapter}
             items={items}
             getId={getThreadItemId}
             draggable={false}
             getScrollElement={() => viewport}
             estimateSize={() => estimateSize}
+            ref={setContent}
           />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -409,6 +461,53 @@ const ThreadMessages = ({
 };
 
 ThreadMessages.displayName = 'Thread.Messages';
+
+//
+// Reply banner
+//
+
+export type ThreadReplyBannerProps = {
+  /** Message the composer is currently targeting. */
+  replyTo: MessageType.Message;
+  onCancel: () => void;
+};
+
+/**
+ * Banner above the composer naming the message a reply targets, with a cancel affordance. Rendered
+ * only while a reply is pending — sending or cancelling clears it.
+ */
+const ThreadReplyBanner = ({ replyTo, onCancel }: ThreadReplyBannerProps) => {
+  const { t } = useTranslation(translationKey);
+  const { getMetadata } = useThreadContext('Thread.ReplyBanner');
+  const { authorName } = getMetadata(replyTo);
+  const text = replyTo.blocks
+    .flatMap((block) => (block._tag === 'text' ? [block.text] : []))
+    .join(' ')
+    .trim();
+
+  return (
+    <div
+      data-testid='thread.reply-banner'
+      className='col-start-2 flex items-center gap-2 mis-[var(--dx-rail-size)] me-2 mb-1 ps-2 py-1 rounded-sm bg-activeSurface text-xs min-w-0'
+    >
+      <Icon icon='ph--arrow-bend-up-left--regular' size={4} classNames='shrink-0 text-description' />
+      <span className='shrink-0 text-description'>{t('replying-to.label', { name: authorName })}</span>
+      <span className='truncate min-w-0 text-description'>{text}</span>
+      <IconButton
+        data-testid='thread.reply-banner.cancel'
+        variant='ghost'
+        density='sm'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('cancel-reply.label')}
+        classNames='ms-auto shrink-0'
+        onClick={onCancel}
+      />
+    </div>
+  );
+};
+
+ThreadReplyBanner.displayName = 'Thread.ReplyBanner';
 
 //
 // Textbox
@@ -420,20 +519,20 @@ export type ThreadTextboxProps = MessageMetadata & {
   disabled?: boolean;
   extensions?: Extension;
   /**
-   * Called with the composer content on send. Return `true` to accept (the
-   * editor is cleared and remounted), `false` to reject.
+   * Called with the composer content on send. Return `true` to accept, which clears the editor.
    */
   onSend?: (text: string) => boolean;
 };
 
-/** Message composer pinned at the foot of a thread. */
-const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
+/**
+ * Message composer pinned at the foot of a thread: `Message.Textbox` plus what a thread adds to it —
+ * the slash-command and mention highlighting, the thread's placeholder, and the focus handle the
+ * header's caret activates.
+ */
+const ThreadTextbox = ({ placeholder, extensions, ...props }: ThreadTextboxProps) => {
   const { t } = useTranslation(translationKey);
-  const { themeMode } = useThemeContext();
   const { registerComposerFocus } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
-  const messageRef = useRef('');
-  const [count, setCount] = useState(0);
 
   // Expose the composer's focus to Thread.Root so the header caret can focus it.
   useEffect(() => {
@@ -441,37 +540,14 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
     return () => registerComposerFocus(undefined);
   }, [registerComposerFocus]);
 
-  const editorExtensions = useMemo(
-    () =>
-      [
-        createBasicExtensions({ placeholder: placeholder ?? t('message.placeholder') }),
-        createThemeExtensions({ themeMode }),
-        listener({ onChange: ({ text }) => (messageRef.current = text) }),
-        command,
-        extensions,
-      ].filter(Boolean) as Extension[],
-    [themeMode, placeholder, t, extensions, count],
-  );
-
-  const handleSend = useCallback(() => {
-    const text = messageRef.current;
-    if (!text?.length || !onSend) {
-      return;
-    }
-    if (onSend(text)) {
-      messageRef.current = '';
-      setCount((value) => value + 1);
-    }
-  }, []);
+  const composerExtensions = useMemo(() => [command, extensions].filter(Boolean) as Extension[], [extensions]);
 
   return (
     <Message.Textbox
       ref={composerRef}
-      {...metadata}
-      autoFocus={autoFocus}
-      disabled={disabled}
-      extensions={editorExtensions}
-      onSend={handleSend}
+      {...props}
+      placeholder={placeholder ?? t('message.placeholder')}
+      extensions={composerExtensions}
     />
   );
 };
@@ -523,6 +599,7 @@ export const Thread = {
   Content: ThreadContent,
   Header: ThreadHeader,
   Messages: ThreadMessages,
+  ReplyBanner: ThreadReplyBanner,
   Textbox: ThreadTextbox,
   Status: ThreadStatus,
 };

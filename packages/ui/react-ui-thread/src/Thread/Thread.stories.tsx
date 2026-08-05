@@ -3,7 +3,8 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -11,7 +12,13 @@ import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { createMessages, getStoryMetadata } from '../testing';
+import {
+  createConversationFixture,
+  createGroupedMessages,
+  createMessages,
+  createMixedSenderMessages,
+  getStoryMetadata,
+} from '../testing';
 import { Thread } from './Thread';
 
 const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
@@ -35,28 +42,10 @@ const DefaultStory = () => {
   );
 };
 
-// Reproduces a report that the local identity's own sent messages don't
-// appear: renders one message from each of three sender shapes — the local
-// identity (matches `Thread.Root`'s `identityDid`), a name-only sender with
-// no `identityDid` (e.g. an externally-synced guest, like freeq before
-// `echo-message`), and a different identity — to check whether the render
-// path itself drops any of them.
+// Reproduces a report that the local identity's own sent messages don't appear: renders one
+// message from each of three sender shapes to check whether the render path drops any of them.
 const MixedSendersStory = () => {
-  const messages = [
-    MessageType.make({
-      sender: { role: 'user', identityDid: 'did:key:alice', name: 'Alice' },
-      blocks: [{ _tag: 'text', text: 'Message from the local identity (Alice).' }],
-    }),
-    MessageType.make({
-      sender: { name: 'guest' },
-      blocks: [{ _tag: 'text', text: 'Message from a name-only sender (guest), no identityDid.' }],
-    }),
-    MessageType.make({
-      sender: { role: 'user', identityDid: 'did:key:bob', name: 'Bob' },
-      blocks: [{ _tag: 'text', text: 'Message from a different identity (Bob).' }],
-    }),
-  ];
-
+  const messages = useMemo(() => createMixedSenderMessages(), []);
   return (
     <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable={false}>
       <Thread.Content classNames='grow min-h-0'>
@@ -66,36 +55,46 @@ const MixedSendersStory = () => {
   );
 };
 
-// Exercises message grouping (consecutive same-sender messages within the
-// default 60s window merge into one tile) and both divider kinds: a labeled
-// day divider before each calendar day's first message, and a plain (gap)
-// divider for a same-day silence over the default 3h threshold.
+// Exercises message grouping and both divider kinds.
 const GroupedStory = () => {
-  const day1 = new Date('2026-07-01T09:00:00.000Z').getTime();
-  const day2 = new Date('2026-07-02T09:00:00.000Z').getTime();
-  const alice = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
-  const bob = { role: 'user' as const, identityDid: 'did:key:bob', name: 'Bob' };
-
-  const at = (time: number, sender: typeof alice | typeof bob, text: string) =>
-    MessageType.make({ created: new Date(time).toISOString(), sender, blocks: [{ _tag: 'text', text }] });
-
-  const messages = [
-    // Same-sender burst within the 60s grouping window: one group, three bodies.
-    at(day1, alice, 'First message in a burst.'),
-    at(day1 + 10_000, alice, 'Second message, 10s later — same group.'),
-    at(day1 + 40_000, alice, 'Third message, 40s after the first — still same group.'),
-    // >60s gap, same sender: starts a new group (no divider — gap is well under 3h).
-    at(day1 + 120_000, alice, 'New group: 2 minutes after the burst.'),
-    // >3h gap, same day: plain (unlabeled) divider, new group.
-    at(day1 + 120_000 + 4 * 60 * 60 * 1000, alice, 'After a 4-hour silence — gap divider above.'),
-    // Different sender: always starts a new group even within the window.
-    at(day1 + 120_000 + 4 * 60 * 60 * 1000 + 5_000, bob, 'Bob replies 5s later — different sender, new group.'),
-    // Next calendar day: labeled day divider, new group (day boundary wins over gap boundary).
-    at(day2, bob, 'A new day.'),
-  ];
-
+  const messages = useMemo(() => createGroupedMessages(), []);
   return (
     <Thread.Root getMetadata={getStoryMetadata} identityDid={IDENTITY.identityDid} editable={false}>
+      <Thread.Content classNames='grow min-h-0'>
+        <Thread.Messages messages={messages} />
+      </Thread.Content>
+    </Thread.Root>
+  );
+};
+
+/**
+ * Every state a message can be rendered in, as one conversation. Reactions and threads are
+ * host-provided — the fixture answers `getReactions`/`getThreadSummary` from static maps, so the
+ * whole gallery renders without a database.
+ */
+const ConversationStory = () => {
+  const { messages, reactions, threads } = useMemo(() => createConversationFixture(), []);
+
+  const getReactions = useCallback((message: MessageType.Message) => reactions.get(message.id) ?? [], [reactions]);
+  const getThreadSummary = useCallback((message: MessageType.Message) => threads.get(message.id), [threads]);
+  const canDelete = useCallback(
+    (message: MessageType.Message) => message.sender.identityDid === IDENTITY.identityDid,
+    [],
+  );
+
+  return (
+    <Thread.Root
+      getMetadata={getStoryMetadata}
+      getReactions={getReactions}
+      getThreadSummary={getThreadSummary}
+      canDelete={canDelete}
+      identityDid={IDENTITY.identityDid}
+      editable
+      onMessageReact={() => {}}
+      onMessageDelete={() => {}}
+      onThreadOpen={() => {}}
+      onThreadCreate={() => {}}
+    >
       <Thread.Content classNames='grow min-h-0'>
         <Thread.Messages messages={messages} />
       </Thread.Content>
@@ -117,7 +116,26 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+/** The composer is `ChatEditor`: Enter sends and clears it, Shift-Enter opens a line instead. */
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Waited for: the editor mounts in an effect, so it is not in the DOM on the play's first tick.
+    const composer = () => canvasElement.querySelector<HTMLElement>('#composer .cm-content');
+    const placeholder = () => canvasElement.querySelector('#composer .cm-placeholder')?.textContent;
+    await waitFor(() => expect(placeholder()).toBe('Enter message...'));
+
+    await userEvent.click(composer()!);
+    await userEvent.keyboard('First line{Shift>}{Enter}{/Shift}second line');
+    await expect(composer()!.textContent).toContain('second line');
+
+    await userEvent.keyboard('{Enter}');
+    // Accepted, so the message lands and the composer is emptied for the next one — which the
+    // placeholder coming back is the observable form of.
+    await expect(await canvas.findByText(/First line/)).toBeVisible();
+    await waitFor(() => expect(placeholder()).toBe('Enter message...'));
+  },
+};
 
 export const MixedSenders: Story = {
   render: MixedSendersStory,
@@ -125,4 +143,22 @@ export const MixedSenders: Story = {
 
 export const Grouped: Story = {
   render: GroupedStory,
+};
+
+export const Conversation: Story = {
+  render: ConversationStory,
+  // Asserts the gallery covers what it claims — and that a quote resolves from a `Ref` to an object
+  // that was never persisted, which is what lets the whole fixture run without a database.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // `findAllByText`: this message is also quoted further down, so its text renders twice.
+    await expect((await canvas.findAllByText('A single message from another sender.'))[0]).toBeVisible();
+
+    // One pill on each singly-reacted message, three on the one reacted several ways.
+    await expect(await canvas.findAllByTestId('thread.message.reaction')).toHaveLength(5);
+    await expect(await canvas.findAllByTestId('thread.message.quote')).toHaveLength(3);
+    // A summary row per threaded message, and the named thread shows its name.
+    await expect(await canvas.findAllByTestId('thread.message.open-thread')).toHaveLength(3);
+    await expect(await canvas.findByText('Release plan')).toBeVisible();
+  },
 };

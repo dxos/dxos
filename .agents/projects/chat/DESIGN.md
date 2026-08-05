@@ -13,17 +13,21 @@ dependencies live in `.agents/projects/feed-live-objects/DESIGN.md` "Roadmap".
 - A **channel** is a `Channel` object in the space db plus a feed holding all
   of its messages (and reactions). Capacity today: ~10k blocks/feed,
   ~1000 feeds/space — team/community scale; feed phases 3–4 raise this.
-- A **thread** is a `threadId` partition of the channel feed (Zulip's
-  `(channel, topic)`): the main view renders roots (`threadId == null`) with
-  thread summaries; a thread view filters by `threadId`. Thread-first UX:
-  any message can start a thread; root messages are primarily branching-off
-  points — guided, not forced (the main composer remains).
+- A **thread** is a `Thread` object in the channel feed, and the `threadId`
+  partition of that feed which carries its id (Zulip's `(channel, topic)`): the
+  main view renders roots (`threadId == null`) with thread summaries; a thread
+  view filters by `threadId`. Thread-first UX: any message can start a thread;
+  root messages are primarily branching-off points — guided, not forced (the
+  main composer remains). Creating a thread is deliberate — a message nobody
+  threaded is not a thread — and the object is what makes it one.
 - **Comments are a channel.** A document's comments live in a per-document
   comments Channel, related to the document and hidden from the navtree via
   the companion-chat pattern (channel-with-relation-to-object ⇒ not shown in
   the custom section). In comment channels **`threadId = anchor id`** (the
   stable cursor range): no per-thread `AnchoredTo` relations; sidebar
-  placement and ordering derive from anchor position in the document.
+  placement and ordering derive from anchor position in the document. OPEN for
+  stage 3: with a thread now being an object, the anchor most likely belongs on
+  the `Thread` rather than in its id.
 
 ### Single-writer principle
 
@@ -44,46 +48,84 @@ Channel {
   backend: { kind: string; config: Ref<Obj.Unknown> }   // default: Feed
 }
 
-// org.dxos.type.message v0.1.0 — sdk/types/src/types/Message.ts
+// org.dxos.type.message v0.2.0 — sdk/types/src/types/Message.ts
 Message {
   id; created: string; sender: Actor
   blocks: ContentBlock[]
   attachments?; properties?: Record<string, any>
-  parentMessage?: Obj.ID         // reply target — stage 1 FIXES this to Ref<Message>
+  parentMessage?: Ref<Message>   // reply target (org.dxos.type.message:0.2.0)
   threadId?: string              // partition key; anchor id in comment channels
 }
 ```
 
 Stage-1 schema fixes:
 
-- **`parentMessage` becomes `Ref<Message>`** (today a bare `Obj.ID`) — schema
-  bump; audit the other Message consumers (inbox, assistant) for reads of the
-  raw id.
-- **Evaluate replacing the untyped `properties` bag with strongly-typed ECHO
-  annotations.** If adopted, `topic`/`resolved` (below) ship as typed
-  annotations instead of bag conventions. Caution: `properties` has existing
-  structural consumers — the schema's `LabelAnnotation` reads
-  `properties.subject` (email), and inbox/assistant stuff other keys — so this
-  is an evaluation with a migration story, not a drop-in swap.
+- **`parentMessage` is a `Ref<Message>`** (was a bare `Obj.ID`) — shipped.
+  Self-referential, so the field is wrapped in `Schema.suspend`. A ref to
+  another item in the same feed resolves because the feed handle's resolver
+  carries feed context; the feed→database direction does not yet resolve, which
+  is why replies point at messages and never at db objects.
+- **Per-service typed annotations replace new `properties` keys** (decided
+  2026-07-29) for metadata that genuinely belongs _on a message_; review's
+  `resolved` will be one. `properties` itself stays — the audit found it carrying
+  transport headers (`subject`/`to`/`cc`/`messageId`/`inReplyTo`/`references`/
+  `listUnsubscribe`/`snippet`/`mailbox`/`sentMessageId`) plus the assistant's
+  tool-call id, none of which chat should inherit; the email set may move to its
+  own annotation once this prototype proves out. Keys are namespaced on the
+  **service** (`org.dxos.chat.*`), never the plugin id, so the stage-2 rename
+  cannot orphan persisted data.
 
-New:
+  Thread state was briefly such an annotation and is **not** one any more (see
+  below): marking someone else's message re-appends it, and a thread that is an
+  object can be a graph node's datum.
+
+New (shipped):
 
 ```ts
-// org.dxos.type.reaction v0.1.0 — appended to the SAME feed as its target.
+// org.dxos.type.reaction v0.1.0 — plugin-thread owns it; appended to the SAME feed as its target.
 Reaction {
   target: Ref<Message>
   emoji: string
   sender: Actor
+  created: string                // ISO date, mirrors Message.created
 }
 ```
 
-Per-message thread metadata (typed annotations if the evaluation above
-adopts them; otherwise `properties` conventions), root messages only, folded
-at read:
+```ts
+// org.dxos.chat.thread v0.1.0 — appended to the SAME feed as its messages.
+Thread {
+  target: Ref<Message>           // the message it branches from; hidden from forms
+  name?: string                  // the type's label annotation (Zulip: topic)
+  created: string                // ISO date, hidden from forms
+}
+```
 
-- `topic?: string` — thread name (Zulip topic; editable = author re-append).
-- `resolved?: boolean` — comment-thread resolution state (review channels;
-  leading candidate pending stage 3 validation).
+**A thread's id is the `Thread` object's id**, which its replies carry as
+`threadId`. Three things follow:
+
+- The thread is the datum of its own graph node — built by the canonical
+  `AppNode.makeObject`, so its label, icon, hue, rename and companions all come
+  from the type rather than from anything the plugin passes by hand.
+- Creating or naming a thread writes the thread, never another participant's
+  message; renaming is open to any participant, and only the name is at stake
+  under last-flush-wins.
+- It carries no channel reference — it lives in that channel's feed — so a
+  thread's article resolves its channel from the node it opened under (the way
+  plugin-inbox resolves a message's mailbox).
+
+**One thread per message**, enforced at creation. Duplicates are reachable only
+across a network partition, where neither peer can see the other's; the fold
+elects the first in feed order, which every peer converges on. Reconciling the
+losers' replies is a TODO, not something stage 1 handles.
+
+`foldThreads` also keeps a partition keyed by a _root message_ — threads seeded
+or imported without an object stay readable, they just have no node — and
+tolerates a missing root, since deleting the branch point must not strand its
+replies.
+
+- `resolved` — comment-thread resolution state, to ship as review's own
+  annotation in stage 3 (`org.dxos.review.*`), on the message or the thread as
+  that design lands.
 
 Relations: one relation per comments channel — Channel → document (companion
 pattern; exact relation type chosen in stage 3). No per-thread relations.
@@ -105,6 +147,98 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
   primitive — explicitly NOT feed blocks (persisting typing events as
   immutable blocks would be wrong). Nearest prior art: plugin-calls swarm
   presence, already integrated in `ChannelArticle`.
+
+### Rendering substrate
+
+REVISED by jdw (round 14, 2026-08-05), superseding the single-document
+decision below. Round 13's premise was one CodeMirror document per transcript,
+with every piece of per-message chrome (heading, avatar, reactions, quote,
+thread row, hover toolbar) reconstructed inside it as decorations, widgets and
+React portals. Stage 2c/2d built that, and the build itself was the evidence
+against it: the portal bookkeeping, a hover toolbar that had to be re-anchored
+imperatively, view-state dispatches racing model rebuilds, flaky container
+plays (one toolbar for the whole transcript means a play must simulate pointer
+position), chrome inside `.cm-content` picking up editor theming (light-theme
+reaction pills), and a fight with the scroller over bottom-pinning — all costs
+of the one-document premise, not of CodeMirror.
+
+**The revised shape: TanStack for the list, CodeMirror per message.**
+
+- `Thread.Messages` (TanStack/Mosaic virtual stack) stays the list. Chrome —
+  heading, avatar rail, reactions, quote, thread row, controls — is ordinary
+  React in the tile, where it was already correct, themed and per-message
+  addressable (the old plays were stable because every tile carried its own
+  controls).
+- Each message body is a **CodeMirror renderer**: one small editor per
+  message, sharing the extension vocabulary (markdown decoration, embeds/XML
+  widgets, streaming). This is an upgrade of the tile stack's existing
+  per-message editor (`TextBlock` already mounts one), not a new layer.
+- The **chunk model (2a/2b) survives as the per-message driver**: a message is
+  an ordered list of blocks (markdown, reasoning, toolCall, surface…), which
+  is exactly the chunk document — streaming appends to the tail block, blocks
+  finalize once. `chunkSync` drives the message's own editor.
+- **Compose stays CodeMirror** (`ChatEditor`) for slash-commands, mentions,
+  completions — already landed in stage 2d.
+- Editor-instance count is bounded by virtualization: viewport + overscan
+  (~10–30 live editors), only the streaming tail is ever hot. To be measured
+  at 500 messages before stage D closes.
+- In-place editing collapses to flipping the message's own editor out of
+  `readOnly` — the tile stack's original mechanism.
+
+What is deliberately given up relative to one-document: cross-message text
+selection and find-across-transcript. Discord offers neither; accepted.
+
+What is kept from the round-13 analysis: the reconciling chunk model (the
+`MessageSyncer`/`TranscriptModel` critique below still holds — both are
+special cases of `set(chunks)` reconcile, now applied per message), the shared
+extension vocabulary, and placement in `@dxos/react-ui-thread`.
+
+The `MessageDocument` component, its chrome extension and its item builder
+were deleted (git has them at `128147d5` if archaeology is ever needed).
+
+<details>
+<summary>Round-13 single-document design (superseded)</summary>
+
+Decided by jdw (round 13), superseding the "keep parallel" lean in Open
+questions: assistant chat, transcription and channel chat converge on **one
+CodeMirror-backed document model**, so the two can actually be integrated
+later rather than merely resembling each other. The near-term win is streaming
+(the assistant's typewriter/append path) and a single vocabulary of widgets —
+NOT virtualization, which `Thread.Messages` already has via TanStack.
+
+Message text stays **plain markdown lines** in the document; only headings,
+avatars, dividers, reactions, thread links, quotes and the edit affordance are
+decorations or widgets. That is what buys wrapping, cross-message selection
+and find for free.
+
+</details>
+
+The shared piece is a **keyed, ordered, reconciling chunk document**: chunks
+render to text, and a `set(chunks)` reconcile computes a minimal diff. Two
+existing models are special cases of it:
+
+- `MessageSyncer` (plugin-assistant) is append-only by contract — it tracks a
+  completed-block index and a trailing char count, and requires each streaming
+  render to be a string-extension of the last. Anything else forces a full
+  document replacement.
+- `TranscriptModel` (react-ui-transcription) has append/update/delete, which is
+  the right shape, but replays a batch against line counts from the _previous_
+  sync and populates them only inside `sync()` — so a delete followed by an
+  update in one batch lands on the wrong lines.
+
+Both were ported onto `ChunkModel` in stage 2b with no UI change; that work is
+unaffected by the round-14 revision.
+
+Placement (jdw, option 2): the model lives in `@dxos/react-ui-thread`
+alongside the chat UI, and `plugin-assistant` and `react-ui-transcription`
+import it from there — accepted because `react-ui-transcription` is expected
+to dissolve into `react-ui-thread` later. `react-ui-markdown` is NOT a
+consumer: `MarkdownStream` is text-level and has no chunk notion.
+
+`react-ui-thread` is the permanent home of this work and does not go away. The
+React tile stack (`Thread.*`/`Message.*`) is no longer transitional — it IS
+the list layer; plugin-review continues on it and stage 3 unification becomes
+a matter of sharing tiles, not of porting to a document.
 
 ### Backend layers
 
@@ -131,15 +265,20 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
    `@dxos/types`; nothing to lift): schema fixes (`parentMessage` → Ref,
    annotations evaluation), thread-first UX, message actions, Reaction type.
    Detail in TASKS.md.
-2. **Stage 2 — rename `plugin-thread` → `plugin-chat`** once the model is
-   proven. Mechanical, own PR, no compatibility shims; blast radius includes
-   the plugin id and the shared `threadTranslations` imported by
-   plugin-review.
-3. **Stage 3 — review unification**: per-document comments channels,
+2. **Stage 2 — CodeMirror rendering substrate** (see Rendering substrate).
+   Port before replace: build the model, move the assistant and transcription
+   onto it with their UI untouched, then build the channel transcript and
+   switch the channel containers to it. Detail in TASKS.md.
+3. **Stage 2e — rename `plugin-thread` → `plugin-chat`.** Mechanical, own PR,
+   no compatibility shims; blast radius includes the plugin id and the shared
+   `threadTranslations` imported by plugin-review. Deliberately sequenced
+   AFTER stage 2's substrate work (2a–2d) — it touches the same files a
+   rebuilt UI replaces, so renaming first buys nothing.
+4. **Stage 3 — review unification**: per-document comments channels,
    `threadId = anchor`, delete the `Thread` type with a migration
    (ref-array messages → feed messages). **Sequence explicitly with
    `document-revisions` (burdon), which is active in plugin-review.**
-4. **Post-stage-3 follow-ups**: notifications (subscription triggers) and
+5. **Post-stage-3 follow-ups**: notifications (subscription triggers) and
    presence/typing (ephemeral EDGE primitive).
 
 **Ship gate:** prototype freely on the landed #12235 surface, but feed
@@ -158,8 +297,13 @@ device capacity (phases 3–4).
 - Orphaned anchors (anchored text deleted): render-as-orphaned, as review
   does today.
 - `resolved` on the root message vs elsewhere — validate in stage 3.
-- Assistant `Chat` / `Channel` convergence (leaning: keep parallel; converge
-  only if the assistant needs channel features).
+- ~~Assistant `Chat` / `Channel` convergence (leaning: keep parallel).~~
+  RESOLVED (jdw, round 13): converge on a shared rendering substrate now so
+  the data models can be integrated later — see Rendering substrate. The
+  _data_ convergence (one `Chat`/`Channel` type) remains open.
+- Accessibility and per-tile semantics on a text surface: tiles are real DOM
+  with roles today, and `onMessageSelect`/`aria-current`/the e2e testids need
+  re-expression as decorations. Prototype before committing to stage 2c.
 - Per-thread read-state granularity: finer than the per-feed cursor feed
   phase 2 defines — feed phase 2 should not design out per-`threadId`
   high-water marks (flagged in feed-live-objects TASKS).

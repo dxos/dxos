@@ -13,9 +13,12 @@ import {
 
 export type TagStyleProps = {
   hue?: ChromaticPalette | NeutralPalette | MessageValence;
+  /** `button` for a pill that acts when clicked (a reaction), rather than one that only labels. */
+  variant?: 'default' | 'button';
 };
 
-const root: ComponentFunction<TagStyleProps> = (_, ...etc) => mx('dx-tag', ...etc);
+const root: ComponentFunction<TagStyleProps> = ({ variant }, ...etc) =>
+  mx('dx-tag', variant === 'button' && 'dx-tag--button', ...etc);
 
 export const tagTheme: Theme<TagStyleProps> = {
   root,

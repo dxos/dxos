@@ -22,11 +22,16 @@ export type {
   MessageTileProps,
   MessageTimeProps,
 } from './Message';
+export { MessageRenderer } from './MessageRenderer';
+export type { MessageChunk, MessageRendererProps } from './MessageRenderer';
 export { command } from './command';
 export { useThreadContext } from './context';
 export type {
   MessageCallbacks,
+  MessageLike,
   MessageMetadata,
+  MessageReaction,
+  MessageThreadSummary,
   ObjectTileComponent,
   ThreadComponents,
   ThreadContextValue,

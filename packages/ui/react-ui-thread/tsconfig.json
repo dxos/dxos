@@ -12,6 +12,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -42,13 +45,25 @@
       "path": "../react-ui"
     },
     {
+      "path": "../react-ui-chat"
+    },
+    {
       "path": "../react-ui-dnd"
     },
     {
       "path": "../react-ui-editor"
     },
     {
+      "path": "../react-ui-menu"
+    },
+    {
       "path": "../react-ui-mosaic"
+    },
+    {
+      "path": "../react-ui-pickers"
+    },
+    {
+      "path": "../ui"
     },
     {
       "path": "../ui-editor"

@@ -16,7 +16,8 @@ import {
   isToday,
 } from 'date-fns';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -118,7 +119,7 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
     ...(message?.threadId && mode !== 'compose' ? { threadId: message.threadId } : {}),
     // Record the specific message being answered so the thread can render the draft directly after it
     // (see `orderThreadItems`) rather than always at the bottom.
-    ...(message && mode !== 'compose' ? { parentMessage: message.id } : {}),
+    ...(message && mode !== 'compose' ? { parentMessage: Ref.make(message) } : {}),
     blocks: [{ _tag: 'text' as const, text: draftBody }],
     properties: {
       to,
@@ -127,6 +128,12 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
       ...properties,
     },
   };
+};
+
+/** Object id a ref points at, when it addresses an ECHO object. */
+const getRefEntityId = (ref: Ref.Ref<Message.Message> | undefined): string | undefined => {
+  const eid = ref && EID.tryParse(ref.uri);
+  return eid ? EID.getEntityId(eid) : undefined;
 };
 
 /**
@@ -139,7 +146,7 @@ export const orderThreadItems = (messages: Message.Message[]): Message.Message[]
   const childDrafts = new Map<string, Message.Message[]>();
   const standalone: Message.Message[] = [];
   for (const message of messages) {
-    const parentId = DraftMessage.instanceOf(message) ? message.parentMessage : undefined;
+    const parentId = DraftMessage.instanceOf(message) ? getRefEntityId(message.parentMessage) : undefined;
     const parent = parentId ? byId.get(parentId) : undefined;
     if (parentId && parent && !DraftMessage.instanceOf(parent)) {
       const drafts = childDrafts.get(parentId) ?? [];

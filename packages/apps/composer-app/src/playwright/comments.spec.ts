@@ -56,8 +56,7 @@ test.describe('Comments tests', () => {
 
     await expect(messageTextbox).toContainText(messageText);
 
-    const editButton = host.page.getByTestId('thread.message.edit');
-    await editButton.click();
+    await Thread.editMessage(message, host.page);
 
     const editedText = 'Edited';
 
@@ -102,11 +101,11 @@ test.describe('Comments tests', () => {
     await expect(Thread.getMessages(thread)).toHaveCount(3);
 
     // Delete the second message.
-    await Thread.deleteMessage(Thread.getMessage(thread, secondMessage));
+    await Thread.deleteMessage(Thread.getMessage(thread, secondMessage), host.page);
     await expect(Thread.getMessages(thread)).toHaveCount(2);
 
     // Deleting last message should delete the thread.
-    await Thread.deleteMessage(Thread.getMessage(thread, firstMessage));
+    await Thread.deleteMessage(Thread.getMessage(thread, firstMessage), host.page);
     await expect(Thread.getComments(host.page)).toHaveCount(0);
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });

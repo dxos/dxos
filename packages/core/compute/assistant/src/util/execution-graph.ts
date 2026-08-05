@@ -493,17 +493,24 @@ const getBranchName = (options: { parentMessage?: EntityId; toolCallId?: string 
 
 const getMessageBranch = (message: Message.Message) => {
   return getBranchName({
-    parentMessage: message.parentMessage,
+    parentMessage: getRefEntityId(message.parentMessage),
     toolCallId: message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID],
   });
 };
 
 const getParentId = (message: Message.Message) => {
-  if (message.parentMessage && message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID]) {
-    return getToolCallId(message.parentMessage, message.properties[MESSAGE_PROPERTY_TOOL_CALL_ID]);
+  const parentMessage = getRefEntityId(message.parentMessage);
+  if (parentMessage && message.properties?.[MESSAGE_PROPERTY_TOOL_CALL_ID]) {
+    return getToolCallId(parentMessage, message.properties[MESSAGE_PROPERTY_TOOL_CALL_ID]);
   } else {
     return undefined;
   }
+};
+
+/** Object id a ref points at, when it addresses an ECHO object. */
+const getRefEntityId = (ref: Ref.Unknown | undefined): EntityId | undefined => {
+  const echoUri = ref && EID.tryParse(ref.uri);
+  return echoUri ? EID.getEntityId(echoUri) : undefined;
 };
 
 const stringifyRef = (ref: Ref.Unknown) => {
@@ -511,8 +518,7 @@ const stringifyRef = (ref: Ref.Unknown) => {
     return stringifyObject(ref.target);
   }
 
-  const echoUri = EID.tryParse(ref.uri);
-  return (echoUri ? EID.getEntityId(echoUri) : undefined) ?? '';
+  return getRefEntityId(ref) ?? '';
 };
 
 const stringifyObject = (obj: Obj.Unknown) => {

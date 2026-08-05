@@ -4,6 +4,7 @@
 
 import { type URI } from '@dxos/keys';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
+import { type ChunkDocument, type ChunkDocumentChange, ChunkModel } from '@dxos/react-ui-thread/model';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type StateDispatch, type XmlWidgetStateManager } from '@dxos/ui-editor';
 
@@ -32,7 +33,8 @@ export type MessageSpan = {
  * with `pending: true` whose content grows over time, transitioning to `pending: false`), the
  * sequence of returned strings must be monotonically extending — each subsequent value must be
  * a string-extension of the previous. The {@link MessageSyncer} relies on this invariant to
- * compute appendable deltas without diffing.
+ * compute appendable deltas without diffing. Non-monotonic output is tolerated but costs the
+ * append path: the document is rewritten rather than streamed.
  */
 export type BlockRenderer = (
   context: MessageThreadContext,
@@ -75,8 +77,30 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
   }
 }
 
+/** One rendered block; the unit the model orders and caches. */
+type BlockChunk = { id: string; messageId: string; message: Message.Message; block: ContentBlock.Any };
+
 /**
- * Syncs messages with the editor.
+ * Cache key for a block's rendering. A pending block re-renders every pass because its content is
+ * still growing; a finalized one is rendered exactly once and cached from then on, which is what
+ * keeps `applyToolBlockToWidgetState` — which *appends* a tool result to widget state — from
+ * folding the same result in twice. Identity is deliberately not used: ECHO may mint a fresh proxy
+ * per property access, so a block object is not stable enough to compare.
+ */
+const FINALIZED = Symbol('finalized');
+
+const toChunks = (messages: Message.Message[]): BlockChunk[] =>
+  messages.flatMap((message) =>
+    message.blocks.map((block, index) => ({
+      id: `${message.id}:${index}`,
+      messageId: message.id,
+      message,
+      block,
+    })),
+  );
+
+/**
+ * Syncs messages with the editor, over the shared {@link ChunkModel}.
  *
  * Reflects the AI streaming contract:
  * - Messages and their blocks are appended in order.
@@ -84,54 +108,75 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
  * - The renderer's output for a streaming block grows monotonically (see {@link BlockRenderer}).
  * - The document is read-only outside this syncer.
  *
- * Under those rules the syncer needs only:
- * - `_completed`: the flat-block index past which everything has been fully appended.
- * - `_trailing`: chars of the in-flight block (at index `_completed`) already appended.
- * - `_threadId`: identity sentinel; if `messages[0]?.id` changes, the document is replaced.
+ * A rewind, which drops turns from the middle or end of the thread, needs no special case: the
+ * model reconciles the whole list, and a change that is not a pure extension arrives here as a
+ * replace. The sink offers only append and whole-document replace, so that lands as `setContent` —
+ * the same full rewrite this class did before, and the reason widget state is rehydrated after it.
  */
 export class MessageSyncer {
-  private _threadId?: string;
+  readonly #model: ChunkModel<BlockChunk>;
+  readonly #context: MessageThreadContext;
+  readonly #sink: ChunkDocument;
 
-  /**
-   * Ids of the messages rendered so far, in document order. `update` streams a suffix, so it needs to
-   * know when the incoming list no longer extends what is on screen — a rewind drops turns, and an
-   * append-only path would leave them rendered.
-   */
-  private _renderedIds: string[] = [];
+  /** Identity sentinel; a change of `messages[0]` means a different thread. */
+  #threadId?: string;
 
-  /** Cumulative block index (across all completed blocks in all messages). */
-  private _completed = 0;
+  /** Messages of the pass being synced, for rehydration after a document replace. */
+  #messages: Message.Message[] = [];
 
-  /** Chars of the in-flight block (at index `_completed`) already appended. */
-  private _trailing = 0;
-
-  /** Document offset at the `_completed` boundary (length of all fully-appended blocks). */
-  private _completedOffset = 0;
-
-  /** Per-message document offset ranges, keyed by message id in document order. */
-  private readonly _spans = new Map<string, { from: number; to: number }>();
-
-  private readonly _context: MessageThreadContext;
+  /** Whether the last sync rewrote the document rather than appending to it. */
+  #replaced = false;
 
   constructor(
     private readonly _document: TextModel,
     private readonly _renderer: BlockRenderer,
     handlers: MessageThreadHandlers = {},
   ) {
-    this._context = new MessageThreadContext(this._document, handlers);
+    this.#context = new MessageThreadContext(this._document, handlers);
+    this.#model = new ChunkModel<BlockChunk>(
+      ({ message, block }) => this._renderer(this.#context, message, block) ?? '',
+      { getRevision: ({ block }) => (block.pending ? {} : FINALIZED) },
+    );
+    this.#sink = {
+      apply: (change: ChunkDocumentChange) => {
+        if (change.type === 'append') {
+          void this._document.append(change.text);
+        } else {
+          this.#replaced = true;
+          // `setContent` uses `wireBypass`, so the editor jumps straight to the final text rather
+          // than typing it out, and clears widget state via `xmlTagResetEffect` — hence the
+          // rehydrate. Live streaming partials take the append path above and keep the typewriter.
+          const messages = this.#messages;
+          void this._document.setContent(this.#model.text).then(() => {
+            rehydrateToolWidgetsFromMessages(this.#context, messages);
+          });
+        }
+      },
+    };
   }
 
   get context() {
-    return this._context;
+    return this.#context;
   }
 
   /**
-   * Per-message document offset spans, in document order. Valid synchronously after
-   * {@link reset} or {@link update} (the offsets are derived from the same rendered buffer
-   * that is dispatched to the document).
+   * Per-message document spans, in document order. Valid synchronously after {@link reset} or
+   * {@link update} (the offsets are derived from the same rendered buffer that is dispatched).
    */
   getSpans(): MessageSpan[] {
-    return Array.from(this._spans, ([id, { from, to }]) => ({ id, from, to }));
+    const spans = new Map<string, MessageSpan>();
+    for (const { id, from, to } of this.#model.getRanges()) {
+      // Chunk ids are `${messageId}:${blockIndex}`; a message spans its blocks' ranges.
+      const messageId = id.slice(0, id.lastIndexOf(':'));
+      const existing = spans.get(messageId);
+      if (existing) {
+        existing.to = to;
+      } else {
+        spans.set(messageId, { id: messageId, from, to });
+      }
+    }
+
+    return Array.from(spans.values());
   }
 
   /**
@@ -139,35 +184,13 @@ export class MessageSyncer {
    * and from {@link update} when it detects an identity change in `messages[0]`.
    */
   reset(messages: Message.Message[] = []): void {
-    this._threadId = messages[0]?.id;
-    this._renderedIds = messages.map((message) => message.id);
-    this._completed = 0;
-    this._trailing = 0;
-    this._completedOffset = 0;
-    this._spans.clear();
-    const buffer = this._walk(messages);
-    // Match the pre-rewrite behaviour: rendering from a steady state (initial mount with
-    // non-empty messages, or thread switch) lands the entire content via `setContent` — which
-    // uses `wireBypass`, so the editor jumps straight to the final text and `update()` returns
-    // `true` so the caller can scroll to the bottom. Live streaming partials that arrive
-    // *after* this initial render flow through `update()`'s incremental path → `_document.append`
-    // → wire's drip filter, preserving the char-by-char typewriter for incoming text.
-    void this._document.setContent(buffer).then(() => {
-      rehydrateToolWidgetsFromMessages(this._context, messages);
-    });
-  }
-
-  /**
-   * Whether `messages` still begins with everything already rendered, making this an append.
-   *
-   * A rewind removes turns from the middle or end of the thread, and the streaming path can only add
-   * text — so anything other than an extension has to go through {@link reset}.
-   */
-  #extendsRendered(messages: Message.Message[]): boolean {
-    if (messages.length < this._renderedIds.length) {
-      return false;
-    }
-    return this._renderedIds.every((id, index) => messages[index]?.id === id);
+    this.#threadId = messages[0]?.id;
+    this.#messages = messages;
+    // Clearing the chunks drops the render cache, so every block renders again into the widget
+    // state the imminent `setContent` is about to clear.
+    this.#model.reset();
+    this.#model.set(toChunks(messages));
+    this.#forceReplace();
   }
 
   /**
@@ -176,69 +199,27 @@ export class MessageSyncer {
    * if the call was a streaming append (or a no-op).
    */
   update(messages: Message.Message[]): boolean {
-    if (messages[0]?.id !== this._threadId || !this.#extendsRendered(messages)) {
+    if (messages[0]?.id !== this.#threadId) {
       this.reset(messages);
       return true;
     }
-    this._renderedIds = messages.map((message) => message.id);
-    const buffer = this._walk(messages);
-    if (buffer.length > 0) {
-      void this._document.append(buffer);
-    }
-    return false;
+
+    this.#messages = messages;
+    this.#replaced = false;
+    this.#model.set(toChunks(messages)).sync(this.#sink);
+    // Reported rather than predicted: a rewind drops turns from the middle or end, and the model
+    // reconciles that into a replace, which the sink can only land as a whole-document rewrite.
+    // Asking what happened beats guessing from the shape of the incoming list.
+    return this.#replaced;
   }
 
   /**
-   * Walk flat blocks starting at `_completed`, advancing the cursors and returning the chars
-   * to append. Blocks before `_completed` are skipped — their renderer is never re-invoked,
-   * which preserves single-shot side effects (e.g. tool widget state mutation).
+   * Write the whole document even when the diff would have been an append, so a reset always lands
+   * through `setContent` — mount and thread switch must bypass the typewriter rather than type the
+   * backlog out, and must clear widget state left by the previous thread.
    */
-  _walk(messages: Message.Message[]): string {
-    let buffer = '';
-    let index = 0;
-    // Absolute document offset at the `_completed` boundary; blocks before it were rendered on
-    // earlier calls and their offsets are already baked into `_completedOffset` (and `_ranges`).
-    let offset = this._completedOffset;
-    outer: for (const message of messages) {
-      for (const block of message.blocks) {
-        if (index < this._completed) {
-          index++;
-          continue;
-        }
-        const rendered = this._renderer(this._context, message, block) ?? '';
-        if (rendered.length > this._trailing) {
-          buffer += rendered.slice(this._trailing);
-        }
-        // The document never shrinks (see the `_trailing` guard below), so span/offset accounting
-        // must track the document, not a renderer output that regressed below what was appended.
-        const renderedLength = Math.max(rendered.length, this._trailing);
-        // The block occupies `[offset, offset + renderedLength)`; extend the message's range.
-        this._saveRange(message.id, offset, offset + renderedLength);
-        if (block.pending) {
-          // Stay on this block; record how far we've appended so the next call can resume.
-          // `Math.max`-style guard against a non-monotonic renderer output without shrinking the doc.
-          if (rendered.length > this._trailing) {
-            this._trailing = rendered.length;
-          }
-          break outer;
-        }
-        this._completed = index + 1;
-        this._trailing = 0;
-        offset += renderedLength;
-        this._completedOffset = offset;
-        index++;
-      }
-    }
-    return buffer;
-  }
-
-  /** Record (or extend) the offset range of a message. `from` is preserved; `to` never regresses. */
-  private _saveRange(id: string, from: number, to: number): void {
-    const existing = this._spans.get(id);
-    if (existing) {
-      existing.to = Math.max(existing.to, to);
-    } else {
-      this._spans.set(id, { from, to });
-    }
+  #forceReplace(): void {
+    this.#model.rebase(this.#model.text);
+    this.#sink.apply({ type: 'replace', from: 0, to: 0, text: this.#model.text });
   }
 }

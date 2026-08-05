@@ -13,12 +13,15 @@ export type BylineIdentity = {
   displayName?: string;
 };
 
+/** Lines of one chunk, as the document text the model concatenates — trailing newline included. */
+const lines = (...values: string[]): string => values.join('\n') + '\n';
+
 export const renderByline =
   (identities: readonly BylineIdentity[]) =>
-  (message: Message.Message, index: number, debug = false): string[] => {
+  (message: Message.Message, index: number, debug = false): string => {
     if (message.sender.role === 'assistant') {
       // Start/stop block.
-      return [message.blocks.find((block) => block._tag === 'transcript')?.text ?? '', ''];
+      return lines(message.blocks.find((block) => block._tag === 'transcript')?.text ?? '', '');
     }
 
     // TODO(burdon): Use link/reference markup for users (with popover).
@@ -31,10 +34,10 @@ export const renderByline =
       message.sender.email ??
       message.sender.identityDid;
     const blocks = message.blocks.filter((block) => block._tag === 'transcript');
-    return [
+    return lines(
       // TODO(thure): Use an XML tag with the bits needed here.
       `###### ${name}` + (debug ? ` [${index}]:${message.id}` : ''),
       blocks.map((block) => block.text.trim()).join(' '),
       '',
-    ];
+    );
   };

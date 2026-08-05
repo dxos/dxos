@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Message as MessageComponent, Thread } from '@dxos/react-ui-thread';
+import { Message as MessageComponent, type MessageLike, Thread } from '@dxos/react-ui-thread';
 import { Message } from '@dxos/types';
 import { type GroupPolicy, type SuggestionSource } from '@dxos/ui-editor';
 import { stringToFallback } from '@dxos/util';
@@ -70,7 +70,7 @@ export const SuggestionThread = ({
   }, [base, sources, group, dismissed, authorLabels]);
 
   const getMetadata = useCallback(
-    (message: Message.Message) => {
+    (message: MessageLike) => {
       const metadata = getMessageMetadata(Obj.getURI(message), undefined, message.sender);
       // Seed the avatar from the author DID so it agrees with the version banner's author tag: the
       // hue is the author's palette hue (identity hue when known, else a stable DID-seeded hue — the

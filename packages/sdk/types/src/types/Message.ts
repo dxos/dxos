@@ -35,10 +35,11 @@ export interface Attachment extends Schema.Schema.Type<typeof Attachment> {}
 // TODO(wittjosiah): Add read status:
 //  - Read receipts need to be per space member.
 //  - Read receipts don't need to be added to schema until they being implemented.
-export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.message', '0.1.0'))(
+export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.message', '0.2.0'))(
   Schema.Struct({
     id: Obj.ID, // TODO(burdon): Remove (from all types in this package).
-    parentMessage: Schema.optional(Obj.ID),
+    /** Message this one replies to; resolves within the same feed. */
+    parentMessage: Schema.optional(Schema.suspend((): Ref.RefSchema<Message> => Ref.Ref(Message))),
     /** Optional grouping identifier for related messages. */
     threadId: Schema.optional(Schema.String),
     /** Message creation timestamp. NOTE: May be different from the object creation timestamp. */

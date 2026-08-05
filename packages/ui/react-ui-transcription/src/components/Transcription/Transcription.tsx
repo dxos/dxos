@@ -6,6 +6,7 @@ import React from 'react';
 
 import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import { type ChunkModel } from '@dxos/react-ui-thread/model';
 import { type Message, type Transcript } from '@dxos/types';
 import {
   AnchorWidget,
@@ -20,7 +21,6 @@ import {
   xmlTags,
 } from '@dxos/ui-editor';
 
-import { type TranscriptModel } from '../../model';
 import { transcription } from './transcription-extension';
 
 const inlinePreviewRegistry: XmlWidgetRegistry = {
@@ -34,7 +34,7 @@ const inlinePreviewRegistry: XmlWidgetRegistry = {
 
 export type TranscriptionProps = {
   transcript?: Transcript.Transcript;
-  model: TranscriptModel<Message.Message>;
+  model: ChunkModel<Message.Message>;
 };
 
 // TODO(burdon): Rename Transcript.
