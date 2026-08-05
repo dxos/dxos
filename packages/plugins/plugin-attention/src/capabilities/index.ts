@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -12,6 +13,10 @@ import * as AttentionCapabilities from '../types/AttentionCapabilities';
 export const Attention = Capability.lazyModule(
   'attention',
   {
+    // App-shell state, so it must be on the startup pass rather than the idle default: the deck
+    // and its planks read it through the STRICT `useCapability` hooks during their first render,
+    // where a missing capability is an invariant violation and not a late-arriving value.
+    activatesOn: ActivationEvents.Startup,
     requires: [Capabilities.AtomRegistry],
     provides: [AttentionCapabilities.Attention, AttentionCapabilities.ViewState],
   },
