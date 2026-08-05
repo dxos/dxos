@@ -6,7 +6,7 @@
 // dependencies so they can be bundled into workerd / browser environments
 // without pulling in protobufjs or similar node-only packages.
 
-const LEGACY_CORS_PROXY_URL = 'https://cors-proxy.dxos.workers.dev';
+const LEGACY_CORS_PROXY_URL = 'https://cors.dxos.network';
 
 // Matches EDGE_CLIENT_TAG_HEADER from @dxos/protocols.
 // Duplicated here to avoid importing the heavy protocols bundle in edge environments.
@@ -22,7 +22,7 @@ const remapAuthorizationForProxy = (headers: Headers): Headers => {
 };
 
 /**
- * Fetch through the legacy standalone open proxy at `cors-proxy.dxos.workers.dev`.
+ * Fetch through the legacy standalone open proxy at `cors.dxos.network`.
  * TEMPORARY — delete when the authenticated `/proxy/*` route on edge ships.
  */
 export const proxyFetchLegacy = (target: URL, init: RequestInit = {}, clientTag?: string): Promise<Response> => {
