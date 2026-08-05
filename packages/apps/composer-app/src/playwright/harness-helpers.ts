@@ -170,7 +170,7 @@ export const trackNetwork = (
 
 export const collectStartupReport = async (page: Page, scenario: Scenario): Promise<StartupReport> => {
   const data = await page.evaluate(() => {
-    const profiler = (window as any).composer?.profiler;
+    const profiler = window.composer?.profiler;
     const snapshot = profiler?.snapshot?.() ?? null;
     const paints = performance.getEntriesByType('paint');
     const fp = paints.find((entry) => entry.name === 'first-paint');
@@ -183,7 +183,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
     // the manager global appears only after React mounts, and its shape is framework-internal.
     let inventory: unknown = null;
     try {
-      const manager = (globalThis as any).composer?.manager;
+      const manager = globalThis.composer?.manager;
       const modules = manager?.getModules?.();
       if (Array.isArray(modules)) {
         const eventKeyOf = (event: any): string =>
@@ -219,7 +219,7 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
 
     // Populated by the `addInitScript`-registered PerformanceObserver; absent (falls back to `[]`)
     // on browsers without Long Tasks API support.
-    const longTasks = ((window as any).__longTasks ?? []) as Array<{ start: number; duration: number }>;
+    const longTasks = window.__longTasks ?? [];
     const fcpStart = fcp ? fcp.startTime : 0;
     const tbt = longTasks
       .filter((task) => task.start > fcpStart)

@@ -7,6 +7,7 @@ import { rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { INITIAL_URL } from './app-manager';
@@ -34,12 +35,12 @@ test.beforeAll(() => {
  */
 const observeLongTasks = (page: Page): Promise<void> =>
   page.addInitScript(() => {
-    (window as any).__longTasks = [];
+    window.__longTasks = [];
     try {
       if (PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
         new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            (window as any).__longTasks.push({ start: entry.startTime, duration: entry.duration });
+            window.__longTasks?.push({ start: entry.startTime, duration: entry.duration });
           }
         }).observe({ type: 'longtask', buffered: true });
       }
@@ -280,8 +281,8 @@ test.describe.serial('Startup timing harness', () => {
 
     await page.addInitScript(() => {
       const capture = () => {
-        (window as any).__bootLoaderSnapshot = {
-          hasDriver: typeof (window as any).__bootLoader?.status === 'function',
+        window.__bootLoaderSnapshot = {
+          hasDriver: typeof window.__bootLoader?.status === 'function',
           bootLoaderInDom: !!document.getElementById('boot-loader'),
           bootLoaderAriaLabel: document.getElementById('boot-loader')?.getAttribute('aria-label') ?? null,
         };
@@ -292,8 +293,10 @@ test.describe.serial('Startup timing harness', () => {
     });
     await page.goto(`${INITIAL_URL}/?profiler=1`, { waitUntil: 'domcontentloaded' });
 
-    const snapshot = await page.evaluate(() => (window as any).__bootLoaderSnapshot);
-    expect(snapshot).toBeTruthy();
+    const snapshot = await page.evaluate(() => window.__bootLoaderSnapshot);
+    // `toBeDefined` rather than `toBeTruthy`: it narrows, so the reads below need no non-null.
+    expect(snapshot).toBeDefined();
+    invariant(snapshot);
     expect(snapshot.bootLoaderInDom).toBe(true);
     expect(snapshot.bootLoaderAriaLabel).toBe('Initializing');
     expect(snapshot.hasDriver).toBe(true);
