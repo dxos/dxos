@@ -56,7 +56,7 @@ describe('crm routine template', () => {
       expect(triggerFeedUri).toBe(mailbox.feed.uri);
 
       // The operation reads the mailbox itself, so the input carries the subject ref plus the research flag.
-      expect(trigger?.input?.mailbox).toBeDefined();
+      expect(trigger?.input?.mailbox?.target?.id).toBe(mailbox.id);
       expect(trigger?.input?.research).toBe(true);
       expect(trigger?.concurrency).toBe(1);
     }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
