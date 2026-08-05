@@ -20,6 +20,7 @@ import {
   createMixedSenderMessages,
   getStoryMetadata,
 } from '../testing';
+import { Thread } from '../Thread';
 import { type MessageLike, type MessageReaction } from '../types';
 import { type MessageAction } from './message-document-extension';
 import { MessageDocument } from './MessageDocument';
@@ -53,20 +54,31 @@ const DefaultStory = () => {
   }, []);
 
   return (
-    <MessageDocument
-      classNames='h-full'
-      messages={messages}
-      editingId={editingId}
+    <Thread.Root
       getMetadata={getStoryMetadata}
-      getActions={({ message }) =>
-        message.sender.identityDid === STORY_IDENTITY.identityDid
-          ? ['react', 'thread', 'edit', 'delete']
-          : ['react', 'thread']
-      }
-      onAction={handleAction}
-      onEditCommit={handleEditCommit}
-      onEditCancel={() => setEditingId(undefined)}
-    />
+      identityDid={STORY_IDENTITY.identityDid}
+      editable
+      onMessageReact={() => {}}
+      onMessageDelete={() => {}}
+      onThreadOpen={() => {}}
+      onThreadCreate={() => {}}
+      canDelete={(message) => message.sender.identityDid === STORY_IDENTITY.identityDid}
+    >
+      <MessageDocument
+        classNames='h-full'
+        messages={messages}
+        editingId={editingId}
+        getMetadata={getStoryMetadata}
+        getActions={({ message }) =>
+          message.sender.identityDid === STORY_IDENTITY.identityDid
+            ? ['react', 'thread', 'edit', 'delete']
+            : ['react', 'thread']
+        }
+        onAction={handleAction}
+        onEditCommit={handleEditCommit}
+        onEditCancel={() => setEditingId(undefined)}
+      />
+    </Thread.Root>
   );
 };
 
@@ -106,30 +118,41 @@ const ConversationStory = () => {
   }, []);
 
   return (
-    <MessageDocument
-      classNames='h-full'
-      messages={messages}
+    <Thread.Root
       getMetadata={getStoryMetadata}
-      getReactions={getReactions}
-      getThreadSummary={getThreadSummary}
-      // The host resolves a reply's target; this package never follows the ref itself.
-      getQuote={(message) => {
-        const parent = message.parentMessage?.target;
-        if (!parent) {
-          return undefined;
-        }
-
-        const text = parent.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join(' ');
-        return { authorName: getStoryMetadata(parent).authorName, text };
-      }}
-      getActions={({ message }) =>
-        message.sender.identityDid === STORY_IDENTITY.identityDid
-          ? ['react', 'thread', 'edit', 'delete']
-          : ['react', 'thread']
-      }
-      onReact={handleReact}
+      identityDid={STORY_IDENTITY.identityDid}
+      editable
+      onMessageReact={() => {}}
+      onMessageDelete={() => {}}
       onThreadOpen={() => {}}
-    />
+      onThreadCreate={() => {}}
+      canDelete={(message) => message.sender.identityDid === STORY_IDENTITY.identityDid}
+    >
+      <MessageDocument
+        classNames='h-full'
+        messages={messages}
+        getMetadata={getStoryMetadata}
+        getReactions={getReactions}
+        getThreadSummary={getThreadSummary}
+        // The host resolves a reply's target; this package never follows the ref itself.
+        getQuote={(message) => {
+          const parent = message.parentMessage?.target;
+          if (!parent) {
+            return undefined;
+          }
+
+          const text = parent.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join(' ');
+          return { authorName: getStoryMetadata(parent).authorName, text };
+        }}
+        getActions={({ message }) =>
+          message.sender.identityDid === STORY_IDENTITY.identityDid
+            ? ['react', 'thread', 'edit', 'delete']
+            : ['react', 'thread']
+        }
+        onReact={handleReact}
+        onThreadOpen={() => {}}
+      />
+    </Thread.Root>
   );
 };
 
@@ -177,12 +200,15 @@ const hover = (element: HTMLElement): void => {
   );
 };
 
-/** Bodies are plain text in the document, and every run carries an avatar in the gutter. */
+/** Bodies are plain text in the document, and each run's head is the tile stack's own row frame. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(canvasElement.querySelectorAll('.cm-line').length).toBeGreaterThan(0));
     await expect(canvasElement.querySelector('.cm-line')?.textContent?.length).toBeGreaterThan(0);
-    await expect(canvasElement.querySelectorAll('.cm-avatar-gutter .cm-gutterElement').length).toBeGreaterThan(0);
+    // The same `Message.Root` the tiles use, portaled into the head widget — hence its testid.
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('[data-testid="thread.message"]').length).toBeGreaterThan(0),
+    );
   },
 };
 
@@ -260,12 +286,12 @@ export const Conversation: Story = {
     await reveal(/Has a busy, named thread/);
     await expect(await canvas.findByText('Release plan')).toBeInTheDocument();
 
-    // The toolbar is `react-ui-menu`, floated over the hovered row rather than taking a column.
+    // The toolbar is the tile stack's own `Message.Controls`, floated over the hovered row rather
+    // than taking a column — same quick reactions and same overflow menu.
     await reveal(/A single message of my own/);
     hover(row(canvasElement, /A single message of my own/));
-    await waitFor(() => expect(canvasElement.querySelector('[data-testid="thread.document.edit"]')).not.toBeNull());
-    // Someone else's message offers neither edit nor delete.
-    hover(row(canvasElement, /A single message from another sender/));
-    await waitFor(() => expect(canvasElement.querySelector('[data-testid="thread.document.edit"]')).toBeNull());
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-testid="thread.message.reaction-option"]')).not.toBeNull(),
+    );
   },
 };

@@ -11,7 +11,7 @@ import {
   StateField,
   type Transaction,
 } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, GutterMarker, WidgetType, gutter, keymap } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, WidgetType, keymap } from '@codemirror/view';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 
 import { Domino } from '@dxos/ui';
@@ -73,6 +73,9 @@ export type MessageDocumentOptions = {
   onDraftChange?: (message: MessageLike, text: string) => void;
   /** The message under the pointer, for the host's floating toolbar. */
   onHoverChange?: (hover: MessageHover | undefined) => void;
+  /** A widget whose content the host renders as React. */
+  onPortalMount?: (portal: MessagePortal) => void;
+  onPortalUnmount?: (id: string) => void;
   /** Copy for the thread row, so this package does not reach for a translation namespace mid-render. */
   labels?: { startThread: () => string; replyCount: (count: number) => string };
 };
@@ -81,28 +84,45 @@ export type MessageDocumentOptions = {
 // Widgets
 //
 
-/** Author and time above the first message of a run. */
-class HeadingWidget extends WidgetType {
+/** A DOM anchor the host renders React into, so a widget can be a real component. */
+export type MessagePortal = { id: string; root: HTMLElement; kind: 'head'; message: MessageLike; continues: boolean };
+
+/**
+ * Widget whose content is rendered by the host as React.
+ *
+ * The row frame has to *be* the tile stack's `Avatar` and heading rather than a DOM approximation of
+ * them — same component, same rail size, same alignment — so it is portaled in rather than built here.
+ */
+class PortalWidget extends WidgetType {
   constructor(
-    private readonly _name: string,
-    private readonly _time: string,
+    private readonly _id: string,
+    private readonly _message: MessageLike,
+    private readonly _continues: boolean,
+    private readonly _notify: PortalNotifier,
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this._name === other._name && this._time === other._time;
+    return this._id === other._id && this._message === other._message && this._continues === other._continues;
   }
 
   override toDOM() {
-    return Domino.of('div')
-      .classNames('flex items-baseline gap-2 pt-2')
-      .append(
-        Domino.of('span').classNames('text-sm font-medium text-base-fg').text(this._name),
-        Domino.of('span').classNames('text-xs text-description').text(this._time),
-      ).root;
+    const root = document.createElement('div');
+    this._notify.mounted({ id: this._id, root, kind: 'head', message: this._message, continues: this._continues });
+    return root;
+  }
+
+  override destroy() {
+    this._notify.unmounted(this._id);
+  }
+
+  override ignoreEvent() {
+    return false;
   }
 }
+
+type PortalNotifier = { mounted: (portal: MessagePortal) => void; unmounted: (id: string) => void };
 
 class DividerWidget extends WidgetType {
   constructor(private readonly _label?: string) {
@@ -144,7 +164,7 @@ class ReactionsWidget extends WidgetType {
   }
 
   override toDOM() {
-    const row = Domino.of('div').classNames('flex flex-wrap gap-1 pb-1');
+    const row = Domino.of('div').classNames('cm-message-chrome flex flex-wrap gap-1 pb-1');
     for (const { emoji, count, self } of this._reactions) {
       row.append(
         Domino.of('button')
@@ -182,11 +202,11 @@ class QuoteWidget extends WidgetType {
   override toDOM() {
     return (
       Domino.of('div')
-        .classNames('flex items-center gap-1.5 pb-0.5 text-xs text-description min-w-0')
+        .classNames('cm-message-chrome flex items-center gap-1.5 pb-0.5 text-xs text-description min-w-0')
         .attributes({ 'data-testid': 'thread.document.quote' })
         // Appended one at a time: `append` fixes its children to a single element type, and this row
         // mixes an SVG with spans.
-        .append(Domino.svg('ph--arrow-bend-up-left--regular').classNames('shrink-0 text-subdued'))
+        .append(Domino.svg('ph--arrow-bend-up-left--regular').classNames('shrink-0 h-[1em] w-[1em] text-subdued'))
         .append(
           Domino.of('span')
             .classNames('shrink-0 font-medium')
@@ -219,7 +239,9 @@ class ThreadLinkWidget extends WidgetType {
   override toDOM() {
     const { name, lastActivity } = this._summary;
     const row = Domino.of('button')
-      .classNames('flex items-center gap-1.5 py-1 text-xs text-accent-text rounded-sm dx-focus-ring min-w-0')
+      .classNames(
+        'cm-message-chrome flex items-center gap-1.5 py-1 text-xs text-accent-text rounded-sm dx-focus-ring min-w-0',
+      )
       .attributes({ 'type': 'button', 'data-testid': 'thread.document.open-thread' })
       .append(Domino.svg('ph--chats-circle--regular'));
     if (name) {
@@ -245,24 +267,6 @@ class ThreadLinkWidget extends WidgetType {
   }
 }
 
-class AvatarMarker extends GutterMarker {
-  constructor(private readonly _metadata: MessageMetadata) {
-    super();
-  }
-
-  override eq(other: this) {
-    return this._metadata.authorId === other._metadata.authorId;
-  }
-
-  override toDOM() {
-    const { authorAvatarProps, authorName } = this._metadata;
-    return Domino.of('div')
-      .classNames('flex items-center justify-center size-6 rounded-full text-xs bg-group-surface')
-      .attributes({ 'data-hue': authorAvatarProps?.hue, 'title': authorName })
-      .text(authorAvatarProps?.emoji ?? authorName?.slice(0, 1) ?? '?').root;
-  }
-}
-
 /** Relative time, as the tile heading shows it. */
 const formatTime = (timestamp?: string): string => {
   if (!timestamp) {
@@ -283,7 +287,11 @@ const formatTime = (timestamp?: string): string => {
  * needs markup planted in it — which is what lets a message body stay plain markdown: it wraps, it
  * is selectable across messages, and find matches it without stepping through tags.
  */
-const buildDecorations = (state: EditorState, options: MessageDocumentOptions): DecorationSet => {
+const buildDecorations = (
+  state: EditorState,
+  options: MessageDocumentOptions,
+  portals: PortalNotifier,
+): DecorationSet => {
   const { model, getMetadata, getReactions, getQuote, getThreadSummary, onReact, onThreadOpen, labels } = options;
   const { editingId, currentId } = state.field(messageDocumentState);
   const builder = new RangeSetBuilder<Decoration>();
@@ -307,12 +315,11 @@ const buildDecorations = (state: EditorState, options: MessageDocumentOptions): 
     }
 
     if (item.head) {
-      const metadata = getMetadata(item.message);
       builder.add(
         range.from,
         range.from,
         Decoration.widget({
-          widget: new HeadingWidget(metadata.authorName ?? 'Anonymous', formatTime(metadata.timestamp)),
+          widget: new PortalWidget(`head:${item.message.id}`, item.message, !item.last, portals),
           block: true,
           side: -1,
         }),
@@ -392,9 +399,9 @@ const buildDecorations = (state: EditorState, options: MessageDocumentOptions): 
   return builder.finish();
 };
 
-const decorations = (options: MessageDocumentOptions): Extension =>
+const decorations = (options: MessageDocumentOptions, portals: PortalNotifier): Extension =>
   StateField.define<DecorationSet>({
-    create: (state) => buildDecorations(state, options),
+    create: (state) => buildDecorations(state, options, portals),
     update: (value, transaction) => {
       // Rebuilt on the model's own writes and when the host says the chrome moved — but NOT on a
       // user edit, whose keystrokes run ahead of the model: rebuilding against ranges that no
@@ -412,39 +419,9 @@ const decorations = (options: MessageDocumentOptions): Extension =>
         return value.map(transaction.changes);
       }
 
-      return buildDecorations(transaction.state, options);
+      return buildDecorations(transaction.state, options, portals);
     },
     provide: (field) => EditorView.decorations.from(field),
-  });
-
-/** Avatars beside the first message of each run. */
-const avatarGutter = ({ model, getMetadata }: MessageDocumentOptions): Extension =>
-  gutter({
-    class: 'cm-avatar-gutter',
-    lineMarkerChange: (update) =>
-      update.docChanged ||
-      update.viewportChanged ||
-      update.transactions.some((transaction) =>
-        transaction.effects.some((effect) => effect.is(messageDocumentChangedEffect)),
-      ),
-    markers: (view) => {
-      const builder = new RangeSetBuilder<GutterMarker>();
-      for (const { from, to } of view.visibleRanges) {
-        let line = view.state.doc.lineAt(from);
-        while (line.from <= to) {
-          const item = model.getChunkStartingAt(line.from);
-          if (item?.kind === 'message' && item.head) {
-            builder.add(line.from, line.from, new AvatarMarker(getMetadata(item.message)));
-          }
-          if (line.to + 1 > view.state.doc.length) {
-            break;
-          }
-          line = view.state.doc.lineAt(line.to + 1);
-        }
-      }
-
-      return builder.finish();
-    },
   });
 
 //
@@ -485,10 +462,6 @@ const hoverReporting = ({ model, onHoverChange }: MessageDocumentOptions): Exten
 
       // Local to the editor's own box, so the overlay can be positioned without measuring twice.
       onHoverChange({ message: item.message, top: coords.top - view.dom.getBoundingClientRect().top });
-      return false;
-    },
-    mouseleave: () => {
-      onHoverChange(undefined);
       return false;
     },
   });
@@ -680,15 +653,23 @@ const selection = ({ model, onSelect }: MessageDocumentOptions): Extension =>
   });
 
 /** Everything the transcript draws over its document. */
-export const messageDocumentChrome = (options: MessageDocumentOptions): Extension => [
-  messageDocumentState,
-  decorations(options),
-  editing(options),
-  avatarGutter(options),
-  hoverReporting(options),
-  selection(options),
-  EditorView.theme({
-    '.cm-avatar-gutter': { width: '2.5rem', paddingLeft: '0.5rem' },
-    '.cm-gutters': { backgroundColor: 'var(--color-base-surface)', border: 'none' },
-  }),
-];
+export const messageDocumentChrome = (options: MessageDocumentOptions): Extension => {
+  const portals: PortalNotifier = {
+    mounted: (portal) => options.onPortalMount?.(portal),
+    unmounted: (id) => options.onPortalUnmount?.(id),
+  };
+
+  return [
+    messageDocumentState,
+    decorations(options, portals),
+    editing(options),
+    hoverReporting(options),
+    selection(options),
+    // Message text is indented past the avatar rail so it lines up under the heading, the way the
+    // tile stack's second grid column does.
+    EditorView.theme({
+      '.cm-message-row': { paddingInlineStart: 'var(--dx-rail-size)' },
+      '.cm-message-chrome': { paddingInlineStart: 'var(--dx-rail-size)' },
+    }),
+  ];
+};

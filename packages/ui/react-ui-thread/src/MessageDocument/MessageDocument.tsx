@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
-import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type Message as MessageType } from '@dxos/types';
 import {
   compactSlots,
   createBasicExtensions,
@@ -17,13 +18,14 @@ import {
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
+import { Message, makeMessageState } from '../Message';
 import { ChunkModel, chunkSync } from '../model';
 import { translationKey } from '../translations';
 import { type MessageLike } from '../types';
 import {
-  type MessageAction,
   type MessageDocumentOptions,
   type MessageHover,
+  type MessagePortal,
   messageDocumentChangedEffect,
   messageDocumentChrome,
   setMessageDocumentStateEffect,
@@ -76,6 +78,17 @@ export const MessageDocument = ({
   // Which row the pointer is over, and where its toolbar goes. Reported by the chrome, rendered
   // here so the controls are ordinary `react-ui-menu` actions rather than hand-built DOM.
   const [hover, setHover] = useState<MessageHover | undefined>(undefined);
+  // Widget contents the chrome asks the host to render: the row frame has to be the tile stack's
+  // own `Avatar` and heading, not a DOM lookalike of them.
+  const [portals, setPortals] = useState<MessagePortal[]>([]);
+  const handlePortalMount = useCallback(
+    (portal: MessagePortal) => setPortals((current) => [...current.filter((p) => p.id !== portal.id), portal]),
+    [],
+  );
+  const handlePortalUnmount = useCallback(
+    (id: string) => setPortals((current) => current.filter((portal) => portal.id !== id)),
+    [],
+  );
 
   // Read through a ref so the editor is not rebuilt when a caller passes fresh callback identities
   // on every render, which is the common case and would otherwise remount on each keystroke.
@@ -106,8 +119,10 @@ export const MessageDocument = ({
         draftRef.current = { id: message.id, text };
       },
       onHoverChange: setHover,
+      onPortalMount: handlePortalMount,
+      onPortalUnmount: handlePortalUnmount,
     }),
-    [model, handlersRef, tRef],
+    [model, handlersRef, tRef, handlePortalMount, handlePortalUnmount],
   );
 
   const { parentRef, view } = useTextEditor(
@@ -177,81 +192,53 @@ export const MessageDocument = ({
     getActions,
   ]);
 
-  const hoveredActions = hover
-    ? (handlers.getActions?.({
-        kind: 'message',
-        id: hover.message.id,
-        message: hover.message,
-        head: true,
-        last: false,
-      }) ?? [])
-    : [];
-
   return (
-    // Relative, because the toolbar is positioned against the editor's own box: it overlays the
-    // hovered row rather than taking a column beside it, so a long message keeps the full width.
-    <div className='relative grid grid-rows-1 min-h-0'>
+    // The toolbar lives here rather than inside the editor, so leaving the editor must not dismiss
+    // it — the pointer has to be able to travel onto it. Hover is cleared when it leaves both.
+    <div className='relative grid grid-rows-1 min-h-0' onMouseLeave={() => setHover(undefined)}>
       <div className={mx('dx-container', classNames)} ref={parentRef} />
-      {hover && hoveredActions.length > 0 && (
-        <MessageToolbar
-          key={hover.message.id}
-          top={hover.top}
-          actions={hoveredActions}
-          onAction={(action) => handlers.onAction?.(action, hover.message)}
-        />
+      {portals.map((portal) =>
+        createPortal(
+          <MessageHead message={portal.message} continues={portal.continues} getMetadata={handlers.getMetadata} />,
+          portal.root,
+          portal.id,
+        ),
       )}
+      {hover && <HoverControls message={hover.message} top={hover.top} />}
     </div>
   );
 };
 
-/** Icon and label per action, on the same translation keys the tile stack's controls use. */
-const ACTIONS: Record<MessageAction, { icon: string; label: string }> = {
-  react: { icon: 'ph--smiley--regular', label: 'add-reaction.label' },
-  reply: { icon: 'ph--arrow-bend-up-left--regular', label: 'reply-message.label' },
-  thread: { icon: 'ph--chats-circle--regular', label: 'start-thread.label' },
-  edit: { icon: 'ph--pencil-simple--regular', label: 'edit-message.label' },
-  delete: { icon: 'ph--trash--regular', label: 'delete-message.label' },
-};
-
-type MessageToolbarProps = {
-  top: number;
-  actions: MessageAction[];
-  onAction: (action: MessageAction) => void;
-};
-
-/** Floating controls for the hovered message, on the same menu primitives as the tile stack. */
-const MessageToolbar = ({ top, actions, onAction }: MessageToolbarProps) => {
-  const { t } = useTranslation(translationKey);
-  const onActionRef = useDynamicRef(onAction);
-  const menuActions = useMenuBuilder(() => {
-    const builder = MenuBuilder.make().root({ label: ['message-controls.title', { ns: translationKey }] });
-    for (const action of actions) {
-      builder.action(
-        action,
-        {
-          label: [ACTIONS[action].label, { ns: translationKey }],
-          icon: ACTIONS[action].icon,
-          iconOnly: true,
-          testId: `thread.document.${action}`,
-        },
-        () => onActionRef.current(action),
-      );
-    }
-
-    return builder.build();
-  }, [actions, onActionRef, t]);
-
+/**
+ * The tile stack's own controls, floated over the hovered row — quick reactions inline, the rest
+ * behind the overflow menu. Reusing the component is the point: a second implementation would
+ * drift from it, and these actions already live in the action graph.
+ */
+const HoverControls = ({ message, top }: { message: MessageLike; top: number }) => {
+  // One state atom per hovered row, so edit mode and the picker reset when the pointer moves on.
+  const state = useMemo(makeMessageState, [message.id]);
   return (
-    // `alwaysActive`: the toolbar belongs to the hovered row, not to whichever plank holds
-    // attention, so it must not disable itself when the transcript is unattended.
-    <Menu.Root {...menuActions} alwaysActive iconSize={4}>
-      <Menu.Toolbar
-        classNames='absolute end-2 w-auto rounded-sm border border-separator bg-base-surface z-10'
-        style={{ top }}
-        density='sm'
-      />
-    </Menu.Root>
+    <div className='absolute z-1 end-1' style={{ top }}>
+      <Message.Controls message={message as MessageType.Message} state={state} />
+    </div>
   );
 };
 
-MessageDocument.displayName = 'MessageDocument';
+type MessageHeadProps = {
+  message: MessageLike;
+  continues: boolean;
+  getMetadata: MessageDocumentOptions['getMetadata'];
+};
+
+/**
+ * Avatar and heading for the first message of a run, in the tile stack's own two-column rail
+ * layout — same `Avatar` component, same `--dx-rail-size` column, so the two renderings line up.
+ */
+const MessageHead = ({ message, continues, getMetadata }: MessageHeadProps) => {
+  const metadata = getMetadata(message);
+  return (
+    <Message.Root {...metadata} continues={continues}>
+      <Message.Heading authorName={metadata.authorName} timestamp={metadata.timestamp} />
+    </Message.Root>
+  );
+};

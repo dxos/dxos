@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-export { Message } from './Message';
+export { Message, makeMessageState } from './Message';
 export type {
   MessageAuthorNameProps,
   MessageBodyProps,

@@ -477,7 +477,7 @@ export type MessageState = {
   picking?: 'toolbar' | 'reactions';
 };
 
-const makeMessageState = () => Atom.make<MessageState>({ editing: false });
+export const makeMessageState = () => Atom.make<MessageState>({ editing: false });
 
 export type MessageControlsProps = {
   /** Message the controls act on. */
