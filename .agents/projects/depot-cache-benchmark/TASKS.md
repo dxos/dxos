@@ -1,6 +1,6 @@
 # Depot cache benchmark — Tasks
 
-_Resume: answer DESIGN.md §9 (runner region, Gate 1 threshold, Stage B home, motivation), then start Phase 0. Uncommitted: none. Last: plan written (DESIGN.md)._
+_Resume: start Phase 0 — confirm the runReport.json remote-operation taxonomy, then measure the M2 ceiling and the sequential-round-trip count. Only open question left is the Gate 1 threshold (DESIGN.md §9 Q2). Uncommitted: none. Last: host fixed as DigitalOcean and motivation fixed as latency, which promotes the netem arm to the Stage B decision._
 
 Design, methodology, controls and gates: [`DESIGN.md`](./DESIGN.md).
 
@@ -28,14 +28,26 @@ measurement instrument before anything depends on it.
   - **If M2 is a negligible share of M1, stop and write it up.**
 - [ ] **Raw endpoint latency from inside the runner**
   - TCP connect + TLS handshake time to `cache.depot.dev`, N samples.
-  - This is the RTT figure the Stage A netem arm will use.
+- [ ] **Confirm the runner region empirically**
+  - IMDSv2 (`.../placement/availability-zone`), falling back to a geo-IP lookup
+    of the egress IP; cross-check the Depot dashboard. Published figure is AWS
+    `us-east-1` — verify rather than assume.
+- [ ] **Measure DO-NYC → runner RTT** — the number the netem arm needs
+  - Stand up a throwaway droplet in NYC1/2/3 and measure RTT both ways.
+  - This is the only Stage B input that cannot be derived from inside CI, and
+    it is far cheaper than deploying the real thing.
 - [ ] **REAPI micro-benchmark**
   - `FindMissingBlobs` / `BatchReadBlobs` / ByteStream `Read` over a 4 KB /
     64 KB / 1 MB / 16 MB blob ladder against Depot.
   - Separates endpoint latency from moon client cost.
+- [ ] **Count sequential round-trips per run** — decides the whole DO question
+  - How many CAS calls does a full run make, and how well does moon batch them?
+  - Few batched calls ⇒ the DO RTT penalty is noise. One call per artifact ⇒ the
+    penalty multiplies by the artifact count and Stage B is likely dead on
+    arrival. Record the blob-count and call-count distribution, not just totals.
 - [ ] **Record the working set (M6)**
-  - CAS bytes moved by one full `moon run :lint :build` — sizes Stage B's disk
-    and its egress estimate.
+  - CAS bytes moved by one full `moon run :lint :build` — sizes the droplet's
+    disk, and its network throughput, and the DO egress estimate.
 
 ## Phase 1: Harness
 
@@ -72,33 +84,43 @@ different CPU and disk make the floor unusable for predicting CI).
     matched to the Depot arm.
 - [ ] **Run arms: Depot vs localhost**
   - Warm (download) and cold (upload, M5) reported separately.
-- [ ] **Run the netem prediction arm**
-  - localhost + `tc qdisc … netem delay <RTT from Phase 0>`.
-  - If it lands on the Depot arm, Stage B is already answered: no.
+- [ ] **Run the netem prediction arm** — the cheap stand-in for Stage B
+  - localhost + `tc qdisc … netem delay <measured DO-NYC RTT from Phase 0>`.
+  - This approximates the DigitalOcean arm to within droplet-vs-loopback, for
+    one CI run and no infrastructure. If it lands on the Depot arm, Stage B is
+    answered: no — do not deploy anything.
 - [ ] **Evaluate Gate 1** (DESIGN.md §6)
   - Requires ≥ 20% M2 win on median _and_ p90, **and** ≥ 10% of M1 on the
     largest job. One metric alone is a null result.
   - Record the decision and its numbers in `REPORT.md` either way.
 
-## Phase 3: Stage B — deployed self-hosted → Gate 2
+## Phase 3: Stage B — DigitalOcean → Gate 2
 
-**Gated on Phase 2.** Do not start until Gate 1 passes and DESIGN.md §9 Q1/Q3
-are answered.
+**Gated on Phase 2, and specifically on the netem arm.** No DO region is
+co-located with Depot's `us-east-1` runner fleet (DESIGN.md §7), so this stage
+starts at an RTT disadvantage and is only worth its cost if the netem arm — which
+simulates exactly that disadvantage for free — still beats Depot.
 
 ### Tasks
 
-- [ ] **Confirm the Depot runner region** — cross-region placement loses on RTT
-      before it starts; this is a prerequisite, not a detail.
-- [ ] **Deploy `bazel-remote` same-region** — NVMe-backed, disk above the M6
-      working set so eviction never fires during a measured rep.
+- [ ] **Provision the droplet** — DO NYC (nearest to `us-east-1`), NVMe-backed,
+      disk above the M6 working set so eviction never fires during a measured
+      rep, and sized for **network throughput** as well as disk: a shared-egress
+      droplet against Depot's 12.5 Gbps runners may bind on bandwidth before
+      latency.
+- [ ] **Deploy `bazel-remote`** — `--storage_mode zstd`, matched to the other
+      arms' compression and `verifyIntegrity`.
 - [ ] **Auth + TLS** — token/basic auth plus TLS (or mTLS via moon's `mtls`
-      block). Never an open CAS. Budget the certificate lifecycle into the ops
-      estimate.
+      block). Never an open CAS on a public droplet. Budget the certificate
+      lifecycle into the ops estimate.
 - [ ] **Run the third arm through the unchanged harness**
-- [ ] **Cost model** — Depot cache spend over the measured window vs instance +
-      storage + egress + eviction-tuning + on-call.
-- [ ] **Evaluate Gate 2** (DESIGN.md §7) — p90 must hold, and the win must
-      survive the ops bill and the no-SLA reality.
+- [ ] **Check the netem prediction against it** — if they disagree materially,
+      the prediction model was wrong and any future arm has to be measured, not
+      simulated. Worth knowing either way.
+- [ ] **Cost model** — Depot cache spend over the measured window vs droplet +
+      storage + DO egress + eviction-tuning + on-call. Recorded, not decisive.
+- [ ] **Evaluate Gate 2** (DESIGN.md §7) — p90 must hold (cross-provider paths
+      are noisier), and a latency tie means stay on Depot.
 
 ## Phase 4: Report and decision
 

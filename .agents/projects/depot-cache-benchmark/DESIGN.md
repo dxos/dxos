@@ -32,9 +32,11 @@ Answered in two stages, the second gated on the first:
 
 CI already runs on Depot runners, and Depot's pitch for its cache is that it
 sits on the same network as those runners — so the RTT is probably already close
-to optimal. The honest hypothesis is that the delta will be **small**, and that
-the plausible reasons to self-host are cost, cache size/eviction control, and
-independence rather than latency.
+to optimal. With DigitalOcean chosen as the self-hosted host (§7), the candidate
+is a _different provider in a different metro_, which makes it likely to be
+slower on latency alone. The honest hypothesis is therefore that Depot wins, and
+that the plausible reasons to self-host are cost, cache size/eviction control,
+and independence rather than latency.
 
 That is not a reason to skip the experiment; it is a reason to run Phase 0
 first, because Phase 0 answers the cheap question — _is remote-cache time even a
@@ -135,9 +137,12 @@ recover — and only the RTT-attributable share of it is actually recoverable,
 since a deployed server adds back the network that localhost removed.
 
 **Third arm: predict Stage B before paying for it.** Re-run the localhost arm
-behind `tc qdisc add dev lo root netem delay <RTT>ms` with the RTT set to a
-plausible same-region figure (measured in Phase 0, step 4). If the netem arm
-lands on top of the Depot arm, Stage B is already answered: no.
+behind `tc qdisc add dev lo root netem delay <RTT>ms`, with the RTT set to the
+**measured DO-NYC → runner** figure from Phase 0 — not a guess, and not a
+same-region figure, since §7 fixes the host as DigitalOcean. This arm _is_ the
+Stage B result to within the difference between a droplet and a loopback server,
+for the price of one CI run and no infrastructure. If it lands on top of the
+Depot arm, Stage B is answered: no.
 
 ### Gate 1
 
@@ -157,12 +162,30 @@ own docs target. [NativeLink](https://github.com/TraceMachina/nativelink) is the
 fallback if bazel-remote's eviction or S3 path disappoints; do not evaluate both
 in the first pass.
 
-**Placement is the experiment.** The server must sit in the same region as the
-Depot runner fleet — confirm the org's runner region in the Depot dashboard
-_first_, since a cross-region server loses on RTT before it starts and would
-produce a foregone conclusion.
+**Host: DigitalOcean** (decided 2026-08-05). This is the constraint that shapes
+the whole stage, because **DigitalOcean has no region co-located with the Depot
+runner fleet.** Depot's managed GitHub Actions runners run in AWS `us-east-1`
+(N. Virginia); DO's nearest region is NYC1/2/3, which is a different provider in
+a different metro. Expect single-digit-millisecond RTT there against a
+sub-millisecond in-region figure for Depot's own cache — so this arm starts at a
+structural disadvantage rather than the level footing "self-hosted" usually
+implies.
 
-**Sizing** comes from M6: NVMe-backed instance with disk cache comfortably above
+That does not kill it. Whether an extra few ms matters depends entirely on how
+many _sequential_ round-trips moon's client makes: REAPI batches small blobs
+through `BatchReadBlobs`, so a run that moves its working set in a handful of
+batched calls barely notices the RTT, while one that serializes a call per
+artifact pays it hundreds of times over. **Phase 0's REAPI micro-benchmark and
+blob-count measurement decide which regime we are in, and that is what makes the
+DO arm worth running or not.**
+
+**Bandwidth may bind before latency does.** Depot advertises 12.5 Gbps on its
+runners; a standard DO droplet's shared network egress is far below that. If M6
+puts the working set in the multi-GB range, size the droplet for throughput, not
+just disk — and check whether DO's egress allowance covers repeated full CI runs
+before the first bill lands.
+
+**Sizing** comes from M6: NVMe-backed droplet with disk cache comfortably above
 the measured working set, so eviction never runs during a measured rep.
 
 **Auth is a required cost line, not an optional extra.** Never expose an
@@ -175,13 +198,15 @@ TLS, and mTLS. Budget the certificate lifecycle into the ops estimate.
 Adopt only if the deployed arm beats Depot on M1 by a margin that survives:
 
 1. **p90, not just median** — a cache that is usually faster and occasionally
-   terrible is worse than a consistent one.
-2. **The ops bill** — instance + storage + egress + eviction tuning + the
-   on-call reality that a cache outage turns every CI job into a full cold
-   build. There is no SLA on a cache we run.
+   terrible is worse than a consistent one. Cross-provider paths are noisier
+   than in-region ones, so expect the p90 to be the binding constraint here.
+2. **The ops bill** — droplet + storage + egress + eviction tuning + the on-call
+   reality that a cache outage turns every CI job into a full cold build. There
+   is no SLA on a cache we run.
 3. **Cost comparison (M6-driven)** — Depot cache spend over the measured window
-   vs the estimated self-hosted bill. Secondary to perf, but it is the most
-   likely _real_ reason to switch, so record it either way.
+   vs the estimated DO bill. Recorded for completeness, but **not** a
+   tie-breaker: latency is the stated motivation (§9 Q4), so a latency tie means
+   stay on Depot.
 
 ## 8. Deliverables
 
@@ -193,16 +218,23 @@ Adopt only if the deployed arm beats Depot on M1 by a margin that survives:
 - `REPORT.md` in this directory — the numbers, the gate decisions, and the
   recommendation.
 
-## 9. Open questions
+## 9. Decisions and open questions
 
-1. **Runner region + billing.** What region is the Depot runner fleet in, and do
-   we have the cache spend figures? Both are prerequisites for Stage B.
-2. **Gate 1 threshold.** The 20% / 10% figures above are a starting proposal —
-   confirm or replace before any measuring, so the bar is not set after seeing
-   the results.
-3. **Where would a self-hosted instance live?** An AWS account, Fly.io, existing
-   infra? If there is no plausible same-region home, Stage B is not reachable
-   and only Phase 0–2 are worth running.
-4. **What actually motivates this — cost, latency, or control?** Latency makes
-   M1 decide; cost makes M6 and the Stage B bill decide, and would justify Stage
-   B even on a latency tie.
+1. **Runner region — published as AWS `us-east-1`, to be confirmed empirically.**
+   Depot's launch post states its managed runners run in `us-east-1` for
+   locality to GitHub's API. Do not take that on faith three years on: Phase 0
+   already runs inside the job, so confirm it there —
+   `curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
+   (IMDSv2 token first), falling back to a geo-IP lookup of the egress IP if
+   IMDS is blocked, and cross-checked against the Depot dashboard's runner
+   settings. The **actual** number Stage B needs is not the region name but the
+   measured RTT from a DO droplet to the runner — collect that directly.
+2. **Gate 1 threshold — open.** The 20% / 10% figures in §6 are a starting
+   proposal. Confirm or replace them before any measuring, so the bar is not set
+   after seeing the results.
+3. **Host: DigitalOcean** (answered 2026-08-05). See §7 — no DO region is
+   co-located with `us-east-1`, so the DO arm carries a structural RTT penalty
+   and the netem prediction arm in §6 is promoted from a nicety to **the** cheap
+   way to decide whether to deploy anything at all.
+4. **Motivation: latency/perf** (answered 2026-08-05). M1 decides; cost is
+   recorded but never a tie-breaker. A latency tie means stay on Depot.
