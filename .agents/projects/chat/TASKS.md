@@ -549,7 +549,7 @@ Replaces 2c/2d's single-document direction. All on this branch/PR.
 
 ### A — shared per-message renderer (DONE)
 
-- [x] `MessageEditor` in `react-ui-thread`: one CM view over a message's
+- [x] `MessageRenderer` in `react-ui-thread`: one CM view over a message's
       blocks, driven by `ChunkModel` + `chunkSync`, with the shared extension
       set. Built ONCE and written to — the view's dependencies deliberately
       exclude the text, so streaming appends to the tail instead of replacing

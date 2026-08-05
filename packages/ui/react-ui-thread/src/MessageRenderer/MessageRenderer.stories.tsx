@@ -11,7 +11,7 @@ import { type ContentBlock } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { MessageEditor } from './MessageEditor';
+import { MessageRenderer } from './MessageRenderer';
 
 const text = (text: string): ContentBlock.Any => ({ _tag: 'text', text }) as ContentBlock.Any;
 
@@ -22,7 +22,7 @@ const BODY = [
   '- renders as one',
 ].join('\n');
 
-const DefaultStory = () => <MessageEditor blocks={[text(BODY)]} />;
+const DefaultStory = () => <MessageRenderer blocks={[text(BODY)]} />;
 
 /** Tokens arriving one at a time, as a model streams them into the tail block. */
 const StreamingStory = () => {
@@ -44,7 +44,7 @@ const StreamingStory = () => {
     return () => clearInterval(interval);
   }, []);
 
-  return <MessageEditor blocks={blocks} />;
+  return <MessageRenderer blocks={blocks} />;
 };
 
 /** Editing in place: the same view becomes writable rather than being rebuilt as one. */
@@ -58,7 +58,7 @@ const EditingStory = () => {
       <button type='button' data-testid='story.toggle-edit' onClick={() => setEditing((value) => !value)}>
         {editing ? 'editing' : 'read-only'}
       </button>
-      <MessageEditor
+      <MessageRenderer
         blocks={blocks}
         editing={editing}
         onChange={setDraft}
@@ -73,7 +73,7 @@ const EditingStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-thread/MessageEditor',
+  title: 'ui/react-ui-thread/MessageRenderer',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: { translations },

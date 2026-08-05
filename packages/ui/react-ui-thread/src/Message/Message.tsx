@@ -43,7 +43,7 @@ import {
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { useThreadContext } from '../context';
-import { MessageEditor } from '../MessageEditor';
+import { MessageRenderer } from '../MessageRenderer';
 import { translationKey } from '../translations';
 import { DEFAULT_REACTIONS, type MessageMetadata, type MessageReaction, type MessageThreadSummary } from '../types';
 
@@ -280,7 +280,7 @@ const TextBlock = ({
   const canEdit = !!isAuthor && !!editing;
   return (
     <div className={mx('me-4', canEdit && 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5')}>
-      <MessageEditor
+      <MessageRenderer
         blocks={[block]}
         editing={canEdit}
         onChange={handleChange}

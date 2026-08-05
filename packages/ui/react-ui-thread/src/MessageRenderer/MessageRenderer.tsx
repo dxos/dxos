@@ -22,9 +22,9 @@ import { isTruthy } from '@dxos/util';
 import { command } from '../command';
 import { ChunkModel, chunkSync } from '../model';
 import { buildMessageChunks, getMessageChunkText, renderMessageChunk } from './message-chunks';
-import { editable, readOnly } from './message-editor-extension';
+import { editable, readOnly } from './message-renderer-extension';
 
-export type MessageEditorProps = ThemedClassName<{
+export type MessageRendererProps = ThemedClassName<{
   /** The message's blocks, in order; only the textual ones reach the document. */
   blocks: readonly ContentBlock.Any[];
   /** Editable in place. The caller decides who may edit; this only renders the mode. */
@@ -40,7 +40,11 @@ export type MessageEditorProps = ThemedClassName<{
 }>;
 
 /**
- * One message's body, rendered by CodeMirror.
+ * One message's body, rendered by CodeMirror — a transcript row, not a composer.
+ *
+ * Read-only in the ordinary case: a message in a thread is something you read, and only its own
+ * author editing in place makes it briefly writable. The thing you type a NEW message into is
+ * `ChatEditor`, behind `Message.Textbox`.
  *
  * The editor is built once and written to by a {@link ChunkModel}, rather than rebuilt whenever the
  * text changes: a message's blocks grow at the tail while it streams, and the model reports that
@@ -52,7 +56,7 @@ export type MessageEditorProps = ThemedClassName<{
  * in React. This renders the body and nothing else, which is what makes it shareable between the
  * channel, the assistant chat and the transcription view.
  */
-export const MessageEditor = ({
+export const MessageRenderer = ({
   classNames,
   blocks,
   editing,
@@ -60,7 +64,7 @@ export const MessageEditor = ({
   onChange,
   onCommit,
   onCancel,
-}: MessageEditorProps) => {
+}: MessageRendererProps) => {
   const { themeMode } = useThemeContext();
   const model = useMemo(() => new ChunkModel(renderMessageChunk), []);
   // Per view, since a compartment addresses one configuration: two messages sharing one would
