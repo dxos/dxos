@@ -89,6 +89,9 @@
       "path": "../../core/compute/pipeline-rdf"
     },
     {
+      "path": "../../core/compute/progress"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -183,6 +186,9 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
     },
     {
       "path": "../plugin-attention"

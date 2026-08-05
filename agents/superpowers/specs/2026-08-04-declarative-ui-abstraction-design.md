@@ -19,7 +19,7 @@ front (`useOperationInvoker`, `useAtomCapability`, `useSelection`,
 `useResolveRef`, a per-message atom family, debounced filter text →
 `QueryBuilder` → `usePagination`), one big `handleAction` switch, a
 `MenuBuilder` menu, and a render body of conditional chrome. None of this is
-wrong — but none of it is *declared*, so it cannot be inspected, generated,
+wrong — but none of it is _declared_, so it cannot be inspected, generated,
 reused across renderers, or kept uniform across plugins except by convention.
 
 We want to explore a further unification: entire containers defined by a
@@ -65,7 +65,7 @@ exists — it just stops one layer below containers.**
   (`values`/`onValuesChanged`/`onSave`, sparse per-JsonPath overrides). And —
   crucially — there is already a **template DSL**: `FormLayoutAnnotation`
   carries named XML-ish templates (`<grid cols="2"><field name="x"
-  span="2"/></grid>`, parser in `FormLayout/parser.ts`) that override linear
+span="2"/></grid>`, parser in `FormLayout/parser.ts`) that override linear
   rendering. This is the embryo of the container-template idea, shipped and in
   use (`compute/types/Project.ts`, `plugin-magazine`, `plugin-library`).
 - **Lists** (`react-ui-list`): compounds over shared aspect hooks
@@ -78,7 +78,7 @@ exists — it just stops one layer below containers.**
   is a protocol (`DndContainerHandler` in `react-ui-dnd`).
 - **Cards**: the outlier. `Card.*` (in `react-ui`) plus `react-ui-card`'s
   shared fragments (`CardTile`, `Row.Date/Ref/Person/Tags/…`) give a good part
-  *vocabulary*, but every card is hand-composed JSX per type. The
+  _vocabulary_, but every card is hand-composed JSX per type. The
   semi-automated pattern in `plugin-inbox` is projection-by-helper:
   `getMessageProps(message)` → a ~25-line JSX card → registered on the
   `AppSurface.CardContent` role. The only schema-driven card is
@@ -100,28 +100,28 @@ layer is what a declarative abstraction should capture.
 
 ## Prior art
 
-| System | Lesson for us |
-| --- | --- |
-| **Jetpack Compose** (runtime/UI split) | The composition runtime (`compose-runtime`) is renderer-agnostic; Android UI is one client. Proof that "declarative tree + state model" can be decoupled from the layout engine — but the tree lives in compiled code, so it is not serializable/generative. |
-| **SwiftUI** | Value-typed view descriptions re-derived from state; identity + diffing owned by the runtime. Same non-serializable caveat; `@Observable` fine-grained tracking parallels atoms. |
-| **SolidJS** | Control flow as components (`<Show>`, `<For>`, `<Switch>/<Match>`) with fine-grained signals and no VDOM diffing. Directly answers "replace conditional braces with IF components" — and the pattern works as an *interpretation strategy*, not just a framework: `<For>` over an atom of items maps to keyed child materialization. |
-| **Elm / MVU** | `Model → view`, `Msg → update`. The discriminated-union `onAction` + Operations is MVU already; naming it makes containers testable headless. |
-| **QML** | Declarative markup + property bindings + signal handlers, logic in controllers; the closest end-state to the brief ("template + data binding + action handlers"). Shows the cost too: a binding language needs scoping/typing rules. |
-| **XAML / WPF** | `DataTemplate` + `DataTemplateSelector` = type-directed template resolution — which is exactly what Surface roles do (`AppSurface.object(CardContent, Message.Message)`). `ICommand` = Operations. MVVM = the "intermediate controller objects" the brief asks about; its failure mode (boilerplate ViewModels mirroring models) is what atom families avoid. |
-| **Server-driven UI** (Airbnb Ghost, Lyft, Shopify) | JSON component trees interpreted by a client registry; versioned schema; unknown-node fallback. The proven architecture for *generated* UI — and its discipline (small closed node set + registered escape hatches) is the right guard-rail. |
-| **Adaptive Cards** | A serializable, schema-validated card DSL with host-controlled styling and a template/data-binding language. Precedent for card unification specifically. |
-| **JSON Forms / RJSF `uiSchema`** | Schema (data) + uiSchema (layout) separation — `FormLayoutAnnotation` is already this, per-type and named-variant. |
-| **XState / statecharts** | Where controller logic outgrows `update(msg)` switches, statecharts keep it declarative and inspectable. Optional, per-container. |
-| **react-three-fiber / Ink** | Custom reconcilers re-target JSX to non-DOM hosts. A cheaper "leave React later" hedge — but it keeps the React runtime, so it serves portability of *authoring*, not independence of *runtime*. |
-| **ImGui (immediate mode)** | The opposite pole: no retained tree, everything re-derived per frame. Attractive for generation, wrong for accessibility/focus/virtualization; noted to bound the space. |
+| System                                             | Lesson for us                                                                                                                                                                                                                                                                                                                                                 |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Jetpack Compose** (runtime/UI split)             | The composition runtime (`compose-runtime`) is renderer-agnostic; Android UI is one client. Proof that "declarative tree + state model" can be decoupled from the layout engine — but the tree lives in compiled code, so it is not serializable/generative.                                                                                                  |
+| **SwiftUI**                                        | Value-typed view descriptions re-derived from state; identity + diffing owned by the runtime. Same non-serializable caveat; `@Observable` fine-grained tracking parallels atoms.                                                                                                                                                                              |
+| **SolidJS**                                        | Control flow as components (`<Show>`, `<For>`, `<Switch>/<Match>`) with fine-grained signals and no VDOM diffing. Directly answers "replace conditional braces with IF components" — and the pattern works as an _interpretation strategy_, not just a framework: `<For>` over an atom of items maps to keyed child materialization.                          |
+| **Elm / MVU**                                      | `Model → view`, `Msg → update`. The discriminated-union `onAction` + Operations is MVU already; naming it makes containers testable headless.                                                                                                                                                                                                                 |
+| **QML**                                            | Declarative markup + property bindings + signal handlers, logic in controllers; the closest end-state to the brief ("template + data binding + action handlers"). Shows the cost too: a binding language needs scoping/typing rules.                                                                                                                          |
+| **XAML / WPF**                                     | `DataTemplate` + `DataTemplateSelector` = type-directed template resolution — which is exactly what Surface roles do (`AppSurface.object(CardContent, Message.Message)`). `ICommand` = Operations. MVVM = the "intermediate controller objects" the brief asks about; its failure mode (boilerplate ViewModels mirroring models) is what atom families avoid. |
+| **Server-driven UI** (Airbnb Ghost, Lyft, Shopify) | JSON component trees interpreted by a client registry; versioned schema; unknown-node fallback. The proven architecture for _generated_ UI — and its discipline (small closed node set + registered escape hatches) is the right guard-rail.                                                                                                                  |
+| **Adaptive Cards**                                 | A serializable, schema-validated card DSL with host-controlled styling and a template/data-binding language. Precedent for card unification specifically.                                                                                                                                                                                                     |
+| **JSON Forms / RJSF `uiSchema`**                   | Schema (data) + uiSchema (layout) separation — `FormLayoutAnnotation` is already this, per-type and named-variant.                                                                                                                                                                                                                                            |
+| **XState / statecharts**                           | Where controller logic outgrows `update(msg)` switches, statecharts keep it declarative and inspectable. Optional, per-container.                                                                                                                                                                                                                             |
+| **react-three-fiber / Ink**                        | Custom reconcilers re-target JSX to non-DOM hosts. A cheaper "leave React later" hedge — but it keeps the React runtime, so it serves portability of _authoring_, not independence of _runtime_.                                                                                                                                                              |
+| **ImGui (immediate mode)**                         | The opposite pole: no retained tree, everything re-derived per frame. Attractive for generation, wrong for accessibility/focus/virtualization; noted to bound the space.                                                                                                                                                                                      |
 
 Two syntheses from this table:
 
 1. Every successful "generate UI at runtime" system is **data-interpreted**
    (SDUI, Adaptive Cards, QML), while every successful "maximum ergonomics for
    engineers" system is **code-compiled** (Compose, SwiftUI, Solid). Systems
-   that need both (Airbnb) run a *closed data model interpreted by
-   code-authored components*. We should not pick one — we should put the
+   that need both (Airbnb) run a _closed data model interpreted by
+   code-authored components_. We should not pick one — we should put the
    boundary in the right place.
 2. Everyone ends up with the same three-part split: **state/bindings**
    (signals/atoms/observables), **messages/commands** (Msg, ICommand,
@@ -136,7 +136,7 @@ Three axes structure the options:
 - **Template representation.** (a) TSX components (status quo, compiled,
   maximally expressive, not serializable); (b) a serializable data model
   (inspectable, generable, renderer-neutral, bounded expressiveness); (c)
-  isomorphic — TSX-looking authoring that *emits* the data model (JSX factory
+  isomorphic — TSX-looking authoring that _emits_ the data model (JSX factory
   or typed builder), so hand-written and generated templates converge on one
   runtime path.
 - **Binding model.** Props-drilling explodes on composites (the brief's
@@ -149,7 +149,7 @@ Three axes structure the options:
 - **Where logic lives.** The "intermediate controller object" the brief
   hypothesizes should be an **Effect-service-shaped controller**: a constructor
   `(ctx: { db, settings, … }) => { state: Record<string, Atom>, dispatch:
-  (msg) => Effect }`. No React. Testable headless (vitest + registry), reusable
+(msg) => Effect }`. No React. Testable headless (vitest + registry), reusable
   from Solid/Lit, and exactly what the existing menu (`MenuBuilder` → atom) and
   board (`Board.Root model=`) APIs already do in miniature.
 
@@ -169,7 +169,7 @@ Keep TSX. Introduce two conventions and a tiny library:
    directly so branches re-render on fine-grained change without parent
    re-render.
 
-The container becomes a pure template *in TSX*: composite roots + control-flow
+The container becomes a pure template _in TSX_: composite roots + control-flow
 components + bindings to `controller.state.*` and `controller.dispatch`.
 
 - **Pros:** immediate clarity win; no interpreter; incremental per-container
@@ -199,7 +199,7 @@ ActionRef = { action: string, args?: Record<string, Binding> } (→ dispatch →
 An **interpreter** (per renderer) walks the tree: React first (each node type
 maps to the existing composites — `Panel`, `Mosaic.VirtualStack`, `Form.Root`,
 `Card.*`), Solid/Lit later against the same node model. Templates are resolved
-type-directedly, exactly like surfaces: a template is *contributed* for
+type-directedly, exactly like surfaces: a template is _contributed_ for
 `(role, schema)` the way `Surface.create({ filter, component })` is today —
 hand-written components and templates coexist behind the same resolution,
 so migration is per-surface and reversible.
@@ -250,8 +250,8 @@ messages) that makes templates possible at all. Concretely:
    container, e.g. `TaskSetArticle`) into `ViewController`s: atoms for query/
    filter/selection state, one `dispatch` routing the existing
    `InboxStackAction` union to Operations. Ship the `useController` hook and
-   headless controller tests. *Exit criterion: the container component contains
-   zero `useCallback`/`useMemo` and no branching beyond template flow.*
+   headless controller tests. _Exit criterion: the container component contains
+   zero `useCallback`/`useMemo` and no branching beyond template flow._
 2. **Ship control-flow components** (`If`/`Match`/`For` over atoms) and use
    them in the extracted containers. This is the Solid idiom inside React and
    doubles as the interpreter's flow semantics later.
@@ -274,7 +274,7 @@ messages) that makes templates possible at all. Concretely:
    `solid-ui` validates the independence claim on one real surface.
 
 Why this ordering wins against the goals: independence is achieved by
-*shrinking the React-specific surface to interpreter + primitives* rather than
+_shrinking the React-specific surface to interpreter + primitives_ rather than
 by rewriting; performance comes from atoms doing invalidation below the
 component level (and is preserved by binding templates to the existing
 virtualized composites rather than replacing them); clarity comes at step 1
@@ -295,7 +295,7 @@ already use.
   lower to `Mosaic.VirtualStack`. Budget: interpretation must be O(visible
   nodes), never O(items).
 - **Prop explosion re-appears as binding explosion.** Mitigate: the controller
-  publishes a *named* state record (a scope), not positional props; templates
+  publishes a _named_ state record (a scope), not positional props; templates
   reference names; `For` introduces nested scopes — this is the MVVM
   DataContext lesson.
 - **Typing serialized templates.** Effect Schema gives structural validation;
@@ -306,7 +306,7 @@ already use.
 
 A time-boxed (2–4 day) probe of the Option A claim, on the hardest real
 container: `plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx`
-(~670 lines). The output is knowledge, not a merge: does *everything* non-JSX
+(~670 lines). The output is knowledge, not a merge: does _everything_ non-JSX
 move out of React, what bridge points remain, and what does it cost/buy?
 
 ### Why this container is the right subject
@@ -389,7 +389,7 @@ in v1, reading controller atoms.
 - **H2 — headless testability.** A vitest test with `Registry.make()` (the
   `plugin-manager.test.ts` recipe) + an ECHO test layer: seed messages/tags →
   set `filterText` → advance debounce → assert `items`; `dispatch({type:
-  'star'})` → assert the tag index. No DOM, no `renderHook`.
+'star'})` → assert the tag index. No DOM, no `renderHook`.
 - **H3 — performance.** React Profiler / `SurfaceMetrics` commit counts for
   (a) typing in the filter, (b) toggling a star, (c) a page fetch. Must be ≤
   current; expect a win on (a) — today every keystroke re-renders the whole
@@ -401,11 +401,11 @@ in v1, reading controller atoms.
 ### Order of work (riskiest first) and exit
 
 1. Pagination atom wrapper → 2. filter/debounce/query atoms → 3. `dispatch` →
-4. menu atom + slot inversion → 5. template + `If`. Behavior comments in the
-file (flash-empty prevention, seeded stores, draft reconciliation) are
-load-bearing — port them with the code; `applyPostFilters`/`reconcileDrafts`
-move unchanged. Regression: existing inbox e2e/storybook coverage plus H2's
-new headless tests.
+2. menu atom + slot inversion → 5. template + `If`. Behavior comments in the
+   file (flash-empty prevention, seeded stores, draft reconciliation) are
+   load-bearing — port them with the code; `applyPostFilters`/`reconcileDrafts`
+   move unchanged. Regression: existing inbox e2e/storybook coverage plus H2's
+   new headless tests.
 
 Exit criteria: H1–H3 measured and written up; the four bridge findings
 (anchors, slots, debounce, pagination atom) folded back into this spec's
@@ -429,7 +429,7 @@ Recommendation step 1; a go/no-go on extracting a second, simple container
    source of truth.
 4. How far do templates reach into chrome (toolbars/menus)? `MenuBuilder`
    already has an atom-native declarative model — templates should probably
-   *reference* menu models, not re-describe them.
+   _reference_ menu models, not re-describe them.
 5. Naming: "Surface templates" ties the feature to the existing resolution
    mechanism; "screens" (the react-ui-form term of art) may fit the named-
    variant axis (`default` | `card` | `compact`) better.
