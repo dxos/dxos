@@ -18,9 +18,11 @@ NEXT: stage 2 — the CodeMirror rendering substrate. Round 13 inserted this
 ahead of the rename, which moved to stage 2e. 2a (model), 2b (assistant +
 transcription ported, no UI change) and 2c (`MessageDocument`, including
 in-place editing and the accessibility and density questions) are DONE.
-2d is PARTLY done: the composer moved to `ChatEditor` (green) and the
-containers render the document (committed, but its ported plays are flaky).
-NEXT: settle how a play addresses the hovered message — see 2d below.
+Round 14 (jdw, 2026-08-05) REVISED the substrate: TanStack stays the list,
+CodeMirror renders each message (see DESIGN.md § Rendering substrate). The
+single-document `MessageDocument` (2c) and the container swap onto it (part
+of 2d) were deleted/reverted; the chunk model (2a/2b) and the `ChatEditor`
+composer survive. NEXT: stage A–D below.
 
 ## Decisions log
 
@@ -521,18 +523,61 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
       start-thread). 9 plays total.
 - [x] 10 plays and 41 unit tests in the package.
 
-### 2d — switch the channel containers over
+### 2d — switch the channel containers over (PARTIALLY SUPERSEDED by round 14)
 
-- [ ] `MessageThread` renders the transcript instead of `Thread.Messages`.
-- [ ] `Thread.Textbox` → `ChatEditor` (`@dxos/react-ui-chat`) so input is one
-      component too; today it is `useTextEditor` with a different assembly.
-      Carry the reply banner over with it.
-- [ ] NOTE for whoever does this: `createBasicExtensions({ readOnly: true })`
-      installs a transaction filter that drops every user edit, so the document
-      cannot use it — editability is governed by the chrome, which turns it on
-      only for the message being edited. This cost a full debugging round.
-- [ ] Port the 16 storybook plays onto widget DOM testids. This is where the
-      schedule risk is, not in the rendering.
+- [x] `Thread.Textbox` → `ChatEditor` (`@dxos/react-ui-chat`). Landed one level
+      lower than planned: `Message.Textbox` renders `ChatEditor` and
+      `Thread.Textbox` reduces to what a thread adds (slash-command and mention
+      highlighting, the placeholder, the header-caret focus handle).
+      `onSend` is now `(text) => boolean` — `submit()`'s clear-on-accept
+      contract. Changeset: `message-composer-chat-editor.md`. **KEPT.**
+- [x] ~~`MessageThread` renders `MessageDocument`~~ — built, then REVERTED by
+      round 14; the container is back on `Thread.Messages`. What the build
+      taught (kept out of the next attempt): one toolbar per transcript makes
+      plays simulate pointer position (the flakiness never got a root cause);
+      chrome inside `.cm-content` inherits editor theming (light-theme pills);
+      `readOnly: true` drops user edits via its own transaction filter;
+      re-hovering inside a `waitFor` poll keeps a toolbar remounting; and
+      events must be dispatched on `.cm-content`, where CM binds handlers.
+- [x] Container plays consolidated 14 → 6 stories (Default/Reading/Editing/
+      Reacting/Deleting; thread Default/Replying), rewritten for per-tile
+      controls after the revert. No layout/pixel assertions in plays.
+
+## Stage 2 (round 14) — TanStack list, CodeMirror message renderer
+
+Replaces 2c/2d's single-document direction. All on this branch/PR.
+
+### A — shared per-message renderer
+
+- [ ] One component in `react-ui-thread`: CM editor over a message's blocks,
+      driven by `ChunkModel` + `chunkSync` (blocks are the chunks; streaming
+      appends to the tail), shared extension set (markdown decoration,
+      embeds/XML widgets), `readOnly` toggleable for edit-in-place.
+- [ ] Replace `TextBlock`'s hand-assembled editor in `Message.tsx` with it.
+- [ ] The old `ObjectTile`/reference-block path keeps its home in the tile
+      (the 2d gap: the document dropped non-text blocks; tiles never did).
+
+### B — channel on the upgraded tiles
+
+- [x] Revert the `MessageDocument` container swap; `Thread.Messages` is the
+      list again (round-14 revert commit).
+- [ ] Tiles render through the stage-A renderer; verify the four interface
+      reports jdw filed against the document build are absent on tiles:
+      bottom-pinned start, highlight padding, no send jitter, dark-theme
+      reaction pills.
+
+### C — assistant chat onto tiles + renderer
+
+- [ ] `plugin-assistant` transcript renders as tiles; each message = one
+      renderer instance; the streaming tail is the only hot editor.
+      `MessageSyncer`-over-`ChunkModel` (2b) becomes per-message.
+- [ ] Keep the 41 assistant plays green; no UI regression intended.
+
+### D — transcription + density
+
+- [ ] `react-ui-transcription` view onto the same tiles/renderer.
+- [ ] Measure editor-instance count and interaction cost at 500 messages
+      (viewport + overscan should bound live editors to ~10–30).
 
 ## Stage 2e — rename plugin-thread → plugin-chat
 

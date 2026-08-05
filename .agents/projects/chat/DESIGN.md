@@ -150,6 +150,55 @@ pattern; exact relation type chosen in stage 3). No per-thread relations.
 
 ### Rendering substrate
 
+REVISED by jdw (round 14, 2026-08-05), superseding the single-document
+decision below. Round 13's premise was one CodeMirror document per transcript,
+with every piece of per-message chrome (heading, avatar, reactions, quote,
+thread row, hover toolbar) reconstructed inside it as decorations, widgets and
+React portals. Stage 2c/2d built that, and the build itself was the evidence
+against it: the portal bookkeeping, a hover toolbar that had to be re-anchored
+imperatively, view-state dispatches racing model rebuilds, flaky container
+plays (one toolbar for the whole transcript means a play must simulate pointer
+position), chrome inside `.cm-content` picking up editor theming (light-theme
+reaction pills), and a fight with the scroller over bottom-pinning — all costs
+of the one-document premise, not of CodeMirror.
+
+**The revised shape: TanStack for the list, CodeMirror per message.**
+
+- `Thread.Messages` (TanStack/Mosaic virtual stack) stays the list. Chrome —
+  heading, avatar rail, reactions, quote, thread row, controls — is ordinary
+  React in the tile, where it was already correct, themed and per-message
+  addressable (the old plays were stable because every tile carried its own
+  controls).
+- Each message body is a **CodeMirror renderer**: one small editor per
+  message, sharing the extension vocabulary (markdown decoration, embeds/XML
+  widgets, streaming). This is an upgrade of the tile stack's existing
+  per-message editor (`TextBlock` already mounts one), not a new layer.
+- The **chunk model (2a/2b) survives as the per-message driver**: a message is
+  an ordered list of blocks (markdown, reasoning, toolCall, surface…), which
+  is exactly the chunk document — streaming appends to the tail block, blocks
+  finalize once. `chunkSync` drives the message's own editor.
+- **Compose stays CodeMirror** (`ChatEditor`) for slash-commands, mentions,
+  completions — already landed in stage 2d.
+- Editor-instance count is bounded by virtualization: viewport + overscan
+  (~10–30 live editors), only the streaming tail is ever hot. To be measured
+  at 500 messages before stage D closes.
+- In-place editing collapses to flipping the message's own editor out of
+  `readOnly` — the tile stack's original mechanism.
+
+What is deliberately given up relative to one-document: cross-message text
+selection and find-across-transcript. Discord offers neither; accepted.
+
+What is kept from the round-13 analysis: the reconciling chunk model (the
+`MessageSyncer`/`TranscriptModel` critique below still holds — both are
+special cases of `set(chunks)` reconcile, now applied per message), the shared
+extension vocabulary, and placement in `@dxos/react-ui-thread`.
+
+The `MessageDocument` component, its chrome extension and its item builder
+were deleted (git has them at `128147d5` if archaeology is ever needed).
+
+<details>
+<summary>Round-13 single-document design (superseded)</summary>
+
 Decided by jdw (round 13), superseding the "keep parallel" lean in Open
 questions: assistant chat, transcription and channel chat converge on **one
 CodeMirror-backed document model**, so the two can actually be integrated
@@ -157,9 +206,16 @@ later rather than merely resembling each other. The near-term win is streaming
 (the assistant's typewriter/append path) and a single vocabulary of widgets —
 NOT virtualization, which `Thread.Messages` already has via TanStack.
 
+Message text stays **plain markdown lines** in the document; only headings,
+avatars, dividers, reactions, thread links, quotes and the edit affordance are
+decorations or widgets. That is what buys wrapping, cross-message selection
+and find for free.
+
+</details>
+
 The shared piece is a **keyed, ordered, reconciling chunk document**: chunks
-(messages) render to lines, and a `set(chunks)` reconcile computes a minimal
-line-range diff. Two existing models are special cases of it:
+render to text, and a `set(chunks)` reconcile computes a minimal diff. Two
+existing models are special cases of it:
 
 - `MessageSyncer` (plugin-assistant) is append-only by contract — it tracks a
   completed-block index and a trailing char count, and requires each streaming
@@ -170,43 +226,19 @@ line-range diff. Two existing models are special cases of it:
   sync and populates them only inside `sync()` — so a delete followed by an
   update in one batch lands on the wrong lines.
 
-Channel chat needs the general case: edits rewrite in place, deletes tombstone
-out of the middle, reactions and thread-summary rows attach under an existing
-message, and a feed merge can insert a message _between_ two others. The model
-therefore reconciles from a **declarative list**, not from imperative
-append/update/delete calls — ECHO hands us a query result set, not a change
-stream, which is the same reason the round-6 graph regression happened.
-
-Everything else decomposes into three small per-consumer pieces over one model
-and one view — a renderer (`chunk => lines`, a pure function, not an
-extension), a widget registry, and an extension set:
-
-|               | renderer emits                                                 | distinctive extensions                                      |
-| ------------- | -------------------------------------------------------------- | ----------------------------------------------------------- |
-| Assistant     | `<prompt>`, markdown, `<reasoning>`, `<toolCall>`, `<surface>` | `typewriter`, `turnFolding`, `xmlBlockDecoration`           |
-| Transcription | speaker lines                                                  | timestamp `gutter`                                          |
-| Channel       | markdown text + dividers                                       | grouping decorations, avatar gutter, `hoverTooltip` toolbar |
-
-Message text stays **plain markdown lines** in the document; only headings,
-avatars, dividers, reactions, thread links, quotes and the edit affordance are
-decorations or widgets. That is what buys wrapping, cross-message selection and
-find for free, and it keeps widget density (and CodeMirror's height estimation)
-manageable.
+Both were ported onto `ChunkModel` in stage 2b with no UI change; that work is
+unaffected by the round-14 revision.
 
 Placement (jdw, option 2): the model lives in `@dxos/react-ui-thread`
 alongside the chat UI, and `plugin-assistant` and `react-ui-transcription`
-import it from there. This inverts the usual layering — a headless CM model
-exported from a React chat-UI package, pulling `react-ui-mosaic`/`-dnd`/
-`-pickers`/`-menu` in as transitive deps for consumers that touch none of them
-— accepted because `react-ui-transcription` is expected to dissolve into
-`react-ui-thread` later, which resolves the direction. `react-ui-markdown` is
-NOT a consumer: `MarkdownStream` is text-level (`setContent`/`append`) and has
-no chunk notion.
+import it from there — accepted because `react-ui-transcription` is expected
+to dissolve into `react-ui-thread` later. `react-ui-markdown` is NOT a
+consumer: `MarkdownStream` is text-level and has no chunk notion.
 
-`react-ui-thread` is the permanent home of this work and does not go away. Its
-existing React tile stack (`Thread.*`/`Message.*`) stays until review/comments
-port over in stage 3 — plugin-review renders comment and suggestion threads on
-`Thread.Root/Content/Textbox/Status` and `Message.Tile/Root`.
+`react-ui-thread` is the permanent home of this work and does not go away. The
+React tile stack (`Thread.*`/`Message.*`) is no longer transitional — it IS
+the list layer; plugin-review continues on it and stage 3 unification becomes
+a matter of sharing tiles, not of porting to a document.
 
 ### Backend layers
 

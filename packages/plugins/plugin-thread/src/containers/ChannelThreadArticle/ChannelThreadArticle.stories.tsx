@@ -15,7 +15,7 @@ import { Channel } from '@dxos/types';
 import { useThreads } from '#hooks';
 import { translations } from '#translations';
 
-import { SEEDED, STORY_TIMEOUT, channelStoryDecorators, control, hoverUntil } from '../testing';
+import { SEEDED, STORY_TIMEOUT, channelStoryDecorators, tileFor } from '../testing';
 import { ChannelThreadArticle } from './ChannelThreadArticle';
 
 /** Opens the seeded fixture's only thread, so the story needs no id wired in from args. */
@@ -61,8 +61,11 @@ export const Default: Story = {
     // Roots of other threads stay in the channel view.
     await expect(canvas.queryByText(SEEDED.own)).toBeNull();
 
-    await hoverUntil(canvasElement, SEEDED.reply, 'thread.message.reply');
-    await expect(control(canvasElement, 'thread.message.start-thread')).toBeNull();
+    // Inside a thread every message offers reply and none offers start-a-thread. Presence, not
+    // visibility: the controls sit at visibility:hidden until the row is hovered.
+    const reply = await tileFor(canvasElement, SEEDED.reply);
+    await expect(await within(reply).findAllByTestId('thread.message.reply')).toHaveLength(1);
+    await expect(canvas.queryAllByTestId('thread.message.start-thread')).toHaveLength(0);
   },
 };
 
@@ -94,7 +97,8 @@ export const Replying: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(await canvas.findByText('Posted into the thread.', {}, STORY_TIMEOUT)).toBeVisible();
 
-    await userEvent.click(await hoverUntil(canvasElement, SEEDED.reply, 'thread.message.reply'));
+    const target = await tileFor(canvasElement, SEEDED.reply);
+    await userEvent.click(await within(target).findByTestId('thread.message.reply'));
     await expect(await canvas.findByTestId('thread.reply-banner')).toBeVisible();
 
     await userEvent.click(await composer());

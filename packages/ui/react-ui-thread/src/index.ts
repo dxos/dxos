@@ -22,16 +22,6 @@ export type {
   MessageTileProps,
   MessageTimeProps,
 } from './Message';
-export { MessageDocument } from './MessageDocument';
-export type {
-  DividerItem,
-  MessageAction,
-  MessageDocumentItem,
-  MessageDocumentItemOptions,
-  MessageDocumentProps,
-  MessageItem,
-  MessageQuote,
-} from './MessageDocument';
 export { command } from './command';
 export { useThreadContext } from './context';
 export type {

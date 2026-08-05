@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type Identity, type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type Space as ClientSpace, getSpace } from '@dxos/react-client/echo';
-import { type MessageDocumentProps, type MessageLike, type ThreadRootProps } from '@dxos/react-ui-thread';
+import { type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type Channel, type Message } from '@dxos/types';
 
 import {
@@ -38,7 +38,7 @@ export type ChannelMessaging = {
   readOnly: boolean;
   /** Whether threads can be created here at all. */
   canCreateThread: boolean;
-  getReactions?: MessageDocumentProps['getReactions'];
+  getReactions?: ThreadRootProps['getReactions'];
   canDelete: NonNullable<ThreadRootProps['canDelete']>;
   onReact?: (messageId: string, emoji: string) => void;
   onDelete?: (messageId: string) => void;
@@ -69,7 +69,10 @@ export const useChannelMessaging = (channel: Channel.Channel | undefined): Chann
   const threads = useMemo(() => foldThreads(messages, threadObjects), [messages, threadObjects]);
 
   const foldedReactions = useMemo(() => foldReactions(reactions, identity?.did), [reactions, identity?.did]);
-  const getReactions = useCallback((message: MessageLike) => foldedReactions.get(message.id) ?? [], [foldedReactions]);
+  const getReactions = useCallback(
+    (message: Message.Message) => foldedReactions.get(message.id) ?? [],
+    [foldedReactions],
+  );
 
   // Deleting tombstones a feed item, which every peer sees — so a participant may only remove their
   // own messages. Moderation by others is a membership concern this plugin does not model yet.
