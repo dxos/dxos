@@ -82,7 +82,7 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
  * Normalized activation specification of a module — which wave it belongs to and what it
  * exchanges with the capability graph.
  *
- * Every module names a wave: `activatesOn` defaults to {@link ActivationEvent.Startup} when the
+ * Every module names a wave: `activatesOn` defaults to {@link ActivationEvent.Idle} when the
  * authoring record omits it. Within a wave, modules are ordered topologically (providers of
  * `requires` activate first) and a module may pull a provider whose own wave has already fired.
  * Because a fired event stays fired, a module gated on an event that has already passed remains
@@ -142,7 +142,7 @@ export interface PluginModule {
 
 /**
  * Structural authoring shape for typed modules. A module without `requires` is a root,
- * triggered by `activatesOn` (implicitly Startup). A module with `requires` is a chain
+ * triggered by `activatesOn` (implicitly Idle). A module with `requires` is a chain
  * member: it activates once every declared capability has been contributed — by whichever
  * event's chain produced the providers, not necessarily during startup — additionally gated
  * on `activatesOn` when declared. Consumers of event-gated providers stay pending until the
@@ -165,7 +165,7 @@ type OptProvides<Opts> = Opts extends { provides: infer P extends readonly Capab
  * unconstructible branded type naming the violation. Checks that activate's environment only
  * uses declared `requires`, that its error channel extends `Error`, and that its return
  * exactly covers the declared `provides`. Options with no capability declarations are a
- * dependency-mode startup root and validate as `true` (the runtime normalizer classifies them).
+ * dependency-mode root and validate as `true` (the runtime normalizer classifies them).
  *
  * Applied on {@link addModule}'s return type (not intersected with the parameter): inference
  * of `Opts` from an options object containing inline generator activates fails when the

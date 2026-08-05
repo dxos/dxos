@@ -28,7 +28,7 @@ import { type ModuleLoader, together } from './module-loader';
 /**
  * The activation lifecycle engine: owns {@link start} / {@link activate} /
  * {@link deactivatePlugin} / {@link resetEvent} and decides when each module's `activate`
- * runs. Every module names a wave via `activatesOn` (defaulting to Startup), and two paths
+ * runs. Every module names a wave via `activatesOn` (defaulting to Idle), and two paths
  * drive them:
  *
  * - {@link runDependencyPass}: rounds over the capability graph (vocabulary and ordering logic
@@ -119,9 +119,10 @@ export class ActivationScheduler {
       // the cycle members simply never activate; everything else proceeds.
       yield* this.#reportGlobalCycle();
 
-      // The startup wave and the dependency pass are the same thing now that an undeclared
-      // `activatesOn` normalizes to Startup: the pass already admits every module whose wave is
-      // firing, so dispatching the event alongside it would claim the same modules twice.
+      // The startup wave and the dependency pass are the same thing: the pass already admits every
+      // module whose wave is firing, so dispatching the event alongside it would claim the same
+      // modules twice. An undeclared `activatesOn` normalizes to Idle, so what runs here is the
+      // modules that asked for Startup plus the baseline providers they pull.
       this.#state.clearPendingReset(key);
       // Graph-level failures (missing provider, duplicate provider, cycle) fail the start call;
       // publish them so boot UIs surface the root cause instead of a silent hang behind their
