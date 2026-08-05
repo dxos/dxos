@@ -21,6 +21,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
+import { EffectEx } from '@dxos/effect';
 import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
@@ -705,7 +706,7 @@ export const __migrate = async (testFilePath: string, legacyCachePath: string): 
   )(await readFile(legacyCachePath, 'utf-8'));
   const store = new FixtureStore(testFilePath, undefined);
   for (const conversation of legacy.conversations) {
-    await Effect.runPromise(store.saveFixtureConversation(conversation));
+    await EffectEx.runPromise(store.saveFixtureConversation(conversation));
   }
   return legacy.conversations.length;
 };
