@@ -2,13 +2,30 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import { EffectEx } from '@dxos/effect';
+import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
+import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import init from './0001_init.sql?raw';
-import { MIGRATIONS } from './index';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './index';
+
+/** Mirrors the store's `migrate`, so the test exercises the production configuration. */
+const migrate = Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+  Effect.provide(SqlTransaction.clientLayer),
+  Effect.orDie,
+);
+
+/** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
+const ids = Object.keys(MIGRATIONS).map((key) => [
+  Number(key.slice(0, key.indexOf('_'))),
+  key.slice(key.indexOf('_') + 1),
+]);
 
 describe('rdf migrations', () => {
   // The initial migration runs against databases that already hold these tables — anything created
@@ -34,5 +51,17 @@ describe('rdf migrations', () => {
       .sort();
 
     expect(onDisk).toEqual(Object.keys(MIGRATIONS).sort());
+  });
+
+  // A database from before migration tracking already holds these tables and has no history, so the
+  // migrator runs migration 1 against it: it must apply as a recorded no-op.
+  test('applies to a legacy database, and a second run is a no-op', async () => {
+    await EffectEx.runPromise(
+      Effect.gen(function* () {
+        yield* SqlMigrations.apply(init);
+        expect(yield* migrate).toEqual(ids);
+        expect(yield* migrate).toEqual([]);
+      }).pipe(Effect.provide(SqlTransaction.layer.pipe(Layer.provideMerge(layerMemory))), Effect.orDie),
+    );
   });
 });

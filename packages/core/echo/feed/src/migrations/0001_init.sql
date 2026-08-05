@@ -11,7 +11,7 @@
 --
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "feeds" (
-    "feedPrivateId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "feedPrivateId" INTEGER PRIMARY KEY AUTOINCREMENT,
     "spaceId" TEXT NOT NULL,
     "feedId" TEXT NOT NULL,
     "feedNamespace" TEXT
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS "feeds" (
 
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "blocks" (
-    "insertionId" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "insertionId" INTEGER PRIMARY KEY AUTOINCREMENT,
     "feedPrivateId" INTEGER NOT NULL,
     "position" INTEGER,
     "sequence" INTEGER NOT NULL,
@@ -33,14 +33,14 @@ CREATE TABLE IF NOT EXISTS "blocks" (
 
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "subscriptions" (
-    "subscriptionId" TEXT NOT NULL PRIMARY KEY,
+    "subscriptionId" TEXT PRIMARY KEY,
     "expiresAt" INTEGER NOT NULL,
     "feedPrivateIds" TEXT NOT NULL
 );
 
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "cursor_tokens" (
-    "spaceId" TEXT NOT NULL PRIMARY KEY,
+    "spaceId" TEXT PRIMARY KEY,
     "token" TEXT NOT NULL
 );
 

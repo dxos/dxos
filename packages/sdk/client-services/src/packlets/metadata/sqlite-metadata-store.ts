@@ -79,9 +79,6 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   /**
-   * Creates the space_metadata and space_large tables if they do not exist.
-   */
-  /**
    * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
    * provided because the migrator wraps its work in the client's `withTransaction`, which emits
    * `BEGIN` / `COMMIT` — rejected in workerd.

@@ -36,6 +36,12 @@ const migrateEntityMeta = Migrator.make({})({
   table: ENTITY_META_TABLE,
 }).pipe(Effect.provide(SqlTransaction.clientLayer), Effect.orDie);
 
+/** Derived from the manifest: hard-coded ids go stale the moment a migration is added. */
+const ENTITY_META_IDS = Object.keys(ENTITY_META).map((key) => [
+  Number(key.slice(0, key.indexOf('_'))),
+  key.slice(key.indexOf('_') + 1),
+]);
+
 const objectMetaColumns = Effect.gen(function* () {
   const sql = yield* SqlClient.SqlClient;
   const columns = yield* sql.unsafe<{ name: string }>('PRAGMA table_info("objectMeta")');
@@ -93,11 +99,7 @@ describe('objectMeta vintages', () => {
   // produces — the INSERT writes all 14 non-key columns and `SELECT *` reads them back.
   it.effect('fresh database gets the desired shape, and the column back-fill no-ops', () =>
     Effect.gen(function* () {
-      expect(yield* migrateEntityMeta).toEqual([
-        [1, 'init'],
-        [2, 'missing_columns'],
-        [3, 'indexes'],
-      ]);
+      expect(yield* migrateEntityMeta).toEqual(ENTITY_META_IDS);
       expect(yield* objectMetaColumns).toEqual(DESIRED_COLUMNS);
     }).pipe(Effect.provide(TestLayer)),
   );

@@ -59,9 +59,6 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Creates the automerge_chunks table if it does not exist.
-   */
-  /**
    * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
    * provided because the migrator wraps its work in the client's `withTransaction`, which emits
    * `BEGIN` / `COMMIT` — rejected in workerd.
