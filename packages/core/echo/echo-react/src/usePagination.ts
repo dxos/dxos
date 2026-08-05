@@ -63,7 +63,7 @@ type PaginationElement<Q extends Query.Any> =
  * results until the new one delivers its own -- that's what keeps the previous page visible while
  * the new one loads (see the hook's own doc comment for why that matters).
  */
-const createPaginationStore = <Q extends Query.Any, O>(
+export const createPaginationStore = <Q extends Query.Any, O>(
   resource: Database.Queryable | undefined,
   innerAst: Parameters<typeof Query.fromAst>[0],
   pageSize: number,

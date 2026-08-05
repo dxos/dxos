@@ -4,5 +4,6 @@
 
 export * from './useQuery';
 export * from './usePagination';
+export * from './paginationAtom';
 export * from './useType';
 export * from './useObject';
