@@ -393,9 +393,20 @@ export const Editing: Story = {
     await expect(canvas.queryByText(/Enter to save/)).toBeNull();
     await waitFor(() => expect(canvasElement.querySelector('[data-testid="thread.message.save"]')).toBeNull());
 
-    // Escape throws the draft away and leaves the stored text alone.
     await openMenu(/Second message, 10s later/);
     await waitFor(() => expect(editingRow()).not.toBeNull());
+
+    // Edit mode belongs to the host, not to the toolbar: the controls are rebuilt for whichever row
+    // the pointer is on, and coming back to an edited one has to find it still an input.
+    const save = () => canvasElement.querySelector('[data-testid="thread.message.save"]');
+    hover(row(canvasElement, /Third message, 40s after/));
+    await waitFor(() => expect(save()).toBeNull());
+    await expect(editingRow()).not.toBeNull();
+    hover(row(canvasElement, /Second message, 10s later/));
+    await waitFor(() => expect(save()).not.toBeNull());
+    await expect(editingRow()).not.toBeNull();
+
+    // Escape throws the draft away and leaves the stored text alone.
     await userEvent.keyboard(' discarded{Escape}');
     await waitFor(() => expect(editingRow()).toBeNull());
     await expect(canvas.queryByText(/discarded/)).toBeNull();

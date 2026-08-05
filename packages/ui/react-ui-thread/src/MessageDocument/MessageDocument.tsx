@@ -273,32 +273,36 @@ const HoverControls = ({
   onEdit: () => void;
   onExitEdit: () => void;
 }) => {
-  // One state atom per hovered row, so edit mode and the picker reset when the pointer moves on.
-  const state = useMemo(makeMessageState, []);
+  // One state atom per hovered row, so edit mode and the picker reset when the pointer moves on —
+  // and seeded from the host, so mounting over a row that is already being edited agrees with it
+  // from the first render. Anything else has to detect that agreement in an effect, which under
+  // StrictMode's double invocation reads as the toolbar leaving edit mode: re-hovering an edited
+  // message committed it.
+  const [state] = useState(() => makeMessageState({ editing }));
   // `Message.Controls` answers Edit by flipping this atom — it has no callback — because in the tile
   // stack the same component renders the body. Here the body is the document, so the two have to be
-  // reconciled in both directions, and which side moved is what says which way: what the atom last
-  // held tells a flip the user made from one the host pushed in.
+  // reconciled, and which side moved is what says which way: the host moving is a commit or a cancel
+  // for the toolbar to follow, the toolbar moving is a request for the host to answer.
   const { editing: controlsEditing } = useAtomValue(state);
   const setState = useAtomSet(state);
-  const controlsRef = useRef(false);
+  const hostRef = useRef(editing);
   const onEditRef = useDynamicRef(onEdit);
   const onExitEditRef = useDynamicRef(onExitEdit);
   useEffect(() => {
-    if (controlsEditing === controlsRef.current) {
+    const hostMoved = hostRef.current !== editing;
+    hostRef.current = editing;
+    if (controlsEditing === editing) {
       return;
     }
 
-    controlsRef.current = controlsEditing;
-    (controlsEditing ? onEditRef : onExitEditRef).current();
-  }, [controlsEditing, onEditRef, onExitEditRef]);
-
-  // The host is where edit mode actually ends: committing with the keyboard never reaches the
-  // toolbar, which left ✓/✗ showing until the pointer moved to another row.
-  useEffect(() => {
-    controlsRef.current = editing;
-    setState((current) => (current.editing === editing ? current : { ...current, editing }));
-  }, [editing, setState]);
+    if (hostMoved) {
+      // Committing with the keyboard never reaches the toolbar, which left ✓/✗ showing until the
+      // pointer moved to another row.
+      setState((current) => ({ ...current, editing }));
+    } else {
+      (controlsEditing ? onEditRef : onExitEditRef).current();
+    }
+  }, [controlsEditing, editing, setState, onEditRef, onExitEditRef]);
 
   return (
     // Straddling the row's top edge at the end of the row, where Discord puts it — the corner
