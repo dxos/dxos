@@ -270,31 +270,28 @@ const resolveUrlAsync = async (
 ): Promise<Array<ResolvedPair | null>> => {
   const keyTable = buildKeyTable(builder);
   const allExtensions = builder.getExtensions();
-  const results: Array<ResolvedPair | null> = [];
-  // Tracks the most recently resolved *item* node, the base for `linked` pairs — a linked pair
-  // always attaches to the preceding item, never to another linked pair.
-  let lastItemNodeId: string | undefined;
+  const results: Array<ResolvedPair | null> = parsed.pairs.map(() => null);
 
-  for (let pairIndex = 0; pairIndex < parsed.pairs.length; pairIndex++) {
-    const pair = parsed.pairs[pairIndex];
-
-    // Linked pair: resolves against the preceding item by variant, not the workspace base — the linked
-    // resolution tier. Produced by no extension (it is a grammar key), so it is matched before the key
-    // table, and it is not itself an item, so it does not become the base for a following linked pair.
-    if (pair.key === builder.urlGrammar.linkedKey) {
-      const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
-      results.push(nodeId ? { pairIndex, nodeId } : null);
-      continue;
+  // The chain partitions into `[item, linked*]` groups: a linked pair resolves against the
+  // preceding ITEM, and item pairs resolve against the workspace base, so groups are independent.
+  // Running them concurrently is what keeps the caller's per-pair deadline a wall-clock bound —
+  // resolving serially spends it once per plank, and a multi-plank cold deep link then exceeds the
+  // module activation timeout, which disables the plugin rather than degrading to not-found.
+  const groups: Array<number[]> = [];
+  parsed.pairs.forEach((pair, pairIndex) => {
+    if (pair.key === builder.urlGrammar.linkedKey && groups.length > 0) {
+      groups[groups.length - 1].push(pairIndex);
+    } else {
+      groups.push([pairIndex]);
     }
+  });
 
+  const resolveItem = async (pairIndex: number): Promise<string | null> => {
+    const pair = parsed.pairs[pairIndex];
     const extensionIdList = keyTable.get(pair.key);
     if (!extensionIdList || extensionIdList.length === 0) {
       log.warn('unknown URL prefix key', { key: pair.key });
-      results.push(null);
-      if (pair.id !== undefined) {
-        lastItemNodeId = undefined;
-      }
-      continue;
+      return null;
     }
 
     const workspaceBaseId = `${Node.RootId}/${pair.workspace}`;
@@ -308,7 +305,7 @@ const resolveUrlAsync = async (
     // A normal key addresses a node by id; an id-less singleton key (e.g. `home`) addresses a fixed node
     // whose terminal segment IS the key — resolve it the same way with the key standing in for the id
     // (`root/<ws>/<...path>/<key>`).
-    const nodeId = await resolveKeyId(
+    return resolveKeyId(
       builder,
       workspaceBaseId,
       pair.workspace,
@@ -316,9 +313,25 @@ const resolveUrlAsync = async (
       pair.id ?? pair.key,
       options?.wait?.(pairIndex),
     );
-    results.push(nodeId ? { pairIndex, nodeId } : null);
-    lastItemNodeId = nodeId ?? undefined;
-  }
+  };
+
+  await Promise.all(
+    groups.map(async ([headIndex, ...linkedIndexes]) => {
+      const headPair = parsed.pairs[headIndex];
+      // A leading linked pair has no item to attach to (groups only start with one when the chain
+      // opens with it), so it resolves to nothing rather than against a stale base.
+      const headNodeId = headPair.key === builder.urlGrammar.linkedKey ? null : await resolveItem(headIndex);
+      results[headIndex] = headNodeId ? { pairIndex: headIndex, nodeId: headNodeId } : null;
+
+      // Linked pairs attach to this group's item, and to each other in order.
+      let lastItemNodeId = headNodeId ?? undefined;
+      for (const pairIndex of linkedIndexes) {
+        const pair = parsed.pairs[pairIndex];
+        const nodeId = lastItemNodeId && pair.id ? await resolveLinked(builder, lastItemNodeId, pair.id) : null;
+        results[pairIndex] = nodeId ? { pairIndex, nodeId } : null;
+      }
+    }),
+  );
 
   return results;
 };
