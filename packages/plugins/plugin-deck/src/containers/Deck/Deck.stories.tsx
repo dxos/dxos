@@ -450,9 +450,6 @@ const meta = {
   decorators: [
     withMosaic(),
     withPluginManager({
-      // The deck's shell state and the process manager's runtime both hang off AtomRegistry,
-      // which no module provides — a real host contributes it.
-      registerFrameworkCapabilities: true,
       plugins: [...corePlugins(), TestPlugin()],
     }),
   ],

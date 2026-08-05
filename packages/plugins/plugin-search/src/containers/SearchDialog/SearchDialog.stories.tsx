@@ -51,9 +51,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      // The dialog reaches the process-manager runtime, which requires AtomRegistry —
-      // contributed by a host, not by any module.
-      registerFrameworkCapabilities: true,
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
