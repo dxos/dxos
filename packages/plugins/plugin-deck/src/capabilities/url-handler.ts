@@ -105,6 +105,18 @@ export default Capability.makeModule(
       registry.set(stateAtom, fn(getState()));
     };
 
+    /**
+     * Settles once a graph builder contributes URL keys beyond those already registered, or on the
+     * deadline. Keyed off the capability rather than a client event so this plugin stays free of a
+     * client dependency.
+     */
+    const awaitUrlKeys = Effect.async<void>((resume) => {
+      const cancel = registry.subscribe(manager.capabilities.atom(AppCapabilities.AppGraphBuilder), () =>
+        resume(Effect.void),
+      );
+      return Effect.sync(cancel);
+    }).pipe(Effect.timeoutTo({ duration: RESOLVE_TIMEOUT, onTimeout: () => undefined, onSuccess: () => undefined }));
+
     const handleNavigation = Effect.fn(function* (url?: URL) {
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
@@ -155,6 +167,14 @@ export default Capability.makeModule(
                 ),
               ),
               Effect.map(parseUrl),
+              // Not every builder rides Idle: the one registering the space/workspace keys is gated
+              // on the client being initialized, which the forked initialization lands well after a
+              // reload's restore. Declaring not-found here would do so on a URL whose keys simply
+              // are not registered YET — and immediately, never reaching the per-pair node wait
+              // below. Re-parse as contributions arrive instead, bounded by the same deadline.
+              Effect.flatMap((afterIdle) =>
+                Option.isSome(afterIdle) ? Effect.succeed(afterIdle) : awaitUrlKeys.pipe(Effect.map(parseUrl)),
+              ),
             ),
         }),
       );
@@ -394,19 +414,10 @@ export default Capability.makeModule(
       syncUrl('replace');
     };
 
-    // Anchor the restore's deadline to graph readiness rather than to boot. The space nodes the URL
-    // resolves against cannot exist until a builder has contributed, and `client.initialize()` is
-    // forked off the startup pass — so on a reload the builder (gated on the client being
-    // initialized) lands well after this module activates, and `RESOLVE_TIMEOUT` was counting down
-    // against client initialization instead of against node materialization, dropping space home to
-    // not-found. Waits on the CAPABILITY rather than a client event, so this plugin stays free of a
-    // client dependency, and FORKED because this module sits on the startup pass — awaiting it here
-    // would hold the whole pass, and the boot loader with it, until the client is up.
-    yield* Effect.forkScoped(
-      manager.capabilities
-        .waitFor(AppCapabilities.AppGraphBuilder)
-        .pipe(Effect.andThen(provideServices(handleNavigation())), Effect.andThen(Effect.sync(startUrlSync))),
-    );
+    // Forked because this module sits on the startup pass: the restore can now wait for
+    // late-arriving URL keys (see `awaitUrlKeys`), and awaiting that here would hold the whole
+    // pass — and the boot loader with it — until the client is up.
+    yield* Effect.forkScoped(provideServices(handleNavigation()).pipe(Effect.andThen(Effect.sync(startUrlSync))));
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
