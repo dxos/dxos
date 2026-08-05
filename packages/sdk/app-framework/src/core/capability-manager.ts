@@ -6,6 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import type * as Capability from './capability';
@@ -276,7 +277,7 @@ class CapabilityManagerImpl implements CapabilityManager {
     if (existing) {
       return existing as Promise<T>;
     }
-    const promise = Effect.runPromise(this.waitFor(interfaceDef)).finally(() => {
+    const promise = EffectEx.runPromise(this.waitFor(interfaceDef)).finally(() => {
       // Drop it once settled so a capability that is removed and re-contributed can be waited on
       // again; until then every suspended reader shares this one reference.
       this._waitPromises.delete(interfaceDef.identifier);

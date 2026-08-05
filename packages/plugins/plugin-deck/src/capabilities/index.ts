@@ -46,6 +46,11 @@ export const DeckSettings = AppCapability.settings(() => import('./settings'), {
 export const DeckState = Capability.lazyModule(
   'DeckState',
   {
+    // App-shell state, so it belongs on the startup pass rather than the idle default: the deck
+    // root and `DeckLayout` read it on their FIRST render, and the shell cannot paint without it.
+    // The gate belongs here, on the provider — declaring it as the reader's `requires` instead
+    // demotes the reader into this module's wave rather than promoting this module.
+    activatesOn: ActivationEvents.Startup,
     requires: [Capabilities.AtomRegistry],
     provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
   },

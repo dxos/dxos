@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -26,6 +27,9 @@ export const SpotlightDismiss = Capability.lazyModule(
 export const State = Capability.lazyModule(
   'State',
   {
+    // App-shell state — same reason as the deck's `DeckState`: `SimpleLayout` reads it on its
+    // first render, so the shell cannot paint until this module has run.
+    activatesOn: ActivationEvents.Startup,
     provides: [SimpleLayoutCapabilities.State, AppCapabilities.Layout],
     props: (options: { isPopover?: boolean }) => ({ initialState: { isPopover: options.isPopover ?? false } }),
   },
