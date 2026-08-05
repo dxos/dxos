@@ -1,0 +1,181 @@
+# @dxos/plugin-routine
+
+## 0.11.0
+
+### Minor Changes
+
+- f7d7735: Add `Project` (`@dxos/compute`), the successor to `Topic`, holding owned instructions, routine references, and an artifacts collection; the `Routine` schema moves into `@dxos/compute` alongside it. `Instructions` gains a structured `commands` field, surfaced as sentinel-command autocomplete in the assistant chat prompt. The existing `@dxos/types` GH/Linear-style `Project` (name, description, image) is renamed to `ExternalProject` to free the typename for the new concept. `dx-input` now owns its full input chrome (padding, focus shift, a single-band ring/border treatment) so markdown-backed fields match plain inputs.
+- cd3ed11: Add project templates: plugins can contribute pre-wired Project scaffolds (instructions, skills, standing context, starter routines) via a new template capability, and the routine instructions editor can now scope which fields it renders and writes back. The mailbox gains a "Set up project" action (Inbox Research with a sender-ledger starter routine), CRM contributes a sender-research project, and the brain plugin contributes a scheduled mailbox fact-analysis project. Routines created in a project's scope run with the project bound into their session so outputs can be filed into the project's artifacts.
+- a83d98a: Routines render a card summarizing when they run ("Runs every day at 9:00 AM", with a green check when the trigger is enabled) instead of a generic form preview of their internals, and the instructions editor no longer exposes the context `objects` field — the owning project or chat supplies session context.
+
+### Patch Changes
+
+- 9da013f: New package `@dxos/echo-panproto`: declarative, JSON-serializable lenses (`Panproto.Lens`) between ECHO objects and foreign wire records, executed by a runner (`Panproto.encode`/`decode`) rather than expressed as closures.
+
+  Annotation-driven publishing of ECHO objects to the AT Protocol. `@dxos/schema` gains `AtprotoRecordAnnotation` (type-level: target collection, record-key strategy, and a declarative serializable lens) and `AtprotoVisibilityAnnotation` (field-level, private by default — a field is published only when explicitly marked), so a generic companion can discover and publish any annotated type without knowing the type itself.
+
+  `MasterDetail` moves from plugin-routine into `@dxos/react-ui-list` as a reusable primitive: a selectable master list above a detail slot, nestable by placing another `MasterDetail` in `detail`. Per-row overflow menus are driven by `useMenuBuilder` from `@dxos/react-ui-menu`.
+
+  `ComboboxField` now shows the selected option's label rather than the stored value, which is often an opaque id the user never chose to see.
+
+- bf055c8: Fix running a routine manually. The runnable's input now comes from the routine's first trigger, so a sync routine's `binding` reaches the operation instead of throwing, and a routine whose trigger is `remote` force-runs on the edge dispatcher rather than silently running on the client. Also export `createInvocationPayload` for building a trigger's invocation payload.
+- Updated dependencies [f9ba47a]
+- Updated dependencies [4e64123]
+- Updated dependencies [c035062]
+- Updated dependencies [9da013f]
+- Updated dependencies [48d168e]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [46ec569]
+- Updated dependencies [53fde97]
+- Updated dependencies [5b05d75]
+- Updated dependencies [b5ecf54]
+- Updated dependencies [3f6ac61]
+- Updated dependencies [091ebe4]
+- Updated dependencies [a77e1a2]
+- Updated dependencies [a256a87]
+- Updated dependencies [bce1dbc]
+- Updated dependencies [a31ef40]
+- Updated dependencies [eec72c5]
+- Updated dependencies [ed992c2]
+- Updated dependencies [e510f3b]
+- Updated dependencies [1a9bca1]
+- Updated dependencies [ed992c2]
+- Updated dependencies [bf013a1]
+- Updated dependencies [fe63f19]
+- Updated dependencies [a19443b]
+- Updated dependencies [dd190a0]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [6df314a]
+- Updated dependencies [962c8cd]
+- Updated dependencies [2048cb3]
+- Updated dependencies [856c4f0]
+- Updated dependencies [382d00d]
+- Updated dependencies [382d00d]
+- Updated dependencies [46ec569]
+- Updated dependencies [f8637f1]
+- Updated dependencies [b8c0825]
+- Updated dependencies [4e64123]
+- Updated dependencies [d79482a]
+- Updated dependencies [717edc0]
+- Updated dependencies [2e10525]
+- Updated dependencies [6a03a30]
+- Updated dependencies [77fff35]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [7b270f2]
+- Updated dependencies [7b270f2]
+- Updated dependencies [af5fbf4]
+- Updated dependencies [717edc0]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [d547045]
+- Updated dependencies [b602d44]
+- Updated dependencies [6439417]
+- Updated dependencies [277e365]
+- Updated dependencies [ba7aabf]
+- Updated dependencies [410a019]
+- Updated dependencies [d958118]
+- Updated dependencies [2a68c3b]
+- Updated dependencies [30ae5eb]
+- Updated dependencies [2543b63]
+- Updated dependencies [6d2afe0]
+- Updated dependencies [e65432c]
+- Updated dependencies [f6a01e3]
+- Updated dependencies [c9651f1]
+- Updated dependencies [9cde1c6]
+- Updated dependencies [5e7839e]
+- Updated dependencies [923d5be]
+- Updated dependencies [85893fe]
+- Updated dependencies [9f7d5ad]
+- Updated dependencies [6067460]
+- Updated dependencies [717edc0]
+- Updated dependencies [12fd785]
+- Updated dependencies [6e4ac74]
+- Updated dependencies [51aaffe]
+- Updated dependencies [801b77f]
+- Updated dependencies [d547045]
+- Updated dependencies [bda1a02]
+- Updated dependencies [59a65a8]
+- Updated dependencies [832d150]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [f10b1ce]
+- Updated dependencies [f7d7735]
+- Updated dependencies [cec59a4]
+- Updated dependencies [717edc0]
+- Updated dependencies [5f08a6a]
+- Updated dependencies [37874ce]
+- Updated dependencies [848ba1b]
+- Updated dependencies [f15c632]
+- Updated dependencies [3761762]
+- Updated dependencies [c9da903]
+- Updated dependencies [bf055c8]
+- Updated dependencies [55bb048]
+- Updated dependencies [bdf9f68]
+- Updated dependencies [4bb7e3b]
+- Updated dependencies [179afc6]
+- Updated dependencies [4df6cf3]
+- Updated dependencies [7b270f2]
+- Updated dependencies [77fff35]
+- Updated dependencies [6e624bd]
+- Updated dependencies [686fac1]
+- Updated dependencies [ed992c2]
+- Updated dependencies [25272e3]
+- Updated dependencies [0e3a1a9]
+- Updated dependencies [96109be]
+- Updated dependencies [37c17cc]
+- Updated dependencies [f0ec728]
+- Updated dependencies [08a3eea]
+- Updated dependencies [bb63d91]
+- Updated dependencies [392c700]
+- Updated dependencies [20153c0]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [a49131a]
+- Updated dependencies [5585ec8]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [ac51564]
+- Updated dependencies [499dde4]
+- Updated dependencies [a1c89fa]
+  - @dxos/echo@0.11.0
+  - @dxos/plugin-markdown@0.11.0
+  - @dxos/schema@0.11.0
+  - @dxos/react-ui-list@0.11.0
+  - @dxos/link@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/react-ui-editor@0.11.0
+  - @dxos/app-toolkit@0.11.0
+  - @dxos/plugin-client@0.11.0
+  - @dxos/ui-editor@0.11.0
+  - @dxos/ui@0.11.0
+  - @dxos/client@0.11.0
+  - @dxos/react-ui-search@0.11.0
+  - @dxos/compute-runtime@0.11.0
+  - @dxos/compute@0.11.0
+  - @dxos/util@0.11.0
+  - @dxos/client-protocol@0.11.0
+  - @dxos/app-framework@0.11.0
+  - @dxos/edge-compute@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/react-ui-form@0.11.0
+  - @dxos/react-ui-components@0.11.0
+  - @dxos/react-ui-attention@0.11.0
+  - @dxos/types@0.11.0
+  - @dxos/ui-theme@0.11.0
+  - @dxos/log@0.11.0
+  - @dxos/echo-react@0.11.0
+  - @dxos/plugin-space@0.11.0
+  - @dxos/assistant-toolkit@0.11.0
+  - @dxos/react-client@0.11.0
+  - @dxos/ai@0.11.0
+  - @dxos/cli-util@0.11.0
+  - @dxos/edge-client@0.11.0
+  - @dxos/react-ui-menu@0.11.0
+  - @dxos/agent-runtime@0.11.0
+  - @dxos/conductor@0.11.0
+  - @dxos/echo-doc@0.11.0
+  - @dxos/plugin-graph@0.11.0
+  - @dxos/react-ui-syntax-highlighter@0.11.0
+  - @dxos/context@0.11.0
+  - @dxos/effect@0.11.0
+  - @dxos/random@0.11.0
+  - @dxos/invariant@0.11.0
