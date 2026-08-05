@@ -19,12 +19,6 @@ export const SurfacesRequested = (role: string) =>
   ActivationEvent$.make('org.dxos.app-framework.event.surfacesRequested', role);
 
 /**
- * A plugin's feature-start event by key convention; see {@link ActivationEvent$.pluginStart}.
- */
-export const PluginStart = (pluginKey: string): ActivationEvent$.ActivationEvent =>
-  ActivationEvent$.pluginStart(pluginKey);
-
-/**
  * Fired once by the host at main-thread idle after the app is interactive.
  *
  * For REGISTRATION contributions only — graph builders, operation handler sets, settings: the

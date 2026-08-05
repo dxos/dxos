@@ -5,7 +5,6 @@
 // @import-as-namespace
 
 import * as ActivationEvent$ from '@dxos/app-framework/ActivationEvent';
-import * as ActivationEvents$ from '@dxos/app-framework/ActivationEvents';
 
 import * as AppCapabilities from './AppCapabilities';
 
@@ -31,4 +30,4 @@ export const createSettingsEvent = (specifier: string) =>
  * Must equal `AssistantEvents.Start` in plugin-assistant, which derives the same event from its
  * own meta.
  */
-export const AssistantStart = ActivationEvents$.PluginStart('org.dxos.plugin.assistant');
+export const AssistantStart = ActivationEvent$.pluginStart('org.dxos.plugin.assistant');

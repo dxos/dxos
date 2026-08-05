@@ -70,11 +70,10 @@ export type StartupReport = {
   };
   /**
    * Static module inventory probed from `composer.manager.getModules()` — the classification
-   * axes (mode, event gate, requires/provides) for joining against the timing data.
+   * axes (wave, requires/provides) for joining against the timing data.
    */
   inventory: Array<{
     id: string;
-    mode: string;
     activatesOn: string[] | null;
     requires: string[];
     provides: string[];
@@ -198,7 +197,6 @@ export const collectStartupReport = async (page: Page, scenario: Scenario): Prom
             : null;
           return {
             id: String(module.id),
-            mode: String(spec.mode ?? 'unknown'),
             activatesOn,
             requires: (spec.requires ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
             provides: (spec.provides ?? []).map((tag: any) => `${String(tag.identifier)}#${String(tag.arity)}`),
