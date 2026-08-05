@@ -364,7 +364,11 @@ const decorations = (options: MessageDocumentOptions, portals: PortalNotifier): 
       // end of an empty document and every chunk is skipped — which left the transcript with no
       // headings, reactions, quotes or thread rows at all.
       const modelWrite = transaction.docChanged && !isUserEdit(transaction);
-      const hostSignal = transaction.effects.some((effect) => effect.is(messageDocumentChangedEffect));
+      // View state moving is its own trigger: which row is hovered or current changes what the
+      // chrome draws but nothing about the text, so it must not cost a model rebuild.
+      const hostSignal = transaction.effects.some(
+        (effect) => effect.is(messageDocumentChangedEffect) || effect.is(setMessageDocumentStateEffect),
+      );
       if (!modelWrite && !hostSignal) {
         return value.map(transaction.changes);
       }

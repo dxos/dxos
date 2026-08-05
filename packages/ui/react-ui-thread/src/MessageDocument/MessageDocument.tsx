@@ -236,12 +236,7 @@ export const MessageDocument = ({
     // text alone — a new reaction, a regrouped run, a message entering edit mode — still has to
     // prompt a rebuild. The getters are in the dependencies for the same reason: they read host
     // state the editor cannot see, so their identity is the only signal that it moved.
-    view?.dispatch({
-      effects: [
-        setMessageDocumentStateEffect.of({ editingId, currentId, hoveredId: hover?.message.id }),
-        messageDocumentChangedEffect.of(null),
-      ],
-    });
+    view?.dispatch({ effects: messageDocumentChangedEffect.of(null) });
   }, [
     model,
     view,
@@ -256,8 +251,18 @@ export const MessageDocument = ({
     getQuote,
     getThreadSummary,
     getActions,
-    hover,
   ]);
+
+  // View state is dispatched on its own, and deliberately not from the effect above: hovering a row
+  // changes what the chrome draws and nothing about the text, so it must not rebuild the chunk model
+  // — which it did on every pointer move, leaving the model's ranges and the document momentarily
+  // disagreeing about where each message starts. That is what the hover handler reads to decide
+  // which message the pointer is on.
+  useEffect(() => {
+    view?.dispatch({
+      effects: setMessageDocumentStateEffect.of({ editingId, currentId, hoveredId: hover?.message.id }),
+    });
+  }, [view, editingId, currentId, hover]);
 
   return (
     // The toolbar lives here rather than inside the editor, so leaving the editor must not dismiss
