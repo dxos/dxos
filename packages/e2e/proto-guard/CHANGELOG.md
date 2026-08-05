@@ -1,5 +1,22 @@
 # @dxos/proto-guard
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/config@0.11.1
+- @dxos/context@0.11.1
+- @dxos/credentials@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/node-std@0.11.1
+- @dxos/protocols@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

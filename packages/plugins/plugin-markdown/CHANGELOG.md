@@ -1,5 +1,47 @@
 # @dxos/plugin-markdown
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/ai@0.11.1
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/assistant@0.11.1
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/client-protocol@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-doc@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/halo@0.11.1
+- @dxos/halo-react@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/react-ui-components@0.11.1
+- @dxos/react-ui-dnd@0.11.1
+- @dxos/react-ui-editor@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/react-ui-menu@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui@0.11.1
+- @dxos/ui-editor@0.11.1
+- @dxos/util@0.11.1
+- @dxos/versioning@0.11.1
+- @dxos/plugin-attention@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-graph@0.11.1
+- @dxos/plugin-preview@0.11.1
+- @dxos/plugin-space@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

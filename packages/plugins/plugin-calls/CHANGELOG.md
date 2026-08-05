@@ -1,5 +1,39 @@
 # @dxos/plugin-calls
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/async@0.11.1
+- @dxos/av@0.11.1
+- @dxos/client@0.11.1
+- @dxos/config@0.11.1
+- @dxos/context@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/devtools@0.11.1
+- @dxos/display-name@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/halo@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/random@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-audio@0.11.1
+- @dxos/react-ui-components@0.11.1
+- @dxos/react-ui-dnd@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-graph@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

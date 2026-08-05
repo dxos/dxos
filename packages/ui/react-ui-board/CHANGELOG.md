@@ -1,5 +1,20 @@
 # @dxos/react-ui-board
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/debug@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/react-ui-dnd@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+- @dxos/ui-types@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

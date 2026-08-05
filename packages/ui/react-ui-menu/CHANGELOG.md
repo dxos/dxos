@@ -1,5 +1,18 @@
 # @dxos/react-ui-menu
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-graph@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keyboard@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/ui-types@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

@@ -1,5 +1,19 @@
 # @dxos/react-ui-card
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/lit-ui@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

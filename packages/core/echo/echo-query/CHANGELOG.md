@@ -1,5 +1,17 @@
 # @dxos/echo-query
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/context@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-protocol@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/node-std@0.11.1
+- @dxos/util@0.11.1
+- @dxos/vendor-quickjs@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

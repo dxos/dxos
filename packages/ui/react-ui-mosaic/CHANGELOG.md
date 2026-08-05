@@ -1,5 +1,25 @@
 # @dxos/react-ui-mosaic
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/react-ui-dnd@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-menu@0.11.1
+- @dxos/react-ui-search@0.11.1
+- @dxos/react-ui-syntax-highlighter@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

@@ -1,5 +1,44 @@
 # @dxos/plugin-client
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/async@0.11.1
+- @dxos/cli-util@0.11.1
+- @dxos/client@0.11.1
+- @dxos/client-protocol@0.11.1
+- @dxos/client-services@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/compute-runtime@0.11.1
+- @dxos/config@0.11.1
+- @dxos/context@0.11.1
+- @dxos/credentials@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-protocol@0.11.1
+- @dxos/edge-client@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/errors@0.11.1
+- @dxos/halo@0.11.1
+- @dxos/halo-adapter-client@0.11.1
+- @dxos/halo-react@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-pickers@0.11.1
+- @dxos/react-ui-syntax-highlighter@0.11.1
+- @dxos/shell@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-graph@0.11.1
+- @dxos/plugin-observability@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes
