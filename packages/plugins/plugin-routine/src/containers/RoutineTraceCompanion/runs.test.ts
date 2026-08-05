@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Trace } from '@dxos/compute';
+import { RUN_AGAIN_MESSAGE, Trace } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
@@ -65,7 +65,7 @@ describe('groupIntoRuns', () => {
     expect(runs[0].status).toBe('failure');
   });
 
-  test('marks run as incomplete when OperationEnd is incomplete (run again)', ({ expect }) => {
+  test('marks run as incomplete when OperationEnd is a run-again failure', ({ expect }) => {
     const start = makeMessage({
       pid: 'p1',
       triggerEntityId: TRIGGER_ID,
@@ -76,19 +76,21 @@ describe('groupIntoRuns', () => {
       pid: 'p1',
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
-      eventOutcome: 'incomplete',
+      eventOutcome: 'failure',
+      eventError: RUN_AGAIN_MESSAGE,
       timestamp: 2000,
     });
     const runs = groupIntoRuns([start, end], new Set([TRIGGER_ID]));
     expect(runs[0].status).toBe('incomplete');
   });
 
-  test('failure beats incomplete', ({ expect }) => {
+  test('a genuine failure beats a run-again incomplete', ({ expect }) => {
     const incomplete = makeMessage({
       pid: 'p1',
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
-      eventOutcome: 'incomplete',
+      eventOutcome: 'failure',
+      eventError: RUN_AGAIN_MESSAGE,
       timestamp: 1000,
     });
     const failure = makeMessage({
@@ -96,6 +98,7 @@ describe('groupIntoRuns', () => {
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
       eventOutcome: 'failure',
+      eventError: 'Network unavailable',
       timestamp: 2000,
     });
     const runs = groupIntoRuns([incomplete, failure], new Set([TRIGGER_ID]));
@@ -158,12 +161,15 @@ function makeMessage(opts: {
   triggerEntityId?: EntityId;
   eventType?: string;
   eventOutcome?: string;
+  eventError?: string;
   timestamp?: number;
 }): Trace.Message {
   const event = {
     type: opts.eventType ?? Trace.OperationStart.key,
     timestamp: opts.timestamp ?? Date.now(),
-    data: opts.eventOutcome ? { key: 'test', outcome: opts.eventOutcome } : { key: 'test' },
+    data: opts.eventOutcome
+      ? { key: 'test', outcome: opts.eventOutcome, ...(opts.eventError && { error: opts.eventError }) }
+      : { key: 'test' },
   } as Trace.Event;
   return Obj.make(Trace.Message, {
     meta: {

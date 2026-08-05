@@ -5,12 +5,19 @@
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 /**
+ * Message carried by {@link RunAgainError}. Exported so trace consumers can recognize a run-again
+ * yield from a persisted `operation.end` event (which serializes only the error message, not the
+ * error type) without re-adding a dedicated outcome to the trace machinery.
+ */
+export const RUN_AGAIN_MESSAGE = 'Run again';
+
+/**
  * Raised when a function wants to yield to the scheduler to not exceed platform limits.
  * The scheduler will re-run the function after the yield.
  * It is assumed that the function can be retried with the same input.
  * The function might have produced side-effects on the first run.
  */
-export class RunAgainError extends BaseError.extend('RunAgainError', 'Run again') {}
+export class RunAgainError extends BaseError.extend('RunAgainError', RUN_AGAIN_MESSAGE) {}
 
 // Errors from @dxos/operation.
 

@@ -458,12 +458,8 @@ export const testTraceService = (
 
 /**
  * Outcome of an operation invocation.
- *
- * `incomplete` is neither success nor failure: the operation yielded to the scheduler
- * (via {@link Operation.runAgain}) with work still to do and will be re-invoked. See
- * {@link RunAgainError}.
  */
-export type OperationOutcome = 'success' | 'failure' | 'incomplete';
+export type OperationOutcome = 'success' | 'failure';
 
 /**
  * Operation invocation started.
@@ -492,7 +488,7 @@ export const OperationEnd = EventType('operation.end', {
     /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
     icon: Schema.optional(Schema.String),
     /** Outcome of the operation. */
-    outcome: Schema.Literal('success', 'failure', 'incomplete'),
+    outcome: Schema.Literal('success', 'failure'),
     /** Error message if the operation failed. */
     error: Schema.optional(Schema.String),
   }),

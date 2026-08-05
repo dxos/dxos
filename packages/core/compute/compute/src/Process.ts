@@ -22,7 +22,6 @@ import { DXN, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { SerializedError } from '@dxos/protocols';
 
-import { RunAgainError } from './errors';
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
 import * as StorageService from './StorageService';
@@ -416,16 +415,14 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
             }).pipe(
               Effect.catchAllDefect((defect) =>
                 Effect.gen(function* () {
-                  // `RunAgainError` is a yield to the scheduler, not a failure: the operation has more
-                  // work to do and will be re-invoked. Record it as `incomplete` with no `error` (that
-                  // field is for failures) so the trace does not surface it as a hard error.
-                  const runAgain = RunAgainError.is(defect);
+                  // Emit operation end event with failure.
+                  const errorMessage = defect instanceof Error ? defect.message : String(defect);
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
                     icon: op.meta.icon,
-                    outcome: runAgain ? 'incomplete' : 'failure',
-                    ...(runAgain ? {} : { error: defect instanceof Error ? defect.message : String(defect) }),
+                    outcome: 'failure',
+                    error: errorMessage,
                   });
                   return yield* Effect.die(defect);
                 }),

@@ -139,19 +139,19 @@ export const END_EVENT_TYPES = new Set([Trace.OperationEnd.key, AgentRequestEnd.
 `execution-graph.ts#L118`. Each branch validates `event.data` against the
 event-type schema; on validation failure the event is silently dropped (log only).
 
-| Event type                        | Condition                  | Icon                            | Level     | Message                         | `idSuffix`          |
-| --------------------------------- | -------------------------- | ------------------------------- | --------- | ------------------------------- | ------------------- |
-| `AgentRequestBegin`               | —                          | `ph--atom--regular`             | `VERBOSE` | `"Agent processing request..."` | —                   |
-| `AgentRequestEnd`                 | —                          | `ph--atom--regular`             | `INFO`    | `"Agent completed request"`     | —                   |
-| `CompleteBlock` text              | `role === 'user'`          | `ph--user--regular`             | `VERBOSE` | trimmed `block.text`            | —                   |
-| `CompleteBlock` text              | `role !== 'user'`          | — (drop)                        | —         | —                               | —                   |
-| `CompleteBlock` status            | —                          | `ph--info--regular`             | `VERBOSE` | trimmed `block.statusText`      | —                   |
-| `CompleteBlock` other             | —                          | — (drop)                        | —         | —                               | —                   |
-| `Trace.OperationStart`            | —                          | `ph--function--regular`         | `VERBOSE` | `data.name ?? data.key`         | `${data.key}:start` |
-| `Trace.OperationEnd` (success)    | `outcome === 'success'`    | `ph--function--regular`         | `INFO`    | `${name ?? key} - Success`      | `${data.key}:end`   |
-| `Trace.OperationEnd` (incomplete) | `outcome === 'incomplete'` | `ph--arrows-clockwise--regular` | `WARN`    | `${name ?? key} - Incomplete`   | `${data.key}:end`   |
-| `Trace.OperationEnd` (failure)    | otherwise                  | `ph--function--regular`         | `ERROR`   | `${name ?? key} - Error`        | `${data.key}:end`   |
-| anything else                     | —                          | — (drop)                        | —         | —                               | —                   |
+| Event type                        | Condition                                              | Icon                            | Level     | Message                         | `idSuffix`          |
+| --------------------------------- | ------------------------------------------------------ | ------------------------------- | --------- | ------------------------------- | ------------------- |
+| `AgentRequestBegin`               | —                                                      | `ph--atom--regular`             | `VERBOSE` | `"Agent processing request..."` | —                   |
+| `AgentRequestEnd`                 | —                                                      | `ph--atom--regular`             | `INFO`    | `"Agent completed request"`     | —                   |
+| `CompleteBlock` text              | `role === 'user'`                                      | `ph--user--regular`             | `VERBOSE` | trimmed `block.text`            | —                   |
+| `CompleteBlock` text              | `role !== 'user'`                                      | — (drop)                        | —         | —                               | —                   |
+| `CompleteBlock` status            | —                                                      | `ph--info--regular`             | `VERBOSE` | trimmed `block.statusText`      | —                   |
+| `CompleteBlock` other             | —                                                      | — (drop)                        | —         | —                               | —                   |
+| `Trace.OperationStart`            | —                                                      | `ph--function--regular`         | `VERBOSE` | `data.name ?? data.key`         | `${data.key}:start` |
+| `Trace.OperationEnd` (success)    | `outcome === 'success'`                                | `ph--function--regular`         | `INFO`    | `${name ?? key} - Success`      | `${data.key}:end`   |
+| `Trace.OperationEnd` (incomplete) | `outcome === 'failure' && error === RUN_AGAIN_MESSAGE` | `ph--arrows-clockwise--regular` | `WARN`    | `${name ?? key} - Incomplete`   | `${data.key}:end`   |
+| `Trace.OperationEnd` (failure)    | otherwise                                              | `ph--function--regular`         | `ERROR`   | `${name ?? key} - Error`        | `${data.key}:end`   |
+| anything else                     | —                                                      | — (drop)                        | —         | —                               | —                   |
 
 `trimText` clips to first 100 chars, trims whitespace, drops everything after the
 first newline (`execution-graph.ts#L438`).
