@@ -263,6 +263,21 @@ const PluginManagerHost = ({
       plugins: options.plugins ?? [],
       enabled: (options.plugins ?? []).map(({ meta }) => meta.profile.key),
     });
+
+    // `useApp` contributes these too, but from an effect registered AFTER this component's own —
+    // which kicks off activation — so the startup pass would reach a module requiring `AtomRegistry`
+    // with no provider registered and nothing to wait for. Contribute at construction instead.
+    pluginManager.capabilities.contribute({
+      interface: Capabilities.PluginManager,
+      implementation: pluginManager,
+      module: 'org.dxos.app-framework.plugin-manager',
+    });
+    pluginManager.capabilities.contribute({
+      interface: Capabilities.AtomRegistry,
+      implementation: pluginManager.registry,
+      module: 'org.dxos.app-framework.atom-registry',
+    });
+
     return pluginManager;
   }, [options]);
 
