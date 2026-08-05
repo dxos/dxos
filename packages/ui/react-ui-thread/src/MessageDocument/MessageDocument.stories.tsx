@@ -271,15 +271,19 @@ export const Conversation: Story = {
     // A folded pill toggles the local identity's reaction. Queried by testid and re-read after the
     // click: scrolling re-creates the widget's DOM, so an element captured beforehand is stale.
     await reveal(/Reacted to once/);
-    const pill = () => canvasElement.querySelector<HTMLElement>('[data-testid="thread.document.pill"]');
-    await waitFor(() => expect(pill()?.textContent).toBe('👍 1'));
+    // `Message.Reactions` renders these, so they carry the tile stack's testid. Which pill is
+    // first depends on what the viewport is showing, so assert that the one clicked changed rather
+    // than pinning a count to a particular message.
+    const pill = () => canvasElement.querySelector<HTMLElement>('[data-testid="thread.message.reaction"]');
+    await waitFor(() => expect(pill()).not.toBeNull());
+    const before = pill()!.textContent;
     await userEvent.click(pill()!);
-    await waitFor(() => expect(pill()?.textContent).toBe('👍 2'));
+    await waitFor(() => expect(pill()?.textContent).not.toBe(before));
 
     // A reply quotes what it answers, resolved by the host rather than by following the ref here.
     await reveal(/Quote-replying to a message above/);
     await waitFor(() =>
-      expect(canvasElement.querySelectorAll('[data-testid="thread.document.quote"]').length).toBeGreaterThan(0),
+      expect(canvasElement.querySelectorAll('[data-testid="thread.message.quote"]').length).toBeGreaterThan(0),
     );
 
     // A thread row carries the thread's name and reply count.

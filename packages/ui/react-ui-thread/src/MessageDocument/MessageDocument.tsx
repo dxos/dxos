@@ -198,11 +198,7 @@ export const MessageDocument = ({
     <div className='relative grid grid-rows-1 min-h-0' onMouseLeave={() => setHover(undefined)}>
       <div className={mx('dx-container', classNames)} ref={parentRef} />
       {portals.map((portal) =>
-        createPortal(
-          <MessageHead message={portal.message} continues={portal.continues} getMetadata={handlers.getMetadata} />,
-          portal.root,
-          portal.id,
-        ),
+        createPortal(<MessageChrome portal={portal} handlers={handlers} />, portal.root, portal.id),
       )}
       {hover && <HoverControls message={hover.message} top={hover.top} />}
     </div>
@@ -224,21 +220,46 @@ const HoverControls = ({ message, top }: { message: MessageLike; top: number }) 
   );
 };
 
-type MessageHeadProps = {
-  message: MessageLike;
-  continues: boolean;
-  getMetadata: MessageDocumentOptions['getMetadata'];
+type MessageChromeProps = {
+  portal: MessagePortal;
+  handlers: Omit<MessageDocumentProps, 'classNames' | 'messages' | 'editingId' | 'currentId'>;
 };
 
 /**
- * Avatar and heading for the first message of a run, in the tile stack's own two-column rail
- * layout — same `Avatar` component, same `--dx-rail-size` column, so the two renderings line up.
+ * Every piece of a message that is not its body, rendered with the tile stack's own components.
+ *
+ * The point of portaling rather than drawing these in the widget is that they are then the *same*
+ * components: the add-reaction pill, the `Tag` variants, the quote's arrow and the thread row's
+ * wording all come from one implementation instead of a lookalike that drifts from it.
  */
-const MessageHead = ({ message, continues, getMetadata }: MessageHeadProps) => {
-  const metadata = getMetadata(message);
-  return (
-    <Message.Root {...metadata} continues={continues}>
-      <Message.Heading authorName={metadata.authorName} timestamp={metadata.timestamp} />
-    </Message.Root>
-  );
+const MessageChrome = ({ portal, handlers }: MessageChromeProps) => {
+  const { message, kind, continues } = portal;
+  const metadata = handlers.getMetadata(message);
+  // `Message.Reactions` drives its picker from this atom, one per row, as the tile does.
+  const state = useMemo(makeMessageState, [message.id]);
+  switch (kind) {
+    case 'head':
+      return (
+        <Message.Root {...metadata} continues={continues}>
+          <Message.Heading authorName={metadata.authorName} timestamp={metadata.timestamp} />
+        </Message.Root>
+      );
+    case 'quote':
+      return <Message.Quote message={message as MessageType.Message} />;
+    case 'reactions':
+      return (
+        <Message.Reactions
+          reactions={handlers.getReactions?.(message) ?? []}
+          onReact={(emoji: string) => handlers.onReact?.(message, emoji)}
+          state={state}
+        />
+      );
+    case 'thread':
+      return (
+        <Message.ThreadLink
+          summary={handlers.getThreadSummary?.(message)}
+          onOpen={() => handlers.onThreadOpen?.(message)}
+        />
+      );
+  }
 };

@@ -85,7 +85,15 @@ export type MessageDocumentOptions = {
 //
 
 /** A DOM anchor the host renders React into, so a widget can be a real component. */
-export type MessagePortal = { id: string; root: HTMLElement; kind: 'head'; message: MessageLike; continues: boolean };
+export type MessagePortalKind = 'head' | 'reactions' | 'quote' | 'thread';
+
+export type MessagePortal = {
+  id: string;
+  root: HTMLElement;
+  kind: MessagePortalKind;
+  message: MessageLike;
+  continues: boolean;
+};
 
 /**
  * Widget whose content is rendered by the host as React.
@@ -96,20 +104,33 @@ export type MessagePortal = { id: string; root: HTMLElement; kind: 'head'; messa
 class PortalWidget extends WidgetType {
   constructor(
     private readonly _id: string,
+    private readonly _kind: MessagePortalKind,
     private readonly _message: MessageLike,
     private readonly _continues: boolean,
+    private readonly _revision: string,
     private readonly _notify: PortalNotifier,
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this._id === other._id && this._message === other._message && this._continues === other._continues;
+    return this._id === other._id && this._revision === other._revision && this._continues === other._continues;
   }
 
   override toDOM() {
     const root = document.createElement('div');
-    this._notify.mounted({ id: this._id, root, kind: 'head', message: this._message, continues: this._continues });
+    // The rail indent, so chrome lines up with the text column — except the head, which renders
+    // `Message.Root` and so brings the rail column with it; indenting that would double it.
+    if (this._kind !== 'head') {
+      root.className = 'cm-message-chrome';
+    }
+    this._notify.mounted({
+      id: this._id,
+      root,
+      kind: this._kind,
+      message: this._message,
+      continues: this._continues,
+    });
     return root;
   }
 
@@ -319,7 +340,7 @@ const buildDecorations = (
         range.from,
         range.from,
         Decoration.widget({
-          widget: new PortalWidget(`head:${item.message.id}`, item.message, !item.last, portals),
+          widget: new PortalWidget(`head:${item.message.id}`, 'head', item.message, !item.last, '', portals),
           block: true,
           side: -1,
         }),
@@ -331,9 +352,16 @@ const buildDecorations = (
 
     const editing = editingId === item.message.id;
 
-    const quote = getQuote?.(item.message);
-    if (quote) {
-      builder.add(range.from, range.from, Decoration.widget({ widget: new QuoteWidget(quote), block: true, side: 0 }));
+    if (getQuote?.(item.message)) {
+      builder.add(
+        range.from,
+        range.from,
+        Decoration.widget({
+          widget: new PortalWidget(`quote:${item.message.id}`, 'quote', item.message, false, '', portals),
+          block: true,
+          side: 0,
+        }),
+      );
     }
 
     // Every line of a message carries its identity, which is how a text surface keeps what a tile
@@ -371,7 +399,14 @@ const buildDecorations = (
         end,
         end,
         Decoration.widget({
-          widget: new ReactionsWidget(reactions, (emoji) => onReact?.(item.message, emoji)),
+          widget: new PortalWidget(
+            `reactions:${item.message.id}`,
+            'reactions',
+            item.message,
+            false,
+            reactions.map((reaction) => `${reaction.emoji}:${reaction.count}:${reaction.self}`).join(','),
+            portals,
+          ),
           block: true,
           side: 1,
         }),
@@ -380,15 +415,18 @@ const buildDecorations = (
 
     const summary = getThreadSummary?.(item.message);
     if (summary) {
-      const label =
-        summary.replyCount > 0
-          ? (labels?.replyCount(summary.replyCount) ?? `${summary.replyCount}`)
-          : (labels?.startThread() ?? 'Start a thread');
       builder.add(
         end,
         end,
         Decoration.widget({
-          widget: new ThreadLinkWidget(summary, label, () => onThreadOpen?.(item.message)),
+          widget: new PortalWidget(
+            `thread:${item.message.id}`,
+            'thread',
+            item.message,
+            false,
+            `${summary.name ?? ''}:${summary.replyCount}:${summary.lastActivity ?? ''}`,
+            portals,
+          ),
           block: true,
           side: 2,
         }),
