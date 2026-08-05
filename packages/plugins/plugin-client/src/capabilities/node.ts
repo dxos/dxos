@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -28,7 +29,12 @@ export const Client = Capability.lazyModule(
 );
 export const LayerSpecs = Capability.lazyModule(
   'LayerSpecs',
-  { provides: [Capabilities.LayerSpec] },
+  {
+    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
+    // idle registration lands after the snapshot and the service is simply absent.
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
+  },
   () => import('./layer-specs'),
 );
 export const Migrations = Capability.lazyModule(

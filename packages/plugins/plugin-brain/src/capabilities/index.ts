@@ -23,7 +23,12 @@ export const SkillDefinition = AppCapability.skillDefinition(() => import('./ski
 // `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
 export const FactStore = Capability.lazyModule(
   'FactStore',
-  { provides: [BrainCapabilities.FactStoreRegistry, Capabilities.LayerSpec] },
+  {
+    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
+    // idle registration lands after the snapshot and the service is simply absent.
+    activatesOn: ActivationEvents.Startup,
+    provides: [BrainCapabilities.FactStoreRegistry, Capabilities.LayerSpec],
+  },
   () => import('./fact-store'),
 );
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -16,7 +17,12 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const LayerSpecs = Capability.lazyModule(
   'LayerSpecs',
-  { provides: [Capabilities.LayerSpec, Capabilities.TraceSink] },
+  {
+    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
+    // idle registration lands after the snapshot and the service is simply absent.
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec, Capabilities.TraceSink],
+  },
   () => import('./layer-specs'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

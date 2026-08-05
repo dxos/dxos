@@ -26,17 +26,32 @@ export const AgentHydrator = Capability.lazyModule(
 );
 export const AgentRuntime = Capability.lazyModule(
   'AgentRuntime',
-  { provides: [Capabilities.LayerSpec] },
+  {
+    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
+    // idle registration lands after the snapshot and the service is simply absent.
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
+  },
   () => import('./agent-service'),
 );
 export const AiContext = Capability.lazyModule(
   'AiContext',
-  { provides: [Capabilities.LayerSpec] },
+  {
+    // LayerSpec contributions are snapshotted ONCE by the process manager during boot, so an
+    // idle registration lands after the snapshot and the service is simply absent.
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
+  },
   () => import('./ai-context'),
 );
 export const AiService = Capability.lazyModule(
   'AiService',
-  { requires: [AppCapabilities.AiModelResolver], provides: [Capabilities.LayerSpec] },
+  {
+    // Snapshotted once by the process manager during boot; see the sibling modules above.
+    activatesOn: ActivationEvents.Startup,
+    requires: [AppCapabilities.AiModelResolver],
+    provides: [Capabilities.LayerSpec],
+  },
   () => import('./ai-service'),
 );
 export const Connector = Capability.lazyModule(
