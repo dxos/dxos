@@ -444,13 +444,18 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # Only composer-app and todomvc serve a production bundle to Playwright (`vite preview`); the other
+      # six e2e suites serve from source (`vite dev` / `storybook dev`) and need library builds, not
+      # bundles. `:bundle` built all eleven apps, so every e2e runner also hydrated the docs, cli,
+      # storybook-react, testbench-app, composer-crx, devtools-extension, examples and tasks closures —
+      # including docs' typedoc tasks, which cost more to download than composer's bundle does to build.
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
-        run: moon run :bundle --affected remote
+        run: moon run composer-app:bundle todomvc:bundle --affected remote
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
-        run: moon run :bundle
+        run: moon run composer-app:bundle todomvc:bundle
 
       # DIAGNOSTIC (DX-1116, remove once resolved): composer-app, storybook-react, docs and tasks
       # re-execute in every downstream job despite hashing identically here, which means their
@@ -532,17 +537,9 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright ${{ matrix.browser }}
 
-      # A manual `e2e` dispatch takes the "All" path on any branch: affected-scoping resolves to nothing
-      # when the diff touches no project (e.g. a CI-only change), which would bundle and test nothing.
-      # These normally hydrate from the remote cache warmed by `e2e-bundle` (seconds, not minutes);
-      # they still execute for real on a cache miss/eviction, so keep generous step budgets upstream.
-      - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
-        run: moon run :bundle --affected remote
-
-      - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
-        run: moon run :bundle
+      # No bundle step: the `:e2e` targets below declare `bundle` as a dep, so moon resolves it and
+      # hydrates it from the cache `e2e-bundle` warmed. An explicit step would only duplicate that
+      # resolution, and scoping it correctly per shard is what the dep graph already encodes.
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
