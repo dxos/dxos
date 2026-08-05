@@ -193,6 +193,11 @@ Deeper conventions:
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **SQLite schema changes** — moving a package's DDL out of string literals into
+  numbered `.sql` migrations, or adding a migration to a converted package →
+  [`agents/instructions/sql-migrations.md`](agents/instructions/sql-migrations.md).
+  Read it before reaching for Prisma: there is no driver adapter for the browser
+  client, which is why the schema is hand-written SQL.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.
