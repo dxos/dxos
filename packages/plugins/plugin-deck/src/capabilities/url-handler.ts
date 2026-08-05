@@ -284,8 +284,20 @@ export default Capability.makeModule(
       });
     };
 
-    yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
+    // Anchor the restore's deadline to graph readiness rather than to boot. The space nodes the URL
+    // resolves against cannot exist until a builder has contributed, and `client.initialize()` is
+    // forked off the startup pass — so on a reload the builder (gated on the client being
+    // initialized) lands well after this module activates, and `RESOLVE_TIMEOUT` was counting down
+    // against client initialization instead of against node materialization, dropping space home to
+    // not-found. Waits on the CAPABILITY rather than a client event, so this plugin stays free of a
+    // client dependency, and FORKED because this module sits on the startup pass — awaiting it here
+    // would hold the whole pass (and the boot loader) until the client is up.
+    yield* Effect.forkScoped(
+      manager.capabilities
+        .waitFor(AppCapabilities.AppGraphBuilder)
+        .pipe(Effect.andThen(provideServices(handleNavigation()))),
+    );
     if ('navigation' in window) {
       window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
     }
