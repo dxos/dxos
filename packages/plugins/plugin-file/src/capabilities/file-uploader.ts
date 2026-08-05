@@ -15,10 +15,9 @@ import { FileOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    const { invoke } = yield* Capabilities.OperationInvoker;
 
-    return Capability.contributes(AppCapabilities.FileUploader, (db, file) => {
-      const { invoke } = capabilities.get(Capabilities.OperationInvoker);
+    return Capability.contribute(AppCapabilities.FileUploader, (db, file) => {
       const program = Effect.gen(function* () {
         const { object } = yield* invoke(FileOperation.Create, { db, file });
         yield* invoke(SpaceOperation.AddObject, { target: db, object });

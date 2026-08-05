@@ -20,7 +20,7 @@ const CreateVideoSchema = Schema.Struct({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Video.Video),
       inputSchema: CreateVideoSchema,
       createObject: (props, options) =>

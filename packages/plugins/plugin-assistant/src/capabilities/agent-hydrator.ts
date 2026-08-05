@@ -12,12 +12,12 @@ import { log } from '@dxos/log';
 //
 // Capability Module
 //
-// Rehydrates durable agent processes once {@link ActivationEvents.ProcessManagerReady} fires.
+// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed.
 //
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const runtime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const runtime = yield* Capabilities.ProcessManagerRuntime;
 
     runtime.runFork(
       Effect.gen(function* () {
@@ -31,6 +31,6 @@ export default Capability.makeModule(
       ),
     );
 
-    return Capability.contributes(Capabilities.Null, null);
+    return [];
   }),
 );

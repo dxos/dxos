@@ -30,7 +30,7 @@ import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'supportTicket',
         filter: AppSurface.oneOf(

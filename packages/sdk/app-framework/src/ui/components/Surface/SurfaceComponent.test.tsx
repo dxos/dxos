@@ -10,7 +10,7 @@ import { describe, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { ActivationEvents, Capabilities } from '../../../common';
+import { Capabilities } from '../../../common';
 import * as Role from '../../../common/Role';
 import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';
@@ -36,14 +36,14 @@ const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.surfacePe
 const TestPlugin = Plugin.define(testMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
           create({ id: 'alpha', filter: makeFilter(RoleA), component: () => <span data-testid='a' /> }),
           create({ id: 'beta', filter: makeFilter(RoleB), component: () => <span data-testid='b' /> }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -62,10 +62,10 @@ const mappedPropsMeta = Plugin.makeMeta({
 const MappedPropsPlugin = Plugin.define(mappedPropsMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
           create({
             id: 'mapped',
             filter: makeFilter(RoleSubject),
@@ -78,7 +78,7 @@ const MappedPropsPlugin = Plugin.define(mappedPropsMeta).pipe(
             component: ({ data: { subject } }) => <span data-testid='envelope'>{subject}</span>,
           }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -92,13 +92,13 @@ const invalidIdMeta = Plugin.makeMeta({
 const InvalidIdPlugin = Plugin.define(invalidIdMeta).pipe(
   Plugin.addModule({
     id: 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
+    provides: [Capabilities.ReactSurface],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+      Effect.succeed([
+        Capability.contributeAll(Capabilities.ReactSurface, [
           create({ id: 'gallery-article', filter: makeFilter(RoleA), component: () => <span data-testid='invalid' /> }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -267,10 +267,10 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
   const BenchPlugin = Plugin.define(benchMeta).pipe(
     Plugin.addModule({
       id: 'surfaces',
-      activatesOn: ActivationEvents.SetupReactSurface,
+      provides: [Capabilities.ReactSurface],
       activate: () =>
-        Effect.succeed(
-          Capability.contributes(
+        Effect.succeed([
+          Capability.contributeAll(
             Capabilities.ReactSurface,
             roles.flatMap((role, ri) =>
               Array.from({ length: SURFACES_PER_ROLE }, (_, si) =>
@@ -278,7 +278,7 @@ describe('SurfaceComponent quantified comparison (per-role vs global subscriptio
               ),
             ),
           ),
-        ),
+        ]),
     }),
     Plugin.make,
   );

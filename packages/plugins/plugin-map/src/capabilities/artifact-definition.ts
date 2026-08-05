@@ -128,6 +128,6 @@ export default Capability.makeModule(() =>
       ],
     });
 
-    return Capability.contributes(Capabilities.ArtifactDefinition, definition);
+    return Capability.contribute(Capabilities.ArtifactDefinition, definition);
   }),
 );

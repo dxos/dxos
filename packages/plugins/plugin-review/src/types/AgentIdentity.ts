@@ -24,7 +24,7 @@ export interface AgentIdentity {
   readonly avatar?: string;
 }
 
-export const AgentIdentity = Capability.make<AgentIdentity>(`${meta.profile.key}.capability.agent-identity`);
+export const AgentIdentity = Capability.makeSingleton<AgentIdentity>()(`${meta.profile.key}.capability.agentIdentity`);
 
 /**
  * Built-in default identity used by ReviewPlugin when no host has contributed

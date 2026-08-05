@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
+import type * as Types from 'effect/Types';
 
 import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -78,20 +79,46 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
 };
 
 /**
+ * Normalized activation specification of a module — how and when it activates.
+ *
+ * - `dependency`: activates during the startup dependency-resolution pass, topologically
+ *   ordered by the capability graph (providers of `requires` activate first). A module
+ *   with no `requires` is a root, triggered at startup.
+ * - `event`: activates when a runtime event fires; `requires` are resolved on demand.
+ */
+export type ActivationSpec =
+  | {
+      readonly mode: 'dependency';
+      readonly requires: readonly Capability.AnyTag[];
+      readonly provides: readonly Capability.AnyTag[];
+    }
+  | {
+      readonly mode: 'event';
+      readonly activatesOn: ActivationEvent.Events;
+      readonly requires: readonly Capability.AnyTag[];
+      readonly provides: readonly Capability.AnyTag[];
+    };
+
+/**
+ * What a module's activate may produce at runtime: raw capability entries (see
+ * {@link Capability.ModuleReturn}) or typed {@link Capability.Contribution}s.
+ */
+export type ModuleActivateResult = Capability.ModuleReturn | readonly Capability.AnyContribution[];
+
+/**
  * A unit of containment of modular functionality that can be provided to an application.
  * Activation of a module is async allowing for code to split and loaded lazily.
  *
- * Ordering between modules is expressed through shared activation events, not registration
- * order: a module `activatesOn` an event, fires events *after* it activates via
- * {@link PluginModule.firesAfterActivation} (publishing "I'm ready"), and forces prerequisites
- * to complete *before* it activates via {@link PluginModule.firesBeforeActivation}. To run
- * module B after module A, A declares `firesAfterActivation: [E]` and B declares
- * `activatesOn: E`. See `plugin-client/src/ClientPlugin.ts` for a worked example.
+ * Ordering between modules is expressed through capability dependencies, not registration
+ * order: a module declares the capabilities it `provides` and `requires`, and the plugin
+ * manager activates providers before consumers (topological order). Runtime-event modules
+ * (`activatesOn`) activate only when their event fires. See
+ * `plugin-client/src/ClientPlugin.ts` for a worked example.
  *
  * @idiom org.dxos.app-framework.moduleActivationOrdering
  *   applies: sequencing one plugin module's activation before or after another
  *   instead-of: assuming module registration order controls activation order
- *   uses: {@link PluginModule.firesAfterActivation}, {@link PluginModule.firesBeforeActivation}
+ *   uses: {@link ActivationSpec}
  */
 export interface PluginModule {
   readonly [PluginModuleTypeId]: PluginModuleTypeId;
@@ -101,66 +128,103 @@ export interface PluginModule {
   id: string;
 
   /**
-   * Events for which the module will be activated.
+   * Normalized activation specification — how and when the module activates.
    */
-  activatesOn: ActivationEvent.Events;
-
-  /**
-   * Events that this module fires *before* its own activation runs.
-   *
-   * When this module is asked to activate (via {@link activatesOn}), the
-   * plugin manager first activates every event listed here, ensuring any
-   * other modules that contribute to those events have completed before
-   * this module's {@link activate} body executes. These events are fired
-   * by the framework on this module's behalf — the module does not need
-   * to wait for some other code to fire them.
-   *
-   * The module is marked as needing reset if a module activated by one
-   * of these events is later removed.
-   *
-   * Read as: "this module fires these events before [its] activation".
-   */
-  firesBeforeActivation?: ActivationEvent.ActivationEvent[];
-
-  /**
-   * Events that this module fires *after* its own activation completes.
-   *
-   * Once this module's {@link activate} body has finished executing, the
-   * plugin manager activates every event listed here, causing any modules
-   * listening on those events to run. These events are fired by the
-   * framework on this module's behalf as part of this module's lifecycle.
-   *
-   * Read as: "this module fires these events after [its] activation".
-   */
-  firesAfterActivation?: ActivationEvent.ActivationEvent[];
+  readonly activation: ActivationSpec;
 
   /**
    * Called when the module is activated.
-   * CapabilityManager is accessed via the Effect layer system (Capability.Service).
-   * PluginManager is accessed via Plugin.Service.
+   * Declared `requires` are provided as Effect services; CapabilityManager and PluginManager
+   * are ambient (Capability.Service, Plugin.Service).
    * @param props Optional props passed to the module.
    * @returns The capabilities of the module.
    */
   activate: (
     props?: any,
-  ) => Effect.Effect<Capability.ModuleReturn, Error, Capability.Service | Service | Scope.Scope | never>;
+  ) => Effect.Effect<ModuleActivateResult, Error, Capability.Service | Service | Scope.Scope | never>;
 }
 
-export type PluginModuleOptions = Omit<PluginModule, 'id' | typeof PluginModuleTypeId> & { id?: string };
+/**
+ * Structural authoring shape for typed modules. A module without `requires` is a root,
+ * triggered by `activatesOn` (implicitly Startup). A module with `requires` is a chain
+ * member: it activates once every declared capability has been contributed — by whichever
+ * event's chain produced the providers, not necessarily during startup — additionally gated
+ * on `activatesOn` when declared. Consumers of event-gated providers stay pending until the
+ * event fires and the provider contributes; capability cycles fail at runtime
+ * (DependencyCycleError). Channel enforcement happens in {@link ValidateModuleOptions}.
+ */
+export type TypedModuleOptions = {
+  readonly id?: string;
+  readonly activatesOn?: ActivationEvent.Events;
+  readonly requires?: readonly Capability.AnyTag[];
+  readonly provides?: readonly Capability.AnyTag[];
+  readonly activate: (props?: any) => Effect.Effect<any, any, any>;
+};
+
+type OptRequires<Opts> = Opts extends { requires: infer R extends readonly Capability.AnyTag[] } ? R : readonly [];
+type OptProvides<Opts> = Opts extends { provides: infer P extends readonly Capability.AnyTag[] } ? P : readonly [];
+
+/**
+ * Validates typed module options: evaluates to `true` for a valid module, otherwise to an
+ * unconstructible branded type naming the violation. Checks that activate's environment only
+ * uses declared `requires`, that its error channel extends `Error`, and that its return
+ * exactly covers the declared `provides`. Options with no capability declarations are a
+ * dependency-mode startup root and validate as `true` (the runtime normalizer classifies them).
+ *
+ * Applied on {@link addModule}'s return type (not intersected with the parameter): inference
+ * of `Opts` from an options object containing inline generator activates fails when the
+ * parameter is an intersection with a conditional over `Opts`, but succeeds for a naked
+ * `Opts` parameter. An invalid module surfaces as a non-callable branded return, which the
+ * `.pipe(...)` site rejects with the brand's message.
+ */
+export type ValidateModuleOptions<Opts extends TypedModuleOptions> = Opts extends
+  | { provides: readonly Capability.AnyTag[] }
+  | { requires: readonly Capability.AnyTag[] }
+  | { activatesOn: ActivationEvent.Events; requires: readonly Capability.AnyTag[] }
+  ? Opts['activate'] extends (props?: any) => Effect.Effect<infer A, infer E, infer R>
+    ? [R] extends [Capability.Requirements<OptRequires<Opts>>]
+      ? [E] extends [Error]
+        ? [A] extends [Capability.ProvidesReturn<OptProvides<Opts>>]
+          ? [Capability.ProvidedIds<OptProvides<Opts>>] extends [Capability.CoveredBy<A>]
+            ? true
+            : {
+                readonly 'activate return misses declared capabilities': Exclude<
+                  Capability.ProvidedIds<OptProvides<Opts>>,
+                  Capability.CoveredBy<A>
+                >;
+              }
+          : {
+              readonly 'activate return includes undeclared capabilities': Exclude<
+                Capability.CoveredBy<A>,
+                Capability.ProvidedIds<OptProvides<Opts>>
+              >;
+            }
+        : { readonly 'activate error channel must extend Error': E }
+      : { readonly 'activate requires undeclared capabilities': Exclude<R, Capability.Requirements<OptRequires<Opts>>> }
+    : { readonly 'activate must be an effect-returning function': Opts['activate'] }
+  : true;
+
+/**
+ * Erased module authoring record stored on the builder. Type enforcement happens at the
+ * {@link addModule} overloads; the builder itself is intentionally heterogeneous.
+ */
+export type ModuleEntry = {
+  readonly id?: string;
+  readonly activatesOn?: ActivationEvent.Events;
+  readonly requires?: readonly Capability.AnyTag[];
+  readonly provides?: readonly Capability.AnyTag[];
+  readonly activate: (props?: any) => Effect.Effect<any, Error, any>;
+};
 
 class PluginModuleImpl implements PluginModule {
   readonly [PluginModuleTypeId]: PluginModuleTypeId = PluginModuleTypeId;
-  readonly id: PluginModule['id'];
-  readonly activatesOn: PluginModule['activatesOn'];
-  readonly firesBeforeActivation?: PluginModule['firesBeforeActivation'];
-  readonly firesAfterActivation?: PluginModule['firesAfterActivation'];
+  readonly id: string;
+  readonly activation: ActivationSpec;
   readonly activate: PluginModule['activate'];
 
-  constructor(options: Omit<PluginModule, typeof PluginModuleTypeId>) {
+  constructor(options: { id: string; activation: ActivationSpec; activate: PluginModule['activate'] }) {
     this.id = options.id;
-    this.activatesOn = options.activatesOn;
-    this.firesBeforeActivation = options.firesBeforeActivation;
-    this.firesAfterActivation = options.firesAfterActivation;
+    this.activation = options.activation;
     this.activate = options.activate;
   }
 }
@@ -274,8 +338,8 @@ class PluginImpl implements Plugin {
  */
 export interface PluginBuilder<T = void> extends Pipeable.Pipeable {
   readonly meta: Meta;
-  readonly modules: ReadonlyArray<PluginModuleOptions | ((options: T) => PluginModuleOptions)>;
-  addModule(moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions)): PluginBuilder<T>;
+  readonly modules: ReadonlyArray<ModuleEntry | ((options: T) => ModuleEntry)>;
+  addModule(moduleOptions: ModuleEntry | ((options: T) => ModuleEntry)): PluginBuilder<T>;
 }
 
 /**
@@ -283,17 +347,17 @@ export interface PluginBuilder<T = void> extends Pipeable.Pipeable {
  */
 class PluginBuilderImpl<T = void> implements PluginBuilder<T> {
   readonly meta: Meta;
-  private readonly _modules: Array<PluginModuleOptions | ((options: T) => PluginModuleOptions)> = [];
+  private readonly _modules: Array<ModuleEntry | ((options: T) => ModuleEntry)> = [];
 
   constructor(meta: Meta) {
     this.meta = meta;
   }
 
-  get modules(): ReadonlyArray<PluginModuleOptions | ((options: T) => PluginModuleOptions)> {
+  get modules(): ReadonlyArray<ModuleEntry | ((options: T) => ModuleEntry)> {
     return this._modules;
   }
 
-  addModule(moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions)): PluginBuilder<T> {
+  addModule(moduleOptions: ModuleEntry | ((options: T) => ModuleEntry)): PluginBuilder<T> {
     this._modules.push(moduleOptions);
     return this;
   }
@@ -310,38 +374,105 @@ class PluginBuilderImpl<T = void> implements PluginBuilder<T> {
 export const define = <T = void>(meta: Meta): PluginBuilder<T> => new PluginBuilderImpl<T>(meta);
 
 /**
- * Adds a module to a plugin builder.
- * Supports both pipeline and direct call styles.
- * Modules can be either PluginModuleOptions or functions that receive options.
+ * Adds a module to a plugin builder. Supports both pipeline and direct call styles.
+ *
+ * Accepts either:
+ * - A spec-carrying module ({@link Capability.lazyModule} / {@link Capability.inlineModule}):
+ *   requires/provides/activatesOn/props all come from the module's own spec (declared where
+ *   it is authored), so the call needs only an optional id override.
+ * - An inline authoring record (or a function receiving plugin options): declares
+ *   `provides`/`requires` (dependency mode) or `activatesOn` + `requires`/`provides`
+ *   (runtime-event mode); the activate effect's environment is constrained to the declared
+ *   requires and its return must cover the declared provides.
  */
-export function addModule<T>(
-  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+export function addModule<T = void>(
+  module: Capability.Module<void>,
+  options?: { id?: string },
 ): (builder: PluginBuilder<T>) => PluginBuilder<T>;
+/** Spec-carrying module whose props are mapped from the plugin options. */
+export function addModule<Options, T extends Options = Options>(
+  module: Capability.Module<Options>,
+  options?: { id?: string },
+): (builder: PluginBuilder<T>) => PluginBuilder<T>;
+export function addModule<T, const Opts extends Types.NoExcessProperties<TypedModuleOptions, Opts>>(
+  moduleOptions: Opts | ((options: T) => Opts),
+): true extends ValidateModuleOptions<Opts>
+  ? (builder: PluginBuilder<T>) => PluginBuilder<T>
+  : ValidateModuleOptions<Opts>;
+/** Direct-call variant of the typed record overload above (see {@link PluginBuilder.addModule}). */
 export function addModule<T>(
   builder: PluginBuilder<T>,
-  moduleOptions: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+  moduleOptions: TypedModuleOptions | ((options: T) => TypedModuleOptions),
 ): PluginBuilder<T>;
 export function addModule<T>(
-  moduleOptionsOrBuilder: PluginModuleOptions | ((options: T) => PluginModuleOptions) | PluginBuilder<T>,
-  moduleOptions?: PluginModuleOptions | ((options: T) => PluginModuleOptions),
+  moduleOrOptionsOrBuilder: Capability.Module<any> | ModuleEntry | ((options: T) => ModuleEntry) | PluginBuilder<T>,
+  moduleOptions?: ModuleEntry | ((options: T) => ModuleEntry) | { id?: string },
 ): ((builder: PluginBuilder<T>) => PluginBuilder<T>) | PluginBuilder<T> {
-  // If second arg is provided, it's the direct call style: addModule(builder, moduleOptions)
-  if (moduleOptions !== undefined) {
-    return (moduleOptionsOrBuilder as PluginBuilder<T>).addModule(moduleOptions);
+  // Spec-carrying module: a tagged function whose requires/provides/activatesOn come from its
+  // own spec; only an optional id override is supplied at the call site.
+  if (typeof moduleOrOptionsOrBuilder === 'function' && Capability.ModuleTag in moduleOrOptionsOrBuilder) {
+    const module = moduleOrOptionsOrBuilder as Capability.Module<any>;
+    const { id } = (moduleOptions as { id?: string } | undefined) ?? {};
+    return (builder: PluginBuilder<T>) =>
+      builder.addModule((pluginOptions: T) => ({
+        id: id ?? Capability.getModuleTag(module),
+        activatesOn: module.activatesOn,
+        requires: module.requires,
+        provides: module.provides,
+        activate: () => module(pluginOptions),
+      }));
   }
-  // Otherwise it's pipeline style: addModule(moduleOptions) returns a function
-  const moduleOpts = moduleOptionsOrBuilder as PluginModuleOptions | ((options: T) => PluginModuleOptions);
+  // Direct-call style: addModule(builder, moduleOptions).
+  if (moduleOptions !== undefined) {
+    return (moduleOrOptionsOrBuilder as PluginBuilder<T>).addModule(
+      moduleOptions as ModuleEntry | ((options: T) => ModuleEntry),
+    );
+  }
+  // Pipeline style: addModule(moduleOptions) returns a function.
+  const moduleOpts = moduleOrOptionsOrBuilder as ModuleEntry | ((options: T) => ModuleEntry);
   return (builder: PluginBuilder<T>) => builder.addModule(moduleOpts);
 }
 
-export type PluginFactory<T = void> = ((options: T) => Plugin) & { meta: Meta };
+/**
+ * A plugin factory. The options parameter is optional exactly when `T` has no required members
+ * (`{} extends T` — every field is optional, or `T` is `void`), so `SomePlugin()` is accepted
+ * without an empty `{}`; a plugin whose options include a required field still demands them.
+ */
+export type PluginFactory<T = void> = ({} extends T ? (options?: T) => Plugin : (options: T) => Plugin) & {
+  meta: Meta;
+};
 
 /**
- * Resolves a module from either PluginModuleOptions or a function that returns PluginModuleOptions.
+ * Normalizes an authoring record to an {@link ActivationSpec}. `activatesOn` selects event
+ * mode; otherwise the module is a dependency-mode chain member (a root — activating at
+ * startup — when `requires` is empty).
+ */
+const normalizeActivation = (options: ModuleEntry): ActivationSpec => {
+  if (options.activatesOn !== undefined) {
+    return {
+      mode: 'event',
+      activatesOn: options.activatesOn,
+      requires: options.requires ?? [],
+      provides: options.provides ?? [],
+    };
+  }
+
+  // A chain member without `activatesOn`: roots (no requires) activate at startup; modules
+  // with requires activate whenever their providers have contributed, whichever event's
+  // chain produced them.
+  return {
+    mode: 'dependency',
+    requires: options.requires ?? [],
+    provides: options.provides ?? [],
+  };
+};
+
+/**
+ * Resolves a module from either a module entry or a function that returns one.
  */
 const resolveModule = (
   meta: Meta,
-  module: PluginModuleOptions | ((options: any) => PluginModuleOptions),
+  module: ModuleEntry | ((options: any) => ModuleEntry),
   options?: any,
 ): PluginModuleImpl => {
   const moduleOptions = typeof module === 'function' ? module(options) : module;
@@ -356,7 +487,13 @@ const resolveModule = (
       onSome: (id) => computeModuleId(pluginName, id),
     }),
   );
-  return new PluginModuleImpl({ ...moduleOptions, id });
+  return new PluginModuleImpl({
+    id,
+    activation: normalizeActivation(moduleOptions),
+    // Erasure boundary: the authoring layer constrained the effect's environment to the
+    // declared requires; the manager supplies exactly those services plus the ambient ones.
+    activate: moduleOptions.activate as PluginModule['activate'],
+  });
 };
 
 /**
@@ -366,7 +503,10 @@ const resolveModule = (
  * When T is void, the function takes no arguments: () => Plugin.
  */
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
-export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
+// The impl return names the required-parameter form; the public overload above narrows it to the
+// optional-parameter form when `T` has no required members (the conditional can't be reduced for a
+// generic `T` inside the body, so it is stated on the overload instead).
+export function make<T>(builder: PluginBuilder<T>): ((options: T) => Plugin) & { meta: Meta } {
   const meta = builder.meta;
   // `dependsOn` entries and `key` are both bare NSIDs, so compare directly.
   invariant(
@@ -374,8 +514,11 @@ export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
     `Plugin ${meta.profile.key} declares itself as a dependency.`,
   );
 
-  const factory = (options: T) => {
-    const modules = builder.modules.map((module) => resolveModule(meta, module, options));
+  const factory = (options?: T) => {
+    // Default to `{}` so an omitted all-optional options object (see {@link PluginFactory}) is
+    // safe for option-reading module callbacks; ignored by `void` and record modules.
+    const resolved = (options ?? {}) as T;
+    const modules = builder.modules.map((module) => resolveModule(meta, module, resolved));
     return new PluginImpl(meta, modules);
   };
 
@@ -427,8 +570,11 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * export default MarkdownPlugin;
  * ```
  */
-export const lazy = <T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory<T> => {
-  const factory = (options: T): Plugin => {
+export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory<T>;
+// Impl names the required-parameter form; the overload narrows to optional when `T` has no
+// required members (see {@link make} / {@link PluginFactory}).
+export function lazy<T = void>(meta: Meta, loader: LazyLoader<T>): ((options: T) => Plugin) & { meta: Meta } {
+  const factory = (options?: T): Plugin => {
     const stub = new PluginImpl(meta, []);
     Object.defineProperty(stub, LazyTag, {
       value: { loader, options } satisfies LazyPayload,
@@ -437,7 +583,7 @@ export const lazy = <T = void>(meta: Meta, loader: LazyLoader<T>): PluginFactory
     return stub;
   };
   return Object.assign(factory, { meta });
-};
+}
 
 /**
  * Type guard for lazy plugin stubs produced by {@link lazy}.

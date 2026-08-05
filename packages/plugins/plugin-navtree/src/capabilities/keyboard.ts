@@ -15,8 +15,8 @@ import { KEY_BINDING } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const invoker = yield* Capabilities.OperationInvoker;
     const pluginContext = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out.
@@ -59,11 +59,12 @@ export default Capability.makeModule(
     Keyboard.singleton.initialize();
     Keyboard.singleton.setCurrentContext(Node.RootId);
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsubscribe();
         Keyboard.singleton.destroy();
       }),
     );
+    return [];
   }),
 );

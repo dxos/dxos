@@ -3,14 +3,17 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SpaceCapability } from '@dxos/plugin-space';
 
-export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const Migrations = Capability.lazy('IllustratorMigrations', () => import('./migrations'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const Migrations = Capability.lazyModule(
+  'IllustratorMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));

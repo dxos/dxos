@@ -4,7 +4,6 @@
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';
@@ -52,9 +51,6 @@ export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): 
     core.push(ThemePlugin({ tx: defaultTx }));
   }
   return createTestApp({
-    // Composer always fires SetupSettings before Startup so that settings modules
-    // activate before graph builders (which use allOf(SetupSettings, SetupAppGraph)).
-    setupEvents: [AppActivationEvents.SetupSettings],
     ...rest,
     plugins: [...core, ...plugins],
   });

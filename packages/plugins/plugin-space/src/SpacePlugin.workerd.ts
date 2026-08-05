@@ -3,7 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppCapability } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -21,13 +21,14 @@ import {
 
 import { meta } from '#meta';
 
-// Direct module import: the `#capabilities` barrel pulls the React surface into worker bundles.
-import OperationHandler from './capabilities/operation-handler';
+// Declared here rather than imported from `#capabilities`: that barrel pulls the React surface
+// into worker bundles.
+const OperationHandler = AppCapability.operationHandler(() => import('./capabilities/operation-handler'));
 
 export const SpacePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({
-    schema: [
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
+    AppCapability.schema([
       ...DataTypes,
       AnchoredTo.AnchoredTo,
       Employer.Employer,
@@ -40,8 +41,8 @@ export const SpacePlugin = Plugin.define(meta).pipe(
       Pipeline.Pipeline,
       Tag.Tag,
       Task.Task,
-    ],
-  }),
+    ]),
+  ),
   Plugin.make,
 );
 

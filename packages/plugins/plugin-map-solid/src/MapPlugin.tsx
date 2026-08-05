@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { Surface } from '#capabilities';
 import { meta } from '#meta';
@@ -12,14 +12,15 @@ import { meta } from '#meta';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'surface',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: Surface,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(Surface),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

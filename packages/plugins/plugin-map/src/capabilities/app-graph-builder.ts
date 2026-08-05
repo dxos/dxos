@@ -17,6 +17,10 @@ import { Map, MapCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Hoisted so the connector below reads it reactively via `get` instead of a sync
+    // `Capability.getAll` snapshot, which would never heal once the capability lands.
+    const markerProvidersAtom = yield* Capability.atom(MapCapabilities.MarkerProvider);
+
     const extensions = yield* GraphBuilder.createExtension({
       id: MapOperation.Toggle.meta.key,
       match: (node, get) => Option.map(NodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
@@ -51,9 +55,9 @@ export default Capability.makeModule(
     const companion = yield* GraphBuilder.createExtension({
       id: 'mapCompanion',
       match: whenPlottable,
-      connector: (object) =>
+      connector: (object, get) =>
         Effect.gen(function* () {
-          const providers = yield* Capability.getAll(MapCapabilities.MarkerProvider);
+          const providers = get(markerProvidersAtom);
           if (!providers.some((provider) => provider.match(object))) {
             return [];
           }
@@ -68,6 +72,6 @@ export default Capability.makeModule(
         }),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extensions, companion]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extensions, companion]);
   }),
 );

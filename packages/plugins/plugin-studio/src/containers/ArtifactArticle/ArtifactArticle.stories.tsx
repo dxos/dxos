@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -57,8 +57,8 @@ const MockProviderPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'story.studio.mock-provider/module',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(StudioCapabilities.GenerationService, mockService)),
+    provides: [StudioCapabilities.GenerationService],
+    activate: () => Effect.succeed([Capability.contribute(StudioCapabilities.GenerationService, mockService)]),
   }),
   Plugin.make,
 );

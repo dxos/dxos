@@ -11,10 +11,12 @@ import { Type } from '@dxos/echo';
 import { Drawing } from '#types';
 
 const activate = Effect.fnUntraced(function* () {
-  return Capability.contributes(AppCapabilities.CommentConfig, {
-    id: Type.getTypename(Drawing.Drawing),
-    comments: 'unanchored',
-  });
+  return [
+    Capability.contribute(AppCapabilities.CommentConfig, {
+      id: Type.getTypename(Drawing.Drawing),
+      comments: 'unanchored',
+    }),
+  ];
 });
 
 export default activate;

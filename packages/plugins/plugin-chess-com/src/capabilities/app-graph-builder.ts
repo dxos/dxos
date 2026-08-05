@@ -43,6 +43,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [accountActions]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [accountActions]);
   }),
 );

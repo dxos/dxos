@@ -16,7 +16,7 @@ import { DefaultSettings } from '#containers';
 // article's `limit={1}` dispatch.
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'defaultPluginSettings',
         position: Position.last,

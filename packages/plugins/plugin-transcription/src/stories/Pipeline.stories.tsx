@@ -25,7 +25,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -46,7 +46,7 @@ import {
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -90,32 +90,36 @@ const StoryGraphPlugin = () =>
       name: 'Transcription Pipeline Story Graph',
     }),
   ).pipe(
-    AppPlugin.addAppGraphModule({
-      activate: Effect.fnUntraced(function* () {
-        const capabilities = yield* Capability.Service;
-        const extensions = yield* GraphBuilder.createExtension({
-          id: 'storyDocs',
-          match: NodeMatcher.whenRoot,
-          connector: (_, get) =>
-            Effect.gen(function* () {
-              // Tolerate the teardown window when stories swap: the Client capability may already be
-              // removed while this reactive connector recomputes once more (use `getAll`, not the
-              // throwing `get`).
-              const [client] = capabilities.getAll(ClientCapabilities.Client);
-              const space = client && AppSpace.getPersonalSpace(client);
-              if (!space) {
-                return [];
-              }
+    Plugin.addModule(
+      Capability.inlineModule(
+        'AppGraphBuilder',
+        { provides: [AppCapabilities.AppGraphBuilder] },
+        Effect.fnUntraced(function* () {
+          const capabilities = yield* Capability.Service;
+          const extensions = yield* GraphBuilder.createExtension({
+            id: 'storyDocs',
+            match: NodeMatcher.whenRoot,
+            connector: (_, get) =>
+              Effect.gen(function* () {
+                // Tolerate the teardown window when stories swap: the Client capability may already be
+                // removed while this reactive connector recomputes once more (use `getAll`, not the
+                // throwing `get`).
+                const [client] = capabilities.getAll(ClientCapabilities.Client);
+                const space = client && AppSpace.getPersonalSpace(client);
+                if (!space) {
+                  return [];
+                }
 
-              const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-              return docs
-                .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-                .filter(isNonNullable);
-            }),
-        });
-        return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-      }),
-    }),
+                const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+                return docs
+                  .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+                  .filter(isNonNullable);
+              }),
+          });
+          return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
+        }),
+      ),
+    ),
     Plugin.make,
   )();
 
@@ -304,7 +308,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

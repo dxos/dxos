@@ -17,8 +17,8 @@ import { settingsAtom } from './settings';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    return Capability.contributes(InboxCapabilities.MailboxAction, {
+    const registry = yield* Capabilities.AtomRegistry;
+    return Capability.contribute(InboxCapabilities.MailboxAction, {
       id: 'analyze',
       label: 'Analyze',
       icon: 'ph--graph--regular',

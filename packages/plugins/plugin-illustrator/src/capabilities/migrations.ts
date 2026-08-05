@@ -23,6 +23,6 @@ const migrations = [sketchToDrawing];
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(ClientCapabilities.Migration, migrations);
+    return Capability.contribute(ClientCapabilities.Migration, migrations);
   }),
 );

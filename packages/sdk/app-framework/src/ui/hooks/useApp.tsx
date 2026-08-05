@@ -68,7 +68,6 @@ export type UseAppOptions = {
   defaults?: string[];
   /**
    * Additional activation events to fire before startup.
-   * These are fired alongside SetupReactSurface before the Startup event.
    */
   setupEvents?: ActivationEvent.ActivationEvent[];
   cacheEnabled?: boolean;
@@ -284,7 +283,6 @@ export const useApp = ({
 
       yield* Effect.all([
         ...setupEvents.map((event) => manager.activate(event)),
-        manager.activate(ActivationEvents.SetupReactSurface),
         manager.activate(ActivationEvents.Startup),
       ]);
 

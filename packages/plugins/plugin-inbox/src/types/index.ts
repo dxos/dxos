@@ -8,7 +8,6 @@ export * from './SyncStreamConfig';
 export * as Calendar from './Calendar';
 export * as ExtractedFrom from './ExtractedFrom';
 export * as InboxCapabilities from './InboxCapabilities';
-export * as InboxEvents from './InboxEvents';
 export * as InboxOperation from './InboxOperation';
 export * as Mailbox from './Mailbox';
 export * as Settings from './Settings';

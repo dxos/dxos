@@ -18,7 +18,7 @@ import { LocationField } from './LocationField';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.map',
         filter: AppSurface.oneOf(

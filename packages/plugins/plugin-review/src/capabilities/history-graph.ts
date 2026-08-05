@@ -40,6 +40,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extension);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extension);
   }),
 );

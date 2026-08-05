@@ -19,12 +19,12 @@ import * as AtprotoRepo from '../services/AtprotoRepo';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const client = yield* ClientCapabilities.Client;
     return [
-      Capability.contributes(AtprotoCapabilities.RepoLayer, (connection) =>
+      Capability.contribute(AtprotoCapabilities.RepoLayer, (connection) =>
         AtprotoRepo.layerLive({ connection: Ref.make(connection), client }),
       ),
-      Capability.contributes(AtprotoCapabilities.ReadRepoLayer, (handle) => AtprotoRepo.layerPublic(handle)),
+      Capability.contribute(AtprotoCapabilities.ReadRepoLayer, (handle) => AtprotoRepo.layerPublic(handle)),
     ];
   }),
 );

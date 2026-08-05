@@ -2,20 +2,47 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { SpaceCapability } from '@dxos/plugin-space';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const LayerSpecs = Capability.lazy<void, Capability.Any[]>('LayerSpecs', () => import('./layer-specs'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { RoutineCapabilities } from '#types';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const LayerSpecs = Capability.lazyModule(
+  'LayerSpecs',
+  { provides: [Capabilities.LayerSpec, Capabilities.TraceSink] },
+  () => import('./layer-specs'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const RegistrySync = Capability.lazy('RegistrySync', () => import('./registry-sync'));
-export const Templates = Capability.lazy('Templates', () => import('./templates'));
-export const TriggerRuntimeController = Capability.lazy(
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const RegistrySync = Capability.lazyModule(
+  'RegistrySync',
+  {
+    requires: [
+      ClientCapabilities.Client,
+      Capabilities.AtomRegistry,
+      AppCapabilities.SkillDefinition,
+      Capabilities.OperationHandler,
+    ],
+    provides: [],
+  },
+  () => import('./registry-sync'),
+);
+export const Templates = Capability.lazyModule(
+  'Templates',
+  { provides: [RoutineCapabilities.Template] },
+  () => import('./templates'),
+);
+export const TriggerRuntimeController = Capability.lazyModule(
   'TriggerRuntimeController',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
+    provides: [],
+    // Runtime event: triggers only need to react to spaces once the client observes them.
+    activatesOn: ClientEvents.SpacesReady,
+  },
   () => import('./trigger-runtime-controller'),
 );

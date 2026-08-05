@@ -46,4 +46,4 @@ export type Template = {
   scaffold: (ctx: { name?: string; subject?: Obj.Unknown }) => Effect.Effect<Project.Project, Error, Database.Service>;
 };
 
-export const Template = Capability.make<Template>(`${meta.profile.key}.capability.template`);
+export const Template = Capability.make<Template>()(`${meta.profile.key}.capability.template`);

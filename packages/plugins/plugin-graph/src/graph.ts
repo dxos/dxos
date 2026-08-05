@@ -16,7 +16,10 @@ import { AppCapabilities, UrlPath } from '@dxos/app-toolkit';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
+
+    // Live view: extensions contributed by dependency-mode modules (including those enabled
+    // later in the session) reach this subscription reactively.
     const extensionsByModuleAtom = yield* Capability.atomByModule(AppCapabilities.AppGraphBuilder);
 
     // The grammar's fixed tiers, configured here rather than declared by an extension: no connector
@@ -54,7 +57,7 @@ export default Capability.makeModule(
 
     setupDevtools(builder.graph);
 
-    return Capability.contributes(AppCapabilities.AppGraph, builder, () =>
+    return Capability.contribute(AppCapabilities.AppGraph, builder, () =>
       Effect.sync(() => {
         // clearInterval(interval);
         unsubscribe();

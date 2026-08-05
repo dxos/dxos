@@ -12,7 +12,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -163,7 +163,7 @@ const storyDeckSettings = Capability.makeModule(() =>
       enableNativeRedirect: false,
     }).pipe(Atom.keepAlive);
 
-    return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
+    return [Capability.contribute(DeckCapabilities.Settings, settingsAtom)];
   }),
 );
 
@@ -213,9 +213,9 @@ const storyDeckState = Capability.makeModule(() =>
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.State, stateAtom),
+      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
@@ -223,22 +223,19 @@ const storyDeckState = Capability.makeModule(() =>
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
     id: 'story-deck-settings',
-    activatesOn: AppActivationEvents.SetupSettings,
+    provides: [DeckCapabilities.Settings],
     activate: storyDeckSettings,
   }),
   Plugin.addModule({
     id: 'story-deck-state',
-    activatesOn: AppActivationEvents.AppGraphReady,
+    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
     activate: storyDeckState,
   }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule({
-    id: 'story-surfaces',
-    activate: () =>
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
+    Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
       Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
+        Capability.contribute(Capabilities.ReactSurface, [
           Surface.create({
             id: 'storyLauncher',
             filter: Surface.makeFilter(
@@ -283,79 +280,83 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
           }),
         ]),
       ),
-  }),
-  AppPlugin.addAppGraphModule({
-    id: 'story-graph',
-    activate: Effect.fnUntraced(function* () {
-      const extensions = yield* Effect.all([
-        GraphBuilder.createExtension({
-          id: 'storyItems',
-          match: NodeMatcher.whenRoot,
-          connector: () =>
-            Effect.succeed([
-              ...STORY_ITEMS.map((item) =>
+    ),
+  ),
+  Plugin.addModule(
+    Capability.inlineModule(
+      'story-graph',
+      { provides: [AppCapabilities.AppGraphBuilder] },
+      Effect.fnUntraced(function* () {
+        const extensions = yield* Effect.all([
+          GraphBuilder.createExtension({
+            id: 'storyItems',
+            match: NodeMatcher.whenRoot,
+            connector: () =>
+              Effect.succeed([
+                ...STORY_ITEMS.map((item) =>
+                  Node.make({
+                    id: item.id,
+                    type: 'story-item',
+                    data: item,
+                    properties: { label: item.title, icon: item.icon },
+                  }),
+                ),
+                // The launcher declares its chain on the node, the way the app resolves it off the type.
                 Node.make({
-                  id: item.id,
-                  type: 'story-item',
-                  data: item,
-                  properties: { label: item.title, icon: item.icon },
+                  id: LAUNCHER_ID,
+                  type: 'story-launcher',
+                  data: { id: LAUNCHER_ID, title: 'Inbox', launcher: true },
+                  properties: {
+                    label: 'Inbox',
+                    icon: 'ph--tray--regular',
+                    deck: { levels: [{ key: 'list' }, { key: 'message' }] },
+                  },
                 }),
+              ]),
+          }),
+          GraphBuilder.createExtension({
+            id: 'storyLauncherMessages',
+            match: NodeMatcher.whenNodeType('story-launcher'),
+            connector: () =>
+              Effect.succeed(
+                LAUNCHER_MESSAGES.map((message) =>
+                  Node.make({
+                    id: message.id,
+                    type: 'story-message',
+                    data: message,
+                    properties: { label: message.title, icon: message.icon },
+                  }),
+                ),
               ),
-              // The launcher declares its chain on the node, the way the app resolves it off the type.
-              Node.make({
-                id: LAUNCHER_ID,
-                type: 'story-launcher',
-                data: { id: LAUNCHER_ID, title: 'Inbox', launcher: true },
-                properties: {
-                  label: 'Inbox',
-                  icon: 'ph--tray--regular',
-                  deck: { levels: [{ key: 'list' }, { key: 'message' }] },
-                },
-              }),
-            ]),
-        }),
-        GraphBuilder.createExtension({
-          id: 'storyLauncherMessages',
-          match: NodeMatcher.whenNodeType('story-launcher'),
-          connector: () =>
-            Effect.succeed(
-              LAUNCHER_MESSAGES.map((message) =>
-                Node.make({
-                  id: message.id,
-                  type: 'story-message',
-                  data: message,
-                  properties: { label: message.title, icon: message.icon },
+          }),
+          // Every story plank carries the same two companions, so the companion can be watched moving from
+          // plank to plank as attention changes.
+          GraphBuilder.createExtension({
+            id: 'storyItemCompanions',
+            match: (node) =>
+              node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
+            connector: (node) =>
+              Effect.succeed([
+                AppNode.makeCompanion({
+                  variant: 'alpha',
+                  label: 'Companion Alpha',
+                  icon: 'ph--sidebar--regular',
+                  data: { variant: 'alpha', parentId: node.id },
+                  position: Position.first,
                 }),
-              ),
-            ),
-        }),
-        // Every story plank carries the same two companions, so the companion can be watched moving from
-        // plank to plank as attention changes.
-        GraphBuilder.createExtension({
-          id: 'storyItemCompanions',
-          match: (node) =>
-            node.type === 'story-item' || node.type === 'story-message' ? Option.some(node) : Option.none(),
-          connector: (node) =>
-            Effect.succeed([
-              AppNode.makeCompanion({
-                variant: 'alpha',
-                label: 'Companion Alpha',
-                icon: 'ph--sidebar--regular',
-                data: { variant: 'alpha', parentId: node.id },
-                position: Position.first,
-              }),
-              AppNode.makeCompanion({
-                variant: 'beta',
-                label: 'Companion Beta',
-                icon: 'ph--chat-circle--regular',
-                data: { variant: 'beta', parentId: node.id },
-              }),
-            ]),
-        }),
-      ]);
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
-    }),
-  }),
+                AppNode.makeCompanion({
+                  variant: 'beta',
+                  label: 'Companion Beta',
+                  icon: 'ph--chat-circle--regular',
+                  data: { variant: 'beta', parentId: node.id },
+                }),
+              ]),
+          }),
+        ]);
+        return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat());
+      }),
+    ),
+  ),
   Plugin.make,
 );
 
@@ -446,7 +447,6 @@ const meta = {
     withMosaic(),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {

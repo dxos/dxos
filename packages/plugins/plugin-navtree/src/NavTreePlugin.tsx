@@ -2,64 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
-import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { Graph } from '@dxos/plugin-graph';
-
-import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
+import { AppGraphBuilder, Expose, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { NavTreeEvents } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'state',
-    // Wait for AttentionReady too so the ViewState Manager (the expansion persistence backend) is available.
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.LayoutReady, AttentionEvents.AttentionReady),
-    firesAfterActivation: [NavTreeEvents.StateReady],
-    activate: State,
-  }),
-  Plugin.addModule({
-    id: 'expose',
-    activatesOn: ActivationEvent.allOf(
-      ActivationEvents.ProcessManagerReady,
-      AppActivationEvents.AppGraphReady,
-      AppActivationEvents.LayoutReady,
-      NavTreeEvents.StateReady,
-    ),
-    activate: Effect.fnUntraced(function* () {
-      const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
-      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-      if (invokePromise && layout.active.length === 1) {
-        // TODO(wittjosiah): This should really be fired once the navtree renders for the first time.
-        //   That is the point at which the graph is expanded and the path should be available.
-        void Graph.waitForPath(graph, { target: layout.active[0] }, { timeout: 30_000 })
-          .then(() => invokePromise(LayoutOperation.Expose, { subject: layout.active[0] }))
-          .catch(() => {});
-      }
-
-      return [];
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(State),
+  Plugin.addModule(Expose),
+  Plugin.addModule(Keyboard),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
     }),
-  }),
-  Plugin.addModule({
-    id: 'keyboard',
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.ProcessManagerReady),
-    activate: Keyboard,
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  ),
   Plugin.make,
 );
 

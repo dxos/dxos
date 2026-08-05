@@ -10,12 +10,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { type OperationHandlerSet } from '@dxos/compute';
 
 import { SampleOperationHandlerSet } from '#operations';
 
 // When the module doesn't need to access other capabilities or perform setup,
 // use `Effect.succeed` directly instead of `Effect.fnUntraced(function* () { ... })`.
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(() =>
-  Effect.succeed(Capability.contributes(Capabilities.OperationHandler, SampleOperationHandlerSet)),
+export default Capability.makeModule(() =>
+  Effect.succeed(Capability.contribute(Capabilities.OperationHandler, SampleOperationHandlerSet)),
 );

@@ -66,7 +66,7 @@ const testConnection: TestConnection = ({ accessToken }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(Connector, [
       {
         id: 'slack',
         source: SLACK_SOURCE,

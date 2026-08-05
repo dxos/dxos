@@ -21,7 +21,9 @@ import * as Settings from './Settings';
 import { type CreateObject, type ObjectViewerProps } from './types';
 
 export namespace SpaceCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.profile.key}.capability.settings`);
+  export const Settings = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
+    `${meta.profile.key}.capability.settings`,
+  );
 
   /** Schema for persisted space plugin state. */
   export const StateSchema = Schema.mutable(
@@ -34,7 +36,7 @@ export namespace SpaceCapabilities {
   export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 
   /** Persisted state (stored in KVS/localStorage). */
-  export const State = Capability.make<Atom.Writable<SpaceState>>(`${meta.profile.key}.capability.state`);
+  export const State = Capability.makeSingleton<Atom.Writable<SpaceState>>()(`${meta.profile.key}.capability.state`);
 
   /**
    * A proposed merge awaiting confirmation. `preview` is detached (never added to the database),
@@ -61,19 +63,24 @@ export namespace SpaceCapabilities {
   };
 
   /** Transient/ephemeral state (not persisted). */
-  export const EphemeralState = Capability.make<Atom.Writable<SpaceEphemeralState>>(
-    `${meta.profile.key}.capability.ephemeral-state`,
+  export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEphemeralState>>()(
+    `${meta.profile.key}.capability.ephemeralState`,
   );
 
+  /** The personal space, contributed once the `IdentityCreated` module has created it. */
+  export const PersonalSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.personalSpace`);
+
   export type SettingsSection = { id: string; label: Label; position?: Position.Position };
-  export const SettingsSection = Capability.make<SettingsSection>(`${meta.profile.key}.capability.settings-section`);
+  export const SettingsSection = Capability.makeSingleton<SettingsSection>()(
+    `${meta.profile.key}.capability.settingsSection`,
+  );
 
   export type OnCreateSpace = (params: {
     space: Space;
     isDefault: boolean;
     rootCollection: Collection.Collection;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnCreateSpace = Capability.make<OnCreateSpace>(`${meta.profile.key}.capability.on-space-created`);
+  export const OnCreateSpace = Capability.make<OnCreateSpace>()(`${meta.profile.key}.capability.onSpaceCreated`);
 
   export type OnTypeAdded = (params: {
     db: Database.Database;
@@ -81,11 +88,11 @@ export namespace SpaceCapabilities {
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
-  export const OnTypeAdded = Capability.make<OnTypeAdded>(`${meta.profile.key}.capability.on-type-added`);
+  export const OnTypeAdded = Capability.make<OnTypeAdded>()(`${meta.profile.key}.capability.onTypeAdded`);
 
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
-  export const Repair = Capability.make<HandleRepair>(`${meta.profile.key}.capability.repair`);
+  export const Repair = Capability.makeSingleton<HandleRepair>()(`${meta.profile.key}.capability.repair`);
 
   /** Typed creation entry contributed per typename by plugins that support creating objects. */
   export type CreateObjectEntry = Readonly<{
@@ -103,15 +110,15 @@ export namespace SpaceCapabilities {
      */
     customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
-  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.profile.key}.capability.create-object`);
+  export const CreateObjectEntry = Capability.make<CreateObjectEntry>()(`${meta.profile.key}.capability.createObject`);
 
   /**
    * The identity rule for a type — how to key an object for duplicate detection and how to merge
    * two of them. Plugins that own a type contribute one (e.g. plugin-crm for Person); the type
    * article only offers its Duplicates tab for types that have one.
    */
-  export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySpec<any>>(
-    `${meta.profile.key}.capability.identity-spec`,
+  export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySpec<any>>()(
+    `${meta.profile.key}.capability.identitySpec`,
   );
 
   /** Props passed to a `CreateObjectEntry.customPanel`. */

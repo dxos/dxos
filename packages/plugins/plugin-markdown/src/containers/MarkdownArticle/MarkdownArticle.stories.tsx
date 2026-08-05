@@ -9,7 +9,7 @@ import React, { useMemo } from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -35,7 +35,7 @@ import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '#types';
+import { Markdown, MarkdownCapabilities } from '#types';
 
 import { MarkdownPlugin } from '../../MarkdownPlugin';
 
@@ -57,8 +57,8 @@ const MarkdownExtensionsPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extensions',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [])),
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activate: () => Effect.succeed([Capability.contribute(MarkdownCapabilities.ExtensionProvider, [])]),
   }),
   Plugin.make,
 );
@@ -96,8 +96,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { title = 'Testing', content = '', objects: showObjects = false } }) => ({
-      // TldrawPlugin's section surface reads its Settings atom, contributed on SetupSettings.
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

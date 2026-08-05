@@ -15,7 +15,6 @@ import { AiService } from '@dxos/ai';
 import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
 import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
@@ -265,8 +264,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
           ),
           (testHarness) => Effect.promise(() => testHarness.dispose()),
         );
-
-        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
 
         const { personalSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),

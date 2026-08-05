@@ -165,15 +165,14 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 10 } }) => ({
       capabilities: [
-        Capability.contributes(AppCapabilities.Translations, translations),
+        Capability.contribute(AppCapabilities.Translations, translations),
         // The Duplicates tab is driven by real operations, so the story registers the handler set
         // and the state atom the space plugin would normally contribute.
-        Capability.contributes(Capabilities.OperationHandler, SpaceOperationHandlerSet),
-        Capability.contributes(SpaceCapabilities.EphemeralState, ephemeralState()),
+        Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet),
+        Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralState()),
         // plugin-inbox contributes these in the app (it owns the types this materialises); the story
         // runs no plugins that would.
-        Capability.contributes(SpaceCapabilities.IdentitySpec, personIdentitySpec),
-        Capability.contributes(SpaceCapabilities.IdentitySpec, organizationIdentitySpec),
+        Capability.contributeAll(SpaceCapabilities.IdentitySpec, [personIdentitySpec, organizationIdentitySpec]),
       ],
       plugins: [
         ...corePlugins(),

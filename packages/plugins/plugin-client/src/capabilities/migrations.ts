@@ -12,13 +12,13 @@ import { ClientCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const migrationsAtom = yield* Capability.atom(ClientCapabilities.Migration);
+    const registry = yield* Capabilities.AtomRegistry;
+    const client = yield* ClientCapabilities.Client;
+    const migrationContributions = yield* ClientCapabilities.Migration;
 
     // NOTE: Migrations are currently unidirectional and idempotent.
     const cancel = registry.subscribe(
-      migrationsAtom,
+      migrationContributions.atom,
       (_migrations: any[]) => {
         const migrations = Array.from(new Set(_migrations.flat()));
         const spaces = client.spaces.get();
@@ -33,6 +33,7 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cancel()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => cancel()));
+    return [];
   }),
 );
