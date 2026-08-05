@@ -35,6 +35,9 @@ export const HubHttpClient = Capability.lazyModule(
 export const Client = Capability.lazyModule(
   'Client',
   {
+    // The boot root: everything downstream requires the client, and nothing pulls it in a host that
+    // has not asked for it yet — so it names the startup wave rather than inheriting the idle default.
+    activatesOn: ActivationEvents.Startup,
     provides: [
       ClientCapabilities.Client,
       Capabilities.Layer,
