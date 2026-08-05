@@ -21,7 +21,9 @@ tasks:
       - prebuild
   # Structural budget on the eager boot graph (entry + modulepreload closure). Its own task rather
   # than a step inside `bundle`: a perf budget must not fail the local build you are running in
-  # order to measure the very thing it is budgeting. Run manually — no CI job invokes either budget.
+  # order to measure the very thing it is budgeting. `check-boot-budget` runs on the `e2e` job
+  # (post-merge, since that job is gated to main/changeset-release/dispatch);
+  # `check-startup-budget` is still manual — its timings cannot gate without a fixed runner.
   check-boot-budget:
     command: node scripts/check-boot-budget.mjs
     deps:

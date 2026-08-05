@@ -12,8 +12,9 @@
  *
  * - BYTES catches leaks. A boot-reachable module importing a barrel instead of a subpath pulls
  *   its package in wholesale; the classes we have actually hit are 200-550 KB each (the
- *   HyperFormula engine at 548 KB, config yaml at 210 KB). The margin is deliberately narrower
- *   than the smallest of them, so a single leak of the kind we keep finding trips this.
+ *   HyperFormula engine at 548 KB, config yaml at 210 KB). The margin was originally sized under
+ *   the smallest of them so a single leak would trip this; after the 2026-08-04 re-baseline it no
+ *   longer is — see the NOTE on MAX_PRELOAD_BYTES for what that gave up and what wins it back.
  *
  * - COUNT catches the chunk partition collapsing. Boot chunks are built by a cycle-safe
  *   topological partition (see `bootChunkingPlugin` in vite.config.ts) that took preload
