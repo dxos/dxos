@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';

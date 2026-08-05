@@ -3,10 +3,11 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { LayerSpec } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN } from '@dxos/keys';
 import { type LogConfig, type LogEntry, LogLevel, log } from '@dxos/log';
 
@@ -16,7 +17,7 @@ import { ProcessManagerPlugin } from './ProcessManagerPlugin';
 
 const LateEvent = ActivationEvent.make('org.dxos.test.lateLayerSpec');
 
-const TestService = Capability.make<{ value: string }>()('org.dxos.test.lateService');
+class TestService extends Context.Tag('org.dxos.test.lateService')<TestService, { value: string }>() {}
 
 const lateMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.lateLayerSpec'), name: 'Late LayerSpec' });
 
