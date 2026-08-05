@@ -406,18 +406,19 @@ export default Capability.makeModule(
     // for its nodes, and a navigation during that window would otherwise have no subscriber at all —
     // the first navigation after a reload silently failed to update the URL. The writes are gated
     // instead, so nothing overwrites the URL being restored from with the pre-restore deck.
-    let restored = false;
-    const syncUrlWhenRestored = () => restored && syncUrl();
-    const unsubscribeState = registry.subscribe(stateAtom, syncUrlWhenRestored);
-    const unsubscribeCompanionVariant = viewState.subscribe(
-      companionAspect,
-      COMPANION_VIEW_STATE_CONTEXT,
-      syncUrlWhenRestored,
+    // Subscribed at activation and NOT gated on the restore: these fire only on an actual write, and
+    // a write means someone — the user or the restore itself — changed the deck, so the URL should
+    // follow it. Gating them instead swallowed every navigation made while the restore was still
+    // waiting on its nodes, which is up to the full deadline.
+    const unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
+    const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
+      syncUrl(),
     );
+    // Only the unconditional BASELINE write is deferred: it serializes the current deck whether or
+    // not anything changed, so at activation it would replace the URL being restored from with the
+    // empty pre-restore deck.
     const startUrlSync = () => {
-      restored = true;
       // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
-      // Also picks up any navigation made while the restore was still in flight.
       syncUrl('replace');
     };
 
