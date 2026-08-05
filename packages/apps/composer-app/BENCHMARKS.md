@@ -244,3 +244,13 @@ Auto-recorded by `src/playwright/startup.spec.ts`. One row per scenario per harn
 | 2026-08-03T15:36:00Z | a7dda15099 |       | warm-cold | chromium |          3793 |       7915 |  196 |       2126 |    25.0 | 285                                                                  | `org.dxos.plugin.kanban.module.OperationHandler` (2621)       |
 | 2026-08-03T15:36:22Z | a7dda15099 |   ⚠   | warm-cold | chromium |          3840 |       9182 |  240 |       2927 |    25.0 | 295                                                                  | `org.dxos.plugin.sample.module.OperationHandler` (3050)       |
 | 2026-08-03T15:36:44Z | a7dda15099 |   ⚠   | warm-cold | chromium |          3930 |       8237 |  224 |       2259 |    25.0 | 290                                                                  | `org.dxos.plugin.inbox.module.OperationHandler` (2710)        |
+| 2026-08-05T21:34:24Z | fc2c36bab7 |  | warm-cold | chromium | 2231 | 5066 | 48 | 1135 | 25.9 | 321 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1247) |
+| 2026-08-05T21:34:37Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2168 | 5539 | 52 | 1138 | 25.9 | 328 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1265) |
+| 2026-08-05T21:34:50Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2173 | 5607 | 48 | 1244 | 25.9 | 329 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1337) |
+| 2026-08-05T21:35:02Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2165 | 5465 | 48 | 1148 | 25.9 | 329 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1260) |
+| 2026-08-05T21:35:15Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2329 | 5658 | 52 | 1214 | 25.9 | 329 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1281) |
+| 2026-08-05T21:40:29Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2115 | 5424 | 52 | 1149 | 25.9 | 329 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1242) |
+| 2026-08-05T21:40:41Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2228 | 5085 | 52 | 1220 | 25.9 | 322 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1319) |
+| 2026-08-05T21:40:53Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2202 | 5440 | 44 | 1217 | 25.9 | 329 | `org.dxos.plugin.assistant.module.ReactSurface` (1226) |
+| 2026-08-05T21:41:05Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2167 | 4996 | 52 | 1173 | 25.9 | 321 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1264) |
+| 2026-08-05T21:41:17Z | fc2c36bab7 | ⚠ | warm-cold | chromium | 2209 | 5057 | 44 | 1169 | 25.9 | 322 | `org.dxos.plugin.atproto.module.AppGraphBuilder` (1266) |
