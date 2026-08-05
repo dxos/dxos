@@ -21,7 +21,7 @@ describe('TranscriptionPlugin', () => {
     // After autoStart: schema, OperationHandler, and SkillDefinition are dependency-mode roots and
     // all activate immediately.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler'), moduleId('SkillDefinition')]),
     );
   });
 });

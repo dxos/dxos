@@ -28,6 +28,6 @@ export default Config2.make({
     icon: { key: 'ph--compass--regular', hue: 'sky' },
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
-    screenshots: [{ dark: 'https://dxos.network/plugin-details-map-dark.png' }],
+    screenshots: [{ dark: 'https://media.dxos.network/plugin-details-map-dark.png' }],
   },
 });

@@ -30,7 +30,7 @@ export DX_FIXTURES_AGE_KEY=~/.config/dxos/fixtures.key
 Authenticate wrangler for the private `test-fixtures` bucket:
 
 ```bash
-pnpm 1p-credentials
+eval "$(pnpm -ws 1p-credentials)"
 ```
 
 ### Capture and upload
@@ -69,9 +69,9 @@ That takes the newest version. Pin one with `--at 20260804-181500`, and pull a t
 `moon run fixtures:info` reports what is available and how this machine is configured — the first thing to check when a fixture-backed test skips unexpectedly, since it separates "nothing pulled" from "pulled but misconfigured":
 
 ```
+identity:   ~/.config/dxos/fixtures.key
 directory:  …/testing/fixtures
 bucket:     test-fixtures
-identity:   ~/.config/dxos/fixtures.key
 user:       burdon
 
 mailbox
@@ -83,7 +83,7 @@ mailbox
 Then run the mailbox pipeline check, which seeds a Mailbox feed from the archive and drives it through a minimal `@dxos/pipeline` (source → stages → sink):
 
 ```bash
-moon run stories-inbox:test -- src/test/mailbox-fixture.test.ts
+moon run stories-inbox:test -- mailbox-fixture
 ```
 
 It asserts the count survives ingestion — neither dropped nor duplicated — and that the fields every mail pipeline reads (`created`, a text block) are present, then logs the corpus summary. Running it first separates *"the transfer worked"* from *"my pipeline is wrong"*, which are easy to confuse when a test over a real corpus misbehaves. With no fixture present it skips, so it is safe anywhere including CI. Point it at another fixture with `DX_FIXTURE_NAME=<name>`.

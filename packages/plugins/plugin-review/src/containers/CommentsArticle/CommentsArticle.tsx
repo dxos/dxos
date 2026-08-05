@@ -464,7 +464,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     ) : hasSuggestions ? null : (
       <div className='p-form-padding'>
         <Message.Root>
-          <Message.Content>
+          <Message.Body>
             <span>
               <Trans
                 {...{
@@ -477,7 +477,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 }}
               />
             </span>
-          </Message.Content>
+          </Message.Body>
         </Message.Root>
       </div>
     );

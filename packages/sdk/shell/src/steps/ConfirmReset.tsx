@@ -80,7 +80,7 @@ export const ConfirmReset = ({
     <>
       <Message.Root valence='error' classNames='mb-2'>
         <Message.Title>{resolvedTitle}</Message.Title>
-        <Message.Content>{resolvedMessage}</Message.Content>
+        <Message.Body>{resolvedMessage}</Message.Body>
       </Message.Root>
       <TextInput
         {...{ validationMessage }}

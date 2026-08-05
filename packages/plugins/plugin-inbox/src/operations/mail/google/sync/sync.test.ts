@@ -22,6 +22,7 @@ import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../../../../constants';
+import { GoogleApiError } from '../../../../errors';
 import { type GmailDataset, GoogleMailApi } from '../../../../services';
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
 import {
@@ -84,6 +85,27 @@ const withFaultAfterMessages = (n: number, dataset: GmailDataset): Layer.Layer<G
           count += 1;
           return count > n ? Effect.die(new Error('injected fault')) : inner.getMessage(userId, messageId);
         },
+      });
+    }),
+  ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+
+/**
+ * Wraps a mock {@link GoogleMailApi} so `getMessage` fails with Gmail's 404 for the given ids — the
+ * response for a message deleted between the id being listed (or logged in `history.list`) and the full
+ * fetch, which no retry can resolve.
+ */
+const withDeletedMessages = (ids: readonly string[], dataset: GmailDataset): Layer.Layer<GoogleMailApi> =>
+  Layer.effect(
+    GoogleMailApi,
+    Effect.gen(function* () {
+      const inner = yield* GoogleMailApi;
+      const deleted = new Set(ids);
+      return GoogleMailApi.of({
+        ...inner,
+        getMessage: (userId, messageId) =>
+          deleted.has(messageId)
+            ? Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'))
+            : inner.getMessage(userId, messageId),
       });
     }),
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
@@ -209,6 +231,25 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
     expect(rerun.newMessages).toBe(0);
     expect(fetched).toEqual([]);
+  });
+
+  test('a window-scan id deleted between the list and the fetch is dropped, not fatal', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const dataset = generateGmailDataset({ count: 4, seed: 89, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+    const deletedId = dataset.messages[1].id;
+
+    const result = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(ambientSyncServices(db)),
+        Effect.provide(withDeletedMessages([deletedId], dataset)),
+      ),
+    );
+
+    expect(result.newMessages).toBe(dataset.messages.length - 1);
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).not.toContain(deletedId);
+    expect(ids.length).toBe(dataset.messages.length - 1);
   });
 
   test('emits trace status updates with advancing progress during sync', async ({ expect }) => {
@@ -825,6 +866,46 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const ids = await syncedIdsOf(db, mailbox);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.length).toBe(base.messages.length + arrivals.length);
+  });
+
+  test('a delta naming a deleted message drops it, syncs the rest, and advances the token', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 3, seed: 87, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+
+    // Unlike the transient crash above, this 404 is permanent: failing the run would strand the token at
+    // '1000', leaving every following run to re-read the same history page and die on the same id.
+    const arrival = generateGmailDataset({ count: 1, seed: 88, start: subDays(now, 1), end: now, idPrefix: 'new' })
+      .messages[0];
+    const deletedId = 'deleted-1';
+    const dataset = {
+      ...base,
+      messages: [...base.messages, arrival],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: [deletedId, arrival.id] }],
+    };
+
+    const result = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(ambientSyncServices(db)),
+        Effect.provide(withDeletedMessages([deletedId], dataset)),
+      ),
+    );
+
+    expect(result.newMessages).toBe(1);
+    expect(tokenOf(binding)).toBe('1001');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).toContain(arrival.id);
+    expect(ids).not.toContain(deletedId);
+    expect(ids.length).toBe(base.messages.length + 1);
   });
 
   test('an incremental label add retags an existing message with no new feed append', async ({ expect }) => {

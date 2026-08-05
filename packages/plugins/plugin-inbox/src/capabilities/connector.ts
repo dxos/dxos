@@ -34,8 +34,19 @@ import { jmapCredentialForm } from './jmap-credential-form';
 /** How often a mailbox's sync Routine polls for new mail. */
 const MAIL_SYNC_CRON = '*/10 * * * *';
 
-/** Whether a newly bound mailbox syncs itself instead of waiting for the user to ask. */
-const MAIL_AUTO_SYNC = false;
+/**
+ * Whether a newly bound mailbox syncs itself instead of waiting for the user to ask. Safe for mail
+ * because a first sync is bounded by the binding's sync horizon (`Cursor.resolveHorizon`, 30 days by
+ * default) and continues in capped batches through the dispatcher rather than in one unbounded run.
+ */
+const MAIL_AUTO_SYNC = true;
+
+/**
+ * Whether a mailbox's sync Routine runs on EDGE rather than on the client, so mail keeps arriving
+ * while Composer is closed. The mail sync operations are in the shared handler set the workerd plugin
+ * registers, so EDGE can run them.
+ */
+const MAIL_REMOTE_SYNC = true;
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -149,6 +160,7 @@ export default Capability.makeModule(
           optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
+          remote: MAIL_REMOTE_SYNC,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,
@@ -168,6 +180,7 @@ export default Capability.makeModule(
           optionsSchema: SyncOptions.SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
+          remote: MAIL_REMOTE_SYNC,
         },
       },
       {

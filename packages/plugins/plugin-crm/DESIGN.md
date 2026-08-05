@@ -164,7 +164,7 @@ agentic-only, ❌ = missing (→ this change or backlog).
 | 4   | Research/enrich Person → profile dossier (`ProfileOf`) | 🟡→✅  | Was prose-only; **new `ResearchPerson`** (§5.2) scaffolds deterministically; LLM/web enrichment stays agentic behind the `ResearchSource` seam |
 | 5   | Research/enrich Organization → profile dossier         | 🟡→✅  | **new `ResearchOrganization`** (§5.2)                                                                                                          |
 | 6   | Process a Mailbox for CRM (cursored, idempotent)       | ❌→✅  | **new `ProcessMailbox`** (§5.3) — the CRM sibling of `AnalyzeMailbox`                                                                          |
-| 7   | Run CRM processing on sync (project + routine)         | 🟡→✅  | **new `crmPipeline` project template** (§5.4); agentic `crmResearch` template remains                                                          |
+| 7   | Run CRM processing on sync (project + routine)         | 🟡→✅  | **new `crmPipeline` project template** (§5.4) + the `crm` automation template (§5.5); agentic `crmResearch` template remains                   |
 | 8   | Attach avatar / logo                                   | ✅     | `AttachImage`                                                                                                                                  |
 | 9   | Track relationship stage (prospect → commit)           | 🟡     | `Organization.status` schema exists; no operation/board wiring (plugin-pipeline research board is a separate concept). Backlog                 |
 | 10  | Interaction ledger (last-touch, counts per sender)     | 🟡     | Agentic `inboxResearch` (sender ledger) template; facts via `AnalyzeMailbox`. Deterministic ledger op = backlog                                |
@@ -241,7 +241,17 @@ Ref.fromURI(ProcessMailbox key) }`, `trigger: { spec: Trigger.specFeed(mailbox.f
 The agentic `crmResearch` template is unchanged — the two are complementary (deterministic
 capture + skeleton vs. model-driven dossier writing).
 
-### 5.5 Removals
+### 5.5 `crm` automation template
+
+`org.dxos.routine.crm` ("CRM") is the routine-only counterpart of §5.4, contributed via
+`automation-templates` as a `RoutineCapabilities.Template` — so it, not the project templates, is
+what the mailbox's Automations companion offers. Converted from an instructions action to the same
+deterministic operation action: `spec: { kind: 'runnable', runnable: Ref.fromURI(ProcessMailbox
+key) }` with the §5.4 trigger (feed spec, `{ mailbox, research: true }` input, `concurrency: 1`,
+disabled). Its `DEFAULT_INSTRUCTIONS` and skill refs are dropped — an operation action owns no
+instructions, and the enrichment prose those carried now lives in the operations.
+
+### 5.6 Removals
 
 - `src/skills/crm/instructions.ts` (+ `makeInstructions` barrel exports). The skill keeps a
   **short** inline instructions template: subject resolution, upsert conventions
@@ -266,8 +276,10 @@ capture + skeleton vs. model-driven dossier writing).
      feed → cursor → contact → research → profile).
 3. `templates/crm-pipeline.test.ts` — scaffold shape, mirroring `mailbox-facts.test.ts`:
    `appliesTo`, runnable spec key, feed trigger, baked input refs, disabled, parenting.
-4. Existing `templates/crm.test.ts` / `crm-project.test.ts` stay green (instructions text there
-   is template-local, not from `instructions.ts`).
+4. `templates/crm.test.ts` asserts the same shape as (3) after the §5.5 conversion: runnable spec
+   key, feed trigger, baked input refs, disabled, and no owned instructions.
+   `templates/crm-project.test.ts` stays green (its instructions text is template-local, not from
+   `instructions.ts`).
 
 Out of scope (recorded, not built): live/eval coverage of the enrichment seam (the
 `crm-mailbox.eval.ts` graded eval already covers the agentic path); Organization creation from

@@ -24,7 +24,11 @@ describe('SettingsPlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('SettingsAppGraphBuilder'), moduleId('OperationHandler')]),
+      expect.arrayContaining([
+        moduleId('SettingsAppGraphBuilder'),
+        moduleId('OperationHandler'),
+        moduleId('ReactSurface'),
+      ]),
     );
     // ReactSurface is role-gated (SurfacesRequested) and parks until its role renders.
     expect(harness.manager.getActive()).not.toContain(moduleId('ReactSurface'));
