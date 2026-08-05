@@ -161,6 +161,27 @@ export const MessageDocument = ({
     [themeMode, options, model],
   );
 
+  // Hovering a run's first message highlights the whole row, header included — the heading is a
+  // block widget of its own, so the line decoration that tints the body cannot reach it. Toggled on
+  // the portal root directly rather than through the rendered tree, which leaves the widget and its
+  // React content untouched.
+  useEffect(() => {
+    for (const portal of portals) {
+      if (portal.kind === 'head') {
+        portal.root.classList.toggle('bg-hover-surface', portal.message.id === hover?.message.id);
+      }
+    }
+  }, [portals, hover]);
+
+  // A run's head carries the avatar and heading in a block above its first line, and the toolbar
+  // belongs to the whole row — so it anchors to the head's top, not to the body line's. Measured
+  // from the mounted portal because only the DOM knows how tall the heading laid out.
+  const headRoot = hover && portals.find((portal) => portal.kind === 'head' && portal.message.id === hover.message.id);
+  const toolbarTop =
+    headRoot && frameRef.current
+      ? headRoot.root.getBoundingClientRect().top - frameRef.current.getBoundingClientRect().top
+      : (hover?.top ?? 0);
+
   const { getReactions, getQuote, getThreadSummary, getActions } = handlers;
   useEffect(() => {
     // Entering edit mode seeds the draft from the stored body, so the first render of the editable
@@ -216,7 +237,7 @@ export const MessageDocument = ({
       {portals.map((portal) =>
         createPortal(<MessageChrome portal={portal} handlers={handlers} />, portal.root, portal.id),
       )}
-      {hover && <HoverControls message={hover.message} top={hover.top} />}
+      {hover && <HoverControls message={hover.message} top={toolbarTop} />}
     </div>
   );
 };
@@ -232,7 +253,7 @@ const HoverControls = ({ message, top }: { message: MessageLike; top: number }) 
   return (
     // Straddling the row's top edge at the end of the row, where Discord puts it — the corner
     // least likely to cover text. `sm` is already the design system's tightest density.
-    <div className='absolute z-1 end-2 -translate-y-1/2' style={{ top }}>
+    <div className='absolute z-1 end-2 -translate-y-1/2' style={{ top }} data-testid='thread.document.toolbar'>
       <DensityProvider density='sm'>
         <Message.Controls message={message as MessageType.Message} state={state} />
       </DensityProvider>
