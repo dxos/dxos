@@ -1,6 +1,6 @@
 # Depot cache benchmark — Tasks
 
-_Resume: start Phase 0 — confirm the runReport.json remote-operation taxonomy, then measure the M2 ceiling and the sequential-round-trip count. Only open question left is the Gate 1 threshold (DESIGN.md §9 Q2). Uncommitted: none. Last: host fixed as DigitalOcean and motivation fixed as latency, which promotes the netem arm to the Stage B decision._
+_Resume: Phase 0 is done except the one measurement that needs CI — the M2 ceiling on a real job, with `DEPOT_TOKEN` present. Findings in [`REPORT.md`](./REPORT.md); probe scripts in [`probe/`](./probe/). Uncommitted: none. Last: F1 (a missing token silently disables remote caching outright), F6 (~2.2 round-trips per cached task — moon batches, so DO's RTT penalty is ~11 ms/task) and F7 (hydration is only 23% of cached-task time; hash-generation is the other 77% and no cache can touch it)._
 
 Design, methodology, controls and gates: [`DESIGN.md`](./DESIGN.md).
 
@@ -13,19 +13,33 @@ measurement instrument before anything depends on it.
 
 ### Tasks
 
-- [ ] **Confirm the runReport operation taxonomy for moon 2.4.5**
-  - Run one real task with the Depot cache warm; dump
-    `.moon/cache/runReport.json` and enumerate the distinct
-    `actions[].operations[]` kinds.
-  - Identify which kinds are remote download, remote upload, and local
-    hydration. If they are not separable, fall back to `moon --dump` (chrome
-    trace) or `--log trace --log-file`.
-- [ ] **Cross-check against `moon run --summary detailed`**
-  - The parser and moon's own summary must agree on total cached-task time.
-- [ ] **Measure the M2 ceiling on the real CI workload**
-  - One instrumented `check`/`test` job at a pinned SHA, cache warm.
+- [x] **Confirm the runReport operation taxonomy for moon 2.4.5** — REPORT.md F2.
+  - M2 = sum of `output-hydration` ops with `status == 'cached-from-remote'`
+    (`cached` means a local hit). Upload side is `archive-creation`.
+  - `hash-generation` is client-side and unrecoverable by any cache — it was
+    3.7× the whole remote hydration cost on the sample run, so it is a floor
+    under every arm.
+- [x] **Cross-check against `moon run --summary detailed`** — agrees; the
+      summary's per-task `cached from remote` markers match the report's
+      `cached-from-remote` statuses 12/12.
+- [x] **A missing `DEPOT_TOKEN` silently disables remote caching** — REPORT.md
+      F1. Not a planned task; found while validating the instrument.
+  - [ ] Reword the "expected and harmless" claim in `AGENTS.md` and
+        `REPOSITORY_GUIDE.md` — it is harmless for correctness, but it means
+        local dev has no remote cache at all. Separate change, not this branch.
+- [x] **`MOON_REMOTE_HOST` overrides `workspace.yml`** — REPORT.md F3. Arms
+      switch by env var, so no benchmark config can leak into a commit.
+- [x] **`--no-actions` destroys cache hits** — REPORT.md F4. Do not use it to
+      strip pnpm-install noise from wall-clock; it converts the cache benchmark
+      into a build benchmark silently.
+- [ ] **Measure the M2 ceiling on the real CI workload** — the one blocking item
+  - One instrumented `check`/`test` job at a pinned SHA, cache warm, with
+    `DEPOT_TOKEN` present so the arm is real (F1).
   - Report: remote-cache seconds vs total moon-step seconds, per job.
   - **If M2 is a negligible share of M1, stop and write it up.**
+  - Locally this came out at **23% of cached-task time**, with hash-generation
+    (unrecoverable by any cache) taking the other 77% — REPORT.md F7. That is a
+    client property and may transfer; the working-set scale will not.
 - [ ] **Raw endpoint latency from inside the runner**
   - TCP connect + TLS handshake time to `cache.depot.dev`, N samples.
 - [ ] **Confirm the runner region empirically**
@@ -40,11 +54,13 @@ measurement instrument before anything depends on it.
   - `FindMissingBlobs` / `BatchReadBlobs` / ByteStream `Read` over a 4 KB /
     64 KB / 1 MB / 16 MB blob ladder against Depot.
   - Separates endpoint latency from moon client cost.
-- [ ] **Count sequential round-trips per run** — decides the whole DO question
-  - How many CAS calls does a full run make, and how well does moon batch them?
-  - Few batched calls ⇒ the DO RTT penalty is noise. One call per artifact ⇒ the
-    penalty multiplies by the artifact count and Stage B is likely dead on
-    arrival. Record the blob-count and call-count distribution, not just totals.
+- [x] **Count sequential round-trips per run** — REPORT.md F6. **~2.2 per cached
+      task**, measured as a 63.7 ms/ms-RTT slope over 29 tasks. moon batches: the
+      same run moves 498–6,972 blobs, so RTT is charged per task, not per
+      artifact. At a hypothesised +5 ms for DO-NYC that is +11 ms per task, and
+      wall-clock did not move outside noise across 0–40 ms.
+  - [ ] Re-measure on a real CI job — the linear model assumes latency-bound
+        hydration and a GB-scale working set may be bandwidth-bound instead.
 - [ ] **Record the working set (M6)**
   - CAS bytes moved by one full `moon run :lint :build` — sizes the droplet's
     disk, and its network throughput, and the DO egress estimate.
@@ -62,9 +78,17 @@ is not comparable to the others.
     pnpm store warm.
   - Records a ~5s CPU + disk micro-baseline per rep for runner-drift detection.
 - [ ] **`tools/bench-remote-cache/` — reporter**
-  - Parses `runReport.json` → M1, M2, M3 (p50/p90/max, MB/s), M4, M5, M6.
+  - Parses `runReport.json` → M1, M2, M3 (p50/p90/max, MB/s), M4, M5, M6, using
+    the F2 taxonomy.
   - **Asserts equal hit rate (M4) across arms and fails the run if it differs.**
+  - **Asserts the remote endpoint actually received traffic** — F1 and F4 are
+    both silent-green failures where the run looks fine and measures nothing.
+    Check the server's request counter, or a nonzero `cached-from-remote` count.
   - Emits JSON + a markdown table; median and p90, never mean.
+- [ ] **Port `delay-proxy.mjs` into the harness** (from the scratchpad; F5)
+  - `tc netem` needs `NET_ADMIN` and an `sch_netem`-capable kernel; the
+    userspace proxy needs neither. Prefer netem on the runner if it works there,
+    since the proxy's own overhead inflates the RTT=0 baseline.
 - [ ] **`.github/workflows/bench-remote-cache.yml`**
   - `workflow_dispatch` only, matrix over arms, uploads the JSON artifact.
   - Never on push — it is expensive and it is not a check.
