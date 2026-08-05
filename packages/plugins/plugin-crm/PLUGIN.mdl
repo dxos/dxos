@@ -93,32 +93,26 @@ type ResearchSource
 skill CrmSkill
   key: org.dxos.skill.crm
   desc: >
-    Drives an agent to research a contact (Person, Organization, or email
-    Message) and produce a Profile document plus Person/Organization
-    records in the user's space.
+    Composes the CRM operations with the web-search, database, and markdown
+    skills so an agent can maintain Person/Organization records and enrich
+    their Profile documents with researched content.
   depends_on:
-    - org.dxos.skill.research    # Research, DocumentCreate operations (high-level synthesis)
     - org.dxos.skill.web-search  # Fetch operation + AnthropicWebSearch (low-level URL fetch + search)
     - org.dxos.skill.database    # object-create, object-update, query, relation-create, load
     - org.dxos.skill.markdown    # create/read/update markdown documents
   contributes:
     - plugin-crm/attach-image
+    - plugin-crm/process-mailbox
+    - plugin-crm/research-person
+    - plugin-crm/research-organization
     - plugin-crm/ProfileOf (schema registration)
     - tools from registered ResearchSource contracts (v1: none)
   instructions: >
-    Authored in `src/skills/crm/instructions.ts`. Content is user-editable
-    post-install via the skill editor. Covers:
-      1. Subject resolution (branch on typename of the input ref).
-      2. Email-based contact extraction from Message (sender + signature).
-      3. Person/Organization lookup-or-create using the database skill.
-      4. Free-mail domain heuristic: do not attach Organization from
-         personal-email domains (gmail, outlook, icloud, yahoo, ...).
-      5. Research invocation via the research skill.
-      6. Profile composition following a section template (Overview,
-         Background, Current Role, Organization, Key Links, Notes, Sources).
-      7. ProfileOf relation creation linking the Document to its subject(s).
-      8. Best-effort image attachment via the attach-image operation.
-      9. Reply in the agent's normal reply style with inline object refs.
+    Authored inline in `src/skills/crm/skill.ts`, deliberately thin: entity
+    shapes, dedup semantics, and profile structure are owned by the CRM
+    operations, so the prose covers only subject resolution, when to prefer
+    the operations over ad-hoc object edits, content-enrichment conventions
+    for Profile documents, and the reply style.
 ```
 
 ## Operations
@@ -150,6 +144,65 @@ op attachImage
     continue without the image.
 ```
 
+```mdl
+op processMailbox
+  desc: >
+    Cursored CRM pipeline over a mailbox's message feed. Extracts contacts
+    for messages past the persisted feed Cursor using @dxos/extractor-lib
+    (same allow-list gate and identity-index dedup as mail sync), records
+    provenance on the mailbox, optionally scaffolds a Profile per new
+    contact, and advances the cursor page-wise.
+  input:
+    mailbox: Ref<Mailbox>
+    pageSize?: number              # messages per cursor-advance page (default 20)
+    research?: boolean             # scaffold a Profile per new contact (default false)
+  output:
+    processed: number
+    contacts: number
+    profiles: number
+  effects: [echo:write]
+  requires: [Database, Operation]
+  note: >
+    Idempotent: the cursor is a coarse skip keyed on message.created (ECHO's
+    native feed cursor is still stubbed) and the space's identity index is
+    the precise backstop, so per-item feed-trigger firing is safe — each
+    firing catches up and extra firings process nothing. The cursor object
+    is tagged with a foreign key (org.dxos.plugin-crm/process-mailbox) so it
+    never collides with other feed consumers' cursors (e.g. AnalyzeMailbox).
+```
+
+```mdl
+op researchPerson
+  desc: >
+    Deterministic profile scaffolding for a Person: creates a markdown
+    Profile skeleton pre-filled from known ECHO data (emails, role,
+    organization link), parents it to the subject, and links it via a
+    ProfileOf relation. Re-runs refresh lastResearchedAt and never
+    regenerate the document body (user/agent-owned after creation).
+  input:
+    subject: Ref<Person>
+  output:
+    profile: Ref<Document>
+    created: boolean
+  effects: [echo:write]
+  requires: [Database]
+```
+
+```mdl
+op researchOrganization
+  desc: >
+    Deterministic profile scaffolding for an Organization; mirrors
+    researchPerson and additionally lists the space's known people at the
+    organization.
+  input:
+    subject: Ref<Organization>
+  output:
+    profile: Ref<Document>
+    created: boolean
+  effects: [echo:write]
+  requires: [Database]
+```
+
 ## Services
 
 ```mdl
@@ -176,8 +229,6 @@ service AssistantToolkit
     Reused skills and operations from @dxos/assistant-toolkit.
   loading: eager
   ops:
-    research.Research(query, instructions?, entityExtraction?)
-    research.DocumentCreate(subject, name, content) → { document: DXN }
     webSearch.Fetch(url) → content              # low-level URL fetch
     webSearch.AnthropicWebSearch                # native Anthropic web search tool
     database.objectCreate(typename, fields) → Obj
@@ -213,18 +264,20 @@ feat F-1: Polymorphic Subject Resolution
 ```
 
 ```mdl
-feat F-2: Contact Extractor Utility
+feat F-2: Deterministic Contact Extraction
   desc: >
-    Pure function used by tests and available as reference output for the
-    agent. Stable deterministic behaviour makes signature parsing
-    regression-testable independently of the LLM loop.
-  req F-2.1: extractContactFromMessage(msg: Message) → ContactExtract is a pure, synchronous function.
-  req F-2.2: Extractor reads Message.sender.name, Message.sender.email, Message.properties.subject, and all text blocks.
-  req F-2.3: Domain part of the sender email determines orgDomain, excluding free-mail domains.
-  req F-2.4: Phone numbers are detected via a permissive regex (international + US formats).
-  req F-2.5: URLs in the signature block are captured into urls[].
-  req F-2.6: Multi-city office strings (e.g., "Americas (New York, San Francisco, ...)") parse into locations[].
-  req F-2.7: Free-mail detection covers at minimum: gmail.com, outlook.com, icloud.com, yahoo.com, hotmail.com, protonmail.com.
+    Contact-extraction semantics are owned by @dxos/extractor-lib (shared
+    with mail sync and plugin-inbox's extractor operations), not by
+    plugin-crm: buildContactFromActor builds the Person, the IdentitySpecs
+    dedupe by normalized email / website domain, and shouldExtractContact
+    gates extraction with an allow-list (a sender earns a record only when
+    outbound or at a known Organization domain; never for
+    no-reply/bulk/role senders). The processMailbox operation is
+    plugin-crm's surface over that machinery.
+  req F-2.1: processMailbox delegates to buildContactFromActor with a run-scoped overlay of the space's identity index.
+  req F-2.2: A repeat sender never yields a second Person, whether processed by this operation or by mail sync.
+  req F-2.3: Extraction provenance for feed messages is recorded via Mailbox.recordExtraction (feed items cannot be relation endpoints).
+  req F-2.4: plugin-crm ships no parallel extraction heuristics of its own.
 ```
 
 ```mdl
@@ -255,15 +308,16 @@ feat F-3: Person & Organization Upsert
 ```mdl
 feat F-4: Research & Profile Composition
   desc: >
-    The skill delegates web research to the research skill and
-    composes a Profile markdown document following an editable section
-    template defined in the skill instructions.
-  req F-4.1: Skill instructions define a default section template: Overview, Background, Current Role, Organization, Key Links, Notes, Sources.
-  req F-4.2: Sections are editable via the skill editor (instructions are part of the skill object).
-  req F-4.3: Agent invokes research.Research with a composed query derived from { fullName, orgName, orgDomain }.
-  req F-4.4: Agent creates a Document via research.DocumentCreate with the subject ref and the composed markdown content.
-  req F-4.5: The "Notes" section records disambiguation hints and uncertainty (e.g., free-mail sender, ambiguous name).
-  req F-4.6: The "Sources" section lists URLs that contributed to the profile.
+    Profile structure is deterministic; profile content is agentic. The
+    researchPerson / researchOrganization operations scaffold the document
+    skeleton (Overview, Details, Organization|People, Key Links, Notes,
+    Sources) pre-filled from known ECHO data and create the ProfileOf
+    relation; the agent enriches sections in place using the web-search and
+    markdown skills.
+  req F-4.1: The section template is rendered by the research operations, not prose; the agent extends sections rather than creating parallel documents.
+  req F-4.2: Re-running a research operation refreshes ProfileOf.lastResearchedAt and never regenerates the document body.
+  req F-4.3: The "Notes" section records disambiguation hints and uncertainty (e.g., free-mail sender, ambiguous name).
+  req F-4.4: The "Sources" section lists URLs that contributed to the profile, mirrored into ProfileOf.sources.
 ```
 
 ```mdl
@@ -317,7 +371,7 @@ feat F-8: Configuration Surface (deferred)
   desc: >
     Per-space CrmSettings ECHO type is planned but not implemented in v1.
     v1 relies on @dxos/config for imageServiceUrl and uses only no-auth
-    public endpoints for search (inherited from the research skill).
+    public endpoints for search (inherited from the web-search skill).
   req F-8.1: v1 does NOT ship a CrmSettings schema.
   req F-8.2: Design allows adding CrmSettings later without breaking API — the attachImage operation reads from Config for now.
   req F-8.3: No API keys are required to run v1.
@@ -339,45 +393,34 @@ feat F-9: CRM Navigation Section
 ## Acceptance
 
 ```mdl
-test T-1: Extractor — corporate short signature
-  given: an email Message with sender "Priya Adebayo <padebayo@ventura-advisors.example>" and signature block
-         containing "Priya Adebayo / padebayo@ventura-advisors.example / (555) 010-0149"
-  when: extractContactFromMessage(msg) is called
+test T-1: ProcessMailbox — gated extraction over the fixture mailbox
+  given: a Mailbox whose feed carries the three email fixtures with distinct timestamps, and
+         Organizations seeded for the two corporate .example domains
+  when: ProcessMailbox({ mailbox }) is invoked
   then:
-    - fullName === "Priya Adebayo"
-    - email === "padebayo@ventura-advisors.example"
-    - phone === "(555) 010-0149"
-    - orgDomain === "ventura-advisors.example"
-    - isFreeMailDomain === false
+    - Persons exist for the two corporate senders, each linked to its Organization
+    - NO Person exists for the freemail sender (allow-list gate)
+    - Mailbox.extracted records the contact id per corporate message
+    - the feed Cursor (tagged org.dxos.plugin-crm/process-mailbox) advanced to the newest message
 ```
 
 ```mdl
-test T-2: Extractor — free-mail personal contact
-  given: an email Message with sender "Riley Nakamura <riley.nakamura@gmail.com>" and no corporate signature
-  when: extractContactFromMessage(msg) is called
+test T-2: ProcessMailbox — idempotent and incremental
+  given: the state after T-1
+  when: ProcessMailbox is re-invoked, then two new messages (one repeat sender, one new sender at a
+        known Organization) are appended and it is invoked again
   then:
-    - fullName === "Riley Nakamura"
-    - email === "riley.nakamura@gmail.com"
-    - orgDomain === "gmail.com"
-    - isFreeMailDomain === true
-    - orgName is undefined
+    - the re-run creates nothing (cursor + identity index)
+    - the incremental run creates exactly one Person (the new sender); the repeat sender is deduplicated
 ```
 
 ```mdl
-test T-3: Extractor — corporate rich multi-office signature
-  given: an email Message with sender "Saskia Volkov <Saskia.Volkov@silverline-partners.example>" and signature
-         block "Saskia Volkov / +1 555 010 4182 / www.silverline-partners.example /
-         Americas (New York, Buenos Aires, Chicago, Miami, San Francisco, São Paulo, Washington DC)"
-  when: extractContactFromMessage(msg) is called
+test T-3: ProcessMailbox — research chain
+  given: the fixture mailbox from T-1
+  when: ProcessMailbox({ mailbox, research: true }) is invoked twice
   then:
-    - fullName === "Saskia Volkov"
-    - email === "Saskia.Volkov@silverline-partners.example"
-    - phone === "+1 555 010 4182"
-    - orgDomain === "silverline-partners.example"
-    - urls contains "www.silverline-partners.example"
-    - locations contains "New York"
-    - locations contains "San Francisco"
-    - isFreeMailDomain === false
+    - the first run scaffolds one Profile document + ProfileOf relation per new contact
+    - the second run creates no additional profiles or relations
 ```
 
 ```mdl
@@ -453,18 +496,18 @@ test T-9: Graduation — assistant-e2e suite
 
 ### Composition over duplication
 
-The single most important architectural decision is that plugin-crm is a thin
-composition layer. The `research`, `web-search`, `database`, and `markdown`
-skills in `@dxos/assistant-toolkit` already provide, respectively,
-high-level synthesis (`Research` / `DocumentCreate`), low-level URL fetch +
-native Anthropic web search (`Fetch` / `AnthropicWebSearch`), CRUD on ECHO
-objects, and Document lifecycle. plugin-crm declares a dependency on these
-skills; the agent sees their tools alongside `attach-image` and drives
-the CRM workflow per the instructions. This means:
+plugin-crm is a thin composition layer with a deterministic core. Structural
+work — contact extraction, dedup, cursoring, profile scaffolding — is done by
+typed operations that compose existing machinery (`@dxos/extractor-lib` for
+gate/identity/contact building, `@dxos/link` for the durable feed cursor)
+rather than reimplementing it or describing it in prose. Content work — web
+research, dossier writing — remains agent-orchestrated through the
+`web-search`, `database`, and `markdown` skills from
+`@dxos/assistant-toolkit`. This means:
 
-- No new `upsert_person` / `upsert_organization` / `create_profile_document` / `search_web` / `fetch_url` tools.
-- The agent is responsible for orchestration — matching Q5 (agent-orchestrated) and Q11 (compose).
-- Tuning the CRM behaviour is primarily a prompt-engineering exercise on the skill instructions.
+- No `search_web` / `fetch_url` tools of plugin-crm's own; enrichment composes existing skills.
+- The trigger loop is deterministic: routines bind `process-mailbox` directly, so no model sits between trigger and operation.
+- Tuning structural behaviour is a code change with deterministic tests; tuning content behaviour is a prompt change on the (thin) skill instructions.
 
 ### LinkedIn / browser extension seam
 
@@ -483,30 +526,31 @@ web-search skill's `Fetch` operation and `AnthropicWebSearch` tool, then
 passes the URL to `attach-image`. This keeps the operation small,
 single-purpose, and mockable in tests.
 
-### Free-mail domains
+### Extraction gate
 
-A conservative allowlist of free-mail domains (gmail, outlook, icloud, yahoo,
-hotmail, protonmail) is treated as "no organization signal from email alone".
-This prevents the free-mail fixture (riley.nakamura@gmail.com) from creating a
-"Gmail" or "Google" organization purely from the sender domain. The skill
-instructions call this out so the agent does not override the heuristic from
-body-text hints unless the user explicitly asks.
+Sender gating is owned by `shouldExtractContact` in `@dxos/extractor-lib` — an
+allow-list (outbound sender, or domain matches a known Organization; never
+no-reply/bulk/role mail), shared verbatim with mail sync. This both prevents a
+"Gmail" Organization from a free-mail sender and prevents automated senders
+from filling the space with contacts nobody will look at. Deterministic
+Organization creation from unknown domains is deliberately withheld pending
+the allow-list rework (sent-mail recipients; tracked in the mailbox-research
+project).
 
 ### Profile section template
 
-The default section template lives in the skill instructions (prose), not
-in a separate schema or a template Document. This makes the template
-user-editable through the existing skill editor surface without
-introducing new ECHO types. Sections: **Overview**, **Background**, **Current
-Role**, **Organization**, **Key Links**, **Notes**, **Sources**.
+The section template is rendered by `renderProfile` in
+`src/operations/research.ts` (Overview, Details, Organization|People, Key
+Links, Notes, Sources). The document body is user/agent-owned after creation:
+re-running a research operation refreshes provenance, never content.
 
 ### Testing strategy
 
 Three layers:
 
-1. **Extractor unit tests** (`src/util/extract-contact.test.ts`) — pure, fast, CI-on-by-default, one test per email.
-2. **Tuning playground** (`src/skills/crm/skill.test.ts`) — memoized LLM + stubbed image/search; `.skip` by default; regenerable with `ALLOW_LLM_GENERATION=1`. Used to iterate on instructions against the 3 emails.
-3. **Graduated assistant-e2e suite** (`packages/core/assistant-e2e/src/testing/crm/`) — tight assertions, canonical CI; populated once playground behaviour is stable.
+1. **Operation tests** (`src/operations/{research,process-mailbox}.test.ts`) — deterministic, CI-on-by-default: the fixture-driven feed → cursor → contact → profile chain, idempotency, and the extraction gate.
+2. **Template tests** (`src/templates/*.test.ts`) — scaffold shape of the project/automation templates, including the runnable + feed-trigger wiring.
+3. **Graded eval** (`packages/core/compute/assistant-evals/src/evals/crm-mailbox.eval.ts`) — the agentic enrichment path, scored with deterministic DB-effect assertions plus an LLM accuracy judge.
 
 ### Out of scope for v1
 
@@ -533,7 +577,7 @@ ext skill
     A named skill declaration describing its key, dependencies on other
     skills, its contributed operations/schemas, and a prose summary of
     its instructions. The skill's actual instruction text lives in
-    source (src/skills/<name>/instructions.ts) and is out of scope for
+    source (src/skills/<name>/skill.ts) and is out of scope for
     this document's extension schema.
   fields:
     key: string                  # skill identifier (e.g. org.dxos.skill.crm)

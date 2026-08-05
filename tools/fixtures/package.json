@@ -1,0 +1,31 @@
+{
+  "name": "@dxos/fixtures",
+  "version": "0.11.0",
+  "private": true,
+  "description": "Development fixture transfer (private R2 bucket, age-encrypted) and by-name resolution for tests across the monorepo.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "dx-fixtures": "./bin/fixtures.mjs"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "src"
+  ]
+}
