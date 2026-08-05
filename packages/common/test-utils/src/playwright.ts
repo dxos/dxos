@@ -94,10 +94,11 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     fullyParallel: true,
     // Fail the build on CI if you accidentally left test.only in the source code.
     forbidOnly: !!process.env.CI,
-    // Retry on CI to ride out the residual d&d / startup flakes while the
-    // underlying causes are still being chased. Local runs stay strict so
-    // flakes are visible while iterating.
-    retries: process.env.CI ? 2 : 0,
+    // No retries anywhere. Retrying hid flakes behind a 3x time cost — three `inbox.spec.ts` tests
+    // alone spent ~9 minutes of a shard failing three times each — which made shard timings
+    // unusable for sizing the suite. A flake now fails loudly and gets skipped with a TODO until
+    // it is fixed, so measured time reflects the tests that actually work.
+    retries: 0,
     // Opt out of parallel tests on CI.
     workers: process.env.CI ? 1 : 4,
     // Reporter to use. See https://playwright.dev/docs/test-reporters.

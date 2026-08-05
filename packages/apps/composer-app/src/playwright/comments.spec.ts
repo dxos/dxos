@@ -74,12 +74,9 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  test('delete message', async ({ browserName }) => {
-    // TODO(wittjosiah): Flaky in CI.
-    if (browserName !== 'chromium') {
-      test.skip();
-    }
-
+  // TODO(wittjosiah): Flaky in CI on every browser — chromium failed then passed on retry in run
+  //   31052131651, and retries are now off. Re-enable once the underlying flake is fixed.
+  test.fixme('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -132,7 +129,8 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  test('undo delete thread', async () => {
+  // TODO(wittjosiah): Failed on firefox in run 31046879125. Re-enable once fixed.
+  test.fixme('undo delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -158,7 +156,8 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  test('selecting comment highlights thread and vice versa', async () => {
+  // TODO(wittjosiah): Failed on webkit in run 31052131651 (quarantined in Trunk). Re-enable once fixed.
+  test.fixme('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 

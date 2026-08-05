@@ -42,7 +42,8 @@ test.describe('Board', () => {
     await expect(board.column(1).title()).toHaveText(col0Label!);
   });
 
-  test('rearrange within column', async () => {
+  // TODO(wittjosiah): Failed on firefox in run 31046879125 (quarantined in Trunk). Re-enable once fixed.
+  test.fixme('rearrange within column', async () => {
     // Pick whichever column has more items for a reliable test.
     const col0Count = await board.column(0).items().count();
     const col1Count = await board.column(1).items().count();
