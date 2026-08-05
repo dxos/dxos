@@ -15,15 +15,7 @@ import { Channel } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import {
-  SEEDED,
-  STORY_TIMEOUT,
-  channelStoryDecorators,
-  chrome,
-  control,
-  hoverUntil,
-  row,
-} from '../testing';
+import { SEEDED, STORY_TIMEOUT, channelStoryDecorators, chrome, control, hoverUntil, row } from '../testing';
 import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle';
 
 // TODO(wittjosiah): Channel doesn't render full height.
