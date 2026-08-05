@@ -27,6 +27,11 @@ const TARGETS: Array<[string, RegExp]> = [
   ['network-manager', /packages\/core\/mesh\/network-manager\//],
   ['teleport', /packages\/core\/mesh\/teleport\//],
   ['automerge-repo', /@automerge\+automerge-repo/],
+  // Property-testing generators reached from production code — `effect`'s `Arbitrary` pulls
+  // fast-check (and pure-rand with it), which is a whole boot chunk of test-only machinery.
+  ['fast-check', /node_modules\/\.pnpm\/fast-check@/],
+  ['effect/Arbitrary', /node_modules\/effect\/dist\/esm\/Arbitrary\.js$/],
+  ['react-aria', /node_modules\/\.pnpm\/@react-aria\+/],
 ];
 
 export const traceBootLeak = (entry: string): PluginOption =>
