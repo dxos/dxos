@@ -402,15 +402,22 @@ export default Capability.makeModule(
       }
     };
 
-    // Installed by the restore fiber below rather than here: the outbound sync writes the CURRENT
-    // deck over the URL, and the restore no longer completes during activation, so running it now
-    // would replace the URL being restored from with the empty pre-restore deck.
-    let unsubscribeState: (() => void) | undefined;
-    let unsubscribeCompanionVariant: (() => void) | undefined;
+    // Subscribed HERE, not from the restore fiber: the restore can now wait seconds for URL keys and
+    // for its nodes, and a navigation during that window would otherwise have no subscriber at all —
+    // the first navigation after a reload silently failed to update the URL. The writes are gated
+    // instead, so nothing overwrites the URL being restored from with the pre-restore deck.
+    let restored = false;
+    const syncUrlWhenRestored = () => restored && syncUrl();
+    const unsubscribeState = registry.subscribe(stateAtom, syncUrlWhenRestored);
+    const unsubscribeCompanionVariant = viewState.subscribe(
+      companionAspect,
+      COMPANION_VIEW_STATE_CONTEXT,
+      syncUrlWhenRestored,
+    );
     const startUrlSync = () => {
-      unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
-      unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () => syncUrl());
+      restored = true;
       // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
+      // Also picks up any navigation made while the restore was still in flight.
       syncUrl('replace');
     };
 
@@ -425,8 +432,8 @@ export default Capability.makeModule(
         if ('navigation' in window) {
           window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
-        unsubscribeState?.();
-        unsubscribeCompanionVariant?.();
+        unsubscribeState();
+        unsubscribeCompanionVariant();
         unlistenDeepLink?.();
       }),
     );
