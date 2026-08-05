@@ -88,7 +88,7 @@ import { FooHandlers } from '#operations';
 
 export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, FooHandlers);
+    return Capability.contribute(Capabilities.OperationHandler, FooHandlers);
   }),
 );
 ```
