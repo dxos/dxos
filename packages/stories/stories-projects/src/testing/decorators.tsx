@@ -7,10 +7,8 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { ActivationEvents, Capabilities, Capability, type Plugin } from '@dxos/app-framework';
-import { Plugin as PluginBuilder } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Instructions, LayerSpec, Project, Routine, Trigger } from '@dxos/compute';
 import { Collection, Database, Feed, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -48,15 +46,15 @@ export const storyParameters = {
 };
 
 /** Contributes this package's module surfaces so a story can drive them from a `ModuleContainer` layout. */
-const StoryModulesPlugin = PluginBuilder.define(
-  PluginBuilder.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.modules'), name: 'Project Story Modules' }),
+const StoryModulesPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.modules'), name: 'Project Story Modules' }),
 ).pipe(
-  PluginBuilder.addModule({
+  Plugin.addModule({
     id: 'project-story-modules',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, moduleSurfaces)),
+    provides: [Capabilities.ReactSurface],
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
-  PluginBuilder.make,
+  Plugin.make,
 );
 
 /**
@@ -91,16 +89,16 @@ export type DecoratorsProps = {
  * prompt) reaches a model instead of failing to resolve the service.
  */
 const StoryAiPlugin = (kind: StoryAiService) =>
-  PluginBuilder.define(
-    PluginBuilder.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.ai'), name: 'Project Story AI Service' }),
+  Plugin.define(
+    Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.ai'), name: 'Project Story AI Service' }),
   ).pipe(
-    PluginBuilder.addModule({
+    Plugin.addModule({
       id: 'project-story-ai',
-      activatesOn: ActivationEvents.SetupProcessManager,
+      provides: [Capabilities.LayerSpec],
       activate: Capability.makeModule(
         Effect.fnUntraced(function* () {
           return [
-            Capability.contributes(
+            Capability.contribute(
               Capabilities.LayerSpec,
               LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
                 kind === 'ollama'
@@ -114,22 +112,20 @@ const StoryAiPlugin = (kind: StoryAiService) =>
         }),
       ),
     }),
-    PluginBuilder.make,
+    Plugin.make,
   )();
 
 /**
  * Story decorators for a project template scenario: a personal space seeded with one mailbox, the
  * plugin set that owns the project machinery, and this package's module surfaces.
  *
- * `SetupArtifactDefinition` matters as much as the plugin list — skill-definition modules activate
- * on it, and the registry it populates is what resolves a skill ref to a display label. Without it
- * the article's skill rows and picker render empty even when the owning plugin is loaded.
+ * The plugin list is what populates the skill-definition registry that resolves a skill ref to a
+ * display label; without the owning plugin the article's skill rows and picker render empty.
  */
 export const createDecorators = ({ mailboxName, messages, ai, plugins = [], types = [] }: DecoratorsProps) => [
   withTheme(),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
-    setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupArtifactDefinition],
     plugins: [
       ...corePlugins(),
       ClientPlugin({

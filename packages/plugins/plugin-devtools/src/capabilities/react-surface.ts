@@ -69,7 +69,7 @@ const isGraphDebug = (data: unknown): data is GraphDebug => {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'appGraph',
         filter: AppSurface.subject(AppSurface.Article, isGraphDebug),

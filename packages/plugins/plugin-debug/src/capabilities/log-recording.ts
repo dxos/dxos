@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { logBuffer } from '@dxos/react-ui-debug';
 
 /**
@@ -15,6 +15,7 @@ import { logBuffer } from '@dxos/react-ui-debug';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     logBuffer.start();
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => logBuffer.stop()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => logBuffer.stop()));
+    return [];
   }),
 );

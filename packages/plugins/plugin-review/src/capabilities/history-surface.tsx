@@ -16,7 +16,7 @@ import { MarkdownProperties } from '../components';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'companion.objectHistory',
         filter: AppSurface.allOf(

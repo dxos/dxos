@@ -30,30 +30,27 @@ const bareWorkspace = (qualifiedWorkspace: string): string => {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = yield* Capability.get(SimpleLayoutCapabilities.State);
+    const operationService = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* SimpleLayoutCapabilities.State;
+    // The graph builder is contributed once by plugin-graph and is stable for the app's lifetime,
+    // so both the inbound (URL -> state) resolution and the outbound sync below share this handle.
+    const builder = yield* AppCapabilities.AppGraph;
 
-    const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
-      effect.pipe(
-        Effect.provideService(Capability.Service, capabilities),
-        Effect.provideService(Operation.Service, operationService),
-      );
+    const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
+      effect.pipe(Effect.provideService(Operation.Service, operationService));
 
     const getState = () => registry.get(stateAtom);
 
     /** Dispatch all NavigationHandler contributions with a given URL. */
-    const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
-      const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-      yield* Effect.all(
-        handlers.map((handler) => handler(url)),
+    const dispatchNavigationHandlers = (url: URL) =>
+      Effect.all(
+        navigationHandlers.get().map((handler) => handler(url)),
         { concurrency: 'unbounded' },
       );
-    });
 
     const handleNavigation = Effect.fn(function* (url?: URL) {
-      const builder = yield* Capability.get(AppCapabilities.AppGraph);
       const resolvedUrl = url ?? new URL(window.location.href);
       yield* dispatchNavigationHandlers(resolvedUrl);
 
@@ -132,8 +129,6 @@ export default Capability.makeModule(
       );
     }
 
-    const builder = yield* Capability.get(AppCapabilities.AppGraph);
-
     // Sync URL with layout state changes.
     const syncUrl = (method: 'push' | 'replace' = 'push') => {
       const state = getState();
@@ -167,20 +162,21 @@ export default Capability.makeModule(
     // Correct a bare/stale URL against the already-persisted state on load.
     syncUrl('replace');
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         unsubscribe();
         unlistenDeepLink?.();
       }),
     );
+    return [];
   }),
 );
 
 /** Check if a path is a redirect path handled elsewhere (e.g., OAuth). */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
-/** GraphPath with file extensions are not graph node paths. */
+/** Paths with file extensions are not graph node paths. */
 const isFilePath = (pathname: string): boolean => /\.[a-z]+$/i.test(pathname);
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */

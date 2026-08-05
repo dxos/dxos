@@ -22,6 +22,6 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({}),
     });
 
-    return [Capability.contributes(MeetingCapabilities.Settings, settingsAtom)];
+    return Capability.contribute(MeetingCapabilities.Settings, settingsAtom);
   }),
 );

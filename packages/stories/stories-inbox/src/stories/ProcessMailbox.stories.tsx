@@ -10,7 +10,6 @@ import { expect, userEvent, within } from 'storybook/test';
 import { ActivationEvents, Capabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
@@ -129,7 +128,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, ActivationEvents.Startup],
+      setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

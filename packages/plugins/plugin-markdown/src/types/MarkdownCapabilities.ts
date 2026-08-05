@@ -26,16 +26,19 @@ export type EditorViewRegistry = {
   getByDocumentId: (documentId: string) => EditorViewEntry | undefined;
 };
 
-export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.makeSingleton<Atom.Writable<Markdown.Settings>>()(
+  `${meta.profile.key}.capability.settings`,
+);
 
 /** Editor state store for cursor positions, scroll state, etc. */
-export const EditorState = Capability.make<EditorStateStore>(`${meta.profile.key}.capability.editor-state`);
+export const EditorState = Capability.makeSingleton<EditorStateStore>()(`${meta.profile.key}.capability.editorState`);
 
 /** Registry of active EditorView instances keyed by attendable ID. */
-export const EditorViews = Capability.make<EditorViewRegistry>(`${meta.profile.key}.capability.editor-views`);
+export const EditorViews = Capability.makeSingleton<EditorViewRegistry>()(`${meta.profile.key}.capability.editorViews`);
 
 // TODO(burdon): Move to ./types (external API)?
-export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
+// Multi capability: each contributing plugin provides one batch (array) of extension providers.
+export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>()(
   `${meta.profile.key}.capability.extensions`,
 );
 
@@ -45,7 +48,7 @@ export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>(
  * affordances. Contributions are app-lifetime: replacing the hook remounts the article (scroll and
  * selection reset), so contributors must register once at activation, not per render.
  */
-export const EditorBindingHook = Capability.make<UseEditorBinding>(`${meta.profile.key}.capability.editor-binding`);
+export const EditorBindingHook = Capability.make<UseEditorBinding>()(`${meta.profile.key}.capability.editorBinding`);
 
 /**
  * A contributed entry for the editor's view-mode dropdown: surfaces a per-document review mode (e.g.
@@ -65,6 +68,6 @@ export type ViewModeExtension = {
   order?: number;
 };
 
-export const ViewModeExtension = Capability.make<ViewModeExtension>(
-  `${meta.profile.key}.capability.view-mode-extension`,
+export const ViewModeExtension = Capability.make<ViewModeExtension>()(
+  `${meta.profile.key}.capability.viewModeExtension`,
 );

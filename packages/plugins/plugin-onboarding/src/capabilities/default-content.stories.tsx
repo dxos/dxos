@@ -9,7 +9,7 @@ import React from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -18,7 +18,7 @@ import { promptRunExtension } from '@dxos/plugin-assistant/extensions';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -41,13 +41,13 @@ const PromptExtensionPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extensions',
-    activatesOn: MarkdownEvents.SetupExtensions,
+    provides: [MarkdownCapabilities.ExtensionProvider],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(MarkdownCapabilities.ExtensionProvider, [
+      Effect.succeed([
+        Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
           () => promptRunExtension({ onRun: (promptText) => console.log('[run prompt]', promptText) }),
         ]),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -77,7 +77,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

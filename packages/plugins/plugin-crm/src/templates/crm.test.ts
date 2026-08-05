@@ -6,19 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Instructions, Routine, Trace, Trigger } from '@dxos/compute';
+import { Routine, Trace, Trigger } from '@dxos/compute';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Mailbox } from '@dxos/plugin-inbox';
 
+import { CrmOperation } from '../types';
 import { crm } from './crm';
 
-/** Number of skill keys wired into a CRM routine. */
-const SKILL_COUNT = 4;
-
 const dbLayer = TestDatabaseLayer({
-  types: [Routine.Routine, Instructions.Instructions, Trigger.Trigger, Mailbox.Mailbox, Feed.Feed],
+  types: [Routine.Routine, Trigger.Trigger, Mailbox.Mailbox, Feed.Feed],
 });
 
 const TestLayer = Layer.mergeAll(dbLayer, Trace.writerLayerNoop);
@@ -30,9 +28,7 @@ describe('crm routine template', () => {
     expect(crm.appliesTo?.(undefined)).toBe(false);
   });
 
-  test('scaffolds a routine draft graph with instructions, a feed trigger, and the event-item input binding', async ({
-    expect,
-  }) => {
+  test('scaffolds a routine draft bound to ProcessMailbox with a feed trigger', async ({ expect }) => {
     await Effect.gen(function* () {
       const mailbox = Mailbox.make({ name: 'Test Mailbox' });
       yield* Database.add(mailbox);
@@ -40,10 +36,16 @@ describe('crm routine template', () => {
 
       const draft = yield* crm.scaffold({ subject: mailbox });
 
-      // The draft is a routine graph with a recognisable name, wired for an instructions action.
+      // The draft is a routine graph with a recognisable name, wired for an operation action.
       expect(Obj.instanceOf(Routine.Routine, draft)).toBe(true);
       expect(draft.name).toContain('Test Mailbox');
-      expect(draft.spec?.kind).toBe('instructions');
+      expect(draft.spec?.kind).toBe('runnable');
+      expect(draft.spec?.kind === 'runnable' && draft.spec.runnable.uri.toString()).toBe(
+        CrmOperation.ProcessMailbox.meta.key.toString(),
+      );
+
+      // No model between trigger and operation: an operation action owns no instructions.
+      expect(Routine.instructionsRef(draft)).toBeUndefined();
 
       // Feed trigger pointing at the mailbox's feed, owned by the routine.
       const trigger = draft.triggers[0]?.target;
@@ -53,19 +55,10 @@ describe('crm routine template', () => {
       const triggerFeedUri = trigger?.spec?.kind === 'feed' ? trigger.spec.feed?.uri : undefined;
       expect(triggerFeedUri).toBe(mailbox.feed.uri);
 
-      // The event-item input binding is preserved (the instructions ref is wired into the trigger input at
-      // save time, not on the draft).
-      expect(trigger?.input?.input).toBe('{{event.item}}');
-
-      // The owned instructions is the routine's action (an instructions action).
-      const instructions = Routine.instructionsRef(draft)?.target;
-      expect(Obj.instanceOf(Instructions.Instructions, instructions)).toBe(true);
-      expect(Obj.instanceOf(Instructions.Instructions, instructions) ? instructions.name : undefined).toContain(
-        'Test Mailbox',
-      );
-      expect(Obj.instanceOf(Instructions.Instructions, instructions) ? instructions.skills : []).toHaveLength(
-        SKILL_COUNT,
-      );
+      // The operation reads the mailbox itself, so the input carries the subject ref plus the research flag.
+      expect(trigger?.input?.mailbox?.target?.id).toBe(mailbox.id);
+      expect(trigger?.input?.research).toBe(true);
+      expect(trigger?.concurrency).toBe(1);
     }).pipe(Effect.provide(TestLayer), EffectEx.runAndForwardErrors);
   });
 });

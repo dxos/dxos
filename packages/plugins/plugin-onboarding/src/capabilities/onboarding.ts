@@ -13,8 +13,8 @@ import { OnboardingCapabilities } from './capabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const client = yield* ClientCapabilities.Client;
     const searchProps = new URLSearchParams(window.location.search);
     const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
 
@@ -40,7 +40,7 @@ export default Capability.makeModule(
     // wired up in the constructor.
     void manager.initialize().catch((error) => log.catch(error));
 
-    return Capability.contributes(OnboardingCapabilities.Onboarding, manager, () =>
+    return Capability.contribute(OnboardingCapabilities.Onboarding, manager, () =>
       Effect.sync(() => manager.destroy()),
     );
   }),

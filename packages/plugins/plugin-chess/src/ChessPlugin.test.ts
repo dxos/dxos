@@ -4,8 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -23,16 +21,11 @@ describe('ChessPlugin', () => {
       plugins: [ClientPlugin({}), GamePlugin(), ChessPlugin()],
     });
 
-    // Modules expected to be active after a normal startup (headless/node variant).
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
-
-    // SetupArtifactDefinition is fired by AssistantPlugin, which can't be included here due to a workspace cycle.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-    expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
-
-    // Operation handlers are not loaded on startup — SetupProcessManager fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
+    // Modules expected to be active after a normal startup (headless/node variant). SkillDefinition
+    // and OperationHandler are dependency-mode roots, so they activate immediately too.
+    expect(harness.manager.getActive()).toEqual(
+      expect.arrayContaining([moduleId('schema'), moduleId('SkillDefinition'), moduleId('OperationHandler')]),
+    );
   });
 
   test('invokes the Print operation via the invoker capability', async ({ expect }) => {

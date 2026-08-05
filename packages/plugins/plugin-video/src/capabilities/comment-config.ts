@@ -14,10 +14,12 @@ const activate = Effect.fnUntraced(function* () {
   // Unanchored: comments attach to the video as a whole. Anchored (range) comments into the
   // transcript/summary text require the comment-sync editor extension, which currently only
   // targets Markdown.Document content.
-  return Capability.contributes(AppCapabilities.CommentConfig, {
-    id: Type.getTypename(Video.Video),
-    comments: 'unanchored',
-  });
+  return [
+    Capability.contribute(AppCapabilities.CommentConfig, {
+      id: Type.getTypename(Video.Video),
+      comments: 'unanchored',
+    }),
+  ];
 });
 
 export default activate;

@@ -14,4 +14,4 @@ import { meta } from '../meta';
  * seconds at the default resolution, and an article remounts whenever it is resized or reopened
  * alongside a companion.
  */
-export const PlanetCache = Capability.make<PlanetCacheType>(`${meta.profile.key}.capability.planetCache`);
+export const PlanetCache = Capability.makeSingleton<PlanetCacheType>()(`${meta.profile.key}.capability.planetCache`);

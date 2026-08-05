@@ -1,5 +1,19 @@
 # @dxos/types
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/client-protocol@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/link@0.11.1
+- @dxos/log@0.11.1
+- @dxos/random@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

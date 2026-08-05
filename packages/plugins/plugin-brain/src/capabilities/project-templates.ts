@@ -11,6 +11,6 @@ import { mailboxFacts } from '../templates/mailbox-facts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [Capability.contributes(ProjectCapabilities.Template, mailboxFacts)];
+    return [Capability.contribute(ProjectCapabilities.Template, mailboxFacts)];
   }),
 );

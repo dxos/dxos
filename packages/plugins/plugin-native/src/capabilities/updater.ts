@@ -64,8 +64,8 @@ export default Capability.makeModule(
     const isDevServer = window.location.port !== TAURI_LOCALHOST_PORT;
     const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
 
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
+    const registry = yield* Capabilities.AtomRegistry;
+    const { invoke } = yield* Capabilities.OperationInvoker;
 
     const statusAtom = Atom.make<Update.Status>(enabled ? { kind: 'idle' } : { kind: 'unsupported' }).pipe(
       Atom.keepAlive,
@@ -148,7 +148,7 @@ export default Capability.makeModule(
       },
     };
 
-    const managerContribution = Capability.contributes(NativeCapabilities.UpdateManager, manager);
+    const managerContribution = Capability.contribute(NativeCapabilities.UpdateManager, manager);
 
     if (!enabled) {
       log.info('updater disabled', { platform, port: window.location.port });
@@ -184,11 +184,10 @@ export default Capability.makeModule(
     const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDaemon);
     log.info('updater module initialized, update check scheduled');
 
-    return [
-      managerContribution,
-      // Return the interruption effect directly; Fiber.interrupt is async and would throw
-      // AsyncFiberException if wrapped in Effect.runSync.
-      Capability.contributes(Capabilities.Null, null, () => Fiber.interrupt(fiber)),
-    ];
+    // Fiber.interrupt is async and would throw AsyncFiberException if wrapped in Effect.runSync,
+    // so the finalizer returns the interruption effect directly.
+    yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
+
+    return managerContribution;
   }),
 );

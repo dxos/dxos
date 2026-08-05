@@ -15,5 +15,5 @@ import { type ModuleLayout } from './ModuleContainer';
  * capability is how a harness hands a runtime-built layout to the container without a wrapper.
  */
 export namespace StoryLayout {
-  export const Atom = Capability.make<Atom.Writable<ModuleLayout | undefined>>('org.dxos.storybook.layout');
+  export const Atom = Capability.make<Atom.Writable<ModuleLayout | undefined>>()('org.dxos.storybook.layout');
 }

@@ -27,14 +27,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { translations as markdownTranslations } from '@dxos/plugin-markdown/translations';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -76,8 +75,8 @@ const MarkdownExtensionsPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extensions',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: () => Effect.succeed(Capability.contributes(MarkdownCapabilities.ExtensionProvider, [])),
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activate: () => Effect.succeed([Capability.contribute(MarkdownCapabilities.ExtensionProvider, [])]),
   }),
   Plugin.make,
 );
@@ -96,11 +95,11 @@ const AmbientReviewPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ambient-review',
-    activatesOn: MarkdownEvents.SetupExtensions,
+    provides: [MarkdownCapabilities.ViewModeExtension],
     activate: () =>
       Effect.succeed([
-        // Stand in for plugin-comments' contribution so the Suggesting view-mode entry appears.
-        Capability.contributes(MarkdownCapabilities.ViewModeExtension, {
+        // Stand in for the plugin's own contribution so the Suggesting view-mode entry appears.
+        Capability.contribute(MarkdownCapabilities.ViewModeExtension, {
           id: 'suggesting',
           icon: 'ph--note-pencil--regular',
           label: 'Suggesting',
@@ -274,7 +273,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>((context) => ({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),
@@ -754,7 +752,7 @@ const editorReadOnly = (canvasElement: HTMLElement): boolean | undefined => {
  * - Editing: both authors' suggestions overlay inline and the comment highlight shows; editor editable.
  * - Viewing: suggestions hide, the comment stays, the editor goes read-only.
  * - Suggestion sources + comments are stood in by story-local `@dxos/ui-editor` fixtures
- *   (plugin-markdown cannot depend on plugin-comments).
+ *   (plugin-markdown cannot depend on plugin-review).
  */
 export const AmbientReviewTest: Story = {
   args: {

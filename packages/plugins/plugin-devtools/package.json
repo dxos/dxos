@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-devtools",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "DXOS developer inspector plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -79,6 +79,7 @@
     "@antv/graphlib": "catalog:",
     "@antv/layout": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",

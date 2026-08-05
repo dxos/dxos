@@ -11,13 +11,13 @@ import { DXN } from '@dxos/keys';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useWebComponentContext } from '@dxos/web-context-react';
 
-import { ActivationEvents, Capabilities } from '../../../common';
+import { Capabilities } from '../../../common';
 import { PluginManagerContext } from '../../../context';
 import { Capability, Plugin } from '../../../core';
 import { useApp } from '../../hooks';
 
 // Define the Counter capability
-const Counter = Capability.make<{ count: number; increment: () => void }>('example/counter');
+const Counter = Capability.makeSingleton<{ count: number; increment: () => void }>()('org.dxos.test.counter');
 
 const CountStatus = () => {
   const manager = useWebComponentContext(PluginManagerContext);
@@ -127,7 +127,7 @@ const CounterPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'CounterMain',
-    activatesOn: ActivationEvents.Startup,
+    provides: [Counter, Capabilities.ReactRoot],
     activate: () => {
       const listeners = new Set<() => void>();
       const counter = {
@@ -144,10 +144,10 @@ const CounterPlugin = Plugin.define(
 
       return Effect.succeed([
         // Contribute the state/logic
-        Capability.contributes(Counter, counter),
+        Capability.contribute(Counter, counter),
 
         // Contribute the UI
-        Capability.contributes(Capabilities.ReactRoot, {
+        Capability.contribute(Capabilities.ReactRoot, {
           id: 'org.dxos.plugin.counter.root',
           root: CounterComponent,
         }),

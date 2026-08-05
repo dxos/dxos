@@ -1,5 +1,24 @@
 # @dxos/feed-store
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/codec-protobuf@0.11.1
+- @dxos/context@0.11.1
+- @dxos/crypto@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/hypercore@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keyring@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/node-std@0.11.1
+- @dxos/random-access-storage@0.11.1
+- @dxos/util@0.11.1
+- @dxos/vendor-hypercore@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

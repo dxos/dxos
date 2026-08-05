@@ -3,15 +3,18 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
-import { type ThreadCapabilities } from '@dxos/plugin-thread';
+import { AppCapability } from '@dxos/app-toolkit';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
+import { ThreadCapabilities } from '@dxos/plugin-thread';
 
-export const ChannelBackend = Capability.lazy<ThreadCapabilities.ChannelBackendProvider>(
+export const ChannelBackend = Capability.lazyModule(
   'BlueskyChannelBackend',
+  { provides: [ThreadCapabilities.ChannelBackend] },
   () => import('./channel-backend'),
 );
-export const Connector = Capability.lazy('BlueskyConnector', () => import('./connector'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const Connector = Capability.lazyModule(
+  'BlueskyConnector',
+  { provides: [ConnectorCapability] },
+  () => import('./connector'),
 );
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

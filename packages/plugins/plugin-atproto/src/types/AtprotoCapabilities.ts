@@ -20,7 +20,7 @@ import type * as AtprotoRepo from '../services/AtprotoRepo';
  */
 export type RepoLayerFactory = (connection: Connection.Connection) => Layer.Layer<AtprotoRepo.Service, unknown>;
 
-export const RepoLayer = Capability.make<RepoLayerFactory>(`${meta.profile.key}.capability.repo-layer`);
+export const RepoLayer = Capability.make<RepoLayerFactory>()(`${meta.profile.key}.capability.repoLayer`);
 
 /**
  * Builds a public, read-only {@link AtprotoRepo.Service} layer for an arbitrary handle/DID (no
@@ -28,4 +28,4 @@ export const RepoLayer = Capability.make<RepoLayerFactory>(`${meta.profile.key}.
  */
 export type ReadRepoLayerFactory = (handle: string) => Layer.Layer<AtprotoRepo.Service, unknown>;
 
-export const ReadRepoLayer = Capability.make<ReadRepoLayerFactory>(`${meta.profile.key}.capability.read-repo-layer`);
+export const ReadRepoLayer = Capability.make<ReadRepoLayerFactory>()(`${meta.profile.key}.capability.readRepoLayer`);

@@ -9,7 +9,6 @@ import React from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -50,14 +49,14 @@ const HistoryProviderPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'history-provider',
-    activatesOn: AppActivationEvents.SetupSchema,
+    provides: [ReviewCapabilities.HistoryProvider],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(ReviewCapabilities.HistoryProvider, {
+      Effect.succeed([
+        Capability.contribute(ReviewCapabilities.HistoryProvider, {
           id: Type.getTypename(TestDoc),
           getTarget: (object) => (Obj.instanceOf(TestDoc, object) ? object.content.target : undefined),
         }),
-      ),
+      ]),
   }),
   Plugin.make,
 );

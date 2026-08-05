@@ -2,26 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
-const Graph = Capability.lazy('Graph', () => import('./graph'));
+const Graph = Capability.lazyModule(
+  'Graph',
+  { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.AppGraph] },
+  () => import('./graph'),
+);
 
 /**
  * Manages the state of the graph for the application.
  * Enables other plugins to register node builders to add nodes to the graph.
  * This includes actions and annotation each other's nodes.
  */
-export const GraphPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupAppGraph],
-    firesAfterActivation: [AppActivationEvents.AppGraphReady],
-    activate: Graph,
-  }),
-  Plugin.make,
-);
+export const GraphPlugin = Plugin.define(meta).pipe(Plugin.addModule(Graph), Plugin.make);
 
 export default GraphPlugin;

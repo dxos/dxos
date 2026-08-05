@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, DebugSettings, LogRecording, ReactSurface, StatsPanel } from '#capabilities';
 import { meta } from '#meta';
@@ -14,27 +14,20 @@ import { type DebugPluginOptions } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addSettingsModule({ activate: DebugSettings }),
-  Plugin.addModule(({ logStore }) => ({
-    id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => ReactSurface({ logStore }),
-  })),
-  Plugin.addModule({
-    id: 'log-recording',
-    activatesOn: ActivationEvents.Startup,
-    activate: LogRecording,
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule(({ persistStats }) => ({
-    id: 'stats-panel',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => StatsPanel({ persist: persistStats ?? true }),
-  })),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(DebugSettings),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(LogRecording),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(StatsPanel),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

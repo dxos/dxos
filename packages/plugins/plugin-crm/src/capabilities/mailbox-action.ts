@@ -18,7 +18,7 @@ import { CrmOperation } from '../types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(InboxCapabilities.MailboxAction, {
+    return Capability.contribute(InboxCapabilities.MailboxAction, {
       id: 'process-crm',
       label: 'Process CRM',
       icon: 'ph--address-book--regular',

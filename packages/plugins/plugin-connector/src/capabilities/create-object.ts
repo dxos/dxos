@@ -12,7 +12,7 @@ import { Connection, ConnectorCoordinator, CreateConnectionForm } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Connection.Connection),
       inputSchema: CreateConnectionForm,
       createObject: (props: { connectorId: string }, options) =>
@@ -22,6 +22,8 @@ export default Capability.makeModule(
             return yield* Effect.fail(new Error('No database for create target'));
           }
 
+          // Read on demand (invoked from the create-object form submit, not module activation) so
+          // this module doesn't need to declare a static dependency on the coordinator.
           const coordinator = yield* Capability.get(ConnectorCoordinator);
           const result = yield* coordinator.createConnection({
             db,

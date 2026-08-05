@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
@@ -20,11 +19,14 @@ describe('SheetPlugin', () => {
       plugins: [ClientPlugin({}), SheetPlugin()],
     });
 
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('CreateObject'), moduleId('schema')]));
-
-    await harness.fire(ActivationEvents.SetupProcessManager);
+    // OperationHandler and UndoMappings are dependency-mode roots, so they activate immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
+      expect.arrayContaining([
+        moduleId('CreateObject'),
+        moduleId('schema'),
+        moduleId('OperationHandler'),
+        moduleId('UndoMappings'),
+      ]),
     );
   });
 });

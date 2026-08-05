@@ -16,14 +16,23 @@ import { SearchOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Reactive read: the connector may evaluate before the client module finishes
+    // activating; the atom dependency re-evaluates it when the client lands.
+    const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
+    // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
+    // `AppCapabilities.Layout`; hoisting the atom lets the connector heal reactively if it lands.
+    const layoutCapabilityAtom = yield* Capability.atom(AppCapabilities.Layout);
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'spaceSearch',
         match: NodeMatcher.whenRoot,
         connector: (node, get) =>
           Effect.gen(function* () {
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
+            const [client] = get(clientAtom);
+            if (!client) {
+              return [];
+            }
+            const [layoutAtom] = get(layoutCapabilityAtom);
             const layout = layoutAtom ? get(layoutAtom) : undefined;
             const spaceId = layout?.workspace ? GraphPath.getSpaceIdFromPath(layout.workspace) : undefined;
             const space = spaceId ? client.spaces.get(spaceId) : null;
@@ -62,6 +71,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

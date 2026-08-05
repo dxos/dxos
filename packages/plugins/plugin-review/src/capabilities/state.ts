@@ -13,6 +13,6 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const stateAtom = Atom.make<CommentState>({ toolbar: {}, drafts: {} }).pipe(Atom.keepAlive);
 
-    return [Capability.contributes(CommentCapabilities.State, stateAtom)];
+    return [Capability.contribute(CommentCapabilities.State, stateAtom)];
   }),
 );

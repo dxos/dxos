@@ -1,5 +1,23 @@
 # @dxos/react-ui-canvas-editor
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/conductor@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/graph@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/react-ui-canvas@0.11.1
+- @dxos/react-ui-editor@0.11.1
+- @dxos/react-ui-syntax-highlighter@0.11.1
+- @dxos/ui-editor@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

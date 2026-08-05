@@ -17,9 +17,9 @@ export default Capability.makeModule(
     return [
       // The markdown editor's version-aware subject binding + review affordances — markdown owns the
       // socket, versioning owns the behaviour (same inversion as the comment-sync extension).
-      Capability.contributes(MarkdownCapabilities.EditorBindingHook, useMarkdownEditorBinding),
+      Capability.contribute(MarkdownCapabilities.EditorBindingHook, useMarkdownEditorBinding),
       // Gates the History companion for markdown documents.
-      Capability.contributes(ReviewCapabilities.HistoryProvider, {
+      Capability.contribute(ReviewCapabilities.HistoryProvider, {
         id: Type.getTypename(Markdown.Document),
         getTarget: (object) => (Obj.instanceOf(Markdown.Document, object) ? object.content.target : undefined),
       }),

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

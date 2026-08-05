@@ -3,8 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { AppGraphBuilder, AtprotoConnector, ReactSurface, RepoLayer } from '#capabilities';
 import { meta } from '#meta';
@@ -15,15 +14,20 @@ import { AtprotoPublication } from '#types';
 import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const AtprotoPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activatesOn: AppActivationEvents.SetupAppGraph, activate: AppGraphBuilder }),
-  AppPlugin.addSchemaModule({ schema: [AtprotoPublication.AtprotoPublication] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  Plugin.addModule({ activatesOn: AppActivationEvents.SetupConnectors, activate: AtprotoConnector }),
-  Plugin.addModule({ activatesOn: ClientEvents.ClientReady, activate: RepoLayer }),
-  AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(AppCapability.schema([AtprotoPublication.AtprotoPublication])),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AtprotoConnector),
+  Plugin.addModule(RepoLayer),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

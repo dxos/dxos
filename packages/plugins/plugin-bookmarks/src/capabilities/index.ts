@@ -3,15 +3,17 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { CrxCapabilities } from '@dxos/plugin-crx/types';
 
-export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
+export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+
+export const PageActionProvider = Capability.lazyModule(
+  'PageActionProvider',
+  { provides: [CrxCapabilities.PageAction] },
+  () => import('./page-action'),
 );
 
-export const PageActionProvider = Capability.lazy('PageActionProvider', () => import('./page-action'));
-
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

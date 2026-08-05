@@ -46,7 +46,7 @@ export const createPerson = (): Person.Person => {
 export const createProject = (): Pipeline.Pipeline => {
   return Obj.make(Pipeline.Pipeline, {
     name: random.person.fullName(),
-    image: 'https://dxos.network/dxos-logotype-blue.png',
+    image: 'https://media.dxos.network/dxos-logotype-blue.png',
     description: random.lorem.paragraph(),
     columns: [],
   });

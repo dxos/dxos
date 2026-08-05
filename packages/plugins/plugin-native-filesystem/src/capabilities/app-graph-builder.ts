@@ -127,14 +127,14 @@ export const createFilesystemEntryExtensions = (
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
     const stateCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.State);
     const filesystemManagerCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.FilesystemManager);
-    const appGraphCapabilitiesAtom = capabilities.atom(AppCapabilities.AppGraph);
+    const appGraphCapabilitiesAtom = yield* Capability.atom(AppCapabilities.AppGraph);
+    const clientCapabilitiesAtom = yield* Capability.atom(ClientCapabilities.Client);
     // Read the current filesystem tree synchronously at URL-resolve time (the `file` resolver runs long
     // after activation), the same registry+atom pattern as markdown-extension.
-    const registry = capabilities.get(Capabilities.AtomRegistry);
-    const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* NativeFilesystemCapabilities.State;
     const filesystemEntryExtensions = yield* createFilesystemEntryExtensions(
       stateCapabilitiesAtom,
       filesystemManagerCapabilitiesAtom,
@@ -176,8 +176,8 @@ export default Capability.makeModule(
           }
 
           const state: NativeFilesystemState = get(stateAtom);
-          const client = capabilities.get(ClientCapabilities.Client);
-          const personalSpace = AppSpace.getPersonalSpace(client);
+          const [client] = get(clientCapabilitiesAtom);
+          const personalSpace = client && AppSpace.getPersonalSpace(client);
 
           if (!state.workspaces.length || !personalSpace) {
             return Effect.succeed([]);
@@ -266,10 +266,7 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [
-      ...extensions.flat(),
-      ...filesystemEntryExtensions,
-    ]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [...extensions.flat(), ...filesystemEntryExtensions]);
   }),
 );
 

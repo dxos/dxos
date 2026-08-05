@@ -12,7 +12,9 @@ export type SpaceOperationConfig = {
   observability: boolean;
 };
 
-export const SpaceOperationConfig = Capability.make<SpaceOperationConfig>('org.dxos.plugin.space.operationConfig');
+export const SpaceOperationConfig = Capability.makeSingleton<SpaceOperationConfig>()(
+  'org.dxos.plugin.space.operationConfig',
+);
 
 /** The contributed identity rule for a typename, or `undefined` when no plugin owns one. */
 export const resolveIdentitySpec = Effect.fnUntraced(function* (typename: string) {

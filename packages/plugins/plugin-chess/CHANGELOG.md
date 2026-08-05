@@ -1,5 +1,26 @@
 # @dxos/plugin-chess
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/async@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui-audio@0.11.1
+- @dxos/react-ui-gameboard@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-game@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

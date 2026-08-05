@@ -3,10 +3,12 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { AppCapability } from '@dxos/app-toolkit';
+import { Connector as ConnectorCapability } from '@dxos/plugin-connector';
 
-export const Connector = Capability.lazy('GitHubConnector', () => import('./connector'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const Connector = Capability.lazyModule(
+  'GitHubConnector',
+  { provides: [ConnectorCapability] },
+  () => import('./connector'),
 );
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));

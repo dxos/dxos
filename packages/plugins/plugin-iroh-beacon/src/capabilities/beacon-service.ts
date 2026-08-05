@@ -17,7 +17,7 @@ import { BroadcastChannelTransport } from '../transport/broadcast-channel-transp
 import { type BeaconState } from '../types';
 
 export namespace BeaconCapabilities {
-  export const State = Capability.make<Atom.Atom<BeaconState>>(`${meta.profile.key}.capability.state`);
+  export const State = Capability.makeSingleton<Atom.Atom<BeaconState>>()(`${meta.profile.key}.capability.state`);
 }
 
 const INITIAL_STATE: BeaconState = {
@@ -29,7 +29,7 @@ const INITIAL_STATE: BeaconState = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const registry = yield* Capabilities.AtomRegistry;
 
     const stateAtom = Atom.make<BeaconState>(INITIAL_STATE).pipe(Atom.keepAlive);
 
@@ -56,6 +56,6 @@ export default Capability.makeModule(
       void service.open();
     }
 
-    return Capability.contributes(BeaconCapabilities.State, stateAtom);
+    return Capability.contribute(BeaconCapabilities.State, stateAtom);
   }),
 );

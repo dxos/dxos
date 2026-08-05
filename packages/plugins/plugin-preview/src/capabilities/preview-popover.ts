@@ -118,6 +118,7 @@ export default Capability.makeModule(
       log.warn('no default view found');
     }
 
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cleanup?.()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => cleanup?.()));
+    return [];
   }),
 );

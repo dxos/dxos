@@ -1,5 +1,24 @@
 # @dxos/stories-lens
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/echo-doc@0.11.1
+- @dxos/echo-panproto@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-editor@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/react-ui-syntax-highlighter@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/storybook-testing@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui-editor@0.11.1
+- @dxos/ui-theme@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

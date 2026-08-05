@@ -2,15 +2,26 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-// eslint-disable-next-line unused-imports/no-unused-imports
-import type { OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
-export const CrxSettings = Capability.lazy('CrxSettings', () => import('./settings'));
-export const InstallPageActions = Capability.lazy('InstallPageActions', () => import('./install-page-actions'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import { CrxCapabilities } from '#types';
+
+export const CrxSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [CrxCapabilities.Settings],
+});
+export const InstallPageActions = Capability.lazyModule(
+  'InstallPageActions',
+  {
+    requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry, CrxCapabilities.Settings],
+    provides: [],
+  },
+  () => import('./install-page-actions'),
 );
-export const PageActionProvider = Capability.lazy('PageActionProvider', () => import('./page-action-provider'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const PageActionProvider = Capability.lazyModule(
+  'PageActionProvider',
+  { provides: [CrxCapabilities.PageAction] },
+  () => import('./page-action-provider'),
+);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'));

@@ -40,6 +40,9 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

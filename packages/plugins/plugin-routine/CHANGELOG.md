@@ -1,5 +1,51 @@
 # @dxos/plugin-routine
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/agent-runtime@0.11.1
+- @dxos/ai@0.11.1
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/assistant-toolkit@0.11.1
+- @dxos/cli-util@0.11.1
+- @dxos/client@0.11.1
+- @dxos/client-protocol@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/compute-runtime@0.11.1
+- @dxos/conductor@0.11.1
+- @dxos/context@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-doc@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/edge-client@0.11.1
+- @dxos/edge-compute@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/link@0.11.1
+- @dxos/log@0.11.1
+- @dxos/random@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/react-ui-components@0.11.1
+- @dxos/react-ui-editor@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-menu@0.11.1
+- @dxos/react-ui-search@0.11.1
+- @dxos/react-ui-syntax-highlighter@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui@0.11.1
+- @dxos/ui-editor@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-graph@0.11.1
+- @dxos/plugin-markdown@0.11.1
+- @dxos/plugin-space@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

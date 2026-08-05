@@ -27,9 +27,9 @@ export default Capability.makeModule(
     // Get context for lazy capability access in callbacks.
     const capabilities = yield* Capability.Service;
 
-    const store = capabilities.get(MeetingCapabilities.State);
+    const store = yield* MeetingCapabilities.State;
 
-    return Capability.contributes(CallsCapabilities.EventHandler, {
+    return Capability.contribute(CallsCapabilities.EventHandler, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const haloIdentity = capabilities.get(ClientCapabilities.IdentityService);
         const identity = Option.getOrUndefined(haloIdentity.getSnapshot());

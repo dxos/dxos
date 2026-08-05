@@ -6,10 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
@@ -21,7 +21,7 @@ import { DXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -31,7 +31,7 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-import { ReviewPlugin } from '../../ReviewPlugin';
+import { ReviewPlugin, type ReviewPluginOptions } from '../../ReviewPlugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 import { translations } from '../../translations';
@@ -109,75 +109,53 @@ const StubAgentRunner: CommentCapabilities.AgentRunner = {
  *    `comment` action to the doc's node.
  * 2. Stubs out plugin-deck's layout operations (`UpdateCompanion`,
  *    `ScrollIntoView`) that ReviewPlugin and the CommentsArticle invoke.
- * 3. Contributes a static `AgentIdentity` ("Kai") so any AgentRunner has a name
- *    to stamp on assistant messages.
  */
+const StoryAppGraphBuilder = Capability.inlineModule(
+  'StoryAppGraphBuilder',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+    const extensions = yield* GraphBuilder.createExtension({
+      id: 'storyDocs',
+      match: NodeMatcher.whenRoot,
+      connector: (_, get) =>
+        Effect.gen(function* () {
+          const client = capabilities.get(ClientCapabilities.Client);
+          const space = AppSpace.getPersonalSpace(client);
+          if (!space) {
+            return [];
+          }
+          const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
+          return docs
+            .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
+            .filter(isNonNullable);
+        }),
+    });
+    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)];
+  }),
+);
+
+const StoryOperationHandler = Capability.inlineModule(
+  'StoryOperationHandler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+          Operation.withHandler(LayoutOperation.ScrollIntoView, () => Effect.void),
+        ),
+      ),
+    ]),
+);
+
 const StoryGraphPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.comments.story.storyGraph'),
     name: 'Story Graph',
   }),
-).pipe(
-  AppPlugin.addAppGraphModule({
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      const extensions = yield* GraphBuilder.createExtension({
-        id: 'storyDocs',
-        match: NodeMatcher.whenRoot,
-        connector: (_, get) =>
-          Effect.gen(function* () {
-            const client = capabilities.get(ClientCapabilities.Client);
-            const space = AppSpace.getPersonalSpace(client);
-            if (!space) {
-              return [];
-            }
-            const docs = get(space.db.query(Filter.type(Markdown.Document)).atom);
-            return docs
-              .map((object) => AppNode.makeObject({ get, db: space.db, object, droppable: false }))
-              .filter(isNonNullable);
-          }),
-      });
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
-    }),
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-            Operation.withHandler(LayoutOperation.ScrollIntoView, () => Effect.void),
-          ),
-        ),
-      ),
-  }),
-  Plugin.addModule({
-    id: 'story-graph.identity',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(AgentIdentity, { name: STORY_AGENT_NAME })),
-  }),
-  Plugin.make,
-);
-
-/**
- * Stub agent runner — used by the WithMentionAgent / WithAutoAgent variants.
- * Loaded BEFORE ReviewPlugin so its `AgentRunner` contribution wins over
- * ReviewPlugin's default LLM-backed runner.
- */
-const StoryStubAgentPlugin = Plugin.define(
-  Plugin.makeMeta({
-    key: DXN.make('org.dxos.plugin.comments.story.storyStubAgent'),
-    name: 'Story Stub Agent',
-  }),
-).pipe(
-  Plugin.addModule({
-    id: 'story-stub-agent.runner',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(CommentCapabilities.AgentRunner, StubAgentRunner)),
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addModule(StoryAppGraphBuilder), Plugin.addModule(StoryOperationHandler), Plugin.make);
 
 type StoryArgs = {
   /**
@@ -225,7 +203,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -252,10 +229,12 @@ const meta = {
             }),
         }),
         SpacePlugin({}),
-        ReviewPlugin(),
+        ReviewPlugin({
+          agentRunner: StubAgentRunner,
+          agentIdentity: { name: STORY_AGENT_NAME },
+        } satisfies ReviewPluginOptions),
         MarkdownPlugin(),
         StoryGraphPlugin(),
-        StoryStubAgentPlugin(),
       ],
     })),
   ],

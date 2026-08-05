@@ -28,15 +28,14 @@ import { ClientCapabilities } from '@dxos/plugin-client';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
-    const capabilityManager = yield* Capability.Service;
+    const client = yield* ClientCapabilities.Client;
+    const atomRegistry = yield* Capabilities.AtomRegistry;
 
     //
     // Skill registration.
     //
 
-    const skillDefinitionsAtom = capabilityManager.atom(AppCapabilities.SkillDefinition);
+    const skillDefinitionsAtom = yield* Capability.atom(AppCapabilities.SkillDefinition);
     const prevSkillKeys = new Set<string>();
 
     atomRegistry.subscribe(
@@ -60,7 +59,7 @@ export default Capability.makeModule(
     // Operation registration.
     //
 
-    const operationHandlersAtom = capabilityManager.atom(Capabilities.OperationHandler);
+    const operationHandlersAtom = yield* Capability.atom(Capabilities.OperationHandler);
     const prevOperationKeys = new Set<string>();
 
     atomRegistry.subscribe(
@@ -110,5 +109,7 @@ export default Capability.makeModule(
       },
       { immediate: true },
     );
+
+    return [];
   }),
 );

@@ -35,22 +35,18 @@ import type {
 import type { Surface } from '../ui';
 
 /**
- * Null capability.
  * @category Capability
  */
-export const Null = Capability$.make<null>('org.dxos.app-framework.capability.null');
-
-/**
- * @category Capability
- */
-export const PluginManager = Capability$.make<PluginManager$.PluginManager>(
+export const PluginManager = Capability$.makeSingleton<PluginManager$.PluginManager>()(
   'org.dxos.app-framework.capability.pluginManager',
 );
 
 /**
  * @category Capability
  */
-export const AtomRegistry = Capability$.make<Registry.Registry>('org.dxos.app-framework.capability.atomRegistry');
+export const AtomRegistry = Capability$.makeSingleton<Registry.Registry>()(
+  'org.dxos.app-framework.capability.atomRegistry',
+);
 
 export type ReactContext = Readonly<{
   id: string;
@@ -61,14 +57,14 @@ export type ReactContext = Readonly<{
 /**
  * @category Capability
  */
-export const ReactContext = Capability$.make<ReactContext>('org.dxos.app-framework.capability.reactContext');
+export const ReactContext = Capability$.make<ReactContext>()('org.dxos.app-framework.capability.reactContext');
 
 export type ReactRoot = Readonly<{ id: string; root: FC<PropsWithChildren> }>;
 
 /**
  * @category Capability
  */
-export const ReactRoot = Capability$.make<ReactRoot>('org.dxos.app-framework.capability.reactRoot');
+export const ReactRoot = Capability$.make<ReactRoot>()('org.dxos.app-framework.capability.reactRoot');
 
 /**
  * Surface definitions that can be either React components or Web Components.
@@ -78,19 +74,19 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
 /**
  * @category Capability
  */
-export const ReactSurface = Capability$.make<ReactSurface>('org.dxos.app-framework.capability.reactSurface');
+export const ReactSurface = Capability$.make<ReactSurface>()('org.dxos.app-framework.capability.reactSurface');
 
 export type AnyCommand = Command$.Command<any, any, any, any>;
 
 /**
  * @category Capability
  */
-export const Command = Capability$.make<AnyCommand>('org.dxos.app-framework.capability.command');
+export const Command = Capability$.make<AnyCommand>()('org.dxos.app-framework.capability.command');
 
 /**
  * @category Capability
  */
-export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app-framework.capability.layer');
+export const Layer = Capability$.make<Layer$.Layer<any, any, any>>()('org.dxos.app-framework.capability.layer');
 
 /**
  * Layer specification contributed by plugins.
@@ -101,7 +97,7 @@ export const Layer = Capability$.make<Layer$.Layer<any, any, any>>('org.dxos.app
  *
  * @category Capability
  */
-export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>('org.dxos.app-framework.capability.layerSpec');
+export const LayerSpec = Capability$.make<LayerSpec$.LayerSpec>()('org.dxos.app-framework.capability.layerSpec');
 
 /**
  * Context passed to {@link TraceSinkFactory} implementations when the
@@ -136,7 +132,7 @@ export type TraceSinkFactory = (ctx: TraceSinkFactoryContext) => Trace$.Sink;
  *
  * @category Capability
  */
-export const TraceSink = Capability$.make<TraceSinkFactory>('org.dxos.app-framework.capability.traceSink');
+export const TraceSink = Capability$.make<TraceSinkFactory>()('org.dxos.app-framework.capability.traceSink');
 
 /**
  * Source of ephemeral trace messages broadcast by remote runtimes over the space swarm (DX-1125).
@@ -146,7 +142,7 @@ export const TraceSink = Capability$.make<TraceSinkFactory>('org.dxos.app-framew
  *
  * @category Capability
  */
-export const RemoteTraceMonitor = Capability$.make<RemoteTraceMonitor$.Monitor>(
+export const RemoteTraceMonitor = Capability$.make<RemoteTraceMonitor$.Monitor>()(
   'org.dxos.app-framework.capability.remoteTraceMonitor',
 );
 
@@ -171,7 +167,7 @@ export const RemoteTraceMonitor = Capability$.make<RemoteTraceMonitor$.Monitor>(
  *
  * @category Capability
  */
-export const ServiceResolver = Capability$.make<ServiceResolver$.ServiceResolver>(
+export const ServiceResolver = Capability$.makeSingleton<ServiceResolver$.ServiceResolver>()(
   'org.dxos.app-framework.capability.serviceResolver',
 );
 
@@ -182,7 +178,9 @@ export const ServiceResolver = Capability$.make<ServiceResolver$.ServiceResolver
  *
  * @category Capability
  */
-export const ProcessMonitor = Capability$.make<Process$.Monitor>('org.dxos.app-framework.capability.processMonitor');
+export const ProcessMonitor = Capability$.makeSingleton<Process$.Monitor>()(
+  'org.dxos.app-framework.capability.processMonitor',
+);
 
 /**
  * Services that are always available when running effects through a {@link ProcessManagerRuntime}.
@@ -221,7 +219,7 @@ export interface ProcessManagerRuntime {
 /**
  * @category Capability
  */
-export const ProcessManagerRuntime = Capability$.make<ProcessManagerRuntime>(
+export const ProcessManagerRuntime = Capability$.makeSingleton<ProcessManagerRuntime>()(
   'org.dxos.app-framework.capability.processManagerRuntime',
 );
 
@@ -230,13 +228,15 @@ export type ManagedRuntime = ManagedRuntime$.ManagedRuntime<any, any>;
 /**
  * @category Capability
  */
-export const ManagedRuntime = Capability$.make<ManagedRuntime>('org.dxos.app-framework.capability.managedRuntime');
+export const ManagedRuntime = Capability$.makeSingleton<ManagedRuntime>()(
+  'org.dxos.app-framework.capability.managedRuntime',
+);
 
 //
 // Operation System Capabilities
 //
 
-export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHandlerSet>(
+export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHandlerSet>()(
   'org.dxos.app-framework.capability.operationHandler',
 );
 
@@ -246,7 +246,7 @@ export type UndoMapping = UndoMapping$.UndoMapping;
  * Undo mapping registration - contributed by plugins.
  * @category Capability
  */
-export const UndoMapping = Capability$.make<UndoMapping[]>('org.dxos.app-framework.capability.undoMapping');
+export const UndoMapping = Capability$.make<UndoMapping[]>()('org.dxos.app-framework.capability.undoMapping');
 
 /**
  * Operation invoker backed by the process manager. Spawns a process per
@@ -258,7 +258,7 @@ export type OperationInvoker = OperationInvoker$.OperationInvoker;
  * Operation invoker - provided by the process-manager capability.
  * @category Capability
  */
-export const OperationInvoker = Capability$.make<OperationInvoker>(
+export const OperationInvoker = Capability$.makeSingleton<OperationInvoker>()(
   'org.dxos.app-framework.capability.operationInvoker',
 );
 
@@ -268,7 +268,7 @@ export type UndoRegistry = UndoRegistry$.UndoRegistry;
  * Undo registry - provided by ProcessManagerPlugin.
  * @category Capability
  */
-export const UndoRegistry = Capability$.make<UndoRegistry>('org.dxos.app-framework.capability.undoRegistry');
+export const UndoRegistry = Capability$.makeSingleton<UndoRegistry>()('org.dxos.app-framework.capability.undoRegistry');
 
 export type HistoryTracker = HistoryTracker$.HistoryTracker;
 
@@ -276,7 +276,9 @@ export type HistoryTracker = HistoryTracker$.HistoryTracker;
  * History tracker - provided by ProcessManagerPlugin.
  * @category Capability
  */
-export const HistoryTracker = Capability$.make<HistoryTracker>('org.dxos.app-framework.capability.historyTracker');
+export const HistoryTracker = Capability$.makeSingleton<HistoryTracker>()(
+  'org.dxos.app-framework.capability.historyTracker',
+);
 
 //
 // Atom Capability Helpers

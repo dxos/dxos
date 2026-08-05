@@ -11,9 +11,9 @@ import { ScriptOperationHandlerSet } from '#operations';
 
 import { ScriptHandlers } from '../skills/functions';
 
-export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(
+    return Capability.contribute(
       Capabilities.OperationHandler,
       OperationHandlerSet.merge(ScriptOperationHandlerSet, ScriptHandlers),
     );

@@ -27,7 +27,7 @@ import { SampleDeckCompanionSurface, SampleStatusSurface } from './SampleSurface
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       // --- Article surface ---
       // The primary content view. `oneOf(object(Article, ...), object(Section, ...))`
       // registers this component for both full-article and inline-section roles.

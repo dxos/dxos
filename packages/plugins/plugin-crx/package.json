@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-crx",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Composer plugin for coordinating with the composer-crx browser extension.",
   "homepage": "https://dxos.org",
@@ -89,6 +89,7 @@
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

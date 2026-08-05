@@ -2,20 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { Plugin } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
 
 import { Duffel } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
 export const DuffelPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: `${meta.profile.key}/duffel`,
-    activatesOn: ActivationEvents.Startup,
-    activate: Duffel,
-  }),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Duffel),
   Plugin.make,
 );
 

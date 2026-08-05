@@ -11,7 +11,7 @@ import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
-    return Capability.contributes(Capabilities.ReactRoot, {
+    return Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: Call.Audio,
     });

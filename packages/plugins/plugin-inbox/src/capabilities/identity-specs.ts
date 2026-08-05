@@ -19,6 +19,6 @@ import { SpaceCapabilities } from '@dxos/plugin-space';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return identitySpecs.map((spec) => Capability.contributes(SpaceCapabilities.IdentitySpec, spec));
+    return Capability.contributeAll(SpaceCapabilities.IdentitySpec, identitySpecs);
   }),
 );

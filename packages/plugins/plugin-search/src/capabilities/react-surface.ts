@@ -17,7 +17,7 @@ import { SearchCompanionSurface, SearchDialogSurface, SearchInputSurface } from 
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: SEARCH_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof SearchDialog>>(AppSurface.Dialog, SEARCH_DIALOG),

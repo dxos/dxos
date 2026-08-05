@@ -12,9 +12,6 @@ import { crmProject } from '../templates/crm-project';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return [
-      Capability.contributes(ProjectCapabilities.Template, crmProject),
-      Capability.contributes(ProjectCapabilities.Template, crmPipeline),
-    ];
+    return Capability.contributeAll(ProjectCapabilities.Template, [crmProject, crmPipeline]);
   }),
 );

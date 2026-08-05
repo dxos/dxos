@@ -2,35 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
 
 import { type ThemePluginOptions } from './react-context';
+import { ThemeCapabilities } from './types';
 
-const ReactContext = Capability.lazy('ReactContext', () => import('./react-context'));
-const Translator = Capability.lazy('Translator', () => import('./translator'));
-const Settings = Capability.lazy('Settings', () => import('./settings'));
+const ReactContext = Capability.lazyModule(
+  'ReactContext',
+  { requires: [Capabilities.AtomRegistry, ThemeCapabilities.Settings], provides: [Capabilities.ReactContext] },
+  () => import('./react-context'),
+);
+const Translator = Capability.lazyModule(
+  'Translator',
+  { requires: [Capabilities.AtomRegistry, AppCapabilities.Translations], provides: [AppCapabilities.Translator] },
+  () => import('./translator'),
+);
+const Settings = AppCapability.settings(() => import('./settings'), {
+  provides: [ThemeCapabilities.Settings],
+});
 
 export const ThemePlugin = Plugin.define<ThemePluginOptions>(meta).pipe(
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(ReactContext),
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupTranslations, AppActivationEvents.SetupSettings],
-    activate: () => ReactContext(options),
-  })),
-  Plugin.addModule((options: ThemePluginOptions) => ({
-    id: Capability.getModuleTag(Translator),
-    activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupTranslations],
-    activate: () => Translator(options),
-  })),
-  Plugin.addModule({
-    id: Capability.getModuleTag(Settings),
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: Settings,
-  }),
+  Plugin.addModule(Settings),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(Translator),
   Plugin.make,
 );
 

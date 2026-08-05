@@ -13,7 +13,7 @@ import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'plugin-settings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),

@@ -2,13 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AppCapability } from '@dxos/app-toolkit';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const CreateObject = Capability.lazyModule(
+  'CreateObject',
+  { provides: [SpaceCapabilities.CreateObjectEntry] },
+  () => import('./create-object'),
+);
 
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
+export const OperationHandler = Capability.lazyModule(
   'OperationHandler',
+  { provides: [Capabilities.OperationHandler] },
   () => import('./operation-handler'),
 );

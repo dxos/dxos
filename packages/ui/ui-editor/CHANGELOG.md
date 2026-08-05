@@ -1,5 +1,29 @@
 # @dxos/ui-editor
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-graph@0.11.1
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/context@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/display-name@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-doc@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/lit-ui@0.11.1
+- @dxos/log@0.11.1
+- @dxos/nlp@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/ui@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/ui-types@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

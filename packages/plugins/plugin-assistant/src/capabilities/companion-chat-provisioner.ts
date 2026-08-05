@@ -32,16 +32,24 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const deckStateAtom = yield* Capability.get(DeckCapabilities.State);
-    const cacheAtom = yield* Capability.get(AssistantCapabilities.CompanionChatCache);
-    const stateAtom = yield* Capability.get(AssistantCapabilities.State);
+    const operationInvoker = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const registry: Registry.Registry = yield* Capabilities.AtomRegistry;
+
+    // Optional: provisioning is keyed off deck planks, so a host without a deck has nothing to
+    // provision for.
+    const deckStateOption = yield* Capability.getOption(DeckCapabilities.State);
+    if (Option.isNone(deckStateOption)) {
+      return [];
+    }
+    const deckStateAtom = deckStateOption.value;
+
+    const cacheAtom = yield* AssistantCapabilities.CompanionChatCache;
+    const stateAtom = yield* AssistantCapabilities.State;
     // The selected companion variant moved off deck state into a global view-state aspect; read and
     // observe it directly so a tab switch (which no longer touches deck state) still re-provisions.
     // Project just the variant so a companion resize (same aspect) does not re-fire provisioning.
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    const viewState = yield* AttentionCapabilities.ViewState;
     const variantAtom = Atom.make((get) => get(viewState.atom(companionAspect, COMPANION_VIEW_STATE_CONTEXT)).variant);
 
     const plankSubs = new Map<string, () => void>();
@@ -142,7 +150,7 @@ export default Capability.makeModule(
     const unsub2 = registry.subscribe(stateAtom, provision);
     const unsub3 = registry.subscribe(variantAtom, provision);
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsub1();
         unsub2();
@@ -150,6 +158,7 @@ export default Capability.makeModule(
         unsubAllPlanks();
       }),
     );
+    return [];
   }),
 );
 

@@ -1,5 +1,61 @@
 # @dxos/cli
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [5fde190]
+  - @dxos/plugin-inbox@0.11.1
+  - @dxos/ai@0.11.1
+  - @dxos/app-framework@0.11.1
+  - @dxos/assistant@0.11.1
+  - @dxos/assistant-toolkit@0.11.1
+  - @dxos/async@0.11.1
+  - @dxos/cli-util@0.11.1
+  - @dxos/client@0.11.1
+  - @dxos/client-protocol@0.11.1
+  - @dxos/client-services@0.11.1
+  - @dxos/compute@0.11.1
+  - @dxos/compute-runtime@0.11.1
+  - @dxos/config@0.11.1
+  - @dxos/context@0.11.1
+  - @dxos/debug@0.11.1
+  - @dxos/echo@0.11.1
+  - @dxos/echo-client@0.11.1
+  - @dxos/edge-client@0.11.1
+  - @dxos/edge-compute@0.11.1
+  - @dxos/effect@0.11.1
+  - @dxos/effect-atom-solid@0.11.1
+  - @dxos/errors@0.11.1
+  - @dxos/introspect@0.11.1
+  - @dxos/invariant@0.11.1
+  - @dxos/keys@0.11.1
+  - @dxos/lock-file@0.11.1
+  - @dxos/log@0.11.1
+  - @dxos/operation@0.11.1
+  - @dxos/protocols@0.11.1
+  - @dxos/random@0.11.1
+  - @dxos/schema@0.11.1
+  - @dxos/types@0.11.1
+  - @dxos/util@0.11.1
+  - @dxos/plugin-assistant@0.11.1
+  - @dxos/plugin-chess@0.11.1
+  - @dxos/plugin-client@0.11.1
+  - @dxos/plugin-connector@0.11.1
+  - @dxos/plugin-game@0.11.1
+  - @dxos/plugin-kanban@0.11.1
+  - @dxos/plugin-map@0.11.1
+  - @dxos/plugin-markdown@0.11.1
+  - @dxos/plugin-observability@0.11.1
+  - @dxos/plugin-registry@0.11.1
+  - @dxos/plugin-review@0.11.1
+  - @dxos/plugin-routine@0.11.1
+  - @dxos/plugin-sample@0.11.1
+  - @dxos/plugin-script@0.11.1
+  - @dxos/plugin-space@0.11.1
+  - @dxos/plugin-table@0.11.1
+  - @dxos/plugin-transcription@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
@@ -31,9 +32,16 @@ type MonitorUpdate = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const registry = yield* Capability.get(AppCapabilities.ProgressRegistry);
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const client = yield* ClientCapabilities.Client;
+    const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
+
+    // Optional: a host without a progress registry (e.g. a storybook or an embedding app that omits
+    // plugin-progress) loses the meter, not the plugin.
+    const registryOption = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+    if (Option.isNone(registryOption)) {
+      return [];
+    }
+    const registry = registryOption.value;
 
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
 
@@ -99,6 +107,8 @@ export default Capability.makeModule(
     for (const space of client.spaces.get()) {
       subscribeSpace(space);
     }
+
+    return [];
   }),
 );
 
