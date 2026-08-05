@@ -28,4 +28,4 @@ runtime:
       - name: image
         endpoint: https://image.main.dxos.network
       - name: discord
-        endpoint: https://discord-service.dxos.workers.dev
+        endpoint: https://discord.dxos.network

@@ -16,7 +16,6 @@ export const EdgeServiceName = Object.freeze({
   CorsProxy: 'cors-proxy',
   ApiProxy: 'api-proxy',
   Introspect: 'introspect',
-  ChatAgent: 'chat-agent',
 } as const);
 
 export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceName];
@@ -30,11 +29,10 @@ export const EDGE_SERVICE_DEFAULTS: Readonly<Record<EdgeServiceName, string>> = 
   [EdgeServiceName.Calls]: 'https://calls.dxos.network',
   [EdgeServiceName.Image]: 'https://image.main.dxos.network',
   [EdgeServiceName.Transcription]: 'https://calls.dxos.network',
-  [EdgeServiceName.Discord]: 'https://discord-service.dxos.workers.dev',
+  [EdgeServiceName.Discord]: 'https://discord.dxos.network',
   [EdgeServiceName.CorsProxy]: 'https://cors.dxos.network',
   [EdgeServiceName.ApiProxy]: 'https://api-proxy.dxos.workers.dev',
-  [EdgeServiceName.Introspect]: 'https://mcp-introspect-service-labs.dxos.workers.dev/mcp',
-  [EdgeServiceName.ChatAgent]: 'wss://chat-agent-labs.dxos.workers.dev',
+  [EdgeServiceName.Introspect]: 'https://introspect.labs.dxos.network/mcp',
 });
 
 /**
