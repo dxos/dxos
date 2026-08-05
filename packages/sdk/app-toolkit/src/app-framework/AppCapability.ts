@@ -259,8 +259,16 @@ export const pluginAsset = (
   );
 };
 
-/** Module contributing CLI commands. */
+/**
+ * Module contributing CLI commands.
+ *
+ * On the startup pass: the CLI reads the contributed set ONCE while building its command tree, so a
+ * command registered in the idle wave is simply absent — `dx space list` falls through to the root
+ * help and exits non-zero rather than failing anywhere near the cause.
+ */
 export const commands = (values: ReadonlyArray<Command$.Command<any, any, any, any>>, options?: { name?: string }) =>
-  Capability$.inlineModule(options?.name ?? 'cli-commands', { provides: [Capabilities.Command] }, () =>
-    Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
+  Capability$.inlineModule(
+    options?.name ?? 'cli-commands',
+    { activatesOn: ActivationEvents.Startup, provides: [Capabilities.Command] },
+    () => Effect.succeed([Capability$.contributeAll(Capabilities.Command, values)]),
   );
