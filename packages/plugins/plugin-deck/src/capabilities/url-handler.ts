@@ -188,6 +188,14 @@ export default Capability.makeModule(
             ),
         }),
       );
+      // An explicit navigation supersedes the URL restore. Checked HERE, before any write: the
+      // parse above can wait out its full deadline, and the not-found branch below writes and
+      // returns — so a check placed only before `Set` would let a timed-out restore knock the user
+      // out of whatever they had opened in the meantime.
+      if (options?.abortIf?.()) {
+        return;
+      }
+
       if (Option.isNone(parsed)) {
         // Unknown/malformed path: same outcome as an unresolvable subject id always had — open the
         // not-found sentinel. `immediate` skips validation, which is redundant for the sentinel anyway.
@@ -271,8 +279,8 @@ export default Capability.makeModule(
         }
       });
 
-      // An explicit navigation supersedes the URL restore: resolution can take seconds, and `Set`
-      // overrides the deck wholesale, so applying it now would undo whatever the user just opened.
+      // Re-checked after resolution, which is a second multi-second wait: `Set` overrides the deck
+      // wholesale, so applying it now would undo whatever the user opened while it ran.
       if (options?.abortIf?.()) {
         return;
       }
