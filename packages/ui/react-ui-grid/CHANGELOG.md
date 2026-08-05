@@ -1,5 +1,14 @@
 # @dxos/react-ui-grid
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/lit-grid@0.11.1
+- @dxos/react-ui-editor@0.11.1
+- @dxos/ui-editor@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @dxos/react-ui-search
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/react-hooks@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

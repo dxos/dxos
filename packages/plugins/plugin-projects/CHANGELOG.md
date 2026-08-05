@@ -1,5 +1,34 @@
 # @dxos/plugin-projects
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [5fde190]
+  - @dxos/plugin-inbox@0.11.1
+  - @dxos/app-framework@0.11.1
+  - @dxos/app-toolkit@0.11.1
+  - @dxos/assistant@0.11.1
+  - @dxos/assistant-toolkit@0.11.1
+  - @dxos/compute@0.11.1
+  - @dxos/echo@0.11.1
+  - @dxos/echo-react@0.11.1
+  - @dxos/effect@0.11.1
+  - @dxos/invariant@0.11.1
+  - @dxos/keys@0.11.1
+  - @dxos/react-ui@0.11.1
+  - @dxos/react-ui-form@0.11.1
+  - @dxos/react-ui-list@0.11.1
+  - @dxos/react-ui-masonry@0.11.1
+  - @dxos/react-ui-menu@0.11.1
+  - @dxos/react-ui-search@0.11.1
+  - @dxos/types@0.11.1
+  - @dxos/util@0.11.1
+  - @dxos/plugin-assistant@0.11.1
+  - @dxos/plugin-graph@0.11.1
+  - @dxos/plugin-routine@0.11.1
+  - @dxos/plugin-space@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

@@ -1,5 +1,95 @@
 # @dxos/stories-assistant
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [430bcab]
+- Updated dependencies [5fde190]
+  - @dxos/plugin-crm@0.11.1
+  - @dxos/plugin-inbox@0.11.1
+  - @dxos/plugin-pipeline@0.11.1
+  - @dxos/plugin-projects@0.11.1
+  - @dxos/ai@0.11.1
+  - @dxos/app-framework@0.11.1
+  - @dxos/app-toolkit@0.11.1
+  - @dxos/assistant@0.11.1
+  - @dxos/assistant-toolkit@0.11.1
+  - @dxos/async@0.11.1
+  - @dxos/client@0.11.1
+  - @dxos/compute@0.11.1
+  - @dxos/compute-runtime@0.11.1
+  - @dxos/conductor@0.11.1
+  - @dxos/config@0.11.1
+  - @dxos/context@0.11.1
+  - @dxos/debug@0.11.1
+  - @dxos/echo@0.11.1
+  - @dxos/echo-client@0.11.1
+  - @dxos/echo-doc@0.11.1
+  - @dxos/echo-protocol@0.11.1
+  - @dxos/echo-query@0.11.1
+  - @dxos/edge-client@0.11.1
+  - @dxos/effect@0.11.1
+  - @dxos/graph@0.11.1
+  - @dxos/invariant@0.11.1
+  - @dxos/keys@0.11.1
+  - @dxos/link@0.11.1
+  - @dxos/lit-ui@0.11.1
+  - @dxos/log@0.11.1
+  - @dxos/protocols@0.11.1
+  - @dxos/random@0.11.1
+  - @dxos/react-client@0.11.1
+  - @dxos/react-edge-client@0.11.1
+  - @dxos/react-ui@0.11.1
+  - @dxos/react-ui-attention@0.11.1
+  - @dxos/react-ui-canvas-compute@0.11.1
+  - @dxos/react-ui-canvas-editor@0.11.1
+  - @dxos/react-ui-chat@0.11.1
+  - @dxos/react-ui-components@0.11.1
+  - @dxos/react-ui-debug@0.11.1
+  - @dxos/react-ui-editor@0.11.1
+  - @dxos/react-ui-experimental@0.11.1
+  - @dxos/react-ui-form@0.11.1
+  - @dxos/react-ui-graph@0.11.1
+  - @dxos/react-ui-list@0.11.1
+  - @dxos/react-ui-masonry@0.11.1
+  - @dxos/react-ui-menu@0.11.1
+  - @dxos/react-ui-mosaic@0.11.1
+  - @dxos/react-ui-syntax-highlighter@0.11.1
+  - @dxos/react-ui-table@0.11.1
+  - @dxos/react-ui-tabs@0.11.1
+  - @dxos/schema@0.11.1
+  - @dxos/storybook-testing@0.11.1
+  - @dxos/types@0.11.1
+  - @dxos/ui-editor@0.11.1
+  - @dxos/ui-theme@0.11.1
+  - @dxos/util@0.11.1
+  - @dxos/plugin-assistant@0.11.1
+  - @dxos/plugin-attention@0.11.1
+  - @dxos/plugin-board@0.11.1
+  - @dxos/plugin-chess@0.11.1
+  - @dxos/plugin-client@0.11.1
+  - @dxos/plugin-connector@0.11.1
+  - @dxos/plugin-deck@0.11.1
+  - @dxos/plugin-explorer@0.11.1
+  - @dxos/plugin-game@0.11.1
+  - @dxos/plugin-graph@0.11.1
+  - @dxos/plugin-illustrator@0.11.1
+  - @dxos/plugin-map@0.11.1
+  - @dxos/plugin-markdown@0.11.1
+  - @dxos/plugin-preview@0.11.1
+  - @dxos/plugin-review@0.11.1
+  - @dxos/plugin-routine@0.11.1
+  - @dxos/plugin-script@0.11.1
+  - @dxos/plugin-space@0.11.1
+  - @dxos/plugin-table@0.11.1
+  - @dxos/plugin-testing@0.11.1
+  - @dxos/plugin-theme@0.11.1
+  - @dxos/plugin-thread@0.11.1
+  - @dxos/plugin-tldraw@0.11.1
+  - @dxos/plugin-transcription@0.11.1
+  - @dxos/plugin-wnfs@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

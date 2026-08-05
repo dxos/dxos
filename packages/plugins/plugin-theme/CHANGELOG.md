@@ -1,5 +1,18 @@
 # @dxos/plugin-theme
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/i18n@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/operation@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

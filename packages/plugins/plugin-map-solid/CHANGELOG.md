@@ -1,5 +1,20 @@
 # @dxos/plugin-map-solid
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-solid@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/operation@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/solid-ui-geo@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-map@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

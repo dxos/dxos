@@ -1,5 +1,17 @@
 # @dxos/react-ui-graph
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/graph@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/node-std@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

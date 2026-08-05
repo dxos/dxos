@@ -1,5 +1,17 @@
 # @dxos/halo-adapter-client
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/client-protocol@0.11.1
+- @dxos/halo@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/protocols@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

@@ -1,5 +1,27 @@
 # @dxos/functions-testing
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/assistant-toolkit@0.11.1
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/compute-runtime@0.11.1
+- @dxos/config@0.11.1
+- @dxos/context@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/edge-compute@0.11.1
+- @dxos/functions-runtime-cloudflare@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/operation@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

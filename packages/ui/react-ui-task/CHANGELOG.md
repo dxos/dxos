@@ -1,5 +1,17 @@
 # @dxos/react-ui-task
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/ui-types@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

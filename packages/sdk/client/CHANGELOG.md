@@ -1,5 +1,41 @@
 # @dxos/client
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/client-protocol@0.11.1
+- @dxos/client-services@0.11.1
+- @dxos/codec-protobuf@0.11.1
+- @dxos/config@0.11.1
+- @dxos/context@0.11.1
+- @dxos/credentials@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-host@0.11.1
+- @dxos/echo-protocol@0.11.1
+- @dxos/edge-client@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/kv-store@0.11.1
+- @dxos/log@0.11.1
+- @dxos/messaging@0.11.1
+- @dxos/network-manager@0.11.1
+- @dxos/node-std@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/random-access-storage@0.11.1
+- @dxos/rpc@0.11.1
+- @dxos/rpc-tunnel@0.11.1
+- @dxos/sql-sqlite@0.11.1
+- @dxos/timeframe@0.11.1
+- @dxos/tracing@0.11.1
+- @dxos/util@0.11.1
+- @dxos/websocket-rpc@0.11.1
+- @dxos/worker-framework@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

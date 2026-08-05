@@ -1,5 +1,12 @@
 # @dxos/log
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/node-std@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes
