@@ -44,7 +44,7 @@ const DefaultStory = () => {
   const [buffer] = useAsyncState<ArrayBuffer>(async () => {
     // CORS set via dashboard.
     // TODO(wittjosiah): Fetch to external url fails in headless storybook test.
-    const response = await fetch('https://dxos.network/dxos.riv', { mode: 'cors' }).catch((error) => {
+    const response = await fetch('https://media.dxos.network/dxos.riv', { mode: 'cors' }).catch((error) => {
       log.catch(error);
     });
     if (response?.ok) {
