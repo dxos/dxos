@@ -547,15 +547,33 @@ per-consumer decomposition, and the placement trade-off jdw accepted.
 
 Replaces 2c/2d's single-document direction. All on this branch/PR.
 
-### A — shared per-message renderer
+### A — shared per-message renderer (DONE)
 
-- [ ] One component in `react-ui-thread`: CM editor over a message's blocks,
-      driven by `ChunkModel` + `chunkSync` (blocks are the chunks; streaming
-      appends to the tail), shared extension set (markdown decoration,
-      embeds/XML widgets), `readOnly` toggleable for edit-in-place.
-- [ ] Replace `TextBlock`'s hand-assembled editor in `Message.tsx` with it.
-- [ ] The old `ObjectTile`/reference-block path keeps its home in the tile
-      (the 2d gap: the document dropped non-text blocks; tiles never did).
+- [x] `MessageEditor` in `react-ui-thread`: one CM view over a message's
+      blocks, driven by `ChunkModel` + `chunkSync`, with the shared extension
+      set. Built ONCE and written to — the view's dependencies deliberately
+      exclude the text, so streaming appends to the tail instead of replacing
+      the view (which is what a caret, a selection and a scroll position
+      survive). Asserted by DOM identity in the `Streaming` play.
+- [x] Editability is a **compartment**, reconfigured rather than rebuilt.
+      Two things this cost: `EditorView.editable` is a first-value-wins facet,
+      so the compartment must sit AHEAD of `createBasicExtensions`; and the
+      Enter/Escape keymap is captured when the view is built, so the mode has
+      to be read through a ref — closed over, it answers for whatever mode the
+      message was in when it first rendered, and Enter silently never commits.
+- [x] `TextBlock` in `Message.tsx` now renders it; its hand-assembled editor
+      (which rebuilt on every `block.text` change) is gone.
+- [x] The `ObjectTile`/reference-block path keeps its home in the tile — the
+      2d gap does not reappear, because only textual blocks reach the document
+      and the rest were never this renderer's to draw.
+- [x] **Model fix found by this work**: `ChunkModel.set` emitted only when the
+      _desired_ text changed, so re-setting the stored chunks after the host
+      had edited the document itself was a no-op — Escape kept the discarded
+      draft. It compares against what the document holds now. Unit test:
+      "setting the same chunks again re-syncs a document the host has since
+      edited".
+- [x] 8 unit tests + 3 plays (Default/Streaming/Editing incl. commit and
+      cancel). Container plays green twice, uncached.
 
 ### B — channel on the upgraded tiles
 

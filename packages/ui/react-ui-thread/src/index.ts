@@ -22,6 +22,8 @@ export type {
   MessageTileProps,
   MessageTimeProps,
 } from './Message';
+export { MessageEditor } from './MessageEditor';
+export type { MessageChunk, MessageEditorProps } from './MessageEditor';
 export { command } from './command';
 export { useThreadContext } from './context';
 export type {

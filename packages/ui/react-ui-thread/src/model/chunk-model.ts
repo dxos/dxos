@@ -156,7 +156,10 @@ export class ChunkModel<T extends Chunk> {
     return this;
   }
 
-  /** Render `chunks` and record the resulting document; emits {@link update} if it changed. */
+  /**
+   * Render `chunks` and record the resulting document; emits {@link update} unless the document
+   * already holds the result.
+   */
   set(chunks: readonly T[]): this {
     const ranges: ChunkRange[] = [];
     let text = '';
@@ -186,11 +189,14 @@ export class ChunkModel<T extends Chunk> {
 
     this.#chunks = chunks;
     this.#ranges = ranges;
-    if (text === this.#desired) {
+    // Compared against what the document holds, not only against the previous desire: a host that
+    // writes to the document itself — an edit in place — leaves the two apart while the desire is
+    // unchanged, and asking for the same thing again is exactly how that edit is discarded.
+    this.#desired = text;
+    if (text === this.#synced) {
       return this;
     }
 
-    this.#desired = text;
     this.update.emit();
     return this;
   }

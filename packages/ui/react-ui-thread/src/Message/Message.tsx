@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { EditorView } from '@codemirror/view';
 import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import { format } from 'date-fns/format';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
@@ -12,7 +11,6 @@ import React, {
   type ReactNode,
   forwardRef,
   useCallback,
-  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -28,15 +26,13 @@ import {
   type ThemedClassName,
   useDynamicRef,
   useOnTransition,
-  useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController } from '@dxos/react-ui-chat';
-import { useTextEditor } from '@dxos/react-ui-editor';
 import { type ActionGroupBuilder, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { EmojiPickerContent } from '@dxos/react-ui-pickers';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
-import { type Extension, createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
+import { type Extension } from '@dxos/ui-editor';
 import {
   hoverableControlItem,
   hoverableControls,
@@ -44,10 +40,10 @@ import {
   hoverableOverlayControlItem,
   mx,
 } from '@dxos/ui-theme';
-import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
+import { hexToEmoji, hexToHue } from '@dxos/util';
 
-import { command } from '../command';
 import { useThreadContext } from '../context';
+import { MessageEditor } from '../MessageEditor';
 import { translationKey } from '../translations';
 import { DEFAULT_REACTIONS, type MessageMetadata, type MessageReaction, type MessageThreadSummary } from '../types';
 
@@ -257,80 +253,41 @@ const TextBlock = ({
   onCancelEdit?: () => void;
 }) => {
   const { t } = useTranslation(translationKey);
-  const { themeMode } = useThemeContext();
-  const inMemoryContentRef = useRef(block.text);
+  const draftRef = useRef(block.text);
 
-  const handleDocumentChange = useCallback((next: string) => {
-    inMemoryContentRef.current = next;
+  const handleChange = useCallback((text: string) => {
+    draftRef.current = text;
   }, []);
 
   // Leaving edit mode is the single commit path, whichever affordance ended it — and an unchanged
   // body is not written back, so cancelling (which restores the original text first) costs no
   // re-append of the message to its feed.
   const saveDocumentChange = useCallback(() => {
-    if (inMemoryContentRef.current !== block.text) {
-      onSave?.(inMemoryContentRef.current);
+    if (draftRef.current !== block.text) {
+      onSave?.(draftRef.current);
     }
   }, [onSave, block.text]);
 
   useOnTransition(editing, true, false, saveDocumentChange);
 
-  // The keymap is captured when the editor is built, so it reads the current callbacks through refs
-  // rather than closing over them (see `Thread.Textbox` for the same hazard on send).
-  const onCommitEditRef = useRef(onCommitEdit);
-  onCommitEditRef.current = onCommitEdit;
-  const onCancelEditRef = useRef(onCancelEdit);
-  onCancelEditRef.current = onCancelEdit;
-
-  const { parentRef, focusAttributes, view } = useTextEditor(
-    () => ({
-      initialValue: block.text,
-      extensions: [
-        // Enter commits and Shift+Enter (falling through to the default binding) breaks the line, the
-        // same contract as composing a message — an edit is submitted, not toggled off.
-        editing &&
-          keymap.of([
-            {
-              key: 'Enter',
-              run: () => {
-                onCommitEditRef.current?.();
-                return true;
-              },
-            },
-            {
-              key: 'Escape',
-              run: () => {
-                inMemoryContentRef.current = block.text;
-                onCancelEditRef.current?.();
-                return true;
-              },
-            },
-          ]),
-        createBasicExtensions({ readOnly: !isAuthor || !editing }),
-        createThemeExtensions({ themeMode }),
-        command,
-        EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            handleDocumentChange(update.state.doc.toString());
-          }
-        }),
-      ].filter(isTruthy),
-    }),
-    [block.text, editing, isAuthor, themeMode, handleDocumentChange],
-  );
-
-  useEffect(() => {
-    if (editing) {
-      view?.focus();
-    }
-  }, [editing, view]);
+  const handleCancel = useCallback(() => {
+    draftRef.current = block.text;
+    onCancelEdit?.();
+  }, [block.text, onCancelEdit]);
 
   // While editing, the body reads as an input rather than as text with a different button beside it:
   // it takes an accented frame and states how to commit, so the mode is legible without hovering.
+  const canEdit = !!isAuthor && !!editing;
   return (
-    <div className={mx('me-4', editing && 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5')}>
-      <div ref={parentRef} {...focusAttributes} />
-      {editing && (
+    <div className={mx('me-4', canEdit && 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5')}>
+      <MessageEditor
+        blocks={[block]}
+        editing={canEdit}
+        onChange={handleChange}
+        onCommit={onCommitEdit}
+        onCancel={handleCancel}
+      />
+      {canEdit && (
         <p data-testid='thread.message.edit-hint' className='pt-0.5 text-xs text-description'>
           {t('editing.message')}
         </p>

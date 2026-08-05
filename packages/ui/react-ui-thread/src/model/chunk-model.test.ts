@@ -323,3 +323,31 @@ describe('ChunkModel render caching', () => {
     expect(calls).toEqual(['b']);
   });
 });
+
+describe('rebase and re-set', () => {
+  test('setting the same chunks again re-syncs a document the host has since edited', () => {
+    const model = new ChunkModel<{ id: string; text: string }>((chunk) => chunk.text);
+    let text = '';
+    const document = {
+      apply: (change: ChunkDocumentChange) => {
+        text =
+          change.type === 'append'
+            ? text + change.text
+            : text.slice(0, change.from) + change.text + text.slice(change.to);
+      },
+    };
+
+    model.set([{ id: 'a', text: 'stored' }]);
+    model.sync(document);
+    expect(text).toBe('stored');
+
+    // The host writes to the document itself — an edit in place — and tells the model what it now
+    // holds. Asking for the stored text again has to put it back, even though the desire is
+    // unchanged: that request is exactly how the edit is discarded.
+    text = 'stored, and typed';
+    model.rebase(text);
+    model.set([{ id: 'a', text: 'stored' }]);
+    model.sync(document);
+    expect(text).toBe('stored');
+  });
+});
