@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -10,6 +11,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
 import * as DeckCapabilities from '../types/DeckCapabilities';
@@ -111,11 +113,27 @@ export default Capability.makeModule(
       return [];
     }
 
-    /** Dispatch all NavigationHandler contributions with the current page URL. */
+    /**
+     * Dispatch all NavigationHandler contributions with the current page URL.
+     *
+     * Each handler is isolated with `catchAllCause`, not `catchAll`: a handler that invokes an
+     * operation fails as a DEFECT (`Process.fromOperation` uses `Effect.orDie`), which the Fail
+     * channel does not carry. An escaping defect would fail this module's activation and take the
+     * popstate listener, the URL<->state sync and the leave-trap down for the whole session — so
+     * one handler's failure must not decide whether URL handling exists.
+     */
     const dispatchNavigationHandlers = () => {
       const url = new URL(window.location.href);
       return Effect.all(
-        navigationHandlers.get().map((handler) => handler(url)),
+        navigationHandlers
+          .get()
+          .map((handler) =>
+            handler(url).pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
+              ),
+            ),
+          ),
         { concurrency: 'unbounded' },
       );
     };

@@ -12,6 +12,7 @@ export default defineConfig({
     'halo': 'src/halo/index.ts',
     'index': 'src/index.ts',
     'invitations': 'src/invitations/index.ts',
+    'local': 'src/services/local.ts',
     'mesh': 'src/mesh/index.ts',
     'testing': 'src/testing/index.ts',
     'services/dedicated/dedicated-worker-entrypoint': 'src/services/dedicated/dedicated-worker-entrypoint.ts',

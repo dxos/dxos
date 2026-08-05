@@ -7,7 +7,11 @@ plugin _is_; this covers _when_ its modules run.
 ## Vocabulary
 
 - **Module** — the unit of activation. Declares `requires`/`provides` (capability tags) and
-  `activatesOn` (its wave). Omitting `activatesOn` puts it in the **startup** wave.
+  `activatesOn` (its wave). Omitting `activatesOn` puts it in the **idle** wave — a module that
+  must run at boot declares `activatesOn: ActivationEvents.Startup` explicitly. The idle wave is
+  still pullable as a provider by an earlier wave, so an un-annotated provider a startup module
+  requires is activated ahead of its own wave; it is only ever a candidate in its own right at
+  idle.
 - **Wave** — the set of modules sharing an activation event. Firing an event activates its wave,
   ordered topologically by the capability graph.
 - **Pull** — a module in the running wave activating a provider it `requires`. Only providers

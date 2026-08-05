@@ -6,6 +6,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
@@ -21,7 +22,9 @@ export const AutomationTemplates = Capability.lazyModule(
 
 export const MailboxAction = Capability.lazyModule(
   'MailboxAction',
-  { provides: [InboxCapabilities.MailboxAction] },
+  // Rides the inbox feature it contributes to, exactly as the plugin-brain sibling does — the
+  // action is unreachable until a mailbox renders.
+  { provides: [InboxCapabilities.MailboxAction], activatesOn: InboxEvents.Start },
   () => import('./mailbox-action'),
 );
 
