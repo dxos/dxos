@@ -30,9 +30,6 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
   /** Maps the plugin's configured tour steps to the body's props. */
   props: (options: { helpSteps?: Tour.Step[] }) => options.helpSteps,
-  // The root reads the state atom through the strict `useAtomCapabilityState` on its FIRST render,
-  // so `HelpState` (ungated, hence idle) has to be pulled onto the startup pass with it.
-  requires: [HelpCapabilities.State],
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: [

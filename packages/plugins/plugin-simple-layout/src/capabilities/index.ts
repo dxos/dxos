@@ -11,11 +11,7 @@ import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
-  // `SimpleLayout` reads both through the strict `useAtomCapability` hooks on its FIRST render, so
-  // `State` (ungated, hence idle) has to be pulled onto the startup pass with the root.
-  requires: [SimpleLayoutCapabilities.State, AppCapabilities.Layout],
-});
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });
