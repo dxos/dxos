@@ -15,8 +15,6 @@ runtime:
       url: wss://dxos.network/
     iceProviders:
       - urls: https://dxos.network/ice
-    ai:
-      server: https://ai-service.dxos.workers.dev
     sandbox:
       url: https://sandbox-service.dxos.workers.dev
     ipfs:

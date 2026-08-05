@@ -16,8 +16,6 @@ runtime:
       url: ws://localhost:8787/
     iceProviders:
       - urls: https://dxos.network/ice
-    ai:
-      server: http://localhost:8788
     sandbox:
       url: http://localhost:8792
     ipfs:

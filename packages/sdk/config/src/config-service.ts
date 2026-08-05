@@ -50,9 +50,6 @@ export const defaultConfig = new Config({
           urls: 'https://dxos.network/ice',
         },
       ],
-      ai: {
-        server: 'https://ai-service.dxos.workers.dev',
-      },
       ipfs: {
         server: 'https://api.ipfs.dxos.network/api/v0',
         gateway: 'https://gateway.ipfs.dxos.network/ipfs',

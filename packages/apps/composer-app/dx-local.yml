@@ -19,7 +19,5 @@ runtime:
     # NOTE: For local testing use the DX_EDGE_BASE_URL environment variable.
     edge:
       url: https://main.dxos.network
-    ai:
-      server: https://ai-service.dxos.workers.dev
     sandbox:
       url: https://sandbox-service.dxos.workers.dev
