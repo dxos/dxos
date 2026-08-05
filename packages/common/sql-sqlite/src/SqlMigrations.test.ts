@@ -40,8 +40,8 @@ describe('splitStatements', () => {
     expect(splitStatements('CREATE TABLE a (x TEXT) /* one; two */;')).toEqual(['CREATE TABLE a (x TEXT)']);
   });
 
-  test('drops the header comment emitted by the generator', () => {
-    const script = ['--', '-- Generated from prisma/schema.prisma.', '--', 'CREATE TABLE a (x TEXT);'].join('\n');
+  test('drops a leading header comment', () => {
+    const script = ['--', '-- A migration header.', '--', 'CREATE TABLE a (x TEXT);'].join('\n');
     expect(splitStatements(script)).toEqual(['CREATE TABLE a (x TEXT)']);
   });
 

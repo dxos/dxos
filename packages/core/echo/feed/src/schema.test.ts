@@ -31,8 +31,8 @@ const migrate = Migrator.make({})({
  * actually stores rather than by the text of the DDL that produced them. The migrations table is
  * excluded — it is bookkeeping, present only after the migrator has run.
  *
- * Nullability of primary-key columns is deliberately excluded: prisma cannot express a nullable
- * `@id`, so it always emits `NOT NULL` on a primary key where the legacy DDL left it off. For an
+ * Nullability of primary-key columns is deliberately excluded: the initial migration declares
+ * `NOT NULL` on primary keys where the store's original inline DDL did not. For an
  * `INTEGER PRIMARY KEY` that is cosmetic — it aliases the rowid and rejects NULL either way. For a
  * `TEXT PRIMARY KEY` it is a real tightening, pinned by its own test.
  */

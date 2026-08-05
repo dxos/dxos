@@ -2,4 +2,4 @@
 '@dxos/sql-sqlite': minor
 ---
 
-Add `SqlMigrations` and `SqlMigrator` for applying versioned SQL migrations recorded in a per-store history table, including baselining for databases created before migration tracking existed. The feed store's schema is now authored as a Prisma schema and applied as numbered migrations rather than inline DDL.
+Add `SqlMigrations` for executing multi-statement SQL scripts, and `SqlTransaction.clientLayer` for running `@effect/sql`'s migrator on platforms whose SQL client cannot emit `BEGIN`/`COMMIT`, such as Cloudflare Durable Objects. The feed store's schema now ships as numbered migration files recorded in a history table rather than as inline DDL.

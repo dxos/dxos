@@ -1,17 +1,13 @@
 --
--- Generated once from prisma/schema.prisma, then maintained by hand:
+-- The feed store's initial schema. Equivalent to the DDL this store created inline before
+-- migrations existed, so a database from an earlier release applies it as a no-op.
 --
---   pnpm exec prisma migrate diff --from-empty \
---     --to-schema-datamodel prisma/schema.prisma --script
+-- `IF NOT EXISTS` on every CREATE is required, for exactly that reason: this migration runs against
+-- databases that already hold these tables. `schema.test.ts` asserts it. Later migrations are
+-- `ALTER`s and deliberately not idempotent — `feed_migrations` guarantees they run exactly once.
 --
--- `IF NOT EXISTS` was added afterwards, and is required. Prisma emits bare statements, which fail
--- against a database that already holds these tables — reachable when the baseline predicate does
--- not fire, e.g. one left partly initialised by an earlier release. Later migrations are `ALTER`s
--- and deliberately not idempotent: `feed_migrations` guarantees they run exactly once.
---
--- Immutable from here on: recorded in `feed_migrations`, never re-run, and its checksum verified on
--- every open. A schema change means a new numbered migration plus an update to schema.prisma —
--- nothing checks that they agree, so keep them in step by hand.
+-- Immutable: recorded in `feed_migrations` and never re-run. Change the schema by adding the next
+-- numbered migration and listing it in `index.ts`.
 --
 -- CreateTable
 CREATE TABLE IF NOT EXISTS "feeds" (

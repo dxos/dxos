@@ -45,8 +45,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
-    "prisma": "catalog:"
+    "@effect/vitest": "catalog:"
   },
   "publishConfig": {
     "access": "public"

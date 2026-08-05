@@ -567,7 +567,6 @@ catalog:
   posthog-js: ^1.353.0
   preact: ^10.26.10
   prettier: ^3.6.2
-  prisma: 6.19.3
   prosemirror-commands: ^1.7.1
   prosemirror-keymap: ^1.2.3
   prosemirror-model: ^1.25.1
@@ -729,7 +728,6 @@ onlyBuiltDependencies:
   - '@bufbuild/buf'
   - '@moonrepo/cli'
   - '@parcel/watcher'
-  - '@prisma/engines'
   - '@swc/core'
   - better-sqlite3
   - canvas
@@ -745,7 +743,6 @@ onlyBuiltDependencies:
   - node-datachannel
   - onnxruntime-node
   - oxc-resolver
-  - prisma
   - protobufjs
   - sharp
   - sodium-native
@@ -851,4 +848,3 @@ trustPolicyExclude:
   - ua-parser-js@1.0.41
   - graphql@15.10.2
   - langium@3.3.1
-  - chokidar@4.0.3
