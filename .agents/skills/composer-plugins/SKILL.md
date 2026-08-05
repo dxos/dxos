@@ -119,7 +119,7 @@ Phase 1, before the PR. The skeleton should include:
 8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
 9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
 10. `src/types/` — one schema type with `make()` factory.
-11. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
+11. `src/capabilities/index.ts` — single `AppCapability.surface()` for ReactSurface (declare its `roles`).
 12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
 13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
 14. `src/components/` — empty barrel, ready for primitives.
@@ -175,7 +175,7 @@ plugin-foo/
     skills/             # AI skill definitions.
       index.ts
     capabilities/           # Lazy capability modules (one file each).
-      index.ts              # Barrel of Capability.lazy() exports.
+      index.ts              # Barrel of maker / Capability.lazyModule() exports.
       react-surface.tsx
       operation-handler.ts
       skill-definition.ts
@@ -256,7 +256,7 @@ the **composite-components** skill.
 
 ### Capability (`src/capabilities/`)
 
-Plugin modules that contribute functionality to the framework. Each is a single file with a default export using `Capability.makeModule()`. The barrel `index.ts` uses only `Capability.lazy()` exports. Do NOT add non-lazy exports.
+Plugin modules that contribute functionality to the framework. Each is a single file with a default export using `Capability.makeModule()`. The barrel `index.ts` uses only makers (`AppCapability.*`) or `Capability.lazyModule()` exports. Do NOT add non-lazy exports.
 
 See: `plugin-chess/src/capabilities/`
 
@@ -335,7 +335,7 @@ Plugins that contribute Effect services to the process-manager runtime do so via
 
 Conventions:
 
-- **Declare each spec at module level**, not inside the `Capability.makeModule(Effect.fnUntraced(...))` activation body. Keep the activation block to just the `Capability.contributes(...)` list (+ any conditional contributions that depend on runtime config).
+- **Declare each spec at module level**, not inside the `Capability.makeModule(Effect.fnUntraced(...))` activation body. Keep the activation block to just the `Capability.contribute(...)` list (+ any conditional contributions that depend on runtime config).
 - **Use PascalCase names ending in `LayerSpec`** (`ClientLayerSpec`, `DatabaseLayerSpec`, `RemoteFunctionExecutionSpec`, …). This makes the module-level intent obvious at the callsite.
 - **Declare runtime dependencies via `requires`, not via outer-scope closures.** If a spec needs the `Client`, require `ClientService` (or `Capability.Service` + `Capability.get(ClientCapabilities.Client)` inside a `Layer.unwrapEffect(Effect.gen(...))`). If a spec needs contributed capabilities (e.g. operation handlers, skill definitions), require `Capability.Service` and resolve them with `Capability.get` / `Capability.getAll` — this keeps the spec portable and the dependency graph explicit.
 - **Hard-fail with `invariant` on missing space context or missing space records.** Space-affinity specs that receive a `context` argument should `invariant(context.space, …)` and `invariant(space, …)` on the client lookup — returning a `notAvailable` fallback hides configuration bugs in the layer graph.
@@ -402,7 +402,7 @@ See: `plugin-chess/src/types/Chess.ts`
 
 ### Operations (`src/operations/`)
 
-Operation definitions use `Operation.make()` with meta, input/output schemas, and services. Handlers use `Operation.withHandler()` with Effect generators. The barrel exports definitions and a lazy `OperationHandlerSet`.
+Operation definitions use `Operation.make()` with meta, input/output schemas, and services. Handlers use `Operation.withHandler()` with Effect generators. The barrel exports definitions and an `OperationHandlerSet.lazy([...])` built from `Def.pipe(Operation.lazyHandler(() => import('./handler')))` pairings, which type-check the definition against its handler module.
 
 Handler file shape (mirror `plugin-trip/src/operations/add-segment.ts`):
 
@@ -415,7 +415,7 @@ See: `plugin-chess/src/operations/`, `plugin-trip/src/operations/add-segment.ts`
 
 ### App graph (`src/capabilities/app-graph-builder.ts`)
 
-Extensions contribute navtree sections, their child nodes, and actions on any node. Assemble with `const extensions = yield* Effect.all([...])` then `Capability.contributes(AppCapabilities.AppGraphBuilder, extensions)` — the raw array fails the `BuilderExtensions` typecheck. Wire with `AppPlugin.addAppGraphModule`.
+Extensions contribute navtree sections, their child nodes, and actions on any node. Assemble with `const extensions = yield* Effect.all([...])` then `Capability.contribute(AppCapabilities.AppGraphBuilder, extensions)` — the raw array fails the `BuilderExtensions` typecheck. Wire with `AppCapability.appGraphBuilder`.
 
 Section hub: one extension matching `AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.<group>)` → `AppNode.makeSection({...})`, a second matching `node.type === SECTION_TYPE && isSpace(node.properties.space)` → the child nodes. Use `TypeSection.createTypeSectionExtension` when the section is keyed by typename.
 
@@ -433,25 +433,54 @@ See: `plugin-inbox/src/capabilities/app-graph-builder.ts`, `plugin-inbox/src/pat
 
 ## Plugin Definition
 
-The main plugin file wires everything together using `Plugin.define(meta).pipe()` with `AppPlugin` helper methods:
+The main plugin file wires everything together with `Plugin.define(meta).pipe(Plugin.addModule(...))`.
+Modules come from **makers** in `AppCapability` (loader-based) or `Capability.lazyModule` /
+`Capability.inlineModule` (for anything without a maker). See `plugin-chess/src/ChessPlugin.tsx`.
 
-| Method                        | Purpose                        | Activation Event          |
-| ----------------------------- | ------------------------------ | ------------------------- |
-| `addSurfaceModule`            | React surface components       | `SetupReactSurface`       |
-| `addMetadataModule`           | Type metadata (icon, creation) | `SetupMetadata`           |
-| `addSchemaModule`             | ECHO type registration         | `SetupSchema`             |
-| `addCommentConfigModule`      | Comment config (per typename)  | `SetupSchema`             |
-| `addOperationHandlerModule`   | Operation handlers             | `SetupOperationHandler`   |
-| `addTranslationsModule`       | i18n resources                 | `SetupTranslations`       |
-| `addSkillDefinitionModule`    | AI skills                      | `SetupArtifactDefinition` |
-| `addSettingsModule`           | Plugin settings                | `SetupSettings`           |
-| `addAppGraphModule`           | Graph builder extensions       | `SetupAppGraph`           |
-| `addCommandModule`            | CLI commands                   | `Startup`                 |
-| `addReactContextModule`       | React context provider         | `Startup`                 |
-| `addNavigationResolverModule` | Navigation resolvers           | `OperationInvokerReady`   |
-| `addNavigationHandlerModule`  | Navigation handlers            | `OperationInvokerReady`   |
+| Maker                                                                         | Contributes                 | Default wave                                         |
+| ----------------------------------------------------------------------------- | --------------------------- | ---------------------------------------------------- |
+| `AppCapability.surface`                                                       | React surfaces              | demand — `SurfacesRequested(role)` per declared role |
+| `AppCapability.reactContext`                                                  | React context provider      | **Startup** (mandatory — see below)                  |
+| `AppCapability.reactRoot`                                                     | React root                  | **Startup**                                          |
+| `AppCapability.settings`                                                      | Plugin settings             | **Startup**                                          |
+| `AppCapability.operationHandler`                                              | Operation handlers          | **Startup**                                          |
+| `AppCapability.navigationResolver`                                            | Navigation target resolvers | **Startup**                                          |
+| `AppCapability.navigationHandler`                                             | Navigation handlers         | **Startup**                                          |
+| `AppCapability.layerSpec`                                                     | Effect layer specs          | **Startup** (restart-scoped)                         |
+| `AppCapability.commands`                                                      | CLI commands                | **Startup**                                          |
+| `AppCapability.appGraphBuilder`                                               | Graph builder extensions    | `Idle`                                               |
+| `AppCapability.skillDefinition`                                               | AI skills                   | the assistant's start event                          |
+| `AppCapability.schema`                                                        | ECHO type registration      | idle (ungated)                                       |
+| `AppCapability.translations`                                                  | i18n resources              | idle (ungated)                                       |
+| `AppCapability.undoMappings` / `commentConfig` / `textContent` / `anchorSort` | as named                    | idle (ungated)                                       |
 
-See: `plugin-chess/src/ChessPlugin.tsx`
+### Activation waves
+
+**Omitting `activatesOn` means idle, not startup.** An ungated module runs in the idle wave after
+the app is interactive, and is pullable earlier as a dependency. That is the right default for
+almost everything; the exceptions are listed above and are baked into the makers.
+
+Four rules, each learned from a shipped regression:
+
+1. **Use the maker.** A module that builds its spec by hand (`Capability.lazyModule({ provides:
+[Capabilities.ReactContext] })`) bypasses the maker's gate and silently inherits the idle
+   default. A React context arriving at idle leaves roots already mounted _outside_ it — Radix
+   reports `Tooltip.Trigger must be used within Tooltip`.
+2. **The gate belongs on the PROVIDER, not the reader.** If a Startup module reads state on its
+   first render, gate the _state module_ `activatesOn: ActivationEvents.Startup`. Declaring it as
+   the reader's `requires` does the opposite of what it looks like: `requires` only pulls a
+   provider forward when the provider is ungated, so pointing it at an idle-gated provider demotes
+   the **reader** into the idle wave. Measured: the deck shell went blank for 6.3 s that way.
+3. **Headless state is not gated on its plugin's UI.** Comment sync, compute graphs and filesystem
+   state work in a markdown document with no review/sheet/filesystem surface ever rendered. Gating
+   them on `<Plugin>Events.Start` conflates "the UI is on screen" with "the state exists"; leave
+   them ungated and let consumers `requires` them.
+4. **Cross-plugin contributions ride the CONSUMING plugin's start event** — a skill rides the
+   assistant's, a markdown extension rides markdown's — so the contribution costs nothing until its
+   host is in use.
+
+A plugin's own `<Plugin>Events.Start` fires on demand: the module loader fires it when one of the
+plugin's modules contributes a `ReactSurface`. An unvisited feature never starts.
 
 ### Module activation ordering
 
@@ -484,7 +513,7 @@ selected by the `#plugin` conditions: `src/FooPlugin.tsx` (browser default), `sr
 `src/FooPlugin.workerd.ts`. **Only add a variant the plugin genuinely supports** — a front-end-only
 plugin has none, and its `#plugin` collapses to a single resolution (`plugin-deck`, `plugin-navtree`).
 
-**`lazy` defers evaluation, not bundling.** `Capability.lazy`, `OperationHandlerSet.keyed` and
+**`lazy` defers evaluation, not bundling.** `Capability.lazyModule`, `OperationHandlerSet.lazy` and
 `React.lazy` all postpone the import at runtime while a bundler still walks it, so a barrel that
 merely _lists_ a React surface pulls React — and the `react-ui` graph behind it — into every
 consumer. Runtime laziness never keeps UI out of a node build; a node-conditioned barrel does.
@@ -542,7 +571,7 @@ See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts
 
 ## React Surface
 
-Surfaces are contributed via `Capability.contributes(Capabilities.ReactSurface, [...])` with `Surface.create()`.
+Surfaces are contributed via `Capability.contribute(Capabilities.ReactSurface, [...])` with `Surface.create()`.
 Common roles: `article`, `section`, `card--content`, `object-properties`, `form-input`, `dialog`.
 Common filters: `AppSurface.object(AppSurface.Article, Type)`, `AppSurface.object(AppSurface.Card, Type)`, `AppSurface.objectProperties(Type)`.
 
@@ -607,6 +636,6 @@ moon run plugin-foo:test-storybook
 - `src/FooPlugin.ts` (the `Plugin.define().pipe()` implementation) must have `export default FooPlugin` so `Plugin.lazy(() => import('#plugin'))` can resolve it.
 - If another plugin needs internals, expose dedicated public entrypoints (`types`, `operations`) instead of re-exporting from root.
 - Plugins should not depend on another plugin's root entrypoint for broad barrels.
-- Never rely on `Capability.lazy` / `OperationHandlerSet.keyed` / `React.lazy` to keep a dependency
+- Never rely on `Capability.lazyModule` / `OperationHandlerSet.lazy` / `React.lazy` to keep a dependency
   out of a bundle — they defer evaluation, not bundling. See **Non-Browser Variants**.
 - The `Surface` component provides top-level `<Suspense>` for lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components.
