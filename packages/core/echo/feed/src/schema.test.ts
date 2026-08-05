@@ -8,6 +8,7 @@ import * as SqlClient from '@effect/sql/SqlClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { readdirSync } from 'node:fs';
 
 import { SqlMigrations, SqlTransaction } from '@dxos/sql-sqlite';
 
@@ -124,9 +125,9 @@ describe('feed migrations', () => {
   // `MIGRATIONS` lists. The manifest stays explicit so a bundler cannot change what ships, and this
   // asserts it stays complete.
   it('the manifest lists every migration file', ({ expect }) => {
-    const files = import.meta.glob('./migrations/*.sql', { query: '?raw', eager: true });
-    const onDisk = Object.keys(files)
-      .map((path) => path.replace('./migrations/', '').replace('.sql', ''))
+    const onDisk = readdirSync(new URL('./migrations', import.meta.url))
+      .filter((entry) => entry.endsWith('.sql'))
+      .map((entry) => entry.replace('.sql', ''))
       .sort();
 
     expect(onDisk).toEqual(Object.keys(MIGRATIONS).sort());

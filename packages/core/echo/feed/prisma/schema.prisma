@@ -36,6 +36,9 @@ model Block {
   timestamp     Int
   data          Bytes
 
+  keyId: String?
+  iv: String?
+
   // NoAction rather than prisma's default (RESTRICT / CASCADE) to match the unqualified
   // `FOREIGN KEY` this table was originally created with.
   feed Feed @relation(fields: [feedPrivateId], references: [feedPrivateId], onDelete: NoAction, onUpdate: NoAction)
