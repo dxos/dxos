@@ -12,9 +12,6 @@ import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 import * as TranscriptionEvents from '../types/TranscriptionEvents';
 
-// RecordingSession / PipelineStatus / TranscriptionSettings stay eager with the driver
-// (ReactContext): its components read them via strict useAtomCapability hooks, so deferring
-// any of them while the driver mounts trips the missing-capability invariant.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const EntityLookup = Capability.lazyModule(
   'EntityLookup',
@@ -36,7 +33,16 @@ export const RecordingSession = Capability.lazyModule(
   { provides: [TranscriptionCapabilities.RecordingSession] },
   () => import('./recording-session'),
 );
-export const TranscriptionDriver = AppCapability.reactContext(() => import('./transcription-driver'));
+// The driver's components read all three through the strict `useAtomCapability` hooks on their
+// FIRST render, so the ungated (hence idle) providers have to be pulled onto the startup pass with
+// it; `TranscriptionSettings` is already there via the `settings` maker.
+export const TranscriptionDriver = AppCapability.reactContext(() => import('./transcription-driver'), {
+  requires: [
+    TranscriptionCapabilities.RecordingSession,
+    TranscriptionCapabilities.PipelineStatus,
+    TranscriptionCapabilities.Settings,
+  ],
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const TextContent = AppCapability.textContent(() => import('./text-content'), {
   activatesOn: TranscriptionEvents.Start,

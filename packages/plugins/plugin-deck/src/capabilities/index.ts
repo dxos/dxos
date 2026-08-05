@@ -36,7 +36,12 @@ export const NotificationTracker = Capability.lazyModule(
   () => import('./notification-tracker'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
+  // The root and `DeckLayout` read all three through the strict `useAtomCapability` hooks on their
+  // FIRST render, so `DeckState` (ungated, hence idle) has to be pulled onto the startup pass here
+  // rather than incidentally via `UrlHandler`'s requires.
+  requires: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   roles: ['org.dxos.role.article'],
 });

@@ -36,8 +36,15 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(() => i
   requires: [ClientCapabilities.Client],
 });
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
+  // The root reads the ephemeral state through the strict `useAtomCapability` on its FIRST render,
+  // so `SpaceState` (ungated, hence idle) has to be pulled onto the startup pass with it.
+  requires: [SpaceCapabilities.EphemeralState],
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  // Several surfaces read the ephemeral state through the strict `useAtomCapability` on their first
+  // render, which a demand-gated surface can reach before the idle wave carries `SpaceState`.
+  requires: [SpaceCapabilities.EphemeralState],
   roles: [
     'org.dxos.plugin.space.role.homeContent',
     'org.dxos.role.article',

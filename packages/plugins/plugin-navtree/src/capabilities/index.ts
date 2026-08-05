@@ -40,6 +40,9 @@ export const Keyboard = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  // The navtree reads its state through the strict `useAtomCapability` on its first render, so the
+  // ungated (hence idle) `State` module has to be pulled in with the surface.
+  requires: [NavTreeCapabilities.State],
   roles: [
     'org.dxos.role.dialog',
     'org.dxos.role.documentTitle',

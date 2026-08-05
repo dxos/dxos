@@ -20,6 +20,8 @@ export const TraceProgressSink = Capability.lazyModule(
 );
 export const ReactSurface = Capability.lazyModule(
   'ReactSurface',
-  { provides: [Capabilities.ReactSurface] },
+  // The status indicator reads the registry through the strict `useAtomCapability` on its first
+  // render, and both modules are ungated (hence idle) — `requires` is what orders them.
+  { requires: [AppCapabilities.ProgressRegistry], provides: [Capabilities.ReactSurface] },
   () => import('./react-surface'),
 );

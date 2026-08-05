@@ -27,6 +27,9 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  // `MarkdownContainer` reads the editor state through the strict `useAtomCapability` on its first
+  // render, which a demand-gated surface can reach before the idle wave carries `MarkdownState`.
+  requires: [MarkdownCapabilities.EditorState],
   roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
 });
 export const MarkdownSettings = AppCapability.settings(() => import('./settings'), {
