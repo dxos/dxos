@@ -3,7 +3,7 @@
 //
 
 import { type Extension } from '@codemirror/state';
-import { EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
+import { EditorView, ViewPlugin } from '@codemirror/view';
 
 import { type CleanupFn } from '@dxos/async';
 
@@ -51,13 +51,9 @@ export const chunkSync = ({ model, autoScroll = true }: ChunkSyncOptions): Exten
     class {
       readonly #document: EditorChunkDocument;
       readonly #cleanup: CleanupFn;
-      #initialized = false;
 
       constructor(view: EditorView) {
         this.#document = new EditorChunkDocument(view);
-        // A remounted editor starts empty; without this the model would diff against text that
-        // belonged to the previous view and write only the difference into a blank document.
-        model.rebase(view.state.doc.toString());
         this.#cleanup = model.update.on(() => {
           const { scrollDOM } = view;
           const sticky = scrollDOM.scrollHeight - scrollDOM.scrollTop - scrollDOM.clientHeight <= STICKY_THRESHOLD;
@@ -66,14 +62,20 @@ export const chunkSync = ({ model, autoScroll = true }: ChunkSyncOptions): Exten
             view.dispatch({ effects: EditorView.scrollIntoView(view.state.doc.length, { y: 'end' }) });
           }
         });
-      }
 
-      update(_update: ViewUpdate) {
-        if (!this.#initialized) {
-          this.#initialized = true;
-          // Deferred: syncing inside `update` would dispatch from within an update cycle.
-          queueMicrotask(() => model.sync(this.#document));
-        }
+        // Whatever the model already holds, written on mount. Deferred because a dispatch cannot
+        // happen while the view is still being constructed.
+        //
+        // The rebase is here rather than in the constructor, and the pair is deliberately atomic: a
+        // component can build several views before the visible one settles (a changed dependency,
+        // a StrictMode double-mount), and they all drive the same model. Rebasing at construction
+        // time lets an earlier view's deferred sync advance the shared baseline first, after which
+        // the model believes it has already written and the view that is actually on screen stays
+        // empty. Declaring what *this* view holds immediately before writing to it cannot race.
+        queueMicrotask(() => {
+          model.rebase(view.state.doc.toString());
+          model.sync(this.#document);
+        });
       }
 
       destroy() {

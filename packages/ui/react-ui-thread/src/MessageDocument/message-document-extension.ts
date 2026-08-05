@@ -74,7 +74,7 @@ export type MessageDocumentOptions = {
   /** The message under the pointer, for the host's floating toolbar. */
   onHoverChange?: (hover: MessageHover | undefined) => void;
   /** Copy for the thread row, so this package does not reach for a translation namespace mid-render. */
-  labels?: { startThread: string; replyCount: (count: number) => string };
+  labels?: { startThread: () => string; replyCount: (count: number) => string };
 };
 
 //
@@ -96,7 +96,7 @@ class HeadingWidget extends WidgetType {
 
   override toDOM() {
     return Domino.of('div')
-      .classNames('flex items-baseline gap-2 pbs-2')
+      .classNames('flex items-baseline gap-2 pt-2')
       .append(
         Domino.of('span').classNames('text-sm font-medium text-base-fg').text(this._name),
         Domino.of('span').classNames('text-xs text-description').text(this._time),
@@ -114,12 +114,12 @@ class DividerWidget extends WidgetType {
   }
 
   override toDOM() {
-    const rule = () => Domino.of('div').classNames('grow bs-px bg-separator');
+    const rule = () => Domino.of('div').classNames('grow h-px bg-separator');
     return this._label
       ? Domino.of('div')
-          .classNames('flex items-center gap-2 pli-2 plb-2 text-xs text-description')
+          .classNames('flex items-center gap-2 px-2 py-2 text-xs text-description')
           .append(rule(), Domino.of('span').classNames('shrink-0').text(this._label), rule()).root
-      : Domino.of('div').classNames('pli-2 plb-2').append(rule()).root;
+      : Domino.of('div').classNames('px-2 py-2').append(rule()).root;
   }
 }
 
@@ -144,7 +144,7 @@ class ReactionsWidget extends WidgetType {
   }
 
   override toDOM() {
-    const row = Domino.of('div').classNames('flex flex-wrap gap-1 pbe-1');
+    const row = Domino.of('div').classNames('flex flex-wrap gap-1 pb-1');
     for (const { emoji, count, self } of this._reactions) {
       row.append(
         Domino.of('button')
@@ -182,7 +182,7 @@ class QuoteWidget extends WidgetType {
   override toDOM() {
     return (
       Domino.of('div')
-        .classNames('flex items-center gap-1.5 pbe-0.5 text-xs text-description min-is-0')
+        .classNames('flex items-center gap-1.5 pb-0.5 text-xs text-description min-w-0')
         .attributes({ 'data-testid': 'thread.document.quote' })
         // Appended one at a time: `append` fixes its children to a single element type, and this row
         // mixes an SVG with spans.
@@ -192,7 +192,7 @@ class QuoteWidget extends WidgetType {
             .classNames('shrink-0 font-medium')
             .text(this._quote.authorName ?? ''),
         )
-        .append(Domino.of('span').classNames('truncate min-is-0').text(this._quote.text)).root
+        .append(Domino.of('span').classNames('truncate min-w-0').text(this._quote.text)).root
     );
   }
 }
@@ -219,11 +219,11 @@ class ThreadLinkWidget extends WidgetType {
   override toDOM() {
     const { name, lastActivity } = this._summary;
     const row = Domino.of('button')
-      .classNames('flex items-center gap-1.5 plb-1 text-xs text-accentText rounded-sm dx-focus-ring min-is-0')
+      .classNames('flex items-center gap-1.5 py-1 text-xs text-accent-text rounded-sm dx-focus-ring min-w-0')
       .attributes({ 'type': 'button', 'data-testid': 'thread.document.open-thread' })
       .append(Domino.svg('ph--chats-circle--regular'));
     if (name) {
-      row.append(Domino.of('span').classNames('truncate min-is-0 font-medium').text(name));
+      row.append(Domino.of('span').classNames('truncate min-w-0 font-medium').text(name));
     }
     row.append(Domino.of('span').classNames('shrink-0').text(this._label));
     if (lastActivity) {
@@ -257,7 +257,7 @@ class AvatarMarker extends GutterMarker {
   override toDOM() {
     const { authorAvatarProps, authorName } = this._metadata;
     return Domino.of('div')
-      .classNames('flex items-center justify-center is-6 bs-6 rounded-full text-xs bg-group-surface')
+      .classNames('flex items-center justify-center size-6 rounded-full text-xs bg-group-surface')
       .attributes({ 'data-hue': authorAvatarProps?.hue, 'title': authorName })
       .text(authorAvatarProps?.emoji ?? authorName?.slice(0, 1) ?? '?').root;
   }
@@ -339,7 +339,7 @@ const buildDecorations = (state: EditorState, options: MessageDocumentOptions): 
         from,
         from,
         Decoration.line({
-          class: mx('cm-message-row', current && 'bg-activeSurface', editing && 'cm-message-row--editing'),
+          class: mx('cm-message-row', current && 'bg-active-surface', editing && 'cm-message-row--editing'),
           attributes: {
             'data-testid': 'thread.document.message',
             'data-message-id': item.message.id,
@@ -376,7 +376,7 @@ const buildDecorations = (state: EditorState, options: MessageDocumentOptions): 
       const label =
         summary.replyCount > 0
           ? (labels?.replyCount(summary.replyCount) ?? `${summary.replyCount}`)
-          : (labels?.startThread ?? 'Start a thread');
+          : (labels?.startThread() ?? 'Start a thread');
       builder.add(
         end,
         end,
@@ -396,12 +396,19 @@ const decorations = (options: MessageDocumentOptions): Extension =>
   StateField.define<DecorationSet>({
     create: (state) => buildDecorations(state, options),
     update: (value, transaction) => {
-      // Rebuilt only when the model says its ranges moved. A document change alone is not that
-      // signal: while a message is being edited the user's keystrokes run ahead of the model, and
-      // rebuilding against ranges that no longer describe the document walks positions backwards,
-      // which the range builder rejects outright. Mapping is exactly right for that case — every
-      // decoration shifts with the change it did not cause.
-      if (!transaction.effects.some((effect) => effect.is(messageDocumentChangedEffect))) {
+      // Rebuilt on the model's own writes and when the host says the chrome moved — but NOT on a
+      // user edit, whose keystrokes run ahead of the model: rebuilding against ranges that no
+      // longer describe the document walks positions backwards, which the range builder rejects
+      // outright. Mapping is exactly right for that case, since every decoration shifts with a
+      // change it did not cause.
+      //
+      // The model's write must be in this set. The host dispatches the effect before the write
+      // lands (the model syncs in a microtask), so at effect time the ranges still point past the
+      // end of an empty document and every chunk is skipped — which left the transcript with no
+      // headings, reactions, quotes or thread rows at all.
+      const modelWrite = transaction.docChanged && !isUserEdit(transaction);
+      const hostSignal = transaction.effects.some((effect) => effect.is(messageDocumentChangedEffect));
+      if (!modelWrite && !hostSignal) {
         return value.map(transaction.changes);
       }
 

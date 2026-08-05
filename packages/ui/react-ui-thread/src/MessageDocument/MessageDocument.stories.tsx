@@ -54,7 +54,7 @@ const DefaultStory = () => {
 
   return (
     <MessageDocument
-      classNames='bs-full'
+      classNames='h-full'
       messages={messages}
       editingId={editingId}
       getMetadata={getStoryMetadata}
@@ -72,12 +72,12 @@ const DefaultStory = () => {
 
 const MixedSendersStory = () => {
   const messages = useMemo(() => createMixedSenderMessages(), []);
-  return <MessageDocument classNames='bs-full' messages={messages} getMetadata={getStoryMetadata} />;
+  return <MessageDocument classNames='h-full' messages={messages} getMetadata={getStoryMetadata} />;
 };
 
 const GroupedStory = () => {
   const messages = useMemo(() => createGroupedMessages(), []);
-  return <MessageDocument classNames='bs-full' messages={messages} getMetadata={getStoryMetadata} />;
+  return <MessageDocument classNames='h-full' messages={messages} getMetadata={getStoryMetadata} />;
 };
 
 const ConversationStory = () => {
@@ -107,7 +107,7 @@ const ConversationStory = () => {
 
   return (
     <MessageDocument
-      classNames='bs-full'
+      classNames='h-full'
       messages={messages}
       getMetadata={getStoryMetadata}
       getReactions={getReactions}
@@ -213,23 +213,55 @@ export const Grouped: Story = {
   },
 };
 
-/** Reactions, quotes, thread rows and the hover toolbar, across the whole gallery. */
+/**
+ * Reactions, quotes, thread rows and the hover toolbar.
+ *
+ * Each assertion scrolls its subject into view first: only the viewport is rendered, so a widget
+ * further down the conversation is genuinely absent from the DOM rather than broken.
+ */
 export const Conversation: Story = {
   render: ConversationStory,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(() => expect(canvasElement.querySelectorAll('.cm-line').length).toBeGreaterThan(10));
+    await waitFor(() => expect(canvasElement.querySelectorAll('.cm-line').length).toBeGreaterThan(0));
 
-    await expect(canvasElement.querySelectorAll('[data-testid="thread.document.quote"]').length).toBe(3);
-    // A single reply, a busy named one, and one hanging off a run's second row.
-    await expect(canvasElement.querySelectorAll('[data-testid="thread.document.open-thread"]').length).toBe(3);
+    // Scroll until the wanted line exists. `scrollIntoView` cannot help here: a line outside the
+    // viewport is not in the DOM at all, so there is nothing to scroll to until the scroller has
+    // been moved far enough for CodeMirror to render it.
+    const scroller = canvasElement.querySelector('.cm-scroller')!;
+    const reveal = async (match: RegExp) => {
+      const step = Math.max(scroller.clientHeight / 2, 100);
+      for (let top = 0; top <= scroller.scrollHeight; top += step) {
+        scroller.scrollTop = top;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        if (Array.from(canvasElement.querySelectorAll('.cm-line')).some((line) => match.test(line.textContent ?? ''))) {
+          return;
+        }
+      }
+
+      throw new Error(`No message line matching ${match} at any scroll position`);
+    };
+
+    // A folded pill toggles the local identity's reaction. Queried by testid and re-read after the
+    // click: scrolling re-creates the widget's DOM, so an element captured beforehand is stale.
+    await reveal(/Reacted to once/);
+    const pill = () => canvasElement.querySelector<HTMLElement>('[data-testid="thread.document.pill"]');
+    await waitFor(() => expect(pill()?.textContent).toBe('👍 1'));
+    await userEvent.click(pill()!);
+    await waitFor(() => expect(pill()?.textContent).toBe('👍 2'));
+
+    // A reply quotes what it answers, resolved by the host rather than by following the ref here.
+    await reveal(/Quote-replying to a message above/);
+    await waitFor(() =>
+      expect(canvasElement.querySelectorAll('[data-testid="thread.document.quote"]').length).toBeGreaterThan(0),
+    );
+
+    // A thread row carries the thread's name and reply count.
+    await reveal(/Has a busy, named thread/);
     await expect(await canvas.findByText('Release plan')).toBeInTheDocument();
 
-    // A folded pill toggles the local identity's reaction.
-    await userEvent.click(await canvas.findByText('👍 1'));
-    await expect(await canvas.findByText('👍 2')).toBeInTheDocument();
-
     // The toolbar is `react-ui-menu`, floated over the hovered row rather than taking a column.
+    await reveal(/A single message of my own/);
     hover(row(canvasElement, /A single message of my own/));
     await waitFor(() => expect(canvasElement.querySelector('[data-testid="thread.document.edit"]')).not.toBeNull());
     // Someone else's message offers neither edit nor delete.

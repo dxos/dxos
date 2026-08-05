@@ -80,13 +80,16 @@ export const MessageDocument = ({
   // Read through a ref so the editor is not rebuilt when a caller passes fresh callback identities
   // on every render, which is the common case and would otherwise remount on each keystroke.
   const handlersRef = useDynamicRef(handlers);
+  // `t` gains a new identity as translations load; depending on it here rebuilt the editor, and a
+  // rebuilt editor is a new view competing for the same model.
+  const tRef = useDynamicRef(t);
   const options = useMemo<MessageDocumentOptions>(
     () => ({
       model,
       themeMode,
       labels: {
-        startThread: t('start-thread.label'),
-        replyCount: (count: number) => t('reply-count.label', { count }),
+        startThread: () => tRef.current('start-thread.label'),
+        replyCount: (count: number) => tRef.current('reply-count.label', { count }),
       },
       getMetadata: (message) => handlersRef.current.getMetadata(message),
       getReactions: (message) => handlersRef.current.getReactions?.(message) ?? [],
@@ -104,7 +107,7 @@ export const MessageDocument = ({
       },
       onHoverChange: setHover,
     }),
-    [model, t, handlersRef],
+    [model, handlersRef, tRef],
   );
 
   const { parentRef, view } = useTextEditor(
@@ -187,7 +190,7 @@ export const MessageDocument = ({
   return (
     // Relative, because the toolbar is positioned against the editor's own box: it overlays the
     // hovered row rather than taking a column beside it, so a long message keeps the full width.
-    <div className='relative grid grid-rows-1 min-bs-0'>
+    <div className='relative grid grid-rows-1 min-h-0'>
       <div className={mx('dx-container', classNames)} ref={parentRef} />
       {hover && hoveredActions.length > 0 && (
         <MessageToolbar
@@ -243,7 +246,7 @@ const MessageToolbar = ({ top, actions, onAction }: MessageToolbarProps) => {
     // attention, so it must not disable itself when the transcript is unattended.
     <Menu.Root {...menuActions} alwaysActive iconSize={4}>
       <Menu.Toolbar
-        classNames='absolute inline-end-2 w-auto rounded-sm border border-separator bg-baseSurface z-10'
+        classNames='absolute end-2 w-auto rounded-sm border border-separator bg-base-surface z-10'
         style={{ top }}
         density='sm'
       />
