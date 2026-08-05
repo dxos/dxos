@@ -27,6 +27,9 @@ tasks:
       - '@group(tests)'
       - $CI
       - $CONFIG_DYNAMIC
+      # Set to a unique value (run id) to force execution without disabling the cache wholesale:
+      # MOON_CACHE=off would also re-run every cached bundle/build dependency in each shard.
+      - $DX_E2E_RUN_ID
       - $DX_ENVIRONMENT
       - $DX_HOST
       - $DX_HUB_URL

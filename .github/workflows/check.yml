@@ -406,11 +406,58 @@ jobs:
           path: test-results
           retention-days: 7
 
+  # Bundles once and publishes to the moon remote cache (bundle/build tasks declare `outputs`, so
+  # any later runner hydrates the artifacts instead of rebuilding). Before this job, every e2e shard
+  # and queue node bundled the whole graph itself — concurrent starts meant none could hit the
+  # others' cache writes, duplicating ~10m of work per runner. The env block must match the shards'
+  # hash-relevant task inputs ($DX_ENVIRONMENT, $DX_EDGE_BASE_URL, $DX_PWA) or their hashes miss.
+  e2e-bundle:
+    if: >-
+      startsWith(github.ref, 'refs/heads/main') ||
+      startsWith(github.ref, 'refs/heads/changeset-release/') ||
+      startsWith(github.head_ref, 'changeset-release/') ||
+      inputs.e2e
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    env:
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Extract branch
+        id: extract_branch
+        uses: ./.github/actions/branch
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Bundle Affected
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
+        run: moon run :bundle --affected remote
+
+      - name: Bundle All
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
+        run: moon run :bundle
+
   e2e:
     # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
     # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
     # github.ref is refs/pull/N/merge so we also check github.head_ref (the source branch name, set only
     # on pull_request events) to catch the changesets/action PR branch (changeset-release/<base>).
+    needs: e2e-bundle
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
@@ -471,6 +518,8 @@ jobs:
 
       # A manual `e2e` dispatch takes the "All" path on any branch: affected-scoping resolves to nothing
       # when the diff touches no project (e.g. a CI-only change), which would bundle and test nothing.
+      # These normally hydrate from the remote cache warmed by `e2e-bundle` (seconds, not minutes);
+      # they still execute for real on a cache miss/eviction, so keep generous step budgets upstream.
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         run: moon run :bundle --affected remote
@@ -506,9 +555,12 @@ jobs:
         timeout-minutes: 40
         uses: trunk-io/analytics-uploader@v1
         env:
-          # A manual dispatch must execute the suite: re-running the same commit otherwise replays a remote
-          # cache hit in seconds, which reports green without running a test and emits no JUnit XML.
-          MOON_CACHE: ${{ inputs.e2e && 'off' || 'read-write' }}
+          # Manual dispatches and the nightly must execute the suite: re-running the same commit
+          # otherwise replays a remote cache hit in seconds, which reports green without running a
+          # test (and the nightly exists to catch live-edge regressions a replay cannot see). A unique
+          # task-input value forces only the e2e tasks to run — unlike MOON_CACHE=off, which would
+          # also rebuild every cached bundle/build dependency in each shard.
+          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -523,9 +575,8 @@ jobs:
         timeout-minutes: 40
         uses: trunk-io/analytics-uploader@v1
         env:
-          # A manual dispatch must execute the suite: re-running the same commit otherwise replays a remote
-          # cache hit in seconds, which reports green without running a test and emits no JUnit XML.
-          MOON_CACHE: ${{ inputs.e2e && 'off' || 'read-write' }}
+          # See "Test All": force execution on dispatch/nightly without discarding the dep cache.
+          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -552,6 +603,7 @@ jobs:
   # Token-gated: without KNAPSACK_PRO_TOKEN every step below skips and the `e2e` matrix keeps
   # composer, so fork PRs and pre-token runs lose nothing.
   e2e-knapsack:
+    needs: e2e-bundle
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       inputs.e2e
@@ -594,8 +646,9 @@ jobs:
         if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
         run: pnpm run install-playwright
 
-      # Bundling runs here at full moon concurrency; the queue-mode invocations below bypass moon, so
-      # deps must be materialized first (the same targets the composer-app:e2e task depends on).
+      # The queue-mode invocations below bypass moon, so deps must be materialized first (the same
+      # targets the composer-app:e2e task depends on). Normally a fast hydration from the remote
+      # cache warmed by `e2e-bundle`; executes for real only on a cache miss.
       - name: Bundle
         if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
         run: moon run composer-app:bundle test-utils:build vite-plugin-icons:build
