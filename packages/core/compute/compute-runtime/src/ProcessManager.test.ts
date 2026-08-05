@@ -306,6 +306,23 @@ const TestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, P
   Layer.provide(Trace.layerNoop),
 );
 
+// Trace messages captured by {@link CapturingTraceTestLayer}. Cleared at the start of each test that
+// uses it (the sink closure holds this stable reference, so it must be mutated in place, not reassigned).
+const capturedTraceMessages: Trace.Message[] = [];
+
+// Variant of {@link TestLayer} whose {@link Trace.TraceSink} records every message for assertions.
+const CapturingTraceTestLayer = Layer.mergeAll(ProcessManager.ProcessOperationInvoker.layer, ProcessMonitor.layer).pipe(
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialIdGenerator })),
+  Layer.provideMerge(RemoteProcessManager.layerNoop),
+  Layer.provideMerge(RemoteTraceMonitor.layerNoop),
+  Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
+  Layer.provide(TestDatabaseLayer({ types: [Organization.Organization] })),
+  Layer.provide(KeyValueStore.layerMemory),
+  Layer.provide(OperationHandlerSet.provide(handlers)),
+  Layer.provideMerge(Registry.layer),
+  Layer.provide(Layer.succeed(Trace.TraceSink, { write: (message) => capturedTraceMessages.push(message) })),
+);
+
 describe('ManagerImpl', () => {
   it.effect(
     'spawns a process and produces output',
@@ -619,6 +636,22 @@ describe('ManagerImpl', () => {
       const processCause = handle.status.exit.pipe(Option.flatMap(Exit.causeOption), Option.getOrUndefined);
       expect(processCause).toEqual(cause);
     }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAgain (RunAgainError) records an incomplete OperationEnd, not a failure',
+    Effect.fn(function* ({ expect }) {
+      capturedTraceMessages.length = 0;
+      const manager = yield* ProcessManager.Service;
+      const handle = yield* manager.spawn(Process.fromOperation(RunAgain, handlers));
+      yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
+
+      // `isOfType` inside the map narrows `event.data` to the OperationEnd payload without a cast.
+      const outcomes = capturedTraceMessages
+        .flatMap((message) => Trace.flatten(message))
+        .flatMap((event) => (Trace.isOfType(Trace.OperationEnd, event) ? [event.data.outcome] : []));
+      expect(outcomes).toEqual(['incomplete']);
+    }, Effect.provide(CapturingTraceTestLayer)),
   );
 
   it.effect(

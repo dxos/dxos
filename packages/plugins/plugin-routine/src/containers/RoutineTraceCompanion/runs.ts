@@ -6,7 +6,7 @@ import { Trace } from '@dxos/compute';
 import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-export type RunStatus = 'success' | 'failure' | 'pending';
+export type RunStatus = 'success' | 'failure' | 'incomplete' | 'pending';
 
 export type RunEvent = {
   type: string;
@@ -103,7 +103,9 @@ export const groupIntoRuns = (
     const lastTimestamp = allEvents.at(-1)?.timestamp ?? startedAt;
     const duration = lastTimestamp - startedAt;
 
-    // Determine status from OperationEnd events — failure beats success.
+    // Determine status from OperationEnd events. Precedence: failure beats incomplete beats success.
+    // `incomplete` is a scheduler yield (Operation.runAgain) — the run will be re-invoked, so it is
+    // neither a success nor a hard failure.
     let status: RunStatus = 'pending';
     for (const evt of allEvents) {
       if (Trace.isOfType(Trace.OperationEnd, evt)) {
@@ -111,7 +113,11 @@ export const groupIntoRuns = (
           status = 'failure';
           break;
         }
-        status = 'success';
+        if (evt.data.outcome === 'incomplete') {
+          status = 'incomplete';
+        } else if (status !== 'incomplete') {
+          status = 'success';
+        }
       }
     }
 

@@ -66,6 +66,10 @@ const ICONS = {
     icon: 'ph--function--regular',
     level: LogLevel.ERROR,
   },
+  operationEndIncomplete: {
+    icon: 'ph--arrows-clockwise--regular',
+    level: LogLevel.WARN,
+  },
   toolCall: {
     icon: 'ph--wrench--regular',
     level: LogLevel.VERBOSE,
@@ -328,11 +332,22 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       log('invalid trace event', { type: event.type });
       return undefined;
     }
-    const success = event.data.outcome === 'success';
+    // `incomplete` is a scheduler yield (Operation.runAgain), not a hard error — present it as a
+    // distinct warn-level state rather than folding it into failure.
+    const presentation =
+      event.data.outcome === 'success'
+        ? { icon: ICONS.operationEndSuccess.icon, level: ICONS.operationEndSuccess.level, suffix: '' }
+        : event.data.outcome === 'incomplete'
+          ? {
+              icon: ICONS.operationEndIncomplete.icon,
+              level: ICONS.operationEndIncomplete.level,
+              suffix: ' - Incomplete',
+            }
+          : { icon: ICONS.operationEndError.icon, level: ICONS.operationEndError.level, suffix: ' - Error' };
     return {
-      icon: event.data.icon ?? (success ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon),
-      level: success ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
-      message: `${event.data.name ?? event.data.key}${!success ? ' - Error' : ''}`,
+      icon: event.data.icon ?? presentation.icon,
+      level: presentation.level,
+      message: `${event.data.name ?? event.data.key}${presentation.suffix}`,
       idSuffix: `${event.data.key}:end`,
     };
   }

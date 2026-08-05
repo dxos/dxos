@@ -65,6 +65,43 @@ describe('groupIntoRuns', () => {
     expect(runs[0].status).toBe('failure');
   });
 
+  test('marks run as incomplete when OperationEnd is incomplete (run again)', ({ expect }) => {
+    const start = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationStart.key,
+      timestamp: 1000,
+    });
+    const end = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'incomplete',
+      timestamp: 2000,
+    });
+    const runs = groupIntoRuns([start, end], new Set([TRIGGER_ID]));
+    expect(runs[0].status).toBe('incomplete');
+  });
+
+  test('failure beats incomplete', ({ expect }) => {
+    const incomplete = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'incomplete',
+      timestamp: 1000,
+    });
+    const failure = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'failure',
+      timestamp: 2000,
+    });
+    const runs = groupIntoRuns([incomplete, failure], new Set([TRIGGER_ID]));
+    expect(runs[0].status).toBe('failure');
+  });
+
   test('marks run as pending when no OperationEnd event present', ({ expect }) => {
     const start = makeMessage({ pid: 'p1', triggerEntityId: TRIGGER_ID, timestamp: 1000 });
     const runs = groupIntoRuns([start], new Set([TRIGGER_ID]));

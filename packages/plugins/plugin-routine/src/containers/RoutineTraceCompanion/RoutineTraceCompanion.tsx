@@ -18,12 +18,14 @@ import { useRoutineRuns } from './useRoutineRuns';
 const STATUS_ICONS: Record<RunStatus, string> = {
   success: 'ph--check-circle--regular',
   failure: 'ph--x-circle--regular',
+  incomplete: 'ph--arrows-clockwise--regular',
   pending: 'ph--clock--regular',
 };
 
 const STATUS_CLASSES: Record<RunStatus, string> = {
   success: 'text-success-text',
   failure: 'text-error-text',
+  incomplete: 'text-warning-text',
   pending: 'text-description',
 };
 

@@ -904,6 +904,32 @@ describe('buildExecutionGraph scenarios', () => {
       "
     `);
   });
+
+  /**
+   * `incomplete` outcome (Operation.runAgain / RunAgainError) — presented as a warn-level state with
+   * an " - Incomplete" suffix, never folded into the error path.
+   */
+  test('incomplete outcome renders as a warn-level commit, not an error', ({ expect }) => {
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'sync', name: 'Sync Google Mail' });
+          yield* Trace.write(Trace.OperationEnd, {
+            key: 'sync',
+            name: 'Sync Google Mail',
+            outcome: 'incomplete',
+            error: 'Run again',
+          });
+        }),
+      ),
+    );
+
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+    const endCommit = commits.find((commit) => commit.id.endsWith('sync:end'));
+    expect(endCommit?.message).toBe('Sync Google Mail - Incomplete');
+    expect(endCommit?.level).toBe(LogLevel.WARN);
+  });
 });
 
 describe('buildExecutionGraph collapseCompletedSpans', () => {
