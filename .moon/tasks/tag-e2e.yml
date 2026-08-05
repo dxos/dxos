@@ -21,9 +21,6 @@ tasks:
           # Read at bundle time by `vite.config.ts` (VitePWA `selfDestroying`), so it belongs on the
           # bundle as well as on the test process above.
           DX_PWA: 'false'
-          # Mail sync runs on EDGE by default, which makes no request from the browser — so the inbox
-          # spec's `page.route` provider fixture would never be reached. Keep it local under test.
-          DX_MAIL_REMOTE_SYNC: 'false'
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'

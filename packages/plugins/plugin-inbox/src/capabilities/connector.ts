@@ -39,25 +39,11 @@ const MAIL_SYNC_CRON = '*/10 * * * *';
 const MAIL_AUTO_SYNC = true;
 
 /**
- * Build config injected by `@dxos/config`'s vite plugin, which folds every `DX_*` build env var into
- * `runtime.app.env`. Read from the define rather than the client's config because this capability
- * activates on `SetupConnectors`, before the client capability exists — reaching for the client here
- * fails the module, and a failed module auto-disables the whole plugin. Absent outside a vite build
- * (node, workerd, tests), hence the `typeof` guard below.
- */
-declare const __CONFIG_DEFAULTS__: { runtime?: { app?: { env?: Record<string, string> } } } | undefined;
-
-/**
  * Whether a mailbox's sync Routine runs on EDGE rather than on the client, so mail keeps arriving
  * while Composer is closed. The mail sync operations are in the shared handler set the workerd plugin
  * registers, so EDGE can run them.
- *
- * On unless a build sets `DX_MAIL_REMOTE_SYNC=false`: an EDGE-run sync issues no request from the
- * browser, so a harness that serves the provider API by intercepting browser HTTP (the inbox e2e's
- * `page.route` fixture) can only exercise mail sync with this off.
  */
-const isRemoteSyncEnabled = (): boolean =>
-  typeof __CONFIG_DEFAULTS__ === 'undefined' || __CONFIG_DEFAULTS__?.runtime?.app?.env?.DX_MAIL_REMOTE_SYNC !== 'false';
+const MAIL_REMOTE_SYNC = true;
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -148,8 +134,6 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const remote = isRemoteSyncEnabled();
-
     return Capability.contributes(Connector, [
       {
         id: GMAIL_CONNECTOR_ID,
@@ -173,7 +157,7 @@ export default Capability.makeModule(
           optionsSchema: SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote,
+          remote: MAIL_REMOTE_SYNC,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,
@@ -193,7 +177,7 @@ export default Capability.makeModule(
           optionsSchema: SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote,
+          remote: MAIL_REMOTE_SYNC,
         },
       },
       {
