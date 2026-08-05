@@ -27,5 +27,6 @@ export default Config2.make({
       },
       { dark: 'https://dxos.network/plugin-details-markdown-dark.png' },
     ],
+    tags: ['beta'],
   },
 });

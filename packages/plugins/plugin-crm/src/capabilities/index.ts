@@ -9,6 +9,10 @@ export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('
 
 export const AutomationTemplates = Capability.lazy('AutomationTemplates', () => import('./automation-templates'));
 
+export const MailboxAction = Capability.lazy('MailboxAction', () => import('./mailbox-action'));
+
+export const ProjectTemplates = Capability.lazy('ProjectTemplates', () => import('./project-templates'));
+
 export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
 
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

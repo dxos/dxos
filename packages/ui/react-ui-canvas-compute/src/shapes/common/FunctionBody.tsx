@@ -3,18 +3,17 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type JSX, useRef, useState } from 'react';
 
 import { VoidInput, VoidOutput } from '@dxos/conductor';
 import { useCanvasContext } from '@dxos/react-ui-canvas';
-import { type CanvasBoard, type Polygon } from '@dxos/react-ui-canvas-editor';
-import { createAnchors, getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
+import { type CanvasBoard } from '@dxos/react-ui-canvas-editor';
+import { getParentShapeElement, rowHeight } from '@dxos/react-ui-canvas-editor';
 
-import { Box, type BoxProps, footerHeight, headerHeight } from '../common';
-import { createAnchorId, getProperties } from '../defs';
+import { Box, type BoxProps } from '../common';
+import { getProperties } from '../defs';
+import { bodyPadding } from './function-anchors';
 
-const bodyPadding = 8;
 const expandedHeight = 200;
 
 export type FunctionBodyProps = {
@@ -70,7 +69,7 @@ export const FunctionBody = ({
       ref={rootRef}
       shape={shape}
       title={name}
-      classNames='divide-y divide-separator'
+      classNames='divide-y divide-subdued-separator'
       open={open}
       onAction={handleAction}
       {...props}
@@ -105,22 +104,4 @@ export const FunctionBody = ({
       {open && <div className='flex flex-col grow overflow-hidden'>{content}</div>}
     </Box>
   );
-};
-
-export const getHeight = (input: Schema.Schema<any>) => {
-  const properties = SchemaAST.getPropertySignatures(input.ast);
-  return headerHeight + footerHeight + bodyPadding * 2 + properties.length * rowHeight + 2; // Incl. borders.
-};
-
-export const createFunctionAnchors = (
-  shape: Polygon,
-  input: Schema.Schema<any> = VoidInput,
-  output: Schema.Schema<any> = VoidOutput,
-) => {
-  // TODO(burdon): Set type.
-  const inputs = SchemaAST.getPropertySignatures(input.ast).map(({ name }) => createAnchorId('input', name.toString()));
-  const outputs = SchemaAST.getPropertySignatures(output.ast).map(({ name }) =>
-    createAnchorId('output', name.toString()),
-  );
-  return createAnchors({ shape, inputs, outputs, center: { x: 0, y: (headerHeight - footerHeight) / 2 + 1 } });
 };

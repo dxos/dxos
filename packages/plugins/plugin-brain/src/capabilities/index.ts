@@ -16,3 +16,4 @@ export const FactStore = Capability.lazy('FactStore', () => import('./fact-store
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const Settings = Capability.lazy('Settings', () => import('./settings'));
 export const MailboxAction = Capability.lazy('MailboxAction', () => import('./mailbox-action'));
+export const ProjectTemplates = Capability.lazy('ProjectTemplates', () => import('./project-templates'));

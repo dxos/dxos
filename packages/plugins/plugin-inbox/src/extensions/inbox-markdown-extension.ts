@@ -5,7 +5,7 @@
 import { EditorView, type Extension, decorateMarkdown } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { hideRemoteImages } from './hide-images-extension';
+import { hideImages } from './hide-images-extension';
 import { type Pattern, replacePatterns } from './replace-patterns-extension';
 
 // Permissive PSTN dial-in: `+` then digits/separators, `,,` pause, conference digits, `#`.
@@ -54,7 +54,7 @@ export type InboxMarkdownOptions = {
 export const inboxMarkdown = ({ loadRemoteImages = false }: InboxMarkdownOptions = {}): Extension[] =>
   [
     decorateInboxMarkdown(loadRemoteImages),
-    !loadRemoteImages && hideRemoteImages(),
+    !loadRemoteImages && hideImages(),
     replacePatterns(INBOX_REPLACE_PATTERNS),
     openLinksInNewTab,
   ].filter(isTruthy);
@@ -67,9 +67,10 @@ const decorateInboxMarkdown = (loadRemoteImages: boolean): Extension =>
         return true;
       }
 
-      // When remote-image loading is disabled, suppress http(s) image rendering;
-      // `hideRemoteImages` also omits the raw markdown source entirely.
-      if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
+      // When image loading is disabled, suppress every remaining image — not just http(s), or a
+      // `cid:`/protocol-relative target renders as a broken image. Local `dxn:` refs already returned
+      // above. `hideImages` omits the raw markdown source to match.
+      if (node.name === 'Image' && !loadRemoteImages) {
         return true;
       }
 

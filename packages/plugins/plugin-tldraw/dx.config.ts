@@ -30,6 +30,7 @@ export default Config2.make({
     dependsOn: ['org.dxos.plugin.illustrator'],
     icon: { key: 'ph--compass-tool--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
     screenshots: [{ dark: 'https://dxos.network/plugin-details-sketch-dark.png' }],
   },
 });

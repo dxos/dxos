@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Operation } from '@dxos/compute';
@@ -58,10 +59,18 @@ describe('createSingleCursor', () => {
     ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>,
   );
 
+  // Never invoked here — `ConnectorSync` requires an operation, and this test only exercises
+  // target materialization and binding.
+  const SyncExampleTarget = Operation.make({
+    meta: { key: DXN.make('org.dxos.test.createSingleCursor.sync') },
+    input: Schema.Struct({ binding: Ref.Ref(Cursor.Cursor) }),
+    output: Schema.Any,
+  });
+
   const makeConnector = (overrides: Partial<ConnectorEntry> = {}): ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
-    materializeTarget: MaterializeExampleTarget,
+    sync: { operation: SyncExampleTarget, materializeTarget: MaterializeExampleTarget },
     ...overrides,
   });
 

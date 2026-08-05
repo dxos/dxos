@@ -32,7 +32,6 @@ import { layerFile, layerMemory, sqlExportLayer } from '@dxos/sql-sqlite/platfor
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { isBun } from '@dxos/util';
 
 const waitForOpfsWorkerClosed = (worker: Worker, timeoutMs = 30_000): Promise<void> =>
   new Promise((resolve) => {
@@ -91,19 +90,15 @@ const setupNetworking = async (
 
   const signals = config.get('runtime.services.signaling');
   const edgeFeatures = config.get('runtime.client.edgeFeatures');
+  const iceProviders = config.get('runtime.services.iceProviders');
+  const iceProvider = iceProviders && createIceProvider(iceProviders);
   if (signals || edgeFeatures?.signaling) {
     const {
       // EdgeSignalManager needs an EdgeConnection and is created in the services host; without edge
       // signaling fall back to an isolated in-memory manager (KUBE `WebsocketSignalManager` removed).
       signalManager = edgeFeatures?.signaling ? undefined : new MemorySignalManager(new MemorySignalManagerContext()),
-      // TODO(wittjosiah): P2P networking causes seg fault in bun currently.
-      transportFactory = isBun()
-        ? MemoryTransportFactory
-        : createRtcTransportFactory(
-            { iceServers: config.get('runtime.services.ice') },
-            config.get('runtime.services.iceProviders') &&
-              createIceProvider(config.get('runtime.services.iceProviders')!),
-          ),
+      // node-datachannel supports bun and node alike, so both use the RTC transport.
+      transportFactory = createRtcTransportFactory({ iceServers: config.get('runtime.services.ice') }, iceProvider),
     } = options;
 
     return {

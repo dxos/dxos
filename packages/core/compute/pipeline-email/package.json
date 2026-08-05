@@ -33,6 +33,7 @@
     "@dxos/ai": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/extractor": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",

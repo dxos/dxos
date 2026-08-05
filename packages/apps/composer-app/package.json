@@ -1,6 +1,6 @@
 {
   "name": "@dxos/composer-app",
-  "version": "0.10.2",
+  "version": "0.10.3",
   "private": true,
   "description": "DXOS Composer application.",
   "homepage": "https://dxos.org",
@@ -104,7 +104,6 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-onboarding": "workspace:*",
     "@dxos/plugin-osrm": "workspace:*",
-    "@dxos/plugin-outliner": "workspace:*",
     "@dxos/plugin-payments": "workspace:*",
     "@dxos/plugin-pipeline": "workspace:*",
     "@dxos/plugin-presenter": "workspace:*",
@@ -133,9 +132,10 @@
     "@dxos/plugin-studio": "workspace:*",
     "@dxos/plugin-support": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
+    "@dxos/plugin-tasks": "workspace:*",
+    "@dxos/plugin-terra": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/plugin-thread": "workspace:*",
-    "@dxos/plugin-tictactoe": "workspace:*",
     "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/plugin-trello": "workspace:*",
@@ -188,8 +188,10 @@
     "react-dom": "catalog:",
     "react-qr-rounded": "catalog:",
     "solid-js": "catalog:",
+    "workbox-expiration": "catalog:",
     "workbox-precaching": "catalog:",
     "workbox-routing": "catalog:",
+    "workbox-strategies": "catalog:",
     "xstate": "catalog:"
   },
   "devDependencies": {

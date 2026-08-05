@@ -14,6 +14,7 @@ import { type Node } from '@dxos/plugin-graph';
 import { meta } from '../meta';
 import { ConnectorCoordinator, type ConnectorEntry } from '../types';
 import * as Connection from '../types/Connection';
+import { ensureSyncTrigger } from './sync-routine';
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';
@@ -111,11 +112,13 @@ export const connectorAuthActions = ({
             Cursor.makeExternal({ source: connection.accessToken, target: existingTarget }),
           );
           invariant(Cursor.isExternal(cursor));
-          // Sets up recurring background sync for the target, if the connector declares it. Not
-          // specially protected — a failure here propagates like any other step in this action
-          // (e.g. a `Database.load` failure above); this action has no blanket catch of its own.
+          // Sets up recurring background sync for the binding, if the connector declares a trigger
+          // spec. Not specially protected — a failure here propagates like any other step in this
+          // action (e.g. a `Database.load` failure above); it has no blanket catch of its own.
           const connector = allConnectors.find((entry) => entry.id === connection.connectorId);
-          yield* connector?.onCursorCreated?.({ connection, cursor, target, db }) ?? Effect.void;
+          if (connector) {
+            yield* ensureSyncTrigger({ connector, cursor });
+          }
         }).pipe(Effect.provide(Database.layer(db))),
     });
 

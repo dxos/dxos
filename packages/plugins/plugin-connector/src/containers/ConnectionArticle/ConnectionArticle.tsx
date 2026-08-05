@@ -68,9 +68,9 @@ export const ConnectionArticle = ({ subject, role }: ConnectionArticleProps) => 
       source={source}
       hasConnector={!!connector}
       bindings={bindings}
-      optionsSchema={connector?.optionsSchema}
+      optionsSchema={connector?.sync?.optionsSchema}
       canSync={!!connector?.sync && syncAvailable}
-      canChangeTargets={!!connector?.getSyncTargets}
+      canChangeTargets={!!connector?.sync?.getTargets}
       syncing={syncing}
       loadingTargets={loading}
       syncTargetsAvailable={syncTargetsAvailable}

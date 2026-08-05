@@ -29,5 +29,6 @@ export default Config2.make({
     icon: { key: 'ph--table--regular', hue: 'green' },
     spec: 'PLUGIN.mdl',
     screenshots: [{ dark: 'https://dxos.network/plugin-details-tables-dark.png' }],
+    tags: ['beta'],
   },
 });

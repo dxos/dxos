@@ -66,6 +66,18 @@ export const geodesicTangent = (from: Vec3, to: Vec3, fraction: number): Vec3 =>
   return add(scale(from, -Math.cos((1 - fraction) * angle)), scale(to, Math.cos(fraction * angle)));
 };
 
+/** Interpolates along the great circle between two unit vectors. */
+export const slerp = (from: Vec3, to: Vec3, fraction: number): Vec3 => {
+  const angle = angleBetween(from, to);
+  if (angle < 1e-12) {
+    return from;
+  }
+  const sin = Math.sin(angle);
+  const left = Math.sin((1 - fraction) * angle) / sin;
+  const right = Math.sin(fraction * angle) / sin;
+  return normalize(add(scale(from, left), scale(to, right)));
+};
+
 /** Moves along the great circle leaving `unit` on `bearing` by `angularDistance` radians. */
 export const advance = (unit: Vec3, bearing: number, angularDistance: number): Vec3 => {
   const { north, east } = tangentFrame(unit);

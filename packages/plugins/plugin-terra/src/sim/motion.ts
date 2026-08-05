@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, add, makeSampler, normalize, radiusAt, scale, seaRadius } from '../engine';
+import { type TerraConfigValues, type Vec3, seaRadius } from '../engine';
 import { type TerraObject } from '../types';
-import { angleBetween, bearingOfTangent, bearingTo, geodesicTangent, toUnit } from './geo';
+import { BOOST_FRACTION, DESCENT_FRACTION, behaviorFor } from './behaviors';
+import { angleBetween, bearingTo, toUnit } from './geo';
+import { FALLBACK_UNIT, clampNonNegative, walkRoute } from './path';
 
 /** Flight stage of a rocket, derived from flight fraction — never stored across calls. */
 export type RocketPhase = 'boost' | 'cruise' | 'descent';
@@ -26,112 +28,23 @@ export type ObjectState = {
   leg: number;
   /** Whether the object has reached the end of `route` at this `elapsed`. */
   arrived: boolean;
+  /** Nose angle off the local horizontal in radians, positive nose-up; set by the object's behavior. */
+  pitch: number;
   phase: RocketPhase;
   /** A rocket's progress through its ballistic arc, `[0, 1]` (launch to touchdown); `0` for every other kind. */
   flightFraction: number;
+  /** Progress through the explosion a rocket leaves where it came down, `[0, 1]`: `0` until it lands, `1` once the blast has faded. The rocket itself is gone for any value above `0`. */
+  explosion: number;
 };
 
 /** `elapsed` is seconds since the object's `spawnedAt` — always absolute, never a per-frame delta. */
 export type MotionContext = { config: TerraConfigValues; elapsed: number };
 
-/** Cruise altitude for planes, as a fraction of sea radius above the surface. */
-const CRUISE_ALTITUDE = 0.06;
-
-/** Peak altitude bump for a rocket's ballistic arc, as a fraction of sea radius. */
-const BALLISTIC_APEX = 0.35;
-
-/** Flight fraction below which a rocket is still in its boost phase. */
-const BOOST_FRACTION = 0.15;
-
-/** Flight fraction above which a rocket has entered descent. */
-const DESCENT_FRACTION = 0.85;
-
 /** Degrees to radians. */
 const DEG = Math.PI / 180;
 
-/** Stable fallback point used only when a definition is missing geo data it needs — never throw. */
-const FALLBACK_UNIT: Vec3 = [0, 1, 0];
-
-const clampNonNegative = (value: number): number => Math.max(0, value);
-
-/** Interpolates along the great circle between two unit vectors. */
-const slerp = (from: Vec3, to: Vec3, fraction: number): Vec3 => {
-  const angle = angleBetween(from, to);
-  if (angle < 1e-12) {
-    return from;
-  }
-  const sin = Math.sin(angle);
-  const left = Math.sin((1 - fraction) * angle) / sin;
-  const right = Math.sin(fraction * angle) / sin;
-  return normalize(add(scale(from, left), scale(to, right)));
-};
-
-/**
- * Bearing at the end of the last non-degenerate segment in a route (the course an object arrives
- * on), or 0 if every segment is degenerate. Evaluated at the segment's end point via
- * `geodesicTangent`, not at its start — a great circle's course drifts along its length, so the
- * arrival bearing is generally not the same as the segment's initial `bearingTo`.
- */
-const finalBearing = (route: readonly Vec3[]): number => {
-  for (let index = route.length - 2; index >= 0; index--) {
-    const to = route[index + 1];
-    if (angleBetween(route[index], to) >= 1e-12) {
-      return bearingOfTangent(to, geodesicTangent(route[index], to, 1));
-    }
-  }
-  return 0;
-};
-
-/**
- * The point at arc length `distance` along a great-circle polyline, its forward tangent as a
- * bearing, and whether the end of the route was reached. Pure function of `(route, distance)` —
- * this is the core of the determinism guarantee: no accumulator, so the same distance always
- * yields the same point regardless of how it was computed. Handles empty, single-point, and
- * zero-length-segment routes without throwing.
- */
-export const walkRoute = (route: readonly Vec3[], distance: number): { unit: Vec3; bearing: number; done: boolean } => {
-  if (route.length === 0) {
-    return { unit: FALLBACK_UNIT, bearing: 0, done: true };
-  }
-  if (route.length === 1) {
-    return { unit: route[0], bearing: 0, done: true };
-  }
-
-  const target = clampNonNegative(distance);
-  let traveled = 0;
-  for (let index = 0; index < route.length - 1; index++) {
-    const from = route[index];
-    const to = route[index + 1];
-    const segment = angleBetween(from, to);
-    if (segment < 1e-12) {
-      // Zero-length segment (duplicate waypoint): contributes no distance, skip to avoid dividing by zero.
-      continue;
-    }
-    if (traveled + segment >= target) {
-      const fraction = (target - traveled) / segment;
-      const point = slerp(from, to, fraction);
-      // Bearing at the *traveled-to point*, not the segment's start — see `geodesicTangent`'s doc.
-      return { unit: point, bearing: bearingOfTangent(point, geodesicTangent(from, to, fraction)), done: false };
-    }
-    traveled += segment;
-  }
-
-  return { unit: route[route.length - 1], bearing: finalBearing(route), done: true };
-};
-
-/**
- * Total arc length of `route`, in radians — the sum of each segment's central angle. Zero for
- * empty or single-point routes. `sim/engine.ts` divides this by an object's `speed` to get how long
- * (in seconds) a leg takes to walk end to end, which is what makes leg duration variable rather
- * than tied to a fixed clock.
- */
-export const routeLength = (route: readonly Vec3[]): number => {
-  let total = 0;
-  for (let index = 0; index < route.length - 1; index++) {
-    total += angleBetween(route[index], route[index + 1]);
-  }
-  return total;
-};
+/** How long a rocket's impact explosion burns, in simulated seconds. */
+export const EXPLOSION_SECONDS = 2.5;
 
 /** A straight great-circle route between an object's source and target, used until Task 6 replans it over the nav grid. */
 const routeFromEndpoints = (definition: TerraObject.TerraObject): Vec3[] => {
@@ -149,22 +62,6 @@ const routeFromEndpoints = (definition: TerraObject.TerraObject): Vec3[] => {
   return [FALLBACK_UNIT];
 };
 
-/** Radius for the routed kinds (boat, tank, plane); tank and only tank depends on terrain at its current position. */
-const routedRadius = (kind: TerraObject.Kind, config: TerraConfigValues, unit: Vec3): number => {
-  switch (kind) {
-    case 'boat':
-      return seaRadius(config);
-    case 'plane':
-      return seaRadius(config) * (1 + CRUISE_ALTITUDE);
-    case 'tank': {
-      const { elevation } = makeSampler(config);
-      return Math.max(seaRadius(config), radiusAt(config, elevation(unit)));
-    }
-    default:
-      return seaRadius(config);
-  }
-};
-
 const evaluateRouted = (
   state: ObjectState,
   definition: TerraObject.TerraObject,
@@ -172,16 +69,26 @@ const evaluateRouted = (
 ): ObjectState => {
   const distance = definition.speed * clampNonNegative(context.elapsed - state.legStart);
   const { unit, bearing, done } = walkRoute(state.route, distance);
+  const { radius, pitch } = behaviorFor(definition.kind).attitude({
+    definition,
+    config: context.config,
+    unit,
+    route: state.route,
+    distance,
+    flightFraction: 0,
+  });
   return {
     unit,
-    radius: routedRadius(definition.kind, context.config, unit),
+    radius,
     bearing,
     route: state.route,
     legStart: state.legStart,
     leg: state.leg,
     arrived: done,
+    pitch,
     phase: 'cruise',
     flightFraction: 0,
+    explosion: 0,
   };
 };
 
@@ -207,8 +114,10 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
       legStart: 0,
       leg: 0,
       arrived: false,
+      pitch: 0,
       phase: 'cruise',
       flightFraction: 0,
+      explosion: 0,
     };
   }
 
@@ -217,17 +126,27 @@ const evaluateOrbit = (definition: TerraObject.TerraObject, context: MotionConte
   const inclination = orbit.inclination * DEG;
   const unit = orbitUnit(theta, inclination);
   const ahead = orbitUnit(theta + ORBIT_BEARING_EPSILON, inclination);
+  const { radius, pitch } = behaviorFor('satellite').attitude({
+    definition,
+    config: context.config,
+    unit,
+    route: [],
+    distance: 0,
+    flightFraction: 0,
+  });
 
   return {
     unit,
-    radius: seaRadius(context.config) * (1 + orbit.altitude),
+    radius,
     bearing: bearingTo(unit, ahead),
     route: [],
     legStart: 0,
     leg: 0,
     arrived: false,
-    phase: 'cruise',
+    pitch,
     flightFraction: 0,
+    phase: 'cruise',
+    explosion: 0,
   };
 };
 
@@ -240,21 +159,33 @@ const evaluateRocket = (definition: TerraObject.TerraObject, context: MotionCont
   const { unit, bearing } = walkRoute([source, target], traveled);
 
   const phase: RocketPhase = fraction < BOOST_FRACTION ? 'boost' : fraction > DESCENT_FRACTION ? 'descent' : 'cruise';
+  const { radius, pitch } = behaviorFor('rocket').attitude({
+    definition,
+    config: context.config,
+    unit,
+    route: [source, target],
+    distance: traveled,
+    flightFraction: fraction,
+  });
 
-  const { elevation } = makeSampler(context.config);
-  const surface = Math.max(seaRadius(context.config), radiusAt(context.config, elevation(unit)));
-  const apex = seaRadius(context.config) * (1 + BALLISTIC_APEX * Math.sin(Math.PI * fraction));
+  // The instant it comes down is closed-form (the arc over its speed), so how far the blast has
+  // burnt through follows from `elapsed` alone — no landing event to catch and remember.
+  const impactElapsed = definition.speed > 0 ? total / definition.speed : Infinity;
+  const explosion =
+    fraction >= 1 ? Math.min(1, (clampNonNegative(context.elapsed) - impactElapsed) / EXPLOSION_SECONDS) : 0;
 
   return {
     unit,
-    radius: Math.max(surface, apex),
+    radius,
     bearing,
+    pitch,
     route: [source, target],
     legStart: 0,
     leg: 0,
     arrived: fraction >= 1,
     phase,
     flightFraction: fraction,
+    explosion,
   };
 };
 
@@ -266,16 +197,26 @@ export const initialState = (definition: TerraObject.TerraObject, config: TerraC
     case 'plane': {
       const route = routeFromEndpoints(definition);
       const { unit, bearing, done } = walkRoute(route, 0);
+      const { radius, pitch } = behaviorFor(definition.kind).attitude({
+        definition,
+        config,
+        unit,
+        route,
+        distance: 0,
+        flightFraction: 0,
+      });
       return {
         unit,
-        radius: routedRadius(definition.kind, config, unit),
+        radius,
         bearing,
         route,
         legStart: 0,
         leg: 0,
         arrived: done,
+        pitch,
         phase: 'cruise',
         flightFraction: 0,
+        explosion: 0,
       };
     }
     case 'satellite':

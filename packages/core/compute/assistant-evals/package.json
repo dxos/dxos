@@ -40,7 +40,9 @@
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
+    "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/ai": "catalog:"

@@ -16,6 +16,7 @@ import {
   AppGraphBuilder,
   Connector,
   CreateObject,
+  IdentitySpecs,
   InboxSettings,
   NavigationTargetResolver,
   OperationHandler,
@@ -58,6 +59,11 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: AppActivationEvents.SetupConnectors,
     activate: Connector,
+  }),
+  Plugin.addModule({
+    id: 'identity-specs',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: IdentitySpecs,
   }),
   Plugin.addModule({
     id: 'contact-extractor',

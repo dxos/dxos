@@ -76,9 +76,6 @@
       "path": "packages/apps/composer-crx/tsconfig.json"
     },
     {
-      "path": "packages/apps/composer-dxos-org/tsconfig.json"
-    },
-    {
       "path": "packages/core/compute/compute/tsconfig.json"
     },
     {
@@ -218,6 +215,9 @@
     },
     {
       "path": "packages/common/feed-store/tsconfig.json"
+    },
+    {
+      "path": "tools/fixtures/tsconfig.json"
     },
     {
       "path": "packages/core/compute/functions-runtime-cloudflare/tsconfig.json"
@@ -502,9 +502,6 @@
       "path": "packages/plugins/plugin-osrm/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-outliner/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-payments/tsconfig.json"
     },
     {
@@ -589,6 +586,9 @@
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-tasks/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-template/tsconfig.json"
     },
     {
@@ -602,9 +602,6 @@
     },
     {
       "path": "packages/plugins/plugin-thread/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-tldraw/tsconfig.json"
@@ -784,6 +781,9 @@
       "path": "packages/ui/react-ui-tabs/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-task/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-thread/tsconfig.json"
     },
     {
@@ -821,6 +821,12 @@
     },
     {
       "path": "packages/stories/stories-inbox/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-lens/tsconfig.json"
+    },
+    {
+      "path": "packages/stories/stories-projects/tsconfig.json"
     },
     {
       "path": "packages/common/storybook-addon-logger/tsconfig.json"

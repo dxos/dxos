@@ -8,15 +8,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { type ContentBlock, type Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
 import { isNonNullable, safeParseJson } from '@dxos/util';
 
 import { meta } from '#meta';
-
-export const isToolMessage = (message: Message.Message) => {
-  return message.blocks.some((block: ContentBlock.Any) => block._tag === 'toolCall' || block._tag === 'toolResult');
-};
 
 export type ToolBlockProps = XmlWidgetProps<{
   blocks: ContentBlock.Any[];

@@ -2,19 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useFocusableGroup } from '@fluentui/react-tabster';
-import { createContext } from '@radix-ui/react-context';
 import { DialogContent, Root as DialogRoot, DialogTitle } from '@radix-ui/react-dialog';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
-  type ComponentPropsWithoutRef,
   type ComponentPropsWithRef,
-  type Dispatch,
   type KeyboardEvent,
   type PropsWithChildren,
-  type SetStateAction,
   forwardRef,
   useCallback,
   useEffect,
@@ -23,7 +18,6 @@ import React, {
 } from 'react';
 
 import { addEventListener } from '@dxos/async';
-import { log } from '@dxos/log';
 import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -31,9 +25,9 @@ import { useThemeContext } from '../../hooks';
 import { type Label, toLocalizedString, useTranslation } from '../../primitives';
 import { type MainStyleProps } from '../../theme';
 import { type ThemedClassName } from '../../util';
+import { MAIN_NAME, MainProvider, type SidebarState, useLandmarkMover, useMainContext } from './MainContext';
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
-const MAIN_NAME = 'Main';
 const MAIN_ROOT_NAME = 'Main.Root';
 const MAIN_OVERLAY_NAME = 'Main.Overlay';
 const MAIN_CONTENT_NAME = 'Main.Content';
@@ -42,112 +36,6 @@ const COMPLEMENTARY_SIDEBAR_NAME = 'Main.ComplementarySidebar';
 
 const handleOpenAutoFocus = (event: Event) => {
   !document.body.hasAttribute('data-w-keyboard') && event.preventDefault();
-};
-
-//
-// Landmark
-//
-
-const landmarkAttr = 'data-main-landmark';
-
-/**
- * Facilitates moving focus between landmarks.
- * Ref https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/landmark_role
- */
-const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>['onKeyDown'], landmark: string) => {
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      const target = event.target as HTMLDivElement;
-      if (event.target === event.currentTarget && event.key === 'Tab' && target.hasAttribute(landmarkAttr)) {
-        event.preventDefault();
-        const landmarks = Array.from(document.querySelectorAll(`[${landmarkAttr}]:not([inert])`))
-          .map((el) => (el.hasAttribute(landmarkAttr) ? parseInt(el.getAttribute(landmarkAttr)!) : NaN))
-          .sort();
-        const l = landmarks.length;
-        const cursor = landmarks.indexOf(parseInt(target.getAttribute(landmarkAttr)!));
-        const nextLandmark = landmarks[(cursor + l + (event.getModifierState('Shift') ? -1 : 1)) % l];
-        (document.querySelector(`[${landmarkAttr}="${nextLandmark}"]`) as HTMLDivElement | null)?.focus();
-      }
-      propsOnKeyDown?.(event);
-    },
-    [propsOnKeyDown],
-  );
-
-  // TODO(thure): This was disconnected once before in #8818;
-  //  if this should change again to support the browser extension, please ensure the change doesn’t break web, desktop and mobile.
-  const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited', ignoreDefaultKeydown: { Tab: true } });
-
-  return {
-    [landmarkAttr]: landmark,
-    tabIndex: 0,
-    onKeyDown: handleKeyDown,
-    ...focusableGroupAttrs,
-  };
-};
-
-//
-// Context
-//
-
-// TODO(burdon): Define collapsed state.
-type SidebarState = 'expanded' | 'collapsed' | 'closed';
-
-type MainContextValue = {
-  resizing: boolean;
-
-  // Navigation
-  navigationSidebarState: SidebarState;
-  setNavigationSidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
-
-  // Complementary
-  complementarySidebarState: SidebarState;
-  setComplementarySidebarState: Dispatch<SetStateAction<SidebarState | undefined>>;
-};
-
-const [MainProvider, useMainContext] = createContext<MainContextValue>(MAIN_NAME, {
-  resizing: false,
-
-  navigationSidebarState: 'closed',
-  setNavigationSidebarState: (_nextState) => {
-    log.warn('Not initialized');
-  },
-
-  complementarySidebarState: 'closed',
-  setComplementarySidebarState: (_nextState) => {
-    log.warn('Not initialized');
-  },
-});
-
-const useSidebars = (consumerName: string) => {
-  const {
-    navigationSidebarState,
-    setNavigationSidebarState,
-
-    complementarySidebarState,
-    setComplementarySidebarState,
-  } = useMainContext(consumerName);
-
-  return {
-    navigationSidebarState,
-    setNavigationSidebarState,
-    toggleNavigationSidebar: useCallback(
-      () => setNavigationSidebarState(navigationSidebarState === 'expanded' ? 'closed' : 'expanded'),
-      [navigationSidebarState, setNavigationSidebarState],
-    ),
-    openNavigationSidebar: useCallback(() => setNavigationSidebarState('expanded'), []),
-    collapseNavigationSidebar: useCallback(() => setNavigationSidebarState('collapsed'), []),
-    closeNavigationSidebar: useCallback(() => setNavigationSidebarState('closed'), []),
-
-    complementarySidebarState,
-    setComplementarySidebarState,
-    toggleComplementarySidebar: useCallback(
-      () => setComplementarySidebarState(complementarySidebarState === 'expanded' ? 'closed' : 'expanded'),
-      [complementarySidebarState, setComplementarySidebarState],
-    ),
-    openComplementarySidebar: useCallback(() => setComplementarySidebarState('expanded'), []),
-    collapseComplementarySidebar: useCallback(() => setComplementarySidebarState('collapsed'), []),
-    closeComplementarySidebar: useCallback(() => setComplementarySidebarState('closed'), []),
-  };
 };
 
 //
@@ -427,7 +315,5 @@ export const Main = {
   NavigationSidebar: MainNavigationSidebar,
   ComplementarySidebar: MainComplementarySidebar,
 };
-
-export { useLandmarkMover, useMainContext, useSidebars };
 
 export type { MainContentProps, MainNavigationSidebarProps, MainOverlayProps, MainRootProps, SidebarState };

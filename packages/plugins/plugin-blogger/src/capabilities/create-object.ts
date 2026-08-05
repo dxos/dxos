@@ -17,7 +17,7 @@ import { getPublicationsPath } from '../paths';
 // for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic
 // "create object" menu needs to navigate to the new object, so both entries below construct the
 // object directly and file it via `SpaceOperation.AddObject` instead, matching every other plugin's
-// `create-object.ts` (e.g. `plugin-gallery`, `plugin-outliner`). The in-publication "+ Post" path
+// `create-object.ts` (e.g. `plugin-gallery`, `plugin-tasks`). The in-publication "+ Post" path
 // (which does use `AddPost`) is wired separately in Tasks 7/9.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

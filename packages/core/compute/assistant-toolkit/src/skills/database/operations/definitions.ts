@@ -146,6 +146,12 @@ export const ObjectCreate = Operation.make({
       examples: ['dxn:org.dxos.type.person'],
     }),
     properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    attach: Schema.optional(Schema.Boolean).annotations({
+      description: trim`
+        Attach the object to the space root collection so it appears in the navigation tree.
+        Set for top-level objects; leave unset for subordinate objects referenced by others.
+      `,
+    }),
   }),
   output: Schema.Unknown,
   services: [Database.Service],

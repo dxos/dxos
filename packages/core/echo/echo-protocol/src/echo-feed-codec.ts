@@ -71,3 +71,9 @@ export class EchoFeedCodec {
     });
   }
 }
+
+/**
+ * Foreign-key source for the global position a feed block was assigned.
+ * Re-exported so `@dxos/echo` can read it without depending on `@dxos/protocols`.
+ */
+export const KEY_QUEUE_POSITION = FeedProtocol.KEY_QUEUE_POSITION;

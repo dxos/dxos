@@ -18,6 +18,7 @@ import {
   type XmlWidgetState,
   navigateNextEffect,
   navigatePreviousEffect,
+  xmlTagContextEffect,
   xmlTagRebuildEffect,
   xmlTagResetEffect,
   xmlTags,
@@ -105,6 +106,26 @@ const xmlDecorations = (view: EditorView): Descriptor[] => {
 };
 
 const flush = () => new Promise<void>((resolve) => queueMicrotask(resolve));
+
+/** The live StubWidget for an id, as CodeMirror would render it. */
+const stubWidget = (view: EditorView, id: string): StubWidget<XmlWidgetProps> => {
+  for (const source of view.state.facet(EditorView.decorations)) {
+    const set = typeof source === 'function' ? source(view) : source;
+    if (!set) {
+      continue;
+    }
+    for (const { value } of decorationSetToArray(set)) {
+      const widget = value.spec?.widget;
+      if (widget instanceof StubWidget && widget.id === id) {
+        return widget;
+      }
+    }
+  }
+
+  throw new Error(`no widget: ${id}`);
+};
+
+const widgetProps = (view: EditorView, id: string): XmlWidgetProps => stubWidget(view, id).props;
 
 const createView = (
   doc: string,
@@ -418,26 +439,6 @@ describe('xmlTags widget state', () => {
     <toolCall id="b" />
   `;
 
-  /** The live StubWidget for an id, as CodeMirror would render it. */
-  const stubWidget = (view: EditorView, id: string): StubWidget<XmlWidgetProps> => {
-    for (const source of view.state.facet(EditorView.decorations)) {
-      const set = typeof source === 'function' ? source(view) : source;
-      if (!set) {
-        continue;
-      }
-      for (const { value } of decorationSetToArray(set)) {
-        const widget = value.spec?.widget;
-        if (widget instanceof StubWidget && widget.id === id) {
-          return widget;
-        }
-      }
-    }
-
-    throw new Error(`no widget: ${id}`);
-  };
-
-  const widgetProps = (view: EditorView, id: string): XmlWidgetProps => stubWidget(view, id).props;
-
   test('applies every widget update effect in a single transaction', async ({ expect }) => {
     const view = createView(doc, { registry: stateRegistry });
     await rebuild(view);
@@ -503,6 +504,85 @@ describe('xmlTags widget state', () => {
     const widget = stubWidget(view, 'a');
     widget.toDOM(view);
     expect(mounted.find((state) => state.id === 'a')?.props.blocks).toEqual(['A']);
+    view.destroy();
+  });
+});
+
+//
+// Widget context.
+//
+// The host publishes the context widgets call back through (`MarkdownStreamController.setContext`),
+// and it necessarily arrives *after* the first decoration build — the controller does not exist until
+// the editor mounts. A widget captures its props when its decoration is built, so unless the context
+// effect both rebuilds decorations and defeats widget reuse, every widget is left holding
+// `context: undefined` for the life of the document and every callback through it silently no-ops.
+//
+
+describe('xmlTags widget context', () => {
+  const contextRegistry: Record<string, XmlWidgetDef> = {
+    branch: { block: true, Component: () => null },
+  };
+
+  const doc = '<branch id="a" />';
+
+  test('a widget built before the context still receives it', async ({ expect }) => {
+    const view = createView(doc, { registry: contextRegistry });
+    await rebuild(view);
+    expect(widgetProps(view, 'a').context).toBeUndefined();
+
+    const context = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+
+    expect(widgetProps(view, 'a').context).toBe(context);
+    view.destroy();
+  });
+
+  test('a later context replaces an earlier one', async ({ expect }) => {
+    const view = createView(doc, { registry: contextRegistry });
+    await rebuild(view);
+
+    const first = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(first) });
+    await flush();
+    expect(widgetProps(view, 'a').context).toBe(first);
+
+    const second = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(second) });
+    await flush();
+    expect(widgetProps(view, 'a').context).toBe(second);
+    view.destroy();
+  });
+
+  test('the mounted widget state carries the context', async ({ expect }) => {
+    let mounted: XmlWidgetState[] = [];
+    const view = createView(doc, { registry: contextRegistry, setWidgets: (widgets) => (mounted = widgets) });
+    await rebuild(view);
+
+    const context = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+
+    // Mount the way the portal host does, then read what the notifier published.
+    stubWidget(view, 'a').toDOM(view);
+    expect(mounted.find((state) => state.id === 'a')?.props.context).toBe(context);
+    view.destroy();
+  });
+
+  test('re-publishing the same context does not churn the widget', async ({ expect }) => {
+    const view = createView(doc, { registry: contextRegistry });
+    await rebuild(view);
+
+    const context = { rewind: () => {} };
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+    const widget = stubWidget(view, 'a');
+
+    view.dispatch({ effects: xmlTagContextEffect.of(context) });
+    await flush();
+
+    // Same context: the widget is interchangeable, so CodeMirror should keep the mounted instance.
+    expect(stubWidget(view, 'a').eq(widget)).toBe(true);
     view.destroy();
   });
 });

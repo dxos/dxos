@@ -7,8 +7,9 @@ import seedrandom from 'seedrandom';
 import { type TerraConfigValues, type Vec3 } from '../engine';
 import { TerraObject } from '../types';
 import { toUnit } from './geo';
-import { type MotionContext, type ObjectState, evaluate, initialState, routeLength } from './motion';
+import { type MotionContext, type ObjectState, evaluate, initialState } from './motion';
 import { type NavGrid } from './nav-grid';
+import { routeLength } from './path';
 import { pickReachableTarget } from './reachable';
 import { planRoute } from './route';
 
@@ -202,6 +203,19 @@ export class SimEngine {
       definition: object.definition,
       state: evaluateObject(object.definition, object.state, nowMs, this.#config, this.#grid),
     }));
+  }
+
+  /**
+   * Re-spawns the single object matching `id` from its definition as it now stands, for callers
+   * that have just changed one (a new destination, say). Rebuilding the whole engine would instead
+   * re-derive every object from leg 0, which is not free of consequence: an object more than
+   * `MAX_CATCHUP_LEGS` legs into its sequence snaps to a fresh leg rather than resuming the one it
+   * was on. Objects other than `id` keep their state untouched.
+   */
+  respawn(id: string): void {
+    this.#objects = this.#objects.map((object) =>
+      object.definition.id === id ? spawn(object.definition, this.#config, this.#grid) : object,
+    );
   }
 
   /** Restores every object to its spawn-time state. */

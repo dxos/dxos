@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { ExternalProject } from '@dxos/types';
+import { TaskSet } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
 import { LinearOperation } from '../types';
@@ -38,15 +38,14 @@ const handler: Operation.WithHandler<typeof LinearOperation.MaterializeLinearTar
         const teamId = remoteTarget.id;
 
         return yield* Effect.gen(function* () {
-          const existing = yield* Database.query(
-            Query.select(Filter.foreignKeys(ExternalProject.ExternalProject, [fkFor(teamId)])),
-          ).run;
+          const existing = yield* Database.query(Query.select(Filter.foreignKeys(TaskSet.TaskSet, [fkFor(teamId)])))
+            .run;
           if (existing.length > 0) {
             return { target: Ref.make(existing[0]) };
           }
 
           const created = yield* Database.add(
-            Obj.make(ExternalProject.ExternalProject, {
+            Obj.make(TaskSet.TaskSet, {
               [Obj.Meta]: { keys: [fkFor(teamId)] },
               name: remoteTarget.name,
             }),

@@ -2,9 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-export const ghostHover = 'hover:bg-hover-surface';
-export const ghostFocusWithin = 'focus-within:bg-hover-surface';
-
 export const hoverableControls =
   '[--controls-opacity:1] [--controls-visibility:visible] hover-hover:[--controls-opacity:0] hover-hover:[--controls-visibility:hidden] hover-hover:hover:[--controls-opacity:1] hover-hover:hover:[--controls-visibility:visible]';
 

@@ -75,6 +75,11 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     ).pipe(FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--tray--regular', hue: 'rose' }),
+    // Reading a mailbox is a chain: the message replaces the message plank rather than growing the
+    // deck, and picking a different message drops the attachment that belonged to the last one.
+    AppAnnotation.DeckAnnotation.set({
+      levels: [{ key: 'mailbox' }, { key: 'message' }, { key: 'attachment' }],
+    }),
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
@@ -150,7 +155,12 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
     return;
   }
   Obj.update(mailbox, (mailbox) => {
-    const map = (mailbox.extracted ??= {});
+    if (!mailbox.extracted) {
+      mailbox.extracted = {};
+    }
+    // Re-read through the proxy: `??=` would evaluate to the plain right-hand object, and mutations
+    // of a detached record are not written through, silently dropping the first recorded entry.
+    const map = mailbox.extracted;
     const merged = [...(map[messageId] ?? [])];
     for (const id of objectIds) {
       if (!merged.includes(id)) {

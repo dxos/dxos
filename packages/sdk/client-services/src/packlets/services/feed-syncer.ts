@@ -377,7 +377,7 @@ export class FeedSyncer extends Resource {
     if (hadFailure) {
       const delayMs = this.#pushFailureBackoffMs;
       this.#pushFailureBackoffMs = Math.min(this.#pushFailureBackoffMs * 2, MAX_PUSH_FAILURE_BACKOFF_MS);
-      log.info('feed sync push retry scheduled with backoff', { delayMs });
+      log('feed sync push retry scheduled with backoff', { delayMs });
       scheduleTask(this._ctx, () => this.#pushTask.schedule(), delayMs);
       return;
     }

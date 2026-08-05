@@ -29,7 +29,7 @@ export const IllustratorPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing] }),
+  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing, Drawing.Canvas] }),
   AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

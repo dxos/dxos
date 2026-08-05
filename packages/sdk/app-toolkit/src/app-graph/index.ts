@@ -4,6 +4,7 @@
 
 export * as AppNode from './AppNode';
 export * as AppNodeMatcher from './AppNodeMatcher';
+export * as DeckSpec from './DeckSpec';
 /**
  * @deprecated Moving away from the generic type-section pattern; top-level sections will all be custom
  * going forward. Remove once there are no more consumers. Remaining consumers: Calendar, Chat, Channel.

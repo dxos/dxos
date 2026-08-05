@@ -9,7 +9,8 @@ import { describe, test } from 'vitest';
 
 import { createDefaultBackends } from '../../core';
 import { ViewState } from '../../types';
-import { ViewStateProvider, useSelection, useSelectionActions } from './ViewStateProvider';
+import { useSelection, useSelectionActions } from './view-state-hooks';
+import { ViewStateProvider } from './ViewStateProvider';
 
 describe('useSelection / useSelectionActions', () => {
   test('single select updates the resolved value', ({ expect }) => {

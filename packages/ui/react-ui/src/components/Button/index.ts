@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+export { BUTTON_GROUP_NAME, useButtonGroupContext } from './ButtonGroupContext';
+
 export * from './Button';
 export * from './IconButton';
 export * from './MicButton';

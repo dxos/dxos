@@ -74,7 +74,7 @@ describe('AssistantPlugin', () => {
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: scriptedAiServiceMiddleware([
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
             { parts: [ScriptedLanguageModel.text('Paris is the capital of France.')] },
           ]),
         }),
@@ -105,7 +105,7 @@ describe('AssistantPlugin', () => {
       plugins: [
         ClientPlugin({}),
         AssistantPlugin({
-          aiServiceMiddleware: scriptedAiServiceMiddleware([
+          aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
             { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: { capital: 'paris' } })] },
             { parts: [ScriptedLanguageModel.text('Done.')] },
           ]),
@@ -154,7 +154,9 @@ describe('AssistantPlugin', () => {
         plugins: [
           ClientPlugin({}),
           AssistantPlugin({
-            aiServiceMiddleware: scriptedAiServiceMiddleware([{ parts: [ScriptedLanguageModel.text('Hello back.')] }]),
+            aiServiceMiddleware: ScriptedLanguageModel.scriptedAiServiceMiddleware([
+              { parts: [ScriptedLanguageModel.text('Hello back.')] },
+            ]),
           }),
           RoutinePlugin(),
         ],
@@ -193,12 +195,3 @@ describe('AssistantPlugin', () => {
     },
   );
 });
-
-/**
- * Replaces the AI service the plugin would construct with a scripted model, so these exercise the
- * plugin composition and the middleware seam rather than a model's output.
- */
-const scriptedAiServiceMiddleware =
-  (turns: readonly ScriptedLanguageModel.ScriptedTurn[]) => (_upstream: AiService.Service) => ({
-    model: () => ScriptedLanguageModel.scriptedLanguageModelLayer(turns),
-  });

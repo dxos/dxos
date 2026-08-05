@@ -131,6 +131,8 @@ const pluginTranslations = [
         'reset-device.label': 'Reset storage',
         'reset-dialog.description': 'Reset storage',
         'reset-dialog.title': 'Reset storage',
+        'navigation-failed-toast.title': 'Link could not be processed',
+        'navigation-failed-toast.description': 'Something went wrong while handling this link. Please try again.',
       },
     },
   },

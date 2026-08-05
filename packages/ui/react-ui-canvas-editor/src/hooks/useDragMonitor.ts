@@ -22,6 +22,34 @@ import { useSnap } from './useSnap';
 export const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
 /**
+ * Repositions one edge of a centred extent, given the already-snapped position for that edge.
+ * `dir` is -1 for the min edge, +1 for the max edge, and 0 to leave the axis untouched.
+ * `symmetric` holds the centre and moves both edges together (shift-drag).
+ *
+ * Clamping to `min`/`max` takes precedence over the snap, so a size driven to a limit can leave the
+ * edge off-grid unless the limits are themselves multiples of the grid pitch.
+ */
+export const resizeAxis = (
+  center: number,
+  size: number,
+  dir: number,
+  edge: number,
+  { min, max, symmetric }: { min: number; max: number; symmetric: boolean },
+): { center: number; size: number } => {
+  if (dir === 0) {
+    return { center, size };
+  }
+  if (symmetric) {
+    return { center, size: clamp(Math.abs(edge - center) * 2, min, max) };
+  }
+
+  // The opposite edge is fixed, so the centre follows from it and the new size.
+  const fixed = center - (dir * size) / 2;
+  const next = clamp(Math.abs(edge - fixed), min, max);
+  return { center: fixed + (dir * next) / 2, size: next };
+};
+
+/**
  * Data property associated with a `draggable` and `dropTargetForElements`.
  * - `draggable.getInitialData()`
  * - `dropTargetForElements.getData()`
@@ -213,38 +241,31 @@ export const useDragMonitor = () => {
             // TODO(burdon): Default sizes.
             const min = 128;
             const max = 960;
-            const delta = pointSubtract(
-              getInputPoint(root, location.current.input),
-              getInputPoint(root, location.initial.input),
-            );
             const anchor = resizeAnchors[state.anchor.id];
-            let { x: dx, y: dy } = snapPoint({
-              x: delta.x * anchor.x * (shiftKey ? 2 : 1),
-              y: delta.y * anchor.y * (shiftKey ? 2 : 1),
-            });
-            if (state.initial.width + dx < min) {
-              dx = min - state.initial.width;
-            } else if (state.initial.width + dx > max) {
-              dx = max - state.initial.width;
-            }
-            if (state.initial.height + dy < min) {
-              dy = min - state.initial.height;
-            } else if (state.initial.height + dy > max) {
-              dy = max - state.initial.height;
-            }
 
-            const center = shiftKey
-              ? state.initial
-              : {
-                  x: state.initial.x + (dx / 2) * (anchor.x < 0 ? -1 : 1),
-                  y: state.initial.y + (dy / 2) * (anchor.y < 0 ? -1 : 1),
-                };
-            const size = {
-              width: state.initial.width + dx,
-              height: state.initial.height + dy,
-            };
+            // Snap the edge the anchor drags, in model space. Snapping the delta instead carries the
+            // shape's existing off-grid remainder into the new size, so the dragged edge lands
+            // between grid lines; and measuring the delta in screen px snaps to the wrong step as
+            // soon as the projection is zoomed.
+            const [initialPos, currentPos] = projection.toModel([
+              getInputPoint(root, location.initial.input),
+              getInputPoint(root, location.current.input),
+            ]);
+            const delta = pointSubtract(currentPos, initialPos);
+            const edge = snapPoint({
+              x: state.initial.x + (anchor.x * state.initial.width) / 2 + delta.x,
+              y: state.initial.y + (anchor.y * state.initial.height) / 2 + delta.y,
+            });
+
+            const bounds = { min, max, symmetric: shiftKey };
+            const x = resizeAxis(state.initial.x, state.initial.width, anchor.x, edge.x, bounds);
+            const y = resizeAxis(state.initial.y, state.initial.height, anchor.y, edge.y, bounds);
             dragMonitor.update({
-              shape: { ...state.shape, center, size },
+              shape: {
+                ...state.shape,
+                center: { x: x.center, y: y.center },
+                size: { width: x.size, height: y.size },
+              },
             });
             break;
           }

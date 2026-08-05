@@ -13,4 +13,4 @@
  * Must be dotted reverse-DNS keys (NOT `/`-paths): `Skill.registryURI` resolves a key as
  * `dxn:<key>`, and slashes make the DXN invalid, yielding an unresolvable Ref URI at bind time.
  */
-export const ARTIFACT_SKILL_KEYS = ['org.dxos.skill.markdown'] as const;
+export const ARTIFACT_SKILL_KEYS = ['org.dxos.skill.markdown', 'org.dxos.skill.table', 'org.dxos.skill.sheet'] as const;

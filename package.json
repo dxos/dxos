@@ -27,6 +27,7 @@
     "check-public-dependencies": "node scripts/check-public-dependencies.mjs",
     "check-publish-config": "node scripts/check-publish-config.mjs",
     "create-worktree": "./scripts/create-worktree",
+    "fixtures": "node tools/fixtures/bin/fixtures.mjs",
     "format": "oxfmt",
     "format-check": "oxfmt --check",
     "gh-action": "./scripts/gh-action.mjs",

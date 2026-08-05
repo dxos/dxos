@@ -5,7 +5,14 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, AutomationTemplates, OperationHandler, SkillDefinition } from '#capabilities';
+import {
+  AppGraphBuilder,
+  AutomationTemplates,
+  MailboxAction,
+  OperationHandler,
+  ProjectTemplates,
+  SkillDefinition,
+} from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { ProfileOf } from '#types';
@@ -23,6 +30,17 @@ export const CrmPlugin = Plugin.define(meta).pipe(
     id: 'crm-automation-templates',
     activatesOn: AppActivationEvents.SetupSchema,
     activate: AutomationTemplates,
+  }),
+  // Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu.
+  Plugin.addModule({
+    id: 'crm-mailbox-action',
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: MailboxAction,
+  }),
+  Plugin.addModule({
+    id: 'crm-project-templates',
+    activatesOn: AppActivationEvents.SetupSchema,
+    activate: ProjectTemplates,
   }),
   AppPlugin.addPluginAssetModule({
     asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },

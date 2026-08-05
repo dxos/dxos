@@ -66,3 +66,39 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * Content lengths side by side. The snippet preview is a fixed 16:9 box, so all three cards must be
+ * the same height — a long document clips under the fade rather than growing its card. Regression
+ * net for the case where the preview had a ratio floor and a separate pixel cap, and each card's
+ * height landed wherever its content did.
+ */
+const ComparisonStory = () => {
+  const subjects = useMemo(
+    () => [
+      Markdown.make({ name: 'Long', content: '# Title\n' + random.lorem.paragraphs(5) }),
+      Markdown.make({ name: 'Short', content: '# Hello\n\nOne line.' }),
+      Markdown.make({ name: 'Empty', content: '' }),
+    ],
+    [],
+  );
+
+  return (
+    <div className='flex items-start gap-4'>
+      {subjects.map((subject) => (
+        <CardContainer key={subject.id} icon='ph--text-aa--regular'>
+          <Card.Root border={false}>
+            <Card.Header>
+              <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+            </Card.Header>
+            <MarkdownCard subject={subject} />
+          </Card.Root>
+        </CardContainer>
+      ))}
+    </div>
+  );
+};
+
+export const Comparison: Story = {
+  render: ComparisonStory,
+};

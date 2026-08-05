@@ -96,7 +96,7 @@ export const RegistrySettings = ({
         <Form.Content>
           <Form.Section title={t('dev-plugin.section.title')}>
             <Message.Root valence='neutral'>
-              <Message.Content>{t('dev-plugin.description')}</Message.Content>
+              <Message.Body>{t('dev-plugin.description')}</Message.Body>
             </Message.Root>
             <Form.Row label={t('dev-plugin.url.label')} description={t('dev-plugin.url.description')}>
               <Input.Root>
@@ -120,7 +120,7 @@ export const RegistrySettings = ({
             </Form.Row>
             {enabled && !loadedDevId && !busy && (
               <Message.Root valence='warning'>
-                <Message.Content>{t('dev-plugin.not-loaded.message')}</Message.Content>
+                <Message.Body>{t('dev-plugin.not-loaded.message')}</Message.Body>
               </Message.Root>
             )}
           </Form.Section>

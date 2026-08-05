@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type TerraConfigValues, type Vec3, scale } from '../engine';
+import { type TerraConfigValues, type Vec3, add, scale, sub } from '../engine';
 import { type TerraObject } from '../types';
-import { advance } from './geo';
+import { tangentFrame } from './geo';
 import { type MotionContext, type ObjectState, evaluate } from './motion';
+
+const DEG = Math.PI / 180;
 
 /** Per-kind tuning: emission spacing, puff lifetime, sample cap, and render-side sizing/alpha. */
 export type TrailSpec = {
@@ -13,10 +15,13 @@ export type TrailSpec = {
   lifetimeMs: number;
   capacity: number;
   startRadius: number;
+  /** Puff radius at the end of its life, relative to `startRadius`: above 1 it spreads, 0 tapers it away to nothing. */
   endScale: number;
   startAlpha: number;
   /** Angular distance the emission point sits behind the object's own origin, clearing its tail. */
   aftOffset: number;
+  /** Puff colour, linear RGB. Exhaust burns; a wake does not — a rocket's plume is flame, a boat's is spray. */
+  color: [number, number, number];
 };
 
 /** Only the kinds the "Smoke trails" design calls for; every other kind leaves no trail. */
@@ -32,6 +37,7 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
     endScale: 2.5,
     startAlpha: 0.3,
     aftOffset: 0.005,
+    color: [1, 1, 1],
   },
   plane: {
     spacing: 0.005,
@@ -41,15 +47,22 @@ export const TRAIL_SPECS: Partial<Record<TerraObject.Kind, TrailSpec>> = {
     endScale: 3,
     startAlpha: 0.35,
     aftOffset: 0.02,
+    color: [1, 1, 1],
   },
   rocket: {
-    spacing: 0.0025,
-    lifetimeMs: 1400,
-    capacity: 30,
-    startRadius: 0.012,
-    endScale: 2,
-    startAlpha: 0.45,
+    // A short, dense plume rather than a smoke column back to the pad: exhaust dissipates fast, and
+    // a long one hides the very thing the trail is there to show, which is the rocket's attitude.
+    spacing: 0.002,
+    lifetimeMs: 500,
+    capacity: 12,
+    startRadius: 0.022,
+    // Tapers to nothing: a plume is widest at the nozzle and thins out behind, where a wake or a
+    // vapour trail spreads as it disperses.
+    endScale: 0,
+    startAlpha: 0.5,
     aftOffset: 0.024,
+    // Burning propellant, shading toward the flame at the nozzle rather than the white of a wake.
+    color: [1, 0.55, 0.16],
   },
 };
 
@@ -89,6 +102,13 @@ export const trailPuffs = (
     return [];
   }
 
+  // A rocket burns for the first part of its arc and coasts the rest, and a cut engine leaves no
+  // plume: the exhaust goes with it rather than hanging in the air behind. Read off the *current*
+  // phase, so the whole trail disappears the instant the burn ends.
+  if (definition.kind === 'rocket' && state.phase !== 'boost') {
+    return [];
+  }
+
   const intervalMs = (spec.spacing / definition.speed) * 1000;
   const elapsedNowMs = nowMs - definition.spawnedAt;
   // The largest tick strictly before `elapsedNowMs`, so the freshest puff never sits exactly on the
@@ -107,26 +127,24 @@ export const trailPuffs = (
     }
     const context: MotionContext = { config, elapsed: birthMs / 1000 };
     const historical = evaluate(state, definition, context);
-    // A rocket only exhausts on the way up. Testing the puff's own birth-time fraction (not the
-    // rocket's current one) keeps ascent puffs visible as it falls, instead of the plume vanishing
-    // the instant it tips over the apex.
-    if (definition.kind === 'rocket' && historical.flightFraction >= APEX_FRACTION) {
-      continue;
-    }
     puffs.push({ position: behindHull(historical, spec), age: age / spec.lifetimeMs });
   }
   return puffs;
 };
 
-/** Flight fraction at which a ballistic arc stops climbing; past this the rocket is descending. */
-const APEX_FRACTION = 0.5;
-
 /**
- * `historical`'s world position, moved back along its own heading at that instant by the kind's
- * `aftOffset` so the puff leaves the tail rather than the middle of the form. Purely cosmetic — it
- * never affects emission timing or spacing.
+ * `historical`'s world position, moved back along the axis it was *flying* at that instant by the
+ * kind's `aftOffset`, so the puff leaves the tail rather than the middle of the form. The axis is
+ * pitched off the local horizontal by `state.pitch`, exactly as the mesh is drawn: offsetting along
+ * the ground track alone would hang a climbing rocket's exhaust out beside its arc instead of below
+ * it, which is the whole plume for a near-vertical launch. Purely cosmetic — it never affects
+ * emission timing or spacing.
  */
 const behindHull = (historical: ObjectState, spec: TrailSpec): Vec3 => {
-  const behindUnit = advance(historical.unit, historical.bearing, -spec.aftOffset);
-  return scale(behindUnit, historical.radius);
+  const { north, east } = tangentFrame(historical.unit);
+  const heading = historical.bearing * DEG;
+  const tangent = add(scale(north, Math.cos(heading)), scale(east, Math.sin(heading)));
+  const forward = add(scale(tangent, Math.cos(historical.pitch)), scale(historical.unit, Math.sin(historical.pitch)));
+  // `aftOffset` is an angular offset, so it becomes a world distance at the object's own radius.
+  return sub(scale(historical.unit, historical.radius), scale(forward, spec.aftOffset * historical.radius));
 };

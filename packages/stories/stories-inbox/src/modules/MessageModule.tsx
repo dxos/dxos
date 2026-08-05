@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { GraphPath } from '@dxos/app-toolkit';
@@ -36,21 +36,13 @@ const MessageModuleContainer = ({ space, attendableId }: { space: Space; attenda
   // positional attendableId — sibling ModuleContainer cells have independent attention targets.
   const selectedId = useSelection(mailbox ? GraphPath.getObjectPathFromObject(mailbox) : attendableId, 'single');
   const selected = messages.find((candidate) => candidate.id === selectedId);
-  // Open the whole thread, not just the clicked message — mirrors the app's `mailboxMessage`
-  // companion connector: all feed messages sharing the selected message's `threadId`, oldest-first.
-  // A message with no `threadId` is its own singleton conversation.
-  const thread = useMemo(() => {
-    if (!selected) {
-      return [];
-    }
-    const members =
-      selected.threadId != null ? messages.filter((message) => message.threadId === selected.threadId) : [selected];
-    return [...members].sort((a, b) => (a.created ?? '').localeCompare(b.created ?? ''));
-  }, [messages, selected]);
-  return thread.length > 0 ? (
+  // The clicked message alone is the subject — `MessageArticle` looks its conversation up by `threadId`
+  // against the mailbox passed as `companionTo`. The article's surface filter matches a single non-draft
+  // Message, so handing it a thread array resolves no surface at all.
+  return selected ? (
     <Surface.Surface
       type={AppSurface.Article}
-      data={{ subject: thread, companionTo: mailbox, attendableId }}
+      data={{ subject: selected, companionTo: mailbox, attendableId }}
       limit={1}
     />
   ) : (

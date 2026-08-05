@@ -8,6 +8,7 @@ import { useCallback, useMemo, useRef } from 'react';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
+  type EditorMenuProviderProps,
   type UseEditorMenuProps,
   filterMenuGroups,
   formattingCommands,
@@ -23,11 +24,13 @@ export type UseEditorMenuOptionsProps = {
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 };
 
+export type UseEditorMenuOptions = UseEditorMenuProps & Pick<EditorMenuProviderProps, 'searchPlaceholder'>;
+
 export const useEditorMenuOptions = ({
   editorView,
   slashCommandGroups,
   onLinkQuery,
-}: UseEditorMenuOptionsProps): UseEditorMenuProps => {
+}: UseEditorMenuOptionsProps): UseEditorMenuOptions => {
   const { t } = useTranslation(meta.profile.key);
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
@@ -49,7 +52,7 @@ export const useEditorMenuOptions = ({
   );
 
   const viewRef = useRef(editorView);
-  return useMemo<UseEditorMenuProps>(() => {
+  return useMemo<UseEditorMenuOptions>(() => {
     const trigger = onLinkQuery ? ['/', '@'] : ['/'];
     const placeholder = {
       delay: 3_000,
@@ -63,6 +66,14 @@ export const useEditorMenuOptions = ({
       },
     };
 
-    return { viewRef, getMenu, trigger, placeholder };
-  }, [getMenu, onLinkQuery]);
+    // The object picker filters by name, so its query belongs in the popover, not the document.
+    return {
+      viewRef,
+      getMenu,
+      trigger,
+      placeholder,
+      searchTriggers: ['@'],
+      searchPlaceholder: t('link-query.placeholder'),
+    };
+  }, [getMenu, onLinkQuery, t]);
 };

@@ -36,7 +36,7 @@ const newDeck = (overrides: Partial<Record<string, unknown>> = {}) => ({
   active: [],
   inactive: [],
   plankSizing: {},
-  companionOpen: false,
+  companionPlanks: [],
   ...overrides,
 });
 

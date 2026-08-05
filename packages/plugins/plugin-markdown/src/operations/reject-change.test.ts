@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { CollaborationOperation } from '@dxos/app-toolkit';
+import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
 import { Collection, Database, Feed, Ref } from '@dxos/echo';
@@ -16,8 +17,6 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
-
-import { WithProperties } from '#testing';
 
 import { Markdown, MarkdownOperation } from '../types';
 import { MarkdownOperationHandlerSet } from './index';

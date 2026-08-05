@@ -31,5 +31,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-mermaid',
     icon: { key: 'ph--anchor-simple--regular', hue: 'cyan' },
     spec: 'PLUGIN.mdl',
+    tags: ['alpha'],
   },
 });

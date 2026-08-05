@@ -15,7 +15,6 @@ import { translations } from '#translations';
 
 import { ExpandoCard, FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import {
-  DefaultStory,
   createExpando,
   createOrganization,
   createPerson,
@@ -24,7 +23,8 @@ import {
   createTableEmpty,
   createTask,
   createUnknown,
-} from './testing';
+} from './fixtures';
+import { DefaultStory } from './testing';
 
 random.seed(999);
 

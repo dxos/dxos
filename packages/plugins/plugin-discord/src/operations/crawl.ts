@@ -41,6 +41,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.CrawlDiscordChannel
               known.add(text);
             }
           }
+
           return yield* DiscordPipeline.run(
             {
               channels: [...channels],

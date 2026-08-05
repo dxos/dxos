@@ -10,7 +10,7 @@ import type { ComponentType } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { type Collection, type Database, type Type } from '@dxos/echo';
+import { type Collection, type Database, type Obj, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
@@ -36,6 +36,18 @@ export namespace SpaceCapabilities {
   /** Persisted state (stored in KVS/localStorage). */
   export const State = Capability.make<Atom.Writable<SpaceState>>(`${meta.profile.key}.capability.state`);
 
+  /**
+   * A proposed merge awaiting confirmation. `preview` is detached (never added to the database),
+   * so abandoning the review writes nothing. Keyed by the type article's URI so the companion
+   * only shows a preview raised by the plank it is companion to.
+   */
+  export type MergePreview = {
+    typeUri: string;
+    typename: string;
+    objectIds: string[];
+    preview: Obj.Unknown;
+  };
+
   /** Ephemeral space plugin state (not persisted). */
   export type SpaceEphemeralState = {
     awaiting: string | undefined;
@@ -43,6 +55,9 @@ export namespace SpaceCapabilities {
     navigableCollections: boolean;
     viewersByObject: Record<string, ComplexMap<PublicKey, ObjectViewerProps>>;
     viewersByIdentity: ComplexMap<PublicKey, Set<string>>;
+    mergePreview: MergePreview | undefined;
+    /** Bumped when a merge commits, so an open duplicates review knows to rescan. */
+    lastMergeAt: number | undefined;
   };
 
   /** Transient/ephemeral state (not persisted). */
@@ -89,6 +104,15 @@ export namespace SpaceCapabilities {
     customPanel?: ComponentType<CreateObjectCustomPanelProps>;
   }>;
   export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.profile.key}.capability.create-object`);
+
+  /**
+   * The identity rule for a type — how to key an object for duplicate detection and how to merge
+   * two of them. Plugins that own a type contribute one (e.g. plugin-crm for Person); the type
+   * article only offers its Duplicates tab for types that have one.
+   */
+  export const IdentitySpec = Capability.make<import('@dxos/extractor').IdentitySpec<any>>(
+    `${meta.profile.key}.capability.identity-spec`,
+  );
 
   /** Props passed to a `CreateObjectEntry.customPanel`. */
   export type CreateObjectCustomPanelProps = {

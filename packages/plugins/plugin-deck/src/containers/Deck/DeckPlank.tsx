@@ -54,8 +54,17 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
   const { findFirstFocusable } = useFocusFinders();
   const { invokePromise } = useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
-  const { node, capabilities, sigilActions, popoverAnchorId, scrollIntoView, onAction, onAdjust, onScrollIntoView } =
-    useDeckPlank({ id, part, active });
+  const {
+    node,
+    capabilities,
+    sigilActions,
+    popoverAnchorId,
+    scrollIntoView,
+    expanded,
+    onAction,
+    onAdjust,
+    onScrollIntoView,
+  } = useDeckPlank({ id, part, active });
 
   // In flat mode only the current (last) plank renders; its predecessors in the stack become
   // breadcrumbs in the heading. Clicking one drops the planks after it (go back), reusing Close.
@@ -114,6 +123,7 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
     <PlankControls
       capabilities={capabilities}
       fullscreen={fullscreen}
+      expanded={expanded}
       close={part === 'complementary' ? 'minify-end' : true}
       onClick={onAdjust}
     />

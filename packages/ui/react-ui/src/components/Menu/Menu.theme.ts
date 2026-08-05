@@ -13,7 +13,7 @@ export type MenuStyleProps = Partial<{
 
 const content: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
-    'dx-popover-surface w-48 md:w-56 border border-separator rounded-md',
+    'dx-popover-surface w-48 md:w-56 border border-separator rounded-sm',
     surfaceZIndex({ elevation, level: 'menu' }),
     surfaceShadow({ elevation: 'positioned' }),
     ...etc,
@@ -24,7 +24,7 @@ const viewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
 
 const item: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
-    'flex cursor-pointer select-none items-center gap-2 rounded-xs px-2 py-2 text-sm',
+    'flex cursor-pointer select-none items-center gap-2 rounded-xs min-h-(--dx-control) px-(--dx-control-pad) py-1 text-sm',
     'hover:bg-hover-surface data-[highlighted]:bg-hover-surface',
     'dx-focus-subdued',
     dataDisabled,
@@ -34,7 +34,7 @@ const item: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
 const separator: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('my-1 mx-2 h-px bg-separator', ...etc);
 
 const groupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('text-description', 'select-none px-2 py-2', ...etc);
+  mx('text-description', 'select-none px-(--dx-control-pad) py-1', ...etc);
 
 const arrow: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 

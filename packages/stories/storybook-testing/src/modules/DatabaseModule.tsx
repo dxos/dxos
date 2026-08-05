@@ -109,7 +109,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
           <div
             className={mx(
               'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-              'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
+              'overflow-hidden dx-base-surface border border-subdued-separator opacity-80',
             )}
           >
             <JsonHighlighter classNames='text-sm' data={filter} />
@@ -120,7 +120,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
             <div
               className={mx(
                 'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-                'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
+                'overflow-hidden dx-base-surface border border-subdued-separator opacity-80',
               )}
             >
               <JsonHighlighter classNames='text-sm' data={selectedObject} />

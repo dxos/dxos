@@ -17,6 +17,9 @@
   ],
   "references": [
     {
+      "path": "../../../tools/fixtures"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -98,13 +101,13 @@
       "path": "../../plugins/plugin-markdown"
     },
     {
-      "path": "../../plugins/plugin-outliner"
-    },
-    {
       "path": "../../plugins/plugin-progress"
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-tasks"
     },
     {
       "path": "../../plugins/plugin-testing"

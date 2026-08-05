@@ -11,8 +11,9 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
+import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EID } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Database from './Database';
@@ -48,6 +49,20 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `trace`: Trace feed.
      */
     namespace: Schema.optional(Schema.Literal('data', 'trace')),
+
+    /**
+     * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,
+     * because the writer may be a different process than the one that decided it.
+     *
+     * Stored as the first *discarded* item rather than the new parent so that rewinding to the very
+     * first item needs no sentinel: nothing precedes it, so the continuation simply starts a new line.
+     * Readers show what precedes it; the next append parents to that and clears this.
+     *
+     * Transient intent, never a source of truth for history. The fork itself lives in item lineage
+     * (see {@link PARENT_KEY}), which is what {@link history} walks and what replicates in a defined
+     * order relative to the blocks.
+     */
+    rewindFrom: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
   }).pipe(
     internal.HiddenAnnotation.set(true),
     Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
@@ -79,6 +94,42 @@ export interface RetentionOptions {
   /** Retain items after this cursor position. */
   // TODO(wittjosiah): Use FeedCursor from @dxos/feed?
   cursor?: string;
+}
+
+/**
+ * Options for {@link append}.
+ */
+export interface AppendOptions {
+  /**
+   * Explicit lineage parent for the appended items — the soft-fork point.
+   * Applies to the first item only; the rest of the batch chain implicitly in append order.
+   */
+  parent?: Entity.Unknown | Entity.Snapshot | EntityId;
+}
+
+/**
+ * Options for {@link history}.
+ */
+export interface HistoryOptions {
+  /**
+   * Item to walk the history from, as git's `HEAD` selects which commits are reachable.
+   * Defaults to the last item, so the most recently appended line of items wins.
+   */
+  head?: Entity.Unknown | Entity.Snapshot | EntityId;
+}
+
+/**
+ * The items reachable from a head by following lineage — a feed's equivalent of
+ * `git log --first-parent`.
+ */
+export interface History<T> {
+  /** The reachable items, in append order. */
+  items: T[];
+  /**
+   * A parent was referenced but could not be resolved, so the walk stopped at a boundary and
+   * earlier history is missing — the same condition as a git shallow clone.
+   */
+  shallow: boolean;
 }
 
 /**
@@ -150,15 +201,33 @@ export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.
 /**
  * Appends items to a feed.
  *
+ * Pass `options.parent` to soft-fork the feed: the first appended item continues from that item
+ * rather than from the feed's tip, so everything appended between the two becomes unreachable from
+ * {@link history}. Nothing is removed from the log.
+ *
  * @example
  * ```ts
  * yield* Feed.append(feed, [Obj.make(Notification, { title: 'Hello' })]);
+ *
+ * // Continue from an earlier item, leaving what followed it unreachable.
+ * yield* Feed.append(feed, [Obj.make(Notification, { title: 'Take two' })], { parent: earlier });
  * ```
  */
-export const append = (feed: Feed, items: Entity.Unknown[]): Effect.Effect<void, never, Database.Service> =>
-  Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.appendToFeed(feed, items)))).pipe(
-    Effect.withSpan('Feed.append'),
-  );
+export const append = (
+  feed: Feed,
+  items: Entity.Unknown[],
+  options?: AppendOptions,
+): Effect.Effect<void, never, Database.Service> =>
+  Database.Service.pipe(
+    Effect.flatMap(({ db }) =>
+      Effect.promise(() => {
+        if (options?.parent !== undefined && items.length > 0) {
+          setParent(items[0], options.parent);
+        }
+        return db.appendToFeed(feed, items);
+      }),
+    ),
+  ).pipe(Effect.withSpan('Feed.append'));
 
 /**
  * Removes items from a feed.
@@ -183,6 +252,147 @@ export const remove = (
       ),
     ),
   ).pipe(Effect.withSpan('Feed.remove'));
+
+//
+// Lineage (soft fork)
+//
+
+/**
+ * Foreign-key source for an item's explicit lineage parent within a feed.
+ *
+ * Lineage is carried in item `@meta` because feed items are arbitrary ECHO objects that the feed
+ * does not own and cannot extend; `KEY_QUEUE_POSITION` rides along with feed blocks the same way.
+ */
+export const PARENT_KEY = 'org.dxos.key.feed-parent';
+
+/**
+ * Tri-state read of the lineage key, distinguishing an absent key from a present but malformed one.
+ * A replicated id that does not parse must not read as "no parent" — that would resolve a fork as
+ * an implicit continuation and silently expose the items it abandoned.
+ */
+const readParent = (item: Entity.Unknown | Entity.Snapshot): { present: boolean; id?: EntityId } => {
+  const id = internal.getKeys(item, PARENT_KEY).at(0)?.id;
+  if (id === undefined) {
+    return { present: false };
+  }
+  return EntityId.isValid(id) ? { present: true, id } : { present: true };
+};
+
+/**
+ * Foreign-key source for the global position a position authority assigned a feed item.
+ * Exposed alongside {@link getPosition} so callers can stamp or inspect it without reaching for
+ * `@dxos/protocols`.
+ */
+export const POSITION_KEY = KEY_QUEUE_POSITION;
+
+/**
+ * The global position a feed item was assigned, or `+Infinity` when it has none — a block written
+ * locally and not yet acknowledged, which sorts last because it is the newest.
+ *
+ * Use this to put items into append order before calling {@link history}: a query returns an unordered
+ * set, and `created` is a wall clock that peers do not agree on.
+ *
+ * @example
+ * ```ts
+ * const inAppendOrder = Array.sort(messages, Order.mapInput(Order.number, Feed.getPosition));
+ * const { items } = Feed.history(inAppendOrder);
+ * ```
+ */
+export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
+  const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
+  const position = key !== undefined ? Number(key) : Number.NaN;
+  return Number.isNaN(position) ? Number.POSITIVE_INFINITY : position;
+};
+
+/**
+ * Returns an item's explicit lineage parent, or `undefined` when it continues from the item that
+ * precedes it in append order (the default for every feed).
+ *
+ * Also `undefined` for a malformed stored id; {@link history} tells the two apart and reports
+ * a malformed parent as truncation.
+ */
+export const getParent = (item: Entity.Unknown | Entity.Snapshot): EntityId | undefined => readParent(item).id;
+
+/**
+ * Sets (or, with `undefined`, clears) an item's explicit lineage parent.
+ * Call before appending the item; {@link append}'s `parent` option does this for you.
+ */
+export const setParent = (
+  item: Entity.Unknown,
+  parent: Entity.Unknown | Entity.Snapshot | EntityId | undefined,
+): void => {
+  internal.change(item, (mutable) => {
+    internal.deleteKeys(mutable, PARENT_KEY);
+    if (parent !== undefined) {
+      const id = typeof parent === 'string' ? parent : parent.id;
+      internal.getMetaChecked(mutable).keys.push(internal.foreignKey(PARENT_KEY, id));
+    }
+  });
+};
+
+/**
+ * Returns the items reachable from a head by following lineage — a feed's `git log --first-parent`.
+ *
+ * Walks backwards from the head: an item with an explicit lineage parent jumps to that item, leaving
+ * everything appended in between unreachable; an item without one steps to its predecessor. So a
+ * feed appended as `M1, M2, M3, M4, M5(M3)` yields `M1, M2, M3, M5`, with `M4` unreachable but still
+ * present in the log — the log is the object store, this function is what HEAD reaches.
+ *
+ * `items` must be in **append order** — the walk is positional, and pre-sorting by a wall-clock
+ * field such as `created` would corrupt it. Lineage is resolved over exactly the list passed in, so
+ * a parent excluded by the caller's filter reads as absent (`shallow`), same as one that has not
+ * replicated yet or whose stored id does not parse.
+ *
+ * @example
+ * ```ts
+ * const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+ * const { items, shallow } = Feed.history(messages);
+ * ```
+ */
+export const history = <T extends Entity.Unknown | Entity.Snapshot>(
+  items: readonly T[],
+  options?: HistoryOptions,
+): History<T> => {
+  const indexById = new Map<EntityId, number>();
+  items.forEach((item, index) => indexById.set(item.id, index));
+
+  const head = options?.head;
+  const headIndex = head === undefined ? items.length - 1 : indexById.get(typeof head === 'string' ? head : head.id);
+  if (headIndex === undefined) {
+    return { items: [], shallow: true };
+  }
+
+  let cursor = headIndex;
+  const reachable: T[] = [];
+  let shallow = false;
+  while (cursor >= 0) {
+    const item = items[cursor];
+    reachable.push(item);
+
+    const parent = readParent(item);
+    if (!parent.present) {
+      cursor -= 1;
+      continue;
+    }
+    if (parent.id === undefined) {
+      // Key present but unparseable — a fork whose target cannot be identified, so stop rather than
+      // fall through to the predecessor and make what this item superseded reachable again.
+      shallow = true;
+      break;
+    }
+
+    // A parent at or after its child is a cycle or a forward reference (possible with arbitrary
+    // multi-writer data); requiring the cursor to strictly decrease also guarantees termination.
+    const parentIndex = indexById.get(parent.id);
+    if (parentIndex === undefined || parentIndex >= cursor) {
+      shallow = true;
+      break;
+    }
+    cursor = parentIndex;
+  }
+
+  return { items: reachable.reverse(), shallow };
+};
 
 /**
  * Creates a reactive query over items in a feed.

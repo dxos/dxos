@@ -5,9 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
+
+import { meta } from '#meta';
 
 import { ClientOperation } from '../../operations';
 
@@ -15,6 +17,8 @@ export type NavigationHandlerOptions = {
   invitationProp?: string;
   tokenProp?: string;
   tokenTypeProp?: string;
+  /** Set false when another plugin (e.g. plugin-onboarding) owns the invitation URL param. */
+  invitationUrlHandler?: boolean;
 };
 
 /**
@@ -26,6 +30,7 @@ export default Capability.makeModule(
     invitationProp = 'deviceInvitationCode',
     tokenProp = 'token',
     tokenTypeProp = 'type',
+    invitationUrlHandler = true,
   }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capability.get(Capabilities.OperationInvoker);
@@ -34,7 +39,7 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const token = url.searchParams.get(tokenProp);
         const tokenType = url.searchParams.get(tokenTypeProp);
-        const invitationCode = url.searchParams.get(invitationProp);
+        const invitationCode = invitationUrlHandler ? url.searchParams.get(invitationProp) : null;
 
         if (token && tokenType === 'login') {
           log('login token received via navigation');
@@ -47,9 +52,21 @@ export default Capability.makeModule(
           yield* Operation.invoke(ClientOperation.JoinIdentity, { invitationCode });
         }
       }).pipe(
+        Effect.catchAll((error) =>
+          Effect.gen(function* () {
+            log.warn('navigation handler failed', { error });
+            yield* Operation.invoke(LayoutOperation.AddToast, {
+              id: `${meta.profile.key}/navigation-failed`,
+              title: ['navigation-failed-toast.title', { ns: meta.profile.key }],
+              description: ['navigation-failed-toast.description', { ns: meta.profile.key }],
+              icon: 'ph--warning--regular',
+            }).pipe(
+              Effect.catchAll((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))),
+            );
+          }),
+        ),
         Effect.provideService(Capability.Service, capabilities),
         Effect.provideService(Operation.Service, operationService),
-        Effect.orDie,
       );
 
     return Capability.contributes(AppCapabilities.NavigationHandler, handler);

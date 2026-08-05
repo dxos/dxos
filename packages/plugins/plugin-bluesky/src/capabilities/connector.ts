@@ -99,10 +99,12 @@ export default Capability.makeModule(
           useRedirectFlow: true,
         },
         credentialForm,
-        optionsSchema: BlueskyTargetOptions,
-        materializeTarget: BlueskyOperation.MaterializeBlueskyTarget,
-        getSyncTargets: BlueskyOperation.GetBlueskyTargets,
-        sync: BlueskyOperation.SyncBlueskyTargets,
+        sync: {
+          operation: BlueskyOperation.SyncBlueskyTargets,
+          getTargets: BlueskyOperation.GetBlueskyTargets,
+          materializeTarget: BlueskyOperation.MaterializeBlueskyTarget,
+          optionsSchema: BlueskyTargetOptions,
+        },
         testConnection,
       },
     ]);

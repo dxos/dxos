@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
+import { Credential } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
@@ -28,8 +29,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     if (accessToken.account) {
       return;
     }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const user = yield* GitHubApi.fetchUser().pipe(
-      Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token: accessToken.token })),
+      Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token })),
     );
     Obj.update(accessToken, (accessToken) => {
       accessToken.account = user.login ?? user.email;
@@ -42,8 +44,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * error so the connection UI can offer to reauthenticate.
  */
 const testConnection: TestConnection = ({ accessToken }) =>
-  GitHubApi.fetchUser().pipe(
-    Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token: accessToken.token })),
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+    GitHubApi.fetchUser().pipe(Effect.provide(Layer.succeed(GitHubApi.GitHubCredentials, { token }))),
+  ).pipe(
     Effect.asVoid,
     Effect.mapError(
       () => new ConnectionTestError({ message: 'GitHub rejected the credential. Reauthenticate to continue syncing.' }),
@@ -73,10 +76,12 @@ export default Capability.makeModule(
           provider: OAuthProvider.GITHUB,
           scopes: [],
         },
-        getSyncTargets: GitHubOperation.GetGitHubRepositories,
-        materializeTarget: GitHubOperation.MaterializeGitHubTarget,
-        sync: GitHubOperation.SyncGitHubRepositories,
-        optionsSchema: GitHubOperation.SyncOptions,
+        sync: {
+          operation: GitHubOperation.SyncGitHubRepositories,
+          getTargets: GitHubOperation.GetGitHubRepositories,
+          materializeTarget: GitHubOperation.MaterializeGitHubTarget,
+          optionsSchema: GitHubOperation.SyncOptions,
+        },
         onTokenCreated,
         testConnection,
       },

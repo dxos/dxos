@@ -17,9 +17,12 @@ import { type Message } from '@dxos/types';
 import { useGmailTags } from '#hooks';
 
 import { getMessageBodyText, getMessageProps } from '../../util';
+import { isMessageGroup } from './is-message-group';
 
 export type InboxStackAction =
-  | { type: 'current'; messageId: string }
+  // `newPlank` when the gesture asked for its own plank (meta/ctrl click) rather than reusing the
+  // one the mailbox keeps for whichever message is being read.
+  | { type: 'current'; messageId: string; newPlank?: boolean }
   | { type: 'current-conversation'; conversationId: string; messageId: string }
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
@@ -53,8 +56,6 @@ export type MessageGroup = {
 /** A stack entry: an individual message or a conversation group. Entries of both kinds may be mixed. */
 export type InboxStackItem = Message.Message | MessageGroup;
 
-export const isMessageGroup = (item: InboxStackItem): item is MessageGroup => 'messages' in item;
-
 /** Per-message tag chip atom family; each tile subscribes to just its own message's tags. */
 export type MessageTagsFamily = (messageId: string) => Atom.Atom<InboxStackTag[]>;
 
@@ -62,6 +63,7 @@ export type MessageTagsFamily = (messageId: string) => Atom.Atom<InboxStackTag[]
 export type StarredFamily = (messageId: string) => Atom.Atom<boolean>;
 
 const EMPTY_TAGS_ATOM = Atom.make((): InboxStackTag[] => []);
+
 const NOT_STARRED_ATOM = Atom.make(() => false);
 
 export type InboxStackProps = {
@@ -444,7 +446,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
     const handleMessageClick = useCallback(
       (event: MouseEvent, messageId: string) => {
         event.stopPropagation();
-        onAction?.({ type: 'current', messageId });
+        onAction?.({ type: 'current', messageId, newPlank: event.metaKey || event.ctrlKey });
       },
       [onAction],
     );

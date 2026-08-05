@@ -5,7 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Terra, TerraObject } from '../types';
-import { initialState } from './motion';
+import { evaluate, initialState } from './motion';
 import { type TrailSpec, trailPuffs } from './trail';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'trail-1' } }));
@@ -18,6 +18,7 @@ const SPEC: TrailSpec = {
   endScale: 2,
   startAlpha: 0.3,
   aftOffset: 0.03,
+  color: [1, 1, 1],
 };
 
 /** A rocket's motion is a pure function of `(definition, context)` — no route/nav-grid setup needed to exercise `trailPuffs`. */
@@ -40,7 +41,7 @@ describe('trailPuffs', () => {
   test('puff count is capped at spec.capacity', () => {
     // A very fast object would otherwise pack far more than `capacity` emission ticks into `lifetimeMs`.
     // At speed 10 the quarter-turn flight lasts ~157ms, so sampling at 70ms keeps the rocket below
-    // its apex — rockets only exhaust while climbing, and a post-apex sample would emit nothing.
+    // its burn — a rocket exhausts for the first third of its arc, and a later sample emits nothing.
     const rocket = makeRocket(10);
     const state = initialState(rocket, config);
     const puffs = trailPuffs(state, rocket, config, 70, SPEC);
@@ -88,6 +89,17 @@ describe('trailPuffs', () => {
     const state = initialState(rocket, config);
     const puffs = trailPuffs(state, rocket, config, 10_000, SPEC);
     expect(puffs[0].age).toBeGreaterThan(0);
+  });
+
+  test('a climbing rocket leaves its exhaust below its arc, not beside it', () => {
+    const rocket = makeRocket(0.05);
+    const state = initialState(rocket, config);
+    // Early in the boost phase the nose is near vertical, so the tail — and the plume — points
+    // almost straight down. Offsetting along the ground track alone would leave every puff at the
+    // rocket's own altitude, beside the arc rather than under it.
+    const [nearest] = trailPuffs(state, rocket, config, 900, SPEC);
+    const flying = evaluate(state, rocket, { config, elapsed: 0.9 });
+    expect(Math.hypot(...nearest.position)).toBeLessThan(flying.radius);
   });
 
   test('determinism: the same state/definition/config/nowMs always yields the same puffs', () => {

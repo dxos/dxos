@@ -5,8 +5,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { getParentId } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
 import { Panel, useTranslation } from '@dxos/react-ui';
-import { type Channel } from '@dxos/types';
+import { Channel } from '@dxos/types';
 
 import { MessageThread } from '#components';
 import { useChannelMessaging } from '#hooks';
@@ -16,7 +19,9 @@ import { type Thread, ThreadOperation, selectThread } from '#types';
 export type ChannelThreadArticleProps = {
   role?: string;
   subject: Thread.Thread;
-  /** The channel whose feed the thread lives in; the thread holds no reference to it. */
+  /** Graph node of this plank, whose parent is the channel the thread was opened under. */
+  attendableId?: string;
+  /** The channel whose feed the thread lives in; resolved from the graph when not supplied. */
   channel?: Channel.Channel;
 };
 
@@ -26,9 +31,19 @@ export type ChannelThreadArticleProps = {
  * the channel view only starts threads, which is what keeps conversation out of the main feed.
  * The thread is renamed from its navtree node, through the rename action every object node carries.
  */
-export const ChannelThreadArticle = ({ role, subject: thread, channel }: ChannelThreadArticleProps) => {
+export const ChannelThreadArticle = ({
+  role,
+  subject: thread,
+  attendableId,
+  channel: channelProp,
+}: ChannelThreadArticleProps) => {
   const threadId = thread.id;
   const { t } = useTranslation(meta.profile.key);
+  // The thread holds no channel reference — it lives in that channel's feed — so the channel is the
+  // object of the node this plank opened under, the way plugin-inbox resolves a message's mailbox.
+  const { graph } = useAppGraph();
+  const parent = useNode(graph, attendableId ? getParentId(attendableId) : undefined);
+  const channel = channelProp ?? (Channel.instanceOf(parent?.data) ? parent.data : undefined);
   const { invokePromise } = useOperationInvoker();
   const { space, identity, members, messages, activity, readOnly, getReactions, canDelete, onReact, onDelete } =
     useChannelMessaging(channel);

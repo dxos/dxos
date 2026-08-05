@@ -28,6 +28,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-discord',
     icon: { key: 'ph--discord-logo--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
-    tags: ['labs', 'integration'],
+    tags: ['labs', 'connector'],
   },
 });

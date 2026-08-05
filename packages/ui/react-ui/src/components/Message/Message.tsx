@@ -18,14 +18,7 @@ import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
 import { Icon } from '../Icon';
-
-const messageIcons: Record<MessageValence, string> = {
-  success: 'ph--check-circle--duotone',
-  info: 'ph--info--duotone',
-  warning: 'ph--warning--duotone',
-  error: 'ph--warning-circle--duotone',
-  neutral: 'ph--info--duotone',
-};
+import { messageIcons } from './message-icons';
 
 type MessageRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   valence?: MessageValence;
@@ -125,6 +118,35 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
 MessageRoot.displayName = MESSAGE_NAME;
 
 //
+// Content
+//
+
+type MessageContentProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+  asChild?: boolean;
+};
+
+const MESSAGE_CONTENT_NAME = 'Message.Content';
+
+/**
+ * Optional padded wrapper around a message's title and body — supplies the inset that hosts
+ * otherwise had to add with their own wrapper `div`. Spans the root's tracks via subgrid so
+ * `Message.Title` still places its icon in the gutter.
+ */
+const MessageContent = forwardRef<HTMLDivElement, MessageContentProps>(
+  ({ asChild, classNames, children, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const Comp = asChild ? Slot : Primitive.div;
+    return (
+      <Comp {...props} className={tx('message.content', {}, classNames)} ref={forwardedRef}>
+        {children}
+      </Comp>
+    );
+  },
+);
+
+MessageContent.displayName = MESSAGE_CONTENT_NAME;
+
+//
 // Title
 //
 
@@ -171,29 +193,29 @@ const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
 MessageTitle.displayName = MESSAGE_TITLE_NAME;
 
 //
-// Content
+// Body
 //
 
-type MessageContentProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
+type MessageBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   asChild?: boolean;
 };
 
-const MESSAGE_CONTENT_NAME = 'Message.Content';
+const MESSAGE_BODY_NAME = 'Message.Body';
 
-const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
+const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const { descriptionId } = useMessageContext(MESSAGE_CONTENT_NAME);
+    const { descriptionId } = useMessageContext(MESSAGE_BODY_NAME);
     const Comp = asChild ? Slot : Primitive.p;
     return (
-      <Comp {...props} className={tx('message.content', {}, classNames)} id={descriptionId} ref={forwardedRef}>
+      <Comp {...props} className={tx('message.body', {}, classNames)} id={descriptionId} ref={forwardedRef}>
         {children}
       </Comp>
     );
   },
 );
 
-MessageContent.displayName = MESSAGE_CONTENT_NAME;
+MessageBody.displayName = MESSAGE_BODY_NAME;
 
 //
 // Message
@@ -201,12 +223,11 @@ MessageContent.displayName = MESSAGE_CONTENT_NAME;
 
 export const Message = {
   Root: MessageRoot,
-  Title: MessageTitle,
   Content: MessageContent,
+  Title: MessageTitle,
+  Body: MessageBody,
 };
 
 export const Callout = Message;
 
-export type { MessageContentProps, MessageRootProps, MessageTitleProps };
-
-export { messageIcons };
+export type { MessageBodyProps, MessageContentProps, MessageRootProps, MessageTitleProps };

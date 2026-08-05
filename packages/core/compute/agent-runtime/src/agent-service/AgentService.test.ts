@@ -352,6 +352,10 @@ describe.skipIf(!runMemoizedTests())('Agent Service', () => {
     { timeout: MemoizedAiService.isGenerationEnabled() ? 120_000 : undefined },
   );
 
+  // Superseded by the ungated scripted-model port in `delegation-scripted.test.ts` (and the
+  // real-strategy test in `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`); kept
+  // in place until this file's memoized fixtures are next regenerated, since removing it would
+  // shift the shared deterministic ID stream the later fixtures depend on.
   describe('delegation (stub)', () => {
     it.scoped(
       'delegates work to a sub-agent and folds the result back on completion',

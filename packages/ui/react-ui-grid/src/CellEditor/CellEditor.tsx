@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { completionStatus } from '@codemirror/autocomplete';
 import { type Extension } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
-import React, { type KeyboardEvent } from 'react';
+import { EditorView } from '@codemirror/view';
+import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
@@ -18,100 +17,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 
 import { type GridEditBox } from '../Grid';
-
-export type EditorKeyEvent = Pick<KeyboardEvent<HTMLInputElement>, 'key'> & { shift?: boolean };
-
-export type EditorKeyHandler = (value: string | undefined, event: EditorKeyEvent) => void;
-export type EditorBlurHandler = (value: string | undefined) => void;
-export type EditorKeyOrBlurHandler = (value: string | undefined, event?: EditorKeyEvent) => void;
-
-export type EditorKeysProps = {
-  onClose: EditorKeyHandler;
-  onNav?: EditorKeyHandler;
-};
-
-// TODO(Zan): Should each consumer be responsible for defining these?
-export const editorKeys = ({ onNav, onClose }: EditorKeysProps): Extension => {
-  return keymap.of([
-    {
-      key: 'ArrowUp',
-      run: (editor) => {
-        const value = editor.state.doc.toString();
-        onNav?.(value, { key: 'ArrowUp' });
-        return !!onNav;
-      },
-    },
-    {
-      key: 'ArrowDown',
-      run: (editor) => {
-        const value = editor.state.doc.toString();
-        onNav?.(value, { key: 'ArrowDown' });
-        return !!onNav;
-      },
-    },
-    {
-      key: 'Mod-ArrowLeft',
-      run: (editor) => {
-        const value = editor.state.doc.toString();
-        onNav?.(value, { key: 'ArrowLeft' });
-        return !!onNav;
-      },
-    },
-    {
-      key: 'Mod-ArrowRight',
-      run: (editor) => {
-        const value = editor.state.doc.toString();
-        onNav?.(value, { key: 'ArrowRight' });
-        return !!onNav;
-      },
-    },
-    {
-      key: 'Enter',
-      run: (editor) => {
-        if (completionStatus(editor.state)) {
-          return false;
-        } else {
-          onClose(editor.state.doc.toString(), { key: 'Enter' });
-          return true;
-        }
-      },
-      shift: (editor) => {
-        if (completionStatus(editor.state)) {
-          return false;
-        } else {
-          onClose(editor.state.doc.toString(), { key: 'Enter', shift: true });
-          return true;
-        }
-      },
-    },
-    {
-      key: 'Tab',
-      run: (editor) => {
-        if (completionStatus(editor.state)) {
-          return false;
-        } else {
-          onClose(editor.state.doc.toString(), { key: 'Tab' });
-          return true;
-        }
-      },
-      shift: (editor) => {
-        if (completionStatus(editor.state)) {
-          return false;
-        } else {
-          onClose(editor.state.doc.toString(), { key: 'Tab', shift: true });
-          return true;
-        }
-      },
-    },
-    {
-      key: 'Escape',
-      run: () => {
-        onClose(undefined, { key: 'Escape' });
-        return true;
-      },
-    },
-  ]);
-};
+import { type EditorBlurHandler } from './editor-keys';
 
 export type CellEditorProps = {
   value?: string;
@@ -162,11 +68,16 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
             scroller: {
               className: mx(
                 'overflow-x-hidden! !py-[max(0,calc(var(--dx-grid-cell-editor-padding-block)-1px))] pe-0! !pl-(--dx-grid-cell-editor-padding-inline)',
+                // Centre the text in the cell. CodeMirror aligns the scroller's items to the start,
+                // which left a single line sitting against the cell's top edge with the slack below.
+                'items-center!',
                 slots?.scroller?.className,
               ),
             },
             content: {
-              className: mx('break-normal!', slots?.content?.className),
+              // Natural height, so the line is something the scroller can centre — CodeMirror's
+              // content otherwise stretches to fill and there is no slack to distribute.
+              className: mx('break-normal! min-h-auto!', slots?.content?.className),
             },
           },
         }),
@@ -178,7 +89,10 @@ export const CellEditor = ({ value, extensions, box, gridId, autoFocus, slots, o
     <div
       data-testid='grid.cell-editor'
       ref={parentRef}
-      className='absolute z-[1] dx-grid__cell-editor'
+      // `grid` (not block) so the editor stretches to the cell: the container's height comes from
+      // `minBlockSize`, and a percentage height resolves against `auto` — so the editor sized itself
+      // to its content and left a strip of dead cell below. A grid row still grows for a taller value.
+      className='absolute z-[1] grid dx-grid__cell-editor'
       style={{
         insetInlineStart: box?.insetInlineStart ?? '0px',
         insetBlockStart: box?.insetBlockStart ?? '0px',

@@ -8,33 +8,52 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInlineAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
+import { Outline, TaskSet } from '@dxos/types';
 
 import * as Instructions from './Instructions';
 import * as Routine from './Routine';
 import type * as Skill from './Skill';
+
+/** Lightweight inline goal: per-item status and addressability without document ceremony. */
+export const Goal = Schema.Struct({
+  id: Schema.String,
+  text: Schema.String,
+  status: Schema.optional(Schema.Literal('open', 'met', 'dropped')),
+});
+
+export type Goal = Schema.Schema.Type<typeof Goal>;
 
 /**
  * A user-facing container for interactive, long-running work: instructions (skills + commands),
  * routines, artifacts, and AI chat sessions in project context. Successor to `Topic`.
  * Chats and agents attach via relations/queries (assistant-toolkit depends on compute, so no typed refs here).
  */
-export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.2.0'))(
+export class Project extends Type.makeObject<Project>(DXN.make('org.dxos.type.project', '0.3.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
 
     /** Owned agent instructions (created + parented at the plugin layer). */
-    instructions: Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true), Schema.optional),
+    instructions: Schema.optional(Ref.Ref(Instructions.Instructions).pipe(FormInlineAnnotation.set(true))),
 
     /** Routines created within the scope of this project. */
     routines: Schema.Array(Ref.Ref(Routine.Routine)),
 
     /** Owned collection of artifacts (documents, outliners, tables, ...) managed by the project. */
-    artifacts: Ref.Ref(Collection.Collection).pipe(Schema.optional),
+    artifacts: Schema.optional(Ref.Ref(Collection.Collection)),
+
+    /** What done means for this project. */
+    goals: Schema.optional(Schema.Array(Goal)),
+
+    /** Ad hoc markdown checklist — the scratch surface; project chats write into it. */
+    outline: Schema.optional(Ref.Ref(Outline.Outline)),
+
+    /** Owned (or adopted synced) task container; membership is the ECHO parent edge. */
+    taskSet: Schema.optional(Ref.Ref(TaskSet.TaskSet)),
   }).pipe(
     Schema.annotations({ title: 'Project' }),
     LabelAnnotation.set(['name']),
-    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'rose' }),
+    Annotation.IconAnnotation.set({ icon: 'ph--stack--regular', hue: 'amber' }),
   ),
 ) {}
 

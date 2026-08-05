@@ -126,9 +126,9 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
                         <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
                       ) : undefined}
 
-                      {connector?.optionsSchema && !targetMissing && !sourceMissing && (
+                      {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
                         <Form.Root
-                          schema={connector.optionsSchema}
+                          schema={connector.sync.optionsSchema}
                           defaultValues={optionsDefaultValues}
                           onValuesChanged={handleOptionsChanged}
                         >

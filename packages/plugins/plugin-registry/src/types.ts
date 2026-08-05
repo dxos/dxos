@@ -40,6 +40,7 @@ export namespace RegistryCapabilities {
 export const RegistryTagType = Schema.Literal(
   'new',
   'beta',
+  'alpha',
   'labs',
   'popular',
   'featured',

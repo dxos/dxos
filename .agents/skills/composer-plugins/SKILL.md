@@ -110,18 +110,19 @@ Specification above), then start with a minimal skeleton before adding features.
 Phase 1, before the PR. The skeleton should include:
 
 1. `README.md` — brief description of the plugin's purpose.
-2. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
-3. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
-4. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
-5. `src/translations.ts` — initial translation resources.
-6. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
-7. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
-8. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
-9. `src/types/` — one schema type with `make()` factory.
-10. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
-11. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
-12. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
-13. `src/components/` — empty barrel, ready for primitives.
+2. `dx.config.ts` — `Config2.make({ plugin: { … } })` with key, name, author, description, icon, and a **quality tier tag** (see below).
+3. `package.json` — with `"private": true`, `#plugin` import alias, `./plugin` export subpath, and minimal dependencies.
+4. `moon.yml` — with `compile` entry points for both `src/index.ts` and `src/plugin.ts`.
+5. `src/meta.ts` — plugin metadata (id, name, description, icon, iconHue).
+6. `src/translations.ts` — initial translation resources.
+7. `src/FooPlugin.tsx` — minimal `Plugin.define(meta).pipe()` with surface and translations modules, plus `export default FooPlugin`.
+8. `src/plugin.ts` — lazy wrapper: `export const FooPlugin = Plugin.lazy(meta, () => import('#plugin'))`. Re-export any `OperationHandlerSet` here too.
+9. `src/index.ts` — exports only `meta` and types/operations. **Never exports the plugin instance.**
+10. `src/types/` — one schema type with `make()` factory.
+11. `src/capabilities/index.ts` — single `Capability.lazy()` for ReactSurface.
+12. `src/capabilities/react-surface.tsx` — one surface for the `article` role.
+13. `src/containers/` — one container (e.g., `FooArticle`) with lazy export and basic storybook.
+14. `src/components/` — empty barrel, ready for primitives.
 
 Build and lint the skeleton before adding features.
 Add capabilities incrementally as needed (operations, skills, settings, etc.).
@@ -129,12 +130,40 @@ Register the plugin with `composer-app`.
 
 Once the plugin contributes a navtree section, apply both rules under **App graph** below — gate the section on a non-empty query, and default the create-object `targetNodeId` to the node that lists the objects.
 
+### Quality tiers
+
+Every plugin MUST declare exactly one quality tier as the FIRST entry of
+`plugin.tags` in `dx.config.ts`. A new plugin defaults to `labs` — promotion is a
+deliberate, separate decision, never the scaffold's default.
+
+| Tier     | Meaning                                                                                                                                                                                                                      |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `system` | Core infrastructure. Force-enabled and not user-toggleable; derived in `plugin-manager.ts` from `tags.includes('system')`. Also omit the key from `getDefaults` in `composer-app/src/plugin-defs.tsx` — redundant once core. |
+| `beta`   | Stable enough to lead with. Shown in the registry's Recommended category.                                                                                                                                                    |
+| `alpha`  | A real feature, still moving. Also shown in Recommended.                                                                                                                                                                     |
+| `labs`   | Experimental, thin, dev-only, or platform-gated. **The default for a new plugin.**                                                                                                                                           |
+
+```ts
+tags: ['labs'],
+```
+
+Secondary tags (`connector`, `game`, `assistant`, `travel`) follow the tier:
+`tags: ['labs', 'connector']`. Add `alpha`/`beta`/`labs`/`system` to
+`RegistryTagType` in `plugin-registry/src/types.ts` — a new secondary tag needs
+no change there, but an unlisted tag renders without a hue.
+
+Do NOT leave a plugin untagged. `getCategoryPredicate` in
+`plugin-registry/src/categories.ts` selects Recommended by an explicit
+`beta`/`alpha` allowlist, so an untagged plugin silently appears in no category
+but `bundled`.
+
 ## Directory Structure
 
-```
+```text
 plugin-foo/
   package.json
   moon.yml
+  dx.config.ts             # Plugin manifest; carries the quality tier in `plugin.tags`.
   PLUGIN.mdl
   src/
     index.ts                # Root entrypoint; exports only meta and types/operations — never the plugin instance.

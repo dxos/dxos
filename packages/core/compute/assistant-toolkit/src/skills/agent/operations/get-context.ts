@@ -6,20 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Harness } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
-import { Database, Filter } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { HarnessContextError } from '../../../errors';
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import { GetContext } from './definitions';
-
-const formatPlan = (chat: Chat.Chat) =>
-  chat.plan
-    ? chat.plan.pipe(Database.load).pipe(
-        Effect.map(Plan.formatPlan),
-        Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No plan found.')),
-      )
-    : Effect.succeed('No plan found.');
 
 export default GetContext.pipe(
   Operation.withHandler(
@@ -28,7 +20,7 @@ export default GetContext.pipe(
       const chats = yield* Harness.queryContext(Filter.type(Chat.Chat));
 
       if (agents.length === 0 && chats.length === 0) {
-        return { id: '', name: '', instructions: 'No agent context.', plan: 'No plan found.' };
+        return { id: '', name: '', instructions: 'No agent context.', checklist: 'No checklist found.' };
       }
       if (agents.length > 1) {
         return yield* Effect.fail(new HarnessContextError({ type: 'agent', count: agents.length }));
@@ -47,7 +39,7 @@ export default GetContext.pipe(
           id: chat.id,
           name: chat.name ?? '',
           instructions: 'No agent context.',
-          plan: yield* formatPlan(chat),
+          checklist: yield* Chat.formatChecklist(chat),
         };
       }
 
@@ -60,7 +52,7 @@ export default GetContext.pipe(
           Effect.map((_) => _.text),
           Effect.catchTag('EntityNotFoundError', () => Effect.succeed('No instructions found.')),
         ),
-        plan: yield* chat ? formatPlan(chat) : Effect.succeed('No plan found.'),
+        checklist: yield* chat ? Chat.formatChecklist(chat) : Effect.succeed('No checklist found.'),
       };
     }) as any,
   ),

@@ -18,8 +18,8 @@ export type CompanionState = Schema.Schema.Type<typeof CompanionState>;
 
 /**
  * Global companion view state, persisted (localStorage) so reopening the companion restores the last
- * selected tab. The companion's width is not stored here: it is a plank, so its size is the deck's
- * (see `DeckState.tilingSizing`).
+ * selected tab. The companion's width is not stored here — it lives with the plank widths in
+ * `DeckState.plankSizing`, so switching tabs never resizes the pane.
  */
 export const companionAspect: ViewState.Aspect<CompanionState> = ViewState.define<CompanionState>({
   key: 'deck-companion',

@@ -141,7 +141,7 @@ export const PluginItem = ({
         gridCols,
         // Override `Listbox.Item`'s default row chrome (flex/items-center/padding/cursor) so the
         // bespoke card grid stretches both columns to full height and controls its own padding.
-        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 bg-modal-surface rounded-md overflow-hidden',
+        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 dx-modal-surface rounded-md overflow-hidden',
       )}
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
@@ -218,8 +218,10 @@ export const PluginItem = ({
 
 const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
   new: 'rose',
-  beta: 'teal',
-  labs: 'blue',
+  // Tier hues ramp green -> blue -> purple so the ordering reads without knowing the labels.
+  beta: 'green',
+  alpha: 'blue',
+  labs: 'purple',
   popular: 'green',
   featured: 'pink',
   experimental: 'amber',

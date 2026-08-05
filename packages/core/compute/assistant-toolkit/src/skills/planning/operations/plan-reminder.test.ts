@@ -13,9 +13,10 @@ import { Operation, OperationHandlerSet, Skill } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Message } from '@dxos/types';
+import { Text } from '@dxos/schema';
+import { Message, Outline } from '@dxos/types';
 
-import { Agent, Chat, Plan } from '../../../types';
+import { Agent, Chat } from '../../../types';
 import { PlanReminder } from './definitions';
 import { PlanningHandlers } from './index';
 
@@ -26,7 +27,7 @@ describe('PlanReminder', () => {
     'attempts a continuation reminder when the model says continue',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* setupChatWithPlan(['todo']);
+        const conversation = yield* setupChatWithChecklist([false]);
 
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
@@ -41,7 +42,7 @@ describe('PlanReminder', () => {
     'enqueues nothing when the model says stop',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* setupChatWithPlan(['todo']);
+        const conversation = yield* setupChatWithChecklist([false]);
 
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
@@ -53,10 +54,10 @@ describe('PlanReminder', () => {
   );
 
   it.effect(
-    'is a no-op when every task is done, without consulting the model',
+    'is a no-op when every item is checked, without consulting the model',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* setupChatWithPlan(['done']);
+        const conversation = yield* setupChatWithChecklist([true]);
 
         const exit = yield* Effect.exit(Operation.invoke(PlanReminder, {}).pipe(Effect.provide(conversation)));
 
@@ -75,14 +76,15 @@ describe('PlanReminder', () => {
   );
 });
 
-/** Creates a chat bound to its feed, carrying a plan with the given task statuses. */
-const setupChatWithPlan = Effect.fnUntraced(function* (statuses: readonly Plan.TaskStatus[]) {
+/** Creates a chat bound to its feed, carrying an outline checklist with the given item states. */
+const setupChatWithChecklist = Effect.fnUntraced(function* (states: readonly boolean[]) {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
-  const plan = yield* Chat.ensurePlan(chat);
-  Obj.update(plan, (plan) => {
-    plan.tasks.push(
-      ...statuses.map((status, index) => ({ id: Plan.TaskId.make(`task-${index}`), title: `Task ${index}`, status })),
+  const { text } = yield* Chat.ensureOutlineText(chat);
+  Obj.update(text, (text) => {
+    text.content = Outline.upsertChecklistItems(
+      text.content,
+      states.map((done, index) => ({ title: `Task ${index}`, done })),
     );
   });
   yield* Database.flush();
@@ -96,7 +98,8 @@ const setupChatWithPlan = Effect.fnUntraced(function* (statuses: readonly Plan.T
 
 const types = [
   Agent.Agent,
-  Plan.Plan,
+  Outline.Outline,
+  Text.Text,
   Chat.Chat,
   Chat.CompanionTo,
   Skill.Skill,

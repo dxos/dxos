@@ -4,100 +4,82 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, Obj, Ref } from '@dxos/echo';
+import { type IdentityIndex } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { type Actor, Organization, Person } from '@dxos/types';
 
-import { matchesDomain } from './domain';
+import { normalizeEmail } from './identity';
+import { getIdentityIndex } from './resolver';
+import { type SenderSignals, shouldExtractContact } from './selection';
 
-/**
- * Run-scoped lookup cache for {@link buildContactFromActor}. Seeded once (instead of querying the
- * space per call) and maintained by the builder as it creates contacts, so bulk extraction over many
- * messages is O(1) per message rather than O(#contacts + #orgs) per message (an O(n²) scan otherwise —
- * the dominant cost of a large mail sync). Callers that extract a single contact can omit it.
- */
-export type ContactLookup = {
-  /** Lowercased emails of Persons already known; the builder adds each contact it creates. */
-  readonly knownEmails: Set<string>;
-  /** Organizations to match a new contact's email domain against (seeded once at run start). */
-  readonly organizations: readonly Organization.Organization[];
+export type BuildContactOptions = {
+  /** Message signals feeding the extraction gate; omit when the caller has already decided. */
+  readonly signals?: SenderSignals;
+  /**
+   * Index to resolve and register against. Pass a run-scoped overlay
+   * (`overlayIdentityIndex`) so contacts this run builds but never commits do not persist into the
+   * space's shared index. Defaults to the shared index.
+   */
+  readonly index?: IdentityIndex;
 };
-
-/**
- * Builds the {@link ContactLookup} for a run by querying the space once. Do this once per bulk
- * extraction and pass the result to every {@link buildContactFromActor} call.
- */
-export const buildContactLookup = (db: Database.Database): Effect.Effect<ContactLookup> =>
-  Effect.gen(function* () {
-    const contacts = yield* Effect.promise(() => db.query(Filter.type(Person.Person)).run());
-    const organizations = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run());
-    const knownEmails = new Set(
-      contacts.flatMap((contact) =>
-        (contact.emails ?? [])
-          .map((email) => email.value?.trim().toLowerCase())
-          .filter((value): value is string => !!value),
-      ),
-    );
-    return { knownEmails, organizations };
-  });
 
 /**
  * Shared contact-creation logic.
  *
  * Builds a fresh Person from the actor (no `db.add` here — caller decides whether to add directly
  * or route through an operation so the visibility/hidden flag can differ per caller).
- * Returns `undefined` when the actor has no email, or when a Person with that email already
- * exists in the space.
+ * Returns `undefined` when the actor has no email, or when a Person with that email already exists.
  *
- * Pass a {@link ContactLookup} (via {@link buildContactLookup}) for bulk extraction to avoid the
- * per-call space queries; omit it for a one-off, which falls back to querying the space.
+ * Existence is answered by the space's shared identity index, so bulk extraction costs one query
+ * per type for the whole run rather than a scan per message, and — because the index is shared and
+ * the new contact is registered into it — a repeat sender never yields a second Person, whether the
+ * repeat is later in this run or concurrent in another.
  */
 export const buildContactFromActor = (
   actor: Actor.Actor,
   db: Database.Database,
-  lookup?: ContactLookup,
+  { signals, index: provided }: BuildContactOptions = {},
 ): Effect.Effect<Person.Person | undefined> =>
   Effect.gen(function* () {
-    const email = actor.email?.trim().toLowerCase();
+    const email = normalizeEmail(actor.email);
     if (!email) {
       log.warn('email is required for contact extraction');
       return undefined;
     }
 
-    const exists = lookup
-      ? lookup.knownEmails.has(email)
-      : (yield* Effect.promise(() => db.query(Filter.type(Person.Person)).run())).some((contact) =>
-          contact.emails?.some((contactEmail) => contactEmail.value?.trim().toLowerCase() === email),
-        );
-    if (exists) {
+    // The shared index is read-only here: registering an uncommitted contact into it would make
+    // every later lookup resolve to an object the space may never receive (see `overlayIdentityIndex`).
+    // A caller that wants in-run dedup passes its own overlay.
+    const index = provided ?? (yield* getIdentityIndex(db));
+    if (index.lookup(Person.Person, { email })) {
       return undefined;
     }
 
-    const newContact = Obj.make(Person.Person, {
-      emails: [{ value: email }],
-    });
+    // Only gate when the caller supplies signals: a caller with no message context (an explicit
+    // "add this contact" action) has already made the decision.
+    if (signals && !shouldExtractContact(email, signals, index)) {
+      return undefined;
+    }
+
+    const contact = Obj.make(Person.Person, { emails: [{ value: email }] });
     if (actor.name) {
-      Obj.update(newContact, (newContact) => {
-        newContact.fullName = actor.name;
-      });
-    }
-    // Record so a repeat sender within the same run isn't created twice (the caller adds to the db
-    // after the pipeline, so a fresh query wouldn't see it yet).
-    lookup?.knownEmails.add(email);
-
-    const emailDomain = email.split('@')[1]?.toLowerCase();
-    if (!emailDomain) {
-      return newContact;
-    }
-
-    const organizations =
-      lookup?.organizations ?? (yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run()));
-    const matchingOrg = organizations.find((org) => matchesDomain(org.website, emailDomain));
-    if (matchingOrg) {
-      Obj.update(newContact, (newContact) => {
-        newContact.organization = Ref.make(matchingOrg);
+      Obj.update(contact, (contact) => {
+        contact.fullName = actor.name;
       });
     }
 
-    return newContact;
+    // Only into a caller-owned overlay: the next message from the same sender must not build a
+    // second contact, but a run that dies before committing must not leave the space's shared index
+    // claiming one either.
+    provided?.register(contact);
+
+    const organization = index.lookup(Organization.Organization, { email });
+    if (organization) {
+      Obj.update(contact, (contact) => {
+        contact.organization = Ref.make(organization);
+      });
+    }
+
+    return contact;
   });

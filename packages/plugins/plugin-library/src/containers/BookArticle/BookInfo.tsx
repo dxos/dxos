@@ -162,7 +162,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                         href={link.href}
                         target='_blank'
                         rel='noreferrer'
-                        className='dx-focus-ring rounded text-accentText'
+                        className='dx-focus-ring rounded text-accent-text'
                       >
                         {link.label}
                       </a>

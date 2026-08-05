@@ -11,6 +11,7 @@ import * as Stream from 'effect/Stream';
 
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { type IdentityIndex, buildIdentityIndex } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -72,54 +73,58 @@ const mapPersonStage: Stage.Stage<GoogleContacts.Person, Cursor.UpsertUnit<Mappe
 );
 
 /**
- * Commit sink: find an existing Person keyed by Google resource name and update it, or create a new
- * one — the single non-idempotent write, deferred out of the pure map stage. Idempotent across runs
- * via the foreign-key lookup. Returns `true` when a new Person was created.
+ * Commit sink: find the Person this contact already is and update it, or create a new one — the
+ * single non-idempotent write, deferred out of the pure map stage. Returns `true` when a new Person
+ * was created.
+ *
+ * Resolution is two-stage: the Google resource name (idempotent across runs), then the shared
+ * identity resolver on each email. Without the second stage this sync could not see the Person mail
+ * sync had already made for the same address, and minted a second one on every first contact sync.
  */
-const upsertPerson = ({ resourceName, props }: MappedPerson) =>
-  Effect.gen(function* () {
-    const existing = yield* Database.query(
-      Query.select(Filter.foreignKeys(Person.Person, [{ source: GOOGLE_INTEGRATION_SOURCE, id: resourceName }])),
-    ).run;
+const upsertPerson =
+  (index: IdentityIndex) =>
+  ({ resourceName, props }: MappedPerson) =>
+    Effect.gen(function* () {
+      const keyed = yield* Database.query(
+        Query.select(Filter.foreignKeys(Person.Person, [{ source: GOOGLE_INTEGRATION_SOURCE, id: resourceName }])),
+      ).run;
 
-    if (existing.length > 0) {
-      if (existing.length > 1) {
+      if (keyed.length > 1) {
         log.warn('multiple Person records share the same Google resource name', {
           resourceName,
-          count: existing.length,
+          count: keyed.length,
         });
       }
-      const person = existing[0] as Person.Person;
-      Obj.update(person, (person) => {
-        if (props.fullName !== undefined) {
-          person.fullName = props.fullName;
-        }
-        if (props.jobTitle !== undefined) {
-          person.jobTitle = props.jobTitle;
-        }
-        if (props.department !== undefined) {
-          person.department = props.department;
-        }
-        if (props.notes !== undefined) {
-          person.notes = props.notes;
-        }
-        if (props.image !== undefined) {
-          person.image = props.image;
-        }
-        if (props.birthday !== undefined) {
-          person.birthday = props.birthday;
-        }
-        person.emails = props.emails ? [...props.emails] : [];
-        person.phoneNumbers = props.phoneNumbers ? [...props.phoneNumbers] : [];
-        person.addresses = props.addresses ? [...props.addresses] : [];
-        person.urls = props.urls ? [...props.urls] : [];
-      });
-      return false;
-    }
 
-    yield* Database.add(Person.make(props));
-    return true;
-  });
+      let person: Person.Person | undefined = keyed[0];
+      if (!person) {
+        for (const { value } of props.emails ?? []) {
+          person = index.lookup(Person.Person, { email: value });
+          if (person) {
+            break;
+          }
+        }
+      }
+
+      if (!person) {
+        const created = yield* Database.add(Person.make(props));
+        // Index immediately so two group members sharing an address collapse within this run too.
+        index.register(created);
+        return true;
+      }
+
+      // Merge rather than assign: the remote contact is one source among several, and overwriting
+      // would drop addresses and numbers learned from mail. `personIdentitySpec.merge` is the same
+      // field policy the duplicates review uses.
+      Obj.update(person, (person) => {
+        InboxResolver.personIdentitySpec.merge(person, Person.make(props));
+        if (!Obj.getKeys(person, GOOGLE_INTEGRATION_SOURCE).some((key) => key.id === resourceName)) {
+          Obj.getMeta(person).keys.push({ source: GOOGLE_INTEGRATION_SOURCE, id: resourceName });
+        }
+      });
+
+      return false;
+    });
 
 const handler = InboxOperation.GoogleContactsSync.pipe(
   Operation.withHandler(({ binding: bindingRef }) =>
@@ -157,12 +162,14 @@ const handler = InboxOperation.GoogleContactsSync.pipe(
         // member each run (idempotent).
         // TODO(wittjosiah): Skip unchanged contacts (dedup by updateTime) once we also detect group
         //   membership changes, so newly-added-but-unmodified contacts still sync.
+        // One query per identity type up front, then every lookup is O(1) and sees this run's writes.
+        const index = yield* buildIdentityIndex(db, InboxResolver.identitySpecs);
         const stats: Cursor.Stats = { newMessages: 0 };
         yield* connectionsSource().pipe(
           Stage.filter('group-member', (person: GoogleContacts.Person) => memberNames.has(person.resourceName)),
           mapPersonStage,
           Stream.grouped(COMMIT_PAGE_SIZE),
-          Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson) }),
+          Pipeline.run({ sink: Cursor.upsertCommit(upsertPerson(index)) }),
           Effect.provide(
             Cursor.layer({ cursor: binding, foreignKeySource: GOOGLE_INTEGRATION_SOURCE, maxKey: cursorKey, stats }),
           ),

@@ -11,7 +11,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { Connection, isCursorForTarget } from '@dxos/plugin-connector';
+import { Connection, isCursorForTarget, syncTarget } from '@dxos/plugin-connector';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { DraftMessage, Event, Message } from '@dxos/types';
@@ -32,7 +32,7 @@ import {
   getSentId,
   getSubscriptionsId,
 } from '../paths';
-import { getMessageLabel, syncTarget } from '../util';
+import { getMessageLabel } from '../util';
 
 const calendarTypename = Type.getTypename(Calendar.Calendar);
 

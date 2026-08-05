@@ -1,6 +1,6 @@
 # plugin-tldraw (né plugin-sketch) + plugin-illustrator — Tasks
 
-_Resume: land PR #12380 (user lands; do NOT merge unprompted) — head `3e36345`, CI fully green, `mergeable: CLEAN`, working tree clean, nothing uncommitted. Phases 3/3.1/3.2 COMPLETE: main merged twice, excalidraw invisible labels + centre-anchored arrows fixed, sketch->drawing migration written and tested (6 cases incl. the production shape), react-ui-diagram spiked; both new packages published to npm at 0.10.0. Next: land #12380 (land skill; user lands). Phase 4 is DESIGNED and APPROVED but NOT implemented — the old "technical-drawing dialect on a whiteboard" framing is superseded: DSL is truth, the diagram is a projection, substrate is React Flow, neutral representation is an extended `@dxos/graph`. Design + phasing: `agents/superpowers/specs/2026-07-29-diagram-substrate-design.md`. Implementation starts at step 1 (extend `@dxos/graph` with `Node.parent` + `Edge.sourcePort`/`targetPort`)._
+_Resume: PR #12380 MERGED 2026-07-29 (squash `3502b3d5`) — it carried the illustrator base, the plugin-sketch->plugin-tldraw rename, the mermaid dialect, the sketch->drawing migration, the excalidraw label/binding fixes AND the initial `react-ui-diagram` spike. Branch continues past the squash with the grid-alignment work (`container` type rename, per-variant Background offset) and a fresh `origin/main` merge (`96066fd`); all green (307 lint tasks, 15 react-ui-diagram + 346 ui-editor tests, oxfmt clean). Phase 4 is DESIGNED and APPROVED but NOT implemented — DSL is truth, diagram is a projection, substrate is React Flow, neutral representation is an extended `@dxos/graph`. Design + phasing: `agents/superpowers/specs/2026-07-29-diagram-substrate-design.md`. Next: open a follow-up PR for the post-squash work, then implementation step 1 (rewrite `@dxos/graph` with `Node.parent` + `Edge.sourcePort`/`targetPort`)._
 
 ## Phase 1: Scene DSL (agent draws/edits diagrams)
 
@@ -45,7 +45,8 @@ Game/Chess-style split: headless host plugin + renderer variant plugins.
 - [x] **Tests** — identical create→edit→read round-trip runs against BOTH builders (tldraw + excalidraw) via `AssistantTestLayer` + `extraServices` capability layer; 15 tldraw tests green, 2 excalidraw green.
 - [x] **Open PR** — #12380 (changeset `illustrator-base-plugin.md`); CI green through `aaf24e4` bar the final in-flight run.
 - [x] **First publish** — `@dxos/plugin-illustrator` + `@dxos/plugin-tldraw` published at 0.10.0 (2026-07-28, burdon) with npm trusted publishing configured; both packages public, plugin-debug depends on them normally, `check-packages-published` green.
-- [ ] **Land #12380** — user lands (land skill); do not merge unprompted.
+- [x] **Land #12380** — MERGED 2026-07-29 as `3502b3d5` (squash). It carried the whole branch, so the
+      `react-ui-diagram` spike landed with it; the two later grid fixes did not and are still on the branch.
 
 ## Phase 4 (next): technical-drawing dialect
 

@@ -101,6 +101,7 @@ export type AssistantTestServices =
   | OpaqueToolkit.OpaqueToolkitProvider
   | Operation.Service
   | ProcessManager.Service
+  | ProcessManager.ProcessOperationInvoker.Service
   | Process.ProcessMonitorService
   | AtomRegistry.AtomRegistry
   | OperationHandlerSet.OperationHandlerProvider

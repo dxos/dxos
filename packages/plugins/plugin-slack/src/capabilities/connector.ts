@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
+import { Credential } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
@@ -28,8 +29,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     if (accessToken.account) {
       return;
     }
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
     const result = yield* SlackApi.fetchAuthTest().pipe(
-      Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token: accessToken.token })),
+      Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token })),
     );
     Obj.update(accessToken, (accessToken) => {
       // Prefer a `<user>@<team>` shape because it reads naturally in the
@@ -49,8 +51,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * UI can offer to reauthenticate.
  */
 const testConnection: TestConnection = ({ accessToken }) =>
-  SlackApi.fetchAuthTest().pipe(
-    Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token: accessToken.token })),
+  Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
+    SlackApi.fetchAuthTest().pipe(Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token }))),
+  ).pipe(
     Effect.asVoid,
     Effect.mapError(
       () => new ConnectionTestError({ message: 'Slack rejected the credential. Reauthenticate to continue syncing.' }),
@@ -72,9 +75,11 @@ export default Capability.makeModule(
           provider: OAuthProvider.SLACK,
           scopes: SLACK_SCOPES,
         },
-        getSyncTargets: SlackOperation.GetSlackChannels,
-        materializeTarget: SlackOperation.MaterializeSlackTarget,
-        sync: SlackOperation.SyncSlackChannel,
+        sync: {
+          operation: SlackOperation.SyncSlackChannel,
+          getTargets: SlackOperation.GetSlackChannels,
+          materializeTarget: SlackOperation.MaterializeSlackTarget,
+        },
         onTokenCreated,
         testConnection,
       },

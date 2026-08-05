@@ -29,9 +29,11 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const { invokePromise } = useOperationInvoker();
+    // `anchor` names the plank this control belongs to: companions are per-plank, and resolving the
+    // target from attention instead would close whichever plank happened to be attended.
     const handleCloseCompanion = useCallback(() => {
-      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null });
-    }, [invokePromise]);
+      return invokePromise(LayoutOperation.UpdateCompanion, { subject: null, anchor: primary });
+    }, [invokePromise, primary]);
     return (
       <div ref={forwardedRef} className='contents dx-app-no-drag'>
         <PlankControl
@@ -61,6 +63,8 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
   capabilities: PlankCapabilities;
   /** Whether this plank is currently displayed fullscreen. */
   fullscreen?: boolean;
+  /** Whether this plank is currently expanded to fill the deck. */
+  expanded?: boolean;
   pin?: 'start' | 'end' | 'both';
 };
 
@@ -69,7 +73,18 @@ export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
 // NOTE(thure): Pinning & unpinning are disabled indefinitely.
 export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
   (
-    { children, classNames, variant = 'default', capabilities, fullscreen, pin, close = false, onClick, ...props },
+    {
+      children,
+      classNames,
+      variant = 'default',
+      capabilities,
+      fullscreen,
+      expanded,
+      pin,
+      close = false,
+      onClick,
+      ...props
+    },
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.profile.key);
@@ -78,6 +93,16 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
     return (
       <ButtonGroup {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
+        {capabilities.expandToggle && (
+          <PlankControl
+            label={t(expanded ? 'collapse-plank.label' : 'expand-plank.label')}
+            classNames={buttonClassNames}
+            icon={expanded ? 'ph--arrows-in-line-horizontal--regular' : 'ph--arrows-out-line-horizontal--regular'}
+            data-testid='plankHeading.expand'
+            onClick={() => onClick?.('expand')}
+          />
+        )}
+
         {capabilities.fullscreenToggle && (
           <PlankControl
             label={t(fullscreen ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
