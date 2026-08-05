@@ -19,7 +19,9 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   {
-    requires: [NativeFilesystemCapabilities.FilesystemManager],
+    // `State` is declared alongside the manager because the provider callbacks read it and it is
+    // contributed by this plugin's own idle-gated module, which markdown start can otherwise precede.
+    requires: [NativeFilesystemCapabilities.FilesystemManager, NativeFilesystemCapabilities.State],
     provides: [MarkdownCapabilities.ExtensionProvider],
     activatesOn: MarkdownEvents.Start,
   },

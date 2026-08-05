@@ -27,16 +27,24 @@ export const CommentConfig = AppCapability.commentConfig(() => import('./comment
 export const ComputeGraphRegistry = Capability.lazyModule(
   'ComputeGraphRegistry',
   {
+    // Headless: formulas evaluate in a markdown document with no sheet surface ever rendered, so
+    // gating this on the sheet's own start conflates "the sheet UI is on screen" with "compute
+    // graphs exist". Ungated (hence idle) it also becomes pullable by the consumers that need it
+    // earlier, which a start-gated provider is not.
     requires: [ClientCapabilities.Client, Capabilities.ProcessManagerRuntime],
     provides: [SheetCapabilities.ComputeGraphRegistry],
-    activatesOn: SheetEvents.Start,
   },
   () => import('./compute-graph-registry'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
-  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
+  {
+    // The provider callbacks read the registry, so it must be in place when this activates.
+    requires: [SheetCapabilities.ComputeGraphRegistry],
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activatesOn: MarkdownEvents.Start,
+  },
   () => import('./markdown-extension'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {

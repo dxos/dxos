@@ -34,13 +34,7 @@ export default Capability.makeModule(
       ({ document: doc, reviewBranch, branchText, suggestionBranch, showComments }) => {
         const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
         const registry = capabilities.get(Capabilities.AtomRegistry);
-        // Tolerant: this provider is gated on MARKDOWN start but the state on REVIEW start, so a
-        // document opened before any review runs this with the state absent — a strict `get` throws
-        // there and takes the plank down. Comments simply stay inert until the review plugin starts.
-        const [stateAtom] = capabilities.getAll(CommentCapabilities.State);
-        if (!stateAtom) {
-          return [];
-        }
+        const stateAtom = capabilities.get(CommentCapabilities.State);
 
         return commentSync({ registry, stateAtom }, doc, invokePromise, {
           reviewBranch,
@@ -56,10 +50,7 @@ export default Capability.makeModule(
         }
 
         const registry = capabilities.get(Capabilities.AtomRegistry);
-        const [stateAtom] = capabilities.getAll(CommentCapabilities.State);
-        if (!stateAtom) {
-          return [];
-        }
+        const stateAtom = capabilities.get(CommentCapabilities.State);
 
         return EditorView.updateListener.of((update) => {
           if (update.docChanged || update.selectionSet) {

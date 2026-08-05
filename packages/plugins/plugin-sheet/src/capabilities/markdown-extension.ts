@@ -18,13 +18,9 @@ export default Capability.makeModule(
 
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc }) => {
-        // Tolerant lookup: this provider is gated on MARKDOWN start but the registry on SHEET
-        // start, so opening a document before any sheet runs this with the registry absent — a
-        // strict `get` throws there and takes the whole plank down. Formulas in the document go
-        // un-evaluated until the sheet plugin starts, which is the correct degraded behaviour.
-        const [computeGraphRegistry] = capabilities.getAll(SheetCapabilities.ComputeGraphRegistry);
+        const computeGraphRegistry = capabilities.get(SheetCapabilities.ComputeGraphRegistry);
         const space = getSpace(doc);
-        if (computeGraphRegistry && space) {
+        if (space) {
           const computeGraph = computeGraphRegistry.getOrCreateGraph(space);
           return computeGraphFacet.of(computeGraph);
         }

@@ -37,10 +37,11 @@ export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./histor
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
-  // OperationInvoker/AtomRegistry/CommentCapabilities.State are accessed lazily inside the
-  // extension-provider callbacks (via the ambient Capability.Service), not yielded at
-  // activation time, so they aren't declared here.
+  // OperationInvoker/AtomRegistry are ambient. `CommentCapabilities.State` is declared because the
+  // provider callbacks read it and it is contributed by this plugin's own idle-gated module, which
+  // markdown start can otherwise precede.
   {
+    requires: [CommentCapabilities.State],
     provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.ViewModeExtension],
     activatesOn: MarkdownEvents.Start,
   },
@@ -72,7 +73,10 @@ export const CommentsSettings = AppCapability.settings(() => import('./settings'
 });
 export const CommentState = Capability.lazyModule(
   'CommentState',
-  { provides: [CommentCapabilities.State], activatesOn: ReviewEvents.Start },
+  // Headless: comments sync in a markdown document with no review surface ever rendered, so gating
+  // this on the review UI's start is wrong. Ungated (hence idle) it is also pullable by the
+  // consumers that need it earlier, which a start-gated provider is not.
+  { provides: [CommentCapabilities.State] },
   () => import('./state'),
 );
 export const ReviewState = Capability.lazyModule(

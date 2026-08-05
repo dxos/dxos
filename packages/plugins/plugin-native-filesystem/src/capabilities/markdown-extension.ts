@@ -32,12 +32,7 @@ export default Capability.makeModule(
             }
 
             const registry = capabilities.get(Capabilities.AtomRegistry);
-            // Tolerant: this provider is gated on markdown start but the state is ungated (hence
-            // idle), so a document opened before the idle wave runs this with the state absent.
-            const [stateAtom] = capabilities.getAll(NativeFilesystemCapabilities.State);
-            if (!stateAtom) {
-              return;
-            }
+            const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
             registry.update(stateAtom, (current: NativeFilesystemCapabilities.NativeFilesystemState) => {
               const result = findFileById(current.workspaces, fileId);
               if (!result) {
@@ -85,10 +80,7 @@ export default Capability.makeModule(
           const { fileId, path } = target;
 
           const registry = capabilities.get(Capabilities.AtomRegistry);
-          const [stateAtom] = capabilities.getAll(NativeFilesystemCapabilities.State);
-          if (!stateAtom) {
-            return;
-          }
+          const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
           const state: NativeFilesystemCapabilities.NativeFilesystemState = registry.get(stateAtom);
 
           const result = findFileById(state.workspaces, fileId);
