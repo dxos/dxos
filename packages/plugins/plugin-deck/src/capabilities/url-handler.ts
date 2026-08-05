@@ -106,18 +106,28 @@ export default Capability.makeModule(
     };
 
     /**
-     * Settles once a graph builder contributes URL keys beyond those already registered, or on the
-     * deadline. Keyed off the capability rather than a client event so this plugin stays free of a
-     * client dependency.
+     * Re-runs `parse` as graph builders register their keys, settling as soon as it succeeds — the
+     * deadline only bounds a URL whose keys never arrive. Keyed off the capability rather than a
+     * client event so this plugin stays free of a client dependency.
      */
-    const awaitUrlKeys = Effect.async<void>((resume) => {
-      const cancel = registry.subscribe(manager.capabilities.atom(AppCapabilities.AppGraphBuilder), () =>
-        resume(Effect.void),
+    const parseWhenKeysArrive = <A>(parse: () => Option.Option<A>) =>
+      Effect.async<Option.Option<A>>((resume) => {
+        const cancel = registry.subscribe(manager.capabilities.atom(AppCapabilities.AppGraphBuilder), () => {
+          const parsed = parse();
+          if (Option.isSome(parsed)) {
+            resume(Effect.succeed(parsed));
+          }
+        });
+        return Effect.sync(cancel);
+      }).pipe(
+        Effect.timeoutTo({
+          duration: RESOLVE_TIMEOUT,
+          onTimeout: () => Option.none<A>(),
+          onSuccess: (parsed) => parsed,
+        }),
       );
-      return Effect.sync(cancel);
-    }).pipe(Effect.timeoutTo({ duration: RESOLVE_TIMEOUT, onTimeout: () => undefined, onSuccess: () => undefined }));
 
-    const handleNavigation = Effect.fn(function* (url?: URL) {
+    const handleNavigation = Effect.fn(function* (url?: URL, options?: { abortIf?: () => boolean }) {
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
@@ -173,7 +183,7 @@ export default Capability.makeModule(
               // are not registered YET — and immediately, never reaching the per-pair node wait
               // below. Re-parse as contributions arrive instead, bounded by the same deadline.
               Effect.flatMap((afterIdle) =>
-                Option.isSome(afterIdle) ? Effect.succeed(afterIdle) : awaitUrlKeys.pipe(Effect.map(parseUrl)),
+                Option.isSome(afterIdle) ? Effect.succeed(afterIdle) : parseWhenKeysArrive(parseUrl),
               ),
             ),
         }),
@@ -260,6 +270,12 @@ export default Capability.makeModule(
           plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
         }
       });
+
+      // An explicit navigation supersedes the URL restore: resolution can take seconds, and `Set`
+      // overrides the deck wholesale, so applying it now would undo whatever the user just opened.
+      if (options?.abortIf?.()) {
+        return;
+      }
 
       // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
       // restore, for one plank or many, with no separate disposition to invent.
@@ -410,7 +426,11 @@ export default Capability.makeModule(
     // a write means someone — the user or the restore itself — changed the deck, so the URL should
     // follow it. Gating them instead swallowed every navigation made while the restore was still
     // waiting on its nodes, which is up to the full deadline.
-    const unsubscribeState = registry.subscribe(stateAtom, () => syncUrl());
+    let userNavigated = false;
+    const unsubscribeState = registry.subscribe(stateAtom, () => {
+      userNavigated = true;
+      syncUrl();
+    });
     const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
       syncUrl(),
     );
@@ -425,7 +445,11 @@ export default Capability.makeModule(
     // Forked because this module sits on the startup pass: the restore can now wait for
     // late-arriving URL keys (see `awaitUrlKeys`), and awaiting that here would hold the whole
     // pass — and the boot loader with it — until the client is up.
-    yield* Effect.forkScoped(provideServices(handleNavigation()).pipe(Effect.andThen(Effect.sync(startUrlSync))));
+    yield* Effect.forkScoped(
+      provideServices(handleNavigation(undefined, { abortIf: () => userNavigated })).pipe(
+        Effect.andThen(Effect.sync(startUrlSync)),
+      ),
+    );
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
