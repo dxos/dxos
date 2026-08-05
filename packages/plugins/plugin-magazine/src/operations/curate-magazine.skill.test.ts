@@ -84,8 +84,8 @@ const CANDIDATES = [
 const articleHtml = (title: string, body: string) =>
   `<!doctype html><html><head><title>${title}</title></head><body><article><h1>${title}</h1><p>${body}</p></article></body></html>`;
 
-// Preserve the real fetch so the stub can pass the agent's Anthropic call through (replay is
-// memoized, so no real call is made then; generation uses the live API key).
+// Preserve the real fetch so the stub can pass the agent's Anthropic call through (replay serves
+// recorded model fixtures, so no real call is made then; generation uses the live API key).
 // eslint-disable-next-line no-restricted-globals
 const realFetch = globalThis.fetch.bind(globalThis);
 

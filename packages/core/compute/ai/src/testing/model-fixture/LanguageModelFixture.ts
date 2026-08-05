@@ -341,6 +341,10 @@ export interface LayerOptions {
   dynamicValuePatterns?: readonly RegExp[];
 }
 
+/**
+ * LanguageModel layer that replays recorded fixtures through the store, deferring to the upstream
+ * {@link LanguageModel.LanguageModel} it requires only to generate on a miss when `allowGeneration` is set.
+ */
 export const layer = (
   options: LayerOptions,
 ): Layer.Layer<LanguageModel.LanguageModel, never, LanguageModel.LanguageModel> =>
@@ -366,6 +370,11 @@ type MakeProps = {
   dynamicValuePatterns?: readonly RegExp[];
 };
 
+/**
+ * Builds the replaying {@link LanguageModel.Service}: each turn is looked up in the store by request
+ * hash and replayed; on a miss it errors, unless `allowGeneration` is set, when it calls the upstream
+ * model and records the turn.
+ */
 export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? []);
   const store = new FixtureStore(options.testFilePath, dynamicMatcher);
@@ -621,11 +630,21 @@ class FixtureStore {
       const { join } = await import('node:path');
       const dir = await this.#dir();
       const file = join(dir, `${await hashKey(matchKey(prompted, this.#dynamicMatcher))}.json`);
+      let contents: string | undefined;
       try {
-        return Option.some(decodeConversation(await readFile(file, 'utf-8')));
+        contents = await readFile(file, 'utf-8');
       } catch (err: any) {
         if (err.code !== 'ENOENT') {
           throw err;
+        }
+      }
+      if (contents !== undefined) {
+        try {
+          return Option.some(decodeConversation(contents));
+        } catch (err) {
+          // A corrupt fixture at the exact hash path must not mask the "no fixture found" diagnostic;
+          // fall through to the structural scan, matching #readAll's tolerance.
+          log.warn('skipping undecodable model fixture', { file, err });
         }
       }
       // Fallback for hashes computed under a different matcher (e.g. migrated fixtures).
@@ -644,16 +663,17 @@ class FixtureStore {
   getClosestMatch(prompted: FixtureConversation): Effect.Effect<Option.Option<FixtureConversation>> {
     return Effect.promise(async () => {
       const all = await this.#readAll(await this.#dir());
+      // Format the prompted conversation and each fixture's distance once — `Order.mapInput` would
+      // otherwise re-run the (patch-computing) mapping on every comparison.
+      const promptedFormatted = formatFixtureConversation(prompted, this.#dynamicMatcher);
+      const scored = all.map((conversation) => ({
+        conversation,
+        distance: gitDiffDistance(formatFixtureConversation(conversation, this.#dynamicMatcher), promptedFormatted),
+      }));
       return Function.pipe(
-        all,
-        Array.sortBy(
-          Order.mapInput(Order.number, (x) =>
-            gitDiffDistance(
-              formatFixtureConversation(x, this.#dynamicMatcher),
-              formatFixtureConversation(prompted, this.#dynamicMatcher),
-            ),
-          ),
-        ),
+        scored,
+        Array.sortBy(Order.mapInput(Order.number, (entry) => entry.distance)),
+        Array.map((entry) => entry.conversation),
         Option.fromIterable,
       );
     });

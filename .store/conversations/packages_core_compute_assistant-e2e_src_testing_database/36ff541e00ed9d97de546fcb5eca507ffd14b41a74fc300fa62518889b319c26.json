@@ -511,12 +511,12 @@
         "content": [
           {
             "type": "text",
-            "text": "I'll help you create a new organization called \"Cyberdyne Systems\" and then verify it was created successfully. Let me start by checking the available schemas.",
+            "text": "I'll start by listing the schemas to find the right typename for an organization, then create it.",
             "options": {}
           },
           {
             "type": "tool-call",
-            "id": "toolu_019PAaxQ81RvcEu8eB7gZQtH",
+            "id": "toolu_01RTcQMHofMVynN8wPtQB94X",
             "name": "list-schemas",
             "params": {},
             "providerExecuted": false,
@@ -530,7 +530,7 @@
         "content": [
           {
             "type": "tool-result",
-            "id": "toolu_019PAaxQ81RvcEu8eB7gZQtH",
+            "id": "toolu_01RTcQMHofMVynN8wPtQB94X",
             "name": "list-schemas",
             "isFailure": false,
             "result": [
@@ -4121,12 +4121,12 @@
         "content": [
           {
             "type": "text",
-            "text": "I can see the `org.dxos.type.organization` schema. Now I'll create the organization \"Cyberdyne Systems\".",
+            "text": "I found the `org.dxos.type.organization` typename. Now I'll create the organization and then query to confirm it was created.",
             "options": {}
           },
           {
             "type": "tool-call",
-            "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
+            "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
             "name": "create-object",
             "params": {
               "typename": "org.dxos.type.organization",
@@ -4146,18 +4146,109 @@
         "content": [
           {
             "type": "tool-result",
-            "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
+            "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
             "name": "create-object",
             "isFailure": false,
             "result": {
-              "id": "01JGHBZV99Z88K9VZYSJHKVD2T",
+              "id": "01JGHBZV99Z88K9VZYSJHKVD2R",
               "@type": "dxn:org.dxos.type.organization:0.1.0",
               "@meta": {
                 "keys": []
               },
-              "@uri": "echo://BY3SWPTVFW7AHF7SN3CYC2FN7DEPJ4MEZ/01JGHBZV99Z88K9VZYSJHKVD2T",
+              "@uri": "echo://BWNO7K57IABJNCR77X2CGOB7YQ6MUNNUR/01JGHBZV99Z88K9VZYSJHKVD2R",
               "name": "Cyberdyne Systems"
             },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "The organization was created. Now let me query the database to confirm it exists.",
+            "options": {}
+          },
+          {
+            "type": "tool-call",
+            "id": "toolu_01Vy4gFer5yZsEDvSX4PrHFo",
+            "name": "query",
+            "params": {
+              "typename": "org.dxos.type.organization",
+              "text": "Cyberdyne Systems",
+              "includeContent": true
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_01Vy4gFer5yZsEDvSX4PrHFo",
+            "name": "query",
+            "isFailure": false,
+            "result": [
+              {
+                "id": "01JGHBZV99Z88K9VZYSJHKVD2R",
+                "@type": "dxn:org.dxos.type.organization:0.1.0",
+                "@meta": {
+                  "keys": []
+                },
+                "@uri": "echo://BWNO7K57IABJNCR77X2CGOB7YQ6MUNNUR/01JGHBZV99Z88K9VZYSJHKVD2R",
+                "name": "Cyberdyne Systems"
+              }
+            ],
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "Both steps completed successfully. Here's a summary:\n\n1. **Created** a new organization object of type `org.dxos.type.organization` with the name **\"Cyberdyne Systems\"** (ID: `01JGHBZV99Z88K9VZYSJHKVD2R`).\n\n2. **Queried** the database for organizations matching \"Cyberdyne Systems\" — the query returned exactly one result, confirming:\n   - The object exists in the database ✅\n   - The query tool is working correctly ✅",
+            "options": {}
+          },
+          {
+            "type": "tool-call",
+            "id": "toolu_01KpzUc5mLwvfdeqHgDozAmm",
+            "name": "completeJob",
+            "params": {
+              "success": {
+                "completedCriteria": {
+                  "organizationCreated": true,
+                  "queryConfirmed": true,
+                  "organizationName": "Cyberdyne Systems",
+                  "objectId": "01JGHBZV99Z88K9VZYSJHKVD2R"
+                }
+              }
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_01KpzUc5mLwvfdeqHgDozAmm",
+            "name": "completeJob",
+            "isFailure": false,
+            "result": {},
             "providerExecuted": false,
             "options": {}
           }
@@ -4176,178 +4267,30 @@
   "response": [
     {
       "type": "response-metadata",
-      "id": "msg_011CdjMbe2L8Y5yFdi62ff84",
+      "id": "msg_011CdjSoW6zufRawpXR8pGuy",
       "modelId": "claude-sonnet-4-6",
-      "timestamp": "2026-08-05T09:21:34.534Z",
-      "metadata": {}
-    },
-    {
-      "type": "text-start",
-      "id": "0",
-      "metadata": {}
-    },
-    {
-      "type": "text-delta",
-      "id": "0",
-      "delta": "The",
-      "metadata": {}
-    },
-    {
-      "type": "text-delta",
-      "id": "0",
-      "delta": " organization was created. Now let me query the database to confirm it exists",
-      "metadata": {}
-    },
-    {
-      "type": "text-delta",
-      "id": "0",
-      "delta": ".",
-      "metadata": {}
-    },
-    {
-      "type": "text-end",
-      "id": "0",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-start",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "name": "query",
-      "providerExecuted": false,
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "{\"typename\":",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": " \"org.d",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "xos.",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "type.o",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "rgani",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "zation\"",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": ", \"tex",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "t\":",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": " \"",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "Cyberdyne",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": " Sys",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "tems\"",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": ", \"i",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "ncl",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "ud",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "eContent\": ",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
-      "delta": "true}",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-end",
-      "id": "toolu_01K9c66AQzHdmJYySQJN3Pas",
+      "timestamp": "2026-08-05T10:29:49.136Z",
       "metadata": {}
     },
     {
       "type": "finish",
-      "reason": "tool-calls",
+      "reason": "stop",
       "usage": {
         "inputTokens": 1,
-        "outputTokens": 116,
-        "totalTokens": 117
+        "outputTokens": 2,
+        "totalTokens": 3
       },
       "metadata": {
         "anthropic": {
           "usage": {
             "cache_creation": {
               "ephemeral_1h_input_tokens": 0,
-              "ephemeral_5m_input_tokens": 268
+              "ephemeral_5m_input_tokens": 254
             },
-            "cache_creation_input_tokens": 268,
-            "cache_read_input_tokens": 21928,
+            "cache_creation_input_tokens": 254,
+            "cache_read_input_tokens": 22430,
             "input_tokens": 1,
-            "output_tokens": 1,
+            "output_tokens": 2,
             "server_tool_use": null,
             "service_tier": "standard"
           }

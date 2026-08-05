@@ -154,10 +154,6 @@ describe('update', { tags: ['model-fixture'] }, () => {
 
           const doc = docs[0];
           invariant(Obj.instanceOf(Markdown.Document, doc));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
         }
 
         yield* agent.submitPrompt('Add a section with a holiday-themed variation.');
@@ -170,10 +166,6 @@ describe('update', { tags: ['model-fixture'] }, () => {
 
           const doc = docs[0];
           invariant(Obj.instanceOf(Markdown.Document, doc));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
         }
       },
       WithProperties,
@@ -216,10 +208,6 @@ describe('update', { tags: ['model-fixture'] }, () => {
           const doc = docs[0];
           invariant(Obj.instanceOf(Markdown.Document, doc));
           const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
           expect(content.toLowerCase()).toContain('flour');
         }
       },
@@ -265,10 +253,6 @@ describe('update', { tags: ['model-fixture'] }, () => {
           const doc = docs[0];
           invariant(Obj.instanceOf(Markdown.Document, doc));
           const content = yield* Database.load(doc.content).pipe(Effect.map((_) => _.content));
-          console.log({
-            name: doc.name,
-            content: yield* Database.load(doc.content).pipe(Effect.map((_) => _.content)),
-          });
           expect(content.toLowerCase()).toContain('milk');
           expect(content.toLowerCase()).toContain('bread');
           expect(content.toLowerCase()).toContain('eggs');

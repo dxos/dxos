@@ -504,7 +504,7 @@
       },
       {
         "role": "user",
-        "content": "Create a new person object for Bernie Sanders\".\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
+        "content": "Create a new person object for Bernie Sanders.\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
         "options": {}
       },
       {
@@ -512,12 +512,12 @@
         "content": [
           {
             "type": "text",
-            "text": "I'll start by checking the available schemas to find the Person type, then create the object.",
+            "text": "I'll start by checking the available schemas to find the Person type.",
             "options": {}
           },
           {
             "type": "tool-call",
-            "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+            "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
             "name": "list-schemas",
             "params": {},
             "providerExecuted": false,
@@ -531,7 +531,7 @@
         "content": [
           {
             "type": "tool-result",
-            "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+            "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
             "name": "list-schemas",
             "isFailure": false,
             "result": [
@@ -4127,7 +4127,7 @@
           },
           {
             "type": "tool-call",
-            "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
+            "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
             "name": "create-object",
             "params": {
               "typename": "org.dxos.type.person",
@@ -4135,7 +4135,16 @@
                 "fullName": "Bernie Sanders",
                 "preferredName": "Bernie",
                 "jobTitle": "U.S. Senator",
-                "notes": "Bernard Sanders, known as Bernie Sanders, is an American politician serving as a U.S. Senator from Vermont. He ran for President of the United States in 2016 and 2020."
+                "emails": [],
+                "phoneNumbers": [],
+                "addresses": [],
+                "urls": [
+                  {
+                    "label": "Website",
+                    "value": "https://berniesanders.com"
+                  }
+                ],
+                "notes": "American politician and U.S. Senator from Vermont. Known for his progressive political views and campaigns for the Democratic presidential nomination."
               },
               "attach": true
             },
@@ -4150,21 +4159,70 @@
         "content": [
           {
             "type": "tool-result",
-            "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
+            "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
             "name": "create-object",
             "isFailure": false,
             "result": {
-              "id": "01JGFSATP5V06756N7855X20NT",
+              "id": "01JGFSATP5V06756N7855X20P3",
               "@type": "dxn:org.dxos.type.person:0.1.0",
               "@meta": {
                 "keys": []
               },
-              "@uri": "echo://BNCLAYPE4NUVHGZVSVHZRV3FJSOB73D3T/01JGFSATP5V06756N7855X20NT",
+              "@uri": "echo://B23LDO6CSCU4GMSFXXYVDXUAWPW7JSKTD/01JGFSATP5V06756N7855X20P3",
+              "addresses": [],
+              "emails": [],
               "fullName": "Bernie Sanders",
               "jobTitle": "U.S. Senator",
-              "notes": "Bernard Sanders, known as Bernie Sanders, is an American politician serving as a U.S. Senator from Vermont. He ran for President of the United States in 2016 and 2020.",
-              "preferredName": "Bernie"
+              "notes": "American politician and U.S. Senator from Vermont. Known for his progressive political views and campaigns for the Democratic presidential nomination.",
+              "phoneNumbers": [],
+              "preferredName": "Bernie",
+              "urls": [
+                {
+                  "label": "Website",
+                  "value": "https://berniesanders.com"
+                }
+              ]
             },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "The Person object for Bernie Sanders has been successfully created with the following data:\n\n- **Full Name:** Bernie Sanders\n- **Preferred Name:** Bernie\n- **Job Title:** U.S. Senator\n- **URLs:** https://berniesanders.com\n- **Notes:** American politician and U.S. Senator from Vermont.",
+            "options": {}
+          },
+          {
+            "type": "tool-call",
+            "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+            "name": "completeJob",
+            "params": {
+              "success": {
+                "completedCriteria": {
+                  "Person object created with correct data.": true
+                }
+              }
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+            "name": "completeJob",
+            "isFailure": false,
+            "result": {},
             "providerExecuted": false,
             "options": {}
           }
@@ -4183,9 +4241,9 @@
   "response": [
     {
       "type": "response-metadata",
-      "id": "msg_011CdjMdcDk2biFDvApPiteF",
+      "id": "msg_011CdjSq9Jf4HSJBW5DBCDj1",
       "modelId": "claude-sonnet-4-6",
-      "timestamp": "2026-08-05T09:22:01.265Z",
+      "timestamp": "2026-08-05T10:30:11.346Z",
       "metadata": {}
     },
     {
@@ -4202,19 +4260,19 @@
     {
       "type": "text-delta",
       "id": "0",
-      "delta": " Person object for Bernie Sanders has been successfully created with the following data:\n\n- **Full Name**: Bernie Sanders\n- **",
+      "delta": " task is complete! A Person object for **Bernie Sanders** has been created in the",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "Preferred Name**: Bernie\n- **Job Title**: U.S. Senator\n- **Notes**: Bernard Sanders, known as Bernie Sanders, is an American politician serving as a U.S. Senator from Vermont. He ran for President of the United States in 2016 ",
+      "delta": " ECHO database with his full name, preferred name, job title (U.S. Senator), website URL, and descript",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "and 2020.",
+      "delta": "ive notes.",
       "metadata": {}
     },
     {
@@ -4223,94 +4281,22 @@
       "metadata": {}
     },
     {
-      "type": "tool-params-start",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "name": "completeJob",
-      "providerExecuted": false,
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "{\"success\"",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": ": {\"com",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "pletedCrit",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "eria\":{\"Per",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "son object c",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "reated with ",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "correct da",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "ta.",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "delta": "\":true}}}",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-end",
-      "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-      "metadata": {}
-    },
-    {
       "type": "finish",
-      "reason": "tool-calls",
+      "reason": "stop",
       "usage": {
         "inputTokens": 1,
-        "outputTokens": 159,
-        "totalTokens": 160
+        "outputTokens": 49,
+        "totalTokens": 50
       },
       "metadata": {
         "anthropic": {
           "usage": {
             "cache_creation": {
               "ephemeral_1h_input_tokens": 0,
-              "ephemeral_5m_input_tokens": 378
+              "ephemeral_5m_input_tokens": 153
             },
-            "cache_creation_input_tokens": 378,
-            "cache_read_input_tokens": 21918,
+            "cache_creation_input_tokens": 153,
+            "cache_read_input_tokens": 22329,
             "input_tokens": 1,
             "output_tokens": 1,
             "server_tool_use": null,

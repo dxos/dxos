@@ -504,7 +504,7 @@
       },
       {
         "role": "user",
-        "content": "Create a new person object for Bernie Sanders\".\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
+        "content": "Create a new person object for Bernie Sanders.\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
         "options": {
           "anthropic": {
             "cacheControl": {
@@ -519,9 +519,9 @@
   "response": [
     {
       "type": "response-metadata",
-      "id": "msg_011CdjMcu5Ui87b3xKfvjzBd",
+      "id": "msg_011CdjSoq3XR7XDjWUutdK2w",
       "modelId": "claude-sonnet-4-6",
-      "timestamp": "2026-08-05T09:21:51.774Z",
+      "timestamp": "2026-08-05T10:29:54.152Z",
       "metadata": {}
     },
     {
@@ -532,19 +532,13 @@
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "I",
+      "delta": "I'll start",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "'ll start by checking the available schemas to find the Person type, then create the object",
-      "metadata": {}
-    },
-    {
-      "type": "text-delta",
-      "id": "0",
-      "delta": ".",
+      "delta": " by checking the available schemas to find the Person type.",
       "metadata": {}
     },
     {
@@ -554,20 +548,20 @@
     },
     {
       "type": "tool-params-start",
-      "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+      "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
       "name": "list-schemas",
       "providerExecuted": false,
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+      "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
       "delta": "",
       "metadata": {}
     },
     {
       "type": "tool-params-end",
-      "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+      "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
       "metadata": {}
     },
     {
@@ -575,8 +569,8 @@
       "reason": "tool-calls",
       "usage": {
         "inputTokens": 3,
-        "outputTokens": 56,
-        "totalTokens": 59
+        "outputTokens": 51,
+        "totalTokens": 54
       },
       "metadata": {
         "anthropic": {
@@ -588,7 +582,7 @@
             "cache_creation_input_tokens": 8612,
             "cache_read_input_tokens": 0,
             "input_tokens": 3,
-            "output_tokens": 1,
+            "output_tokens": 3,
             "server_tool_use": null,
             "service_tier": "standard"
           }

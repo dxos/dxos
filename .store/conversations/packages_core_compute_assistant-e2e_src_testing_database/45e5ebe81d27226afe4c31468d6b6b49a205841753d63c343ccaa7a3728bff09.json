@@ -16,15 +16,16 @@
               ],
               "properties": {
                 "completedCriteria": {
-                  "$id": "/schemas/%7B%7D",
-                  "anyOf": [
-                    {
-                      "type": "object"
-                    },
-                    {
-                      "type": "array"
-                    }
+                  "type": "object",
+                  "required": [
+                    "Person object created with correct data."
                   ],
+                  "properties": {
+                    "Person object created with correct data.": {
+                      "type": "boolean"
+                    }
+                  },
+                  "additionalProperties": false,
                   "description": "True/false for passed or not passed completion criteria."
                 }
               },
@@ -503,7 +504,7 @@
       },
       {
         "role": "user",
-        "content": "Create a new organization called \"Cyberdyne Systems\".\nQuery the database to confirm that the organization is created and the query tool is working.\n<input>{}</input>",
+        "content": "Create a new person object for Bernie Sanders.\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
         "options": {}
       },
       {
@@ -511,12 +512,12 @@
         "content": [
           {
             "type": "text",
-            "text": "I'll help you create a new organization called \"Cyberdyne Systems\" and then verify it was created successfully. Let me start by checking the available schemas.",
+            "text": "I'll start by checking the available schemas to find the Person type.",
             "options": {}
           },
           {
             "type": "tool-call",
-            "id": "toolu_019PAaxQ81RvcEu8eB7gZQtH",
+            "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
             "name": "list-schemas",
             "params": {},
             "providerExecuted": false,
@@ -530,7 +531,7 @@
         "content": [
           {
             "type": "tool-result",
-            "id": "toolu_019PAaxQ81RvcEu8eB7gZQtH",
+            "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
             "name": "list-schemas",
             "isFailure": false,
             "result": [
@@ -4128,9 +4129,9 @@
   "response": [
     {
       "type": "response-metadata",
-      "id": "msg_011CdjMbGwKVHTBFZXyMNMfY",
+      "id": "msg_011CdjSpB1KoK5yCVACpPwgS",
       "modelId": "claude-sonnet-4-6",
-      "timestamp": "2026-08-05T09:21:29.865Z",
+      "timestamp": "2026-08-05T10:30:01.498Z",
       "metadata": {}
     },
     {
@@ -4141,19 +4142,19 @@
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "I can see the",
+      "delta": "I",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": " `org.dxos.type.organization` schema. Now I'll create the organization \"Cyb",
+      "delta": " found the `org.dxos.type.person` schema. Now I'll create a",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "erdyne Systems\".",
+      "delta": " Person object for Bernie Sanders with the correct data.",
       "metadata": {}
     },
     {
@@ -4163,128 +4164,386 @@
     },
     {
       "type": "tool-params-start",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
       "name": "create-object",
       "providerExecuted": false,
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
       "delta": "",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "{\"typen",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "{\"",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "ame\": \"org.",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "type",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "dxos.type.or",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "name",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "ga",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "\": \"org.dx",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "nization\"",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "os.type.pe",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": ", \"pro",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "rson\"",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "perti",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ", \"properti",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "es\":",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "es\": {\"",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": " {\"",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "full",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "name\":",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "Name\":\"Ber",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "\"Cyberdyne",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "nie Sander",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": " S",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "s\",\"p",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "ys",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "refe",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "te",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "rredNam",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "ms\"}",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "e\"",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": ", \"attach\"",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ":\"Berni",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": ": tr",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "e\",\"jobT",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
-      "delta": "ue}",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "itle\":\"U",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ".S. Senator\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ",\"emails\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ":[],\"phoneN",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "umbers\":[]",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ",\"addres",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "se",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "s\":[],\"urls",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "\":[{\"label\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ":\"Websit",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "e\",\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "valu",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "e\":\"https:",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "//be",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "rniesand",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "ers.com",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "\"}],\"notes",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "\":\"Amer",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "ican ",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "politic",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "ian and U.S.",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": " Sen",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "at",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "or",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": " from Ve",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "rmont.",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": " Known fo",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "r his progr",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "ess",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "ive politica",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "l vi",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "ews",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": " and",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": " campaigns ",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "for the Dem",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "ocratic",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": " presiden",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "tia",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "l ",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "nominati",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "on.\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": "}",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": ", \"attach\":",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+      "delta": " true}",
       "metadata": {}
     },
     {
       "type": "tool-params-end",
-      "id": "toolu_017UuutNr1Sj9sz8UK3Y3SL4",
+      "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
       "metadata": {}
     },
     {
@@ -4292,20 +4551,20 @@
       "reason": "tool-calls",
       "usage": {
         "inputTokens": 1,
-        "outputTokens": 135,
-        "totalTokens": 136
+        "outputTokens": 236,
+        "totalTokens": 237
       },
       "metadata": {
         "anthropic": {
           "usage": {
             "cache_creation": {
               "ephemeral_1h_input_tokens": 0,
-              "ephemeral_5m_input_tokens": 13320
+              "ephemeral_5m_input_tokens": 13301
             },
-            "cache_creation_input_tokens": 13320,
-            "cache_read_input_tokens": 8608,
+            "cache_creation_input_tokens": 13301,
+            "cache_read_input_tokens": 8612,
             "input_tokens": 1,
-            "output_tokens": 4,
+            "output_tokens": 1,
             "server_tool_use": null,
             "service_tier": "standard"
           }

@@ -504,7 +504,7 @@
       },
       {
         "role": "user",
-        "content": "Create a new person object for Bernie Sanders\".\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
+        "content": "Create a new person object for Bernie Sanders.\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
         "options": {}
       },
       {
@@ -512,12 +512,12 @@
         "content": [
           {
             "type": "text",
-            "text": "I'll start by checking the available schemas to find the Person type, then create the object.",
+            "text": "I'll start by checking the available schemas to find the Person type.",
             "options": {}
           },
           {
             "type": "tool-call",
-            "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+            "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
             "name": "list-schemas",
             "params": {},
             "providerExecuted": false,
@@ -531,7 +531,7 @@
         "content": [
           {
             "type": "tool-result",
-            "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+            "id": "toolu_018pCrXC2RLx7pTPvKJQ9jPG",
             "name": "list-schemas",
             "isFailure": false,
             "result": [
@@ -4115,6 +4115,78 @@
             "options": {}
           }
         ],
+        "options": {}
+      },
+      {
+        "role": "assistant",
+        "content": [
+          {
+            "type": "text",
+            "text": "I found the `org.dxos.type.person` schema. Now I'll create a Person object for Bernie Sanders with the correct data.",
+            "options": {}
+          },
+          {
+            "type": "tool-call",
+            "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+            "name": "create-object",
+            "params": {
+              "typename": "org.dxos.type.person",
+              "properties": {
+                "fullName": "Bernie Sanders",
+                "preferredName": "Bernie",
+                "jobTitle": "U.S. Senator",
+                "emails": [],
+                "phoneNumbers": [],
+                "addresses": [],
+                "urls": [
+                  {
+                    "label": "Website",
+                    "value": "https://berniesanders.com"
+                  }
+                ],
+                "notes": "American politician and U.S. Senator from Vermont. Known for his progressive political views and campaigns for the Democratic presidential nomination."
+              },
+              "attach": true
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
+        "options": {}
+      },
+      {
+        "role": "tool",
+        "content": [
+          {
+            "type": "tool-result",
+            "id": "toolu_01CncR13zu93t9vwVoQdKPKn",
+            "name": "create-object",
+            "isFailure": false,
+            "result": {
+              "id": "01JGFSATP5V06756N7855X20P3",
+              "@type": "dxn:org.dxos.type.person:0.1.0",
+              "@meta": {
+                "keys": []
+              },
+              "@uri": "echo://B23LDO6CSCU4GMSFXXYVDXUAWPW7JSKTD/01JGFSATP5V06756N7855X20P3",
+              "addresses": [],
+              "emails": [],
+              "fullName": "Bernie Sanders",
+              "jobTitle": "U.S. Senator",
+              "notes": "American politician and U.S. Senator from Vermont. Known for his progressive political views and campaigns for the Democratic presidential nomination.",
+              "phoneNumbers": [],
+              "preferredName": "Bernie",
+              "urls": [
+                {
+                  "label": "Website",
+                  "value": "https://berniesanders.com"
+                }
+              ]
+            },
+            "providerExecuted": false,
+            "options": {}
+          }
+        ],
         "options": {
           "anthropic": {
             "cacheControl": {
@@ -4129,9 +4201,9 @@
   "response": [
     {
       "type": "response-metadata",
-      "id": "msg_011CdjMdA6ckiqVeyC3iXXUr",
+      "id": "msg_011CdjSpqDUZVncHmsTn6biw",
       "modelId": "claude-sonnet-4-6",
-      "timestamp": "2026-08-05T09:21:55.793Z",
+      "timestamp": "2026-08-05T10:30:07.141Z",
       "metadata": {}
     },
     {
@@ -4142,25 +4214,19 @@
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "I found",
+      "delta": "The",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": " the `org.dxos.type.person` schema. Now I'll create a",
+      "delta": " Person object for Bernie Sanders has been successfully created with the following data:\n\n- **Full Name:** Bernie Sanders\n- **Preferred",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": " Person object for Bernie Sanders with the correct data",
-      "metadata": {}
-    },
-    {
-      "type": "text-delta",
-      "id": "0",
-      "delta": ".",
+      "delta": " Name:** Bernie\n- **Job Title:** U.S. Senator\n- **URLs:** https://berniesanders.com\n- **Notes:** American politician and U.S. Senator from Vermont.",
       "metadata": {}
     },
     {
@@ -4170,320 +4236,98 @@
     },
     {
       "type": "tool-params-start",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "name": "create-object",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "name": "completeJob",
       "providerExecuted": false,
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
       "delta": "",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "{\"ty",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "{\"succes",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "pename\":",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "s\": {\"c",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": " \"org.dxos.",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "ompleted",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "type.",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "Criter",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "person\"",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "ia\":",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": ", ",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "{\"Per",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "\"pr",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "son ob",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "oper",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "ject cr",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "ti",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "eated with",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "es\": {\"fullN",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": " correct d",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "ame\"",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "ata.\"",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": ":\"Bernie San",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": ":true",
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "ders\",\"prefe",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "rredName\":\"",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "Bernie",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "\",\"jo",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "bTi",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "tle\":\"U.S. S",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "enator\",",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "\"notes\":",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "\"Be",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "rnard",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": " San",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "ders, kno",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "wn as ",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "Bern",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "ie Sander",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "s, i",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "s an Am",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "erican po",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "litic",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "ian",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": " serving ",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "as a U",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": ".S. Senato",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "r fr",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "om Verm",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "ont. He",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": " ran for Pre",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "si",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "dent",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": " of th",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "e U",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "nited State",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "s in 201",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "6 and 2020.",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "\"}",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": ", \"attach\":",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": " t",
-      "metadata": {}
-    },
-    {
-      "type": "tool-params-delta",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-      "delta": "rue}",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
+      "delta": "}}}",
       "metadata": {}
     },
     {
       "type": "tool-params-end",
-      "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
+      "id": "toolu_01EoVQgabHvhbTPpieTDd1Hv",
       "metadata": {}
     },
     {
@@ -4491,20 +4335,20 @@
       "reason": "tool-calls",
       "usage": {
         "inputTokens": 1,
-        "outputTokens": 208,
-        "totalTokens": 209
+        "outputTokens": 141,
+        "totalTokens": 142
       },
       "metadata": {
         "anthropic": {
           "usage": {
             "cache_creation": {
               "ephemeral_1h_input_tokens": 0,
-              "ephemeral_5m_input_tokens": 13306
+              "ephemeral_5m_input_tokens": 416
             },
-            "cache_creation_input_tokens": 13306,
-            "cache_read_input_tokens": 8612,
+            "cache_creation_input_tokens": 416,
+            "cache_read_input_tokens": 21913,
             "input_tokens": 1,
-            "output_tokens": 2,
+            "output_tokens": 1,
             "server_tool_use": null,
             "service_tier": "standard"
           }

@@ -35,7 +35,7 @@ describe('Database', { tags: ['model-fixture'] }, () => {
     agentTest({
       model: DXN.make('com.anthropic.model.claude-sonnet-4-6.default'),
       instructions: trim`
-        Create a new person object for Bernie Sanders".
+        Create a new person object for Bernie Sanders.
       `,
       completionCriteria: ['Person object created with correct data.'],
     }),

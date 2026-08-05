@@ -388,7 +388,7 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Remove Context Corp' }));
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(Obj.getURI(org)) as Ref.Ref<any>;
+        const ref = db.makeRef<Organization.Organization>(Obj.getURI(org));
         yield* agent.addContext([ref]);
         const uri = Obj.getURI(org);
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);

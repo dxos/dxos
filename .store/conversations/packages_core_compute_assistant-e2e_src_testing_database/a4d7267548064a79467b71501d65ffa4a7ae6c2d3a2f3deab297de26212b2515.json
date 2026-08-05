@@ -16,16 +16,15 @@
               ],
               "properties": {
                 "completedCriteria": {
-                  "type": "object",
-                  "required": [
-                    "Person object created with correct data."
-                  ],
-                  "properties": {
-                    "Person object created with correct data.": {
-                      "type": "boolean"
+                  "$id": "/schemas/%7B%7D",
+                  "anyOf": [
+                    {
+                      "type": "object"
+                    },
+                    {
+                      "type": "array"
                     }
-                  },
-                  "additionalProperties": false,
+                  ],
                   "description": "True/false for passed or not passed completion criteria."
                 }
               },
@@ -504,7 +503,7 @@
       },
       {
         "role": "user",
-        "content": "Create a new person object for Bernie Sanders\".\n\nCompletion criteria:\n- Person object created with correct data.\n<input>{}</input>",
+        "content": "Create a new organization called \"Cyberdyne Systems\".\nQuery the database to confirm that the organization is created and the query tool is working.\n<input>{}</input>",
         "options": {}
       },
       {
@@ -512,12 +511,12 @@
         "content": [
           {
             "type": "text",
-            "text": "I'll start by checking the available schemas to find the Person type, then create the object.",
+            "text": "I'll start by listing the schemas to find the right typename for an organization, then create it.",
             "options": {}
           },
           {
             "type": "tool-call",
-            "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+            "id": "toolu_01RTcQMHofMVynN8wPtQB94X",
             "name": "list-schemas",
             "params": {},
             "providerExecuted": false,
@@ -531,7 +530,7 @@
         "content": [
           {
             "type": "tool-result",
-            "id": "toolu_01RWbTYpyCsfoG6Wja5WBx5a",
+            "id": "toolu_01RTcQMHofMVynN8wPtQB94X",
             "name": "list-schemas",
             "isFailure": false,
             "result": [
@@ -4115,100 +4114,6 @@
             "options": {}
           }
         ],
-        "options": {}
-      },
-      {
-        "role": "assistant",
-        "content": [
-          {
-            "type": "text",
-            "text": "I found the `org.dxos.type.person` schema. Now I'll create a Person object for Bernie Sanders with the correct data.",
-            "options": {}
-          },
-          {
-            "type": "tool-call",
-            "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-            "name": "create-object",
-            "params": {
-              "typename": "org.dxos.type.person",
-              "properties": {
-                "fullName": "Bernie Sanders",
-                "preferredName": "Bernie",
-                "jobTitle": "U.S. Senator",
-                "notes": "Bernard Sanders, known as Bernie Sanders, is an American politician serving as a U.S. Senator from Vermont. He ran for President of the United States in 2016 and 2020."
-              },
-              "attach": true
-            },
-            "providerExecuted": false,
-            "options": {}
-          }
-        ],
-        "options": {}
-      },
-      {
-        "role": "tool",
-        "content": [
-          {
-            "type": "tool-result",
-            "id": "toolu_011BoRowrdCe1YjpTaihRsvd",
-            "name": "create-object",
-            "isFailure": false,
-            "result": {
-              "id": "01JGFSATP5V06756N7855X20NT",
-              "@type": "dxn:org.dxos.type.person:0.1.0",
-              "@meta": {
-                "keys": []
-              },
-              "@uri": "echo://BNCLAYPE4NUVHGZVSVHZRV3FJSOB73D3T/01JGFSATP5V06756N7855X20NT",
-              "fullName": "Bernie Sanders",
-              "jobTitle": "U.S. Senator",
-              "notes": "Bernard Sanders, known as Bernie Sanders, is an American politician serving as a U.S. Senator from Vermont. He ran for President of the United States in 2016 and 2020.",
-              "preferredName": "Bernie"
-            },
-            "providerExecuted": false,
-            "options": {}
-          }
-        ],
-        "options": {}
-      },
-      {
-        "role": "assistant",
-        "content": [
-          {
-            "type": "text",
-            "text": "The Person object for Bernie Sanders has been successfully created with the following data:\n\n- **Full Name**: Bernie Sanders\n- **Preferred Name**: Bernie\n- **Job Title**: U.S. Senator\n- **Notes**: Bernard Sanders, known as Bernie Sanders, is an American politician serving as a U.S. Senator from Vermont. He ran for President of the United States in 2016 and 2020.",
-            "options": {}
-          },
-          {
-            "type": "tool-call",
-            "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-            "name": "completeJob",
-            "params": {
-              "success": {
-                "completedCriteria": {
-                  "Person object created with correct data.": true
-                }
-              }
-            },
-            "providerExecuted": false,
-            "options": {}
-          }
-        ],
-        "options": {}
-      },
-      {
-        "role": "tool",
-        "content": [
-          {
-            "type": "tool-result",
-            "id": "toolu_012p4qJ6Uz7DNR8jqPmPhdmP",
-            "name": "completeJob",
-            "isFailure": false,
-            "result": {},
-            "providerExecuted": false,
-            "options": {}
-          }
-        ],
         "options": {
           "anthropic": {
             "cacheControl": {
@@ -4223,9 +4128,9 @@
   "response": [
     {
       "type": "response-metadata",
-      "id": "msg_011CdjMdxAnnjLpKoZoTP5As",
+      "id": "msg_011CdjSnHt1WbqVojcPXkG8D",
       "modelId": "claude-sonnet-4-6",
-      "timestamp": "2026-08-05T09:22:05.750Z",
+      "timestamp": "2026-08-05T10:29:33.142Z",
       "metadata": {}
     },
     {
@@ -4236,19 +4141,19 @@
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "The",
+      "delta": "I found",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": " task is complete! A Person object for Bernie Sanders has been successfully created in the ECHO database with his full name",
+      "delta": " the `org.dxos.type.organization` typename. Now I'll create the organization",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": ", preferred name, job title, and biographical notes.",
+      "delta": " and then query to confirm it was created.",
       "metadata": {}
     },
     {
@@ -4257,24 +4162,132 @@
       "metadata": {}
     },
     {
+      "type": "tool-params-start",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "name": "create-object",
+      "providerExecuted": false,
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "{\"typenam",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "e\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": ": \"org.dxos.",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "type.org",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "anizat",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "ion\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": ", \"propertie",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "s\": {\"name\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": ":\"Cyb",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "erdyne Sys",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "tem",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "s\"}",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": ", \"attach\"",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": ": ",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-delta",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "delta": "true}",
+      "metadata": {}
+    },
+    {
+      "type": "tool-params-end",
+      "id": "toolu_013QaTEJVp3u6Fgr4NedKphG",
+      "metadata": {}
+    },
+    {
       "type": "finish",
-      "reason": "stop",
+      "reason": "tool-calls",
       "usage": {
         "inputTokens": 1,
-        "outputTokens": 38,
-        "totalTokens": 39
+        "outputTokens": 136,
+        "totalTokens": 137
       },
       "metadata": {
         "anthropic": {
           "usage": {
             "cache_creation": {
               "ephemeral_1h_input_tokens": 0,
-              "ephemeral_5m_input_tokens": 171
+              "ephemeral_5m_input_tokens": 13307
             },
-            "cache_creation_input_tokens": 171,
-            "cache_read_input_tokens": 22296,
+            "cache_creation_input_tokens": 13307,
+            "cache_read_input_tokens": 8608,
             "input_tokens": 1,
-            "output_tokens": 1,
+            "output_tokens": 2,
             "server_tool_use": null,
             "service_tier": "standard"
           }

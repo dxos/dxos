@@ -518,9 +518,9 @@
   "response": [
     {
       "type": "response-metadata",
-      "id": "msg_011CdjMasc7eaanqoW4nMtPU",
+      "id": "msg_011CdjSn2dUvxihRgmjwdKw1",
       "modelId": "claude-sonnet-4-6",
-      "timestamp": "2026-08-05T09:21:25.313Z",
+      "timestamp": "2026-08-05T10:29:29.183Z",
       "metadata": {}
     },
     {
@@ -531,13 +531,19 @@
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "I",
+      "delta": "I'll start",
       "metadata": {}
     },
     {
       "type": "text-delta",
       "id": "0",
-      "delta": "'ll help you create a new organization called \"Cyberdyne Systems\" and then verify it was created successfully. Let me start by checking the available schemas.",
+      "delta": " by listing the schemas to find the right typename for an organization, then create",
+      "metadata": {}
+    },
+    {
+      "type": "text-delta",
+      "id": "0",
+      "delta": " it.",
       "metadata": {}
     },
     {
@@ -547,20 +553,20 @@
     },
     {
       "type": "tool-params-start",
-      "id": "toolu_019PAaxQ81RvcEu8eB7gZQtH",
+      "id": "toolu_01RTcQMHofMVynN8wPtQB94X",
       "name": "list-schemas",
       "providerExecuted": false,
       "metadata": {}
     },
     {
       "type": "tool-params-delta",
-      "id": "toolu_019PAaxQ81RvcEu8eB7gZQtH",
+      "id": "toolu_01RTcQMHofMVynN8wPtQB94X",
       "delta": "",
       "metadata": {}
     },
     {
       "type": "tool-params-end",
-      "id": "toolu_019PAaxQ81RvcEu8eB7gZQtH",
+      "id": "toolu_01RTcQMHofMVynN8wPtQB94X",
       "metadata": {}
     },
     {
@@ -568,8 +574,8 @@
       "reason": "tool-calls",
       "usage": {
         "inputTokens": 3,
-        "outputTokens": 70,
-        "totalTokens": 73
+        "outputTokens": 57,
+        "totalTokens": 60
       },
       "metadata": {
         "anthropic": {
@@ -581,7 +587,7 @@
             "cache_creation_input_tokens": 8608,
             "cache_read_input_tokens": 0,
             "input_tokens": 3,
-            "output_tokens": 1,
+            "output_tokens": 3,
             "server_tool_use": null,
             "service_tier": "standard"
           }
