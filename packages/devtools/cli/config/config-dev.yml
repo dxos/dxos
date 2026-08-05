@@ -15,7 +15,7 @@ runtime:
     edge:
       url: wss://edge.dxos.workers.dev/
     iceProviders:
-      - urls: https://edge-production.dxos.workers.dev/ice
+      - urls: https://dxos.network/ice
     ai:
       server: https://ai-service.dxos.workers.dev
     ipfs:

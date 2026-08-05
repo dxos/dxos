@@ -23,8 +23,8 @@ const edgeUrl = (edge: NonNullable<ConfigPresetOptions['edge']>) =>
   Match.value(edge).pipe(
     Match.when('local', () => 'http://localhost:8787'),
     Match.when('dev', () => 'https://edge.dxos.workers.dev'),
-    Match.when('main', () => 'https://edge-main.dxos.workers.dev'),
-    Match.when('production', () => 'https://edge-production.dxos.workers.dev'),
+    Match.when('main', () => 'https://main.dxos.network'),
+    Match.when('production', () => 'https://dxos.network'),
     Match.exhaustive,
   );
 

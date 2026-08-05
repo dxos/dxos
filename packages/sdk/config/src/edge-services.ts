@@ -27,11 +27,11 @@ export type EdgeServiceName = (typeof EdgeServiceName)[keyof typeof EdgeServiceN
  * Production values are supplied per-app via `dx.yml` (`runtime.services.edgeServices`).
  */
 export const EDGE_SERVICE_DEFAULTS: Readonly<Record<EdgeServiceName, string>> = Object.freeze({
-  [EdgeServiceName.Calls]: 'https://calls-service.dxos.workers.dev',
-  [EdgeServiceName.Image]: 'https://image-service-main.dxos.workers.dev',
-  [EdgeServiceName.Transcription]: 'https://calls-service.dxos.workers.dev',
+  [EdgeServiceName.Calls]: 'https://calls.dxos.network',
+  [EdgeServiceName.Image]: 'https://image.main.dxos.network',
+  [EdgeServiceName.Transcription]: 'https://calls.dxos.network',
   [EdgeServiceName.Discord]: 'https://discord-service.dxos.workers.dev',
-  [EdgeServiceName.CorsProxy]: 'https://cors-proxy.dxos.workers.dev',
+  [EdgeServiceName.CorsProxy]: 'https://cors.dxos.network',
   [EdgeServiceName.ApiProxy]: 'https://api-proxy.dxos.workers.dev',
   [EdgeServiceName.Introspect]: 'https://mcp-introspect-service-labs.dxos.workers.dev/mcp',
   [EdgeServiceName.ChatAgent]: 'wss://chat-agent-labs.dxos.workers.dev',

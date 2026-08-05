@@ -15,7 +15,7 @@ runtime:
     edge:
       url: ws://localhost:8787/
     iceProviders:
-      - urls: https://edge-production.dxos.workers.dev/ice
+      - urls: https://dxos.network/ice
     ai:
       server: http://localhost:8788
     sandbox:

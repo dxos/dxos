@@ -43,11 +43,11 @@ export const defaultConfig = new Config({
     },
     services: {
       edge: {
-        url: 'wss://edge-production.dxos.workers.dev/',
+        url: 'wss://dxos.network/',
       },
       iceProviders: [
         {
-          urls: 'https://edge-production.dxos.workers.dev/ice',
+          urls: 'https://dxos.network/ice',
         },
       ],
       ai: {

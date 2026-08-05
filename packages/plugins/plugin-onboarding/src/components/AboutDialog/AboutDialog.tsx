@@ -15,6 +15,11 @@ const ENV_LABELS: Record<string, string> = {
   'edge-main': 'Main',
   'edge-labs': 'Labs',
   'edge-production': 'Production',
+  // dxos.network scheme: <env>.dxos.network per environment; the production apex yields 'dxos'.
+  'main': 'Main',
+  'labs': 'Labs',
+  'staging': 'Staging',
+  'dxos': 'Production',
 };
 
 const REPO = 'https://github.com/dxos/dxos';
