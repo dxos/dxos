@@ -452,6 +452,22 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run :bundle
 
+      # DIAGNOSTIC (DX-1116, remove once resolved): composer-app, storybook-react, docs and tasks
+      # re-execute in every downstream job despite hashing identically here, which means their
+      # artifacts are absent from the remote cache rather than mismatched. moon aborts an action's
+      # upload when a single blob exceeds 4 MB unless the server takes the ByteStream API, so list
+      # the outputs that would trip it. Vite's build table cannot answer this — it omits copied
+      # `public/` assets, which is exactly where the large files live.
+      - name: Report bundle output blob sizes
+        if: ${{ always() }}
+        run: |
+          for dir in packages/apps/*/out packages/apps/*/dist tools/storybook-*/out docs/dist docs/.astro; do
+            [ -d "$dir" ] || continue
+            printf '== %s total=%s files=%s\n' "$dir" \
+              "$(du -sh "$dir" | cut -f1)" "$(find "$dir" -type f | wc -l)"
+            find "$dir" -type f -size +4M -printf '   %10s  %p\n' 2>/dev/null | sort -rn | head -5
+          done
+
   e2e:
     # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
     # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
