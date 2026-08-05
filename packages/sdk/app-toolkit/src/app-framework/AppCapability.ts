@@ -56,10 +56,14 @@ export const appGraphBuilder: Maker<typeof AppCapabilities.AppGraphBuilder> = Ca
  * `requires` on boot modules — where a post-ready gate trips the missing-capability invariant.
  * A plugin whose settings are read only from its own deferred surfaces declares
  * `activatesOn: ActivationEvents.Idle` to keep them off the startup pass.
+ *
+ * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
+ * is precisely the post-ready gate this paragraph rules out.
  */
 export const settings: Maker<typeof AppCapabilities.Settings> = Capability$.moduleMaker(
   'Settings',
   AppCapabilities.Settings,
+  { activatesOn: ActivationEvents.Startup },
 );
 
 /**
@@ -82,10 +86,14 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
  * A feature plugin whose operations cannot be invoked before the app is interactive declares
  * `activatesOn: ActivationEvents.Idle` to register in that wave instead of on the startup pass;
  * the boot path (deck, layout, space, client) invokes operations during startup and stays eager.
+ *
+ * Stated explicitly rather than inherited: omitting `activatesOn` now normalizes to Idle, which
+ * would leave the registry incomplete for exactly those boot-path invocations.
  */
 export const operationHandler: Maker<typeof Capabilities.OperationHandler> = Capability$.moduleMaker(
   'OperationHandler',
   Capabilities.OperationHandler,
+  { activatesOn: ActivationEvents.Startup },
 );
 
 /** Module maker contributing undo operation mappings. */
@@ -98,24 +106,37 @@ export const undoMappings: Maker<typeof Capabilities.UndoMapping> = Capability$.
 export const reactContext: Maker<typeof Capabilities.ReactContext> = Capability$.moduleMaker(
   'ReactContext',
   Capabilities.ReactContext,
+  // A context provider has to wrap the tree on the FIRST render, and shell components read what it
+  // provides through the strict `useCapability` hooks — arriving in the idle wave trips the
+  // missing-capability invariant rather than merely rendering late.
+  { activatesOn: ActivationEvents.Startup },
 );
 
 /** Module maker contributing a React root. */
 export const reactRoot: Maker<typeof Capabilities.ReactRoot> = Capability$.moduleMaker(
   'ReactRoot',
   Capabilities.ReactRoot,
+  // Same reason as `reactContext` — a root that mounts at idle is a blank shell until it does.
+  { activatesOn: ActivationEvents.Startup },
 );
 
-/** Module maker contributing navigation target resolvers. */
+/**
+ * Module maker contributing navigation target resolvers. On the startup pass: URL restore runs as
+ * part of boot, so a resolver that registers at idle is absent exactly when the deep link it
+ * resolves is being handled — the shape behind the earlier not-found-redirect-on-load race.
+ */
 export const navigationResolver: Maker<typeof AppCapabilities.NavigationTargetResolver> = Capability$.moduleMaker(
   'NavigationResolver',
   AppCapabilities.NavigationTargetResolver,
+  { activatesOn: ActivationEvents.Startup },
 );
 
-/** Module maker contributing a navigation handler. */
+/** Module maker contributing a navigation handler. On the startup pass for the same reason as
+ * {@link navigationResolver} — the boot-time URL restore is what invokes it. */
 export const navigationHandler: Maker<typeof AppCapabilities.NavigationHandler> = Capability$.moduleMaker(
   'NavigationHandler',
   AppCapabilities.NavigationHandler,
+  { activatesOn: ActivationEvents.Startup },
 );
 
 const surfaceMaker: Maker<typeof Capabilities.ReactSurface> = Capability$.moduleMaker(
