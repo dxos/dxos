@@ -16,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Progress } from '@dxos/progress';
-import { type EditorController } from '@dxos/react-ui-editor';
+import type { EditorController } from '@dxos/react-ui-editor';
 import {
   type ActionGraphProps,
   MenuBuilder,
@@ -28,17 +28,20 @@ import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 import { type MenuActionChrome } from '@dxos/ui-types';
 
-import {
-  type InboxStackAction,
-  type InboxStackItem,
-  type InboxStackTag,
-  type MessageTagsFamily,
-  type StarredFamily,
-  isMessageGroup,
+// Type-only barrel import plus a direct value import: pulling `isMessageGroup` through the
+// `#components` barrel would drag the whole UI runtime (mosaic → @atlaskit CJS with CSS requires)
+// into headless (node) consumers of this controller.
+import type {
+  InboxStackAction,
+  InboxStackItem,
+  InboxStackTag,
+  MessageTagsFamily,
+  StarredFamily,
 } from '#components';
 import { meta } from '#meta';
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings, SystemTags } from '#types';
 
+import { isMessageGroup } from '../../components/InboxStack/is-message-group';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { createSyncProgressKey } from '../../operations/mail/mail-sync';
 import { messageMatchesQuery } from '../../util';
