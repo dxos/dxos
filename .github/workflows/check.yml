@@ -617,10 +617,16 @@ jobs:
           path: test-results/playwright
           retention-days: 7
 
-  # Composer-app's Playwright suite through Knapsack Pro queue mode (DX-1116 Option B trial): the 4
-  # nodes pull test files from a shared queue ordered by recorded duration, so imbalance self-corrects
-  # mid-run instead of being fixed up front. Trial scope is composer only (11 of 21 e2e specs, all
-  # three browsers in one run) — the remaining 1-4 spec suites stay on the per-browser matrix above.
+  # Composer-app's Playwright suite through Knapsack Pro queue mode (DX-1116 Option B): nodes pull test
+  # files from a queue ordered by recorded duration, so imbalance self-corrects mid-run instead of
+  # being fixed up front — a node that starts late simply takes fewer batches.
+  #
+  # Sharded on two axes, browser × node, because the queue's atom is a whole test file and a file
+  # therefore bounds a node's floor. Running all three browsers per node made `comments.spec.ts` a
+  # single 8m24s unit; per browser it is ~2m50s, so the same suite fits in far less wall time.
+  # Composer's measured test work is ~7m40s per browser (run 31052131651), so 2 nodes each lands
+  # around 4m — inside the 10m target with room for the slowest file.
+  #
   # Token-gated: without KNAPSACK_PRO_TOKEN every step below skips and the `e2e` matrix keeps
   # composer, so fork PRs and pre-token runs lose nothing.
   e2e-knapsack:
@@ -631,7 +637,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [0, 1, 2, 3]
+        browser: [chromium, firefox, webkit]
+        node: [0, 1]
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -644,9 +651,8 @@ jobs:
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
-      # All three browser projects in one run — the queue distributes per test file, and a file's
-      # projects run together in whichever node pulls it.
-      PLAYWRIGHT_BROWSER: all
+      # One browser per node, so the queue distributes (file × browser) rather than whole files.
+      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
       # Exposed so step conditions can branch on token presence without referencing
       # secrets directly (secrets are not allowed in if: expressions).
       KNAPSACK_PRO_TOKEN: ${{ secrets.KNAPSACK_PRO_TOKEN }}
@@ -663,9 +669,10 @@ jobs:
         if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
         uses: ./.github/actions/setup
 
+      # Only this shard's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
         if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
-        run: pnpm run install-playwright
+        run: pnpm run install-playwright ${{ matrix.browser }}
 
       - name: Clean stale test results
         if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
@@ -677,8 +684,14 @@ jobs:
         uses: trunk-io/analytics-uploader@v1
         env:
           KNAPSACK_PRO_TEST_SUITE_TOKEN_PLAYWRIGHT: ${{ secrets.KNAPSACK_PRO_TOKEN }}
-          KNAPSACK_PRO_CI_NODE_TOTAL: 4
+          KNAPSACK_PRO_CI_NODE_TOTAL: 2
           KNAPSACK_PRO_CI_NODE_INDEX: ${{ matrix.node }}
+          # One queue per browser. Both of these default to values that are identical across the
+          # browser axis (the queue id falls back to nodeTotal-branch-commitHash), which would put
+          # all three browsers on one queue — each file then gets claimed by whichever browser's node
+          # reached it first and the other two browsers would silently never run it.
+          KNAPSACK_PRO_TEST_QUEUE_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.browser }}
+          KNAPSACK_PRO_CI_NODE_BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.browser }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -692,7 +705,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: ${{ always() && env.KNAPSACK_PRO_TOKEN != '' }}
         with:
-          name: playwright-report-knapsack-${{ matrix.node }}
+          name: playwright-report-knapsack-${{ matrix.browser }}-${{ matrix.node }}
           path: test-results/playwright
           retention-days: 7
 

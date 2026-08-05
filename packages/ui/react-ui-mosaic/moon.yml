@@ -9,6 +9,12 @@ tags:
   - storybook
 tasks:
   e2e:
+    # The suite serves stories from `storybook dev`, which resolves packages from source but still
+    # needs generated artifacts: vendor bundles (their dist is absent under the `vendor` tag, and
+    # without it Vite's dep-scan aborts and the web server exits) and each `storybook:prebuild`.
+    deps:
+      - '#vendor:build'
+      - '#storybook:prebuild'
     inputs:
       - .storybook/*
       - /tools/storybook-react/.storybook/main.ts
