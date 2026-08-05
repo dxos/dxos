@@ -18,8 +18,9 @@ NEXT: stage 2 — the CodeMirror rendering substrate. Round 13 inserted this
 ahead of the rename, which moved to stage 2e. 2a (model), 2b (assistant +
 transcription ported, no UI change) and 2c (`MessageDocument`, including
 in-place editing and the accessibility and density questions) are DONE.
-NEXT: 2d — switch the channel containers over, move the composer to
-`ChatEditor`, and port the 16 plugin-thread plays.
+2d is PARTLY done: the composer moved to `ChatEditor` (green) and the
+containers render the document (committed, but its ported plays are flaky).
+NEXT: settle how a play addresses the hovered message — see 2d below.
 
 ## Decisions log
 
