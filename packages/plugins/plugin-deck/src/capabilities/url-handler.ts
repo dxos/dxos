@@ -63,10 +63,26 @@ export default Capability.makeModule(
     const builder = yield* AppCapabilities.AppGraph;
     const manager = yield* Plugin.Service;
 
-    /** Dispatch all NavigationHandler contributions with a given URL. */
+    /**
+     * Dispatch all NavigationHandler contributions with a given URL.
+     *
+     * `catchAllCause`, not `catchAll`: a handler that invokes an operation fails as a DEFECT
+     * (`Process.fromOperation` uses `Effect.orDie`), which the Fail channel does not carry. On the
+     * `?token&type=login` boot the redeem races the forked client init, so the defect is the COMMON
+     * path — and left to escape it fails this module's activation, taking the popstate listener,
+     * the URL<->state sync and the leave-trap down for the whole session.
+     */
     const dispatchNavigationHandlers = (url: URL) =>
       Effect.all(
-        navigationHandlers.get().map((handler) => handler(url)),
+        navigationHandlers
+          .get()
+          .map((handler) =>
+            handler(url).pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
+              ),
+            ),
+          ),
         { concurrency: 'unbounded' },
       );
 
