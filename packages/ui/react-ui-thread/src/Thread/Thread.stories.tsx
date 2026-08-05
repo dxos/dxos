@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, within } from 'storybook/test';
 
-import { Ref } from '@dxos/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
@@ -20,7 +19,6 @@ import {
   createMixedSenderMessages,
   getStoryMetadata,
 } from '../testing';
-import { type MessageReaction, type MessageThreadSummary } from '../types';
 import { Thread } from './Thread';
 
 const IDENTITY = { role: 'user' as const, identityDid: 'did:key:alice', name: 'Alice' };
