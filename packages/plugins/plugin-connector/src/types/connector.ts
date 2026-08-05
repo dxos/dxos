@@ -113,6 +113,13 @@ export type ConnectorSync = {
    * should only sync on demand: {@link operation} is then invoked directly.
    */
   trigger?: Trigger.Spec;
+  /**
+   * Run the sync on EDGE rather than on the client. Defaults to false: a connector opts in only once
+   * its sync operation is registered in the workerd plugin build, since a remote trigger is dispatched
+   * where the client may be closed. Applies to newly created sync Routines; an existing Routine keeps
+   * whatever the user last chose in the trigger editor.
+   */
+  remote?: boolean;
 };
 
 /**
