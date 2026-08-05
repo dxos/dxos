@@ -14,7 +14,6 @@ export const EdgeServiceName = Object.freeze({
   Transcription: 'transcription',
   Discord: 'discord',
   CorsProxy: 'cors-proxy',
-  ApiProxy: 'api-proxy',
   Introspect: 'introspect',
 } as const);
 
@@ -31,7 +30,6 @@ export const EDGE_SERVICE_DEFAULTS: Readonly<Record<EdgeServiceName, string>> = 
   [EdgeServiceName.Transcription]: 'https://calls.dxos.network',
   [EdgeServiceName.Discord]: 'https://discord.dxos.network',
   [EdgeServiceName.CorsProxy]: 'https://cors.dxos.network',
-  [EdgeServiceName.ApiProxy]: 'https://api-proxy.dxos.workers.dev',
   [EdgeServiceName.Introspect]: 'https://introspect.labs.dxos.network/mcp',
 });
 

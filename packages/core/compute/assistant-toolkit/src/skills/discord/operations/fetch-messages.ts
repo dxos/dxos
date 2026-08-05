@@ -29,7 +29,8 @@ const DiscordConfigFromCredential = Layer.unwrapEffect(
     return DiscordConfig.layer({
       token: yield* Credential.CredentialsService.getApiKey({ service: 'discord.com' }),
       rest: {
-        baseUrl: 'https://api-proxy.dxos.workers.dev/discord.com/api/v10',
+        // Routed through the DXOS CORS proxy (cors-proxy worker), which forwards `Authorization` verbatim.
+        baseUrl: 'https://cors.dxos.network/discord.com/api/v10',
       },
     });
   }),
