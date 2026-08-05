@@ -9,7 +9,6 @@ import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { log } from '@dxos/log';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type MaybePromise } from '@dxos/util';
 

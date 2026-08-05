@@ -12,7 +12,6 @@ import { synchronized } from '@dxos/async';
 import { subtleCrypto } from '@dxos/crypto';
 import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { schema } from '@dxos/protocols/proto';
 import { BlobMeta } from '@dxos/protocols/proto/dxos/echo/blob';
 import { type BlobChunk } from '@dxos/protocols/proto/dxos/mesh/teleport/blobsync';
