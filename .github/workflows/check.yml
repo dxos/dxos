@@ -591,7 +591,11 @@ jobs:
 
       # When the Knapsack Pro token is present, composer-app runs in the `e2e-knapsack` job instead —
       # keep this target list in sync with the `e2e`-tagged projects minus composer-app.
-      - name: Test All (composer via Knapsack)
+      #
+      # Most of this step's duration is moon hydrating the dep closure, not running tests: it
+      # measured 13m33s in run 31056219946 against ~3m30s of actual e2e task time. Read per-task
+      # durations out of the log rather than trusting the step total.
+      - name: Test All (every suite except composer)
         if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e) && env.KNAPSACK_PRO_TOKEN != '' }}
         timeout-minutes: 40
         uses: trunk-io/analytics-uploader@v1
