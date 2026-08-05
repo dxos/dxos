@@ -106,13 +106,18 @@ export default Capability.makeModule(
     };
 
     /**
-     * Re-runs `parse` as graph builders register their keys, settling as soon as it succeeds — the
-     * deadline only bounds a URL whose keys never arrive. Keyed off the capability rather than a
-     * client event so this plugin stays free of a client dependency.
+     * Re-runs `parse` as builders register their keys, settling as soon as it succeeds — the deadline
+     * only bounds a URL whose keys never arrive.
+     *
+     * Keyed off the builder's OWN extensions, which is what `buildUrlKeyTable` reads. The
+     * `AppGraphBuilder` capability is a step removed: plugin-graph registers extensions from its own
+     * subscription to that capability, and two subscribers have no relative ordering — waking on the
+     * capability can therefore re-parse against extensions not yet added, miss, and then wait out the
+     * full deadline for a further contribution that never comes.
      */
     const parseWhenKeysArrive = <A>(parse: () => Option.Option<A>) =>
       Effect.async<Option.Option<A>>((resume) => {
-        const cancel = registry.subscribe(manager.capabilities.atom(AppCapabilities.AppGraphBuilder), () => {
+        const cancel = registry.subscribe(builder.extensions, () => {
           const parsed = parse();
           if (Option.isSome(parsed)) {
             resume(Effect.succeed(parsed));
