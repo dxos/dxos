@@ -38,6 +38,11 @@ const TOKEN = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
 // GitHub rejects a release body over 125,000 characters; truncate below that rather than lose the release.
 const MAX_BODY = 120_000;
 
+// Deadlines for the two outbound operations, so a hung API request or git transport fails the step with a
+// diagnosable error instead of burning the job's 90-minute budget.
+const API_TIMEOUT = 60_000;
+const PUSH_TIMEOUT = 300_000;
+
 const BUMP_ORDER = ['patch', 'minor', 'major'];
 
 // stderr is captured, not inherited, so git's own diagnostics don't precede this script's error line.
@@ -217,6 +222,7 @@ async function api(method, path, body, { allow404 = false } = {}) {
       'X-GitHub-Api-Version': '2022-11-28',
     },
     body: body && JSON.stringify(body),
+    signal: AbortSignal.timeout(API_TIMEOUT),
   });
   if (allow404 && response.status === 404) {
     return undefined;
@@ -246,12 +252,21 @@ async function upsertRelease({ tag, body, sha }) {
 }
 
 async function pushTags(tags) {
-  // One push carrying both refs: the per-ref push loop this replaces is what GitHub's backend rejected.
-  const remote = process.env.GH_TOKEN ? `https://x-access-token:${process.env.GH_TOKEN}@github.com/${REPO}` : 'origin';
   const refs = tags.map((tag) => `refs/tags/${tag}`);
+  // Authenticate `origin` with a header instead of pushing to a credential-bearing URL. git-lfs treats an
+  // ad-hoc URL as an unknown remote, so it cannot tell which objects the remote already holds and re-uploads
+  // them — 46 MB for a push whose own payload is 194 bytes — and warns that the remote carries credentials.
+  // Scoped to this one invocation via `-c`, so nothing is written to the repo config.
+  const auth = TOKEN
+    ? ['-c', `http.extraheader=AUTHORIZATION: basic ${Buffer.from(`x-access-token:${TOKEN}`).toString('base64')}`]
+    : [];
   for (let attempt = 1; ; attempt++) {
     try {
-      execFileSync('git', ['push', remote, ...refs], { cwd: ROOT, stdio: 'inherit' });
+      execFileSync('git', [...auth, 'push', 'origin', ...refs], {
+        cwd: ROOT,
+        stdio: 'inherit',
+        timeout: PUSH_TIMEOUT,
+      });
       return;
     } catch (err) {
       if (attempt >= 3) {
@@ -300,6 +315,12 @@ try {
 
   for (const { tag } of releases) {
     if (git('tag', '-l', tag)) {
+      // Reusing a tag is only safe if it is the tag this run would have written: a stale one names the wrong
+      // commit, and a lightweight one breaks the annotated-tag contract. Either would be pushed and then
+      // preserved by the release upsert.
+      if (git('cat-file', '-t', `refs/tags/${tag}`) !== 'tag' || git('rev-parse', `${tag}^{commit}`) !== sha) {
+        throw new Error(`Existing tag ${tag} is not an annotated tag at ${sha} — delete it or pick another ref`);
+      }
       console.log(`Tag ${tag} already exists locally`);
     } else {
       git('tag', '-a', tag, '-m', tag, sha);
