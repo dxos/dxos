@@ -41,6 +41,16 @@ got here — checkpoints, measurements and findings, not work items.
       idle effect. `activateDemandGatedModules` keeps its `Idle` element deliberately: the daemon is
       forked, so a caller asserting as soon as `start()` returns would otherwise race it — the fire
       is an ordering barrier, idempotent against the wave guard.
+- [ ] **Make `activatesOn` genuinely optional so the scheduler goes event-agnostic** (user-raised,
+      2026-08-05). `normalizeActivation` folds an omitted gate into a concrete `Idle`, destroying
+      the distinction between "the author chose Idle" and "the author said nothing". The scheduler
+      then reconstructs that lost intent by matching event NAMES — `#isBaselineWave` (Startup ∪
+      Idle, for provider pulls) and `#declaresStartup` (eligibility for a newly enabled plugin's
+      incremental pass) are both workarounds for it, and both are mine. Two module attributes are
+      hiding here and were never modelled: _pullable on demand_ (no opinion — the absence of an
+      event, not an event) and _required at boot_. Model them directly, let `undefined` mean
+      pullable, and have the `Idle` wave sweep up whatever is still unactivated rather than being
+      the default value; the scheduler then names no event but the host-designated boot event.
 - [ ] **Eager-core UI laziness** — swept and attributed; `ResetDialog` is already lazy and
       emoji-mart is gone. Two edges remain, each ~250 KB and neither fixable from our own imports:
       fast-check via `@effect/ai`'s `Prompt` -> `effect/Arbitrary`, and the `react-aria` umbrella
