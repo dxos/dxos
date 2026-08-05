@@ -115,34 +115,39 @@ pathological artifact.
 - _Total artifact size_ — `testbench-app` (25 MB, 533 files) and `devtools-extension` (20 MB,
   542 files) both hydrate fine.
 
-**Likely mechanism:** moon aborts an action's cache upload when a single blob exceeds 4 MB,
-which makes every subsequent run a guaranteed miss — matching the symptom exactly. This is meant
-to be handled by the ByteStream API for gRPC servers (see moon v1.32 release notes), and Depot
-does implement Bazel RE v2 + ByteStream with the limit advertised via the Capabilities API. So
-either the streaming path is not being negotiated here, or something else trips it. **This is
-the main thing to confirm.**
+- _A single blob over 4 MB_ — **measured and ruled out for `composer-app`.** moon aborts an
+  action's upload when one blob exceeds 4 MB, which would make every later run a guaranteed miss
+  (see moon v1.32 release notes; meant to be handled by the ByteStream API for gRPC servers, and
+  Depot does implement Bazel RE v2 + ByteStream with the limit advertised via the Capabilities
+  API). It was the leading hypothesis, but a CI diagnostic over the real on-disk output found no
+  file above 4 MB in `composer-app/out`. Still worth confirming for `storybook-react`/`tasks`.
 
-**Direct evidence for one of the four:** `docs/public/` contains
+**The real anomaly — `composer-app/out` is 384 MB across 17 954 files** (measured in CI, run
+`31054215273`; vite's build table had suggested only 122.8 MB / 4834 files, because it omits
+files copied from `public/` — chiefly the tldraw assets `prebuild` copies in, plus sourcemaps).
+For comparison `todomvc/out` is 26 MB / 62 files and hydrates fine. So the remaining candidates
+are **total action size** or **file count**, not per-blob size. This also bounds how fast the
+artifact could ever hydrate even if the upload succeeded — 384 MB per runner is not a good deal
+against the 21 s it takes to rebuild.
+
+Worth asking whether `composer-app:bundle` should emit sourcemaps at all in the e2e path;
+Playwright does not need them, and they are a large fraction of those bytes.
+
+**Direct evidence for a second of the four:** `docs/public/` contains
 `blog/images/Table-combobox-feat.mp4` (7 928 964 B) and `blog/images/comments--1-.mp4`
 (5 739 521 B). Astro copies `public/` verbatim into `dist`, which is `docs:bundle`'s declared
-output. Two checked-in videos are why `docs:bundle` never caches. (Separately: 13 MB of video
-in a cached build output looks like an accident worth fixing on its own.)
+output — so `docs:bundle` _does_ exceed the 4 MB per-blob limit, unlike composer. Two checked-in
+videos are why it never caches. (Separately: 13 MB of video in a cached build output looks like
+an accident worth fixing on its own.)
 
-**Not explained:** `composer-app` (its `public/` is only 144 K; largest vite-reported file is
-0.94 MB across 4834 files / 122.8 MB total — so any oversized blob comes from the tldraw assets
-copied at `prebuild`, or `_worker.js` from `build:functions`), `storybook-react`, and `tasks`.
-Note vite's build table **cannot** answer this: it omits files copied from `public/`.
+**Not explained:** `storybook-react` and `tasks`.
 
-A diagnostic step was added to `e2e-bundle` in PR #12482 (marked temporary, remove when
-resolved) that prints per-output totals plus any file over 4 MB:
-
-```bash
-for dir in packages/apps/*/out packages/apps/*/dist tools/storybook-*/out docs/dist docs/.astro; do
-  [ -d "$dir" ] || continue
-  printf '== %s total=%s files=%s\n' "$dir" "$(du -sh "$dir" | cut -f1)" "$(find "$dir" -type f | wc -l)"
-  find "$dir" -type f -size +4M -printf '   %10s  %p\n' 2>/dev/null | sort -rn | head -5
-done
-```
+A diagnostic step lives in the `e2e-bundle` job on PR #12482 (`Report bundle output composition`,
+marked temporary — remove when resolved). It prints per-output totals, the largest subdirectories,
+the largest individual files and a breakdown by extension, which is how the numbers above were
+obtained. Note the caveat that produced a wrong hypothesis first time round: **vite's build table
+is not a reliable measure of output size**, because it omits everything copied from `public/`.
+Measure the real directory.
 
 Also unexplained and possibly a separate bug: `tasks:bundle` reports completing in 2.0 s, which
 seems too fast for a real vite build of a DXOS app, so its task config may not be doing what it

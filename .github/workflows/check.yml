@@ -457,20 +457,28 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run composer-app:bundle todomvc:bundle
 
-      # DIAGNOSTIC (DX-1116, remove once resolved): composer-app, storybook-react, docs and tasks
-      # re-execute in every downstream job despite hashing identically here, which means their
-      # artifacts are absent from the remote cache rather than mismatched. moon aborts an action's
-      # upload when a single blob exceeds 4 MB unless the server takes the ByteStream API, so list
-      # the outputs that would trip it. Vite's build table cannot answer this — it omits copied
-      # `public/` assets, which is exactly where the large files live.
-      - name: Report bundle output blob sizes
+      # DIAGNOSTIC (DX-1116, remove once resolved): composer-app:bundle re-executes in every
+      # downstream job despite hashing identically here, so its artifact is absent from the remote
+      # cache rather than mismatched. A single blob over 4 MB (moon aborts the upload for those
+      # unless the server takes the ByteStream API) is ruled out — the previous run found none, but
+      # measured `out` at 384 MB across 17954 files. Break that down: the size or the file count is
+      # the remaining candidate, and it also bounds how fast the artifact could ever hydrate.
+      - name: Report bundle output composition
         if: ${{ always() }}
         run: |
-          for dir in packages/apps/*/out packages/apps/*/dist tools/storybook-*/out docs/dist docs/.astro; do
+          for dir in packages/apps/*/out packages/apps/*/dist tools/storybook-*/out docs/dist; do
             [ -d "$dir" ] || continue
             printf '== %s total=%s files=%s\n' "$dir" \
               "$(du -sh "$dir" | cut -f1)" "$(find "$dir" -type f | wc -l)"
-            find "$dir" -type f -size +4M -printf '   %10s  %p\n' 2>/dev/null | sort -rn | head -5
+            du -sh "$dir"/* 2>/dev/null | sort -rh | head -8 | sed 's/^/   subdir /'
+            printf '   largest files:\n'
+            find "$dir" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -5 |
+              awk -F'\t' '{ printf "     %8.2f MB  %s\n", $1 / 1048576, $2 }'
+            printf '   by extension (top 6 by total bytes):\n'
+            find "$dir" -type f -printf '%s\t%f\n' 2>/dev/null |
+              awk -F'\t' '{ n = $2; sub(/.*\./, "", n); if (n == $2) n = "(none)"; b[n] += $1; c[n]++ }
+                END { for (k in b) printf "     %8.2f MB  %6d files  .%s\n", b[k] / 1048576, c[k], k }' |
+              sort -rn | head -6
           done
 
   e2e:
