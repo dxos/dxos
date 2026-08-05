@@ -583,12 +583,26 @@ export class ActivationScheduler {
   }
 
   /**
-   * Whether a module can activate now: its wave has already fired, or it sits in the baseline
-   * wave and so declared no gate. The catalog uses this to pick which of a newly enabled
-   * plugin's modules join an incremental pass; the rest wait for their event.
+   * Whether a module can activate now: its wave has already fired, or it declared Startup. The
+   * catalog uses this to pick which of a newly enabled plugin's modules join an incremental pass;
+   * the rest wait for their event.
+   *
+   * Deliberately NOT `#isBaselineWave`, which also admits Idle. Candidates handed to
+   * `runDependencyPass` are EXPLICIT candidates and bypass the `#waveFired` gate in `#runRound`, so
+   * admitting idle-default modules here would activate them eagerly during boot for any plugin
+   * whose `enable()` lands after `started` flips — the dominant path in Composer, where lazy plugin
+   * stubs enable over seconds while Startup dispatches milliseconds after mount. That would make
+   * deferral depend on an enable/start race and defeat the idle default entirely. Idle stays in the
+   * baseline for PROVIDER PULLS only (see {@link ActivationScheduler.#isBaselineWave}).
    */
   isEligible(module: Plugin.PluginModule): boolean {
-    return this.#waveFired(module) || this.#isBaselineWave(module);
+    return this.#waveFired(module) || this.#declaresStartup(module);
+  }
+
+  /** Whether the module explicitly names the Startup wave. */
+  #declaresStartup(module: Plugin.PluginModule): boolean {
+    const startup = ActivationEvent.eventKey(ActivationEvent.Startup);
+    return ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(startup);
   }
 
   /**

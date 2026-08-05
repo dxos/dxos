@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -53,6 +54,9 @@ export const DeckState = Capability.lazyModule(
 export const UrlHandler = Capability.lazyModule(
   'UrlHandler',
   {
+    // Boot-time URL restore: this installs the popstate listener and the URL<->state sync, so an
+    // idle registration leaves a deep link unhandled for the window it takes to get there.
+    activatesOn: ActivationEvents.Startup,
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.NavigationHandler,
