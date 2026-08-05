@@ -108,7 +108,9 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  test('delete thread', async () => {
+  // TODO(wittjosiah): Failed on firefox in run 31056219946, the first run without retries.
+  //   Re-enable once fixed.
+  test.fixme('delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
