@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -125,7 +126,20 @@ export default Capability.makeModule(
           // URL keys come from graph builders that ride Idle, and a deep link can be restored
           // before that wave lands. The URL is itself the demand signal, so pull the wave and
           // re-parse — awaited, so this settles when the contributions are in, not on a timer.
-          onNone: () => manager.activate(ActivationEvents.Idle).pipe(Effect.map(parseUrl)),
+          //
+          // Failures are logged, not propagated, matching the scheduler's own idle daemon: the wave
+          // carries every plugin's registration contributions, so one broken plugin must not take
+          // URL handling down with it. Re-parsing then simply misses and falls through to the
+          // not-found sentinel below.
+          onNone: () =>
+            manager.activate(ActivationEvents.Idle).pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() =>
+                  log.warn('idle activation failed during url restore', { error: Cause.pretty(cause) }),
+                ),
+              ),
+              Effect.map(parseUrl),
+            ),
         }),
       );
       if (Option.isNone(parsed)) {
