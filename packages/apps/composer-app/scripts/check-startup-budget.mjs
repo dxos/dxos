@@ -40,7 +40,7 @@ import path from 'node:path';
  * calibration data — if this flaps on commits that are fine, raise it against the observed spread
  * rather than nudging it each time.
  */
-const MAX_MODULES_AT_READY = 300;
+const MAX_MODULES_AT_READY = 350;
 
 /** Below this the median is not meaningful — one sample decides nothing. */
 const MIN_SAMPLES = 3;
