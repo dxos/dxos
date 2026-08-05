@@ -136,6 +136,23 @@ export const merge = (...sets: OperationHandlerSet[]): OperationHandlerSet => {
   };
 };
 
+/**
+ * Creates a handler set from typed {@link Operation.LazyHandler} pairings: definitions are
+ * enumerable without loading any handler body, resolving an operation imports only that
+ * operation's module, and each pairing is checked so a definition cannot be wired to another
+ * operation's handler.
+ *
+ * @example
+ * ```ts
+ * const set = OperationHandlerSet.lazy([
+ *   MarkdownOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+ *   MarkdownOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
+ * ]);
+ * ```
+ */
+export const lazy = (entries: readonly Operation.LazyHandler[]): OperationHandlerSet =>
+  keyed(entries.map(({ definition, load }) => [definition, load] as const));
+
 /** A {@link keyed} entry: the (statically imported, lightweight) definition + its handler module. */
 export type KeyedEntry = readonly [
   definition: Operation.Definition.Any,
@@ -146,6 +163,10 @@ export type KeyedEntry = readonly [
  * Creates a handler set keyed by operation definition: definitions are enumerable without
  * loading any handler body, and resolving an operation imports only that operation's module —
  * per-operation loading instead of per-plugin. Loaded handlers are cached per key.
+ *
+ * The tuple form does NOT relate the definition to the handler's type — either half is
+ * `Definition.Any` — so a mispairing compiles and fails only at dispatch. Prefer {@link lazy},
+ * which checks them against each other.
  *
  * @example
  * ```ts
