@@ -12,6 +12,16 @@ modules-at-ready over 5 warm-cold repeats, budget 300, today 291)._
 The whole list, in priority order. Everything below this section is the record of how the work
 got here — checkpoints, measurements and findings, not work items.
 
+- [ ] **Space home resolves to Not Found on reload of the bundled app** (user-reported,
+      2026-08-05, seen on the built app — not dev). A regression of the same shape as "Fix
+      not-found redirect on load (URL restore races graph)", which this project already fixed once.
+      Prime suspect is the idle default becoming real in `1ebf33e3b8`: `UrlHandler` is on the
+      startup pass and `requires` `AppCapabilities.AppGraph`, but `AppCapability.appGraphBuilder`
+      defaults its modules to **Idle**, so boot-time URL restore runs against a graph whose builders
+      have not contributed their nodes yet and the space-home path does not resolve. Confirm by
+      sampling `getActive()` for `…module.AppGraphBuilder` against the restore, the way
+      `blank-gap.spec.ts` did for the deck root — do NOT fix by adding `requires` to the reader,
+      which demotes the reader into the provider's wave (measured, see the `df55880ddb` revert).
 - [ ] **Post-merge check sweep** — the only item blocking PR #12415. Detail under
       [Later / standing](#later--standing).
 - [x] **Wire `check-boot-budget` into CI** — a `Check boot budget` step after `Bundle` on the `e2e`
