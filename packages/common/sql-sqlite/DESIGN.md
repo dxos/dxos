@@ -1,12 +1,3 @@
----
-name: sql-migrations
-description: >-
-  SQLite schema changes via numbered .sql migrations. Use when adding a
-  migration to an existing store, creating a new SQLite-backed store, changing
-  anything under src/migrations/, or when tempted to introduce Prisma or an ORM
-  for schema/queries (there is no driver adapter for the browser client).
----
-
 # SQLite schema migrations
 
 Every SQLite schema in the repo lives in numbered, immutable `.sql` migration files applied through
