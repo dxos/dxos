@@ -563,8 +563,10 @@ const hashKey = async (key: string): Promise<string> => {
 const decodeConversation = (data: string): FixtureConversation =>
   Schema.decodeSync(Schema.parseJson(FixtureConversation))(data);
 
+// Compact (single-line) JSON: the store is treated as opaque generated blobs via `.gitattributes`
+// (`-diff -merge linguist-generated`), so pretty-printing only inflates line counts in review.
 const encodeConversation = (conversation: FixtureConversation): string =>
-  Schema.encodeSync(Schema.parseJson(FixtureConversation, { space: 2 }))(conversation);
+  Schema.encodeSync(Schema.parseJson(FixtureConversation))(conversation);
 
 /**
  * Resolves the suite directory for a test file: `<repo-root>/.store/conversations/<suite>`, where
