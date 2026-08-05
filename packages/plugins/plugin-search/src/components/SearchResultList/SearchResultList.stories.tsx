@@ -86,6 +86,9 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({
+      // Renders attention-aware results, and attention requires AtomRegistry — which no module
+      // provides; a real host contributes it.
+      registerFrameworkCapabilities: true,
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),

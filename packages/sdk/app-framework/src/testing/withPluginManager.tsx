@@ -25,8 +25,9 @@ import { StorybookErrorFallback } from './StorybookErrorFallback';
 export const setupPluginManager = ({
   capabilities,
   plugins = [],
+  registerFrameworkCapabilities = false,
   ...options
-}: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
+}: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities' | 'registerFrameworkCapabilities'> = {}) => {
   // Auto-enable every non-system plugin so stories don't have to spell out
   // enablement. System-tagged plugins are force-enabled by the manager.
   const enabled = plugins
@@ -39,20 +40,22 @@ export const setupPluginManager = ({
     ...options,
   });
 
-  // The framework capabilities a real host contributes, mirroring `createTestApp`. Without these
-  // no MODULE provides `AtomRegistry`, so any module requiring it fails the dependency pass's
-  // missing-provider check with nothing to wait for — reached as soon as a requiring module sits
-  // on the startup pass (attention, graph, the process manager).
-  pluginManager.capabilities.contribute({
-    interface: Capabilities.PluginManager,
-    implementation: pluginManager,
-    module: 'org.dxos.app-framework.plugin-manager',
-  });
-  pluginManager.capabilities.contribute({
-    interface: Capabilities.AtomRegistry,
-    implementation: pluginManager.registry,
-    module: 'org.dxos.app-framework.atom-registry',
-  });
+  if (registerFrameworkCapabilities) {
+    // The framework capabilities a real host contributes, mirroring `createTestApp`. Without these
+    // no MODULE provides `AtomRegistry`, so any module requiring it fails the dependency pass's
+    // missing-provider check with nothing to wait for — reached as soon as a requiring module sits
+    // on the startup pass (attention, graph, the process manager).
+    pluginManager.capabilities.contribute({
+      interface: Capabilities.PluginManager,
+      implementation: pluginManager,
+      module: 'org.dxos.app-framework.plugin-manager',
+    });
+    pluginManager.capabilities.contribute({
+      interface: Capabilities.AtomRegistry,
+      implementation: pluginManager.registry,
+      module: 'org.dxos.app-framework.atom-registry',
+    });
+  }
 
   if (capabilities) {
     // Fixtures hand us `Contribution`s (from `Capability.contribute`); expand them to the raw
@@ -80,6 +83,14 @@ type ManagedPluginManagerState = {
 };
 
 export type WithPluginManagerOptions = UseAppOptions & {
+  /**
+   * Contribute the `PluginManager` / `AtomRegistry` capabilities a real host provides, as
+   * `createTestApp` does. Defaults to FALSE, unlike the headless harness: no module provides
+   * `AtomRegistry`, so contributing it lets every module requiring it activate — including the
+   * process manager, which builds a runtime most stories neither need nor expect. Stories whose
+   * subject genuinely requires it (the deck's shell state, search's dialog) opt in.
+   */
+  registerFrameworkCapabilities?: boolean;
   /** @deprecated */
   capabilities?: MaybeProvider<Capability.AnyContribution[], CapabilityManager.CapabilityManager>;
   /** @deprecated */
