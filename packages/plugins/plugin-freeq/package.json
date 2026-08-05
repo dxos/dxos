@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-freeq",
-  "version": "0.9.0",
+  "version": "0.11.0",
   "private": true,
   "description": "DXOS plugin integrating freeq (IRCv3-over-WebSocket, Bluesky/ATProto auth) as a live channel backend for plugin-thread.",
   "homepage": "https://dxos.org",

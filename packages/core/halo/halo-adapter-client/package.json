@@ -1,6 +1,6 @@
 {
   "name": "@dxos/halo-adapter-client",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Implements the @dxos/halo services over a @dxos/client instance.",
   "homepage": "https://github.com/dxos/dxos/tree/main/packages/core/halo/halo-adapter-client#readme",
   "bugs": "https://github.com/dxos/dxos/issues",

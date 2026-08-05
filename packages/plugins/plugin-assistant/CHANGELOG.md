@@ -1,0 +1,209 @@
+# @dxos/plugin-assistant
+
+## 0.11.0
+
+### Minor Changes
+
+- f9ba47a: Agents become identity/presets (breaking, no data migration — 0.1.0 agents must be recreated): `Agent` 0.2.0 keeps only name, DID, enabled, and a typed `Instructions` ref; a chat and the agent it runs as are linked by the `CompanionTo` relation (resolved with `AgentChat.loadAgent` / `AgentChat.loadChat`), neither type referencing the other by field; durable artifacts belong to a Project collection; subscriptions and cron schedules compile to Routines whose relay qualifies events with a cheap model and forwards them onto the durable agent session.
+- b5ecf54: Chats carry a typed `instructions` ref rendered into the system prompt at request time (replacing typename-based inlining of bound Instructions objects, which now bind as ordinary context objects), and the new Project skill lets the assistant file created objects into a project's artifacts collection and list them.
+- 801b77f: Add a `Minimap` component (`@dxos/react-ui-components`): a vertical rail of ticks representing anchor markers in a scrollable document, with a wave hover animation, per-marker popover, and brighter ticks for the currently-visible range.
+
+  `MarkdownStreamController` gains `scrollTo`, `getVisibleRange`, and `onVisibleRangeChange`. In `plugin-assistant` the chat thread now renders a `Chat.Minimap` rail (one tick per prompt turn, scrolls to the turn on click), and prompt prev/next navigation steps through the prompt range table rather than the xml-tag widget bookmarks.
+
+### Patch Changes
+
+- a256a87: Reorganize CodeMirror extensions into themed folders (`core`, `state`, `behavior`, `decoration`, `language`, `collab`, `completion`, `streaming`, `structure`, `demo`, `debug`) with per-folder barrels; the package's public export set is preserved. Fixes the misspelled exported type `CompoetionContext` → `CompletionContext`, de-duplicates `escapeRegExpSource` into `util` (closing a latent tag-escaping bug in `extendedMarkdown`'s mixed parser), and adds an `xmlTags` characterization test suite. `xmlTags` block widgets now keep their portal alive across viewport culls (removing the blank/flicker on scroll-back for known-height embeds). `@dxos/ui`: adds a `string` overload to `Domino.of` for custom-element tags (e.g. `dx-icon`); `@dxos/plugin-assistant` drops the now-unneeded `Domino.of(... as any)` casts.
+- c9da903: Move the `useFlush` hook from `@dxos/plugin-assistant/hooks` to `@dxos/react-client/echo`. It operates on a `Space`, so it belongs with the other space hooks; import it from `@dxos/react-client/echo` instead of `@dxos/plugin-assistant/hooks`.
+- bdf9f68: Add routed scripts to the scripted test language model (per-session cursors for supervisor/sub-agent scenarios) and restore per-message span publishing from the chat thread (minimap markers and prompt navigation).
+- Updated dependencies [f9ba47a]
+- Updated dependencies [4e64123]
+- Updated dependencies [c035062]
+- Updated dependencies [5585ec8]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [9da013f]
+- Updated dependencies [c3625d3]
+- Updated dependencies [48d168e]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [46ec569]
+- Updated dependencies [53fde97]
+- Updated dependencies [5b05d75]
+- Updated dependencies [b5ecf54]
+- Updated dependencies [3f6ac61]
+- Updated dependencies [091ebe4]
+- Updated dependencies [a77e1a2]
+- Updated dependencies [a256a87]
+- Updated dependencies [bce1dbc]
+- Updated dependencies [a31ef40]
+- Updated dependencies [eec72c5]
+- Updated dependencies [bce1dbc]
+- Updated dependencies [e7f0d9e]
+- Updated dependencies [ed992c2]
+- Updated dependencies [e510f3b]
+- Updated dependencies [1a9bca1]
+- Updated dependencies [68e61ca]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ebb6383]
+- Updated dependencies [bf013a1]
+- Updated dependencies [a83d98a]
+- Updated dependencies [fe63f19]
+- Updated dependencies [a19443b]
+- Updated dependencies [dd190a0]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [6df314a]
+- Updated dependencies [2048cb3]
+- Updated dependencies [856c4f0]
+- Updated dependencies [382d00d]
+- Updated dependencies [382d00d]
+- Updated dependencies [46ec569]
+- Updated dependencies [f8637f1]
+- Updated dependencies [b8c0825]
+- Updated dependencies [4e64123]
+- Updated dependencies [717edc0]
+- Updated dependencies [2e10525]
+- Updated dependencies [6a03a30]
+- Updated dependencies [77fff35]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [7b270f2]
+- Updated dependencies [7b270f2]
+- Updated dependencies [af5fbf4]
+- Updated dependencies [717edc0]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [d547045]
+- Updated dependencies [b602d44]
+- Updated dependencies [6439417]
+- Updated dependencies [277e365]
+- Updated dependencies [ba7aabf]
+- Updated dependencies [410a019]
+- Updated dependencies [d958118]
+- Updated dependencies [2a68c3b]
+- Updated dependencies [30ae5eb]
+- Updated dependencies [2543b63]
+- Updated dependencies [1dad41e]
+- Updated dependencies [6d2afe0]
+- Updated dependencies [e65432c]
+- Updated dependencies [f6a01e3]
+- Updated dependencies [c9651f1]
+- Updated dependencies [9cde1c6]
+- Updated dependencies [0d1f866]
+- Updated dependencies [5e7839e]
+- Updated dependencies [923d5be]
+- Updated dependencies [85893fe]
+- Updated dependencies [9f7d5ad]
+- Updated dependencies [9ded6b9]
+- Updated dependencies [6067460]
+- Updated dependencies [717edc0]
+- Updated dependencies [12fd785]
+- Updated dependencies [6e4ac74]
+- Updated dependencies [51aaffe]
+- Updated dependencies [801b77f]
+- Updated dependencies [1a989ed]
+- Updated dependencies [d547045]
+- Updated dependencies [bda1a02]
+- Updated dependencies [59a65a8]
+- Updated dependencies [832d150]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [f10b1ce]
+- Updated dependencies [f7d7735]
+- Updated dependencies [cec59a4]
+- Updated dependencies [717edc0]
+- Updated dependencies [cd3ed11]
+- Updated dependencies [5f08a6a]
+- Updated dependencies [37874ce]
+- Updated dependencies [848ba1b]
+- Updated dependencies [f15c632]
+- Updated dependencies [3761762]
+- Updated dependencies [c9da903]
+- Updated dependencies [a83d98a]
+- Updated dependencies [bf055c8]
+- Updated dependencies [55bb048]
+- Updated dependencies [bdf9f68]
+- Updated dependencies [4bb7e3b]
+- Updated dependencies [179afc6]
+- Updated dependencies [4df6cf3]
+- Updated dependencies [7b270f2]
+- Updated dependencies [77fff35]
+- Updated dependencies [6e624bd]
+- Updated dependencies [686fac1]
+- Updated dependencies [ed992c2]
+- Updated dependencies [25272e3]
+- Updated dependencies [0e3a1a9]
+- Updated dependencies [105dac4]
+- Updated dependencies [96109be]
+- Updated dependencies [37c17cc]
+- Updated dependencies [f0ec728]
+- Updated dependencies [08a3eea]
+- Updated dependencies [bb63d91]
+- Updated dependencies [392c700]
+- Updated dependencies [20153c0]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [a49131a]
+- Updated dependencies [5585ec8]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [4f24c4e]
+- Updated dependencies [ac51564]
+- Updated dependencies [499dde4]
+- Updated dependencies [a1c89fa]
+  - @dxos/echo@0.11.0
+  - @dxos/plugin-markdown@0.11.0
+  - @dxos/app-graph@0.11.0
+  - @dxos/async@0.11.0
+  - @dxos/schema@0.11.0
+  - @dxos/react-ui-list@0.11.0
+  - @dxos/plugin-connector@0.11.0
+  - @dxos/plugin-routine@0.11.0
+  - @dxos/link@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/react-ui-editor@0.11.0
+  - @dxos/app-toolkit@0.11.0
+  - @dxos/plugin-client@0.11.0
+  - @dxos/ui-editor@0.11.0
+  - @dxos/ui@0.11.0
+  - @dxos/client@0.11.0
+  - @dxos/plugin-deck@0.11.0
+  - @dxos/react-ui-search@0.11.0
+  - @dxos/compute-runtime@0.11.0
+  - @dxos/echo-client@0.11.0
+  - @dxos/compute@0.11.0
+  - @dxos/util@0.11.0
+  - @dxos/app-framework@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/react-ui-form@0.11.0
+  - @dxos/halo@0.11.0
+  - @dxos/react-ui-components@0.11.0
+  - @dxos/react-ui-attention@0.11.0
+  - @dxos/types@0.11.0
+  - @dxos/ui-theme@0.11.0
+  - @dxos/log@0.11.0
+  - @dxos/echo-react@0.11.0
+  - @dxos/react-ui-mosaic@0.11.0
+  - @dxos/react-ui-masonry@0.11.0
+  - @dxos/plugin-space@0.11.0
+  - @dxos/react-ui-markdown@0.11.0
+  - @dxos/assistant-toolkit@0.11.0
+  - @dxos/react-client@0.11.0
+  - @dxos/ai@0.11.0
+  - @dxos/react-ui-tabs@0.11.0
+  - @dxos/edge-client@0.11.0
+  - @dxos/react-ui-menu@0.11.0
+  - @dxos/agent-runtime@0.11.0
+  - @dxos/assistant@0.11.0
+  - @dxos/conductor@0.11.0
+  - @dxos/devtools@0.11.0
+  - @dxos/plugin-map@0.11.0
+  - @dxos/plugin-status-bar@0.11.0
+  - @dxos/plugin-table@0.11.0
+  - @dxos/plugin-transcription@0.11.0
+  - @dxos/react-ui-chat@0.11.0
+  - @dxos/react-ui-transcription@0.11.0
+  - @dxos/plugin-graph@0.11.0
+  - @dxos/react-ui-graph@0.11.0
+  - @dxos/plugin-attention@0.11.0
+  - @dxos/react-ui-syntax-highlighter@0.11.0
+  - @dxos/lit-ui@0.11.0
+  - @dxos/effect@0.11.0
+  - @dxos/halo-react@0.11.0
+  - @dxos/react-list@0.11.0
+  - @dxos/invariant@0.11.0
