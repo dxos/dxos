@@ -1,7 +1,7 @@
 # Declarative UI Abstraction — Design Exploration
 
 - **Date:** 2026-08-04
-- **Status:** Exploration (no implementation)
+- **Status:** Exploration; Experiment 1 implemented on this branch (see Results)
 - **Scope:** `react-ui-form` / `react-ui-card` / `react-ui-list` / `react-ui-mosaic`,
   plugin containers, the Surface system, and the effect-atom substrate.
 
@@ -411,6 +411,73 @@ Exit criteria: H1–H3 measured and written up; the four bridge findings
 (anchors, slots, debounce, pagination atom) folded back into this spec's
 Recommendation step 1; a go/no-go on extracting a second, simple container
 (`TaskSetArticle`) to test that the pattern generalizes downward as well as up.
+
+### Results (implemented on this branch)
+
+Status: **implemented and verified headlessly** — `mailbox-controller.ts` (~560
+lines, no React import), `MailboxArticle.tsx` (~170-line template),
+`useMailboxController.ts` (the bridge), `Show`, `debounce-atom.ts`,
+`mailbox-menu-items.ts` (hooks → pure functions), and
+`echo-react/paginationAtom.ts`. Verified: `tsc --build` clean on all changed
+files; plugin-inbox node suite 237 passed / 0 failed (incl. 4 new controller
+tests); echo-react 38 passed; oxlint clean.
+
+- **H1 (separability): confirmed.** The article file has zero
+  `useState`/`useEffect`/`useMemo`/`useCallback`; the one construction
+  `useMemo` lives in the bridge hook. The `systemTagIdsKey` eslint-disable
+  memo dance disappeared as predicted (atom nodes compare per-node). The
+  template's only conditionals are `Show` nodes and prop expressions.
+- **H2 (headless testability): confirmed, with two caveats.** Four vitest
+  tests drive the controller through `Registry.make()` + `EchoTestBuilder` —
+  items flow, debounce → query rebuild (both directions + empty-state), star
+  toggle through the tag index, and the menu model (incl. the Drafts variant)
+  — no DOM, no `renderHook`. Caveats worth institutionalizing: (a) an
+  **unmounted atom's `registry.get` returns a cached first value** — tests
+  must `registry.subscribe` (mount) atoms they poll, exactly as the template
+  would; (b) fixtures must set `threadId` (`Builder … { threads: n }`) because
+  the whole-thread semi-join matches on it — providers always set it.
+- **H3 (performance): not measured here** (no browser profiling in this
+  environment) — but two structural wins landed by construction: the menu
+  atom no longer rebuilds per keystroke (the old `filterElement` memo dep
+  forced it), and typing subscribes only the filter slot + query chain, not
+  the article. Profiling remains open for a follow-up in the running app.
+- **H4 (renderer neutrality):** the headless tests are themselves the cheap
+  proof — the full container logic runs with no renderer at all.
+
+Bridge findings (the experiment's product), as instrumented:
+
+1. **Pagination** — `createPaginationStore` was already framework-free;
+   `paginationAtom` (echo-react) wraps it with AST-keyed rebuilds and
+   page-seeding so upstream atom recomputes don't reset the window. Candidate
+   for promotion into the echo API proper.
+2. **Debounce** — no `Atom.debounce` upstream; `debounceAtom` built on
+   `get.subscribe` + `get.setSelf` (~15 lines). Candidate for a shared home.
+3. **Anchors** — the named-anchor record (`anchors.saveButton`,
+   `anchors.filterEditor`, filled by template ref callbacks) was sufficient;
+   dispatch arms reference DOM/imperative handles by name only.
+4. **Slots** — inverted as designed (menu declares the slot, template supplies
+   `MailboxFilterSlot`, which subscribes to atoms itself so the slot closure
+   is stable). The remaining React leak is _typed_, not architectural: the
+   menu model's `render?: () => ReactNode` lives in `@dxos/ui-types`, and
+   `MenuBuilder` itself lives in `react-ui-menu` (a React package) — a
+   headless menu-model package is the promotion path.
+
+Two unplanned findings:
+
+- **Headless-safety is a module-graph property.** The controller initially
+  imported `isMessageGroup` through the `#components` barrel, dragging the
+  whole UI runtime (mosaic → `@atlaskit` CJS with CSS `require`s) into node
+  consumers. Type-only barrel imports + direct value imports fixed it; a lint
+  boundary ("controller files import no component barrels") should enforce it
+  when the pattern spreads.
+- **`Show` is not slot-transparent.** Radix `asChild` composition can't slot
+  through a control-flow component; the working idiom is to put the slotted
+  element _inside_ each branch (`<Show>` wrapping two complete
+  `<Panel.Content asChild>` blocks). An interpreter (Option B) hits the same
+  issue and should adopt the same lowering.
+
+Go/no-go on generalizing: **go** — extract `TaskSetArticle` next to test that
+the pattern scales down without ceremony (its controller should be ~40 lines).
 
 ## Open questions
 

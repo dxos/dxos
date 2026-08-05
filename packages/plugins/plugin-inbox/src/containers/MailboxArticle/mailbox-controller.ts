@@ -31,13 +31,7 @@ import { type MenuActionChrome } from '@dxos/ui-types';
 // Type-only barrel import plus a direct value import: pulling `isMessageGroup` through the
 // `#components` barrel would drag the whole UI runtime (mosaic → @atlaskit CJS with CSS requires)
 // into headless (node) consumers of this controller.
-import type {
-  InboxStackAction,
-  InboxStackItem,
-  InboxStackTag,
-  MessageTagsFamily,
-  StarredFamily,
-} from '#components';
+import type { InboxStackAction, InboxStackItem, InboxStackTag, MessageTagsFamily, StarredFamily } from '#components';
 import { meta } from '#meta';
 import { InboxCapabilities, InboxOperation, Mailbox, type Settings, SystemTags } from '#types';
 

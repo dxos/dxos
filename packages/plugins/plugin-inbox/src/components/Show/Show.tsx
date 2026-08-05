@@ -9,8 +9,8 @@ import { type ReactNode } from 'react';
 export type ShowProps<T> = {
   /** Condition source; the branch re-renders on atom change without re-rendering the parent. */
   when: Atom.Atom<T>;
-  /** Rendered when `when` is truthy; the function form receives the current value. */
-  children: ReactNode | ((value: T) => ReactNode);
+  /** Rendered when `when` is truthy; the function form receives the (truthiness-narrowed) value. */
+  children: ReactNode | ((value: NonNullable<T>) => ReactNode);
   /** Rendered when `when` is falsy. */
   fallback?: ReactNode;
 };

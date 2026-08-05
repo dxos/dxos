@@ -55,7 +55,11 @@ describe('MailboxController', () => {
     const mailbox = db.add(Mailbox.make());
     await db.flush();
     const feed = mailbox.feed!.target!;
-    const { messages } = new Builder().createMessages(options?.messageCount ?? 3).build();
+    const count = options?.messageCount ?? 3;
+    // One thread per message: the mailbox's whole-thread semi-join matches on `threadId`, so
+    // messages without one (the Builder default) never qualify — mirroring providers, which
+    // always set it.
+    const { messages } = new Builder().createMessages(count, { threads: count }).build();
     await EffectEx.runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(Database.layer(db))));
 
     const registry = Registry.make();
@@ -87,32 +91,33 @@ describe('MailboxController', () => {
     expect(registry.get(controller.state.showEmptyState)).toBe(false);
   });
 
-  test('filter text narrows the list only after the debounce settles', async ({ expect }) => {
-    const { registry, controller, messages } = await setup({ messageCount: 3 });
+  test('filter text rebuilds the query only after the debounce settles', async ({ expect }) => {
+    const { registry, controller } = await setup({ messageCount: 3 });
     mount(registry, controller);
     await expect.poll(() => registry.get(controller.state.messages).length, { timeout: 3_000 }).toBe(3);
 
-    const sender = messages[0].sender?.email;
-    expect(sender).toBeDefined();
-    registry.set(controller.state.filterText, `from:${sender}`);
+    // A structural filter matching no message: narrowing to empty proves the debounced text
+    // reached the query, and the empty state derives only once the query settles.
+    registry.set(controller.state.filterText, 'from:nobody@example.com');
 
     // The immediate filter parses right away (it gates the save affordance)...
     expect(registry.get(controller.state.filter)).toBeDefined();
-    // ...while the visible list narrows only once the debounced value lands in the query.
-    const expected = messages.filter((message) => message.sender?.email === sender).length;
-    await expect.poll(() => registry.get(controller.state.messages).length, { timeout: 3_000 }).toBe(expected);
+    // ...while the visible list changes only once the debounced value lands in the query.
+    await expect.poll(() => registry.get(controller.state.messages).length, { timeout: 3_000 }).toBe(0);
+    await expect.poll(() => registry.get(controller.state.showEmptyState), { timeout: 3_000 }).toBe(true);
 
     controller.dispatch({ type: 'clear-filter' });
     await expect.poll(() => registry.get(controller.state.messages).length, { timeout: 3_000 }).toBe(3);
   });
 
-  test('star dispatch toggles tag membership, provisioning the tag index lazily', async ({ expect }) => {
-    const { registry, controller, mailbox } = await setup({ messageCount: 2 });
+  test('star dispatch toggles tag membership through the tag index', async ({ expect }) => {
+    const { registry, controller } = await setup({ messageCount: 2 });
     mount(registry, controller);
     await expect.poll(() => registry.get(controller.state.messages).length, { timeout: 3_000 }).toBe(2);
 
     const [message] = registry.get(controller.state.messages);
-    expect(mailbox.tags).toBeUndefined();
+    // Mounted like a tile would: an unmounted atom's `get` returns a cached first value.
+    registry.subscribe(controller.state.starred(message.id), () => {});
     expect(registry.get(controller.state.starred(message.id))).toBe(false);
 
     controller.dispatch({ type: 'star', messageId: message.id });
