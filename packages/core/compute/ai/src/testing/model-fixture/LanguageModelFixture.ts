@@ -21,9 +21,11 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
+import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';
 
+import * as AiService from '../../AiService';
 import { withoutToolCallParising } from '../../util';
 
 // Can be performance-intensive
@@ -36,17 +38,17 @@ const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
 const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
 
 /**
- * NEVER redact EntityIds, EIDs, or DXNs in this module. Memoized prompts
+ * NEVER redact EntityIds, EIDs, or DXNs in this module. Fixture prompts
  * must match the exact strings the LLM is asked to reason about — collapsing
  * ids to a placeholder hides real mismatches and produces false hits. Test
  * determinism comes from `EntityId.dangerouslyDisableRandomness()` (test PRNG
- * with a fixed seed); when memos drift, fix the upstream id generation or
- * regenerate with `ALLOW_LLM_GENERATION=1`, do not normalize here.
+ * with a fixed seed); when fixtures drift, fix the upstream id generation or
+ * regenerate with `DX_UPDATE_MODEL_FIXTURES=1`, do not normalize here.
  */
 
 const TIMESTAMP_PLACEHOLDER = '<memoized-timestamp>';
 
-const normalizePromptForMemoization = (prompt: unknown, dynamicMatcher?: RegExp): unknown => {
+const normalizePromptForMatching = (prompt: unknown, dynamicMatcher?: RegExp): unknown => {
   const normalized = deepMapValues(prompt, (value, recurse, key) => {
     // Message metadata `timestamp` fields are stamped with the live clock as each turn completes and
     // are fed back verbatim into the prompt of every subsequent turn. They carry no meaning for the
@@ -69,7 +71,7 @@ const normalizePromptForMemoization = (prompt: unknown, dynamicMatcher?: RegExp)
 /**
  * Deep clone before normalizing so we never mutate prompts still in use by the caller.
  */
-const cloneForMemoNormalization = (prompt: unknown): unknown => {
+const cloneForMatching = (prompt: unknown): unknown => {
   try {
     return JSON.parse(JSON.stringify(prompt)) as unknown;
   } catch {
@@ -230,14 +232,8 @@ const remapStoredResponse = (
   // Collecting over the raw prompt would pick up tokens the matcher had normalized away (e.g. ISO
   // timestamps in `timestamp` metadata when ISO_TIMESTAMP_PATTERN is registered), diverging the
   // token count/order from what the match established and misaligning the positional remap. See DESIGN.md.
-  const storedValues = collectDynamicValues(
-    normalizePromptForMemoization(cloneForMemoNormalization(storedPrompt)),
-    matcher,
-  );
-  const liveValues = collectDynamicValues(
-    normalizePromptForMemoization(cloneForMemoNormalization(livePrompt)),
-    matcher,
-  );
+  const storedValues = collectDynamicValues(normalizePromptForMatching(cloneForMatching(storedPrompt)), matcher);
+  const liveValues = collectDynamicValues(normalizePromptForMatching(cloneForMatching(livePrompt)), matcher);
   const mapping = new Map<string, string>();
   for (let index = 0; index < storedValues.length; index++) {
     const live = liveValues[index];
@@ -263,7 +259,7 @@ export const __testing = {
   buildDynamicMatcher,
   /** Canonicalizes a prompt for matching/hashing (dynamic tokens → positional placeholders). */
   normalizeForMatching: (prompt: unknown, patterns: readonly RegExp[]): unknown =>
-    normalizePromptForMemoization(cloneForMemoNormalization(prompt), buildDynamicMatcher(patterns)),
+    normalizePromptForMatching(cloneForMatching(prompt), buildDynamicMatcher(patterns)),
   /** Substitutes stored dynamic values with the live prompt's values across a stored response. */
   remapResponse: (
     storedPrompt: unknown,
@@ -272,6 +268,72 @@ export const __testing = {
     patterns: readonly RegExp[],
   ): readonly unknown[] => remapStoredResponse(storedPrompt, storedResponse, livePrompt, buildDynamicMatcher(patterns)),
 };
+
+//
+// AiService-level fixture wrapper. `layerTest` is the entry consumers use: it wraps the upstream
+// AiService so every model it builds replays through the fixture store (regenerating on a miss only
+// when `DX_UPDATE_MODEL_FIXTURES=1`).
+//
+
+export type ServiceOptions = {
+  upstream: AiService.Service;
+  /** Path the fixture store reads/writes for this suite. */
+  storePath: string;
+  allowGeneration: boolean;
+  /**
+   * Patterns matching run-specific identifiers (e.g. {@link SPACE_ID_PATTERN}) to canonicalize for
+   * matching and substitute back into the response on a cache hit. Opt-in.
+   */
+  dynamicValuePatterns?: readonly RegExp[];
+};
+
+/** Wraps an upstream {@link AiService.Service} so every model it builds replays through the fixture store. */
+export const makeService = (options: ServiceOptions): AiService.Service => ({
+  model: (model) =>
+    Layer.provide(
+      layer({
+        modelName: model,
+        storePath: options.storePath,
+        allowGeneration: options.allowGeneration,
+        dynamicValuePatterns: options.dynamicValuePatterns,
+      }),
+      options.upstream.model(model),
+    ),
+});
+
+/**
+ * Derives the fixture store path for a suite from its test-file path. Kept as the single place the
+ * path convention lives so the store layout can evolve in one edit.
+ */
+const defaultStorePath = (filepath: string): string =>
+  filepath.endsWith('.eval.ts')
+    ? filepath.replace('.eval.ts', '.conversations.json')
+    : filepath.replace('.test.ts', '.conversations.json');
+
+/**
+ * AiService layer that records model turns to the fixture store and replays them offline.
+ * Requires {@link TestContextService} to derive the store path from the running test file.
+ *
+ * @param options.storePath [default: derived from the test file path].
+ * @param options.allowGeneration [default: `DX_UPDATE_MODEL_FIXTURES=1`] — whether to hit the live model on a miss.
+ */
+export const layerTest = (options: Partial<Omit<ServiceOptions, 'upstream'>> = {}) =>
+  Layer.effect(
+    AiService.AiService,
+    Effect.gen(function* () {
+      const ctx = yield* TestContextService;
+      const upstream = yield* AiService.AiService;
+      return makeService({
+        upstream,
+        storePath: options.storePath ?? defaultStorePath(ctx.task.file.filepath),
+        allowGeneration: options.allowGeneration ?? isUpdateEnabled(),
+        dynamicValuePatterns: options.dynamicValuePatterns,
+      });
+    }),
+  );
+
+/** @returns true if fixture regeneration is enabled via `DX_UPDATE_MODEL_FIXTURES`. */
+export const isUpdateEnabled = (): boolean => ['1', 'true'].includes(process.env.DX_UPDATE_MODEL_FIXTURES ?? '0');
 
 export interface LayerOptions {
   modelName: string;
@@ -313,12 +375,12 @@ type MakeProps = {
 
 export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> => {
   const dynamicMatcher = buildDynamicMatcher(options.dynamicValuePatterns ?? []);
-  const store = new MemoizedStore(options.storePath, dynamicMatcher);
+  const store = new FixtureStore(options.storePath, dynamicMatcher);
 
   return LanguageModel.make({
-    generateText: Effect.fn('MemoizedLanguageModel.generateText')(function* (params) {
+    generateText: Effect.fn('LanguageModelFixture.generateText')(function* (params) {
       const conversation = getConversationFromOptions(options.modelName, false, params);
-      const memoized = yield* store.getMemoizedConversation(conversation);
+      const memoized = yield* store.getFixtureConversation(conversation);
       if (Option.isSome(memoized)) {
         return remapStoredResponse(
           memoized.value.prompt,
@@ -351,12 +413,12 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
             ),
           );
 
-        const newConversation: MemoziedConversation = {
-          parameters: getMemoizedConversationParameters(options.modelName, false, params),
+        const newConversation: FixtureConversation = {
+          parameters: getFixtureConversationParameters(options.modelName, false, params),
           prompt: params.prompt,
           response,
         };
-        yield* store.saveMemoizedConversation(newConversation);
+        yield* store.saveFixtureConversation(newConversation);
 
         return response;
       }
@@ -366,7 +428,7 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
         Effect.gen(function* () {
           const conversation = getConversationFromOptions(options.modelName, true, params);
 
-          const memoized = yield* store.getMemoizedConversation(conversation);
+          const memoized = yield* store.getFixtureConversation(conversation);
           if (Option.isSome(memoized)) {
             return Stream.fromIterable(
               remapStoredResponse(
@@ -413,12 +475,12 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                 ),
                 Stream.onDone(() =>
                   Effect.gen(function* () {
-                    const conversation: MemoziedConversation = {
-                      parameters: getMemoizedConversationParameters(options.modelName, true, params),
+                    const conversation: FixtureConversation = {
+                      parameters: getFixtureConversationParameters(options.modelName, true, params),
                       prompt: params.prompt,
                       response: parts,
                     };
-                    yield* store.saveMemoizedConversation(conversation);
+                    yield* store.saveFixtureConversation(conversation);
                   }),
                 ),
               );
@@ -428,7 +490,7 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
   });
 };
 
-const getMemoizedConversationParameters = (
+const getFixtureConversationParameters = (
   model: string,
   stream: boolean,
   params: LanguageModel.ProviderOptions,
@@ -448,17 +510,17 @@ const getConversationFromOptions = (
   model: string,
   stream: boolean,
   params: LanguageModel.ProviderOptions,
-): MemoziedConversation => {
+): FixtureConversation => {
   return {
-    parameters: getMemoizedConversationParameters(model, stream, params),
+    parameters: getFixtureConversationParameters(model, stream, params),
     prompt: params.prompt,
     response: [],
   };
 };
 
 const converstationMatches = (
-  haystack: MemoziedConversation,
-  needle: MemoziedConversation,
+  haystack: FixtureConversation,
+  needle: FixtureConversation,
   dynamicMatcher: RegExp | undefined,
 ): boolean => {
   // TODO(dmaretskyi): dequal doesn't work for some reason.
@@ -467,8 +529,8 @@ const converstationMatches = (
   }
 
   if (
-    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(haystack.prompt), dynamicMatcher)) !==
-    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(needle.prompt), dynamicMatcher))
+    jsonStableStringify(normalizePromptForMatching(cloneForMatching(haystack.prompt), dynamicMatcher)) !==
+    jsonStableStringify(normalizePromptForMatching(cloneForMatching(needle.prompt), dynamicMatcher))
   ) {
     return false;
   }
@@ -478,8 +540,8 @@ const converstationMatches = (
 
 // TODO(dmaretskyi): Currently this doesn't clean the old memoized convesations and the memoization files can grow quickly.
 // To solve this, we can separate convesations for each test, put the time the conversation was last used, and then delete the ones that are unused.
-// We will only edit the files when ALLOW_LLM_GENERATION=1 is specified.
-class MemoizedStore {
+// We will only edit the files when DX_UPDATE_MODEL_FIXTURES=1 is specified.
+class FixtureStore {
   #path: string;
   #dynamicMatcher: RegExp | undefined;
 
@@ -491,7 +553,7 @@ class MemoizedStore {
   /**
    * @returns A stored converstation that starts with the same parameters and messages as the prompted conversation.
    */
-  getMemoizedConversation(prompted: MemoziedConversation): Effect.Effect<Option.Option<MemoziedConversation>> {
+  getFixtureConversation(prompted: FixtureConversation): Effect.Effect<Option.Option<FixtureConversation>> {
     return Effect.gen(this, function* () {
       const stored = yield* this.#loadStore();
       return Function.pipe(
@@ -504,7 +566,7 @@ class MemoizedStore {
   /**
    * @returns A stored converstation that is the closest match to the prompted conversation.
    */
-  getClosestMatch(prompted: MemoziedConversation): Effect.Effect<Option.Option<MemoziedConversation>> {
+  getClosestMatch(prompted: FixtureConversation): Effect.Effect<Option.Option<FixtureConversation>> {
     return Effect.gen(this, function* () {
       const stored = yield* this.#loadStore();
       return Function.pipe(
@@ -512,8 +574,8 @@ class MemoizedStore {
         Array.sortBy(
           Order.mapInput(Order.number, (x) =>
             gitDiffDistance(
-              formatMemoizedConversation(x, this.#dynamicMatcher),
-              formatMemoizedConversation(prompted, this.#dynamicMatcher),
+              formatFixtureConversation(x, this.#dynamicMatcher),
+              formatFixtureConversation(prompted, this.#dynamicMatcher),
             ),
           ),
         ),
@@ -526,11 +588,11 @@ class MemoizedStore {
    * Saves the conversation to the store.
    * @param conversation The conversation to save.
    */
-  formatConversation(conversation: MemoziedConversation): string {
-    return formatMemoizedConversation(conversation, this.#dynamicMatcher);
+  formatConversation(conversation: FixtureConversation): string {
+    return formatFixtureConversation(conversation, this.#dynamicMatcher);
   }
 
-  saveMemoizedConversation(conversation: MemoziedConversation): Effect.Effect<void> {
+  saveFixtureConversation(conversation: FixtureConversation): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const store = yield* this.#loadStore();
       store.conversations.push(conversation);
@@ -578,18 +640,18 @@ const ConversationParameters = Schema.Struct({
 });
 type ConversationParameters = Schema.Schema.Type<typeof ConversationParameters>;
 
-const MemoziedConversation = Schema.Struct({
+const FixtureConversation = Schema.Struct({
   parameters: ConversationParameters,
   prompt: Prompt.Prompt,
 
   // This is supposed to be Response.AllParts for arbitrary tools.
   // Tool call schema is generated based on the available tools so we can't use a static schema.
   response: Schema.Array(Schema.Unknown),
-}).annotations({ identifier: 'MemoziedConversation' });
-type MemoziedConversation = Schema.Schema.Type<typeof MemoziedConversation>;
+}).annotations({ identifier: 'FixtureConversation' });
+type FixtureConversation = Schema.Schema.Type<typeof FixtureConversation>;
 
 const ConversationStore = Schema.Struct({
-  conversations: Schema.Array(MemoziedConversation).pipe(Schema.mutable),
+  conversations: Schema.Array(FixtureConversation).pipe(Schema.mutable),
 }).pipe(Schema.mutable);
 type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
 
@@ -597,14 +659,14 @@ type ConversationStore = Schema.Schema.Type<typeof ConversationStore>;
  * Formats the conversation for diffing and displaying to the developer.
  * Doesn't need to be lossless.
  */
-const formatMemoizedConversation = (conversation: MemoziedConversation, dynamicMatcher?: RegExp): string => {
+const formatFixtureConversation = (conversation: FixtureConversation, dynamicMatcher?: RegExp): string => {
   return (
     jsonStableStringify(
       {
         parameters: conversation.parameters,
         // Promps may contain long encrypted strings, which are not important to see. We sanitize them so that levenstein distance doesn't OOM.
         prompt: deepMapValues(
-          normalizePromptForMemoization(cloneForMemoNormalization(conversation.prompt), dynamicMatcher),
+          normalizePromptForMatching(cloneForMatching(conversation.prompt), dynamicMatcher),
           (value, recurse, key) => {
             if (typeof value === 'string' && value.length > 256 && key === 'encrypted_content') {
               return sanitizeString(value);
@@ -637,7 +699,7 @@ const gitDiffDistance = (a: string, b: string): number => {
   return diff.length;
 };
 
-const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: MemoziedConversation) =>
+const throwErrorWithClosestMatch = (store: FixtureStore, conversation: FixtureConversation) =>
   Effect.gen(function* () {
     if (!DISABLE_CLOSEST_MATCH_SEARCH) {
       const closestMatch = yield* store.getClosestMatch(conversation);
@@ -659,7 +721,7 @@ const throwErrorWithClosestMatch = (store: MemoizedStore, conversation: Memozied
 const error = (patch?: string) =>
   [
     'No memoized conversation found for the given prompt.',
-    'Re-run test with ALLOW_LLM_GENERATION=1 to generate a new memoized conversation.',
+    'Re-run test with DX_UPDATE_MODEL_FIXTURES=1 to generate a new memoized conversation.',
     patch && `Closest match: ${patch}`,
   ]
     .filter(Boolean)

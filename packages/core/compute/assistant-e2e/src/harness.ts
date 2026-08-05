@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';
-import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
+import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
 import { type Plugin } from '@dxos/app-framework';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -121,7 +121,7 @@ const formatInstructions = (instructions: string, completionCriteria: readonly s
   return `${instructions}\n\nCompletion criteria:\n${criteria}`;
 };
 
-const makeMemoizedAiServiceMiddleware = (
+const makeLanguageModelFixtureMiddleware = (
   ctx: TestContext,
   options: Pick<AgentTestOptions, 'inferenceProvider' | 'disableLlmMemoization'>,
 ): Promise<(_upstream: AiService.Service) => AiService.Service> =>
@@ -134,9 +134,9 @@ const makeMemoizedAiServiceMiddleware = (
         // (e.g. an image-hosting upload id) differ across runs; canonicalize for matching and
         // substitute live values back into memoized responses on a cache hit.
         dynamicValuePatterns: [
-          MemoizedLanguageModel.SPACE_ID_PATTERN,
-          MemoizedLanguageModel.ENTITY_ID_PATTERN,
-          MemoizedLanguageModel.UUID_PATTERN,
+          LanguageModelFixture.SPACE_ID_PATTERN,
+          LanguageModelFixture.ENTITY_ID_PATTERN,
+          LanguageModelFixture.UUID_PATTERN,
         ],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
@@ -160,7 +160,7 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
     types: [...DEFAULT_CLIENT_TYPES, ...(options.clientTypes ?? [])],
   }),
   AssistantPlugin({
-    aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx, options),
+    aiServiceMiddleware: await makeLanguageModelFixtureMiddleware(ctx, options),
   }),
   RoutinePlugin(),
   InboxPlugin(),
@@ -308,4 +308,4 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
  * enabled or memoization is disabled, and a shorter replay timeout for memoized runs.
  */
 export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
-  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;
+  LanguageModelFixture.isUpdateEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;

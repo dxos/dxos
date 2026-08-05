@@ -18,11 +18,9 @@ import { EntityId } from '@dxos/keys';
 import { dbg } from '@dxos/log';
 
 import * as AiService from '../../AiService';
-import { runMemoizedTests } from '../gate';
 import { AiServiceTestingPreset } from '../test-layers';
 import { TestingToolkit, testingLayer } from '../toolkit';
-import * as MemoizedAiService from './MemoizedAiService';
-import * as MemoizedLanguageModel from './MemoizedLanguageModel';
+import * as LanguageModelFixture from './LanguageModelFixture';
 
 // Workaround: @effect/ai-anthropic v0.26.0 declares AnthropicWebSearch with
 // parameters: EmptyParams, but the API now sends { query: "..." } in tool_use.input,
@@ -53,7 +51,7 @@ const TestLayer = Layer.mergeAll(
   testingLayer,
   layerTest,
   AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
-).pipe(Layer.provideMerge(MemoizedAiService.layerTest()), Layer.provide(AiServiceTestingPreset('edge-remote')));
+).pipe(Layer.provideMerge(LanguageModelFixture.layerTest()), Layer.provide(AiServiceTestingPreset('edge-remote')));
 
 class TestObjectReadToolkit extends Toolkit.make(
   Tool.make('read-object', {
@@ -70,21 +68,22 @@ class TestObjectReadToolkit extends Toolkit.make(
   });
 }
 
-// These call through `MemoizedAiService`/`Chat` against a real model on a cache miss, so they're
-// frozen-conversation replay (A/B) like the rest of the memoized suites — off by default
-// (`DX_RUN_LLM_TESTS=1` / `ALLOW_LLM_GENERATION=1` to run). The `dynamic value matching` describe
-// below tests the matching machinery itself with no model involved, so it stays ungated.
+// These call through `LanguageModelFixture`/`Chat` against a real model on a cache miss, so they carry
+// the `model-fixture` tag and replay frozen conversations — skipped by default
+// (DX_RUN_MODEL_FIXTURE_TESTS=1 to replay, DX_UPDATE_MODEL_FIXTURES=1 to regenerate). The `dynamic
+// value matching` describe below tests the matching machinery itself with no model involved, so it
+// stays untagged and always runs.
 
 describe('memoization', () => {
   it.effect(
     'context paths',
     Effect.fnUntraced(function* (ctx) {
       const filepath = ctx.task.file.filepath;
-      expect(filepath.endsWith('memoization.test.ts')).toBe(true);
+      expect(filepath.endsWith('LanguageModelFixture.test.ts')).toBe(true);
     }),
   );
 
-  it.effect.skipIf(!runMemoizedTests())(
+  it.effect(
     'generate a poem',
     Effect.fnUntraced(
       function* (_) {
@@ -95,9 +94,10 @@ describe('memoization', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    { tags: ['model-fixture'] },
   );
 
-  it.effect.skipIf(!runMemoizedTests())(
+  it.effect(
     'tools',
     Effect.fnUntraced(
       function* (_) {
@@ -126,9 +126,10 @@ describe('memoization', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    { tags: ['model-fixture'] },
   );
 
-  it.effect.skipIf(!runMemoizedTests())(
+  it.effect(
     'tools with encoding',
     Effect.fnUntraced(
       function* (_) {
@@ -151,9 +152,10 @@ describe('memoization', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    { tags: ['model-fixture'] },
   );
 
-  it.effect.skipIf(!runMemoizedTests())(
+  it.effect(
     'provider-defined tool',
     Effect.fnUntraced(
       function* (_) {
@@ -176,11 +178,12 @@ describe('memoization', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    { tags: ['model-fixture'] },
   );
 });
 
 describe('dynamic value matching', () => {
-  const { SPACE_ID_PATTERN, ENTITY_ID_PATTERN, ISO_TIMESTAMP_PATTERN, UUID_PATTERN, __testing } = MemoizedLanguageModel;
+  const { SPACE_ID_PATTERN, ENTITY_ID_PATTERN, ISO_TIMESTAMP_PATTERN, UUID_PATTERN, __testing } = LanguageModelFixture;
 
   // Two structurally identical prompts that differ only in the (run-specific) space key.
   const SPACE_A = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE';
@@ -252,7 +255,7 @@ describe('dynamic value matching', () => {
     // Regression: `timestamp` metadata is normalized away for matching but was collected raw during
     // remap. With ISO_TIMESTAMP_PATTERN registered, a duplicate-timestamp asymmetry (stored dedups
     // to one, live to two) shifted every downstream positional index, remapping the space key to a
-    // timestamp value instead of the live space key. See DESIGN.md / MemoizedLanguageModel remap.
+    // timestamp value instead of the live space key. See DESIGN.md / LanguageModelFixture remap.
     const timestampedPrompt = (spaceId: string, timestamps: readonly string[]) => [
       ...timestamps.map((timestamp) => ({ role: 'user', timestamp, content: [{ type: 'text', text: 'tick' }] })),
       { role: 'user', content: [{ type: 'text', text: `Create an object in space echo://${spaceId}` }] },
@@ -301,7 +304,7 @@ describe('dynamic value matching', () => {
     expect(tokens).toEqual([SPACE_A, OBJECT_ID]);
   });
 
-  it.effect.skipIf(!runMemoizedTests())(
+  it.effect(
     'works with tool calsl',
     Effect.fnUntraced(
       function* (_) {
@@ -331,8 +334,8 @@ describe('dynamic value matching', () => {
           AiService.model('com.anthropic.model.claude-sonnet-4-6.default'),
         ).pipe(
           Layer.provideMerge(
-            MemoizedAiService.layerTest({
-              dynamicValuePatterns: [MemoizedLanguageModel.ENTITY_ID_PATTERN],
+            LanguageModelFixture.layerTest({
+              dynamicValuePatterns: [LanguageModelFixture.ENTITY_ID_PATTERN],
             }),
           ),
           Layer.provide(AiServiceTestingPreset('edge-remote')),
@@ -340,5 +343,6 @@ describe('dynamic value matching', () => {
       ),
       TestHelpers.provideTestContext,
     ),
+    { tags: ['model-fixture'] },
   );
 });

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { LanguageModelFixture } from '@dxos/ai/testing';
 import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { OperationHandlerSet, Skill } from '@dxos/compute';
@@ -57,6 +57,6 @@ describe('Browser', { tags: ['manual'] }, () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000, tags: ['sync'] },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 240_000 : 30_000, tags: ['sync'] },
   );
 });

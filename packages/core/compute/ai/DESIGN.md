@@ -1,6 +1,6 @@
 # AI test memoization — design & known issues
 
-`src/testing/memoization/MemoizedLanguageModel.ts` records live LLM responses to a JSON snapshot
+`src/testing/model-fixture/LanguageModelFixture.ts` records live LLM responses to a JSON snapshot
 (`*.conversations.json`) and replays them so agent/skill tests are deterministic and offline. The
 hard part is **reconciling run-specific values** (space keys, entity ids, timestamps) between the
 saved snapshot and the live prompt so a structurally-identical conversation still matches.

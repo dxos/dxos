@@ -66,7 +66,7 @@ export class FunctionsAiUpstreamError extends BaseError.extend(
 
 /**
  * Specialized `FunctionsAiUpstreamError` for the memoization layer: the recorded fixture for a
- * given cache key was not found and `ALLOW_LLM_GENERATION` is unset. The `cacheKey` is exposed
+ * given cache key was not found and `DX_UPDATE_MODEL_FIXTURES` is unset. The `cacheKey` is exposed
  * via `context.cacheKey` to make regeneration straightforward.
  */
 export class FunctionsAiMemoizationMissError extends BaseError.extend(

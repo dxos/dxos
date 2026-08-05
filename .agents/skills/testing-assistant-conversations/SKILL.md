@@ -5,7 +5,7 @@ description: Test assistant conversations, agents, and skills using AssistantTes
 
 # Testing assistant conversations, agents, and skills
 
-This guide matches patterns in `packages/core/assistant-toolkit` and related packages (`assistant`, `plugin-markdown`, `plugin-assistant`). For **regenerating** `*.conversations.json` only, prefer the focused skill `regenerate-memoized-llm`.
+This guide matches patterns in `packages/core/assistant-toolkit` and related packages (`assistant`, `plugin-markdown`, `plugin-assistant`). For **regenerating** `*.conversations.json` only, prefer the focused skill `regenerate-model-fixture`.
 
 ## AssistantTestLayer
 
@@ -37,15 +37,15 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 
 Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
 
-## Model memoization and `ALLOW_LLM_GENERATION`
+## Model memoization and `DX_UPDATE_MODEL_FIXTURES`
 
-`AssistantTestLayer` includes memoization internally — you do **not** need to set up `MemoizedAiService` yourself. The layer wraps the AI service with `MemoizedAiService.layerTest` automatically (unless `disableLlmMemoization: true`).
+`AssistantTestLayer` includes memoization internally — you do **not** need to set up `LanguageModelFixture` yourself. The layer wraps the AI service with `LanguageModelFixture.layerTest` automatically (unless `disableLlmMemoization: true`).
 
-Default test AI goes through **`MemoizedAiService.layerTest`**, which:
+Default test AI goes through **`LanguageModelFixture.layerTest`**, which:
 
 - Writes/reads **`<test-file>.conversations.json`** next to the test (path from `TestContextService`).
-- **Without** `ALLOW_LLM_GENERATION`: replays only; **missing** matching prompt → error telling you to regenerate.
-- **With** `ALLOW_LLM_GENERATION=1` (or `true`): calls the real model when no match exists and **updates** the JSON.
+- **Without** `DX_UPDATE_MODEL_FIXTURES`: replays only; **missing** matching prompt → error telling you to regenerate.
+- **With** `DX_UPDATE_MODEL_FIXTURES=1` (or `true`): calls the real model when no match exists and **updates** the JSON.
 
 CI stays deterministic because it uses committed fixtures, not live LLM calls.
 
@@ -60,10 +60,10 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
 2. **Run tests with generation:**
 
    ```bash
-   ALLOW_LLM_GENERATION=1 moon run assistant-toolkit:test
+   DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-toolkit:test
    ```
 
-   Or all memoized-LLM packages: `ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'`.
+   Or all memoized-LLM packages: `DX_UPDATE_MODEL_FIXTURES=1 moon run '#memoized-llm:test'`.
 
 3. **Commit** updated `*.conversations.json` files.
 
@@ -71,7 +71,7 @@ Packages that participate are tagged **`memoized-llm`** in their `moon.yml` (e.g
 
 ### Timeouts
 
-LLM conversation tests should use a longer timeout to account for generation. Pattern: `{ timeout: 60_000 }` or `MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000`. Note that `MemoizedAiService` is only needed as an import for the timeout helper — the layer already handles memoization internally.
+LLM conversation tests should use a longer timeout to account for generation. Pattern: `{ timeout: 60_000 }` or `LanguageModelFixture.isGenerationEnabled() ? 240_000 : 30_000`. Note that `LanguageModelFixture` is only needed as an import for the timeout helper — the layer already handles memoization internally.
 
 ### `TestHelpers.provideTestContext`
 
@@ -83,7 +83,7 @@ Effects that use memoization **must** end with **`TestHelpers.provideTestContext
 
 The default `aiServicePreset: 'direct'` calls the Anthropic API directly. Set `DX_ANTHROPIC_API_KEY`
 (via `pnpm -ws 1p-credentials` or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
-memoized cache with `ALLOW_LLM_GENERATION=1`. Use `DX_ANTHROPIC_API_KEY`, not `ANTHROPIC_API_KEY`
+memoized cache with `DX_UPDATE_MODEL_FIXTURES=1`. Use `DX_ANTHROPIC_API_KEY`, not `ANTHROPIC_API_KEY`
 (the latter breaks Claude Code). Normal cached runs need no key. Works for both direct operation
 invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/skills/skill-manager/skill.test.ts`.
 
@@ -95,7 +95,7 @@ Use `@effect/vitest` (`describe`, `it.effect`, `it.scoped`) and `Effect.fnUntrac
 
 ### Determinism
 
-Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope for stable IDs. The PRNG is **shared across all tests in the same file** — memos and fixtures that embed object IDs only match when tests run in file order. When regenerating memoized LLM cache, never use vitest `-t` for a single test; regenerate the whole test file (see `regenerate-memoized-llm` skill).
+Many tests call **`EntityId.dangerouslyDisableRandomness()`** at module scope for stable IDs. The PRNG is **shared across all tests in the same file** — memos and fixtures that embed object IDs only match when tests run in file order. When regenerating memoized LLM cache, never use vitest `-t` for a single test; regenerate the whole test file (see `regenerate-model-fixture` skill).
 
 ### Database and invocation flow
 
@@ -121,5 +121,5 @@ Include every ECHO type instances may have: skill metadata types, domain objects
 
 - [ ] `AssistantTestLayer` (or WithTriggers) with correct `operationHandlers` and `types`.
 - [ ] `Effect.provide(TestLayer)` + `TestHelpers.provideTestContext` for memoized LLM tests.
-- [ ] New/changed prompts → regenerate with `ALLOW_LLM_GENERATION=1` + `1p-credentials`, commit `*.conversations.json`.
+- [ ] New/changed prompts → regenerate with `DX_UPDATE_MODEL_FIXTURES=1` + `1p-credentials`, commit `*.conversations.json`.
 - [ ] Package has `memoized-llm` tag if tests use memoization (for CI grouping).

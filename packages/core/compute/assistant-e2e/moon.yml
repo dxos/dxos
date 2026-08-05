@@ -3,4 +3,4 @@ language: typescript
 tags:
   - ts-test
   - typecheck
-  - memoized-llm
+  - model-fixture

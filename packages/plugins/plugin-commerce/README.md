@@ -46,7 +46,7 @@ and deterministically — no API key, no network. To re-record after changing th
 or tool schemas:
 
 ```bash
-ALLOW_LLM_GENERATION=1 moon run plugin-commerce:test -- generate-template
+DX_UPDATE_MODEL_FIXTURES=1 moon run plugin-commerce:test -- generate-template
 ```
 
 This calls the real model over `edge-remote` (~2 min) and rewrites the committed
