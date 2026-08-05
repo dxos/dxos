@@ -30,7 +30,7 @@ export const messageDocumentChangedEffect = StateEffect.define<null>();
  * Carried in editor state rather than in the options object, because the options are captured when
  * the editor is built — putting either there would rebuild the whole editor to move a highlight.
  */
-export type MessageDocumentState = { editingId?: string; currentId?: string };
+export type MessageDocumentState = { editingId?: string; currentId?: string; hoveredId?: string };
 
 export const setMessageDocumentStateEffect = StateEffect.define<MessageDocumentState>();
 
@@ -75,7 +75,7 @@ export type MessageDocumentOptions = {
   onHoverChange?: (hover: MessageHover | undefined) => void;
   /** A widget whose content the host renders as React. */
   onPortalMount?: (portal: MessagePortal) => void;
-  onPortalUnmount?: (id: string) => void;
+  onPortalUnmount?: (id: string, root: HTMLElement) => void;
   /** Copy for the thread row, so this package does not reach for a translation namespace mid-render. */
   labels?: { startThread: () => string; replyCount: (count: number) => string };
 };
@@ -117,8 +117,11 @@ class PortalWidget extends WidgetType {
     return this._id === other._id && this._revision === other._revision && this._continues === other._continues;
   }
 
+  #root?: HTMLElement;
+
   override toDOM() {
     const root = document.createElement('div');
+    this.#root = root;
     // The rail indent, so chrome lines up with the text column — except the head, which renders
     // `Message.Root` and so brings the rail column with it; indenting that would double it.
     if (this._kind !== 'head') {
@@ -135,7 +138,10 @@ class PortalWidget extends WidgetType {
   }
 
   override destroy() {
-    this._notify.unmounted(this._id);
+    // The root is passed back so the host can tell a genuine unmount from the teardown of a widget
+    // that has already been replaced: ids are stable, so a late `destroy` would otherwise remove
+    // the entry its own replacement just added.
+    this._notify.unmounted(this._id, this.#root!);
   }
 
   override ignoreEvent() {
@@ -143,7 +149,7 @@ class PortalWidget extends WidgetType {
   }
 }
 
-type PortalNotifier = { mounted: (portal: MessagePortal) => void; unmounted: (id: string) => void };
+type PortalNotifier = { mounted: (portal: MessagePortal) => void; unmounted: (id: string, root: HTMLElement) => void };
 
 class DividerWidget extends WidgetType {
   constructor(private readonly _label?: string) {
@@ -314,7 +320,7 @@ const buildDecorations = (
   portals: PortalNotifier,
 ): DecorationSet => {
   const { model, getMetadata, getReactions, getQuote, getThreadSummary, onReact, onThreadOpen, labels } = options;
-  const { editingId, currentId } = state.field(messageDocumentState);
+  const { editingId, currentId, hoveredId } = state.field(messageDocumentState);
   const builder = new RangeSetBuilder<Decoration>();
   const { doc } = state;
   const ranges = model.getRanges();
@@ -368,13 +374,21 @@ const buildDecorations = (
     // got from being its own element: a test can target one message, and the current one is marked
     // for assistive technology rather than only tinted.
     const current = currentId === item.message.id;
+    // The hovered row is tinted for its whole height, the way Discord marks what the toolbar acts
+    // on — otherwise a floating toolbar leaves the target ambiguous in a dense transcript.
+    const hovered = hoveredId === item.message.id;
     for (let line = first.number; line <= last.number; line++) {
       const { from } = doc.line(line);
       builder.add(
         from,
         from,
         Decoration.line({
-          class: mx('cm-message-row', current && 'bg-active-surface', editing && 'cm-message-row--editing'),
+          class: mx(
+            'cm-message-row',
+            current && 'bg-active-surface',
+            hovered && !current && 'bg-hover-surface',
+            editing && 'cm-message-row--editing',
+          ),
           attributes: {
             'data-testid': 'thread.document.message',
             'data-message-id': item.message.id,
@@ -694,7 +708,7 @@ const selection = ({ model, onSelect }: MessageDocumentOptions): Extension =>
 export const messageDocumentChrome = (options: MessageDocumentOptions): Extension => {
   const portals: PortalNotifier = {
     mounted: (portal) => options.onPortalMount?.(portal),
-    unmounted: (id) => options.onPortalUnmount?.(id),
+    unmounted: (id, root) => options.onPortalUnmount?.(id, root),
   };
 
   return [

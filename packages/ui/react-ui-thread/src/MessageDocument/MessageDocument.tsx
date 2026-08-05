@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, type ThemedClassName, useDynamicRef, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Message as MessageType } from '@dxos/types';
 import {
@@ -78,6 +78,15 @@ export const MessageDocument = ({
   // Which row the pointer is over, and where its toolbar goes. Reported by the chrome, rendered
   // here so the controls are ordinary `react-ui-menu` actions rather than hand-built DOM.
   const [hover, setHover] = useState<MessageHover | undefined>(undefined);
+  const frameRef = useRef<HTMLDivElement>(null);
+  // Opening the overflow menu moves the pointer into a portaled popover, which reads as leaving the
+  // transcript — dismissing the toolbar the menu belongs to. While something in it is expanded the
+  // toolbar stays; the next row hovered replaces it, as it does in Discord.
+  const handleMouseLeave = useCallback(() => {
+    if (!frameRef.current?.querySelector('[aria-expanded="true"]')) {
+      setHover(undefined);
+    }
+  }, []);
   // Widget contents the chrome asks the host to render: the row frame has to be the tile stack's
   // own `Avatar` and heading, not a DOM lookalike of them.
   const [portals, setPortals] = useState<MessagePortal[]>([]);
@@ -86,7 +95,10 @@ export const MessageDocument = ({
     [],
   );
   const handlePortalUnmount = useCallback(
-    (id: string) => setPortals((current) => current.filter((portal) => portal.id !== id)),
+    (id: string, root: HTMLElement) =>
+      // Only when this is still the mounted root: a rebuilt decoration destroys the old widget
+      // after the new one has registered, and both carry the same id.
+      setPortals((current) => current.filter((portal) => !(portal.id === id && portal.root === root))),
     [],
   );
 
@@ -174,7 +186,10 @@ export const MessageDocument = ({
     // prompt a rebuild. The getters are in the dependencies for the same reason: they read host
     // state the editor cannot see, so their identity is the only signal that it moved.
     view?.dispatch({
-      effects: [setMessageDocumentStateEffect.of({ editingId, currentId }), messageDocumentChangedEffect.of(null)],
+      effects: [
+        setMessageDocumentStateEffect.of({ editingId, currentId, hoveredId: hover?.message.id }),
+        messageDocumentChangedEffect.of(null),
+      ],
     });
   }, [
     model,
@@ -190,12 +205,13 @@ export const MessageDocument = ({
     getQuote,
     getThreadSummary,
     getActions,
+    hover,
   ]);
 
   return (
     // The toolbar lives here rather than inside the editor, so leaving the editor must not dismiss
     // it — the pointer has to be able to travel onto it. Hover is cleared when it leaves both.
-    <div className='relative grid grid-rows-1 min-h-0' onMouseLeave={() => setHover(undefined)}>
+    <div className='relative grid grid-rows-1 min-h-0' ref={frameRef} onMouseLeave={handleMouseLeave}>
       <div className={mx('dx-container', classNames)} ref={parentRef} />
       {portals.map((portal) =>
         createPortal(<MessageChrome portal={portal} handlers={handlers} />, portal.root, portal.id),
@@ -214,8 +230,12 @@ const HoverControls = ({ message, top }: { message: MessageLike; top: number }) 
   // One state atom per hovered row, so edit mode and the picker reset when the pointer moves on.
   const state = useMemo(makeMessageState, [message.id]);
   return (
-    <div className='absolute z-1 end-1' style={{ top }}>
-      <Message.Controls message={message as MessageType.Message} state={state} />
+    // Straddling the row's top edge at the end of the row, where Discord puts it — the corner
+    // least likely to cover text. `sm` is already the design system's tightest density.
+    <div className='absolute z-1 end-2 -translate-y-1/2' style={{ top }}>
+      <DensityProvider density='sm'>
+        <Message.Controls message={message as MessageType.Message} state={state} />
+      </DensityProvider>
     </div>
   );
 };
