@@ -11,9 +11,11 @@ import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { type Client } from '@dxos/client';
 import { Credential, Trigger } from '@dxos/compute';
 import { withAuthorization } from '@dxos/compute-runtime';
 import { Obj } from '@dxos/echo';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -42,8 +44,13 @@ const MAIL_AUTO_SYNC = true;
  * Whether a mailbox's sync Routine runs on EDGE rather than on the client, so mail keeps arriving
  * while Composer is closed. The mail sync operations are in the shared handler set the workerd plugin
  * registers, so EDGE can run them.
+ *
+ * On by default, and off only where a build sets `DX_MAIL_REMOTE_SYNC=false`: an EDGE-run sync makes
+ * no request from the browser, so a harness that serves the provider API by intercepting browser HTTP
+ * (the inbox e2e's `page.route` fixture) can only exercise mail sync with this off.
  */
-const MAIL_REMOTE_SYNC = true;
+const isRemoteSyncEnabled = (client: Client): boolean =>
+  client.config.values.runtime?.app?.env?.DX_MAIL_REMOTE_SYNC !== 'false';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -134,6 +141,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const client = yield* Capability.get(ClientCapabilities.Client);
+    const remote = isRemoteSyncEnabled(client);
+
     return Capability.contributes(Connector, [
       {
         id: GMAIL_CONNECTOR_ID,
@@ -157,7 +167,7 @@ export default Capability.makeModule(
           optionsSchema: SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote: MAIL_REMOTE_SYNC,
+          remote,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,
@@ -177,7 +187,7 @@ export default Capability.makeModule(
           optionsSchema: SyncOptions,
           auto: MAIL_AUTO_SYNC,
           trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote: MAIL_REMOTE_SYNC,
+          remote,
         },
       },
       {

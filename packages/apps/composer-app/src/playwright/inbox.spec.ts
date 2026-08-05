@@ -19,6 +19,13 @@ if (process.env.DX_PWA !== 'false') {
  */
 const AUTO_SYNC = true;
 
+// Mail sync only reaches the fixture below because the e2e bundle is built with
+// `DX_MAIL_REMOTE_SYNC=false` (see `.moon/tasks/tag-e2e.yml`); the shipped default runs it on EDGE,
+// where no browser request is made to intercept.
+// TODO(wittjosiah): Seed the mailbox instead of syncing it, so this suite covers the inbox UI without
+//   depending on where sync runs — sync mechanics are already covered by plugin-inbox's sync tests
+//   against the same fixtures. Would also let the e2e run the shipped remote default.
+
 test.describe('Inbox', () => {
   let host: AppManager;
 
