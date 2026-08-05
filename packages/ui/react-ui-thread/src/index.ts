@@ -29,8 +29,8 @@ export type {
   MessageDocumentItem,
   MessageDocumentItemOptions,
   MessageDocumentProps,
-  MessageQuote,
   MessageItem,
+  MessageQuote,
 } from './MessageDocument';
 export { command } from './command';
 export { useThreadContext } from './context';

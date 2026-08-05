@@ -21,7 +21,6 @@ import {
   channelStoryDecorators,
   chrome,
   control,
-  hoverToolbar,
   hoverUntil,
   row,
 } from '../testing';

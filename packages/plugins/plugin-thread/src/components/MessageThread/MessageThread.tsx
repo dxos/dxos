@@ -8,9 +8,9 @@ import { Obj } from '@dxos/echo';
 import { type Identity, type Space } from '@dxos/halo';
 import { type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import {
-  type MessageLike,
   MessageDocument,
   type MessageDocumentProps,
+  type MessageLike,
   type MessageQuote,
   Thread,
   type ThreadRootProps,

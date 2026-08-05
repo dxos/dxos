@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type Identity, type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { type Space as ClientSpace, getSpace } from '@dxos/react-client/echo';
-import { type MessageLike, type MessageDocumentProps, type ThreadRootProps } from '@dxos/react-ui-thread';
+import { type MessageDocumentProps, type MessageLike, type ThreadRootProps } from '@dxos/react-ui-thread';
 import { type Channel, type Message } from '@dxos/types';
 
 import {
