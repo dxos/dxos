@@ -129,6 +129,12 @@ const StoryAppGraphBuilder = Capability.inlineModule(
       connector: (_, get) =>
         Effect.gen(function* () {
           const client = capabilities.get(ClientCapabilities.Client);
+          // `initialize()` is forked off the startup pass, so the graph can build before the client
+          // has a runtime; reading spaces then trips its not-initialized invariant. The connector is
+          // reactive, so yielding nothing here just re-runs once the client lands.
+          if (!client.initialized) {
+            return [];
+          }
           const space = AppSpace.getPersonalSpace(client);
           if (!space) {
             return [];

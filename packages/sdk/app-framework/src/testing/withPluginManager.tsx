@@ -25,7 +25,7 @@ import { StorybookErrorFallback } from './StorybookErrorFallback';
 export const setupPluginManager = ({
   capabilities,
   plugins = [],
-  registerFrameworkCapabilities = false,
+  registerFrameworkCapabilities = true,
   ...options
 }: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities' | 'registerFrameworkCapabilities'> = {}) => {
   // Auto-enable every non-system plugin so stories don't have to spell out
@@ -85,10 +85,10 @@ type ManagedPluginManagerState = {
 export type WithPluginManagerOptions = UseAppOptions & {
   /**
    * Contribute the `PluginManager` / `AtomRegistry` capabilities a real host provides, as
-   * `createTestApp` does. Defaults to FALSE, unlike the headless harness: no module provides
-   * `AtomRegistry`, so contributing it lets every module requiring it activate — including the
-   * process manager, which builds a runtime most stories neither need nor expect. Stories whose
-   * subject genuinely requires it (the deck's shell state, search's dialog) opt in.
+   * `createTestApp` does. On by default: no MODULE provides `AtomRegistry`, and the shared
+   * `corePlugins()` set (attention, graph, the process manager) all require it, so without this a
+   * story using that set fails the dependency pass with nothing to wait for. Opt out for a story
+   * that wants a deliberately bare manager.
    */
   registerFrameworkCapabilities?: boolean;
   /** @deprecated */
