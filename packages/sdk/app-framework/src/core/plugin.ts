@@ -440,11 +440,18 @@ export type PluginFactory<T = void> = ({} extends T ? (options?: T) => Plugin : 
 
 /**
  * Normalizes an authoring record to an {@link ActivationSpec} — the single boundary where the
- * optional authoring shape becomes the concrete runtime shape. Omitting `activatesOn` means the
- * module belongs to the startup wave.
+ * optional authoring shape becomes the concrete runtime shape.
+ *
+ * Omitting `activatesOn` means the module belongs to the IDLE wave: a module that must run at
+ * boot states `activatesOn: ActivationEvents.Startup` explicitly. Inverted from a startup default
+ * so that forgetting the annotation costs post-paint responsiveness rather than time-to-
+ * interactive — startup was the dumping ground, and its cost becomes the transitive demand
+ * closure of the boot path, enforced by the capability graph instead of by remembering to
+ * annotate. Un-annotated modules stay pullable as providers because the baseline wave is
+ * `Startup u Idle`; see `ActivationScheduler.#isBaselineWave`, which moves with this default.
  */
 const normalizeActivation = (options: ModuleEntry): ActivationSpec => ({
-  activatesOn: options.activatesOn ?? ActivationEvent.Startup,
+  activatesOn: options.activatesOn ?? ActivationEvent.Idle,
   requires: options.requires ?? [],
   provides: options.provides ?? [],
 });

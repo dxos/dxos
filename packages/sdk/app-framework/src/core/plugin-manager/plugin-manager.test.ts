@@ -1436,6 +1436,9 @@ describe('PluginManager', () => {
 
         releaseLoader();
         yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
         assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 2 }]);
       }),
     );
@@ -1484,6 +1487,9 @@ describe('PluginManager', () => {
 
         releaseLoader();
         yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
         assert.deepStrictEqual(manager.getFailed(), []);
         assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 7 }]);
         assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'consumer' }]);
@@ -1547,6 +1553,9 @@ describe('PluginManager', () => {
 
         releaseLoader();
         yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
         assert.deepStrictEqual(snapshot, [{ string: 'early' }, { string: 'late' }]);
       }),
     );
@@ -2252,6 +2261,20 @@ describe('PluginManager', () => {
       });
     };
 
+    /**
+     * Brings a manager up the way a host does. These fixtures declare no `activatesOn`, which now
+     * normalizes to the idle wave, and `start()` FORKS that wave rather than awaiting it — so
+     * asserting on `getActive()` straight after `start()` races the daemon. Firing `Idle` here is
+     * the barrier; it is idempotent against the wave guard whichever order the two land in.
+     * Returns whether either wave activated anything, which is what `start()` alone used to report.
+     */
+    const startAndSettle = (manager: PluginManager.PluginManager) =>
+      Effect.gen(function* () {
+        const started = yield* manager.start();
+        const idled = yield* manager.activate(ActivationEvents.Idle);
+        return started || idled;
+      });
+
     it.effect('activates a provider chain in topological order and yields the implementations', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
@@ -2285,7 +2308,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const result = yield* manager.start();
+        const result = yield* startAndSettle(manager);
         assert.isTrue(result);
         assert.deepStrictEqual(manager.getActive(), [
           'org.dxos.plugin.test.module.string',
@@ -2325,7 +2348,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         assert.strictEqual(manager.getActive().length, 2);
       }),
     );
@@ -2346,7 +2369,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.isTrue(activated);
         assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.root']);
       }),
@@ -2369,7 +2392,7 @@ describe('PluginManager', () => {
 
         const manager = makeManagerWith(Test);
         // Structural problems put the plugin into an error state; startup continues.
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         const failures = manager.getFailed();
         assert.strictEqual(failures.length, 1);
@@ -2403,7 +2426,7 @@ describe('PluginManager', () => {
 
         const manager = makeManagerWith(Test);
         // The consumer's chain roots at the provider's event: it pends through startup...
-        assert.isFalse(yield* manager.start());
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         assert.deepStrictEqual(manager.getFailed(), []);
 
@@ -2443,7 +2466,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         const failures = manager.getFailed();
         assert.isAbove(failures.length, 0);
@@ -2472,7 +2495,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         const failures = manager.getFailed();
         assert.isAbove(failures.length, 0);
@@ -2495,7 +2518,7 @@ describe('PluginManager', () => {
         const Undeclared = Plugin.make(builder);
 
         const manager = makeManagerWith(Undeclared);
-        assert.isFalse(yield* manager.start());
+        yield* startAndSettle(manager);
         const failures = manager.getFailed();
         assert.strictEqual(failures.length, 1);
         assert.instanceOf(failures[0].error, ProvidesMismatchError);
@@ -2517,7 +2540,7 @@ describe('PluginManager', () => {
         const Conditional = Plugin.make(builder);
 
         const manager = makeManagerWith(Conditional);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.conditional']);
         assert.deepStrictEqual(manager.capabilities.getAll(String), []);
       }),
@@ -2547,7 +2570,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Consumer);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         // Soft ordering: the same-pass provider activated first, so the snapshot saw it.
         assert.deepStrictEqual(snapshot, [{ widget: 'one' }, { widget: 'two' }]);
 
@@ -2638,7 +2661,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         assert.strictEqual(count, 0);
       }),
     );
@@ -2695,7 +2718,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         yield* manager.activate(CountEvent);
         assert.deepStrictEqual(manager.capabilities.get(String), { string: 'gated' });
@@ -2736,7 +2759,7 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key],
           pluginLoader,
         });
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.provider']);
 
         yield* manager.add(lateMeta.profile.key);
@@ -2766,7 +2789,7 @@ describe('PluginManager', () => {
         const lateInstance = Late();
         plugins = [baseInstance, lateInstance];
         const manager = PluginManager.make({ plugins: [baseInstance], enabled: [testMeta.profile.key], pluginLoader });
-        yield* manager.start();
+        yield* startAndSettle(manager);
 
         yield* manager.add(lateMeta.profile.key);
         const enabled = yield* manager.enable(lateMeta.profile.key);
@@ -2825,7 +2848,7 @@ describe('PluginManager', () => {
           enabled: [providerMeta.profile.key, testMeta.profile.key],
           pluginLoader,
         });
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.strictEqual(manager.getActive().length, 2);
 
         yield* manager.disable(providerMeta.profile.key);
@@ -2880,7 +2903,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.strictEqual(manager.getActive().length, 3);
 
         yield* manager.shutdown();
@@ -2913,7 +2936,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.strictEqual(finalized, 0, 'finalizer ran while the module was still active');
 
         yield* manager.shutdown();
@@ -2942,7 +2965,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
 
         const marks = () => performance.getEntriesByName(`milestone:dispatch:${demandKey}:requested`).length;
         assert.strictEqual(yield* manager.activate(DemandEvent), true);
@@ -2978,7 +3001,7 @@ describe('PluginManager', () => {
 
         const manager = makeManagerWith(Test);
         const subscription = yield* PubSub.subscribe(manager.activation);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         while (true) {
           const message = yield* Queue.poll(subscription);
           if (message._tag === 'None') {
@@ -3127,6 +3150,9 @@ describe('PluginManager', () => {
         yield* Deferred.succeed(gateC, undefined);
         yield* Fiber.join(eventFiber);
         yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
         // The scoped pull leaves slowC to the startup pass — nothing is orphaned.
         assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 3 }]);
       }),
@@ -3136,8 +3162,10 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const Test = Plugin.make(
           Plugin.define(testMeta).pipe(
+            // The startup half of the contrast, so it says so: omitting `activatesOn` now means idle.
             Plugin.addModule({
               id: 'keep',
+              activatesOn: ActivationEvent.Startup,
               provides: [String],
               activate: () => Effect.succeed([Capability.contribute(String, { string: 'keep' })]),
             }),

@@ -29,7 +29,7 @@ const makeManager = () =>
   });
 
 describe('Plugin module authoring', () => {
-  describe('default (startup) wave', () => {
+  describe('default (idle) wave', () => {
     it('normalizes provides/requires declarations', () => {
       const Test = Plugin.make(
         Plugin.define(testMeta).pipe(
@@ -47,7 +47,7 @@ describe('Plugin module authoring', () => {
       );
 
       const [module] = Test().modules;
-      expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(module.activation.requires).toEqual([String, Number]);
       expect(module.activation.provides).toEqual([Total]);
       expect(module.id).toEqual('org.dxos.plugin.test.module.total');
@@ -92,7 +92,7 @@ describe('Plugin module authoring', () => {
       }),
     );
 
-    it('empty provides declares a startup root', () => {
+    it('empty provides declares an idle-wave root', () => {
       const Test = Plugin.make(
         Plugin.define(testMeta).pipe(
           Plugin.addModule({
@@ -103,7 +103,7 @@ describe('Plugin module authoring', () => {
         ),
       );
       const [module] = Test().modules;
-      expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(module.activation.provides).toEqual([]);
     });
   });
@@ -145,7 +145,7 @@ describe('Plugin module authoring', () => {
         }),
       );
       const [chainMember] = Plugin.make(builder)().modules;
-      expect(chainMember.activation.activatesOn).toEqual(ActivationEvent.Startup);
+      expect(chainMember.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(chainMember.activation.requires).toEqual([String]);
       expect(chainMember.activation.provides).toEqual([]);
     });
@@ -277,7 +277,7 @@ describe('Plugin module authoring', () => {
       const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
       expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
-      expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(module.activation.provides).toEqual([Total]);
     });
 
@@ -300,7 +300,7 @@ describe('Plugin module authoring', () => {
 
         const [module] = Test({ offset: 41 }).modules;
         expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
-        expect(module.activation.activatesOn).toEqual(ActivationEvent.Startup);
+        expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
         expect(module.activation.provides).toEqual([Total]);
 
         const result = yield* module

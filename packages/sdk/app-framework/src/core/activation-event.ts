@@ -82,6 +82,16 @@ export const getEvents = (events: Events) => ('type' in events ? events.events :
 export const Startup = make('org.dxos.app-framework.event.startup');
 
 /**
+ * Fired once by the host at main-thread idle after the app is interactive; see the `common`
+ * well-known events for the authoring-facing documentation.
+ *
+ * Defined here rather than only in `common` because omitting `activatesOn` normalizes to this
+ * event, and `Plugin.normalizeActivation` lives in core — which cannot import `common` without
+ * closing the `common -> core` cycle.
+ */
+export const Idle = make('org.dxos.app-framework.event.idle');
+
+/**
  * A plugin's feature-start event, by convention `<pluginKey>.event.start`. A plugin's
  * off-critical-path modules declare `activatesOn` on its own start event (conventionally
  * exported as `<Name>Events.Start` from the plugin's types); cross-plugin contributions (a

@@ -591,14 +591,21 @@ export class ActivationScheduler {
   }
 
   /**
-   * Whether a module sits in the baseline (startup) wave — which is what omitting `activatesOn`
-   * normalizes to. A module there has declared no demand gate, so any wave may pull it as a
-   * provider, whether or not startup has run. Explicitly gated providers stay wave-scoped, which
-   * is what keeps two mutually-exclusive providers of one capability from both being candidates.
+   * Whether a module sits in the baseline wave — `Startup u Idle`. A module there is pullable as a
+   * provider by any wave, whether or not its own wave has run; explicitly gated providers stay
+   * wave-scoped, which is what keeps two mutually-exclusive providers of one capability from both
+   * being candidates.
+   *
+   * Idle is in the baseline because it is what omitting `activatesOn` normalizes to: scoping
+   * un-annotated modules to their own wave would make every un-annotated provider invisible to the
+   * startup pass, so `ClientPlugin`'s `Client` would not initialize until idle. Modules declaring
+   * `Startup` explicitly lose nothing — their wave fires first, so `#waveFired` covers them after.
    */
   #isBaselineWave(module: Plugin.PluginModule): boolean {
-    const startup = ActivationEvent.eventKey(ActivationEvent.Startup);
-    return ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(startup);
+    const baseline = [ActivationEvent.Startup, ActivationEvent.Idle].map(ActivationEvent.eventKey);
+    return ActivationEvent.getEvents(module.activation.activatesOn)
+      .map(ActivationEvent.eventKey)
+      .some((event) => baseline.includes(event));
   }
 
   /**

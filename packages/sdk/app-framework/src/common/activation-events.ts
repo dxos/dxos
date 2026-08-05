@@ -32,5 +32,9 @@ export const PluginStart = (pluginKey: string): ActivationEvent$.ActivationEvent
  * settings read) and which therefore no single surface can gate. A feature's own modules ride
  * its plugin start event, fired when its surface renders; putting a feature body here instead
  * is what turned the former `DeferredStartup` into a second startup pass.
+ *
+ * This is also what omitting `activatesOn` normalizes to, so a module that must run at boot has
+ * to say `activatesOn: ActivationEvents.Startup` explicitly. Defined in core; see
+ * {@link ActivationEvent$.Idle}.
  */
-export const Idle = ActivationEvent$.make('org.dxos.app-framework.event.idle');
+export const Idle = ActivationEvent$.Idle;
