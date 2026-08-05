@@ -9,6 +9,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -220,13 +221,17 @@ const storyDeckState = Capability.makeModule(() =>
 );
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
+  // Shell state the Deck reads through the strict hooks on its first render, so it belongs on the
+  // startup pass rather than the idle default these would otherwise normalize to.
   Plugin.addModule({
     id: 'story-deck-settings',
+    activatesOn: ActivationEvents.Startup,
     provides: [DeckCapabilities.Settings],
     activate: storyDeckSettings,
   }),
   Plugin.addModule({
     id: 'story-deck-state',
+    activatesOn: ActivationEvents.Startup,
     provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
     activate: storyDeckState,
   }),
