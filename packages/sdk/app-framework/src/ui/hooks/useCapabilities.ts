@@ -63,6 +63,17 @@ export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Ato
 };
 
 /**
+ * Tolerant variant of {@link useAtomCapability}: returns `undefined` while the atom capability is
+ * not registered, rather than throwing. Use it wherever a reader can render before its provider —
+ * a provider gated on a genuine runtime event (a status indicator whose state arrives with the
+ * client) cannot be pulled onto the startup pass with `requires`.
+ */
+export const useOptionalAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T | undefined => {
+  const atom = useOptionalCapability(atomCapability);
+  return useAtomValue(atom ?? emptyAtomValue) as T | undefined;
+};
+
+/**
  * Hook to get value and updater for an atom capability.
  * Returns [currentValue, updateFn] similar to useState.
  * @example const [settings, updateSettings] = useAtomCapabilityState(CommentCapabilities.Settings);
