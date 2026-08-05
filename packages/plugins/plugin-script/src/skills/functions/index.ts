@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import {
@@ -18,14 +19,14 @@ import {
 
 export * from './definitions';
 
-export const ScriptHandlers = OperationHandlerSet.keyed([
-  [Create, () => import('./create')],
-  [Read, () => import('./read')],
-  [Update, () => import('./update')],
-  [Delete, () => import('./delete')],
-  [Deploy, () => import('./deploy')],
-  [Invoke, () => import('./invoke')],
-  [InspectInvocations, () => import('./inspect-invocations')],
-  [QueryDeployedFunctions, () => import('./query-deployed-functions')],
-  [InstallFunction, () => import('./install-function')],
+export const ScriptHandlers = OperationHandlerSet.lazy([
+  Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  Read.pipe(Operation.lazyHandler(() => import('./read'))),
+  Update.pipe(Operation.lazyHandler(() => import('./update'))),
+  Delete.pipe(Operation.lazyHandler(() => import('./delete'))),
+  Deploy.pipe(Operation.lazyHandler(() => import('./deploy'))),
+  Invoke.pipe(Operation.lazyHandler(() => import('./invoke'))),
+  InspectInvocations.pipe(Operation.lazyHandler(() => import('./inspect-invocations'))),
+  QueryDeployedFunctions.pipe(Operation.lazyHandler(() => import('./query-deployed-functions'))),
+  InstallFunction.pipe(Operation.lazyHandler(() => import('./install-function'))),
 ]);

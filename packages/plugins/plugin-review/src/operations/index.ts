@@ -2,20 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as CommentOperation from '../types/CommentOperation';
 
-export const CommentOperationHandlerSet = OperationHandlerSet.keyed([
-  [CommentOperation.AddMessage, () => import('./add-message')],
-  [CommentOperation.Create, () => import('./create')],
-  [CommentOperation.CreateProposals, () => import('./create-proposals')],
-  [CommentOperation.Delete, () => import('./delete')],
-  [CommentOperation.DeleteMessage, () => import('./delete-message')],
-  [CommentOperation.RespondToThread, () => import('./respond-to-thread')],
-  [CommentOperation.Restore, () => import('./restore')],
-  [CommentOperation.RestoreMessage, () => import('./restore-message')],
-  [CommentOperation.Select, () => import('./select')],
-  [CommentOperation.SetAgentConfig, () => import('./set-agent-config')],
-  [CommentOperation.ToggleResolved, () => import('./toggle-resolved')],
+export const CommentOperationHandlerSet = OperationHandlerSet.lazy([
+  CommentOperation.AddMessage.pipe(Operation.lazyHandler(() => import('./add-message'))),
+  CommentOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  CommentOperation.CreateProposals.pipe(Operation.lazyHandler(() => import('./create-proposals'))),
+  CommentOperation.Delete.pipe(Operation.lazyHandler(() => import('./delete'))),
+  CommentOperation.DeleteMessage.pipe(Operation.lazyHandler(() => import('./delete-message'))),
+  CommentOperation.RespondToThread.pipe(Operation.lazyHandler(() => import('./respond-to-thread'))),
+  CommentOperation.Restore.pipe(Operation.lazyHandler(() => import('./restore'))),
+  CommentOperation.RestoreMessage.pipe(Operation.lazyHandler(() => import('./restore-message'))),
+  CommentOperation.Select.pipe(Operation.lazyHandler(() => import('./select'))),
+  CommentOperation.SetAgentConfig.pipe(Operation.lazyHandler(() => import('./set-agent-config'))),
+  CommentOperation.ToggleResolved.pipe(Operation.lazyHandler(() => import('./toggle-resolved'))),
 ]);

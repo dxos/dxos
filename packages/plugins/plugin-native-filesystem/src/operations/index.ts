@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as NativeFilesystemOperation from '../types/NativeFilesystemOperation';
 
-export const NativeFilesystemOperationHandlerSet = OperationHandlerSet.keyed([
-  [NativeFilesystemOperation.OpenDirectory, () => import('./open-directory')],
-  [NativeFilesystemOperation.CloseDirectory, () => import('./close-directory')],
-  [NativeFilesystemOperation.RefreshDirectory, () => import('./refresh-directory')],
+export const NativeFilesystemOperationHandlerSet = OperationHandlerSet.lazy([
+  NativeFilesystemOperation.OpenDirectory.pipe(Operation.lazyHandler(() => import('./open-directory'))),
+  NativeFilesystemOperation.CloseDirectory.pipe(Operation.lazyHandler(() => import('./close-directory'))),
+  NativeFilesystemOperation.RefreshDirectory.pipe(Operation.lazyHandler(() => import('./refresh-directory'))),
 ]);

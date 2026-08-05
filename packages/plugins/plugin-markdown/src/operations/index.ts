@@ -3,23 +3,24 @@
 //
 
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as MarkdownOperation from '../types/MarkdownOperation';
 
-export const MarkdownOperationHandlerSet = OperationHandlerSet.keyed([
-  [CollaborationOperation.AcceptChange, () => import('./accept-change')],
-  [MarkdownOperation.Create, () => import('./create')],
-  [MarkdownOperation.CreateBranch, () => import('./create-branch')],
-  [MarkdownOperation.CreateCheckpoint, () => import('./create-checkpoint')],
-  [MarkdownOperation.CreateMarkdown, () => import('./create-markdown')],
-  [MarkdownOperation.GetHistory, () => import('./get-history')],
-  [MarkdownOperation.GetSelection, () => import('./get-selection')],
-  [MarkdownOperation.MergeBranch, () => import('./merge-branch')],
-  [MarkdownOperation.Open, () => import('./open')],
-  [CollaborationOperation.RejectChange, () => import('./reject-change')],
-  [CollaborationOperation.RestoreText, () => import('./restore-text')],
-  [MarkdownOperation.ScrollToAnchor, () => import('./scroll-to-anchor')],
-  [MarkdownOperation.SuggestEdit, () => import('./suggest-edit')],
-  [MarkdownOperation.Update, () => import('./update-markdown')],
+export const MarkdownOperationHandlerSet = OperationHandlerSet.lazy([
+  CollaborationOperation.AcceptChange.pipe(Operation.lazyHandler(() => import('./accept-change'))),
+  MarkdownOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  MarkdownOperation.CreateBranch.pipe(Operation.lazyHandler(() => import('./create-branch'))),
+  MarkdownOperation.CreateCheckpoint.pipe(Operation.lazyHandler(() => import('./create-checkpoint'))),
+  MarkdownOperation.CreateMarkdown.pipe(Operation.lazyHandler(() => import('./create-markdown'))),
+  MarkdownOperation.GetHistory.pipe(Operation.lazyHandler(() => import('./get-history'))),
+  MarkdownOperation.GetSelection.pipe(Operation.lazyHandler(() => import('./get-selection'))),
+  MarkdownOperation.MergeBranch.pipe(Operation.lazyHandler(() => import('./merge-branch'))),
+  MarkdownOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
+  CollaborationOperation.RejectChange.pipe(Operation.lazyHandler(() => import('./reject-change'))),
+  CollaborationOperation.RestoreText.pipe(Operation.lazyHandler(() => import('./restore-text'))),
+  MarkdownOperation.ScrollToAnchor.pipe(Operation.lazyHandler(() => import('./scroll-to-anchor'))),
+  MarkdownOperation.SuggestEdit.pipe(Operation.lazyHandler(() => import('./suggest-edit'))),
+  MarkdownOperation.Update.pipe(Operation.lazyHandler(() => import('./update-markdown'))),
 ]);

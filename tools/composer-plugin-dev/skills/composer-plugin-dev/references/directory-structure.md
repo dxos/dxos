@@ -29,7 +29,7 @@ src/
       FooArticle.tsx
       FooArticle.stories.tsx
   operations/
-    index.ts              # OperationHandlerSet.keyed([...]) + re-export defs
+    index.ts              # OperationHandlerSet.lazy([...]) + re-export defs
     definitions.ts
     create.ts
     move.ts

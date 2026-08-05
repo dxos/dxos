@@ -70,7 +70,7 @@ Invokes an operation from within an Effect context (e.g., inside another handler
 yield * Operation.invoke(SpaceOperation.AddObject, { object, target: collection });
 ```
 
-### `OperationHandlerSet.keyed(entries)`
+### `OperationHandlerSet.lazy(entries)`
 
 Pairs each operation definition with its handler module. The definitions stay in the eager graph
 (they are lightweight), so the framework can route an invocation and then load only that
@@ -81,9 +81,9 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as MyOperation from '../types/MyOperation';
 
-export const MyOperationHandlerSet = OperationHandlerSet.keyed([
-  [MyOperation.CreateItem, () => import('./create-item')],
-  [MyOperation.DeleteItem, () => import('./delete-item')],
+export const MyOperationHandlerSet = OperationHandlerSet.lazy([
+  MyOperation.CreateItem.pipe(Operation.lazyHandler(() => import('./create-item'))),
+  MyOperation.DeleteItem.pipe(Operation.lazyHandler(() => import('./delete-item'))),
 ]);
 ```
 
@@ -118,7 +118,7 @@ src/operations/
   definitions.ts         # All Operation.make() definitions
   create-item.ts         # Handler for CreateItem (export default)
   delete-item.ts         # Handler for DeleteItem (export default)
-  index.ts               # OperationHandlerSet.keyed() + re-export definitions
+  index.ts               # OperationHandlerSet.lazy() + re-export definitions
 ```
 
 ## Examples

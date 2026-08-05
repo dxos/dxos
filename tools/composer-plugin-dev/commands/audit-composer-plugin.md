@@ -37,7 +37,7 @@ Walk the plugin tree and report **every deviation** from the rules in `skills/co
 ### Operations & skills
 
 - Operations split between `definitions.ts` and per-handler files?
-- `OperationHandlerSet.keyed()` in the barrel?
+- `OperationHandlerSet.lazy()` in the barrel?
 - Skill defined and registered? Type metadata references `skills: [...]`?
 
 ### Types

@@ -2267,7 +2267,7 @@ export default handler;
 
 - [ ] **Step 4: Register in the operations barrel**
 
-In `packages/plugins/plugin-inbox/src/operations/index.ts`, find the `OperationHandlerSet.keyed(...)` array and add a new entry pairing the definition with its handler module:
+In `packages/plugins/plugin-inbox/src/operations/index.ts`, find the `OperationHandlerSet.lazy(...)` array and add a new entry pairing the definition with its handler module:
 
 ```typescript
 [InboxOperation.ExtractMessage, () => import('./extract-message')],

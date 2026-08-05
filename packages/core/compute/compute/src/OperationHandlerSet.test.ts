@@ -101,14 +101,13 @@ describe('OperationHandlerSet.reactive', () => {
   });
 });
 
-describe('OperationHandlerSet.keyed', () => {
+describe('OperationHandlerSet.lazy', () => {
   test('definitions enumerate without loading any handler body', async ({ expect }) => {
     let loads = 0;
-    const set = OperationHandlerSet.keyed([
-      [
-        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
-        () => (loads++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
-      ],
+    const set = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => (loads++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+      ),
     ]);
     expect(set.definitions().map((definition) => definition.meta.key)).toEqual([KEY_A]);
     expect(loads).toEqual(0);
@@ -116,15 +115,13 @@ describe('OperationHandlerSet.keyed', () => {
 
   test('resolving one operation loads only that module', async ({ expect }) => {
     const loads = { a: 0, b: 0 };
-    const set = OperationHandlerSet.keyed([
-      [
-        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
-        () => (loads.a++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
-      ],
-      [
-        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_B } }),
-        () => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') })),
-      ],
+    const set = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => (loads.a++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+      ),
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_B } }).pipe(
+        Operation.lazyHandler(() => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') }))),
+      ),
     ]);
     const found = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(set, KEY_A));
     expect(found.meta.key).toEqual(KEY_A);
@@ -136,17 +133,15 @@ describe('OperationHandlerSet.keyed', () => {
 
   test('merge loads only the matched child', async ({ expect }) => {
     const loads = { a: 0, b: 0 };
-    const setA = OperationHandlerSet.keyed([
-      [
-        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
-        () => (loads.a++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
-      ],
+    const setA = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => (loads.a++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+      ),
     ]);
-    const setB = OperationHandlerSet.keyed([
-      [
-        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_B } }),
-        () => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') })),
-      ],
+    const setB = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_B } }).pipe(
+        Operation.lazyHandler(() => (loads.b++, Promise.resolve({ default: makeHandler(KEY_B, 'B') }))),
+      ),
     ]);
     const merged = OperationHandlerSet.merge(setA, setB);
 
@@ -162,11 +157,10 @@ describe('OperationHandlerSet.keyed', () => {
   test('merge enumerates definitions without loading any handler', async ({ expect }) => {
     let loaded = 0;
     const set = OperationHandlerSet.merge(
-      OperationHandlerSet.keyed([
-        [
-          Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
-          () => (loaded++, Promise.resolve({ default: makeHandler(KEY_A, 'A') })),
-        ],
+      OperationHandlerSet.lazy([
+        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+          Operation.lazyHandler(() => (loaded++, Promise.resolve({ default: makeHandler(KEY_A, 'A') }))),
+        ),
       ]),
       OperationHandlerSet.make(makeHandler(KEY_B, 'B')),
     );
@@ -180,19 +174,18 @@ describe('OperationHandlerSet.keyed', () => {
     expect(loaded).toEqual(0);
   });
 
-  test('an earlier make-set override wins over a later keyed set for the same key', async ({ expect }) => {
+  test('an earlier make-set override wins over a later lazy set for the same key', async ({ expect }) => {
     // A materialized `make` set answers per-key lookups directly, so resolution honors
-    // contribution order — a later keyed contribution must not shadow an earlier override
+    // contribution order — a later lazy contribution must not shadow an earlier override
     // (e.g. a story or test stubbing an operation a plugin also handles).
     const overrideHandler = makeHandler(KEY_A, 'override');
     const override = OperationHandlerSet.make(overrideHandler);
-    const keyed = OperationHandlerSet.keyed([
-      [
-        Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }),
-        () => Promise.resolve({ default: makeHandler(KEY_A, 'plugin') }),
-      ],
+    const lazySet = OperationHandlerSet.lazy([
+      Operation.make({ input: Schema.Void, output: Schema.String, meta: { key: KEY_A } }).pipe(
+        Operation.lazyHandler(() => Promise.resolve({ default: makeHandler(KEY_A, 'plugin') })),
+      ),
     ]);
-    const merged = OperationHandlerSet.merge(override, keyed);
+    const merged = OperationHandlerSet.merge(override, lazySet);
 
     const found = await EffectEx.runPromise(OperationHandlerSet.getHandlerByKey(merged, KEY_A));
     expect(found).toBe(overrideHandler);

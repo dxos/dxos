@@ -2,17 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as IbkrOperation from '../types/IbkrOperation';
 
 /** Combined handler set for all IBKR operations; provided to the Composer operation registry. */
-export const IbkrOperationHandlerSet = OperationHandlerSet.keyed([
-  [IbkrOperation.SyncPortfolioReport, () => import('./sync-portfolio')],
-  [IbkrOperation.ImportPortfolioReport, () => import('./import-portfolio')],
-  [IbkrOperation.GetPortfolio, () => import('./get-portfolio')],
-  [IbkrOperation.GetTrades, () => import('./get-trades')],
-  [IbkrOperation.MaterializeInstrument, () => import('./materialize-instrument')],
-  [IbkrOperation.GetInstrumentFundamentals, () => import('./get-instrument-fundamentals')],
-  [IbkrOperation.SyncLots, () => import('./sync-lots')],
+export const IbkrOperationHandlerSet = OperationHandlerSet.lazy([
+  IbkrOperation.SyncPortfolioReport.pipe(Operation.lazyHandler(() => import('./sync-portfolio'))),
+  IbkrOperation.ImportPortfolioReport.pipe(Operation.lazyHandler(() => import('./import-portfolio'))),
+  IbkrOperation.GetPortfolio.pipe(Operation.lazyHandler(() => import('./get-portfolio'))),
+  IbkrOperation.GetTrades.pipe(Operation.lazyHandler(() => import('./get-trades'))),
+  IbkrOperation.MaterializeInstrument.pipe(Operation.lazyHandler(() => import('./materialize-instrument'))),
+  IbkrOperation.GetInstrumentFundamentals.pipe(Operation.lazyHandler(() => import('./get-instrument-fundamentals'))),
+  IbkrOperation.SyncLots.pipe(Operation.lazyHandler(() => import('./sync-lots'))),
 ]);

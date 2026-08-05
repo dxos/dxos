@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as InboxOperation from '../../../types/InboxOperation';
@@ -17,7 +17,7 @@ export const JmapOperations: {
   Sync,
 };
 
-export const JmapHandlers = OperationHandlerSet.keyed([
-  [InboxOperation.JmapSend, () => import('./send')],
-  [InboxOperation.JmapSync, () => import('./sync')],
+export const JmapHandlers = OperationHandlerSet.lazy([
+  InboxOperation.JmapSend.pipe(Operation.lazyHandler(() => import('./send'))),
+  InboxOperation.JmapSync.pipe(Operation.lazyHandler(() => import('./sync'))),
 ]);

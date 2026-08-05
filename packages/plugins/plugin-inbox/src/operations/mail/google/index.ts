@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Operation from '@dxos/compute/Operation';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as InboxOperation from '../../../types/InboxOperation';
@@ -17,7 +17,7 @@ export const GmailFunctions: {
   Sync,
 };
 
-export const GmailHandlers = OperationHandlerSet.keyed([
-  [InboxOperation.GmailSend, () => import('./send')],
-  [InboxOperation.GoogleMailSync, () => import('./sync')],
+export const GmailHandlers = OperationHandlerSet.lazy([
+  InboxOperation.GmailSend.pipe(Operation.lazyHandler(() => import('./send'))),
+  InboxOperation.GoogleMailSync.pipe(Operation.lazyHandler(() => import('./sync'))),
 ]);

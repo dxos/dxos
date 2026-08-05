@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as VoxelOperation from '../types/VoxelOperation';
 
-export const VoxelOperationHandlerSet = OperationHandlerSet.keyed([
-  [VoxelOperation.AddVoxels, () => import('./add-voxels')],
-  [VoxelOperation.GenerateShape, () => import('./generate-shape')],
-  [VoxelOperation.QueryWorld, () => import('./query-world')],
-  [VoxelOperation.RemoveVoxels, () => import('./remove-voxels')],
+export const VoxelOperationHandlerSet = OperationHandlerSet.lazy([
+  VoxelOperation.AddVoxels.pipe(Operation.lazyHandler(() => import('./add-voxels'))),
+  VoxelOperation.GenerateShape.pipe(Operation.lazyHandler(() => import('./generate-shape'))),
+  VoxelOperation.QueryWorld.pipe(Operation.lazyHandler(() => import('./query-world'))),
+  VoxelOperation.RemoveVoxels.pipe(Operation.lazyHandler(() => import('./remove-voxels'))),
 ]);

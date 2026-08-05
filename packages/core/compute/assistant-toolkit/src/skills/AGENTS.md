@@ -9,5 +9,5 @@ export { XSkillHandlers, XSkillOperations } from './operations';
 ```ts
 // <skill>/operations/index.ts — single source of both aggregates
 export * as XSkillOperations from './definitions';
-export const XHandlers = OperationHandlerSet.keyed([...]);
+export const XHandlers = OperationHandlerSet.lazy([...]);
 ```

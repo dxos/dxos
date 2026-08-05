@@ -64,9 +64,9 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import * as FooOperation from '../types/FooOperation';
 
-export const FooOperationHandlerSet = OperationHandlerSet.keyed([
-  [FooOperation.Create, () => import('./create')],
-  [FooOperation.Move, () => import('./move')],
+export const FooOperationHandlerSet = OperationHandlerSet.lazy([
+  FooOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  FooOperation.Move.pipe(Operation.lazyHandler(() => import('./move'))),
 ]);
 ```
 

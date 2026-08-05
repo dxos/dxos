@@ -3,6 +3,7 @@
 //
 
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { UpdateProfile } from './definitions';
@@ -21,18 +22,20 @@ import { CreateAgent } from './definitions';
 export * as ClientOperation from './definitions';
 export * from './errors';
 
-export const ClientOperationHandlerSet = OperationHandlerSet.keyed([
-  [CreateAgent, () => import('./create-agent')],
-  [CreateIdentity, () => import('./create-identity')],
-  [CreatePasskey, () => import('./create-passkey')],
-  [CreateRecoveryCode, () => import('./create-recovery-code')],
-  [JoinIdentity, () => import('./join-identity')],
-  [OpenUsage, () => import('./open-usage')],
-  [RecoverIdentity, () => import('./recover-identity')],
-  [RedeemPasskey, () => import('./redeem-passkey')],
-  [RedeemToken, () => import('./redeem-token')],
-  [ResetStorage, () => import('./reset-storage')],
-  [ShareIdentity, () => import('./share-identity')],
-  [NavigationOperation.ResolveNavigationTargets, () => import('./resolve-navigation-targets')],
-  [UpdateProfile, () => import('./update-profile')],
+export const ClientOperationHandlerSet = OperationHandlerSet.lazy([
+  CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent'))),
+  CreateIdentity.pipe(Operation.lazyHandler(() => import('./create-identity'))),
+  CreatePasskey.pipe(Operation.lazyHandler(() => import('./create-passkey'))),
+  CreateRecoveryCode.pipe(Operation.lazyHandler(() => import('./create-recovery-code'))),
+  JoinIdentity.pipe(Operation.lazyHandler(() => import('./join-identity'))),
+  OpenUsage.pipe(Operation.lazyHandler(() => import('./open-usage'))),
+  RecoverIdentity.pipe(Operation.lazyHandler(() => import('./recover-identity'))),
+  RedeemPasskey.pipe(Operation.lazyHandler(() => import('./redeem-passkey'))),
+  RedeemToken.pipe(Operation.lazyHandler(() => import('./redeem-token'))),
+  ResetStorage.pipe(Operation.lazyHandler(() => import('./reset-storage'))),
+  ShareIdentity.pipe(Operation.lazyHandler(() => import('./share-identity'))),
+  NavigationOperation.ResolveNavigationTargets.pipe(
+    Operation.lazyHandler(() => import('./resolve-navigation-targets')),
+  ),
+  UpdateProfile.pipe(Operation.lazyHandler(() => import('./update-profile'))),
 ]);
