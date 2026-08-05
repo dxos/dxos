@@ -12,9 +12,9 @@ CI job that runs moon — handing them off for a focused investigation.
    compute but emit many files (asset copies, typedoc HTML, rolldown bundles) are net losses.
 2. **Four tasks never hydrate at all**, re-executing in every job despite producing
    byte-identical hashes. The lookup key is right, so the artifact is absent — an upload-side
-   failure. `docs:bundle` is explained (two checked-in mp4s exceed moon's 4 MB per-blob limit).
-   `composer-app:bundle` is **not** the same cause — measured, it has no file over 4 MB, but its
-   output is **384 MB across 17 954 files**, so total size or file count is the open candidate.
+   failure. Both explained cases have blobs past moon's 4 MB per-blob upload limit: `docs:bundle`
+   via two checked-in mp4s, and `composer-app:bundle` via a 22 MB audio file among others, in a
+   384 MB / 17 954-file output that is 46% sourcemaps.
 3. Consequence: per-job wall time is dominated by cache hydration, not by real work —
    **920–1121 s of hydration against 20–95 s of execution**, at only 3.0–3.7× effective
    parallelism on 8-core runners.
@@ -118,34 +118,52 @@ pathological artifact.
   `devtools-extension` (20 MB, 542 files) both hydrate fine, so size alone is not disqualifying
   at that magnitude. It is still a live candidate at composer's magnitude — see below.
 
-- _A single blob over 4 MB_ — **measured and ruled out for `composer-app`.** moon aborts an
-  action's upload when one blob exceeds 4 MB, which would make every later run a guaranteed miss
-  (see moon v1.32 release notes; meant to be handled by the ByteStream API for gRPC servers, and
-  Depot does implement Bazel RE v2 + ByteStream with the limit advertised via the Capabilities
-  API). It was the leading hypothesis, but a CI diagnostic over the real on-disk output found no
-  file above 4 MB in `composer-app/out`. Still worth confirming for `storybook-react`/`tasks`.
+**Leading explanation — blobs far over moon's 4 MB per-blob limit.** moon aborts an action's cache
+upload when one blob exceeds 4 MB, making every later run a guaranteed miss. That is meant to be
+handled by the ByteStream API for gRPC servers (moon v1.32 release notes), and Depot does implement
+Bazel RE v2 + ByteStream with the limit advertised via the Capabilities API — so the question is why
+the streaming path is not taking effect here. Measured in `composer-app/out` (run `31056219946`):
 
-**The real anomaly — `composer-app/out` is 384 MB across 17 954 files** (measured in CI with
-`du`/`find`, run `31054215273`). For comparison `todomvc/out` is 26 MB / 62 files and hydrates
-fine. So the remaining candidates are **total action size** or **file count**, not per-blob size.
-This also bounds how fast the artifact could ever hydrate even if the upload succeeded: 384 MB
-per runner is a poor trade against the 21 s it takes to rebuild.
+| file                               |     size |
+| :--------------------------------- | -------: |
+| `assets/thunder-*.m4a`             | 22.46 MB |
+| `assets/gongs-1-*.m4a`             | 16.18 MB |
+| `assets/esbuild-*.wasm`            | 13.27 MB |
+| `assets/typescript-*.js.map`       | 12.48 MB |
+| `assets/SpacetimeArticle-*.js.map` | 11.49 MB |
 
-**Composition is not yet known** — and two guesses have already proved wrong, so measure rather
-than infer:
+(An earlier revision of this document claimed the 4 MB limit was measured and ruled out for
+composer. That was wrong — a too-narrow grep over the diagnostic output dropped the size lines.
+The limit is the most likely cause, not an excluded one.)
 
-- Summing vite's build table gives only 122.8 MB / 4834 files. Do not trust it; it does not
-  enumerate everything that lands in the output directory.
-- The tldraw assets `composer-app:prebuild` copies in are **not** the bulk:
-  `@tldraw/assets@3.0.0` in `node_modules` totals only 1.7 MB.
+**Scale — `composer-app/out` is 384 MB across 17 954 files**, versus `todomvc/out` at 26 MB / 62
+files which hydrates fine. Even if the upload succeeded, 384 MB per runner is a poor trade against
+the 21 s it takes to rebuild (see Finding 1). Composition, by total bytes:
 
-The refined diagnostic in the `e2e-bundle` job (`Report bundle output composition`) reports
-subdirectories, largest files and totals by extension, which should settle it. The specific
-question worth answering: do sourcemaps dominate? Playwright does not need them, so excluding
-them from the e2e bundle would shrink both the build and the artifact.
+| extension |      size | files |
+| :-------- | --------: | ----: |
+| `.map`    | 178.53 MB | 3 805 |
+| `.js`     |  64.72 MB | 4 791 |
+| `.m4a`    |  47.94 MB |     7 |
+| `.wasm`   |  29.09 MB |    10 |
+| `.svg`    |   4.91 MB | 9 218 |
+| `.ttf`    |   1.00 MB |     4 |
 
-Worth asking whether `composer-app:bundle` should emit sourcemaps at all in the e2e path;
-Playwright does not need them, and they are a large fraction of those bytes.
+Three things fall out of that, each independently actionable:
+
+- **Sourcemaps are 46% of the artifact.** Playwright does not need them, so not emitting them for
+  the e2e bundle would remove 178 MB and speed the build.
+- **48 MB of audio in 7 files**, including a single 22.46 MB `thunder-*.m4a` and a 16.18 MB
+  `gongs-1-*.m4a`. These are the largest blobs in the output and, unlike the sourcemaps, they ship
+  to users — worth raising as a bundle-size issue in its own right, independent of caching.
+- **9 218 SVGs for only 4.91 MB** — icons, and the main driver of the file _count_ rather than the
+  size. Relevant if restore cost turns out to be per-file rather than per-byte bound.
+
+Do not measure output size by summing vite's build table: it gave 122.8 MB / 4834 files, a 3×
+undercount, because it does not enumerate everything that lands in the output directory. Use
+`du`/`find` over the real directory (the `Report bundle output composition` step in `e2e-bundle`
+does this). The tldraw assets `composer-app:prebuild` copies are also _not_ the bulk —
+`@tldraw/assets@3.0.0` is only 1.7 MB.
 
 **Direct evidence for a second of the four:** `docs/public/` contains
 `blog/images/Table-combobox-feat.mp4` (7 928 964 B) and `blog/images/comments--1-.mp4`
