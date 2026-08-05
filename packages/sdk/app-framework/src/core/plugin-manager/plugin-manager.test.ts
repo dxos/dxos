@@ -1414,6 +1414,7 @@ describe('PluginManager', () => {
           Plugin.define(testMeta).pipe(
             Plugin.addModule({
               id: 'fast',
+              activatesOn: ActivationEvents.Startup,
               provides: [String],
               activate: () => Effect.succeed([Capability.contribute(String, { string: 'fast' })]),
             }),
@@ -2987,6 +2988,7 @@ describe('PluginManager', () => {
           Plugin.define(testMeta).pipe(
             Plugin.addModule({
               id: 'provider',
+              activatesOn: ActivationEvents.Startup,
               provides: [String],
               activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' })]),
             }),
