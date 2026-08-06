@@ -41,8 +41,14 @@ diagnostics, `Client.diagnostics()`.
 
 - ~~QUERIES diagnostics set retaining the client graph per query (DX-1140)~~ —
   **fixed**, PR #12366 merged to main (5f08a6a2b3).
-- `BufferingTracingBackend#pending` — unbounded when no backend exports spans
-  (noted in email-sync-stability backlog; edge-confirmed, browser unverified).
+- `BufferingTracingBackend#pending` — **verified in-browser 2026-08-06**:
+  unbounded whenever `DX_OTEL_ENDPOINT` is absent (`otel/extension.ts` returns
+  `stubExtension`, so `TRACE_PROCESSOR.tracingBackend` is never set and every
+  `@trace.span()` buffers a `BufferedSpan` forever — page and dedicated worker
+  both; the coordinator worker never initializes observability at all, so it
+  always buffers). Fresh-baseline magnitude is negligible (9 spans on the
+  page); an activity soak must quantify the rate before this earns a fix. The
+  DX-1140 client-graph pinning per span is separate and already fixed.
 - Automerge doc handles: every loaded doc stays resident; no eviction. A large
   space loads many docs (see feed-live-objects partial-replication roadmap).
 - Mailbox/feed data: feeds are fully replicated client-side today.

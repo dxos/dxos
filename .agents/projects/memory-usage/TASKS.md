@@ -25,8 +25,12 @@ checkpoints, and the top dominators from a snapshot.
       (PWA off): page 96.7MB / worker 24.2MB / coordinator 0.6MB ≈ 122MB total.
       Dev is ~2.5× prod on the main thread; delta is module sources + inline
       sourcemaps + unminified code. (serve-min is still dev-serving — 170MB.)
-- [ ] **Verify tracing buffer behavior in-browser** — does
-      `BufferingTracingBackend#pending` grow unbounded in Composer?
+- [x] **Verify tracing buffer behavior in-browser** — confirmed unbounded by
+      design when no `DX_OTEL_ENDPOINT` (extension.ts returns `stubExtension`,
+      backend never set, every `@trace.span()` buffers forever; coordinator
+      worker never initializes observability at all). Magnitude at fresh
+      baseline is negligible (9 BufferedSpans on the page); needs an
+      activity soak to quantify the growth rate before it's worth fixing.
 
 ## Phase 2: Reproduce the report
 
