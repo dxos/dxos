@@ -15,10 +15,10 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
 import {
-  checkEmailExists,
   isAccountErrorType,
   joinWaitlist,
   login,
+  probeEmailExists,
   redeemAccountInvitation,
   validateInvitationCode,
 } from '../credentials';
@@ -174,8 +174,10 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       try {
         // Probe before creating anything: redemption rejects a duplicate email, and an
         // identity created first would be stranded with no account and no way to retry.
-        if (await checkEmailExists({ hubUrl, email })) {
-          setError('account-exists');
+        // An inconclusive probe is not permission to proceed, so it stops here too.
+        const probe = await probeEmailExists({ hubUrl, email });
+        if (probe !== 'available') {
+          setError(probe === 'exists' ? 'account-exists' : 'email-check-unavailable');
           return;
         }
 

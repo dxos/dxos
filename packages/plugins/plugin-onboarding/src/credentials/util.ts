@@ -15,24 +15,43 @@ import { type AccountErrorType } from '@dxos/protocols';
 export type RedeemResult = { accountId: string; emailVerificationSent: boolean } | { needsIdentity: true };
 
 /**
+ * Outcome of the pre-signup email probe. `unavailable` is deliberately distinct from
+ * `available`: a failed probe says nothing about the address, and treating it as free
+ * would create a local identity that redemption then refuses to bind.
+ */
+export type EmailProbeResult = 'exists' | 'available' | 'unavailable';
+
+/**
  * POST `/account/email/exists` on hub-service. Lets the signup flow reject a
  * duplicate email before creating a local identity, since redemption rejects it
  * afterwards and the orphaned identity cannot be bound to any account.
  *
- * Reports `false` when the probe itself fails (network error, or the 10/min rate
- * limit): redemption re-checks the collision server-side and stays the authority.
+ * Rate limits (10/min) and transport errors both yield `unavailable`, so callers
+ * must stop rather than assume the address is free.
  */
-export const checkEmailExists = async ({ hubUrl, email }: { hubUrl: string; email: string }): Promise<boolean> => {
+export const probeEmailExists = async ({
+  hubUrl,
+  email,
+}: {
+  hubUrl: string;
+  email: string;
+}): Promise<EmailProbeResult> => {
   try {
     const response = await fetch(new URL('/account/email/exists', hubUrl), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
+    if (!response.ok) {
+      return 'unavailable';
+    }
     const envelope = (await response.json()) as { success: boolean; data?: { exists: boolean } };
-    return !!envelope.success && !!envelope.data?.exists;
+    if (!envelope.success || typeof envelope.data?.exists !== 'boolean') {
+      return 'unavailable';
+    }
+    return envelope.data.exists ? 'exists' : 'available';
   } catch {
-    return false;
+    return 'unavailable';
   }
 };
 

@@ -15,6 +15,10 @@ left with no account, no error, and no way to retry short of a storage reset.
 
 Signup now probes `/account/email/exists` first and stops before any identity is
 created, reporting a new `account-exists` error with a link through to email login.
-Redemption failures are still mapped by `data.type`, so a collision that slips past
-the probe (rate-limited, so it reports `false`) surfaces the same message rather than
-the misleading delivery error.
+
+The probe is tri-state: a rate-limited or failed check reports `unavailable` rather
+than "free", and that also stops before identity creation with a retriable error —
+so no signup path can strand an unbindable identity. The URL-driven flow leaves its
+`accountInvitationCode`/`email` params intact in that case so a reload retries.
+Redemption failures are additionally mapped by `data.type`, so a collision reaching
+the server surfaces the same message rather than the misleading delivery error.

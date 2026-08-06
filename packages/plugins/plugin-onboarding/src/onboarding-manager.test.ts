@@ -51,11 +51,26 @@ describe('OnboardingManager', () => {
       hubUrl: 'https://hub.example.com',
       email: 'existing@example.com',
       accountInvitationCode: 'XK4F9P2A',
-      emailExists: true,
+      emailProbe: 'exists',
     });
     await manager.initialize();
 
     // Redemption would reject the duplicate email, stranding this identity unbindable.
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
+    expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
+  });
+
+  test('url-driven signup creates no identity when the email probe is rate-limited', async ({ expect }) => {
+    const { manager, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      email: 'unknown@example.com',
+      accountInvitationCode: 'XK4F9P2A',
+      emailProbe: 'unavailable',
+    });
+    await manager.initialize();
+
+    // An inconclusive probe says nothing about the address, so proceeding could still
+    // strand an identity that redemption refuses to bind.
     expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
     expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
   });
@@ -85,14 +100,21 @@ const createInvoker = () => {
 
 /**
  * Stubs the `/account/email/exists` probe. Any other hub request throws so a test can't
- * pass off the back of a silently-failing fetch.
+ * pass off the back of a silently-failing fetch. `'unavailable'` simulates the rate-limit
+ * response, which must not be read as "this email is free".
  */
-const stubEmailExists = (exists: boolean) => {
+const stubEmailProbe = (outcome: 'exists' | 'available' | 'unavailable') => {
   vi.stubGlobal('fetch', async (input: unknown) => {
     if (!(input instanceof URL) || input.pathname !== '/account/email/exists') {
       throw new Error(`Unexpected hub request: ${String(input)}`);
     }
-    return new Response(JSON.stringify({ success: true, data: { exists } }), {
+    if (outcome === 'unavailable') {
+      return new Response(JSON.stringify({ success: false, message: 'Too many requests' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    return new Response(JSON.stringify({ success: true, data: { exists: outcome === 'exists' } }), {
       headers: { 'Content-Type': 'application/json' },
     });
   });
@@ -107,14 +129,14 @@ const createManager = async (options: {
   hubUrl?: string;
   email?: string;
   accountInvitationCode?: string;
-  emailExists?: boolean;
+  emailProbe?: 'exists' | 'available' | 'unavailable';
 }) => {
   const client = await createClient();
   if (options.identity) {
     await client.halo.createIdentity();
   }
-  if (options.emailExists !== undefined) {
-    stubEmailExists(options.emailExists);
+  if (options.emailProbe !== undefined) {
+    stubEmailProbe(options.emailProbe);
   }
   const { invokePromise, getCalls, calls } = createInvoker();
   const manager = new OnboardingManager({

@@ -35,6 +35,7 @@ const ATMOSPHERE_PROVIDER = 'atproto';
 const errorMessageKeys: Record<WelcomeError, string> = {
   'email': 'email-error.message',
   'account-exists': 'account-exists-error.message',
+  'email-check-unavailable': 'email-check-unavailable-error.message',
   'oauth': 'oauth-error.message',
   'passkey-dismissed': 'passkey-dismissed-error.message',
   'passkey-rejected': 'passkey-rejected-error.message',
@@ -198,9 +199,12 @@ export const Welcome = ({
     }
   }, [code, email, onCreateAccount]);
 
-  // A duplicate email is a signup failure with a login remedy, so it reports under the
-  // signup email field rather than as a generic delivery error.
-  const signupEmailError = error === 'email' || error === 'account-exists' ? t(errorMessageKeys[error]) : null;
+  // Signup-specific failures report under the signup email field rather than as a
+  // generic delivery error.
+  const signupEmailError =
+    error === 'email' || error === 'account-exists' || error === 'email-check-unavailable'
+      ? t(errorMessageKeys[error])
+      : null;
 
   const handleSwitchToEmailLogin = useCallback(() => {
     setTab('login');

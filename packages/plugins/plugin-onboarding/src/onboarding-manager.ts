@@ -20,7 +20,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { WELCOME_SCREEN } from './components';
 import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
-import { checkEmailExists } from './credentials';
+import { probeEmailExists } from './credentials';
 import { meta } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from './util';
 
@@ -260,8 +260,10 @@ export class OnboardingManager {
    * supported on this path -- magic-link login (`/account/login`) handles
    * recovery for real emails, and test emails are always fresh (no restore).
    *
-   * Resolves false when the email already has an account, in which case no identity
-   * is created and the welcome dialog stays open so the user can log in instead.
+   * Resolves false when no identity was created — either the email already has an
+   * account (the welcome dialog stays open so the user can log in instead) or the
+   * probe was inconclusive, in which case the URL params are left intact so a reload
+   * retries the signup.
    */
   private async _redeemAccountInvitation(): Promise<boolean> {
     invariant(this._email);
@@ -269,8 +271,13 @@ export class OnboardingManager {
 
     // Probe before creating anything: redemption rejects a duplicate email, and an
     // identity created first would be stranded with no account and no way to retry.
-    if (await checkEmailExists({ hubUrl: this._hubUrl, email: this._email })) {
-      log.info('signup email already registered; awaiting login', { email: this._email });
+    const probe = await probeEmailExists({ hubUrl: this._hubUrl, email: this._email });
+    if (probe === 'unavailable') {
+      log.warn('could not check whether signup email is registered; leaving signup params for retry');
+      return false;
+    }
+    if (probe === 'exists') {
+      log.info('signup email already registered; awaiting login');
       this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
       removeQueryParamByValue(this._email);
       return false;
