@@ -8,12 +8,11 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Client, LayerSpecs, Migrations, OperationHandler, SchemaDefs } from '#capabilities';
 import { meta } from '#meta';
 
-import { account, config, device, edge, halo, profile } from './commands';
 import * as ClientOptions from './types/ClientOptions';
 
 export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addModule(AppCapability.commands([account, config, device, edge, halo, profile])),
+  Plugin.addModule(AppCapability.commands(() => import('./command-defs.node'))),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Client),
   Plugin.addModule(SchemaDefs),

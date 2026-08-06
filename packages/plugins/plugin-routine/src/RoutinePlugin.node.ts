@@ -19,11 +19,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 
-import { trigger } from './commands';
-
 export const RoutinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.commands([trigger])),
+  Plugin.addModule(AppCapability.commands(() => import('./command-defs'))),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(
     AppCapability.schema([Routine.Routine, Operation.PersistentOperation, Trigger.Trigger, Trace.Message]),

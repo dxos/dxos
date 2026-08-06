@@ -25,11 +25,10 @@ import { translations } from '#translations';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
-import { trigger } from './commands';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addModule(AppCapability.commands([trigger])),
+  Plugin.addModule(AppCapability.commands(() => import('./command-defs'))),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),

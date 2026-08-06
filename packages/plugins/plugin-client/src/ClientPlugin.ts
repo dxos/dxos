@@ -25,13 +25,10 @@ import {
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-import { config, device, edge, halo } from './commands';
 import * as ClientOptions from './types/ClientOptions';
 
 export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
-  // `account` needs the OAuth callback server and `profile` a filesystem, so both stay in the
-  // node variant; the rest resolve through the client alone.
-  Plugin.addModule(AppCapability.commands([config, device, edge, halo])),
+  Plugin.addModule(AppCapability.commands(() => import('./command-defs'))),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(OperationHandler),
