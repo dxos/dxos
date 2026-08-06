@@ -31,7 +31,11 @@ permissions:
   packages: read
 
 env:
-  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
@@ -101,6 +105,9 @@ jobs:
 
       - name: Check package.json paths
         run: pnpm run pkg-lint
+
+      - name: Check remote cache wiring
+        run: node scripts/check-cache-wiring.mjs
 
       # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
       # config resolves workspace packages through their `source` export condition — so it needs no

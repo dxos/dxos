@@ -127,7 +127,9 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Unused deps & dead files: `pnpm knip` (root deps are excluded — see `REPOSITORY_GUIDE.md`)
 - Storybook: `moon run storybook-react:serve` (port 9009)
 
-Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).
+A remote-cache warning from moon is harmless — builds work, they just don't share the team's
+cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
+once per machine, for every worktree.
 
 ## Code style
 
