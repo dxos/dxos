@@ -276,10 +276,13 @@ const ToggleGroupToolbarItem = ({
   }
 };
 
-export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
+/**
+ * Attention-gated toolbar container with no graph items of its own — compose with
+ * {@link ToolbarMenuItems} when the items' position among other toolbar children matters.
+ */
+export const ToolbarMenuRoot = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
   ({ __menuScope, children, ...props }, forwardedRef) => {
-    const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
-    const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
+    const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenuRoot', __menuScope);
     const { hasAttention } = useAttention(attendableId);
 
     return (
@@ -288,13 +291,33 @@ export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMen
         disabled={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
-        {items?.map((item: MenuItem) => (
-          <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
-        ))}
         {children}
       </NaturalToolbar.Root>
     );
   },
+);
+
+/** The menu graph's toolbar items, container-free, so JSX order controls their placement. */
+export const ToolbarMenuItems = ({ __menuScope }: MenuScopedProps<{}>) => {
+  const items = useMenuItems(undefined, undefined, 'ToolbarMenuItems', __menuScope);
+
+  return (
+    <>
+      {items?.map((item: MenuItem) => (
+        <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
+      ))}
+    </>
+  );
+};
+
+/** The common case: graph items first, extra children appended. */
+export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
+  ({ __menuScope, children, ...props }, forwardedRef) => (
+    <ToolbarMenuRoot __menuScope={__menuScope} {...props} ref={forwardedRef}>
+      <ToolbarMenuItems __menuScope={__menuScope} />
+      {children}
+    </ToolbarMenuRoot>
+  ),
 );
 
 const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem }>) => {

@@ -159,9 +159,11 @@ export const SubscriptionsArticle = ({ role, subject: mailbox, attendableId }: S
       <Panel.Root role={role}>
         <Panel.Toolbar>
           <Menu.Root {...menuActions} attendableId={id}>
-            <Menu.Toolbar classNames='dx-document'>
-              <SearchList.Input placeholder={t('subscriptions.filter.placeholder')} />
-            </Menu.Toolbar>
+            {/* Decomposed toolbar: the filter leads and grows; the graph actions sit at the end. */}
+            <Menu.ToolbarRoot classNames='dx-document'>
+              <SearchList.Input classNames='grow' placeholder={t('subscriptions.filter.placeholder')} />
+              <Menu.ToolbarItems />
+            </Menu.ToolbarRoot>
           </Menu.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
