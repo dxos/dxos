@@ -551,8 +551,11 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
+      # `!inputs.e2e_compare` as well as `!inputs.e2e`: without it a comparison dispatch satisfies this
+      # condition too, so arm A ran the affected subset here *and* the full suite below — inflating the
+      # arm under scrutiny with a duplicate run.
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e && !inputs.e2e_compare }}
         timeout-minutes: 30
         uses: trunk-io/analytics-uploader@v1
         with:
