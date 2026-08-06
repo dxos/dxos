@@ -37,7 +37,7 @@ Four things that will silently invalidate a re-run of this:
 
 `task-execution` is easy to miss: on a fully-cached run nothing executes, so it never appears, and
 `process-execution` looks like the execution channel. Any ratio computed without it understates
-the denominator. [`parse-report.mjs`](../../../tools/moon-cache/bench/parse-report.mjs) counts all of them.
+the denominator. [`analyze.mjs`](../../../tools/moon-cache/bench/analyze.mjs) counts all of them.
 
 ## Result
 
@@ -82,8 +82,8 @@ environment.**
 449 MB in 349 s of wall clock, **1.29 MB/s — about 3% of what was available.**
 
 **It is not RTT.** `cache.depot.dev` and `nyc3.digitaloceanspaces.com` are equidistant from this
-machine (25.0 ms vs 25.5 ms), and the droplet measured 22.8 ms. A latency sweep through
-[`delay-proxy.mjs`](../../../tools/moon-cache/bench/delay-proxy.mjs), 3 reps per RTT:
+machine (25.0 ms vs 25.5 ms), and the droplet measured 22.8 ms. A latency sweep through a TCP relay
+delaying each direction by RTT/2, 3 reps per RTT:
 
 |   RTT | hydration |   wall |
 | ----: | --------: | -----: |

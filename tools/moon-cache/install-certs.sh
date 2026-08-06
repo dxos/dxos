@@ -16,8 +16,10 @@ mkdir -p "$DEST"
 if [ "$SRC" = "--op" ]; then
   vault="${2:-CI}"
   command -v op >/dev/null || { echo "1Password CLI (op) not installed: brew install 1password-cli"; exit 1; }
+  # One item, one field per file. ca.key is deliberately not fetched: it signs new clients and
+  # belongs only on an operator's machine.
   for file in ca.pem client.pem client.key; do
-    op document get "moon-cache-$file" --vault "$vault" --out-file "$DEST/$file" --force
+    op read "op://$vault/moon-cache-certs/$file" --out-file "$DEST/$file" --force
   done
 else
   for file in ca.pem client.pem client.key; do

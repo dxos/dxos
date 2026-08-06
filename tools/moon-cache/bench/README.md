@@ -1,48 +1,31 @@
 # Remote cache benchmark harness
 
-Compares moon remote caches — hosted, self-hosted, or the same server at a simulated RTT. Produced
-the numbers in [`.agents/projects/ci/REPORT.md`](../../../.agents/projects/ci/REPORT.md); kept because the
-next cache question deserves the same instrument rather than a fresh one.
+Two scripts: `bench.sh` runs reps against a cache, `analyze.mjs` reads the reports. That is the
+whole thing. It produced the numbers in
+[`.agents/projects/ci/REPORT.md`](../../../.agents/projects/ci/REPORT.md), and it is here so the next
+cache question gets measured the same way rather than re-invented.
 
-Results land in `.moon-bench/` (gitignored).
-
-## Comparing two caches
-
-```bash
-# Arm A — whatever .moon/workspace.yml points at.
-./tools/moon-cache/bench/reps.sh A 5
-
-# Arm B — an override. Interleave the calls, never 5xA then 5xB.
-./tools/moon-cache/bench/reps.sh B 5 'grpc://127.0.0.1:9092'
-
-node tools/moon-cache/bench/analyze-ab.mjs .moon-bench
-```
-
-`analyze-ab.mjs` prints per-rep wall/hydration/hit counts and then median, p90, range and
-coefficient of variation per arm. `analyze-3arm.mjs` does the same for arms labelled `A`/`B`/`C`.
-
-## Simulating a cache at a different RTT
+Output lands in `.moon-bench/` (gitignored).
 
 ```bash
-RTTS="0 2 5 10 20 40" REPS=3 ./tools/moon-cache/bench/sweep.sh 9092
-node tools/moon-cache/bench/analyze-sweep.mjs .moon-bench
+# Interleave the arms — A, B, A, B — never all of one then all of the other.
+./tools/moon-cache/bench/bench.sh A 5                            # the configured cache
+./tools/moon-cache/bench/bench.sh B 5 'grpc://127.0.0.1:9092'    # a local bazel-remote
+
+node tools/moon-cache/bench/analyze.mjs .moon-bench
 ```
 
-`delay-proxy.mjs` is a TCP relay delaying each direction by RTT/2 — a substitute for `tc netem`,
-which needs `NET_ADMIN` and an `sch_netem`-capable kernel, and does not exist on macOS. It reports
-a least-squares slope in ms of hydration per ms of RTT, and per-task round-trips.
+```
+arm        n  hits      wall median  wall range          CV  hydration median  per-task p50
+A          5       324       338.0s  325.6-363.3s      4.7%           1100.1s  2027ms
+B          5       324        16.8s  16.4-18.0s        3.1%             16.3s  28ms
 
-## Reading a CI job instead
-
-When the run report is gone — a finished job, or one you cannot re-run — parse the log:
-
-```bash
-gh run view --job <id> --log > job.log
-node tools/moon-cache/bench/parse-ci-log.mjs job.log
+B is 20.1x faster than A on wall clock.
 ```
 
-It reports hydration, executed time, wall span and effective parallelism from moon's per-task
-completion lines. Actions logs expire after about seven days.
+`analyze.mjs` also takes a single report — `node analyze.mjs .moon/cache/runReport.json` — for the
+operation breakdown of one run, which is the quickest way to check whether a cache is working at
+all.
 
 ## A local server to measure against
 
@@ -56,14 +39,13 @@ Keep the server's log **outside** `--dir`, or the next start fails its directory
 
 ## Rules that make the numbers mean anything
 
-1. **Assert server-side traffic on every arm.** `curl -s localhost:9093/status` must show a
-   non-zero file count, or `cached from remote` must be non-zero. A missing credential, a rejected
-   credential and an unresolvable host all produce a green run with no caching — three of the four
-   failure modes in the report were found this way.
-2. **Prime every arm at the same SHA before measuring**, and check the hit counts match. Otherwise
-   you are comparing a rebuild against a cache.
-3. **Pin the SHA and do not use `--affected`** — the action graph must be identical across arms.
+1. **Check the hit counts match across arms.** `analyze.mjs` warns when they differ. Unequal hits
+   means you are comparing a rebuild against a cache, not two caches.
+2. **A green run proves nothing.** Absent credentials, rejected credentials and an unresolvable
+   host all produce a passing build with no caching — three of the four failure modes in the report
+   were found that way. Non-zero hits is the only evidence the arm measured anything.
+3. **Pin the SHA and never use `--affected`** — the action graph must be identical across arms.
 4. **Never `--no-actions`.** It destroys cache hits and silently turns this into a build benchmark.
-5. **Use `~/.proto/shims/moon`, not `moon`** — `proto activate` can put an older version ahead of
-   the shims on `PATH`, and the client version is part of what you are measuring.
-6. **Median and p90, never mean.** Both hosted and self-hosted caches showed multi-x tail reps.
+5. **Median and p90, never mean.** Both hosted and self-hosted caches produced multi-x tail reps.
+6. Editing `.moon/workspace.yml` re-hashes every task, so the first run after a config change is a
+   cold build and is not a measurement.
