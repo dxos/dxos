@@ -26,6 +26,12 @@ on:
         required: false
         default: false
 
+      e2e_moon_shard:
+        type: boolean
+        description: "Run moon's native task sharding against Knapsack (DX-1116; 9 jobs)"
+        required: false
+        default: false
+
 permissions:
   contents: read
   packages: read
@@ -416,7 +422,8 @@ jobs:
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+      inputs.e2e ||
+      inputs.e2e_moon_shard
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -452,11 +459,11 @@ jobs:
       # `bundle-e2e`, not `bundle`: the e2e closure waits on that target, and warming any other hash
       # leaves every node to rebuild the bundle itself.
       - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e && !inputs.e2e_moon_shard }}
         run: moon run composer-app:bundle-e2e todomvc:bundle-e2e --affected remote
 
       - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_moon_shard }}
         run: moon run composer-app:bundle-e2e todomvc:bundle-e2e
 
   e2e:
@@ -688,6 +695,82 @@ jobs:
         if: ${{ always() && env.KNAPSACK_PRO_TOKEN != '' }}
         with:
           name: playwright-report-knapsack-${{ matrix.browser }}-${{ matrix.node }}
+          path: test-results/playwright
+          retention-days: 7
+
+  # EXPERIMENT (DX-1116, remove once decided): does moon's own `--job/--job-total` make Knapsack Pro
+  # redundant? With `workers: 4` the parallelism that matters moved inside the runner, and in run
+  # 31101995366 Knapsack's slowest node (3m03s) already sat under the phase's critical path — the
+  # non-composer chromium shard at 3m25s — so its distribution may be buying nothing.
+  #
+  # Note the two are not equivalent in kind: `--job` partitions whole *targets*, so it cannot split
+  # `composer-app:e2e` the way a file-level queue can. What it can replace is the hand-maintained
+  # "every suite except composer" target list in the `e2e` job, which silently omitted
+  # `plugin-script:e2e` once already.
+  #
+  # 9 cells (3 browsers x 3 jobs) to match the 9 runners the current split uses, so the comparison is
+  # per-runner-equal. Deliberately NOT wrapped in the Trunk uploader: quarantine masks failures, and
+  # an honest max-cell duration is the whole measurement.
+  e2e-moon-shard:
+    needs: e2e-bundle
+    if: ${{ inputs.e2e_moon_shard }}
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        job: [0, 1, 2]
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    env:
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
+      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: pnpm run install-playwright ${{ matrix.browser }}
+
+      # The `e2e` job clears this because a stale optimizeDeps graph makes `storybook dev` serve a 504;
+      # the storybook-backed suites are in scope here too, so it has to be cleared the same way.
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      # Records which targets this cell was given, so the partition can be read off the log rather
+      # than inferred from durations. `--job` is undocumented as to ordering, and an uneven split is
+      # the expected failure mode given composer dwarfs the other eight targets.
+      - name: Test shard
+        timeout-minutes: 35
+        env:
+          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ matrix.browser }}-j${{ matrix.job }}
+        run: |
+          moon run :e2e --job ${{ matrix.job }} --job-total 3 --concurrency=1 --summary 2>&1 | tee shard.log
+          printf '\n===== targets this cell ran =====\n'
+          grep -oE '^[▮ ]*[a-z0-9-]+:e2e' shard.log | tr -d '▮ ' | sort -u || true
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report-moonshard-${{ matrix.browser }}-${{ matrix.job }}
           path: test-results/playwright
           retention-days: 7
 
