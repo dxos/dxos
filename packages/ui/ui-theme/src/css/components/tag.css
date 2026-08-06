@@ -159,11 +159,11 @@
    * keeps its palette.
    */
   .dx-tag.dx-tag--button[data-hue='neutral'] {
-    @apply bg-hover-surface text-base-fg ring-1 ring-inset ring-separator;
+    @apply bg-input-surface text-base-fg ring-1 ring-inset ring-separator;
   }
 
   .dx-tag.dx-tag--button:hover {
-    @apply bg-current-surface;
+    @apply bg-hover-surface;
   }
 
   .dx-tag.dx-tag--button[aria-pressed='true'] {

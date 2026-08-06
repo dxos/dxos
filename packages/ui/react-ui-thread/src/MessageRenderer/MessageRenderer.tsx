@@ -10,7 +10,6 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { type ContentBlock } from '@dxos/types';
 import {
   type Extension,
-  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -131,9 +130,10 @@ export const MessageRenderer = ({
         // Deliberately NOT `readOnly`: its transaction filter drops every user edit, so a view built
         // read-only cannot become writable. Editability is a compartment the mode toggles instead.
         createBasicExtensions({ lineWrapping: true }),
-        // `compactSlots`, not `documentSlots`: the latter centres content in a 50rem column, which
-        // is a document's layout and not a chat row's.
-        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: compactSlots }),
+        // No content slot: a body shares the tile's text column with the heading, the quote and the
+        // reaction row, and both `documentSlots` (a centred 50rem column) and `compactSlots` (an
+        // 8px inline margin) would inset the body alone, off the column everything else is on.
+        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         // The parser, not only the decorator: `decorateMarkdown` reads a syntax tree, so without the
         // markdown language nothing is decorated and a body renders as its own source — asterisks,
         // backticks and link brackets and all.
@@ -176,11 +176,13 @@ export const MessageRenderer = ({
 };
 
 /**
- * The frame an editable body wears — drawn outward, so entering edit mode costs no layout.
+ * The frame an editable body wears — an input's surface and edge, drawn outward so that entering
+ * edit mode costs no layout.
  *
- * The negative margins cancel the padding exactly: the border box grows by 6px/2px on each side
- * while the content box keeps the width and origin it had at rest. Padding alone narrows the
- * measure, which rewraps the body and moves every word in it — the text has to stay where the
- * reader left it, with the box appearing around it.
+ * The negative margins cancel the padding exactly: the border box grows by 8px/2px on each side,
+ * reaching back into the avatar gutter, while the content box keeps the width and origin it had at
+ * rest. Padding alone narrows the measure, which rewraps the body and moves every word in it — the
+ * text has to stay on the column every other message is on, so that becoming editable is a change
+ * of appearance rather than of position.
  */
-const EDIT_FRAME = 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5 -mx-1.5 -my-0.5';
+const EDIT_FRAME = 'rounded-sm ring-1 ring-separator bg-input-surface px-2 py-0.5 -mx-2 -my-0.5';

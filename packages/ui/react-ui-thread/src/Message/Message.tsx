@@ -708,10 +708,13 @@ const MessageControls = ({ message, state }: MessageControlsProps) => {
               absolutely positioned box would resolve against the whole row. */}
           <Menu.Toolbar
             classNames={mx(
-              'w-auto rounded-sm border border-separator',
-              // Editing collapses the toolbar to save/cancel, which must stay put rather than follow
-              // the pointer; so must a toolbar whose menu or picker is open, since reaching either
-              // takes the pointer off the row.
+              'w-auto rounded-sm',
+              // Editing collapses the toolbar to save/cancel and the tile renders it in the flow
+              // beneath the body, where it is two buttons on the hint's row rather than a panel
+              // floating over the message — so it keeps the surface and edge only while it floats.
+              // It must also stay put rather than follow the pointer, as must a toolbar whose menu
+              // or picker is open, since reaching either takes the pointer off the row.
+              editing ? 'bg-transparent' : 'border border-separator',
               !editing && !picking && hoverableOverlayControlItem,
               'has-[[aria-expanded=true]]:[--controls-opacity:1] has-[[aria-expanded=true]]:[--controls-visibility:visible]',
             )}
@@ -959,6 +962,7 @@ const MessageTile = ({ message, classNames, continues = true, continuation = fal
 
   const controls = <MessageControls message={message} state={state} />;
   const canEdit = isAuthor && editing;
+  const isCurrent = currentMessageId === message.id;
 
   return (
     <MessageRoot
@@ -976,8 +980,12 @@ const MessageTile = ({ message, classNames, continues = true, continuation = fal
       classNames={[
         hoverableControls,
         hoverableFocusedWithinControls,
+        // The hovered row is tinted for its whole height, the way Discord marks what the toolbar
+        // acts on: the controls appear over one message out of many, and without the tint nothing
+        // says which. Yielded to the current row's own fill, and to the edited row's box.
+        !isCurrent && !editing && 'hover-hover:hover:bg-hover-surface',
         onMessageSelect && 'cursor-pointer',
-        currentMessageId === message.id && 'bg-current-surface',
+        isCurrent && 'bg-current-surface',
         classNames,
       ]}
     >
