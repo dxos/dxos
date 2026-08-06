@@ -263,8 +263,13 @@ type DashboardActivityCustomProps = {
 
 type DashboardActivityProps = ComposableProps<DashboardActivityCustomProps>;
 
+// Shared row template keeps the day-label column and the weeks grid vertically aligned.
+const activityRows = 'max-content repeat(7, var(--dx-dashboard-cell, 0.75rem))';
+
 /**
  * GitHub-style activity matrix: week columns by day rows, colored by intensity.
+ * Never scrolls horizontally: when the weeks overflow, the oldest are clipped on the left
+ * so the most recent weeks stay pinned to the right; day labels remain visible.
  */
 const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProps>(
   ({ data, weeks = 52, endDate, locale, children: _children, ...props }, forwardedRef) => {
@@ -273,43 +278,54 @@ const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProp
     const dayFormat = useMemo(() => new Intl.DateTimeFormat(locale, { weekday: 'short' }), [locale]);
 
     return (
-      <div
-        {...composableProps(props, {
-          classNames: 'grid gap-[3px] overflow-x-auto',
-          // Fixed cell tracks keep cells the same size regardless of the number of weeks;
-          // the label column is max-content so leftover free space is not distributed to it.
-          style: { gridTemplateColumns: `max-content repeat(${weeks}, var(--dx-dashboard-cell, 0.75rem))` },
-        })}
-        ref={forwardedRef}
-      >
-        {calendar.months.map(({ weekIndex, month, year }) => (
-          <span
-            key={`${year}-${month}`}
-            style={{ gridColumn: weekIndex + 2, gridRow: 1 }}
-            className='whitespace-nowrap text-xs text-description'
-          >
-            {monthFormat.format(new Date(year, month, 1))}
+      // min-w-0 lets the matrix shrink inside grid/flex parents instead of widening them.
+      <div {...composableProps(props, { classNames: 'flex min-w-0 gap-[3px]' })} ref={forwardedRef}>
+        <div className='grid gap-[3px]' style={{ gridTemplateRows: activityRows }}>
+          {/* Zero-width spacer reserves the month-row height so day rows align with cell rows. */}
+          <span aria-hidden className='text-xs'>
+            {'​'}
           </span>
-        ))}
-        {dayLabelRows.map((day) => (
-          <span
-            key={day}
-            style={{ gridColumn: 1, gridRow: day + 2 }}
-            className='self-center pe-1 text-[10px] leading-none text-description uppercase font-mono'
+          {dayLabelRows.map((day) => (
+            <span
+              key={day}
+              style={{ gridRow: day + 2 }}
+              className='self-center pe-1 text-[10px] leading-none text-description uppercase font-mono'
+            >
+              {dayFormat.format(new Date(referenceMonday.getFullYear(), 0, referenceMonday.getDate() + day))}
+            </span>
+          ))}
+        </div>
+        {/* justify-end overflows surplus weeks past the clipped left edge, pinning recent weeks right. */}
+        <div className='flex min-w-0 justify-end overflow-hidden'>
+          <div
+            className='grid gap-[3px]'
+            style={{
+              gridTemplateRows: activityRows,
+              // Fixed cell tracks keep cells the same size regardless of the number of weeks.
+              gridTemplateColumns: `repeat(${weeks}, var(--dx-dashboard-cell, 0.75rem))`,
+            }}
           >
-            {dayFormat.format(new Date(referenceMonday.getFullYear(), 0, referenceMonday.getDate() + day))}
-          </span>
-        ))}
-        {calendar.cells.map((cell) => (
-          <span
-            key={cell.key}
-            style={{ gridColumn: cell.week + 2, gridRow: cell.day + 2 }}
-            className={mx('aspect-square min-w-0 rounded-xs', activityLevels[cell.level])}
-            data-level={cell.level}
-            data-date={cell.key}
-            title={`${cell.key}: ${cell.value}`}
-          />
-        ))}
+            {calendar.months.map(({ weekIndex, month, year }) => (
+              <span
+                key={`${year}-${month}`}
+                style={{ gridColumn: weekIndex + 1, gridRow: 1 }}
+                className='whitespace-nowrap text-xs text-description'
+              >
+                {monthFormat.format(new Date(year, month, 1))}
+              </span>
+            ))}
+            {calendar.cells.map((cell) => (
+              <span
+                key={cell.key}
+                style={{ gridColumn: cell.week + 1, gridRow: cell.day + 2 }}
+                className={mx('rounded-xs', activityLevels[cell.level])}
+                data-level={cell.level}
+                data-date={cell.key}
+                title={`${cell.key}: ${cell.value}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     );
   },
