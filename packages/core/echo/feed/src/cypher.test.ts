@@ -23,11 +23,17 @@ describe('WebCryptoCypher', () => {
   });
 
   test('the sealed payload holds no plaintext bytes', async () => {
-    const cypher = createWebCryptoCypher({ keyProvider: await createInMemoryKeyProvider() });
+    const keyProvider = await createInMemoryKeyProvider();
+    const cypher = createWebCryptoCypher({ keyProvider });
     const sealed = await cypher.encrypt(PLAINTEXT, CONTEXT);
     expect(sealed.ciphertext).not.toEqual(PLAINTEXT);
     expect(sealed.iv.length).toBe(12);
-    expect(sealed.encryptionKeyId).toBe('in-memory-key');
+    expect(sealed.encryptionKeyId).toBe(await keyProvider.currentKeyId());
+  });
+
+  test('the default key id is a public key', async () => {
+    const keyProvider = await createInMemoryKeyProvider();
+    expect(await keyProvider.currentKeyId()).toMatch(/^[0-9a-f]{64}$/);
   });
 
   test('two seals of one payload differ (random IV)', async () => {

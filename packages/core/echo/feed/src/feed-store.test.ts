@@ -807,7 +807,8 @@ describe('FeedStore encryption', () => {
     Effect.gen(function* () {
       const spaceId = SpaceId.random();
       const feedId = EntityId.random();
-      const cypher = yield* Effect.promise(makeCypher);
+      const keyProvider = yield* Effect.promise(() => createInMemoryKeyProvider());
+      const cypher = createWebCryptoCypher({ keyProvider });
 
       const feed = new FeedStore({ localActorId: ALICE, assignPositions: true, cypher });
       yield* feed.migrate();
@@ -819,7 +820,7 @@ describe('FeedStore encryption', () => {
       `;
       expect(rows.length).toBe(1);
       expect(new Uint8Array(rows[0].data)).not.toEqual(PLAINTEXT);
-      expect(rows[0].encryptionKeyId).toBe('in-memory-key');
+      expect(rows[0].encryptionKeyId).toBe(yield* Effect.promise(() => keyProvider.currentKeyId()));
       expect(rows[0].iv).not.toBeNull();
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -878,7 +879,7 @@ describe('FeedStore encryption', () => {
         SELECT blocks.encryptionKeyId FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
         WHERE feeds.feedId = ${encryptedFeed}
       `;
-      expect(encrypted[0].encryptionKeyId).toBe('in-memory-key');
+      expect(encrypted[0].encryptionKeyId).toBe(yield* Effect.promise(() => keyProvider.currentKeyId()));
       const plain = yield* sql<{ encryptionKeyId: string | null }>`
         SELECT blocks.encryptionKeyId FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
         WHERE feeds.feedId = ${plaintextFeed}

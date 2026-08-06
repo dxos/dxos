@@ -76,7 +76,7 @@ export const Block = Schema.Struct({
   data: Schema.Uint8Array,
 
   /**
-   * Identifier of the key that sealed `data`, when the block is encrypted at rest.
+   * Hex-encoded public key naming the key that sealed `data`, when the block is encrypted at rest.
    * Absent on plaintext blocks.
    */
   encryptionKeyId: Schema.optional(Schema.String),

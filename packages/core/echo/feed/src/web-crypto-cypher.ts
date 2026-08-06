@@ -18,6 +18,14 @@ const textEncoder = new TextEncoder();
  */
 const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => bytes.slice().buffer;
 
+/** Ed25519 public key width, the identifier format the KMS names keys by. */
+const PUBLIC_KEY_BYTES = 32;
+
+const randomKeyId = (): string =>
+  Array.from(crypto.getRandomValues(new Uint8Array(PUBLIC_KEY_BYTES)), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
+
 /**
  * Resolves the AES-GCM keys a {@link WebCryptoCypher} seals and opens with.
  *
@@ -25,9 +33,9 @@ const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => bytes.slice().buffer;
  * KMS-DO-backed provider on the edge, over one unchanged crypto body.
  */
 export interface CypherKeyProvider {
-  /** Identifier of the key new writes seal under. */
+  /** Hex-encoded public key naming the key new writes seal under. */
   currentKeyId(): Promise<string>;
-  /** Resolve the AES-GCM key for an identifier, throwing if it is unknown. */
+  /** Resolve the AES-GCM key for a public key, throwing if it is unknown. */
   resolveKey(keyId: string): Promise<CryptoKey>;
 }
 
@@ -77,8 +85,10 @@ export const createWebCryptoCypher = (options: WebCryptoCypherOptions): Cypher =
  * A one-key in-memory {@link CypherKeyProvider}, for tests and single-process use.
  *
  * The key never leaves the process; production callers back the provider with the KMS DO instead.
+ * The default id is public-key-shaped random hex, so it exercises the same identifier format the KMS
+ * hands out rather than a label that only works in-process.
  */
-export const createInMemoryKeyProvider = async (keyId = 'in-memory-key'): Promise<CypherKeyProvider> => {
+export const createInMemoryKeyProvider = async (keyId = randomKeyId()): Promise<CypherKeyProvider> => {
   const key = await crypto.subtle.generateKey(AES_GCM, false, ['encrypt', 'decrypt']);
   return {
     currentKeyId: async () => keyId,
