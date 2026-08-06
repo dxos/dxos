@@ -127,7 +127,8 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Storybook: `moon run storybook-react:serve` (port 9009)
 
 A remote-cache warning from moon is harmless — builds work, they just don't share the team's
-cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates.
+cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs the certificates
+once per machine, for every worktree.
 
 ## Code style
 
