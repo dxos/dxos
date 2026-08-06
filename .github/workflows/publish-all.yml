@@ -64,9 +64,9 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+          # Published artifacts are built from source, never trusted from a cache any CI job can
+          # write to — the same reasoning as the isolated pnpm scope below.
+          remote-cache: 'false'
           # Isolate publish cache from PR caches (cache-poisoning defense).
           cache-scope: publish
           verify-integrity: 'true'

@@ -10,6 +10,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
 jobs:
   publish:
     runs-on: depot-ubuntu-24.04-4
@@ -30,10 +37,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Build
         run: moon run :build

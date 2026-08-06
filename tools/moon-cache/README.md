@@ -106,9 +106,23 @@ whether clients dial the name or the address.
 
 ## CI
 
-`.github/actions/setup` writes the three files from secrets into `.moon/certs/` before any moon
-task runs, and **fails the job if they are missing** — except on fork PRs, which cannot receive
-secrets and fall back to local-cache-only with a warning.
+`.github/actions/setup` writes the three files into `.moon/certs/` before any moon task runs, and
+**fails the job if they are missing** — except on fork PRs, which cannot receive secrets and fall
+back to local-cache-only with a warning.
+
+They arrive as environment variables, bound once per workflow, because a composite action cannot
+read the `secrets` context:
+
+```yaml
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+```
+
+Deployment and publish workflows opt out instead — `remote-cache: 'false'` on the setup call, which
+points moon at an unroutable host. A released artifact is built from source rather than trusted
+from a cache any CI job can write to.
 
 | secret | contents |
 | --- | --- |

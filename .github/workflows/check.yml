@@ -31,6 +31,11 @@ permissions:
   packages: read
 
 env:
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
@@ -75,10 +80,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Check for import cycles
         run: pnpm run check-cycles
@@ -169,10 +170,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Install Playwright
         run: pnpm run install-playwright
@@ -270,10 +267,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Install Playwright
         run: pnpm run install-playwright
@@ -371,10 +364,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Clean stale test results
         run: rm -rf test-results
@@ -461,10 +450,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Install Playwright
         run: pnpm run install-playwright
@@ -554,10 +539,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
-          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
-          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
       # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.

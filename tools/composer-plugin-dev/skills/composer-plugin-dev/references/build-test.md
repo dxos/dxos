@@ -33,4 +33,5 @@ MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism
 moon run :lint -- --fix
 ```
 
-A remote-cache warning means the cache is off, not that it is noise — see `tools/moon-cache/`.
+A remote-cache warning is harmless — builds just don't share the team's cache. See
+`tools/moon-cache/` to install the certificates.

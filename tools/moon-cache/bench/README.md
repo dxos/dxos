@@ -32,6 +32,18 @@ node tools/moon-cache/bench/analyze-sweep.mjs .moon-bench
 which needs `NET_ADMIN` and an `sch_netem`-capable kernel, and does not exist on macOS. It reports
 a least-squares slope in ms of hydration per ms of RTT, and per-task round-trips.
 
+## Reading a CI job instead
+
+When the run report is gone — a finished job, or one you cannot re-run — parse the log:
+
+```bash
+gh run view --job <id> --log > job.log
+node tools/moon-cache/bench/parse-ci-log.mjs job.log
+```
+
+It reports hydration, executed time, wall span and effective parallelism from moon's per-task
+completion lines. Actions logs expire after about seven days.
+
 ## A local server to measure against
 
 ```bash

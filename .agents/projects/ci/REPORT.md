@@ -69,9 +69,8 @@ counts, ~100× faster per task:
 | `plugin-space:build` |     20–23 s |         22.22 s |  0.180 s |
 | `react-ui:build`     |     15–18 s |         20.62 s |  0.173 s |
 
-This also refutes the per-file-overhead hypothesis in
-[the handoff](../../../agents/superpowers/handoffs/2026-08-05-moon-remote-cache-slowness.md), which
-inferred it from restore time tracking file count.
+This also refutes the per-file-overhead hypothesis below, which was inferred from restore time
+tracking file count rather than bytes.
 
 **It is not the client's network position.** The CI column comes from `depot-ubuntu-24.04-8`
 runners that Depot co-locates with its cache; the middle column is a laptop 25 ms away. They agree
@@ -151,6 +150,41 @@ abort. Against `bazel-remote`, 3 reps, 309/309 hits every rep:
 hydrates. The cache holds 11 blobs over 4 MB, largest 75.9 MB, all stored and served. **Neither
 moon's client nor the artifacts are at fault** — the abort does not fire against a server that
 negotiates ByteStream, which points at Depot's endpoint.
+
+## Restoring is often slower than rebuilding
+
+Measured on CI (run `31050679009`, commit `5c73a0bb`) before the cache moved, by joining two jobs in
+the same workflow run that resolved **identical task hashes** — `e2e-bundle` executed them cold,
+the `e2e (chromium)` shard restored them minutes later.
+
+| task                        | build cold | restore | verdict                |
+| --------------------------- | ---------: | ------: | ---------------------- |
+| `composer-app:prebuild`     |      0.2 s |   7.2 s | **restore 35× slower** |
+| `devtools-extension:bundle` |      5.6 s |  51.9 s | restore 9.3× slower    |
+| `testbench-app:bundle`      |      6.4 s |  47.3 s | restore 7.4× slower    |
+| `client:typedoc`            |      3.2 s |  15.9 s | restore 4.9× slower    |
+| `cli:bundle`                |      5.2 s |  24.1 s | restore 4.6× slower    |
+| `react-client:typedoc`      |      3.4 s |  13.7 s | restore 4.0× slower    |
+| `app-framework:typedoc`     |      3.7 s |  11.6 s | restore 3.1× slower    |
+| `todomvc:bundle`            |      1.8 s |   4.2 s | restore 2.3× slower    |
+| `shell:bundle`              |      2.0 s |   1.1 s | restore 1.9× faster    |
+| `rpc-tunnel-e2e:bundle`     |      0.3 s |   0.1 s | restore 2.7× faster    |
+| `examples:bundle`           |      2.5 s |   0.4 s | restore 6.0× faster    |
+| `composer-crx:bundle`       |      4.3 s |   0.4 s | restore 11.2× faster   |
+
+**8 of 12 slower to restore, ~146 s wasted per job across those eight.** The clearest case,
+`composer-app:prebuild`, is literally a `cp -R` of one package's assets: 0.2 s to copy locally,
+7.2 s to download the copied result.
+
+Two caveats on those numbers: the columns come from different runners so network variance is
+included, and the build column excludes upload cost. Ratios of 35×/9×/7× are far outside noise;
+`todomvc` at 2.3× is not.
+
+This measurement predates the cache migration, so the restore column would now be much faster —
+but the _shape_ survives, because it is a property of the task rather than the cache: a task that
+is cheap to compute and emits many files is a poor caching candidate at any speed. The fix is
+`options.cache: false` on high-output-bytes/low-compute tasks, independent of where the cache
+lives. Tracked in [`TASKS.md`](./TASKS.md).
 
 ## Operational consequences
 
