@@ -13,6 +13,18 @@ tasks:
     script: pnpm exec vite build && pnpm run --silent build:functions
     deps:
       - prebuild
+  # The bundle Playwright serves. This exists as a separate target, rather than the e2e env being
+  # overridden on `e2e`'s `bundle` dependency, because a dependency-level `env` map is part of the
+  # dependency's task hash: `moon run composer-app:bundle` and the bundle the e2e closure waits on
+  # were two different hashes, so the warming job populated an entry no e2e node ever read and every
+  # node rebuilt the bundle (measured at 19s each). DX_PWA stays off `bundle` itself because
+  # production deploys ship the service worker.
+  bundle-e2e:
+    extends: bundle
+    env:
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: 'false'
   # Native (Tauri) builds embed the web bundle via `frontendDist`; `beforeBuildCommand` is empty, so the
   # frontend + macOS ollama sidecar are hoisted to task deps here (no moon-in-moon). Locally
   # `moon run composer-app:tauri-build` builds them first; CI runs `tauri build` bare — frontend from a
@@ -98,12 +110,8 @@ tasks:
       - vite-plugin-icons:build
       - target: ^:build
         optional: true
-      - target: bundle
+      - target: bundle-e2e
         optional: true
-        env:
-          DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-          DX_TELEMETRY_TAG: e2e
-          DX_PWA: 'false'
     options:
       cache: false
   # Dev-server startup harness — measures `vite serve` against the shared

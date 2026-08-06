@@ -13,14 +13,11 @@ tasks:
       - vite-plugin-icons:build
       - target: ^:build
         optional: true
-      - target: bundle
+      # `bundle-e2e` rather than `bundle` with an `env` override: the override is hashed into the
+      # dependency, so it produced a bundle no other invocation could hydrate. Only the two apps that
+      # serve a production bundle define it, hence optional.
+      - target: bundle-e2e
         optional: true
-        env:
-          DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-          DX_TELEMETRY_TAG: e2e
-          # Read at bundle time by `vite.config.ts` (VitePWA `selfDestroying`), so it belongs on the
-          # bundle as well as on the test process above.
-          DX_PWA: 'false'
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'

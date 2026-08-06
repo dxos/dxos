@@ -26,12 +26,6 @@ on:
         required: false
         default: false
 
-      e2e_workers_experiment:
-        type: boolean
-        description: 'Run the worker-contention experiment (DX-1116; 6 jobs, firefox only)'
-        required: false
-        default: false
-
 permissions:
   contents: read
   packages: read
@@ -418,14 +412,11 @@ jobs:
   # others' cache writes, duplicating ~10m of work per runner. The env block must match the shards'
   # hash-relevant task inputs ($DX_ENVIRONMENT, $DX_EDGE_BASE_URL, $DX_PWA) or their hashes miss.
   e2e-bundle:
-    # `e2e_workers_experiment` is included because the experiment job depends on this one; without it
-    # a dispatch that asks only for the experiment skips the bundle and takes the experiment with it.
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e ||
-      inputs.e2e_workers_experiment
+      inputs.e2e
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -458,37 +449,15 @@ jobs:
       # bundles. `:bundle` built all eleven apps, so every e2e runner also hydrated the docs, cli,
       # storybook-react, testbench-app, composer-crx, devtools-extension, examples and tasks closures —
       # including docs' typedoc tasks, which cost more to download than composer's bundle does to build.
+      # `bundle-e2e`, not `bundle`: the e2e closure waits on that target, and warming any other hash
+      # leaves every node to rebuild the bundle itself.
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
-        run: moon run composer-app:bundle todomvc:bundle --affected remote
+        run: moon run composer-app:bundle-e2e todomvc:bundle-e2e --affected remote
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
-        run: moon run composer-app:bundle todomvc:bundle
-
-      # DIAGNOSTIC (DX-1116, remove once resolved): composer-app:bundle re-executes in every
-      # downstream job despite hashing identically here, so its artifact is absent from the remote
-      # cache rather than mismatched. A single blob over 4 MB (moon aborts the upload for those
-      # unless the server takes the ByteStream API) is ruled out — the previous run found none, but
-      # measured `out` at 384 MB across 17954 files. Break that down: the size or the file count is
-      # the remaining candidate, and it also bounds how fast the artifact could ever hydrate.
-      - name: Report bundle output composition
-        if: ${{ always() }}
-        run: |
-          for dir in packages/apps/*/out packages/apps/*/dist tools/storybook-*/out docs/dist; do
-            [ -d "$dir" ] || continue
-            printf '== %s total=%s files=%s\n' "$dir" \
-              "$(du -sh "$dir" | cut -f1)" "$(find "$dir" -type f | wc -l)"
-            du -sh "$dir"/* 2>/dev/null | sort -rh | head -8 | sed 's/^/   subdir /'
-            printf '   largest files:\n'
-            find "$dir" -type f -printf '%s\t%p\n' 2>/dev/null | sort -rn | head -5 |
-              awk -F'\t' '{ printf "     %8.2f MB  %s\n", $1 / 1048576, $2 }'
-            printf '   by extension (top 6 by total bytes):\n'
-            find "$dir" -type f -printf '%s\t%f\n' 2>/dev/null |
-              awk -F'\t' '{ n = $2; sub(/.*\./, "", n); if (n == $2) n = "(none)"; b[n] += $1; c[n]++ }
-                END { for (k in b) printf "     %8.2f MB  %6d files  .%s\n", b[k] / 1048576, c[k], k }' |
-              sort -rn | head -6
-          done
+        run: moon run composer-app:bundle-e2e todomvc:bundle-e2e
 
   e2e:
     # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
@@ -721,62 +690,6 @@ jobs:
           name: playwright-report-knapsack-${{ matrix.browser }}-${{ matrix.node }}
           path: test-results/playwright
           retention-days: 7
-
-  # EXPERIMENT (DX-1116, remove once decided): does running Playwright workers in parallel on one
-  # runner cost more in flakes than it saves in time? Two in-repo notes say it might — the boot
-  # assert in `app-manager.ts` allows 30s against a ~16s firefox boot (1.9x headroom), and
-  # `startup.spec.ts` records `waitForReady` being "too tight" under load.
-  #
-  # Firefox only, because it has the thinnest margin: if 4 workers is clean here it is clean on
-  # chromium and webkit. Three trials per arm so a single green run cannot be mistaken for a
-  # verdict. Deliberately NOT wrapped in the Trunk uploader — quarantine masks failures, which is
-  # exactly the signal being measured.
-  e2e-workers-experiment:
-    needs: e2e-bundle
-    if: ${{ inputs.e2e_workers_experiment }}
-    strategy:
-      fail-fast: false
-      matrix:
-        workers: [1, 4]
-        trial: [1, 2, 3]
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 45
-    env:
-      DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
-      PLAYWRIGHT_BROWSER: firefox
-      PLAYWRIGHT_WORKERS: ${{ matrix.workers }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          lfs: true
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Install Playwright
-        run: pnpm run install-playwright firefox
-
-      - name: Clean stale test results
-        run: rm -rf test-results
-
-      # Every cell must actually execute: without a unique task input moon would replay one cell's
-      # cached result for all six and the experiment would measure nothing.
-      - name: Test composer-app
-        timeout-minutes: 35
-        env:
-          DX_E2E_RUN_ID: ${{ github.run_id }}-w${{ matrix.workers }}-t${{ matrix.trial }}
-        run: moon run composer-app:e2e
 
   # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
   # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that

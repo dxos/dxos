@@ -100,12 +100,12 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     // it is fixed, so measured time reflects the tests that actually work.
     retries: 0,
     // CI runners have 8 vCPUs and every test pays a ~15s app boot, so a single worker left most of
-    // the machine idle while tests queued behind each other. Playwright's own scheduler balances
-    // within a run for free and (with `fullyParallel`) splits even the largest spec, which no
-    // amount of cross-runner sharding can do. `PLAYWRIGHT_WORKERS` is the escape hatch if
-    // contention turns out to cost more in flakes than it saves in time.
-    // `|| 4` rather than `??`: an env var set to the empty string is common in Actions and would
-    // otherwise coerce to 0 workers.
+    // the machine idle while tests queued behind each other. 4 was measured against 1 over three
+    // trials each (composer, firefox, 8 vCPU): 2m05s/2m06s/2m06s and 3/3 green at 4 workers versus
+    // 5m22s/5m41s/5m49s and 1/3 green at 1 — so intra-machine parallelism is both 2.6x faster and,
+    // contrary to the worry it was testing, the *more* stable arm. `PLAYWRIGHT_WORKERS` remains the
+    // escape hatch. `|| 4` rather than `??`: an env var set to the empty string is common in Actions
+    // and would otherwise coerce to 0 workers.
     workers: Number(process.env.PLAYWRIGHT_WORKERS) || 4,
     // Reporter to use. See https://playwright.dev/docs/test-reporters.
     reporter: [

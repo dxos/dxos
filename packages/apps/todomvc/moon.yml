@@ -8,3 +8,11 @@ tasks:
   bundle:
     deps:
       - shell:bundle
+  # The bundle Playwright serves, as its own target. See composer-app's copy for why the e2e env is
+  # declared here rather than overridden on the `e2e` dependency.
+  bundle-e2e:
+    extends: bundle
+    env:
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: 'false'
