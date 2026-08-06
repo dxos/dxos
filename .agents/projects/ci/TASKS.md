@@ -6,8 +6,8 @@ Context and the failure mode that governs this area: [`DESIGN.md`](./DESIGN.md).
 
 ## Phase 1: Adopt the self-hosted cache
 
-Everything below is committed on the branch and verified from a dev machine. None of it has run in
-CI — that is what opening the PR settles.
+Committed, verified from a dev machine, and now measured on a Depot runner via PR #12494 — see
+REPORT.md, "In CI". What remains is operational hardening, not the rollout itself.
 
 - [x] **Provision and harden the cache** — `bazel-remote` v2.5.0 on `s-4vcpu-8gb` NYC3,
       systemd, zstd, 100 GB LRU, mTLS via a private CA. Verified 401 without a client

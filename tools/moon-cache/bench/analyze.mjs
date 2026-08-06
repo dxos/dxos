@@ -16,7 +16,7 @@ const secs = (value) => (value / 1000).toFixed(1);
 /** Totals for one run, by the operation taxonomy in .agents/projects/ci/REPORT.md. */
 const summarise = (path) => {
   const report = JSON.parse(readFileSync(path, 'utf8'));
-  const totals = { hydration: 0, hits: 0, localHits: 0, hash: 0, executed: 0, execCount: 0, upload: 0 };
+  const totals = { hydration: 0, hits: 0, localHits: 0, hash: 0, executed: 0, execCount: 0, upload: 0, setup: 0 };
   const perTask = [];
   for (const action of report.actions) {
     for (const op of action.operations ?? []) {
@@ -40,6 +40,13 @@ const summarise = (path) => {
           break;
         case 'archive-creation':
           totals.upload += duration;
+          break;
+        // Not cache work, but reported so the breakdown accounts for the wall clock instead of
+        // leaving an unexplained gap: the pnpm install and moon's own bookkeeping.
+        case 'setup-operation':
+        case 'process-execution':
+        case 'sync-operation':
+          totals.setup += duration;
           break;
       }
     }
@@ -79,7 +86,7 @@ if (statSync(target).isFile()) {
   );
   console.log(`local hits ${run.localHits}`);
   console.log(
-    `hash-generation ${secs(run.hash)}s   task-execution ${secs(run.executed)}s over ${run.execCount} tasks   upload ${secs(run.upload)}s`,
+    `hash-generation ${secs(run.hash)}s   task-execution ${secs(run.executed)}s over ${run.execCount} tasks   upload ${secs(run.upload)}s   setup ${secs(run.setup)}s`,
   );
   if (!run.hits && !run.localHits) {
     console.log('\nNo cache hits at all. Either this is a cold run, or the cache is unreachable —');

@@ -34,6 +34,27 @@ echo "installed into $DEST"
 openssl x509 -in "$DEST/client.pem" -noout -subject -enddate
 
 # A certificate that parses is not the same as a cache that answers; check reachability too.
-# Skip comment lines — the rollback-to-Depot block is a commented `host:` that would match first.
-host=$(grep -v '^[[:space:]]*#' "$ROOT/.moon/workspace.yml" | sed -n "s/.*host: 'grpcs:\/\/\([^']*\)'.*/\1/p" | head -1)
-echo "configured host: ${host:-<none found>}"
+# Certificates that parse are not the same as a cache that answers, and moon reports an
+# unreachable cache as one warning and a green build — so check here, where it is noticeable.
+# `grpcs*` rather than `grpcs\?`: BSD sed treats \? literally.
+host=$(grep -v '^[[:space:]]*#' "$ROOT/.moon/workspace.yml" | sed -n "s|.*host: 'grpcs*://\([^':]*\).*|\1|p" | head -1)
+if [ -z "$host" ]; then
+  echo "could not read remote.host from .moon/workspace.yml"
+  exit 1
+fi
+
+# 9093 is the HTTP listener of the same process that serves gRPC on 9092.
+if ! curl -sf --max-time 20 --cacert "$DEST/ca.pem" "https://$host:9093/status" > /dev/null; then
+  echo "FAIL: $host is unreachable, or its certificate does not verify."
+  exit 1
+fi
+# /status is unauthenticated; a CAS path is not. 404 is authorised-and-absent, 401 is rejected.
+code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 \
+  --cacert "$DEST/ca.pem" --cert "$DEST/client.pem" --key "$DEST/client.key" \
+  "https://$host:9093/cas/0000000000000000000000000000000000000000000000000000000000000000")
+if [ "$code" != "404" ]; then
+  echo "FAIL: $host rejected the client certificate (HTTP $code, expected 404)."
+  exit 1
+fi
+
+echo "$host reachable and authenticated."

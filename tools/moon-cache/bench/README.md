@@ -15,13 +15,17 @@ Output lands in `.moon-bench/` (gitignored).
 node tools/moon-cache/bench/analyze.mjs .moon-bench
 ```
 
-```
+```text
 arm        n  hits      wall median  wall range          CV  hydration median  per-task p50
 A          5       324       338.0s  325.6-363.3s      4.7%           1100.1s  2027ms
 B          5       324        16.8s  16.4-18.0s        3.1%             16.3s  28ms
 
 B is 20.1x faster than A on wall clock.
 ```
+
+That sample is the historical Depot-versus-loopback comparison, kept because it shows the output
+shape at a large margin — arm A there is Depot's hosted cache, not the self-hosted one now
+configured.
 
 `analyze.mjs` also takes a single report — `node analyze.mjs .moon/cache/runReport.json` — for the
 operation breakdown of one run, which is the quickest way to check whether a cache is working at

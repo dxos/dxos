@@ -33,13 +33,23 @@ echo "== $($MOON --version) | $(git rev-parse --short HEAD) | :$TARGET | ${HOST:
 for i in $(seq 1 "$REPS"); do
   # The local cache must be cold or it masks the remote path entirely. The toolchain and pnpm store
   # stay warm deliberately — they are not under test.
-  rm -rf .moon/cache/outputs .moon/cache/states .moon/cache/hashes
+  # The report is removed as well as the caches: without this, a failed rep would leave the
+  # previous rep's report in place and get copied as if it were this one's.
+  rm -rf .moon/cache/outputs .moon/cache/states .moon/cache/hashes .moon/cache/runReport.json
   if [ -n "$HOST" ]; then
     MOON_REMOTE_HOST="$HOST" "$MOON" run ":$TARGET" > "$OUT/$ARM$i.log" 2>&1
   else
     "$MOON" run ":$TARGET" > "$OUT/$ARM$i.log" 2>&1
   fi
   code=$?
+  if [ "$code" -ne 0 ]; then
+    echo "== $ARM$i FAILED exit=$code — see $OUT/$ARM$i.log"
+    exit "$code"
+  fi
+  if [ ! -f .moon/cache/runReport.json ]; then
+    echo "== $ARM$i produced no run report"
+    exit 1
+  fi
   cp .moon/cache/runReport.json "$OUT/report-$ARM$i.json"
   echo "== $ARM$i exit=$code hits=$(grep -c 'cached from remote' "$OUT/$ARM$i.log")"
 done
