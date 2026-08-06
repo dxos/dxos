@@ -5,7 +5,7 @@
 import { type BranchStore } from '@dxos/echo-client';
 import { log } from '@dxos/log';
 
-const branchSelectionKey = (spaceId: string) => `dxos.org/state/branch-selection/${spaceId}`;
+const branchSelectionKey = (spaceId: string) => `org.dxos.state.branch-selection/${spaceId}`;
 
 /**
  * Device-local persistence for the current-branch selection of a space. Selections must survive a

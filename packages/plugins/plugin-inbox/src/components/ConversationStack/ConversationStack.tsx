@@ -239,11 +239,29 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
 
       const scrollIntoView = () => tile.scrollIntoView({ block: 'end', behavior: 'smooth' });
       scrollIntoView();
+      // Focus the reply's body editor (`.dx-expander` distinguishes it from the recipient editors,
+      // which are CodeMirror too). The composer mounts asynchronously — watch the tile until the
+      // editor appears, bounded by the same settle window as the scroll re-pinning below;
+      // `preventScroll` keeps the focus from cutting the smooth scroll short.
+      const focusBody = () => {
+        const content = tile.querySelector<HTMLElement>('.dx-expander .cm-content');
+        if (content) {
+          content.focus({ preventScroll: true });
+          focusObserver.disconnect();
+        }
+      };
+      const focusObserver = new MutationObserver(focusBody);
+      focusObserver.observe(tile, { childList: true, subtree: true });
+      focusBody();
       const observer = new ResizeObserver(scrollIntoView);
       observer.observe(tile);
-      const timeout = setTimeout(() => observer.disconnect(), 1_000);
+      const timeout = setTimeout(() => {
+        observer.disconnect();
+        focusObserver.disconnect();
+      }, 1_000);
       return () => {
         observer.disconnect();
+        focusObserver.disconnect();
         clearTimeout(timeout);
       };
     }, [tileItems]);
