@@ -1,5 +1,5 @@
 ---
-'@dxos/react-ui-menu': minor
+'@dxos/react-ui-menu': major
 ---
 
-`Menu.Toolbar` is now decomposable: `Menu.ToolbarRoot` (the attention-gated toolbar container) plus `Menu.ToolbarItems` (the graph items, container-free) let callers control where the graph items sit among other toolbar children via JSX order. `Menu.Toolbar` is unchanged sugar for the common items-then-children case.
+`Menu.Toolbar` no longer renders the graph items implicitly — it is now only the attention-gated toolbar container, and the new `Menu.Items` renders the graph-backed items wherever it sits among the toolbar's children, so JSX order controls placement. Every `<Menu.Toolbar />` becomes `<Menu.Toolbar><Menu.Items /></Menu.Toolbar>`; a toolbar mixing its own children with the graph items orders them freely.

@@ -29,7 +29,7 @@ import {
   useMenuScope,
   useMenuScoped,
 } from './MenuContext';
-import { ToolbarMenu, ToolbarMenuItems, ToolbarMenuRoot } from './ToolbarMenu';
+import { ToolbarMenu, ToolbarMenuItems } from './ToolbarMenu';
 
 //
 // MenuProvider (internal) — the context provider used by Menu.Root.
@@ -229,10 +229,9 @@ const MenuContent = ({
  * - `Menu.Root` — context boundary (replaces `MenuProvider`); also provides a dropdown root.
  * - `Menu.Trigger` / `Menu.VirtualTrigger` — dropdown trigger (use with `Menu.Content`).
  * - `Menu.Content` — renders graph-backed dropdown items inside a portal.
- * - `Menu.Toolbar` — flat toolbar component with graph-backed item rendering (items first,
- *   extra children appended).
- * - `Menu.ToolbarRoot` + `Menu.ToolbarItems` — the same toolbar decomposed, for callers that
- *   need to place other toolbar children before or between the graph items.
+ * - `Menu.Toolbar` — attention-gated toolbar container; renders only its children.
+ * - `Menu.Items` — the graph-backed toolbar items; place it among `Menu.Toolbar`'s children,
+ *   whose JSX order controls where the items sit.
  */
 const Menu = {
   Root: MenuRoot,
@@ -240,8 +239,7 @@ const Menu = {
   Content: MenuContent,
   VirtualTrigger: NaturalDropdownMenu.VirtualTrigger,
   Toolbar: ToolbarMenu,
-  ToolbarRoot: ToolbarMenuRoot,
-  ToolbarItems: ToolbarMenuItems,
+  Items: ToolbarMenuItems,
 };
 
 export { Menu };

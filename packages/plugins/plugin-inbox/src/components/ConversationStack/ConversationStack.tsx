@@ -611,7 +611,9 @@ type MessageMenuProps = {
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
   <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent' />
+    <Menu.Toolbar classNames='p-1 bg-transparent'>
+      <Menu.Items />
+    </Menu.Toolbar>
   </Menu.Root>
 );
 
@@ -823,7 +825,9 @@ const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToo
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+        <Menu.Items />
+      </Menu.Toolbar>
     </Menu.Root>
   );
 });

@@ -380,7 +380,9 @@ export const MailboxArticle = ({
       <ElevationProvider elevation='positioned'>
         <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
           <Panel.Toolbar asChild>
-            <Menu.Toolbar />
+            <Menu.Toolbar>
+              <Menu.Items />
+            </Menu.Toolbar>
           </Panel.Toolbar>
         </Menu.Root>
       </ElevationProvider>

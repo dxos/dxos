@@ -256,7 +256,9 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
           <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
             {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
             <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-              <Menu.Toolbar />
+              <Menu.Toolbar>
+                <Menu.Items />
+              </Menu.Toolbar>
             </Menu.Root>
           </Panel.Toolbar>
           <Panel.Content>

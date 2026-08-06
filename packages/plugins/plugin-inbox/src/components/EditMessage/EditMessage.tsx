@@ -241,7 +241,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             {/* Label / editor / reveal-links tracks; every row shares the grid so the labels and
                 fields align as columns, with a small row gap separating the fields vertically. */}
             <Column.Center
-              classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-1'
+              classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-y-2'
               data-testid='edit-email-form'
             >
               <span className={labelStyles}>{t('draft-to.label')}</span>
@@ -255,7 +255,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 onChange={(value) => updateField('to', value)}
               />
               {(!showCc || !showBcc) && (
-                <span className='shrink-0 flex items-center gap-2 pe-2 text-sm text-description'>
+                <span className='shrink-0 flex items-center gap-2 ps-2 text-sm text-description'>
                   {!showCc && (
                     <button type='button' className='dx-link-hover' onClick={revealCc}>
                       {t('draft-cc.label')}
@@ -301,7 +301,6 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 <Input.Label srOnly>{t('draft-subject.label')}</Input.Label>
                 <Input.TextInput
                   ref={subjectRef}
-                  variant='subdued'
                   classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
                   defaultValue={message.properties?.subject}

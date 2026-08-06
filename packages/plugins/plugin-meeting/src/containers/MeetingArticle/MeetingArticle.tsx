@@ -120,7 +120,9 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       {tab === 'call' && callData && (

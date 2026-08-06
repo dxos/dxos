@@ -277,12 +277,12 @@ const ToggleGroupToolbarItem = ({
 };
 
 /**
- * Attention-gated toolbar container with no graph items of its own — compose with
- * {@link ToolbarMenuItems} when the items' position among other toolbar children matters.
+ * Attention-gated toolbar container with no graph items of its own — render {@link ToolbarMenuItems}
+ * among its children, whose JSX order controls where the graph items sit.
  */
-export const ToolbarMenuRoot = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
+export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
   ({ __menuScope, children, ...props }, forwardedRef) => {
-    const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenuRoot', __menuScope);
+    const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
     const { hasAttention } = useAttention(attendableId);
 
     return (
@@ -309,16 +309,6 @@ export const ToolbarMenuItems = ({ __menuScope }: MenuScopedProps<{}>) => {
     </>
   );
 };
-
-/** The common case: graph items first, extra children appended. */
-export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
-  ({ __menuScope, children, ...props }, forwardedRef) => (
-    <ToolbarMenuRoot __menuScope={__menuScope} {...props} ref={forwardedRef}>
-      <ToolbarMenuItems __menuScope={__menuScope} />
-      {children}
-    </ToolbarMenuRoot>
-  ),
-);
 
 const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {

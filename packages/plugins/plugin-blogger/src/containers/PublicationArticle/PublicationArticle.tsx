@@ -196,7 +196,9 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
     <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
-          <Menu.Toolbar classNames='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
