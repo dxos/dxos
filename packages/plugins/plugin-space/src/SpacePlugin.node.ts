@@ -19,14 +19,14 @@ import {
   Task,
 } from '@dxos/types';
 
-import { CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
+import { Commands, CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
 
 import * as SpaceSchema from './types/SpaceSchema';
 
 export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands'))),
+  Plugin.addModule(Commands),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(

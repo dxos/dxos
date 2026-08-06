@@ -11,6 +11,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 
 import {
   AppGraphBuilder,
+  Commands,
   LayerSpecs,
   OperationHandler,
   RegistrySync,
@@ -21,7 +22,7 @@ import { meta } from '#meta';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands'))),
+  Plugin.addModule(Commands),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(
     AppCapability.schema([Routine.Routine, Operation.PersistentOperation, Trigger.Trigger, Trace.Message]),

@@ -9,6 +9,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { RegistryCapabilities } from '../types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const DevPluginLoader = Capability.lazyModule(
   'DevPluginLoader',
   { requires: [Capabilities.PluginManager, Capabilities.AtomRegistry, RegistryCapabilities.Settings], provides: [] },

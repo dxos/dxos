@@ -22,6 +22,7 @@ export const AccountCache = Capability.lazyModule(
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   activatesOn: ClientEvents.Initialized,
 });
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const HubHttpClient = Capability.lazyModule(
   'HubHttpClient',
   {

@@ -21,6 +21,9 @@ export const BuiltinConnectors = Capability.lazyModule(
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connectors'),
 );
+// Declared for parity with the node barrel, whose `#capabilities` types resolve through this
+// file; only the node plugin adds the module, since `connector oauth` needs a callback server.
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const OAuthRedirect = Capability.lazyModule(
   'OAuthRedirect',

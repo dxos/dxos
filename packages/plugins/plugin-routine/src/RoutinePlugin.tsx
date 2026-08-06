@@ -12,6 +12,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 
 import {
   AppGraphBuilder,
+  Commands,
   CreateObject,
   LayerSpecs,
   OperationHandler,
@@ -28,7 +29,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
 
 export const RoutinePlugin = Plugin.define(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands'))),
+  Plugin.addModule(Commands),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
