@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 
 import {
   DEFAULT_SPAN_TIMEOUT_MS,

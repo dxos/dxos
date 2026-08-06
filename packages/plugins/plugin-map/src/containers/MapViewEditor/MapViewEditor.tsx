@@ -11,7 +11,7 @@ import { Format } from '@dxos/echo/Format';
 import { Form, type FormFieldMap, SelectField } from '@dxos/react-ui-form';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
-import { type Map } from '#types';
+import type * as Map from '../../types/Map';
 
 // TODO(wittjosiah): Add center and zoom.
 export const MapSettingsSchema = Schema.Struct({

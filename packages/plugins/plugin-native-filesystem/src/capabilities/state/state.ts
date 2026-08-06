@@ -6,12 +6,12 @@ import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';
-
+import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 import { loadWorkspace, refreshWorkspace } from '../../util';
 import { createDirectoryWatcher } from './directory-watcher';
 import * as FilesystemManager from './FilesystemManager';
@@ -20,10 +20,10 @@ import { MirrorSpaceManager } from './mirror-space-manager';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const registry = yield* Capabilities.AtomRegistry;
+    const client = yield* ClientCapabilities.Client;
 
-    const stateAtom = Atom.make<NativeFilesystemState>({
+    const stateAtom = Atom.make<NativeFilesystemCapabilities.NativeFilesystemState>({
       workspaces: [],
       currentFile: undefined,
     }).pipe(Atom.keepAlive);
@@ -121,11 +121,10 @@ export default Capability.makeModule(
     const currentWorkspaces = registry.get(stateAtom).workspaces;
     yield* Effect.forEach(currentWorkspaces, directoryWatcher.startWatching, { discard: true });
 
+    yield* Effect.addFinalizer(() => directoryWatcher.stopAll());
     return [
-      Capability.contributes(NativeFilesystemCapabilities.State, stateAtom),
-      Capability.contributes(NativeFilesystemCapabilities.FilesystemManager, filesystemManager, () =>
-        directoryWatcher.stopAll(),
-      ),
+      Capability.contribute(NativeFilesystemCapabilities.State, stateAtom),
+      Capability.contribute(NativeFilesystemCapabilities.FilesystemManager, filesystemManager),
     ];
   }),
 );

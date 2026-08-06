@@ -11,7 +11,6 @@ import { Resource } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type CallMetadata, type LogFilter, log, parseFilter } from '@dxos/log';
-import { createIceProvider } from '@dxos/network-manager';
 import { subscribeStream } from '@dxos/protocols';
 import { type LogEntry, LogLevel } from '@dxos/protocols/proto/dxos/client/services';
 import type { MaybePromise } from '@dxos/util';
@@ -62,7 +61,7 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
         // Serve the tab's WebRTC BridgeService (RtcTransportService) to the worker over the
         // worker→client port. Imported lazily so the RTC stack is only pulled in when a worker
         // connection opens.
-        const { RtcTransportService } = await import('@dxos/network-manager');
+        const { RtcTransportService, createIceProvider } = await import('@dxos/network-manager');
         const iceProviders = config.get('runtime.services.iceProviders');
         const transportService = new RtcTransportService(
           { iceServers: [...(config.get('runtime.services.ice') ?? [])] },

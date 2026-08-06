@@ -7,8 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { ThemeProvider } from '@dxos/react-ui';
-
-import { type SearchResult } from '#types';
+import { type SearchResult } from '@dxos/react-ui-search';
 
 import { SearchResultList } from './SearchResultList';
 

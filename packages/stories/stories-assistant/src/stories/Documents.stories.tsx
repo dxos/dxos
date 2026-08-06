@@ -6,11 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { ToolId } from '@dxos/ai';
-import { Script, Skill, Template } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Filter, Query, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantSkill } from '@dxos/plugin-assistant';
-import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
+import { MarkdownSkill } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { CommentSkill } from '@dxos/plugin-review/skills';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
@@ -18,6 +21,7 @@ import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules';
 import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing';
+
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
   render: ModuleContainer,

@@ -3,7 +3,7 @@
 //
 
 import { Text as EchoText, Obj } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { random } from '@dxos/random';
 import { type Text } from '@dxos/schema';
 import { Branch } from '@dxos/versioning';

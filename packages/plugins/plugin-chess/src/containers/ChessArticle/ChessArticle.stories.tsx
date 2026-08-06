@@ -6,13 +6,13 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { type Obj } from '@dxos/echo';
-import { Game } from '@dxos/plugin-game';
+import * as Game from '@dxos/plugin-game/Game';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Chess } from '#types';
 
+import * as Chess from '../../types/Chess';
 import { ChessArticle } from './ChessArticle';
 
 type StoryArgs = {

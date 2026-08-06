@@ -6,7 +6,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Bookmark } from '#types';
+
+import * as Bookmark from './types/Bookmark';
 
 export const translations = [
   {

@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 
-import { type Plugin, type Registry, UrlLoader } from '@dxos/app-framework';
+import { type Registry } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { EffectEx } from '@dxos/effect';
 
 /**

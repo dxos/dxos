@@ -8,13 +8,15 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Game } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
 import { Card, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { ChessComAccount, ChessComOperation } from '#types';
+
+import * as ChessComAccount from '../../types/ChessComAccount';
+import * as ChessComOperation from '../../types/ChessComOperation';
 
 export type ChessGameArticleProps = AppSurface.ObjectArticleProps<ChessComAccount.Account>;
 

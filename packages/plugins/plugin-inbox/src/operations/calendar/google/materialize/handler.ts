@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
 import { CalendarForeignKeyWrongTypeError } from '../../../../errors';
-import { Calendar, InboxOperation } from '../../../../types';
+import * as Calendar from '../../../../types/Calendar';
+import * as InboxOperation from '../../../../types/InboxOperation';
 
 /**
  * Find-or-create the local Calendar materialized for this remote calendar id.

@@ -5,7 +5,8 @@
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { isSpace } from '@dxos/react-client/echo';
@@ -14,9 +15,9 @@ import { Masonry } from '@dxos/react-ui-masonry';
 
 import { ArtifactCard } from '#components';
 import { meta } from '#meta';
-import { Artifact } from '#types';
 
 import { getKindIcon } from '../../constants';
+import * as Artifact from '../../types/Artifact';
 
 type Kind = 'image' | 'video';
 

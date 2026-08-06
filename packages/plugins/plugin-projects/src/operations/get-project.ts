@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
-import { ProjectMcpOperation } from '#types';
+import * as ProjectMcpOperation from '../types/ProjectMcpOperation';
 
 /**
  * The detail read behind `projectList`: goals, per-task-set open/total counts, the checklist

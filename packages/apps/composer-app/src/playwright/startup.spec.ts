@@ -2,15 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type CDPSession, expect, test } from '@playwright/test';
+import { type CDPSession, type Page, expect, test } from '@playwright/test';
 import { rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { INITIAL_URL } from './app-manager';
-import { appendBenchmarkRow, collectStartupReport, trackNetwork, waitForReady, writeReport } from './harness-helpers';
+import {
+  appendBenchmarkRow,
+  appendRunSample,
+  collectStartupReport,
+  trackNetwork,
+  waitForReady,
+  writeReport,
+} from './harness-helpers';
 
 // Surface the DX_PWA requirement as a test-level failure rather than a hard
 // `process.exit` at spec-collection time — keeps the playwright report and
@@ -20,6 +28,26 @@ test.beforeAll(() => {
     throw new Error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
   }
 });
+
+/**
+ * Registers a `longtask` PerformanceObserver before any page script runs — `collectStartupReport`
+ * reads the accumulated entries from `window.__longTasks` to compute Total Blocking Time.
+ */
+const observeLongTasks = (page: Page): Promise<void> =>
+  page.addInitScript(() => {
+    window.__longTasks = [];
+    try {
+      if (PerformanceObserver.supportedEntryTypes?.includes('longtask')) {
+        new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            window.__longTasks?.push({ start: entry.startTime, duration: entry.duration });
+          }
+        }).observe({ type: 'longtask', buffered: true });
+      }
+    } catch {
+      // Long Tasks API unsupported in this browser (firefox/webkit) — `__longTasks` stays empty.
+    }
+  });
 
 test.describe.serial('Startup timing harness', () => {
   // First-paint and module-graph evaluation each take real wall clock; webkit can be much slower.
@@ -33,6 +61,7 @@ test.describe.serial('Startup timing harness', () => {
     const context = await browser.newContext();
     const page = await context.newPage();
     const network = trackNetwork(page);
+    await observeLongTasks(page);
 
     const start = Date.now();
     await page.goto(`${INITIAL_URL}/?profiler=1`);
@@ -44,6 +73,7 @@ test.describe.serial('Startup timing harness', () => {
     const counts = network();
     report.transferredBytes = counts.bytes;
     report.responseCount = counts.responses;
+    report.fetchedUrls = counts.urls;
 
     writeReport(`startup-cold-${browserName}.json`, report);
     appendBenchmarkRow(report);
@@ -76,6 +106,7 @@ test.describe.serial('Startup timing harness', () => {
 
     // Warm reload: navigate again, measure.
     const network = trackNetwork(page);
+    await observeLongTasks(page);
     const start = Date.now();
     await page.reload();
     await waitForReady(page);
@@ -86,6 +117,7 @@ test.describe.serial('Startup timing harness', () => {
     const counts = network();
     report.transferredBytes = counts.bytes;
     report.responseCount = counts.responses;
+    report.fetchedUrls = counts.urls;
 
     writeReport(`startup-warm-${browserName}.json`, report);
     appendBenchmarkRow(report);
@@ -103,6 +135,9 @@ test.describe.serial('Startup timing harness', () => {
 
   // TODO(wittjosiah): The warm-reload path is the one the ResetDialog race was documented against,
   //   and it only survived on the retries removed above. Deferred until the race is root-caused.
+  //   NOTE: `check-startup-budget` greps this scenario and reads the samples it writes, so that task
+  //   exits 1 with a "no startup samples" error while this stays deferred. It is a manual task, not
+  //   wired into CI, so nothing is silently green — but re-enabling this restores that gate too.
   test.fixme('warm-cold start (persisted identity, fresh tab)', async ({ playwright, browserName }, testInfo) => {
     test.skip(browserName !== 'chromium', 'persistent context flow currently exercised only on chromium');
 
@@ -120,6 +155,10 @@ test.describe.serial('Startup timing harness', () => {
       const primerPage = primer.pages()[0] ?? (await primer.newPage());
       await primerPage.goto(`${INITIAL_URL}/?profiler=1`);
       await waitForReady(primerPage);
+      // TODO(wittjosiah): Prime an open document (via a robust page-object flow) so the measured
+      //   reload restores an editor plank and `milestone:first-editor-interactive` lands here.
+      const measuredUrl = new URL(primerPage.url());
+      measuredUrl.searchParams.set('profiler', '1');
       await primer.close();
 
       // Re-launch with the same `userDataDir`. IDB persists; module cache is
@@ -127,18 +166,20 @@ test.describe.serial('Startup timing harness', () => {
       const context = await browserType.launchPersistentContext(userDataDir);
       const page = context.pages()[0] ?? (await context.newPage());
       const network = trackNetwork(page);
+      await observeLongTasks(page);
       const start = Date.now();
-      await page.goto(`${INITIAL_URL}/?profiler=1`);
+      await page.goto(measuredUrl.toString());
       await waitForReady(page);
       const navigationToReady = Date.now() - start;
-
       const report = await collectStartupReport(page, 'warm-cold');
       report.navigationToReady = navigationToReady;
       const counts = network();
       report.transferredBytes = counts.bytes;
       report.responseCount = counts.responses;
+      report.fetchedUrls = counts.urls;
 
       writeReport(`startup-warm-cold-${browserName}.json`, report);
+      appendRunSample('warm-cold', report);
       appendBenchmarkRow(report);
       log.info('warm-cold start report', {
         browser: browserName,
@@ -197,6 +238,7 @@ test.describe.serial('Startup timing harness', () => {
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 2 });
 
     const network = trackNetwork(page);
+    await observeLongTasks(page);
     const start = Date.now();
     await page.goto(`${INITIAL_URL}/?profiler=1`);
     await waitForReady(page, 300_000);
@@ -207,6 +249,7 @@ test.describe.serial('Startup timing harness', () => {
     const counts = network();
     report.transferredBytes = counts.bytes;
     report.responseCount = counts.responses;
+    report.fetchedUrls = counts.urls;
 
     writeReport(`startup-throttled-cold-${browserName}.json`, report);
     appendBenchmarkRow(report);
@@ -241,8 +284,8 @@ test.describe.serial('Startup timing harness', () => {
 
     await page.addInitScript(() => {
       const capture = () => {
-        (window as any).__bootLoaderSnapshot = {
-          hasDriver: typeof (window as any).__bootLoader?.status === 'function',
+        window.__bootLoaderSnapshot = {
+          hasDriver: typeof window.__bootLoader?.status === 'function',
           bootLoaderInDom: !!document.getElementById('boot-loader'),
           bootLoaderAriaLabel: document.getElementById('boot-loader')?.getAttribute('aria-label') ?? null,
         };
@@ -253,8 +296,10 @@ test.describe.serial('Startup timing harness', () => {
     });
     await page.goto(`${INITIAL_URL}/?profiler=1`, { waitUntil: 'domcontentloaded' });
 
-    const snapshot = await page.evaluate(() => (window as any).__bootLoaderSnapshot);
-    expect(snapshot).toBeTruthy();
+    const snapshot = await page.evaluate(() => window.__bootLoaderSnapshot);
+    // `toBeDefined` rather than `toBeTruthy`: it narrows, so the reads below need no non-null.
+    expect(snapshot).toBeDefined();
+    invariant(snapshot);
     expect(snapshot.bootLoaderInDom).toBe(true);
     expect(snapshot.bootLoaderAriaLabel).toBe('Initializing');
     expect(snapshot.hasDriver).toBe(true);

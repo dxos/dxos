@@ -7,7 +7,7 @@
 // import { Client } from '@dxos/client';
 // import { type Space } from '@dxos/client/echo';
 // import { TestBuilder } from '@dxos/client/testing';
-// import { Markdown } from '@dxos/plugin-markdown';
+// import * as Markdown from '@dxos/plugin-markdown/Markdown';
 // import { DiagramType } from '@dxos/plugin-tldraw';
 // import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space';
 // import { TableType } from '@dxos/schema';

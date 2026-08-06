@@ -11,8 +11,7 @@ import * as THREE from 'three';
 
 import { type ColorStyles, type Hue, palette } from '@dxos/ui-theme';
 
-import { type Voxel } from '#types';
-
+import type * as Voxel from '../../types/Voxel';
 import { computeVoxelBounds, toThree } from './voxel-bounds';
 
 //

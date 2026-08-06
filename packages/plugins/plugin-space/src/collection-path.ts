@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppAnnotation, GraphPath } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Annotation, Collection, Database, Filter } from '@dxos/echo';
 import { EID } from '@dxos/keys';

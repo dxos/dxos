@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { KanbanSkill } from '#skills';
 
-const skillDefinition = () => Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, KanbanSkill)]);
+const skillDefinition = () => Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, KanbanSkill)]);
 
 export default skillDefinition;

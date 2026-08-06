@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
 
-import { PlankSizing } from '#types';
+import * as DeckSchema from '../types/DeckSchema';
 
 /**
  * Superset of the current on-disk deck shape that additionally tolerates fields absent from the current
@@ -19,11 +19,11 @@ import { PlankSizing } from '#types';
 const LegacyDeckState = Schema.Struct({
   active: Schema.mutable(Schema.Array(Schema.String)),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  plankSizing: Schema.mutable(PlankSizing),
+  plankSizing: Schema.mutable(DeckSchema.PlankSizing),
   companionPlanks: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   companionOpen: Schema.optional(Schema.Boolean),
   tilingSizing: Schema.optional(Schema.Number),
-  companionFrameSizing: Schema.optional(Schema.mutable(PlankSizing)),
+  companionFrameSizing: Schema.optional(Schema.mutable(DeckSchema.PlankSizing)),
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
   fullscreen: Schema.optional(Schema.Boolean),

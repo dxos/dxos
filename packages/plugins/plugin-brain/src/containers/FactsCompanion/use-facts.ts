@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { EffectEx } from '@dxos/effect';
 import { type FactStoreApi, type RDF } from '@dxos/pipeline-rdf';
 
-import { type FactStoreRegistry } from '../../capabilities';
+import { type FactStoreRegistry } from '../../capabilities/fact-store';
 
 // Kept out of `FactsCompanion.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on

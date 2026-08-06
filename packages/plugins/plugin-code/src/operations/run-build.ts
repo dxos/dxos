@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 
 import { type LoadedFile, compileEntry, executeScript } from '../compiler';
-import { CodeOperation } from '../types';
+import * as CodeOperation from '../types/CodeOperation';
 
 /**
  * F-12a: build the project, then execute the emitted entry script inside a

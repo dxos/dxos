@@ -17,8 +17,8 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { type Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -26,7 +26,9 @@ import { Stage } from '@dxos/pipeline';
 import { Message } from '@dxos/types';
 
 import { isAiServiceUnavailable } from '../operations/extractor';
-import { InboxCapabilities, InboxOperation, type Mailbox } from '../types';
+import * as InboxCapabilities from '../types/InboxCapabilities';
+import * as InboxOperation from '../types/InboxOperation';
+import type * as Mailbox from '../types/Mailbox';
 
 /** Read `syncBackDays` and `filter` from the binding options (opaque record). */
 export const readBindingOptions = (binding: Cursor.ExternalCursor) => {

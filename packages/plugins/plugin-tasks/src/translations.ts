@@ -7,7 +7,8 @@ import { type Resource } from '@dxos/react-ui';
 import { Outline } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Journal } from '#types';
+
+import * as Journal from './types/Journal';
 
 export const translations = [
   {

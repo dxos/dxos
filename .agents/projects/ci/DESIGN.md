@@ -23,8 +23,9 @@ Two consequences that any change in this area has to respect:
 
 1. **Nothing here can be verified by "CI is green."** Correctness and cache health are independent
    signals, and only one of them turns the build red.
-2. **Every cache change needs an explicit assertion** on hits, or a regression is invisible.
-   `.github/actions/assert-remote-cache` exists for this.
+2. **Assert the cache works, not that it was used.** The setup action probes reachability and
+   certificate acceptance before any task runs. Counting cache hits cannot do this job — a
+   legitimately cold branch has zero hits too.
 
 A live example: `preview.yml`, `upload-introspect-cache.yml` and `publish-all.yml` call the setup
 action and run moon tasks but never set `DEPOT_TOKEN`, so they have had **no remote cache at all**
@@ -37,18 +38,15 @@ in ~86 s from the same machine at the same RTT. The cost is not bandwidth and no
 it is invariant to where the client sits, which is why it does not improve on a Depot runner
 either. Full analysis in [`REPORT.md`](./REPORT.md).
 
-Current direction: self-hosted `bazel-remote` on a DigitalOcean droplet behind mTLS, with
-Blacksmith sticky disks as an alternative under evaluation. The two are not equivalent —
-sticky disks are snapshot/clone/commit with no live sharing between concurrent jobs, so they
-change cache semantics rather than just relocating the cache.
+Settled: a self-hosted `bazel-remote` on a DigitalOcean droplet in NYC3, behind mTLS, on Depot
+runners. Blacksmith was evaluated as an alternative runner and rejected — REPORT.md, "Runners".
 
 ## Open questions
 
-1. **Runner→cache numbers.** Every measurement so far is from a dev machine. The CI-side figure
-   needs a PR that actually runs Check against the self-hosted cache.
-2. **Concurrency.** One client pulling 449 MB is measured; ten concurrent jobs are not, and that
-   is where a shared-egress droplet could bind on bandwidth.
-3. **Trust boundary for cache writes.** Any client with a certificate can write, and
+1. **Concurrency.** One client pulling 449 MB is measured, on a laptop and on a runner; ten
+   concurrent jobs are not, and that is where a shared-egress droplet could bind on bandwidth.
+   Nothing so far has run more than one cache client at a time.
+2. **Trust boundary for cache writes.** Any client with a certificate can write, and
    `bazel-remote` has no per-client ACL — so a developer's machine can currently poison CI's
    cache. The pnpm store already has a `cache-scope` isolation story for exactly this; the remote
    cache does not.

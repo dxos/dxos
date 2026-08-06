@@ -4,12 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
 
-import { HelpOperation } from '#types';
-
 import { WelcomeDismissedAnnotation } from '../annotations';
+import * as HelpOperation from '../types/HelpOperation';
 
 const handler: Operation.WithHandler<typeof HelpOperation.HideWelcome> = HelpOperation.HideWelcome.pipe(
   Operation.withHandler(

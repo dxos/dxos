@@ -8,7 +8,7 @@ import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import { Connection } from './types';
+import * as Connection from './types/Connection';
 
 export const translations = [
   {

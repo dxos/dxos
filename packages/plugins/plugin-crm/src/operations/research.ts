@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Organization, type Person } from '@dxos/types';
 
-import { ProfileOf } from '../types';
+import * as ProfileOf from '../types/ProfileOf';
 
 /** One profile document section; empty bodies render as a heading the user/agent fills in. */
 export type ProfileSection = {

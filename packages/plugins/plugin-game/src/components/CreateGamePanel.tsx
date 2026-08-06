@@ -6,22 +6,23 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { type SpaceCapabilities } from '@dxos/plugin-space';
+import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Column, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-import { GameCapabilities, type GameVariant } from '#types';
+
+import * as GameCapabilities from '../types/GameCapabilities';
 
 export type CreateGamePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to GameCapabilities.VariantProvider. */
-  variants?: GameVariant[];
+  variants?: GameCapabilities.GameVariant[];
 };
 
 /**
  * Two-stage create panel for games:
- *   1. Variant picker (SearchList over contributed `GameVariant[]`).
+ *   1. Variant picker (SearchList over contributed `GameCapabilities.GameVariant[]`).
  *   2. Variant-specific input form (rendered from variant.inputSchema).
  *
  * On submit, calls `onCreateObject({ variantId, name, input })` where `input` is the
@@ -91,7 +92,7 @@ export const CreateGamePanel = ({ target, onCreateObject, variants: variantsProp
 };
 
 type VariantPickerProps = {
-  variants: GameVariant[];
+  variants: GameCapabilities.GameVariant[];
   onSelect: (id: string) => void;
 };
 

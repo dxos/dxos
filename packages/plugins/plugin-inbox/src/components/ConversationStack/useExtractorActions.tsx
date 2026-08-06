@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Obj } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { log } from '@dxos/log';
 
 import { isAiServiceUnavailable } from '../../operations/extractor/ai-gate';
-import { InboxOperation, Mailbox } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 
 export type ExtractorMenuItem = {
   id: string;

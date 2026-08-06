@@ -11,7 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, Card, Icon, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
@@ -19,13 +19,13 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { AtprotoCapabilities } from '#types';
 
 import { ATPROTO_SOURCES, isAtprotoConnection } from '../../connection';
 import { getAtprotoUris } from '../../foreign-key';
 import { importRecord } from '../../publish';
 import { getMappedCollections } from '../../schema-map';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
+import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
 
 export type PdsBrowserProps = {
   role?: string;

@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Feed, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
@@ -20,9 +19,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
-import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
+import * as Mailbox from '../../types/Mailbox';
 import { InitializeMailbox } from './InitializeMailbox';
 
 type StoryArgs = {
@@ -45,7 +44,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { withToken = false } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

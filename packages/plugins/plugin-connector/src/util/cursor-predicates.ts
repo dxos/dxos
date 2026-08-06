@@ -5,7 +5,7 @@
 import { type Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
-import { Connection } from '../types';
+import * as Connection from '../types/Connection';
 
 /**
  * True when `cursor` is an external-sync cursor authenticated by `connection`'s access token.

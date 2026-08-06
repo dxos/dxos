@@ -1,6 +1,6 @@
 # CI — Tasks
 
-_Resume: branch `claude/depot-vs-self-hosted-cache-3fbd62`, ready for a PR — that is the next step and the only thing left before this is live. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS: **11.3× faster than Depot** on the 324-task `:build` from a dev machine, 338 s → 30 s wall. Certificates, repository secrets and DNS are all in place and verified end-to-end; nothing has run in CI yet. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
+_Resume: branch `claude/depot-vs-self-hosted-cache-3fbd62`, PR #12494 OPEN as a draft — watch Check, then mark ready. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS, and it is now **measured in CI**: a fully-cached 324-task `:build` takes **14 s against 161 s uncached** on a Depot runner, hydrating 324/324 in 13.6 s at 31 ms per task over a 7 ms link. Runners were compared and Depot stays: compute is identical and it sits closest to the cache. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
 
 Context and the failure mode that governs this area: [`DESIGN.md`](./DESIGN.md).
 
@@ -18,18 +18,19 @@ CI — that is what opening the PR settles.
       `MOON_CACHE_*` environment variables, bound once per workflow rather than at every call
       site (a composite action cannot read the `secrets` context). It **fails** when they are
       absent, except on fork PRs.
-- [x] **Guard against silent degradation** — `.github/actions/assert-remote-cache`,
-      warn-only in `check`.
+- [x] **Guard against silent degradation** — the setup action probes the cache for reachability
+      and client-certificate acceptance before any task runs, and fails the job if either is
+      wrong. Connectivity rather than a hit count: a legitimately cold branch has zero hits, so a
+      hit count cannot tell "nothing to restore" from "cache is broken".
 - [x] **Document operations and local setup** — [`tools/moon-cache/`](../../../tools/moon-cache/README.md),
       including `install-certs.sh --op`.
 - [x] **Store the certificates** — one `moon-cache-certs` item in the 1Password `CI` vault, each
       file its own concealed field; `install-certs.sh --op` reads the three client files from it.
       `ca.key` is in the item but never fetched by that path.
 - [x] **Set the three `MOON_CACHE_*` repository secrets** on `dxos/dxos`.
-- [ ] **Open the PR and read the CI numbers.** The first measurement of this cache from a
-      real runner, and the first test of whether the mTLS path works from inside the job
-      container. Expect a full cold build on the first run — a `workspace.yml` change
-      re-hashes every task.
+- [x] **Measure the cache in CI** — 14 s cached against 161 s uncached on a Depot runner,
+      324/324 hits, mTLS working from inside the job container. REPORT.md, "In CI".
+- [x] **Open the PR** — https://github.com/dxos/dxos/pull/12494 (draft).
 - [x] **DNS `cache.dxos.network` → the droplet** — A record, DNS-only (the Cloudflare proxy does
       not pass gRPC on 9092). `.moon/workspace.yml` now uses the name; verified 12/12 hits over it.
 - [ ] **Reserve the droplet IP.** Now that clients dial the name, a rebuild costs a DNS edit
@@ -39,53 +40,15 @@ CI — that is what opening the PR settles.
       A dead cache is invisible: CI just gets slow.
 - [ ] **Read-only certificates for developers.** Any client with a certificate can write and
       `bazel-remote` has no per-client ACL, so a laptop can poison CI's cache today.
-- [ ] **Promote `assert-remote-cache` to failing** and add it to the other five moon jobs
-      (`test`, `storybook`, `workerd`, `e2e`, `cli`).
 - [ ] **Cancel the Depot cache subscription** once this has a track record. Depot remains the
       runner provider (`depot-ubuntu-24.04-8`); only the cache moved.
 
-## Phase 2: Evaluate Blacksmith
+## Phase 2: Backlog
 
-Not started — the benchmark workflow was written and then removed rather than merged, because it
-cannot run until the app has repository access and an unrunnable workflow on `main` is worse than
-none. Recreate it when the prerequisite lands.
-
-**Sticky disks are not a drop-in replacement for a shared CAS.** Blacksmith exposes no remote-cache
-endpoint; it snapshots a disk, clones it per job, and commits at job end. Every job works on its
-own clone, so concurrent jobs never see each other's writes, and with branch protection enabled
-only `push`/`schedule`/`workflow_dispatch` on the default branch may commit at all.
-
-- [ ] **Get the Blacksmith app access to `dxos/dxos`.** The one prerequisite: a first run sat
-      queued 12 minutes and never got a runner. `blacksmith-8vcpu-ubuntu-2404` is a valid label,
-      so this is repository access, not configuration.
-- [ ] **Recreate the benchmark workflow** — dispatch-only, one job, `useblacksmith/stickydisk@v1`
-      mounting `.moon/cache`, `remote-cache: 'false'` on setup so the sticky disk is the only
-      thing under test, then `moon run :build` and a local/remote/executed breakdown from the run
-      report. Key it per job (`…-moon-cache-${{ github.job }}`): on a shared key only the last job
-      to finish keeps its artifacts.
-  - Note `workflow_dispatch` only fires for workflows already on the default branch, so testing it
-    from a branch needs a temporary branch-scoped `push` trigger.
-- [ ] **Run it twice** — once to populate and commit a snapshot, once to measure hydration off it.
-- [ ] **Answer three questions before considering a migration**
-  - Does the sticky disk mount reach inside the job container? Jobs run in
-    `ghcr.io/dxos/gh-actions`, and the mount happens on the runner.
-  - How does hydration compare to 109 s (self-hosted, mTLS) and 1,100 s (Depot)?
-  - What is left once hydration is local — `hash-generation` was ~31 s and no cache touches it.
-- [ ] **Decide on PR-run semantics.** With branch protection on, PR jobs read the snapshot but
-      cannot commit, so iterating on a PR rebuilds the same packages every run — a regression
-      against a shared cache. Turning it off reintroduces the poisoning risk the pnpm
-      `cache-scope` already guards against.
-- [ ] **Weigh it against the migration cost.** This is a runner migration, not a cache swap:
-      `runs-on` changes in seven job definitions, and it means leaving Depot's runners too.
-- [ ] **Cost** — $0.50/GB/month, 7-day idle eviction, ~6 per-job keys each holding the `:build`
-      outputs.
-
-## Phase 3: Backlog
-
-- [ ] **Check that every moon-running job has a cache credential.** `preview.yml` and
-      `upload-introspect-cache.yml` ran moon tasks with no `DEPOT_TOKEN` and so had no remote cache
-      at all, silently, for an unknown length of time. Both are fixed, and `publish-all` now opts
-      out deliberately — but nothing stops the next workflow from reintroducing the bug.
+- [x] **Check that every moon-running job has a cache credential** —
+      `scripts/check-cache-wiring.mjs`, run in `check`. `model-fixture.yml` landed from main after
+      the call sites were wired and had neither binding nor opt-out, which the setup action caught
+      in CI; this catches it before pushing.
 - [x] **Reword the cache warning** in `AGENTS.md`, `REPOSITORY_GUIDE.md` and the
       composer-plugin-dev skill — it is harmless, but it means no shared cache, and the docs said
       to filter it rather than fix it.

@@ -51,11 +51,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -64,7 +59,33 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Journal": {
+      "source": "./src/types/Journal.ts",
+      "types": "./dist/types/src/types/Journal.d.ts",
+      "import": "./dist/lib/Journal.mjs"
+    },
+    "./OutlineOperation": {
+      "source": "./src/types/OutlineOperation.ts",
+      "types": "./dist/types/src/types/OutlineOperation.d.ts",
+      "import": "./dist/lib/OutlineOperation.mjs"
+    },
+    "./TaskOperation": {
+      "source": "./src/types/TaskOperation.ts",
+      "types": "./dist/types/src/types/TaskOperation.d.ts",
+      "import": "./dist/lib/TaskOperation.mjs"
+    },
+    "./TasksEvents": {
+      "source": "./src/types/TasksEvents.ts",
+      "types": "./dist/types/src/types/TasksEvents.d.ts",
+      "import": "./dist/lib/TasksEvents.mjs"
+    },
+    "./TasksUtil": {
+      "source": "./src/types/TasksUtil.ts",
+      "types": "./dist/types/src/types/TasksUtil.d.ts",
+      "import": "./dist/lib/TasksUtil.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -74,14 +95,28 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Journal": [
+        "dist/types/src/types/Journal.d.ts"
+      ],
+      "OutlineOperation": [
+        "dist/types/src/types/OutlineOperation.d.ts"
+      ],
+      "TaskOperation": [
+        "dist/types/src/types/TaskOperation.d.ts"
+      ],
+      "TasksEvents": [
+        "dist/types/src/types/TasksEvents.d.ts"
+      ],
+      "TasksUtil": [
+        "dist/types/src/types/TasksUtil.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

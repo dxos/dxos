@@ -8,7 +8,7 @@ import { Show, createMemo, createSignal } from 'solid-js';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-solid';
-import { type Map as MapType } from '@dxos/plugin-map';
+import type * as Map from '@dxos/plugin-map/Map';
 import { getTypeURIFromQuery } from '@dxos/schema';
 import { type GeoMarker } from '@dxos/solid-ui-geo';
 import { getDeep } from '@dxos/util';
@@ -17,7 +17,7 @@ import { GlobeControl } from '../Globe';
 import { MapControl } from '../Map';
 
 type MapSurfaceProps = {
-  data?: { subject: MapType.Map };
+  data?: { subject: Map.Map };
 };
 
 const MapSurface = (props: MapSurfaceProps) => {

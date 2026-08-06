@@ -10,7 +10,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Branch, Version } from '@dxos/versioning';
 
 import { type UseVersioningResult } from '../../hooks';
-import { type ReviewCapabilities } from '../../types';
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { authorHue } from '../../util';
 import { VersionBanner } from './VersionBanner';
 

@@ -6,10 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, DXN, Type } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { meta } from '#meta';
 

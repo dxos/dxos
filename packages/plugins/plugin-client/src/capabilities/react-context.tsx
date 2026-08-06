@@ -6,7 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useCapability } from '@dxos/app-framework/ui';
 import { Identity, Space } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
@@ -14,11 +15,12 @@ import { HaloProvider } from '@dxos/halo-react';
 import { ClientProvider } from '@dxos/react-client';
 
 import { meta } from '#meta';
-import { ClientCapabilities } from '#types';
+
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactContext, {
+    Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }: { children?: ReactNode }) => {
         const client = useCapability(ClientCapabilities.Client);
@@ -33,7 +35,9 @@ export default Capability.makeModule(() =>
           [client],
         );
         return (
-          <ClientProvider client={client}>
+          // `suspend`: initialization is forked by the client capability; consumers suspend at
+          // their own Suspense boundaries instead of blanking the whole tree behind a fallback.
+          <ClientProvider client={client} suspend>
             <HaloProvider services={services}>{children}</HaloProvider>
           </ClientProvider>
         );

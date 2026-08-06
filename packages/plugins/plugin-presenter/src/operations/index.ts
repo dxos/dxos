@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const PresenterOperationHandlerSet = OperationHandlerSet.lazy(() => import('./toggle-presentation'));
+import * as PresenterOperation from '../types/PresenterOperation';
+
+export const PresenterOperationHandlerSet = OperationHandlerSet.lazy([
+  PresenterOperation.TogglePresentation.pipe(Operation.lazyHandler(() => import('./toggle-presentation'))),
+]);

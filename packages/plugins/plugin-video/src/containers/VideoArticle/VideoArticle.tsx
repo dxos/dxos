@@ -13,7 +13,9 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+
+import * as Video from '../../types/Video';
+import * as VideoOperation from '../../types/VideoOperation';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 

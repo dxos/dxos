@@ -8,16 +8,20 @@ import React, { useCallback } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { LayerSpec, Project } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -33,16 +37,18 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             mockAiService({ text: 'A concise topic summary.' }),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -91,7 +97,6 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

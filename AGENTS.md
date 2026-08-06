@@ -134,6 +134,10 @@ cache. Worth fixing anyway: `tools/moon-cache/install-certs.sh --op` installs th
 Universal rules. Deeper conventions live in skills — see the pointers below.
 
 - TypeScript, single quotes. Prefer functional style and arrow functions.
+- **Prefer Effect over async/Promise.** Raw Promises belong only at platform boundaries —
+  dynamic `import()` and browser callback APIs (wrap the latter with `Effect.async`). Use
+  `Effect.sleep`/`Effect.gen` instead of `setTimeout`/`async` orchestration. (Exception:
+  tests that need real macrotask turns across runtimes — TestClock virtualizes `Effect.sleep`.)
 - Import order, blank line between groups:
   builtin → external → @dxos → internal → parent → sibling.
 - Prefer named exports; avoid default exports. Use barrel imports.
@@ -194,6 +198,11 @@ Deeper conventions:
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **SQLite schema changes** — adding a migration, creating a new SQLite-backed
+  store, or anything under `src/migrations/` →
+  [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).
+  Read it before reaching for Prisma: there is no driver adapter for the
+  browser client, which is why the schema is hand-written SQL.
 - **`REPOSITORY_GUIDE.md`** — toolchain setup, prerequisites, and how to run
   apps/services (Composer, Tasks, Docs).
 - **`OPS_GUIDE.md`** / **`TROUBLESHOOTING.md`** — operations and common issues.

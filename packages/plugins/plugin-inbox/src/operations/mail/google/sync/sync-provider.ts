@@ -17,7 +17,8 @@ import { GoogleMail } from '../../../../apis';
 import { GMAIL_SOURCE } from '../../../../constants';
 import { GoogleApiError, MailSyncError } from '../../../../errors';
 import { GoogleMailApi, type GoogleMailApiError } from '../../../../services';
-import { Mailbox, SystemTags } from '../../../../types';
+import * as Mailbox from '../../../../types/Mailbox';
+import * as SystemTags from '../../../../types/SystemTags';
 import { parseFromHeader } from '../../../util';
 import {
   type MailSyncItem,

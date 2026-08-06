@@ -4,7 +4,7 @@
 
 import * as Layer from 'effect/Layer';
 
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 import { Context as DxContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { type SpaceId } from '@dxos/keys';

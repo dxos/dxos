@@ -24,7 +24,8 @@ tasks:
       - $VITEST_ENV
       - $VITEST_XML_REPORT
       - $VITEST_TAGS_FILTER
-      - $ALLOW_LLM_GENERATION
+      - $DX_RUN_MODEL_FIXTURE_TESTS
+      - $DX_UPDATE_MODEL_FIXTURES
     outputs:
       - /coverage/$project/node/**
       - /test-results/$project/node/**

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { PageAction as Protocol } from '@dxos/crx-protocol';
 
 // Re-export the serializable wire schemas from the shared protocol package.

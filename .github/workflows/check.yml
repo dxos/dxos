@@ -78,11 +78,16 @@ jobs:
         with:
           detached: true
 
+      # Full depth keeps the commit graph that `--affected remote` / `merge-base` resolve against,
+      # while `filter: blob:none` stops the transfer of every historical file version — the previous
+      # full fetch ranged 32s–15m on the same commit. No `lfs: true`: nothing in the tree is
+      # LFS-tracked. `fetch-tags: false` is not used because checkout ignores it at depth 0; at
+      # ~150 tags the residual refspec cost is noise.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
@@ -113,6 +118,9 @@ jobs:
       - name: Check package.json paths
         run: pnpm run pkg-lint
 
+      - name: Check remote cache wiring
+        run: node scripts/check-cache-wiring.mjs
+
       - name: Check formatting
         run: pnpm run format-check
 
@@ -123,14 +131,6 @@ jobs:
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
-
-      # Guards the self-hosted cache against silent degradation: an unreachable or unauthenticated
-      # cache still exits 0 and simply rebuilds everything. warn-only until the cache has a
-      # track record — flip to a hard failure once it has been green for a week.
-      - name: Assert remote cache
-        uses: ./.github/actions/assert-remote-cache
-        with:
-          warn-only: 'true'
 
       - name: Check module structure (affected)
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
@@ -173,7 +173,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -270,7 +270,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -367,7 +367,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -440,7 +440,7 @@ jobs:
     timeout-minutes: 30
     env:
       DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_EDGE_BASE_URL: 'wss://main.dxos.network/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
     steps:
@@ -524,7 +524,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -541,6 +541,18 @@ jobs:
       # No bundle step: the `:e2e` targets below declare `bundle` as a dep, so moon resolves it and
       # hydrates it from the cache `e2e-bundle` warmed. An explicit step would only duplicate that
       # resolution, and scoping it correctly per shard is what the dep graph already encodes.
+
+      # Static boot-graph budget over the bundle just built. The class it catches is a property of an
+      # IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a refactor
+      # that relocates the edge silently drops the fix and neither the build nor the tests notice;
+      # three separate fixes were undone that way. Not `--affected`-scoped, because the offending
+      # edit lands in some other package. NOTE: this job is gated to main/changeset-release/dispatch,
+      # so today the check runs post-merge and does not gate the PR that introduces the regression.
+      # Skipped for a comparison dispatch: it only exists in this job, so counting it would charge arm A
+      # for work the other arms never do.
+      - name: Check boot budget
+        if: ${{ !inputs.e2e_compare }}
+        run: moon run composer-app:check-boot-budget
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
       # Avoids 504 Outdated Optimize Dep when graph differs from bundle step.
@@ -901,7 +913,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
@@ -1029,6 +1041,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Detect missing changeset

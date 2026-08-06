@@ -38,11 +38,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -51,7 +46,23 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./DiscordEvents": {
+      "source": "./src/types/DiscordEvents.ts",
+      "types": "./dist/types/src/types/DiscordEvents.d.ts",
+      "import": "./dist/lib/DiscordEvents.mjs"
+    },
+    "./DiscordOperation": {
+      "source": "./src/types/DiscordOperation.ts",
+      "types": "./dist/types/src/types/DiscordOperation.d.ts",
+      "import": "./dist/lib/DiscordOperation.mjs"
+    },
+    "./DiscordTargetOptions": {
+      "source": "./src/types/DiscordTargetOptions.ts",
+      "types": "./dist/types/src/types/DiscordTargetOptions.d.ts",
+      "import": "./dist/lib/DiscordTargetOptions.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -64,6 +75,19 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DiscordEvents": [
+        "dist/types/src/types/DiscordEvents.d.ts"
+      ],
+      "DiscordOperation": [
+        "dist/types/src/types/DiscordOperation.d.ts"
+      ],
+      "DiscordTargetOptions": [
+        "dist/types/src/types/DiscordTargetOptions.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -5,7 +5,7 @@
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
+import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { useTranslation } from '@dxos/react-ui';
 import { type ChatEditorController } from '@dxos/react-ui-chat';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';

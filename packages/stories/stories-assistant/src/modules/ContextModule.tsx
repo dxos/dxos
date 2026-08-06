@@ -6,9 +6,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
-import { Assistant } from '@dxos/plugin-assistant';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';

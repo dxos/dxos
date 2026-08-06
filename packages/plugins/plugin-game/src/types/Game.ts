@@ -62,7 +62,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
  * Variant-narrowed reference to a Game.
  *
  * Encodes — at the type level — that the variant ref points to a specific state type.
- * Runtime narrowing is performed by `loadGame(ref, variantType)` which validates and
+ * Runtime narrowing is performed by `GameUtil.loadGame(ref, variantType)` which validates and
  * returns the resolved Game together with its typed variant state.
  *
  * @example
@@ -71,7 +71,7 @@ export class Game extends Type.makeObject<Game>(DXN.make('org.dxos.type.game', '
  *   game: GameRef(Chess.State),
  * }),
  * // handler:
- * const { game, variant } = yield* loadGame(input.game, Chess.State);
+ * const { game, variant } = yield* GameUtil.loadGame(input.game, Chess.State);
  * // `variant` is typed as Chess.State.
  * ```
  */

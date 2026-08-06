@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-// @import-as-namespace
-
 import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type GeoMarker, type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { type MapControlType } from '#containers';
@@ -34,10 +32,12 @@ export type State = {
   zoom?: number;
 };
 
-export const State = Capability.make<Atom.Writable<State>>(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${meta.profile.key}.capability.state`);
 
 /** Writable settings atom (also surfaced as a settings form via `AppCapabilities.Settings`). */
-export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.profile.key}.capability.settings`);
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsType>>()(
+  `${meta.profile.key}.capability.settings`,
+);
 
 //
 // Marker providers
@@ -70,4 +70,9 @@ export type MarkerProvider = {
   useMarkers: (subject: any, options: { attendableId?: string }) => MarkerSet;
 };
 
-export const MarkerProvider = Capability.make<MarkerProvider>(`${meta.profile.key}.capability.marker-provider`);
+// Multi capability: every plugin that can plot a subject on the map (map's own view provider,
+// plugin-trip, ...) contributes one entry.
+export const MarkerProvider = Capability.make<MarkerProvider>()(`${meta.profile.key}.capability.markerProvider`);
+
+// TODO(wittjosiah): Factor out?
+export const LocationAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Location');

@@ -6,7 +6,6 @@ tags:
   - ts-test-storybook
   - pack
   - storybook
-  - memoized-llm
 tasks:
   check-module-structure:
     # Fail when the ./plugin export pulls in `@dxos/react-ui`. The plugin entry must

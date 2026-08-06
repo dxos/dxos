@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 
 import { SEARCH_DIALOG } from '../constants';
-import { SearchOperation } from '../types';
+import * as SearchOperation from '../types/SearchOperation';
 
 const handler: Operation.WithHandler<typeof SearchOperation.OpenSearch> = SearchOperation.OpenSearch.pipe(
   Operation.withHandler(

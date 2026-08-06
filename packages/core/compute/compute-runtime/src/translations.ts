@@ -4,7 +4,7 @@
 
 import { type Resource } from 'i18next';
 
-import { Script } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
 import { Type } from '@dxos/echo';
 
 export const translations = [

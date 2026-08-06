@@ -5,15 +5,16 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,7 +22,7 @@ import { meta } from '#meta';
 import { SLACK_SOURCE } from '../constants';
 import { formatSlackSyncFailure } from '../errors';
 import { SlackApi } from '../services';
-import { SlackOperation } from '../types';
+import * as SlackOperation from '../types/SlackOperation';
 
 type SlackConversation = SlackApi.SlackConversation;
 type SlackMessage = SlackApi.SlackMessage;

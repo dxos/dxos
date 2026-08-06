@@ -5,7 +5,8 @@
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
@@ -15,9 +16,9 @@ import { Masonry } from '@dxos/react-ui-masonry';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
-import { Artifact } from '#types';
 
 import { useArtifactCoverSource } from '../../hooks';
+import * as Artifact from '../../types/Artifact';
 
 const isArtifact = Obj.instanceOf(Artifact.Artifact);
 

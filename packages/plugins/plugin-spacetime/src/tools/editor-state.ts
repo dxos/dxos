@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Model } from '../types';
+import type * as Model from '../types/Model';
 import { type Selection, type SelectionMode } from './tool-context';
 
 /** Unified editor state shared between tools, actions, canvas, and toolbar. */

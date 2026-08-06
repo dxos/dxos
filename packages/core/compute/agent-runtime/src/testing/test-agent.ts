@@ -7,7 +7,8 @@ import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { CompleteBlock, PartialBlock } from '@dxos/assistant';
-import { type AgentService, Trace } from '@dxos/compute';
+import type * as AgentService from '@dxos/compute/AgentService';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 import { Message } from '@dxos/types';

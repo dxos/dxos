@@ -58,11 +58,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -82,13 +77,37 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    }
+    "./ChessComAccount": {
+      "source": "./src/types/ChessComAccount.ts",
+      "types": "./dist/types/src/types/ChessComAccount.d.ts",
+      "import": "./dist/lib/ChessComAccount.mjs"
+    },
+    "./ChessComEvents": {
+      "source": "./src/types/ChessComEvents.ts",
+      "types": "./dist/types/src/types/ChessComEvents.d.ts",
+      "import": "./dist/lib/ChessComEvents.mjs"
+    },
+    "./ChessComOperation": {
+      "source": "./src/types/ChessComOperation.ts",
+      "types": "./dist/types/src/types/ChessComOperation.d.ts",
+      "import": "./dist/lib/ChessComOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ChessComAccount": [
+        "dist/types/src/types/ChessComAccount.d.ts"
+      ],
+      "ChessComEvents": [
+        "dist/types/src/types/ChessComEvents.d.ts"
+      ],
+      "ChessComOperation": [
+        "dist/types/src/types/ChessComOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

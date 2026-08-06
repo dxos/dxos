@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SystemTags } from '../../../../types';
+import type * as SystemTags from '../../../../types/SystemTags';
 
 /**
  * JMAP mailbox role → canonical system tag ({@link SystemTags.SystemTag}). Roles absent here are

@@ -8,7 +8,8 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Event } from '@dxos/types';
 
-import { Segment, Trip } from '../types';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
 import { buildTripFromEvents, defaultTripName, eventsSpan, eventsToSegments } from './events-to-segments';
 
 describe('eventsToSegments', () => {

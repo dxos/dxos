@@ -6,10 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 

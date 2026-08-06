@@ -4,12 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
+import type * as Place from '../types/Place';
+import * as Routing from '../types/Routing';
+import * as RoutingOperation from '../types/RoutingOperation';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
+import * as TripCapabilities from '../types/TripCapabilities';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 

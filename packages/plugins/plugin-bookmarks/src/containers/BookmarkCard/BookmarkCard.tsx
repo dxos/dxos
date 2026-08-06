@@ -8,8 +8,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { Card } from '@dxos/react-ui';
 
-import { type Bookmark } from '#types';
-
+import type * as Bookmark from '../../types/Bookmark';
 import { useImageLoads } from '../useImageLoads';
 
 export type BookmarkCardProps = AppSurface.ObjectCardProps<Bookmark.Bookmark>;

@@ -392,6 +392,40 @@ describe('path-resolution', () => {
       );
       expect(results).toEqual([{ pairIndex: 0, nodeId: `${Node.RootId}/${WORKSPACE_A}/sharedDoc` }]);
     });
+
+    test('a shared key spends one deadline, not one per extension', async ({ expect }) => {
+      // Two extensions declare `doc`, and neither candidate exists. Waiting per candidate would
+      // spend the deadline twice over, so the caller's bound would scale with how many extensions
+      // happen to share the key.
+      const builder = buildTestBuilder();
+      const started = Date.now();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(
+          builder,
+          { workspace: WORKSPACE_A, pairs: [{ key: 'doc', id: 'neverArrives', workspace: WORKSPACE_A }] },
+          { wait: () => '200 millis' },
+        ),
+      );
+      expect(results).toEqual([null]);
+      expect(Date.now() - started).toBeLessThan(400);
+    });
+
+    test('a resolver candidate waits for the deadline like a static one', async ({ expect }) => {
+      // Dynamic resolvers name the recursive shapes (nested collections) whose containers are the
+      // slowest to materialize, so they need the wait at least as much as static paths do — they
+      // used to get none, and a cold deep link into one landed on not-found.
+      const builder = buildTestBuilder();
+      const started = Date.now();
+      const results = await EffectEx.runPromise(
+        PathResolution.resolveUrl(
+          builder,
+          { workspace: WORKSPACE_A, pairs: [{ key: 'dyn', id: 'missing', workspace: WORKSPACE_A }] },
+          { wait: () => '200 millis' },
+        ),
+      );
+      expect(results).toEqual([null]);
+      expect(Date.now() - started).toBeGreaterThanOrEqual(150);
+    });
   });
 
   describe('representNode', () => {

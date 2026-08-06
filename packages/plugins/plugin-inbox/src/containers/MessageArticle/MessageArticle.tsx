@@ -6,7 +6,8 @@ import { Atom } from '@effect-atom/atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Ref, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
@@ -24,9 +25,12 @@ import {
   keyOf,
   messageViewModeAspect,
 } from '#components';
-import { InboxCapabilities, InboxOperation, Mailbox, type Settings } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
+import type * as Settings from '../../types/Settings';
 import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */

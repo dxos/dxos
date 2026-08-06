@@ -9,7 +9,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';
@@ -17,7 +17,6 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import { getFieldPublishFlags } from '../../annotation';
 import { isAtprotoConnection } from '../../connection';
@@ -32,6 +31,8 @@ import {
   unpublishObject,
 } from '../../publish';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
+import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
+import * as AtprotoPublication from '../../types/AtprotoPublication';
 
 export type AtprotoCompanionProps = AppSurface.ArticleProps<Obj.Unknown>;
 

@@ -5,12 +5,15 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type FC, useEffect, useState } from 'react';
 
-import { Capabilities, type Role } from '@dxos/app-framework';
+import { type Role } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppSpace, GraphPath, NotFound } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { StorybookCapabilities } from '@dxos/plugin-testing';
+import * as StorybookCapabilities from '@dxos/plugin-testing/StorybookCapabilities';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';

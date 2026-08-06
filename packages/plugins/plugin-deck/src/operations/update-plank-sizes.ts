@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Operation from '@dxos/compute/Operation';
 
-import { DeckCapabilities, DeckOperation } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
+import * as DeckOperation from '../types/DeckOperation';
 import { updateActiveDeck } from './helpers';
 
 const handler: Operation.WithHandler<typeof DeckOperation.UpdatePlankSizes> = DeckOperation.UpdatePlankSizes.pipe(

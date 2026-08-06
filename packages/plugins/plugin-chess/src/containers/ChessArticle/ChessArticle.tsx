@@ -8,16 +8,17 @@ import React, { useCallback, useRef, useState } from 'react';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type GameVariantSurfaceProps } from '@dxos/plugin-game/types';
+import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
 import { Chessboard, type ChessboardController, type ChessboardInfoProps } from '#components';
 import { meta } from '#meta';
-import { Chess } from '#types';
 
-export type ChessArticleProps = GameVariantSurfaceProps;
+import * as Chess from '../../types/Chess';
+
+export type ChessArticleProps = GameCapabilities.GameVariantSurfaceProps;
 
 export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
   const { t } = useTranslation(meta.profile.key);

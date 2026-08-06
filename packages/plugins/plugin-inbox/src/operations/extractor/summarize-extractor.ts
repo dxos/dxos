@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { type Obj, Type } from '@dxos/echo';
 import {
   ExtractError,
@@ -16,10 +16,10 @@ import {
   type MatchResult,
   type ObjectExtractor,
 } from '@dxos/extractor';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { InboxOperation } from '../../types';
+import * as InboxOperation from '../../types/InboxOperation';
 
 /**
  * AI summarization extractor. Matches any message with a non-trivial plain-text body

@@ -5,12 +5,12 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { GoogleCalendar } from '../../../../apis';
 import { GoogleCredentials } from '../../../../services/google-credentials';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { toGoogleEvent } from '../mapper';
 
 const handler = InboxOperation.CreateGoogleCalendarEvent.pipe(
