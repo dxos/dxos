@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Decorator } from '@storybook/react';
+import { type Decorator } from '@storybook/react-vite';
 import React, { type FC, type PropsWithChildren, memo } from 'react';
 
 import { type ClassNameValue, type ThemedClassName } from '@dxos/react-ui';

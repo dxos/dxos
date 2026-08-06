@@ -102,6 +102,12 @@ jobs:
       - name: Check package.json paths
         run: pnpm run pkg-lint
 
+      # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
+      # config resolves workspace packages through their `source` export condition — so it needs no
+      # build and runs before the expensive `moon run :lint :build` step below.
+      - name: Check dependencies
+        run: pnpm run knip
+
       - name: Check formatting
         run: pnpm run format-check
 

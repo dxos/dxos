@@ -22,7 +22,6 @@
     "@dxos/credentials": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/echo-host": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -30,11 +29,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/rpc": "workspace:*",
-    "@dxos/sql-sqlite": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "fast-deep-equal": "catalog:"
-  },
-  "devDependencies": {}
+  }
 }

@@ -19,9 +19,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/debug"
-    },
-    {
       "path": "../../common/i18n"
     },
     {
@@ -47,9 +44,6 @@
     },
     {
       "path": "../react-primitives/react-input"
-    },
-    {
-      "path": "../react-primitives/react-list"
     },
     {
       "path": "../ui-theme"

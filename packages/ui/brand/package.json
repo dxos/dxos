@@ -25,23 +25,19 @@
     "dist",
     "src"
   ],
-  "dependencies": {
-    "d3": "catalog:"
-  },
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@fontsource/k2d": "catalog:",
     "@phosphor-icons/react": "catalog:",
     "@rive-app/react-canvas": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
+    "d3": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
     "@phosphor-icons/react": "catalog:",
     "react": "catalog:",
