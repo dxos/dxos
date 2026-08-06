@@ -92,28 +92,21 @@ tasks:
       - public/assets/plugin-tldraw
   # Dev server (`vite dev`) — the everyday inner loop, with the full plugin registry. Vite dev
   # resolves @dxos/* from source (importSource), so pre-building the whole graph is wasted work:
-  # only packages whose dist is actually consumed need it. Those declare it themselves — they
-  # publish no `source` export condition (so node/bun and vite both take their dist) and carry the
-  # `dist-runtime` moon tag, fanned out here; `pkg-lint` enforces the pairing.
+  # only packages whose dist is actually consumed need it, and each kind declares itself by tag.
   serve:
     options:
       # The `vite` tag contributes `^:build`, and deps merge by append — without this the whole
-      # graph is still built and the list below is redundant.
+      # graph is still built and the tags below are redundant.
       mergeDeps: replace
     deps:
       - prebuild
       # dist consumed at runtime.
       - '#dist-runtime:build'
-      # dist consumed at config-load time (vite.config.ts imports run in Node,
-      # before importSource is active) — derived from vite.config.ts's own
-      # `@dxos/*` imports; a missing entry fails fast at server startup.
-      - app-framework:build
-      - ui-theme:build
-      - util:build
-      - vite-plugin-icons:build
-      - vite-plugin-import-source:build
-      - vite-plugin-log:build
-      - vite-plugin-shutdown:build
+      # dist consumed at config-load time: `vite.config.ts` runs in Node, before importSource is
+      # active. The `vite-plugin` tag marks packages that *export a vite plugin this config loads*
+      # — not merely anything the config imports. A non-plugin import like `@dxos/util` stays
+      # untagged: the plugin packages depend on it, so their own `^:build` builds it first.
+      - '#vite-plugin:build'
   # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
   # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
   # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.
