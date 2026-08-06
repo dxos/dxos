@@ -45,20 +45,39 @@ Chrome's number is renderer process footprint, not JS heap.
       Non-JS (native) growth; no data needed. DESIGN.md Findings.
 - [x] **Allocation sampling** — idle churn is modest (~3.4 MB/min page); top
       allocators include 3 Cloudflare Stream video iframes on the home surface.
-- [ ] **Video-block control soak** — same soak with `*cloudflarestream*`
-      blocked; if flat, media pipeline is the driver. RUNNING.
-- [ ] **Attribute the ~480 MB baseline RSS gap** (762 MB RSS at ready vs
-      ~280 MB heap+backing) — wasm reservations, media, canvas, code pages.
-- [ ] **Loaded-profile pass** — real (/recovery.html debug port) or synthetic
-      data to explain Main=816 MB JS heap on the user's instance.
+- [x] **Video-block control soak** — videos exonerated; growth persisted
+      (faster, even).
+- [x] **Attribution chain complete** — memory-infra dumps (±perf stub),
+      constructor heap diff, chunk-plateau watch, bare-chromium control.
+      Verdict in DESIGN.md "FINAL ATTRIBUTION": ~0.7–1.0 GB structural
+      baseline (971 chunks + wasm + overhead, plateaus t≈3 min);
+      perf-timeline entries the only true in-app unbounded leak
+      (~0.5–1 MB/min idle, recalibrated); the fast linear climb was
+      DevTools/CDP-attach retention, which the user's DevTools-open tab
+      shares.
+- [ ] **Loaded-profile pass** — user captures a heap snapshot of the 3 GB
+      tab's Main + a chrome://tracing memory-infra trace; analyze with
+      `analyze.mjs` / the dump rollup to decompose the data-proportional
+      816 MB. (Or synthetic-data local approximation.)
 
 ## Phase 3: Fix
 
-Ranked by measured impact — seeded from Phase 1/2 findings.
+Ranked by measured impact — see DESIGN.md "Fix ranking".
 
 ### Tasks
 
-- [ ] (seeded from findings)
+- [ ] **Shrink structural baseline** — audit the Idle activation wave: which
+      of the 63 `ActivationEvents.Idle` registrations pull how much closure,
+      and why do disabled/Labs plugins load at all; evaluate dropping the
+      main-thread automerge wasm instance.
+- [ ] **Gate performance.mark/measure emitters** behind a default-off debug
+      flag — sql-sqlite ×2, echo-host ×3, query-executor, effect
+      Performance.ts, tracing api.ts; plus bounded entry names (no SQL text).
+- [ ] **Reduce idle chatter** — 51 SQL/s at idle (1 s polling fan-out);
+      coordinate with feed-live-objects push roadmap.
+- [ ] **Harness into repo** — promote scratchpad memory-harness scripts
+      (measure/soak/memory-dump/snapshot-diff/count-entries) into a tools
+      package or composer-app scripts with a README.
 
 ### References
 

@@ -256,6 +256,54 @@ IDB transaction buffers, log-store writes).
   the user's DevTools-open tab has the same effect, a plain tab does not.
   Discriminator in flight: constructor-level heap-snapshot diff t=1→7 min.
 
+### 2026-08-06 — FINAL ATTRIBUTION (fresh-profile production)
+
+Three closing measurements:
+
+1. Constructor-level heap diff (t=1→7 min, no stub): the ONLY JS accumulator
+   is perf entries — worker +16,708 `PerformanceMeasure` (+2.16 MB native) +
+   1,456 `PerformanceMark`; page grew just ~4 MB of code/shape noise.
+   `BufferedSpan` growth: negligible. Native cost per entry ≈ 130 B + wrapper
+   — the earlier ~5 KB/entry estimate came from a JS-side approximation of
+   name+detail and OVERSTATES the retained cost. Recalibrated: perf-timeline
+   leak ≈ **0.5–1 MB/min at idle** — real, unbounded, but not the dominant
+   term.
+2. 24-min watch: modulepreload plateau at exactly 971 chunks from t≈3 min on.
+3. **Bare-chromium soak (no DevTools/CDP attached): renderer oscillates
+   700–980 MB, NO monotonic growth over 12 min.** The linear 30–46 MB/min
+   climb in earlier soaks was inflated by CDP page instrumentation
+   (Playwright's always-on Network domain → Blink retains response bodies) —
+   the same class of retention a DevTools-open tab has.
+
+**Consolidated model of the user's 3.0 GB tab:**
+
+- **~0.7–1.0 GB structural baseline in ANY Composer tab** — all 971 chunks'
+  code + module records resident (incl. the idle wave importing registration
+  closures of all 63 plugins, enabled or not), automerge wasm on main thread
+  AND worker, DOM/styles, allocator overhead. This alone brushes Chrome's
+  "high memory" flag; it is why the tab is "always" flagged.
+- **DevTools-open retention** — with an inspector attached, footprint climbs
+  linearly (measured ~11–46 MB/min idle, faster with activity — response
+  bodies, console/object retention). A developer's workday tab with DevTools
+  open reaches multi-GB. Not app-fixable, but app chatter (51 SQL/s idle,
+  1 s polling) multiplies it.
+- **Perf-timeline entries** — unbounded in-app leak, ~0.5–1 MB/min idle,
+  more under activity; also mirrored into DevTools when open.
+- **Data-proportional heap** — user's Main = 816 MB vs 97 MB fresh; needs a
+  snapshot of the real tab to decompose (ECHO objects, editors, history).
+
+**Fix ranking (Phase 3):**
+
+1. Shrink the structural baseline — audit the Idle wave (why do disabled/Labs
+   plugins' registration closures load at all?), drop automerge wasm from the
+   main thread if possible. Biggest lever on the always-flagged tab.
+2. Gate `performance.mark/measure` emitters behind a debug flag (off by
+   default) — kills the only true in-app unbounded leak; cheap.
+3. Reduce idle chatter (51 SQL/s, 1 s polling) — multiplies DevTools
+   retention and churn; feed-live-objects roadmap already owns the push
+   replacement.
+4. Advisory: DevTools-open is itself a multi-GB amplifier on long sessions.
+
 ### Fix directions (Phase 3)
 
 1. **Gate the devtools-track instrumentation off by default** — one shared
