@@ -15,12 +15,48 @@ import * as Scope from 'effect/Scope';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 
+import { Capabilities } from '../../common';
+import * as ActivationEvent from '../activation-event';
 import * as Capability from '../capability';
 import * as CapabilityManager from '../capability-manager';
 import { CapabilityNotFoundError, ProvidesMismatchError } from '../errors';
 import * as Plugin from '../plugin';
 import { type ManagerState } from './manager-state';
 import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
+
+/**
+ * Yields the host's event loop before a module body runs. Effect's scheduler drains its run queue
+ * within one macrotask, so a wave of cache-hit module activations otherwise fuses into one
+ * multi-second long task that blocks paint and input (measured: 2 s max task, ~4.7 s TBT at boot).
+ *
+ * Prefers `scheduler.yield()` (input-priority aware); falls back to a MessageChannel hop, which is
+ * a real macrotask boundary without `setTimeout`'s clamp. The fallback is `Effect.async` rather
+ * than a hand-built promise so an interrupt closes the ports instead of leaking a channel per
+ * yield — this runs between every module activation, so a few hundred times at boot.
+ */
+export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
+  const scheduler = globalThis.scheduler;
+  // Feature-tested, not just presence-checked: Chromium shipped `postTask` before `yield`.
+  if (typeof scheduler?.yield === 'function') {
+    return Effect.promise(() => scheduler.yield());
+  }
+  if (typeof MessageChannel === 'undefined') {
+    return Effect.void;
+  }
+  return Effect.async<void>((resume) => {
+    const { port1, port2 } = new MessageChannel();
+    const close = () => {
+      port1.close();
+      port2.close();
+    };
+    port1.onmessage = () => {
+      close();
+      resume(Effect.void);
+    };
+    port2.postMessage(null);
+    return Effect.sync(close);
+  });
+});
 
 /**
  * Owns the per-module load pipeline and its bookkeeping: memoized loads (id -> Deferred),
@@ -40,15 +76,19 @@ export class ModuleLoader {
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
   readonly #activationTimeout: Duration.DurationInput;
+  readonly #yieldToHost: Effect.Effect<void>;
 
   constructor(
     state: ManagerState,
     capabilities: CapabilityManager.CapabilityManager,
     activationTimeout: Duration.DurationInput,
+    /** Injected so the host yield is explicit at the composition root, and swappable in tests. */
+    yieldToHostEffect: Effect.Effect<void> = yieldToHost,
   ) {
     this.#state = state;
     this.#capabilities = capabilities;
     this.#activationTimeout = activationTimeout;
+    this.#yieldToHost = yieldToHostEffect;
   }
 
   /** Whether the module's load has started (memoized) — settled or not. */
@@ -95,8 +135,7 @@ export class ModuleLoader {
             ),
           ),
         );
-        yield* this.#state.fibers.track(fiber);
-        yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.#state.fibers.untrack(fiber))));
+        yield* this.#state.fibers.trackForked(fiber);
 
         return deferred;
       }).pipe(semaphore.withPermits(1));
@@ -104,6 +143,45 @@ export class ModuleLoader {
       // Wait for result outside the semaphore so multiple waiters can proceed concurrently.
       return yield* Deferred.await(deferredToAwait);
     });
+
+  /**
+   * Awaits an in-flight load without starting one. A module with no memoized load — never
+   * started, or deactivated mid-wait (deactivation clears the memo) — counts as settled;
+   * joining via {@link load} instead would RESTART such a module (e.g. re-activating a
+   * timed-out module of an auto-disabled plugin).
+   */
+  awaitSettled(moduleId: string): Effect.Effect<void> {
+    const deferred = this.#memo.get(moduleId);
+    return deferred ? Deferred.await(deferred).pipe(Effect.ignore, Effect.asVoid) : Effect.void;
+  }
+
+  /**
+   * Awaits every in-flight load until none remain, to a fixpoint (a settling load can start
+   * new ones). Returns whether anything was pending. Used by streaming startup: forked
+   * enable-chain passes load modules outside `start()`'s own passes, and the ready signal
+   * must not publish while any of them are mid-load.
+   */
+  awaitAllSettled(): Effect.Effect<boolean> {
+    return Effect.gen(this, function* () {
+      let waited = false;
+      for (;;) {
+        const pending: Deferred.Deferred<any, Error>[] = [];
+        for (const deferred of this.#memo.values()) {
+          if (!(yield* Deferred.isDone(deferred))) {
+            pending.push(deferred);
+          }
+        }
+        if (pending.length === 0) {
+          return waited;
+        }
+        waited = true;
+        yield* Effect.all(
+          pending.map((deferred) => Deferred.await(deferred).pipe(Effect.ignore)),
+          { concurrency: 'unbounded', discard: true },
+        );
+      }
+    });
+  }
 
   /**
    * Ingests a module's expanded capabilities into the registry and marks it active. A module
@@ -123,7 +201,7 @@ export class ModuleLoader {
     });
   }
 
-  /** Removes the module's contributions, runs deactivate hooks, and closes its scope. */
+  /** Removes the module's contributions and closes its scope (running its finalizers). */
   deactivate(module: Plugin.PluginModule): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       const id = module.id;
@@ -134,8 +212,6 @@ export class ModuleLoader {
       if (capabilities) {
         for (const capability of capabilities) {
           this.#capabilities.remove(capability.interface, capability.implementation);
-          const program = capability.deactivate?.() ?? Effect.succeed(undefined);
-          yield* program;
         }
         this.#contributed.delete(id);
       }
@@ -217,6 +293,35 @@ export class ModuleLoader {
    * result against the declared provides, and expand it to registry entries. Instrumented
    * with a span, a slow-activation warning, and a devtools track entry.
    */
+  /**
+   * A surface rendering is the demand signal for its own plugin: the feature is now in use, so
+   * the contributions other plugins target at it (editor extensions, variants, integrations)
+   * should load. Firing here rather than from a blanket post-startup sweep is what keeps an
+   * unvisited feature's code off the wire entirely.
+   *
+   * Forked, not awaited: contributions are read through the reactive capability atoms, so a
+   * consumer re-renders when they land, and awaiting here would deadlock a surface behind
+   * modules that may themselves resolve surfaces. Re-firing an already-fired event is a no-op
+   * in the manager, so no dedup is needed at this call site.
+   */
+  #fireOwnStartForSurface(
+    capabilities: readonly Capability.Any[],
+    pluginId: string | undefined,
+  ): Effect.Effect<void, never, Plugin.Service> {
+    if (!pluginId || !capabilities.some((capability) => capability.interface === Capabilities.ReactSurface)) {
+      return Effect.void;
+    }
+    return Effect.gen(function* () {
+      const manager = yield* Plugin.Service;
+      yield* manager.activate(ActivationEvent.pluginStart(pluginId)).pipe(
+        Effect.catchAll((error) =>
+          Effect.sync(() => log.warn('plugin start event failed', { pluginId, error: String(error) })),
+        ),
+        Effect.forkDaemon,
+      );
+    });
+  }
+
   #runActivation(
     module: Plugin.PluginModule,
     parentEvent: string,
@@ -229,9 +334,19 @@ export class ModuleLoader {
       const pluginId = this.#state.pluginIdOfModule(module.id);
       yield* this.#awaitProvidersInFlight(module);
       const requiresContext = yield* this.#resolveRequires(module);
+      // One host yield per module keeps activation tasks under the long-task threshold;
+      // counted as wait, not run, by the split below.
+      yield* this.#yieldToHost;
+      // Wait/run split: `module:<id>` spans the whole pipeline, so scheduling delay (in-flight
+      // providers + requires resolution) is indistinguishable from work without these sub-measures.
+      performance.mark(`module:${module.id}:run`);
+      performance.measure(`module-wait:${module.id}`, `module:${module.id}:start`, `module:${module.id}:run`);
       const [duration, capabilities] = yield* module.activate().pipe(
         Effect.provide(requiresContext),
         Effect.provideService(Capability.Service, this.#capabilities),
+        Effect.locally(Capability.CurrentModuleId, module.id),
+        Effect.locallyWith(Capability.ActivatingModuleIds, (ids) => new Set([...ids, module.id])),
+
         Scope.extend(scope),
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against
@@ -252,14 +367,18 @@ export class ModuleLoader {
       const elapsed = Duration.toMillis(duration);
       performance.mark(`module:${module.id}:end`);
       performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
+      performance.measure(`module-run:${module.id}`, `module:${module.id}:run`, `module:${module.id}:end`);
       yield* PubSub.publish(this.#state.activation, { event: parentEvent, state: 'activated', module: module.id });
+
       log('loaded module', {
         module: module.id,
         parentEvent,
         elapsed,
         failed: false,
       });
-      return CapabilityManager.expandContributions(normalized);
+      const expanded = CapabilityManager.expandContributions(normalized);
+      yield* this.#fireOwnStartForSurface(expanded, pluginId);
+      return expanded;
     }).pipe(
       Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
       Effect.withSpan('ModuleLoader.load'),

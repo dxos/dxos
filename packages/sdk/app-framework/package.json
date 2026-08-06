@@ -82,7 +82,8 @@
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
       "import": "./dist/lib/ui.mjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "scripts": {

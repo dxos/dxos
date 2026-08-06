@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Feed } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 
 import { AppGraphBuilder, CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Connection } from '#types';
 
 import { connector } from './commands';
+import * as Connection from './types/Connection';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

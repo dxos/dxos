@@ -2,17 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as boardTranslations } from '@dxos/react-ui-board/translations';
 
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Board } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Board from './types/Board';
 
 export const BoardPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

@@ -4,11 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-
-import { RoutineCapabilities } from '#types';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { defaultTemplates } from '../templates';
+import * as RoutineCapabilities from '../types/RoutineCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

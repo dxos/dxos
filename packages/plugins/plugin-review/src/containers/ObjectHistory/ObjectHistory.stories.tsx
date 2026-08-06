@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -21,9 +22,9 @@ import { Text } from '@dxos/schema';
 import { Branch, History, Version } from '@dxos/versioning';
 
 import { translations } from '#translations';
-import { ReviewCapabilities } from '#types';
 
 import { ReviewPlugin } from '../../plugin';
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { ObjectHistory } from './ObjectHistory';
 
 /**

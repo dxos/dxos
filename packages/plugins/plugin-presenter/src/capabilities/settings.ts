@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { PresenterCapabilities, Settings } from '#types';
+
+import * as PresenterCapabilities from '../types/PresenterCapabilities';
+import * as Settings from '../types/Settings';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

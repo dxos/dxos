@@ -2,13 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from '../common';
+import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
 import { meta } from './meta';
 
 const ProcessManagerCapability = Capability.lazyModule(
   'ProcessManager',
   {
+    // Event-mode on Startup: the body snapshots multi capabilities (LayerSpec, TraceSink,
+    // OperationHandler), so it must run after the full registry is in — the Startup wave
+    // fires post-registration and pulls all inactive multi providers first. A streaming
+    // dependency round could otherwise run it before later plugins' specs contribute.
+    activatesOn: ActivationEvents.Startup,
     requires: [
       Capabilities.AtomRegistry,
       Capabilities.LayerSpec,

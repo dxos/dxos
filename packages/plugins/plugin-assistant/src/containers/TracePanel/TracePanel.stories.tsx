@@ -9,9 +9,10 @@ import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMe
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { addEventListener } from '@dxos/async';
-import { Process, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Feed, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';

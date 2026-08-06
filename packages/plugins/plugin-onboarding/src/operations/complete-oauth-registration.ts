@@ -4,16 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as Operation from '@dxos/compute/Operation';
 import { Context as DxContext } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, Connection } from '@dxos/plugin-connector';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { CompleteOAuthRegistration } from './definitions';
 import { createEdgeHttpClient } from './shared';

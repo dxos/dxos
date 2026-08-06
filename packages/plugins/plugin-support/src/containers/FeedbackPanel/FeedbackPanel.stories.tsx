@@ -5,12 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { DXN } from '@dxos/keys';
 import { type Observability } from '@dxos/observability';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ObservabilityCapabilities } from '@dxos/plugin-observability';
+import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

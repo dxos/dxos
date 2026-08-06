@@ -19,8 +19,8 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Board } from '#types';
 
+import * as Board from '../../types/Board';
 import { BoardArticle } from './BoardArticle';
 
 random.seed(0);

@@ -4,15 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, GraphPath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as Operation from '@dxos/compute/Operation';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { SearchOperation } from '#types';
+
+import * as SearchOperation from '../types/SearchOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

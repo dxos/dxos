@@ -7,7 +7,7 @@ import { useCallback, useContext } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 
-import { SpotlightCapabilities } from '#types';
+import * as SpotlightCapabilities from '../types/SpotlightCapabilities';
 
 export type UseSpotlightState = {
   state: SpotlightCapabilities.SpotlightState;

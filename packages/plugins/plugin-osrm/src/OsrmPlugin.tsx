@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
 import { RoutingService } from '#capabilities';
 import { meta } from '#meta';

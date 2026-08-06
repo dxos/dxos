@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { ProgressRegistry, ReactSurface, TraceProgressSink } from '#capabilities';
 import { meta } from '#meta';

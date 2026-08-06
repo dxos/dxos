@@ -6,25 +6,24 @@ import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Graph, type Node } from '@dxos/app-graph';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import {
-  COMPANION_VIEW_STATE_CONTEXT,
-  DeckCapabilities,
-  PLANK_COMPANION_TYPE,
-  type StoredDeckState,
-  companionAspect,
-} from '@dxos/plugin-deck';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import { COMPANION_VIEW_STATE_CONTEXT, companionAspect } from '@dxos/plugin-deck';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT } from '#meta';
-import { AssistantCapabilities, AssistantOperation } from '#types';
+
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 /**
  * Non-React capability that watches deck companion state and provisions transient chats
@@ -104,7 +103,7 @@ export default Capability.makeModule(
     };
 
     const provision = () => {
-      const deckState: StoredDeckState = registry.get(deckStateAtom);
+      const deckState: DeckSchema.StoredDeckState = registry.get(deckStateAtom);
       const deck = deckState.decks[deckState.activeDeck];
       if (!deck?.companionPlanks.length) {
         unsubAllPlanks();
@@ -172,7 +171,7 @@ const resolveEffectiveVariant = (
   preferredVariant: string | undefined,
 ): string | undefined => {
   const companions = Graph.getConnections(graph, plankId, 'child')
-    .filter((node) => node.type === PLANK_COMPANION_TYPE)
+    .filter((node) => node.type === DeckSchema.PLANK_COMPANION_TYPE)
     .toSorted((a, b) => Position.compare(a.properties, b.properties));
 
   if (companions.length === 0) {

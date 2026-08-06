@@ -2,10 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { OnboardingCapabilities } from './capabilities';
 
@@ -44,10 +47,15 @@ export const Onboarding = Capability.lazyModule(
       ClientCapabilities.Client,
     ],
     provides: [OnboardingCapabilities.Onboarding],
+    // The manager reads `client.halo` synchronously at construction, so it needs the forked
+    // client initialization to have completed.
+    activatesOn: ClientEvents.Initialized,
   },
   () => import('./onboarding'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog'],
+});
 
 export * from './capabilities';

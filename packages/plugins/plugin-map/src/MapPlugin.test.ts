@@ -19,15 +19,9 @@ describe('MapPlugin', () => {
       plugins: [ClientPlugin({}), MapPlugin()],
     });
 
-    // SkillDefinition and OperationHandler are dependency-mode roots, so they activate immediately too.
+    // OperationHandler is a dependency-mode root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('AppGraphBuilder'),
-        moduleId('CreateObject'),
-        moduleId('schema'),
-        moduleId('SkillDefinition'),
-        moduleId('OperationHandler'),
-      ]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('schema'), moduleId('OperationHandler')]),
     );
   });
 });

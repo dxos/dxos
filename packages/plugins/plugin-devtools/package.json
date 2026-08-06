@@ -43,11 +43,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -66,9 +61,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Devtools": {
+      "source": "./src/types/Devtools.ts",
+      "types": "./dist/types/src/types/Devtools.d.ts",
+      "import": "./dist/lib/Devtools.mjs"
+    },
+    "./DevtoolsEvents": {
+      "source": "./src/types/DevtoolsEvents.ts",
+      "types": "./dist/types/src/types/DevtoolsEvents.d.ts",
+      "import": "./dist/lib/DevtoolsEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Devtools": [
+        "dist/types/src/types/Devtools.d.ts"
+      ],
+      "DevtoolsEvents": [
+        "dist/types/src/types/DevtoolsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -4,14 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-import { CrxCapabilities, Settings } from '#types';
 
 import { installPageActionListeners } from '../page-actions';
+import * as CrxCapabilities from '../types/CrxCapabilities';
+import * as Settings from '../types/Settings';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

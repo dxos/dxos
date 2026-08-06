@@ -4,15 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { overlayIdentityIndex } from '@dxos/extractor';
 import { buildContactFromActor, getIdentityIndex, identitySpecs } from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Message } from '@dxos/types';
 
-import { CrmOperation } from '../types';
+import * as CrmOperation from '../types/CrmOperation';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ProcessMailbox> = CrmOperation.ProcessMailbox.pipe(
   Operation.withHandler(

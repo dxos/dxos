@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Text } from '@dxos/schema';
 
 import { AppGraphBuilder, CommentConfig, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Video } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Video from './types/Video';
 
 export const VideoPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

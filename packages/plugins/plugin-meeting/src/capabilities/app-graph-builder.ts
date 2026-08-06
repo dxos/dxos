@@ -5,13 +5,17 @@
 import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -21,7 +25,10 @@ import { Channel, Event } from '@dxos/types';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Meeting, MeetingCapabilities, MeetingOperation } from '#types';
+
+import * as Meeting from '../types/Meeting';
+import * as MeetingCapabilities from '../types/MeetingCapabilities';
+import * as MeetingOperation from '../types/MeetingOperation';
 
 /**
  * Atom families to derive meeting state properties.

@@ -4,14 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
-import { type BookingSearch, TripCapabilities } from '@dxos/plugin-trip/types';
+import type * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
+import * as TripCapabilities from '@dxos/plugin-trip/TripCapabilities';
 
 import { meta } from '#meta';
 import { makeDuffelBookingService } from '#services';
-import { DuffelCapabilities, Settings } from '#types';
+
+import * as DuffelCapabilities from '../types/DuffelCapabilities';
+import * as Settings from '../types/Settings';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

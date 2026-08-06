@@ -7,7 +7,7 @@
 import { type Blockstore as BlockstoreInterface } from 'interface-blockstore';
 import { type PrivateDirectory, type PrivateForest } from 'wnfs';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';

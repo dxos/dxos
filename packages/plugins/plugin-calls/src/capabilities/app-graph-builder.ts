@@ -4,13 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { CallsCapabilities } from '#types';
+
+import * as CallsCapabilities from '../types/CallsCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

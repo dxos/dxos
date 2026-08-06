@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
@@ -18,9 +19,10 @@ import {
   CustomTokenDialog,
   SyncTargetsDialog,
 } from '#containers';
-import { Connection, ConnectorAnnotationId } from '#types';
 
 import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import * as Connection from '../types/Connection';
+import { ConnectorAnnotationId } from '../types/ConnectorAnnotations';
 import { ConnectorSelectorField } from './ConnectorSelectorField';
 
 export default Capability.makeModule(() =>

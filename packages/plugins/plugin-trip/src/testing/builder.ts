@@ -4,7 +4,10 @@
 
 import { addDays, addHours, startOfDay } from 'date-fns';
 
-import { Booking, Place, Segment, Trip } from '#types';
+import * as Booking from '../types/Booking';
+import * as Place from '../types/Place';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
 
 type PlaceType = Place.Place;
 

@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { debounce } from '@dxos/async';
 import { log } from '@dxos/log';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { listener } from '@dxos/ui-editor';
 
-import { type FilesystemWorkspace, NativeFilesystemCapabilities, type NativeFilesystemState } from '#types';
-
+import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
 import { findFileById, updateFileInWorkspace, writeFileContent } from '../util';
 
 const AUTO_SAVE_DELAY_MS = 1000;
@@ -33,7 +33,7 @@ export default Capability.makeModule(
 
             const registry = capabilities.get(Capabilities.AtomRegistry);
             const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
-            registry.update(stateAtom, (current: NativeFilesystemState) => {
+            registry.update(stateAtom, (current: NativeFilesystemCapabilities.NativeFilesystemState) => {
               const result = findFileById(current.workspaces, fileId);
               if (!result) {
                 return current;
@@ -43,7 +43,7 @@ export default Capability.makeModule(
               }
               return {
                 ...current,
-                workspaces: current.workspaces.map((ws: FilesystemWorkspace) =>
+                workspaces: current.workspaces.map((ws: NativeFilesystemCapabilities.FilesystemWorkspace) =>
                   ws.id === result.workspace.id ? updateFileInWorkspace(ws, fileId, { modified: false }) : ws,
                 ),
               };
@@ -81,7 +81,7 @@ export default Capability.makeModule(
 
           const registry = capabilities.get(Capabilities.AtomRegistry);
           const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
-          const state: NativeFilesystemState = registry.get(stateAtom);
+          const state: NativeFilesystemCapabilities.NativeFilesystemState = registry.get(stateAtom);
 
           const result = findFileById(state.workspaces, fileId);
           if (!result) {
@@ -94,9 +94,9 @@ export default Capability.makeModule(
             return;
           }
 
-          registry.update(stateAtom, (current: NativeFilesystemState) => ({
+          registry.update(stateAtom, (current: NativeFilesystemCapabilities.NativeFilesystemState) => ({
             ...current,
-            workspaces: current.workspaces.map((ws: FilesystemWorkspace) =>
+            workspaces: current.workspaces.map((ws: NativeFilesystemCapabilities.FilesystemWorkspace) =>
               ws.id === workspace.id ? updateFileInWorkspace(ws, fileId, { text: textContent, modified: true }) : ws,
             ),
           }));

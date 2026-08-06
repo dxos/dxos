@@ -17,9 +17,9 @@ import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { Bookmark } from '#types';
 
 import { BookmarksPlugin } from '../../plugin';
+import * as Bookmark from '../../types/Bookmark';
 import { BookmarkArticle } from './BookmarkArticle';
 
 const DefaultStory = () => {

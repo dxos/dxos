@@ -5,13 +5,15 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Client } from '@dxos/client';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities, ClientOperation } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { redeemAccountInvitation } from '../credentials';
 import { OnboardingOperation } from '../operations';
@@ -122,6 +124,9 @@ export default Capability.makeModule(
         Effect.gen(function* () {
           const client = yield* Capability.waitFor(ClientCapabilities.Client);
           const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);
+          // The capability is contributed while the forked initialization is still running;
+          // `halo` reads below need it complete.
+          yield* Effect.promise(() => client.waitUntilInitialized());
           yield* finalizeRedirect(client, invoker, params).pipe(
             Effect.catchAll((error) =>
               Effect.gen(function* () {

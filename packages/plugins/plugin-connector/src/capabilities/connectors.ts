@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 import { AccessToken } from '@dxos/link';
 
-import { Connection, Connector } from '#types';
-
 import { CUSTOM_PROVIDER_ID } from '../constants';
+import * as Connection from '../types/Connection';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 
 /** Default form for manually entered access tokens (custom connector). */
 const CustomTokenForm = Schema.Struct({
@@ -32,13 +32,13 @@ const CustomTokenForm = Schema.Struct({
 });
 
 /**
- * Built-in {@link Connector} entries: just the manual-token connector.
+ * Built-in {@link ConnectorSpec.Connector} entries: just the manual-token connector.
  * Service-specific connectors (atproto/Atmosphere in `@dxos/plugin-atproto`, Bluesky, Trello,
  * GitHub, …) live in their own plugins and contribute from their own dependency-mode modules.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: CUSTOM_PROVIDER_ID,
         // The user enters the source in the dialog; we don't know it ahead of time.

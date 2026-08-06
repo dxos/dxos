@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   ClientReady,
@@ -19,18 +20,18 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ObservabilityCapabilities, type ObservabilityPluginOptions } from '#types';
 
-export type { ObservabilityPluginOptions } from '#types';
+import * as ObservabilityCapabilities from './types/ObservabilityCapabilities';
+import * as ObservabilityOptions from './types/ObservabilityOptions';
 
-export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
+export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.ObservabilityPluginOptions>(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(Observability),
   Plugin.addModule(ObservabilitySettings),
   Plugin.addModule(ObservabilityState),
   Plugin.addModule(Namespace),
-  Plugin.addModule(({ downloadLogs }: ObservabilityPluginOptions) => ({
+  Plugin.addModule(({ downloadLogs }: ObservabilityOptions.ObservabilityPluginOptions) => ({
     id: 'log-downloader',
     requires: [],
     provides: downloadLogs !== undefined ? [ObservabilityCapabilities.LogDownloader] : [],

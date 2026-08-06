@@ -4,11 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';

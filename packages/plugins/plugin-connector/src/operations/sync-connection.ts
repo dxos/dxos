@@ -4,15 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, RunAgainError } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 
 import { connectionDeckSubject } from '../constants';
 import { ConnectionAuthExpiredError, isUnauthorizedError } from '../errors';
-import { Connector, ConnectorOperation } from '../types';
+import * as ConnectorOperation from '../types/ConnectorOperation';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { isCursorForConnection, syncBinding } from '../util';
 
 /** How many of a connection's bindings sync at once. */
@@ -28,7 +31,7 @@ const handler: Operation.WithHandler<typeof ConnectorOperation.SyncConnection> =
       }
 
       const connection = yield* Database.load(connectionRef).pipe(Effect.provide(Database.layer(db)));
-      const connectors = (yield* Capability.getAll(Connector)).flat();
+      const connectors = (yield* Capability.getAll(ConnectorSpec.Connector)).flat();
       const connector = connectors.find((entry) => entry.id === connection.connectorId);
       if (!connector?.sync) {
         return { synced: 0 };

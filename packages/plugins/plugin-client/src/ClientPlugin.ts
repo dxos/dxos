@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AccountCache,
@@ -24,9 +24,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type ClientPluginOptions } from '#types';
 
-export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
+import * as ClientOptions from './types/ClientOptions';
+
+export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(OperationHandler),

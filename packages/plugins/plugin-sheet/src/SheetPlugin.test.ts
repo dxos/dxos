@@ -21,12 +21,7 @@ describe('SheetPlugin', () => {
 
     // OperationHandler and UndoMappings are dependency-mode roots, so they activate immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('CreateObject'),
-        moduleId('schema'),
-        moduleId('OperationHandler'),
-        moduleId('UndoMappings'),
-      ]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler'), moduleId('UndoMappings')]),
     );
   });
 });

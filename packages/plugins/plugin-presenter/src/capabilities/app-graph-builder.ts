@@ -6,16 +6,18 @@ import { type Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Obj } from '@dxos/echo';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
 import { meta } from '#meta';
-import { PresenterOperation } from '#types';
-import { PresenterCapabilities } from '#types';
+
+import * as PresenterCapabilities from '../types/PresenterCapabilities';
+import * as PresenterOperation from '../types/PresenterOperation';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node, get: Atom.Context) =>

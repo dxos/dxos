@@ -4,14 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Outline, TaskSet } from '@dxos/types';
 
 import { JournalArticle, OutlineArticle, OutlineCard, QuickEntryDialog, TaskSetArticle } from '#containers';
 import { QUICK_ENTRY_DIALOG } from '#meta';
-import { Journal } from '#types';
+
+import * as Journal from '../types/Journal';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

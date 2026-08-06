@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { HubHttpClient } from '@dxos/edge-client';
 
-import { ClientCapabilities } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

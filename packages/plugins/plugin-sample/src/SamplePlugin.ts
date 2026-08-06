@@ -9,16 +9,16 @@
 // that activates at the appropriate lifecycle event.
 // `Plugin.make` finalizes the plugin (must be the last call in the chain).
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, SampleSettings } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { SampleItem } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as SampleItem from './types/SampleItem';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   // Registers graph builder extensions (actions, connectors, companions).

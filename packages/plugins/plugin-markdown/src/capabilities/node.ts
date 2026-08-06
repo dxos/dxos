@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));

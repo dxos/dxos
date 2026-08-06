@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Type } from '@dxos/echo';
-import { GameCapabilities, type GameVariant } from '@dxos/plugin-game/types';
+import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
 
 import { ChessArticle, ChessCard } from '#containers';
-import { Chess } from '#types';
+
+import * as Chess from '../types/Chess';
 
 const CreateChessInput = Schema.Struct({
   name: Schema.optional(
@@ -27,7 +28,7 @@ const CreateChessInput = Schema.Struct({
   ),
 });
 
-const variant: GameVariant = {
+const variant: GameCapabilities.GameVariant = {
   id: Type.getTypename(Chess.State),
   label: 'Chess',
   icon: 'ph--shield-chevron--regular',

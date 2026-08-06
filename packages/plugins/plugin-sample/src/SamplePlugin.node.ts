@@ -7,12 +7,13 @@
 // schema (so the CLI can query/create objects) and metadata (for the createObject factory).
 // No surfaces, graph builders, settings, or translations are needed.
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { SampleItem } from '#types';
+
+import * as SampleItem from './types/SampleItem';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

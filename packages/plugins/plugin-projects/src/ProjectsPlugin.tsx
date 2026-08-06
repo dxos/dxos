@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { Project } from '@dxos/compute';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Project from '@dxos/compute/Project';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface, Templates } from '#capabilities';
 import { meta } from '#meta';

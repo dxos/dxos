@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Hints, Keyshortcuts } from '@dxos/plugin-deck';
-import { SpaceHomeContent } from '@dxos/plugin-space';
+import { Hints, Keyshortcuts } from '@dxos/plugin-deck/DeckRole';
+import { SpaceHomeContent } from '@dxos/plugin-space/SpaceSurface';
 import { Position } from '@dxos/util';
 
 import {
@@ -24,9 +25,9 @@ import {
   SupportSettings,
 } from '#containers';
 import { meta } from '#meta';
-import { Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants';
+import * as Support from '../types/Support';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

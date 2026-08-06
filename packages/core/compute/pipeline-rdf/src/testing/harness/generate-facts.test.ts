@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
-import { FactStore } from '../../store';
+import { FactStoreLive } from '../../store';
 import { type ExtractDocument } from '../../types';
 import { queuedAiService } from '../index';
 import { generateFacts } from './generate-facts';
@@ -92,7 +92,7 @@ const STUB_PAYLOADS: readonly unknown[] = [
   },
 ];
 
-const TestLayer = FactStore.layer.pipe(
+const TestLayer = FactStoreLive.layer.pipe(
   Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(queuedAiService(STUB_PAYLOADS)),

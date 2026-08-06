@@ -9,10 +9,15 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapabilityState, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -35,15 +40,10 @@ import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import {
-  DeckCapabilities,
-  type EphemeralDeckState,
-  type Settings,
-  type StoredDeckState,
-  defaultDeck,
-  getMode,
-} from '#types';
 
+import * as DeckCapabilities from '../../types/DeckCapabilities';
+import * as DeckSchema from '../../types/DeckSchema';
+import * as Settings from '../../types/Settings';
 import { Deck } from './Deck';
 
 type StoryItem = { id: string; title: string; icon: string };
@@ -171,16 +171,16 @@ const storyDeckSettings = Capability.makeModule(() =>
 // persists to localStorage, which otherwise leaks planks between stories.
 const storyDeckState = Capability.makeModule(() =>
   Effect.sync(() => {
-    const stateAtom = Atom.make<StoredDeckState>({
+    const stateAtom = Atom.make<DeckSchema.StoredDeckState>({
       sidebarState: 'closed',
       complementarySidebarState: 'closed',
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
-      decks: { default: { ...defaultDeck } },
+      decks: { default: { ...DeckSchema.defaultDeck } },
     }).pipe(Atom.keepAlive);
 
-    const ephemeralAtom = Atom.make<EphemeralDeckState>({
+    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
       fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
@@ -201,7 +201,7 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck, !!ephemeral.fullscreen),
+        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
@@ -221,13 +221,17 @@ const storyDeckState = Capability.makeModule(() =>
 );
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
+  // Shell state the Deck reads through the strict hooks on its first render, so it belongs on the
+  // startup pass rather than the idle default these would otherwise normalize to.
   Plugin.addModule({
     id: 'story-deck-settings',
+    activatesOn: ActivationEvents.Startup,
     provides: [DeckCapabilities.Settings],
     activate: storyDeckSettings,
   }),
   Plugin.addModule({
     id: 'story-deck-state',
+    activatesOn: ActivationEvents.Startup,
     provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
     activate: storyDeckState,
   }),
@@ -364,7 +368,7 @@ type DefaultStoryProps = {
   /** Number of story planks to open on mount (0 renders the empty deck). */
   count?: number;
   /** Navigation sidebar state to seed. `closed` is only reachable below `lg`. */
-  sidebarState?: StoredDeckState['sidebarState'];
+  sidebarState?: DeckSchema.StoredDeckState['sidebarState'];
   /** Which planks open with their companion showing, as 1-based positions. */
   companionPlanks?: number[];
   /** Open the launcher fixture as the first plank (the mailbox-shaped path). */

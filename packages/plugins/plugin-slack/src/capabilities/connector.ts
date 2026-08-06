@@ -5,15 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
-import { Credential } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
 import { SlackApi } from '../services';
-import { SlackOperation } from '../types';
+import * as SlackOperation from '../types/SlackOperation';
 
 /**
  * Service-specific token-created hook for Slack.
@@ -24,7 +25,7 @@ import { SlackOperation } from '../types';
  * logs defects from the runner and continues so a failed `auth.test` cannot
  * block the Connection already created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     if (accessToken.account) {
       return;
@@ -50,7 +51,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * token or transport failure surfaces as a user-facing error so the connection
  * UI can offer to reauthenticate.
  */
-const testConnection: TestConnection = ({ accessToken }) =>
+const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.flatMap(Credential.getApiKeyValue({ accessTokenId: accessToken.id }), (token) =>
     SlackApi.fetchAuthTest().pipe(Effect.provide(Layer.succeed(SlackApi.SlackCredentials, { token }))),
   ).pipe(
@@ -61,12 +62,12 @@ const testConnection: TestConnection = ({ accessToken }) =>
   );
 
 /**
- * Contributes a single `Connector` entry that wires Slack's auth, discovery,
+ * Contributes a single `ConnectorSpec.Connector` entry that wires Slack's auth, discovery,
  * materialization and sync to the `'slack.com'` source.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: 'slack',
         source: SLACK_SOURCE,

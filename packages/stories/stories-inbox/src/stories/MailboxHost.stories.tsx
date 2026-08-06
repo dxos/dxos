@@ -7,13 +7,13 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Invitation, InvitationEncoder } from '@dxos/client/invitations';
 import { persistentClientServices } from '@dxos/client/testing';
 import { Config } from '@dxos/config';
 import { Database, Feed, Tag } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { SpacePlugin } from '@dxos/plugin-space/testing';

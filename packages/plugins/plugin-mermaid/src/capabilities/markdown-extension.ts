@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { mermaid } from '../extensions';
 

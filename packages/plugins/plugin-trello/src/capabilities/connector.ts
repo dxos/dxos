@@ -5,15 +5,16 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
-import { Credential } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
-import { ConnectionTestError, Connector, type OnTokenCreated, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { TRELLO_SOURCE } from '../constants';
 import { TrelloApi } from '../services';
-import { TrelloOperation } from '../types';
+import * as TrelloOperation from '../types/TrelloOperation';
 
 /**
  * Service-specific token-created hook for Trello.
@@ -26,7 +27,7 @@ import { TrelloOperation } from '../types';
  * The wrapping Connection itself is auto-created by plugin-connector BEFORE
  * this runs.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     if (accessToken.account) {
       return;
@@ -47,7 +48,7 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
  * token or transport failure surfaces as a user-facing error so the connection
  * UI can offer to reauthenticate.
  */
-const testConnection: TestConnection = ({ accessToken }) =>
+const testConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
     const creds = yield* TrelloApi.credentialsFromToken(
       yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
@@ -60,14 +61,14 @@ const testConnection: TestConnection = ({ accessToken }) =>
   );
 
 /**
- * Contributes a single `Connector` entry that wires Trello's discovery,
+ * Contributes a single `ConnectorSpec.Connector` entry that wires Trello's discovery,
  * target materialization, sync operation, and token-created hook to the
  * `'trello.com'` source. plugin-connector routes connections to connectors
  * by `connectorId`.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: 'trello',
         source: TRELLO_SOURCE,

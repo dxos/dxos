@@ -5,32 +5,30 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import {
-  AppAnnotation,
-  AppCapabilities,
-  AppNode,
-  AppNodeMatcher,
-  DeckSpec,
-  GraphPath,
-  LayoutOperation,
-  UrlResolution,
-} from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import { DeckSpec } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
 
 import { resolveCollectionObjectPath } from '../../../collection-path';
+import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
 import {
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,

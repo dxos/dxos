@@ -7,15 +7,22 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Instructions, LayerSpec, Project, Routine, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Project from '@dxos/compute/Project';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Builder, InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
@@ -94,6 +101,8 @@ const StoryAiPlugin = (kind: StoryAiService) =>
   ).pipe(
     Plugin.addModule({
       id: 'project-story-ai',
+      // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+      activatesOn: ActivationEvents.Startup,
       provides: [Capabilities.LayerSpec],
       activate: Capability.makeModule(
         Effect.fnUntraced(function* () {

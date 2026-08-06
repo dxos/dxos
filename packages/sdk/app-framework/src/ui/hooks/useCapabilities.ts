@@ -6,8 +6,6 @@ import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback } from 'react';
 
-import { invariant } from '@dxos/invariant';
-
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
 import { usePluginManager } from '../components';
@@ -26,13 +24,22 @@ export const useCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>) => 
 
 /**
  * Hook to request a capability from the plugin context.
+ *
+ * Suspends (throws the contribution promise) while nothing has contributed the interface yet, so a
+ * reader that renders before its provider activates parks at its nearest Suspense boundary. An
+ * invariant here cannot tell "not yet" from "never": most providers are idle-gated or wait on a
+ * runtime event, so the reader legitimately renders first, and hard-failing on that blanks the
+ * subtree. Declaring the dependency as the module's `requires` is NOT the alternative — that
+ * demotes the reader's module into the provider's (later) wave.
+ *
  * @returns The capability.
- * @throws If no capability is found.
  */
-// TODO(burdon): Option not to throw?
 export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
+  const manager = usePluginManager();
   const capabilities = useCapabilities(interfaceDef);
-  invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+  if (capabilities.length === 0) {
+    throw manager.capabilities.waitForPromise(interfaceDef);
+  }
   return capabilities[0];
 };
 
@@ -60,6 +67,17 @@ export const useOptionalCapability = <T>(interfaceDef: Capability.InterfaceDef<T
 export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T => {
   const atom = useCapability(atomCapability);
   return useAtomValue(atom);
+};
+
+/**
+ * Tolerant variant of {@link useAtomCapability}: returns `undefined` while the atom capability is
+ * not registered, rather than throwing. Use it wherever a reader can render before its provider —
+ * a provider gated on a genuine runtime event (a status indicator whose state arrives with the
+ * client) cannot be pulled onto the startup pass with `requires`.
+ */
+export const useOptionalAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T | undefined => {
+  const atom = useOptionalCapability(atomCapability);
+  return useAtomValue(atom ?? emptyAtomValue) as T | undefined;
 };
 
 /**

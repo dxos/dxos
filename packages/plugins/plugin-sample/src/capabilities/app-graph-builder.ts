@@ -10,17 +10,20 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SampleOperation } from '#types';
-import { SampleItem } from '#types';
+
+import * as SampleItem from '../types/SampleItem';
+import * as SampleOperation from '../types/SampleOperation';
 
 // Section type constant used to identify the "Samples" section node.
 // A second extension matches this type to populate child nodes.

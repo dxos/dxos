@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -20,11 +21,12 @@ import {
   ResetDialog,
   UsageContainer,
 } from '#containers';
-import { Account, type ClientPluginOptions } from '#types';
 
 import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../constants';
+import * as Account from '../types/Account';
+import * as ClientOptions from '../types/ClientOptions';
 
-type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
+type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'onReset'> & {
   createInvitationUrl: (invitationCode: string) => string;
 };
 

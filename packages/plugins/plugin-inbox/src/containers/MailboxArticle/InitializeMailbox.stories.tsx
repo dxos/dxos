@@ -19,9 +19,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
-import { Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
+import * as Mailbox from '../../types/Mailbox';
 import { InitializeMailbox } from './InitializeMailbox';
 
 type StoryArgs = {

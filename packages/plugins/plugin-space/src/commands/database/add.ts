@@ -10,19 +10,20 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { type Capability, Plugin } from '@dxos/app-framework';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import type * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { CommandConfig, Common, type SpaceNotFoundError, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
-import type { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, type Err, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';
 import { type SpaceId } from '@dxos/keys';
 
-import { SpaceCapabilities } from '#types';
-
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../types/SpaceEvents';
 import { printObject } from './util';
 
 // NOTE: Explicit annotation required: d.ts emit cannot portably name the inferred @dxos/compute types (TS2883).
@@ -43,9 +44,11 @@ export const add: Command.Command<
       const manager = yield* Plugin.Service;
       const { db } = yield* Database.Service;
 
-      // Ensures the dependency pass has run so `SpaceCapabilities.CreateObjectEntry` providers
-      // (dependency-mode modules) have contributed before they're queried below.
+      // Ensures the dependency pass has run, then fires the create-flow demand event —
+      // `SpaceCapabilities.CreateObjectEntry` providers are gated on it by default and must
+      // have contributed before they're queried below.
       yield* manager.start();
+      yield* manager.activate(SpaceEvents.CreateObjectRequested);
 
       const resolve = (typename: string) => {
         const entry = manager.capabilities

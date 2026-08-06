@@ -12,7 +12,7 @@ import * as Queue from 'effect/Queue';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect } from 'vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { OperationInvoker } from '@dxos/operation';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;

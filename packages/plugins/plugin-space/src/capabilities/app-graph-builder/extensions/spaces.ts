@@ -4,13 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, AppSpace, GraphPath } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Expando } from '@dxos/schema';
@@ -18,9 +22,10 @@ import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SPACE_HOME_NODE_TYPE, SPACE_TYPE, SpaceCapabilities } from '#types';
 
-import { SHARED, getSpaceDisplayName } from '../../../util';
+import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
+import * as SpaceSchema from '../../../types/SpaceSchema';
+import { getSpaceDisplayName } from '../../../util';
 import {
   CAN_DROP_SPACE,
   CREATE_OBJECT_IN_SPACE_LABEL,
@@ -48,7 +53,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   const clientAtom = yield* Capability.atom(ClientCapabilities.Client);
   const stateCapAtom = yield* Capability.atom(SpaceCapabilities.State);
   const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
-  const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.Settings);
+  const settingsCapAtom = yield* Capability.atom(SpaceCapabilities.SettingsAtom);
   const appGraphAtom = yield* Capability.atom(AppCapabilities.AppGraph);
 
   return yield* Effect.all([
@@ -61,8 +66,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         Effect.succeed([
           {
             id: GraphPath.SPACE_HOME_SEGMENT,
-            type: SPACE_HOME_NODE_TYPE,
-            data: SPACE_HOME_NODE_TYPE,
+            type: SpaceSchema.SPACE_HOME_NODE_TYPE,
+            data: SpaceSchema.SPACE_HOME_NODE_TYPE,
             properties: {
               label: SPACE_HOME_NODE_LABEL,
               icon: 'ph--house--regular',
@@ -72,7 +77,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               droppable: false,
               space,
             },
-          } satisfies Node.NodeArg<typeof SPACE_HOME_NODE_TYPE>,
+          } satisfies Node.NodeArg<typeof SpaceSchema.SPACE_HOME_NODE_TYPE>,
         ]),
     }),
 
@@ -215,7 +220,9 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = get(personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).atom);
+          const [spacesOrder] = get(
+            personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom,
+          );
           const [appGraph] = get(appGraphAtom);
           if (!appGraph) {
             return Effect.succeed([]);
@@ -355,7 +362,7 @@ const constructSpaceNode = ({
 
   return Node.make({
     id: space.id,
-    type: SPACE_TYPE,
+    type: SpaceSchema.SPACE_TYPE,
     cacheable: AppNode.CACHEABLE_PROPS,
     data: space,
     properties: {

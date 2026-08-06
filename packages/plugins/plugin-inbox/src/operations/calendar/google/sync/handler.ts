@@ -6,13 +6,13 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { Cursor } from '@dxos/link';
 
 import { GoogleCredentials } from '../../../../services';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { type SyncCalendarProps, syncCalendar } from './sync';
 
 const handler = InboxOperation.GoogleCalendarSync.pipe(

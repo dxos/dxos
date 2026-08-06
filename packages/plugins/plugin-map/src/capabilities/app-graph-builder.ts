@@ -5,15 +5,18 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, View } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { MapOperation } from '#types';
-import { Map, MapCapabilities } from '#types';
+
+import * as Map from '../types/Map';
+import * as MapCapabilities from '../types/MapCapabilities';
+import * as MapOperation from '../types/MapOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

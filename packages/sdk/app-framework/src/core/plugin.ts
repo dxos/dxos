@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { Config2, PluginProfileSchema, PluginReleaseSchema } from '@dxos/protocols';
 
-import type * as ActivationEvent from './activation-event';
+import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import type * as PluginManager from './plugin-manager';
 
@@ -79,25 +79,21 @@ export const isPluginModule = (value: unknown): value is PluginModule => {
 };
 
 /**
- * Normalized activation specification of a module — how and when it activates.
+ * Normalized activation specification of a module — which wave it belongs to and what it
+ * exchanges with the capability graph.
  *
- * - `dependency`: activates during the startup dependency-resolution pass, topologically
- *   ordered by the capability graph (providers of `requires` activate first). A module
- *   with no `requires` is a root, triggered at startup.
- * - `event`: activates when a runtime event fires; `requires` are resolved on demand.
+ * Every module names a wave: `activatesOn` defaults to {@link ActivationEvent.Idle} when the
+ * authoring record omits it. Within a wave, modules are ordered topologically (providers of
+ * `requires` activate first) and a module may pull a provider whose own wave has already fired.
+ * Because a fired event stays fired, a module gated on an event that has already passed remains
+ * eligible in every later round — which is what lets a consumer activate once a provider from
+ * some other wave finally lands.
  */
-export type ActivationSpec =
-  | {
-      readonly mode: 'dependency';
-      readonly requires: readonly Capability.AnyTag[];
-      readonly provides: readonly Capability.AnyTag[];
-    }
-  | {
-      readonly mode: 'event';
-      readonly activatesOn: ActivationEvent.Events;
-      readonly requires: readonly Capability.AnyTag[];
-      readonly provides: readonly Capability.AnyTag[];
-    };
+export type ActivationSpec = {
+  readonly activatesOn: ActivationEvent.Events;
+  readonly requires: readonly Capability.AnyTag[];
+  readonly provides: readonly Capability.AnyTag[];
+};
 
 /**
  * What a module's activate may produce at runtime: raw capability entries (see
@@ -146,7 +142,7 @@ export interface PluginModule {
 
 /**
  * Structural authoring shape for typed modules. A module without `requires` is a root,
- * triggered by `activatesOn` (implicitly Startup). A module with `requires` is a chain
+ * triggered by `activatesOn` (implicitly Idle). A module with `requires` is a chain
  * member: it activates once every declared capability has been contributed — by whichever
  * event's chain produced the providers, not necessarily during startup — additionally gated
  * on `activatesOn` when declared. Consumers of event-gated providers stay pending until the
@@ -169,7 +165,7 @@ type OptProvides<Opts> = Opts extends { provides: infer P extends readonly Capab
  * unconstructible branded type naming the violation. Checks that activate's environment only
  * uses declared `requires`, that its error channel extends `Error`, and that its return
  * exactly covers the declared `provides`. Options with no capability declarations are a
- * dependency-mode startup root and validate as `true` (the runtime normalizer classifies them).
+ * dependency-mode root and validate as `true` (the runtime normalizer classifies them).
  *
  * Applied on {@link addModule}'s return type (not intersected with the parameter): inference
  * of `Opts` from an options object containing inline generator activates fails when the
@@ -443,29 +439,22 @@ export type PluginFactory<T = void> = ({} extends T ? (options?: T) => Plugin : 
 };
 
 /**
- * Normalizes an authoring record to an {@link ActivationSpec}. `activatesOn` selects event
- * mode; otherwise the module is a dependency-mode chain member (a root — activating at
- * startup — when `requires` is empty).
+ * Normalizes an authoring record to an {@link ActivationSpec} — the single boundary where the
+ * optional authoring shape becomes the concrete runtime shape.
+ *
+ * Omitting `activatesOn` means the module belongs to the IDLE wave: a module that must run at
+ * boot states `activatesOn: ActivationEvents.Startup` explicitly. Inverted from a startup default
+ * so that forgetting the annotation costs post-paint responsiveness rather than time-to-
+ * interactive — startup was the dumping ground, and its cost becomes the transitive demand
+ * closure of the boot path, enforced by the capability graph instead of by remembering to
+ * annotate. Un-annotated modules stay pullable as providers because the baseline wave is
+ * `Startup u Idle`; see `ActivationScheduler.#isBaselineWave`, which moves with this default.
  */
-const normalizeActivation = (options: ModuleEntry): ActivationSpec => {
-  if (options.activatesOn !== undefined) {
-    return {
-      mode: 'event',
-      activatesOn: options.activatesOn,
-      requires: options.requires ?? [],
-      provides: options.provides ?? [],
-    };
-  }
-
-  // A chain member without `activatesOn`: roots (no requires) activate at startup; modules
-  // with requires activate whenever their providers have contributed, whichever event's
-  // chain produced them.
-  return {
-    mode: 'dependency',
-    requires: options.requires ?? [],
-    provides: options.provides ?? [],
-  };
-};
+const normalizeActivation = (options: ModuleEntry): ActivationSpec => ({
+  activatesOn: options.activatesOn ?? ActivationEvent.Idle,
+  requires: options.requires ?? [],
+  provides: options.provides ?? [],
+});
 
 /**
  * Resolves a module from either a module entry or a function that returns one.

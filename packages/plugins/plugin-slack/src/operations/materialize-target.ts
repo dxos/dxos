@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { SlackOperation } from '../types';
+import * as SlackOperation from '../types/SlackOperation';
 import { findOrCreateChannelForTarget } from './sync';
 
 /**

@@ -15,6 +15,7 @@ import { type MaybeProvider, getProviderValue } from '@dxos/util';
 import { ActivationEvents, Capabilities } from '../common';
 import { type ActivationEvent, Capability, CapabilityManager, Plugin, PluginManager } from '../core';
 import { type UseAppOptions, useApp } from '../ui';
+import { activateDemandGatedModules } from './demand-gated';
 import { StorybookErrorFallback } from './StorybookErrorFallback';
 
 /**
@@ -36,6 +37,21 @@ export const setupPluginManager = ({
     plugins: [StoryPlugin, ...plugins],
     enabled,
     ...options,
+  });
+
+  // The framework capabilities a real host contributes, mirroring `createTestApp`. Without these
+  // no MODULE provides `AtomRegistry`, so any module requiring it fails the dependency pass's
+  // missing-provider check with nothing to wait for — reached as soon as a requiring module sits
+  // on the startup pass (attention, graph, the process manager).
+  pluginManager.capabilities.contribute({
+    interface: Capabilities.PluginManager,
+    implementation: pluginManager,
+    module: 'org.dxos.app-framework.plugin-manager',
+  });
+  pluginManager.capabilities.contribute({
+    interface: Capabilities.AtomRegistry,
+    implementation: pluginManager.registry,
+    module: 'org.dxos.app-framework.atom-registry',
   });
 
   if (capabilities) {
@@ -110,7 +126,9 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
       return () => {
         pluginManager.capabilities.remove(capability.interface, capability.implementation);
-        void EffectEx.runAndForwardErrors(pluginManager.shutdown());
+        // A story switch tears down while the start-event trickle is still activating, which
+        // interrupts the shutdown fiber — expected; real failures still surface.
+        EffectEx.runDetached(pluginManager.shutdown());
       };
     }, [storyId, init]);
 
@@ -130,15 +148,38 @@ const WithPluginManagerApp = ({
   setupEvents,
   storyId,
 }: ManagedPluginManagerState) => {
+  // Gates the first render: rendering before the start events land lets a component read a
+  // capability that has not been contributed yet, which strict `useCapability` throws on.
+  const [activated, setActivated] = useState(false);
+
   // Fire deprecated events only after the effect-owned manager for this story exists.
-  useAsyncEffect(async () => {
-    await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-  }, [fireEvents, pluginManager, storyId]);
+  useAsyncEffect(
+    async (controller) => {
+      await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
+      // In the app plugins start on demand (surface render), but stories render one surface in
+      // isolation — fire every start event so start-gated modules are present regardless of
+      // which plugin's surface the story exercises. A story switch shuts the manager down
+      // mid-trickle, interrupting the activation fiber — expected; real failures still surface.
+      EffectEx.runDetached(
+        activateDemandGatedModules(pluginManager).pipe(
+          // Interruption skips this, so a torn-down story never flips the gate.
+          Effect.andThen(
+            Effect.sync(() => {
+              if (!controller.signal.aborted) {
+                setActivated(true);
+              }
+            }),
+          ),
+        ),
+      );
+    },
+    [fireEvents, pluginManager, storyId],
+  );
 
   // Default to a fallback that offers "Download logs" so a crashed story is still debuggable;
   // callers can override via `withPluginManager({ fallback })`.
   const App = useApp({ pluginManager, setupEvents, fallback: fallback ?? StorybookErrorFallback });
-  return <App />;
+  return activated ? <App /> : <></>;
 };
 
 const storyMeta = Plugin.makeMeta({

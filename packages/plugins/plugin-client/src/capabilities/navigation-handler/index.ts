@@ -2,14 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { type ClientPluginOptions } from '#types';
+import * as ClientCapabilities from '../../types/ClientCapabilities';
+import * as ClientOptions from '../../types/ClientOptions';
 
 export type { NavigationHandlerOptions } from './navigation-handler';
 
 export const NavigationHandler = AppCapability.navigationHandler(() => import('./navigation-handler'), {
-  requires: [Capabilities.OperationInvoker],
-  props: ({ invitationProp, invitationUrlHandler }: ClientPluginOptions) => ({ invitationProp, invitationUrlHandler }),
+  requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
+  props: ({ invitationProp, invitationUrlHandler }: ClientOptions.ClientPluginOptions) => ({
+    invitationProp,
+    invitationUrlHandler,
+  }),
 });

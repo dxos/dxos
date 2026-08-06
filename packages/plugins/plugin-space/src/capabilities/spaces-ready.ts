@@ -6,8 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
 import { Annotation, Collection, Filter, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
@@ -15,8 +20,8 @@ import { log } from '@dxos/log';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
 // Explicit import so the emitted `.d.ts` references the package via its public
 // alias instead of a relative `node_modules` path (TS2883).
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
@@ -25,9 +30,9 @@ import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
 
-import { SHARED } from '../util';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceSchema from '../types/SpaceSchema';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -73,13 +78,13 @@ export default Capability.makeModule(
         }
 
         const queryResults = yield* Effect.promise(() =>
-          personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
+          personalSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).run(),
         );
         if (!queryResults[0]) {
           // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
           //  Instead, we store order as an array of space ids.
           try {
-            personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+            personalSpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [] }));
           } catch (err) {
             // The space may have been destroyed (e.g. during test teardown) between the query and the add.
             log.warn('Failed to initialize spaces order, space may be closing', { err });

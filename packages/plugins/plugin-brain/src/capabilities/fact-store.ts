@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayerSpec } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { invariant } from '@dxos/invariant';
-import { FactStore, type FactStoreApi } from '@dxos/pipeline-rdf';
+import { FactStore, type FactStoreApi, FactStoreLive } from '@dxos/pipeline-rdf';
 
-import { BrainCapabilities } from '#types';
+import * as BrainCapabilities from '../types/BrainCapabilities';
 
 /**
  * Per-space in-memory registry: the shared {@link FactStore}, used as both the operation-injected
@@ -52,7 +53,7 @@ export const makeFactStoreRegistry = (): FactStoreRegistry => {
   const forSpace = (spaceId: string): FactStoreApi => {
     let store = stores.get(spaceId);
     if (!store) {
-      store = withNotify(FactStore.makeMemory(), spaceId);
+      store = withNotify(FactStoreLive.makeMemory(), spaceId);
       stores.set(spaceId, store);
     }
 

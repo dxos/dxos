@@ -5,16 +5,17 @@
 import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Script } from '@dxos/compute';
+import * as Script from '@dxos/compute/Script';
 
 import { DeploymentDialog, ScriptProperties, TestContainer } from '#containers';
 import { meta } from '#meta';
-import { Notebook } from '#types';
 
 import { DEPLOYMENT_DIALOG } from '../constants';
+import * as Notebook from '../types/Notebook';
 import {
   NotebookArticleSurface,
   ScriptArticleSurface,

@@ -38,11 +38,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -61,9 +56,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./SlackEvents": {
+      "source": "./src/types/SlackEvents.ts",
+      "types": "./dist/types/src/types/SlackEvents.d.ts",
+      "import": "./dist/lib/SlackEvents.mjs"
+    },
+    "./SlackOperation": {
+      "source": "./src/types/SlackOperation.ts",
+      "types": "./dist/types/src/types/SlackOperation.d.ts",
+      "import": "./dist/lib/SlackOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SlackEvents": [
+        "dist/types/src/types/SlackEvents.d.ts"
+      ],
+      "SlackOperation": [
+        "dist/types/src/types/SlackOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

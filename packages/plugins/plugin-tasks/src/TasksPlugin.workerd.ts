@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Journal } from '#types';
+
+import * as Journal from './types/Journal';
 
 // Declared here rather than imported from `#capabilities`: that barrel pulls the React surface
 // into worker bundles.

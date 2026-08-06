@@ -307,7 +307,7 @@ export const useApp = ({
       clearTimeout(timeoutId);
       void EffectEx.runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
-        void EffectEx.runAndForwardErrors(manager.shutdown());
+        EffectEx.runDetached(manager.shutdown());
       }
     };
   }, [manager]);

@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { Video } from '#types';
+import * as Video from '../types/Video';
 
 const activate = Effect.fnUntraced(function* () {
   // Unanchored: comments attach to the video as a whole. Anchored (range) comments into the

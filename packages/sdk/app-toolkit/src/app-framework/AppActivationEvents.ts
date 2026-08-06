@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { ActivationEvent as ActivationEvent$ } from '@dxos/app-framework';
+import * as ActivationEvent$ from '@dxos/app-framework/ActivationEvent';
 
 import * as AppCapabilities from './AppCapabilities';
 
@@ -20,3 +20,14 @@ export const LayoutReady = createStateEvent(AppCapabilities.LAYOUT_CAPABILITY_ID
  */
 export const createSettingsEvent = (specifier: string) =>
   ActivationEvent$.make('org.dxos.app-framework.event.settings', specifier);
+
+/**
+ * The assistant plugin's start event, derived from its well-known key. Skills (and other
+ * assistant-consumed contributions from arbitrary plugins) ride the CONSUMER's start event, and
+ * naming it by key convention here avoids a package dependency on the assistant plugin — which
+ * would be cyclic for plugins the assistant itself integrates with (markdown, routine).
+ *
+ * Must equal `AssistantEvents.Start` in plugin-assistant, which derives the same event from its
+ * own meta.
+ */
+export const AssistantStart = ActivationEvent$.pluginStart('org.dxos.plugin.assistant');

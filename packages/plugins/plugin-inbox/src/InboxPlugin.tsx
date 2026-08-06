@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { Project } from '@dxos/compute';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Project from '@dxos/compute/Project';
 import { AccessToken, Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
@@ -24,7 +24,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Calendar, ExtractedFrom, Mailbox } from '#types';
+
+import * as Calendar from './types/Calendar';
+import * as ExtractedFrom from './types/ExtractedFrom';
+import * as Mailbox from './types/Mailbox';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

@@ -9,7 +9,9 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Operation, RunAgainError, Trace } from '@dxos/compute';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -27,7 +29,9 @@ import {
   seedMailboxBinding,
   seedSenderOrganizations,
 } from '../../../../testing/sync-fixture';
-import { InboxOperation, Mailbox, SystemTags } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
+import * as Mailbox from '../../../../types/Mailbox';
+import * as SystemTags from '../../../../types/SystemTags';
 import { createSyncProgressKey } from '../../mail-sync';
 import { JMAP_KEYWORD_TAGS, JMAP_ROLE_TAGS } from './system-tags';
 

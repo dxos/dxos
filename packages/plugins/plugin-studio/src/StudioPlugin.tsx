@@ -2,16 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { AppGraphBuilder, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Artifact, Lightbox, Variant } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Artifact from './types/Artifact';
+import * as Lightbox from './types/Lightbox';
+import * as Variant from './types/Variant';
 
 export const StudioPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

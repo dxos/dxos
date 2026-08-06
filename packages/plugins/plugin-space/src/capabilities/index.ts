@@ -2,14 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-
-import { SpaceCapabilities, SpaceCapability, type SpacePluginOptions } from '#types';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { SpaceOperationConfig } from '../operations/helpers';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceCapability from '../types/SpaceCapability';
+import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
 export * from './app-graph-builder';
@@ -34,7 +38,19 @@ export const NavigationTargetResolver = AppCapability.navigationResolver(() => i
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  props: (options: SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
+  roles: [
+    'org.dxos.plugin.space.role.homeContent',
+    'org.dxos.role.article',
+    'org.dxos.role.dialog',
+    'org.dxos.role.formInput',
+    'org.dxos.role.navbarEnd',
+    'org.dxos.role.navtreeItemEnd',
+    'org.dxos.role.objectProperties',
+    'org.dxos.role.popover',
+    'org.dxos.role.section',
+    'org.dxos.role.statusIndicator',
+  ],
+  props: (options: SpaceSchema.SpacePluginOptions) => ({ createInvitationUrl: makeCreateInvitationUrl(options) }),
 });
 export const Repair = Capability.lazyModule(
   'Repair',
@@ -46,7 +62,7 @@ export const Repair = Capability.lazyModule(
   () => import('./repair'),
 );
 export const SpaceSettings = AppCapability.settings(() => import('./settings'), {
-  provides: [SpaceCapabilities.Settings],
+  provides: [SpaceCapabilities.SettingsAtom],
 });
 export const SpacesReady = Capability.lazyModule(
   'SpacesReady',
@@ -78,7 +94,7 @@ export const SpaceState = Capability.lazyModule(
 );
 export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings'), {
   provides: [SpaceOperationConfig],
-  props: (options: SpacePluginOptions) => ({
+  props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
     observability: options.observability,
   }),

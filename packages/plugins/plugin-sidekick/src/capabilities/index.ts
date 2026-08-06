@@ -2,7 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});

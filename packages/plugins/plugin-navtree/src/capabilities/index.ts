@@ -4,12 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability, LayoutOperation } from '@dxos/app-toolkit';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph } from '@dxos/plugin-graph';
 
-import { NavTreeCapabilities } from '#types';
+import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const Expose = Capability.inlineModule(
@@ -36,7 +39,14 @@ export const Keyboard = Capability.lazyModule(
   () => import('./keyboard'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: [
+    'org.dxos.role.dialog',
+    'org.dxos.role.documentTitle',
+    'org.dxos.role.navigation',
+    'org.dxos.role.searchInput',
+  ],
+});
 export const State = Capability.lazyModule(
   'State',
   {

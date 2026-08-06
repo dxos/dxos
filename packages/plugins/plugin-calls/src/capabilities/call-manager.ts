@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
-
-import { CallsCapabilities } from '#types';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { CallManager } from '../calls';
+import * as CallsCapabilities from '../types/CallsCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -19,10 +19,11 @@ export default Capability.makeModule(
     const callManager = new CallManager(client, registry, haloIdentity);
     yield* Effect.tryPromise(() => callManager.open());
 
-    return Capability.contribute(CallsCapabilities.Manager, callManager, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         void callManager.close();
       }),
     );
+    return Capability.contribute(CallsCapabilities.Manager, callManager);
   }),
 );

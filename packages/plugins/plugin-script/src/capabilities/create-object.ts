@@ -4,13 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation, Script } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { ScriptOperation } from '#types';
-import { Notebook } from '#types';
+import * as Notebook from '../types/Notebook';
+import * as ScriptOperation from '../types/ScriptOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

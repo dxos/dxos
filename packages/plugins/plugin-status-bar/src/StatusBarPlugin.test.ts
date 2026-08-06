@@ -18,6 +18,7 @@ describe('StatusBarPlugin', () => {
       plugins: [StatusBarPlugin()],
     });
 
-    expect(harness.manager.getActive()).toContain(moduleId('ReactSurface'));
+    // ReactSurface is role-gated (SurfacesRequested) and parks until one of its roles renders.
+    expect(harness.manager.getActive()).not.toContain(moduleId('ReactSurface'));
   });
 });

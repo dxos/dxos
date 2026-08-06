@@ -15,8 +15,8 @@ import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { Calendar } from '@dxos/plugin-inbox/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -28,7 +28,7 @@ import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
-import { Meeting } from '../types';
+import * as Meeting from '../types/Meeting';
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */

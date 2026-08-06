@@ -4,12 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { SpaceCapabilities, SpaceCapability, SpaceEvents } from '@dxos/plugin-space';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Operation from '@dxos/compute/Operation';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
-import { HelpCapabilities, SupportCapabilities, SupportOperation, type Tour } from '#types';
+import * as HelpCapabilities from '../types/HelpCapabilities';
+import * as SupportCapabilities from '../types/SupportCapabilities';
+import * as SupportOperation from '../types/SupportOperation';
+import type * as Tour from '../types/Tour';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
   requires: [SupportCapabilities.Settings],
@@ -26,7 +31,19 @@ export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'), {
   /** Maps the plugin's configured tour steps to the body's props. */
   props: (options: { helpSteps?: Tour.Step[] }) => options.helpSteps,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: [
+    'org.dxos.plugin.space.role.homeContent',
+    'org.dxos.plugin.support.role.hints',
+    'org.dxos.plugin.support.role.keyshortcuts',
+    'org.dxos.role.article',
+    'org.dxos.role.deckCompanion.discord',
+    'org.dxos.role.deckCompanion.help',
+    'org.dxos.role.dialog',
+    'org.dxos.role.section',
+    'org.dxos.role.statusIndicator',
+  ],
+});
 export const SupportSettings = AppCapability.settings(() => import('./settings'), {
   provides: [SupportCapabilities.Settings],
 });

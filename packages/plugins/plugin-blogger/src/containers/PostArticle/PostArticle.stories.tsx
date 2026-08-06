@@ -7,22 +7,23 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { BloggerOperationHandlerSet } from '#operations';
 import { translations } from '#translations';
-import { Blog } from '#types';
 
+import * as Blog from '../../types/Blog';
 import { PostArticle } from './PostArticle';
 
 /** Builds a `Post` whose single body document is seeded with recognizable text for the assertion. */

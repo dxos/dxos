@@ -2,15 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { AiContext } from '@dxos/assistant';
-import { Agent, Chat, McpServer, Memory } from '@dxos/assistant-toolkit';
-import { Instructions, Skill } from '@dxos/compute';
-import { Sequence } from '@dxos/conductor';
-import { Feed } from '@dxos/echo';
-import { Text } from '@dxos/schema';
-import { HasSubject, Message } from '@dxos/types';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AgentHydrator,
@@ -34,34 +27,18 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type AssistantPluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as AssistantOptions from './types/AssistantOptions';
 
-export const AssistantPlugin = Plugin.define<AssistantPluginOptions | void>(meta)
+export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOptions | void>(meta)
   .pipe(
     Plugin.addModule(AppGraphBuilder),
     Plugin.addModule(SkillDefinition),
     Plugin.addModule(CreateObject),
     Plugin.addModule(OperationHandler),
-    Plugin.addModule(
-      AppCapability.schema([
-        Chat.Chat,
-        Chat.CompanionTo,
-        Skill.Skill,
-        AiContext.Binding,
-        Feed.Feed,
-        HasSubject.HasSubject,
-        Message.Message,
-        Instructions.Instructions,
-        Agent.Agent,
-        McpServer.McpServer,
-        Sequence.Sequence,
-        Memory.Memory,
-        Text.Text,
-      ]),
-    ),
+    Plugin.addModule(AppCapability.schema(() => import('./schema-defs'))),
     Plugin.addModule(Settings),
     Plugin.addModule(ReactSurface),
     Plugin.addModule(AppCapability.translations(translations)),

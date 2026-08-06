@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { ReviewCapabilities } from '#types';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -2,18 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { AppGraphBuilder, DebugSettings, LogRecording, ReactSurface, StatsPanel } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type DebugPluginOptions } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Debug from './types/Debug';
 
-export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
+export const DebugPlugin = Plugin.define<Debug.DebugPluginOptions>(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(DebugSettings),
   Plugin.addModule(ReactSurface),

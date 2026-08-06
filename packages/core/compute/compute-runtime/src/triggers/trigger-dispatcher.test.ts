@@ -13,16 +13,14 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import {
-  Operation,
-  OperationHandlerSet,
-  ServiceNotAvailableError,
-  ServiceResolver,
-  Trace,
-  Trigger,
-  TriggerEvent,
-} from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';

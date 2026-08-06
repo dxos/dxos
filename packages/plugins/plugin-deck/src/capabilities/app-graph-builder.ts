@@ -4,15 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { DeckCapabilities } from '#types';
+
+import * as DeckCapabilities from '../types/DeckCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

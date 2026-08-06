@@ -20,10 +20,12 @@ import * as Stream from 'effect/Stream';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { log } from '@dxos/log';
-import { AssistantCapabilities, type Ollama } from '@dxos/plugin-assistant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import type * as Ollama from '@dxos/plugin-assistant/Ollama';
 
 // NOTE: Running ollama on non-standard port (config Tauri).
 const OLLAMA_HOST = 'http://localhost:21434';
@@ -259,13 +261,16 @@ export default Capability.makeModule(
       remove,
     };
 
+    // One disposal path: the resolver and the manager close over the same runtime.
+    yield* Effect.addFinalizer(() =>
+      Effect.tryPromise(() => runtime.dispose()).pipe(
+        Effect.catchAll((error) => Effect.sync(() => log.warn('ollama runtime dispose failed', { error }))),
+      ),
+    );
     return [
-      // The runtime-dispose finalizer lives on the resolver contribution only; the manager closes
-      // over the same runtime, so there is a single disposal path.
       Capability.contribute(
         AppCapabilities.AiModelResolver,
         OllamaSidecarModelResolver.pipe(Layer.provide(sidecarLayer)),
-        () => Effect.tryPromise(() => runtime.dispose()),
       ),
       Capability.contribute(AssistantCapabilities.OllamaManager, manager),
     ];

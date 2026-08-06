@@ -10,7 +10,9 @@ import { useSoundEffect } from '@dxos/react-ui-audio';
 import { type AudioInputDevice, MicSettings } from '@dxos/react-ui-transcription';
 
 import { meta } from '#meta';
-import { type Settings, TranscriptionCapabilities } from '#types';
+
+import type * as Settings from '../../types/Settings';
+import * as TranscriptionCapabilities from '../../types/TranscriptionCapabilities';
 
 export type MicProps = {
   /** Attendable id of the target editor; keys the recording session. */

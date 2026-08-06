@@ -7,9 +7,14 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/keys';
 
 /**
@@ -49,6 +54,8 @@ export const StoryAiPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'story-ai',
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
     provides: [Capabilities.LayerSpec],
     activate: Capability.makeModule(
       Effect.fnUntraced(function* () {

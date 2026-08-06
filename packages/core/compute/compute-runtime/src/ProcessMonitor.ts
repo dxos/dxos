@@ -9,7 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { Process, type Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import type * as Trace from '@dxos/compute/Trace';
 
 import { ProcessManagerService } from './process-manager-service';
 import * as RemoteProcessManager from './RemoteProcessManager';

@@ -4,16 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, createProgressRegistry } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import { createProgressRegistry } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 /**
  * Contributes the always-on {@link AppCapabilities.ProgressRegistry}. Built from the shared atom
  * registry so any plugin can register/subscribe to progress providers.
  */
-export default Capability.inlineModule(
-  'ProgressRegistry',
-  { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.ProgressRegistry] },
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     return [Capability.contribute(AppCapabilities.ProgressRegistry, createProgressRegistry(registry))];

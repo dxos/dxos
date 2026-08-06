@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AgentService, LayerSpec } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { RoutineCapabilities } from '@dxos/plugin-routine';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 //
 // Capability Module

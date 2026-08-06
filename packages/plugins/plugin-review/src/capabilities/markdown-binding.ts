@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Obj, Type } from '@dxos/echo';
-import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
-
-import { ReviewCapabilities } from '#types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { useMarkdownEditorBinding } from '../hooks';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

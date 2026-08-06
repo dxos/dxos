@@ -29,7 +29,7 @@ const makeManager = () =>
   });
 
 describe('Plugin module authoring', () => {
-  describe('dependency mode', () => {
+  describe('default (idle) wave', () => {
     it('normalizes provides/requires declarations', () => {
       const Test = Plugin.make(
         Plugin.define(testMeta).pipe(
@@ -47,7 +47,7 @@ describe('Plugin module authoring', () => {
       );
 
       const [module] = Test().modules;
-      assert(module.activation.mode === 'dependency');
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(module.activation.requires).toEqual([String, Number]);
       expect(module.activation.provides).toEqual([Total]);
       expect(module.id).toEqual('org.dxos.plugin.test.module.total');
@@ -92,7 +92,7 @@ describe('Plugin module authoring', () => {
       }),
     );
 
-    it('empty provides declares a startup root', () => {
+    it('empty provides declares an idle-wave root', () => {
       const Test = Plugin.make(
         Plugin.define(testMeta).pipe(
           Plugin.addModule({
@@ -103,12 +103,12 @@ describe('Plugin module authoring', () => {
         ),
       );
       const [module] = Test().modules;
-      assert(module.activation.mode === 'dependency');
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(module.activation.provides).toEqual([]);
     });
   });
 
-  describe('event mode', () => {
+  describe('declared wave', () => {
     it('normalizes activatesOn with requires', () => {
       const Test = Plugin.make(
         Plugin.define(testMeta).pipe(
@@ -125,7 +125,6 @@ describe('Plugin module authoring', () => {
         ),
       );
       const [module] = Test().modules;
-      assert(module.activation.mode === 'event');
       expect(module.activation.activatesOn).toEqual(CountEvent);
       expect(module.activation.requires).toEqual([String]);
     });
@@ -146,7 +145,7 @@ describe('Plugin module authoring', () => {
         }),
       );
       const [chainMember] = Plugin.make(builder)().modules;
-      assert(chainMember.activation.mode === 'dependency');
+      expect(chainMember.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(chainMember.activation.requires).toEqual([String]);
       expect(chainMember.activation.provides).toEqual([]);
     });
@@ -223,7 +222,6 @@ describe('Plugin module authoring', () => {
       const entries = CapabilityManager.expandContributions([contribution]);
       expect(entries).toHaveLength(2);
       expect(entries.map((entry) => entry.implementation)).toEqual([{ entry: 'a' }, { entry: 'b' }]);
-      expect(entries[0].deactivate).toBeUndefined();
     });
   });
 
@@ -234,7 +232,8 @@ describe('Plugin module authoring', () => {
       );
 
       expect(Capability.getModuleTag(Inline)).toEqual('total');
-      expect(Inline.requires).toEqual([]);
+      // Undeclared requires stay absent until `normalizeActivation` concretes them.
+      expect(Inline.requires).toBeUndefined();
       expect(Inline.provides).toEqual([Total]);
     });
   });
@@ -249,7 +248,7 @@ describe('Plugin module authoring', () => {
     it('bakes in the default name and provides', () => {
       const module = totalModule(loader);
       expect(Capability.getModuleTag(module)).toEqual('Total');
-      expect(module.requires).toEqual([]);
+      expect(module.requires).toBeUndefined();
       expect(module.provides).toEqual([Total]);
     });
 
@@ -278,7 +277,7 @@ describe('Plugin module authoring', () => {
       const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
       expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
-      assert(module.activation.mode === 'dependency');
+      expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
       expect(module.activation.provides).toEqual([Total]);
     });
 
@@ -301,7 +300,7 @@ describe('Plugin module authoring', () => {
 
         const [module] = Test({ offset: 41 }).modules;
         expect(module.id).toEqual('org.dxos.plugin.test.module.Total');
-        assert(module.activation.mode === 'dependency');
+        expect(module.activation.activatesOn).toEqual(ActivationEvent.Idle);
         expect(module.activation.provides).toEqual([Total]);
 
         const result = yield* module
@@ -343,7 +342,6 @@ describe('Plugin module authoring', () => {
       );
       const Test = Plugin.make(Plugin.define(testMeta).pipe(Plugin.addModule(Lazy)));
       const [module] = Test().modules;
-      assert(module.activation.mode === 'event');
       expect(module.activation.activatesOn).toEqual(CountEvent);
       expect(module.activation.requires).toEqual([String]);
     });

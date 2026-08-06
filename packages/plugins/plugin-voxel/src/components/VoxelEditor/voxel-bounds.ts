@@ -4,8 +4,7 @@
 
 /* eslint-disable react/no-unknown-property */
 
-import { type Voxel } from '#types';
-
+import * as Voxel from '../../types/Voxel';
 import { type VoxelBounds } from './VoxelEditor';
 
 // Kept out of `VoxelEditor.tsx`: react-refresh only fast-refreshes a module whose

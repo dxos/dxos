@@ -17,9 +17,8 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { Calendar } from '#types';
-
 import { InboxPlugin } from '../../InboxPlugin';
+import * as Calendar from '../../types/Calendar';
 import { InitializeCalendar } from './InitializeCalendar';
 
 type StoryArgs = {

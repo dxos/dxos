@@ -10,9 +10,8 @@ import { log } from '@dxos/log';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 
-import { CallsCapabilities } from '#types';
-
 import { Call, Lobby } from '../../components';
+import * as CallsCapabilities from '../../types/CallsCapabilities';
 
 export type CallArticleProps = {
   role?: string;

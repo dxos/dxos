@@ -66,11 +66,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -89,9 +84,54 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./CreateSubscription": {
+      "source": "./src/types/CreateSubscription.ts",
+      "types": "./dist/types/src/types/CreateSubscription.d.ts",
+      "import": "./dist/lib/CreateSubscription.mjs"
+    },
+    "./FeedOperation": {
+      "source": "./src/types/FeedOperation.ts",
+      "types": "./dist/types/src/types/FeedOperation.d.ts",
+      "import": "./dist/lib/FeedOperation.mjs"
+    },
+    "./Magazine": {
+      "source": "./src/types/Magazine.ts",
+      "types": "./dist/types/src/types/Magazine.d.ts",
+      "import": "./dist/lib/Magazine.mjs"
+    },
+    "./MagazineEvents": {
+      "source": "./src/types/MagazineEvents.ts",
+      "types": "./dist/types/src/types/MagazineEvents.d.ts",
+      "import": "./dist/lib/MagazineEvents.mjs"
+    },
+    "./Subscription": {
+      "source": "./src/types/Subscription.ts",
+      "types": "./dist/types/src/types/Subscription.d.ts",
+      "import": "./dist/lib/Subscription.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "CreateSubscription": [
+        "dist/types/src/types/CreateSubscription.d.ts"
+      ],
+      "FeedOperation": [
+        "dist/types/src/types/FeedOperation.d.ts"
+      ],
+      "Magazine": [
+        "dist/types/src/types/Magazine.d.ts"
+      ],
+      "MagazineEvents": [
+        "dist/types/src/types/MagazineEvents.d.ts"
+      ],
+      "Subscription": [
+        "dist/types/src/types/Subscription.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

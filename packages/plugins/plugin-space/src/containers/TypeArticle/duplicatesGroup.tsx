@@ -9,7 +9,7 @@ import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
-import { SpaceCapabilities } from '../../types';
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { type UseDuplicatesResult, buildMergePreview } from './useDuplicates';
 
 export type UseDuplicatesGroupOptions = {

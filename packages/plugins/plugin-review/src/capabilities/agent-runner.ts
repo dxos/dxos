@@ -10,17 +10,19 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { getRangeFromCursor, toCursorRange, updateText } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { AnchoredTo, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { AgentIdentity, CommentCapabilities } from '../types';
+import * as AgentIdentity from '../types/AgentIdentity';
+import * as CommentCapabilities from '../types/CommentCapabilities';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-sonnet-4-6.default';
 
@@ -195,7 +197,7 @@ export default Capability.makeModule(
           const aiServiceLayer = ServiceResolver.provide({ space: db.spaceId }, AiService.AiService).pipe(
             Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
           );
-          const identity = yield* Capability.get(AgentIdentity);
+          const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
 
           // Load every referenced message into a plain Message.Message[].
           const loaded = yield* Effect.forEach(

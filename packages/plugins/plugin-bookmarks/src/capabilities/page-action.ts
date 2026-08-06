@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { CrxCapabilities, type PageAction } from '@dxos/plugin-crx/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as CrxCapabilities from '@dxos/plugin-crx/CrxCapabilities';
+import type * as PageAction from '@dxos/plugin-crx/PageAction';
 
 import { meta } from '#meta';
-import { BookmarkOperation } from '#types';
+
+import * as BookmarkOperation from '../types/BookmarkOperation';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {

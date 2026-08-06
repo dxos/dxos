@@ -18,16 +18,127 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./AgentIdentity": {
+      "source": "./src/AgentIdentity.ts",
+      "types": "./dist/types/src/AgentIdentity.d.ts",
+      "import": "./dist/lib/AgentIdentity.mjs"
+    },
     "./AgentService": {
       "source": "./src/AgentService.ts",
       "types": "./dist/types/src/AgentService.d.ts",
       "import": "./dist/lib/AgentService.mjs"
+    },
+    "./Cancellation": {
+      "source": "./src/Cancellation.ts",
+      "types": "./dist/types/src/Cancellation.d.ts",
+      "import": "./dist/lib/Cancellation.mjs"
+    },
+    "./Credential": {
+      "source": "./src/Credential.ts",
+      "types": "./dist/types/src/Credential.d.ts",
+      "import": "./dist/lib/Credential.mjs"
+    },
+    "./Header": {
+      "source": "./src/Header.ts",
+      "types": "./dist/types/src/Header.d.ts",
+      "import": "./dist/lib/Header.mjs"
+    },
+    "./Instructions": {
+      "source": "./src/types/Instructions.ts",
+      "types": "./dist/types/src/types/Instructions.d.ts",
+      "import": "./dist/lib/types/Instructions.mjs"
+    },
+    "./LayerSpec": {
+      "source": "./src/LayerSpec.ts",
+      "types": "./dist/types/src/LayerSpec.d.ts",
+      "import": "./dist/lib/LayerSpec.mjs"
+    },
+    "./McpServer": {
+      "source": "./src/McpServer.ts",
+      "types": "./dist/types/src/McpServer.d.ts",
+      "import": "./dist/lib/McpServer.mjs"
+    },
+    "./Operation": {
+      "source": "./src/Operation.ts",
+      "types": "./dist/types/src/Operation.d.ts",
+      "import": "./dist/lib/Operation.mjs"
+    },
+    "./OperationHandlerSet": {
+      "source": "./src/OperationHandlerSet.ts",
+      "types": "./dist/types/src/OperationHandlerSet.d.ts",
+      "import": "./dist/lib/OperationHandlerSet.mjs"
+    },
+    "./OperationRegistry": {
+      "source": "./src/OperationRegistry.ts",
+      "types": "./dist/types/src/OperationRegistry.d.ts",
+      "import": "./dist/lib/OperationRegistry.mjs"
+    },
+    "./Process": {
+      "source": "./src/Process.ts",
+      "types": "./dist/types/src/Process.d.ts",
+      "import": "./dist/lib/Process.mjs"
+    },
+    "./Project": {
+      "source": "./src/types/Project.ts",
+      "types": "./dist/types/src/types/Project.d.ts",
+      "import": "./dist/lib/types/Project.mjs"
+    },
+    "./Routine": {
+      "source": "./src/types/Routine.ts",
+      "types": "./dist/types/src/types/Routine.d.ts",
+      "import": "./dist/lib/types/Routine.mjs"
+    },
+    "./Runnable": {
+      "source": "./src/Runnable.ts",
+      "types": "./dist/types/src/Runnable.d.ts",
+      "import": "./dist/lib/Runnable.mjs"
+    },
+    "./Script": {
+      "source": "./src/types/Script.ts",
+      "types": "./dist/types/src/types/Script.d.ts",
+      "import": "./dist/lib/types/Script.mjs"
+    },
+    "./ServiceResolver": {
+      "source": "./src/ServiceResolver.ts",
+      "types": "./dist/types/src/ServiceResolver.d.ts",
+      "import": "./dist/lib/ServiceResolver.mjs"
+    },
+    "./Skill": {
+      "source": "./src/types/Skill.ts",
+      "types": "./dist/types/src/types/Skill.d.ts",
+      "import": "./dist/lib/types/Skill.mjs"
     },
     "./StorageService": {
       "source": "./src/StorageService.ts",
       "types": "./dist/types/src/StorageService.d.ts",
       "import": "./dist/lib/StorageService.mjs"
     },
+    "./Template": {
+      "source": "./src/types/Template.ts",
+      "types": "./dist/types/src/types/Template.d.ts",
+      "import": "./dist/lib/types/Template.mjs"
+    },
+    "./Trace": {
+      "source": "./src/Trace.ts",
+      "types": "./dist/types/src/Trace.d.ts",
+      "import": "./dist/lib/Trace.mjs"
+    },
+    "./Trigger": {
+      "source": "./src/types/Trigger.ts",
+      "types": "./dist/types/src/types/Trigger.d.ts",
+      "import": "./dist/lib/types/Trigger.mjs"
+    },
+    "./TriggerEvent": {
+      "source": "./src/types/TriggerEvent.ts",
+      "types": "./dist/types/src/types/TriggerEvent.d.ts",
+      "import": "./dist/lib/types/TriggerEvent.mjs"
+    },
+    "./errors": {
+      "source": "./src/errors.ts",
+      "types": "./dist/types/src/errors.d.ts",
+      "import": "./dist/lib/errors.mjs"
+    },
+    "./package.json": "./package.json",
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",

@@ -6,8 +6,8 @@
 
 import type * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import type { Project } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Project from '@dxos/compute/Project';
 import type { Database, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';

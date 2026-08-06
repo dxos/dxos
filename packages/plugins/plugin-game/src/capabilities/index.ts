@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section'],
+});

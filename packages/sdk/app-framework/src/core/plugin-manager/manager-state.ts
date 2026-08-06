@@ -166,7 +166,11 @@ export class ManagerState {
   addModule(module: Plugin.PluginModule): void {
     log('add module', { id: module.id });
     // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
-    this.#update(this.modules, (modules) => (modules.includes(module) ? modules : [...modules, module]));
+    // Dedup by id, not reference: re-resolving a lazy plugin yields fresh module objects for
+    // the same ids, and double-registration would double-activate.
+    this.#update(this.modules, (modules) =>
+      modules.some((existing) => existing.id === module.id) ? modules : [...modules, module],
+    );
   }
 
   removeModule(id: string): void {
@@ -206,18 +210,14 @@ export class ManagerState {
   }
 
   getActiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this.getActiveModules().filter(
-      (module) =>
-        module.activation.mode !== 'dependency' &&
-        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    return this.getActiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
     );
   }
 
   getInactiveModulesByEvent(key: string): Plugin.PluginModule[] {
-    return this.getInactiveModules().filter(
-      (module) =>
-        module.activation.mode !== 'dependency' &&
-        ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
+    return this.getInactiveModules().filter((module) =>
+      ActivationEvent.getEvents(module.activation.activatesOn).map(ActivationEvent.eventKey).includes(key),
     );
   }
 
@@ -257,11 +257,6 @@ export class ManagerState {
   }
 
   markPendingResetFor(module: Plugin.PluginModule): void {
-    // Dependency-mode modules do not participate in event-keyed resets.
-    if (module.activation.mode === 'dependency') {
-      return;
-    }
-
     const activationEvents = ActivationEvent.getEvents(module.activation.activatesOn)
       .map(ActivationEvent.eventKey)
       .filter((key) => this.eventFired(key));
@@ -332,6 +327,18 @@ export class FiberTracker {
     const fiber = Effect.runFork(effect);
     Effect.runSync(this.track(fiber));
     Effect.runFork(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
+  }
+
+  /**
+   * Registers a fiber forked inside an Effect, untracking it when it settles. The counterpart to
+   * {@link fork} for effects that need the ambient context (`Plugin.Service`), which `runFork`
+   * cannot supply.
+   */
+  trackForked(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      yield* this.track(fiber);
+      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
+    });
   }
 
   interruptAll(): Effect.Effect<void> {

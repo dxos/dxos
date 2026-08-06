@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { Text } from '@dxos/schema';
 
@@ -21,7 +21,8 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Markdown } from '#types';
+
+import * as Markdown from './types/Markdown';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

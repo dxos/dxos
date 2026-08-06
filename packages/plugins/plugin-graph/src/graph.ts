@@ -5,9 +5,11 @@
 import * as Effect from 'effect/Effect';
 import * as Record from 'effect/Record';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Graph, GraphBuilder, Node } from '@dxos/app-graph';
-import { AppCapabilities, UrlPath } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
@@ -57,12 +59,13 @@ export default Capability.makeModule(
 
     setupDevtools(builder.graph);
 
-    return Capability.contribute(AppCapabilities.AppGraph, builder, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         // clearInterval(interval);
         unsubscribe();
       }),
     );
+    return Capability.contribute(AppCapabilities.AppGraph, builder);
   }),
 );
 

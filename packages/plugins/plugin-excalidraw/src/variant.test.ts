@@ -9,21 +9,20 @@ import * as Layer from 'effect/Layer';
 import { describe } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import {
-  Drawing,
-  DrawingOperation,
-  IllustratorCapabilities,
-  IllustratorOperationHandlerSet,
-} from '@dxos/plugin-illustrator';
+import { IllustratorOperationHandlerSet } from '@dxos/plugin-illustrator';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { ExcalidrawBuilder } from '#model';
 
-import { Excalidraw } from './types';
+import * as Excalidraw from './types/Excalidraw';
 
 EntityId.dangerouslyDisableRandomness();
 

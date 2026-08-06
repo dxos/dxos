@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { LayerSpec, OperationHandlerSet, Process, ServiceResolver, Trace } from '@dxos/compute';
 import {
   LayerStack,
   ProcessManager,
@@ -15,6 +14,11 @@ import {
   RemoteProcessManager,
   RemoteTraceMonitor,
 } from '@dxos/compute-runtime';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 // Explicit import so the emitted `.d.ts` references the package via its public
@@ -59,6 +63,29 @@ export default Capability.makeModule(
     // One-shot snapshot: startup soft-ordering makes same-pass providers visible; entries
     // contributed by plugins enabled later do not join the stack (same as the event window).
     const layerSpecs = layerSpecContributions.get();
+
+    // The snapshot is restart-scoped — the stack below bakes into one runtime, and rebuilding it
+    // for a late arrival would tear down every live service on it. A LayerSpec contributed after
+    // this point is therefore silently absent, and the failure surfaces hops away as a missing
+    // service (which is exactly how it has bitten us). Name it here instead.
+    const layerSpecModulesAtSnapshot = new Set(
+      Object.keys(atomRegistry.get(capabilityManager.atomByModule(Capabilities.LayerSpec))),
+    );
+    const cancelLayerSpecWatch = atomRegistry.subscribe(
+      capabilityManager.atomByModule(Capabilities.LayerSpec),
+      (byModule) => {
+        for (const moduleId of Object.keys(byModule)) {
+          if (!layerSpecModulesAtSnapshot.has(moduleId)) {
+            layerSpecModulesAtSnapshot.add(moduleId);
+            log.error('LayerSpec contributed after the runtime was built — it is ignored until the next boot', {
+              module: moduleId,
+              fix: 'contribute it with AppCapability.layerSpec (or declare activatesOn: ActivationEvents.Startup)',
+            });
+          }
+        }
+      },
+    );
+    yield* Effect.addFinalizer(() => Effect.sync(cancelLayerSpecWatch));
     const traceSinkFactories = traceSinkContributions.get();
     // Optional swarm-backed remote trace source (DX-1125); first contribution wins, else empty.
     const remoteTraceMonitors = remoteTraceMonitorContributions.get();
@@ -106,6 +133,8 @@ export default Capability.makeModule(
     const layerStack = new LayerStack.LayerStack({ layers: [ambientLayerSpec, ...layerSpecs] });
     const serviceResolver = layerStack.getServiceResolver();
 
+    // Handler sets register eagerly at startup (keyed sets defer only handler BODIES), so the
+    // reactive view over contributions is complete at boot — no demand pull on a miss.
     const handlerSet = OperationHandlerSet.reactive(atomRegistry, operationHandlerContributions.atom);
 
     const traceSinks = traceSinkFactories.map((factory) => factory({ resolver: serviceResolver }));

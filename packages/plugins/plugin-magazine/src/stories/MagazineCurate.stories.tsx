@@ -10,14 +10,17 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { LayerSpec } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -31,10 +34,11 @@ import { Text } from '@dxos/schema';
 
 import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
-import { Magazine, Subscription } from '#types';
 
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
 import { MagazinePlugin } from '../MagazinePlugin';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 
 // Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
@@ -55,6 +59,8 @@ const AgentRuntimePlugin = Plugin.define(
   ),
   Plugin.addModule({
     id: 'ai-service',
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
     provides: [Capabilities.LayerSpec],
     activate: () => Effect.succeed([Capability.contribute(Capabilities.LayerSpec, aiServiceSpec)]),
   }),

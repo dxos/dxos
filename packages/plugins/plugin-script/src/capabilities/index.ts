@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { ScriptCapabilities, ScriptEvents } from '#types';
+import * as ScriptCapabilities from '../types/ScriptCapabilities';
+import * as ScriptEvents from '../types/ScriptEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
@@ -20,8 +22,13 @@ export const Compiler = Capability.lazyModule(
   },
   () => import('./compiler'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.dialog', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
+});
 export const ScriptSettings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [ScriptCapabilities.Settings],
 });

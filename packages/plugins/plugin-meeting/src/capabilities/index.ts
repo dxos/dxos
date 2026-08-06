@@ -2,29 +2,48 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
+import * as CallsEvents from '@dxos/plugin-calls/CallsEvents';
 
-import { MeetingCapabilities } from '#types';
+import * as MeetingCapabilities from '../types/MeetingCapabilities';
+import * as MeetingEvents from '../types/MeetingEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  requires: [CallsCapabilities.Manager, MeetingCapabilities.State, Capabilities.OperationInvoker],
+  // Call manager read optionally in the body (absence-guarded atom) — see plugin-thread's note.
+  requires: [MeetingCapabilities.State, Capabilities.OperationInvoker],
 });
 export const CallExtension = Capability.lazyModule(
   'CallExtension',
-  { requires: [MeetingCapabilities.State], provides: [CallsCapabilities.EventHandler] },
+  {
+    requires: [MeetingCapabilities.State],
+    provides: [CallsCapabilities.EventHandler],
+    // Both features must be live: the handler extends calls but reads meeting state.
+    activatesOn: ActivationEvent.allOf(CallsEvents.Start, MeetingEvents.Start),
+  },
   () => import('./call-extension'),
 );
 export const MeetingSettings = Capability.lazyModule(
   'MeetingSettings',
-  { provides: [MeetingCapabilities.Settings] },
+  { provides: [MeetingCapabilities.SettingsAtom], activatesOn: MeetingEvents.Start },
   () => import('./settings'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const MeetingState = Capability.lazyModule(
   'MeetingState',
-  { requires: [Capabilities.AtomRegistry], provides: [MeetingCapabilities.State] },
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [MeetingCapabilities.State],
+    activatesOn: MeetingEvents.Start,
+  },
   () => import('./state'),
 );

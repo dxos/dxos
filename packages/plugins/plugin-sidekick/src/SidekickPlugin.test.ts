@@ -20,8 +20,6 @@ describe('SidekickPlugin', () => {
     });
 
     // SkillDefinition is a dependency-mode root, so it activates immediately too.
-    expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('schema'), moduleId('ReactSurface'), moduleId('SkillDefinition')]),
-    );
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
   });
 });

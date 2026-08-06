@@ -5,14 +5,14 @@
 import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
-import { NavTreeCapabilities } from '#types';
-
+import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
 import { navTreeOpenAspect } from './nav-tree-view-state';
 
 /** Default `open` value for new entries; `current` is derived from the layout when the entry is created. */
@@ -149,14 +149,11 @@ export default Capability.makeModule(
       }
     }).pipe(Effect.forkDaemon);
 
-    return Capability.contribute(
-      NavTreeCapabilities.State,
-      {
-        getItem,
-        getItemAtom,
-        setItem,
-      },
-      () => Effect.sync(() => unsubscribe()),
-    );
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    return Capability.contribute(NavTreeCapabilities.State, {
+      getItem,
+      getItemAtom,
+      setItem,
+    });
   }),
 );

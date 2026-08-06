@@ -9,7 +9,8 @@ import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
-import { InvokerNotInitializedError, NoHandlerError, Operation } from '@dxos/compute';
+import { InvokerNotInitializedError, NoHandlerError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DynamicRuntime, EffectEx, Performance } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

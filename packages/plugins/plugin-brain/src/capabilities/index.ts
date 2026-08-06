@@ -2,33 +2,47 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { InboxCapabilities } from '@dxos/plugin-inbox/types';
-import { ProjectCapabilities } from '@dxos/plugin-projects/types';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
+import * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
+import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';
 
-import { BrainCapabilities } from '#types';
+import * as BrainCapabilities from '../types/BrainCapabilities';
 
-export * from './fact-store';
-
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const FactStore = Capability.lazyModule(
-  'FactStore',
-  { provides: [BrainCapabilities.FactStoreRegistry, Capabilities.LayerSpec] },
-  () => import('./fact-store'),
-);
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+// No `export * from './fact-store'` here: that barrel re-export made the module a static import of
+// the definition, which value-imports `FactStoreLive` from the `@dxos/pipeline-rdf` barrel and
+// pulls SPARQL (~1.5 MB) into the definition closure — defeating this lazy module. Consumers of
+// `FactStoreRegistry` / `makeFactStoreRegistry` import the module directly.
+export const FactStore = AppCapability.layerSpec(() => import('./fact-store'), {
+  name: 'FactStore',
+  provides: [BrainCapabilities.FactStoreRegistry],
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.plugin.brain.surface.facts'],
+});
 export const Settings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [BrainCapabilities.Settings],
 });
 export const MailboxAction = Capability.lazyModule(
   'MailboxAction',
-  { requires: [Capabilities.AtomRegistry], provides: [InboxCapabilities.MailboxAction] },
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [InboxCapabilities.MailboxAction],
+    activatesOn: InboxEvents.Start,
+  },
   () => import('./mailbox-action'),
 );
 export const ProjectTemplates = Capability.lazyModule(
   'ProjectTemplates',
-  { provides: [ProjectCapabilities.Template] },
+  { provides: [ProjectCapabilities.Template], activatesOn: ProjectsEvents.Start },
   () => import('./project-templates'),
 );

@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { Operation } from '@dxos/compute';
 import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -15,9 +15,9 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { withComputeGraphDecorator } from '#testing';
-import { Sheet } from '#types';
 
 import { useSheetModel } from '../../model';
+import * as Sheet from '../../types/Sheet';
 import { useComputeGraph } from './ComputeGraphContext';
 
 const FUNCTION_NAME = 'TEST';

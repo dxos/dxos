@@ -2,19 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ClientCapabilities, type ClientPluginOptions } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
+import * as ClientEvents from '../types/ClientEvents';
+import * as ClientOptions from '../types/ClientOptions';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  activatesOn: ClientEvents.Initialized,
+});
 export const Client = Capability.lazyModule(
   'Client',
   {
+    // The boot root: everything downstream requires the client, and nothing pulls it in a host that
+    // has not asked for it yet — so it names the startup wave rather than inheriting the idle default.
+    activatesOn: ActivationEvents.Startup,
     provides: [
       ClientCapabilities.Client,
       Capabilities.Layer,
@@ -24,22 +30,25 @@ export const Client = Capability.lazyModule(
   },
   () => import('./client'),
 );
-export const LayerSpecs = Capability.lazyModule(
-  'LayerSpecs',
-  { provides: [Capabilities.LayerSpec] },
-  () => import('./layer-specs'),
-);
+export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), { name: 'LayerSpecs' });
 export const Migrations = Capability.lazyModule(
   'Migrations',
-  { requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration], provides: [] },
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, ClientCapabilities.Migration],
+    provides: [],
+    // The immediate subscription reads `client.spaces` synchronously, so this needs the forked
+    // client initialization to have completed — the same point it ran at when the startup pass
+    // awaited initialize.
+    activatesOn: ClientEvents.Initialized,
+  },
   () => import('./migrations'),
 );
 export const NavigationHandler = Capability.lazyModule(
   'NavigationHandler',
   {
-    requires: [Capabilities.OperationInvoker],
+    requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
     provides: [AppCapabilities.NavigationHandler],
-    props: ({ invitationProp }: ClientPluginOptions) => ({ invitationProp }),
+    props: ({ invitationProp }: ClientOptions.ClientPluginOptions) => ({ invitationProp }),
   },
   () => import('./navigation-handler/navigation-handler'),
 );

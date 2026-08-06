@@ -10,11 +10,12 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { setupPluginManager } from '@dxos/app-framework/testing';
 import { PluginManagerProvider } from '@dxos/app-framework/ui';
+import { fromHost } from '@dxos/client/local';
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { Identity } from '@dxos/halo';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { Client, ClientProvider, fromHost } from '@dxos/react-client';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';

@@ -2,12 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-// @import-as-namespace
-
 import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type GeoMarker, type LatLngLiteral } from '@dxos/react-ui-geo';
 
 import { type MapControlType } from '#containers';
@@ -75,3 +73,6 @@ export type MarkerProvider = {
 // Multi capability: every plugin that can plot a subject on the map (map's own view provider,
 // plugin-trip, ...) contributes one entry.
 export const MarkerProvider = Capability.make<MarkerProvider>()(`${meta.profile.key}.capability.markerProvider`);
+
+// TODO(wittjosiah): Factor out?
+export const LocationAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Location');

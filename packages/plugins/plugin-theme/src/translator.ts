@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Resource, addResources, translator } from '@dxos/i18n';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -40,6 +41,7 @@ export default Capability.makeModule(
     register();
     const unsubscribe = registry.subscribe(translationsAtom, register);
 
-    return Capability.contribute(AppCapabilities.Translator, translator, () => Effect.sync(() => unsubscribe()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+    return Capability.contribute(AppCapabilities.Translator, translator);
   }),
 );

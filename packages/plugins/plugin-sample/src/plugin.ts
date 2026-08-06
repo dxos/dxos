@@ -2,10 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
 import { meta } from './meta';
 
 export const SamplePlugin = Plugin.lazy(meta, () => import('#plugin'));
-
-export { SampleOperationHandlerSet } from './operations';

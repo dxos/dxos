@@ -5,8 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { ActivationEvent, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { DXN } from '@dxos/keys';
 
 export const Number = Capability.make<number>()('org.dxos.test.generator.number');

@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Blob, Database } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { FileOperation } from '#types';
+import * as FileOperation from '../types/FileOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

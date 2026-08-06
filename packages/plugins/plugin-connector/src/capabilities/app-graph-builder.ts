@@ -5,21 +5,25 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SETTINGS_SECTION_ID } from '@dxos/plugin-space/types';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
 import { meta } from '#meta';
-import { Connector } from '#types';
 
 import { CONNECTIONS_SECTION_ID, CONNECTIONS_SECTION_TYPE } from '../constants';
-import { Connection, ConnectorAuthAnnotation, ConnectorOperation } from '../types';
+import * as Connection from '../types/Connection';
+import * as ConnectorAnnotations from '../types/ConnectorAnnotations';
+import * as ConnectorOperation from '../types/ConnectorOperation';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { connectorAuthActions, isCursorForConnection, isCursorForTarget } from '../util';
 
 /**
@@ -61,7 +65,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Hoisted so the connector-reading extensions below establish a reactive dependency instead of
     // reading the capability manager synchronously (graph-extension bodies must never sync-get).
-    const connectorAtom = yield* Capability.atom(Connector);
+    const connectorAtom = yield* Capability.atom(ConnectorSpec.Connector);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -120,7 +124,7 @@ export default Capability.makeModule(
       // Separate listing extension so the graph reacts when connections are added or removed.
       GraphBuilder.createExtension({
         id: 'connectionsSection',
-        url: { key: 'connections', kind: 'singleton', path: [SETTINGS_SECTION_ID] },
+        url: { key: 'connections', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
         match: AppNodeMatcher.whenSpaceSettings,
         connector: (space) =>
           Effect.succeed([
@@ -156,7 +160,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Connector-auth ("Connect X") for any object whose type carries `ConnectorAuthAnnotation` —
+      // ConnectorSpec.Connector-auth ("Connect X") for any object whose type carries `ConnectorAnnotations.ConnectorAuthAnnotation` —
       // the single cross-plugin toolbar contribution. Opting in is purely declarative (annotate the
       // type); the connectorIds / bindTarget come from the annotation, and connected-state is derived
       // from bindTarget. Owning plugins inline their own sync/generate actions separately.
@@ -168,7 +172,9 @@ export default Capability.makeModule(
           }
           const type = Obj.getType(node.data);
           const schema = type ? Type.getSchema(type) : undefined;
-          const annotation = schema ? Option.getOrUndefined(ConnectorAuthAnnotation.get(schema)) : undefined;
+          const annotation = schema
+            ? Option.getOrUndefined(ConnectorAnnotations.ConnectorAuthAnnotation.get(schema))
+            : undefined;
           return annotation ? Option.some({ object: node.data, annotation }) : Option.none();
         },
         // A dropdown group, contributed via `actionGroups` so its type/nested actions are preserved.
@@ -215,7 +221,7 @@ export default Capability.makeModule(
       // Connection objects listed under the connections section node.
       GraphBuilder.createExtension({
         id: 'connectionListing',
-        url: { key: 'connection', kind: 'item', path: [SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
+        url: { key: 'connection', kind: 'item', path: [SpaceSchema.SETTINGS_SECTION_ID, CONNECTIONS_SECTION_ID] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CONNECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

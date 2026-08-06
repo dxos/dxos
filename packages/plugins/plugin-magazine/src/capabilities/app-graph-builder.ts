@@ -6,20 +6,25 @@ import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, GraphPath, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Selection } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#types';
-import { Magazine, Subscription } from '#types';
 
 import { getMagazinesPath } from '../paths';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

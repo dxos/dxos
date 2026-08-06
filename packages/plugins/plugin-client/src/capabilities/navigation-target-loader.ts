@@ -4,14 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, NotFound } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { Context } from '@dxos/context';
 import { Database, EID } from '@dxos/echo';
 import { EntityId, SpaceId } from '@dxos/keys';
 
 import { meta } from '#meta';
-import { ClientCapabilities } from '#types';
+
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 /** Cap on the remote edge existence check so an unreachable edge cannot block navigation. */
 const EDGE_EXISTENCE_TIMEOUT = '3 seconds';
@@ -38,6 +40,10 @@ export default Capability.makeModule(
           if (!SpaceId.isValid(spaceId) || !EntityId.isValid(entityId)) {
             return false;
           }
+          // A URL restore can call this while the forked client initialization is still
+          // running; `spaces` is unreadable until it completes, and failing here would
+          // fail-fast the plank to not-found.
+          yield* Effect.promise(() => client.waitUntilInitialized());
           const eid = EID.make({ spaceId, entityId });
 
           // Local first: loading the object populates the collection/type-section refs that address

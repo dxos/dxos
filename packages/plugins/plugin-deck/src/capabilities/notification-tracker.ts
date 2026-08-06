@@ -7,16 +7,21 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability, type PluginManager } from '@dxos/app-framework';
-import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { type Operation, OperationHandlerSet, Process } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import type * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-import { DeckCapabilities } from '#types';
 
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import { upsertToast } from '../util';
 
 const NOTIFY_TOAST_DURATION = 5_000;
@@ -54,6 +59,8 @@ export default Capability.makeModule(
     const runInvocation = (action: Operation.SerializedInvocation) =>
       void EffectEx.runPromise(
         Effect.gen(function* () {
+          // Handler sets register eagerly at startup, so the merged contributions are complete;
+          // only the matched handler's body loads here (keyed sets resolve per operation).
           const handlers = OperationHandlerSet.merge(...operationHandlers.get());
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);

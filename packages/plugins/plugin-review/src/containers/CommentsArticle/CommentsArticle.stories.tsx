@@ -6,22 +6,29 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -35,7 +42,8 @@ import { ReviewPlugin, type ReviewPluginOptions } from '../../ReviewPlugin';
 import { textOf } from '../../should-trigger-agent';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing';
 import { translations } from '../../translations';
-import { AgentIdentity, CommentCapabilities } from '../../types';
+import * as AgentIdentity from '../../types/AgentIdentity';
+import * as CommentCapabilities from '../../types/CommentCapabilities';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
@@ -87,7 +95,7 @@ const seedComments = (space: Space, doc: Markdown.Document, text: Text.Text) => 
 const StubAgentRunner: CommentCapabilities.AgentRunner = {
   run: ({ thread }) =>
     Effect.gen(function* () {
-      const identity = yield* Capability.get(AgentIdentity);
+      const identity = yield* Capability.get(AgentIdentity.AgentIdentity);
       // User-authored messages have no role set; only assistant messages do.
       const lastUser = [...thread.messages].reverse().find((ref) => ref.target?.sender.role !== 'assistant');
       const echoText = textOf(lastUser?.target);
@@ -121,6 +129,12 @@ const StoryAppGraphBuilder = Capability.inlineModule(
       connector: (_, get) =>
         Effect.gen(function* () {
           const client = capabilities.get(ClientCapabilities.Client);
+          // `initialize()` is forked off the startup pass, so the graph can build before the client
+          // has a runtime; reading spaces then trips its not-initialized invariant. The connector is
+          // reactive, so yielding nothing here just re-runs once the client lands.
+          if (!client.initialized) {
+            return [];
+          }
           const space = AppSpace.getPersonalSpace(client);
           if (!space) {
             return [];

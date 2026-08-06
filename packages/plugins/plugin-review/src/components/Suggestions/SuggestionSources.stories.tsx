@@ -8,7 +8,7 @@ import { expect, fn, userEvent, waitFor } from 'storybook/test';
 
 import { Text as EchoText, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';

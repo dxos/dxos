@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import { ObservabilityProvider } from '@dxos/observability';
 
-import { ObservabilityCapabilities, ObservabilityOperation } from '#types';
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
+import * as ObservabilityOperation from '../types/ObservabilityOperation';
 
 // The `observability` instance is read from `ObservabilityCapabilities.Observability` (contributed
 // once, at Startup, by the `observability` module) rather than re-created here — a capability is a

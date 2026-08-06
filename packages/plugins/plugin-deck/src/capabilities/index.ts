@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
-import { DeckCapabilities } from '#types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const CheckAppScheme = Capability.lazyModule(
@@ -34,13 +37,20 @@ export const NotificationTracker = Capability.lazyModule(
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
 export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const DeckSettings = AppCapability.settings(() => import('./settings'), {
   provides: [DeckCapabilities.Settings],
 });
 export const DeckState = Capability.lazyModule(
   'DeckState',
   {
+    // App-shell state, so it belongs on the startup pass rather than the idle default: the deck
+    // root and `DeckLayout` read it on their FIRST render, and the shell cannot paint without it.
+    // The gate belongs here, on the provider — declaring it as the reader's `requires` instead
+    // demotes the reader into this module's wave rather than promoting this module.
+    activatesOn: ActivationEvents.Startup,
     requires: [Capabilities.AtomRegistry],
     provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
   },
@@ -49,6 +59,9 @@ export const DeckState = Capability.lazyModule(
 export const UrlHandler = Capability.lazyModule(
   'UrlHandler',
   {
+    // Boot-time URL restore: this installs the popstate listener and the URL<->state sync, so an
+    // idle registration leaves a deep link unhandled for the window it takes to get there.
+    activatesOn: ActivationEvents.Startup,
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.NavigationHandler,

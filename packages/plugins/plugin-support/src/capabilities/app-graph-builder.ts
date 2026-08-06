@@ -5,21 +5,27 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNode, AppSpace, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
-import { SPACE_HOME_NODE_TYPE } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
 import { WelcomeDismissedAnnotation } from '../annotations';
 import { SHORTCUTS_DIALOG } from '../constants';
+import * as HelpCapabilities from '../types/HelpCapabilities';
+import * as HelpOperation from '../types/HelpOperation';
+import * as SupportCapabilities from '../types/SupportCapabilities';
 
 // Graph node/action label tuples. These MUST be module-level singletons: connectors/actions re-evaluate
 // whenever their matched node emits, and `addNodeImpl` dedupes properties by reference. A label tuple
@@ -148,14 +154,14 @@ export default Capability.makeModule(
       }),
 
       // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
-      // by plugin-space: type === SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
+      // by plugin-space: type === SpaceSchema.SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
       // conditional on the personal space and the welcome not being dismissed — read reactively via
       // the space properties atom so the actions appear/disappear live without a React re-render cycle.
       GraphBuilder.createExtension({
         id: 'spaceHomeActions',
         match: (node): Option.Option<Space> => {
           const space = (node.properties as { space?: unknown }).space;
-          return node.type === SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
+          return node.type === SpaceSchema.SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
         },
         actions: (space, get) => {
           const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;

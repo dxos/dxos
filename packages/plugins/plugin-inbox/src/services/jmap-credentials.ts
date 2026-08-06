@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 /**
  * Credentials needed to talk to a JMAP server: the server `host` (used to discover the session at

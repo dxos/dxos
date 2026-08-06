@@ -4,11 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 
 import { meta } from '#meta';
-import { ObservabilityCapabilities } from '#types';
+
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
 
 /**
  * Shows the privacy notice toast once when an identity is first created.

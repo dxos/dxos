@@ -2,31 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { Connector } from '#types';
+import * as ConnectorEvents from '../types/ConnectorEvents';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 
 export * from './connector-coordinator';
 
-export const AppGraphBuilder = Capability.lazyModule(
-  'AppGraphBuilder',
-  { requires: [Connector], provides: [AppCapabilities.AppGraphBuilder] },
-  () => import('./app-graph-builder'),
-);
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
+  requires: [ConnectorSpec.Connector],
+});
 export const BuiltinConnectors = Capability.lazyModule(
   'BuiltinConnectors',
-  { provides: [Connector] },
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
   () => import('./connectors'),
 );
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
-export const OperationHandler = Capability.lazyModule(
-  'OperationHandler',
-  { provides: [Capabilities.OperationHandler] },
-  () => import('./operation-handler'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});

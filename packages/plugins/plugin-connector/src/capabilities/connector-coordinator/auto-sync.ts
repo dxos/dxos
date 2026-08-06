@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Connection, type ConnectorEntry, ConnectorOperation } from '#types';
+import type * as Connection from '../../types/Connection';
+import * as ConnectorOperation from '../../types/ConnectorOperation';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 
 /**
  * Run the first sync for a connection whose initial sync targets were just bound, so a new
@@ -23,7 +25,7 @@ import { type Connection, type ConnectorEntry, ConnectorOperation } from '#types
 export const autoSyncConnection = (
   invoker: Operation.OperationService,
   db: Database.Database,
-  connector: ConnectorEntry,
+  connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
 ): Effect.Effect<void, never> => {
   if (!connector.sync?.auto) {

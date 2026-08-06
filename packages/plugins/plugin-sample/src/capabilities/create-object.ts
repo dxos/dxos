@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { SampleItem } from '#types';
+import * as SampleItem from '../types/SampleItem';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

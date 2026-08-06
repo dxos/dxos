@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { type Settings } from '#types';
 
+import type * as Settings from '../../types/Settings';
 import { getSpaceDisplayName } from '../../util';
 
 export type SpaceSettingsProps = {

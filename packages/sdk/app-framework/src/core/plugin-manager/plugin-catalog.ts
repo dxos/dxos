@@ -9,6 +9,7 @@ import * as PubSub from 'effect/PubSub';
 
 import { log } from '@dxos/log';
 
+import * as ActivationEvent from '../activation-event';
 import * as Plugin from '../plugin';
 import type * as PluginRegistry from '../registry';
 import { type ActivationScheduler } from './activation-scheduler';
@@ -295,20 +296,51 @@ export class PluginCatalog {
       });
 
       log('pending reset', { events: [...this.#state.getPendingReset()] });
-      // Replay events that already fired so the newly registered modules activate.
+      // Replay events that already fired so the newly registered modules activate. Startup is
+      // excluded: `activate` delegates it to `start()`, which would re-run the full unscoped
+      // passes, re-publish the event-level `activated` message that gates app-ready, and fork a
+      // second idle daemon — once per enable. The scoped pass below covers this plugin's
+      // baseline-wave modules, which is all the replay was reaching for.
+      const startupKey = ActivationEvent.eventKey(ActivationEvent.Startup);
+      const replay = this.#state.getPendingReset().filter((event) => event !== startupKey);
+      this.#state.clearPendingReset(startupKey);
       yield* Effect.all(
-        this.#state.getPendingReset().map((event) => this.#scheduler.activate(event)),
+        replay.map((event) => this.#scheduler.activate(event)),
         { concurrency: 'unbounded' },
       );
 
-      // After startup, newly enabled dependency-mode modules activate incrementally against
-      // the already-contributed capability set. Failures are scoped to this plugin.
+      // After startup, a newly enabled module whose wave has already passed activates
+      // incrementally against the already-contributed capability set. Failures are scoped to
+      // this plugin. Modules still waiting on an unfired event are excluded — they activate
+      // when it fires, and the pending-reset dispatch above replays the ones that already did.
       if (yield* this.#state.isStarted()) {
-        const result = yield* this.#scheduler
-          .runDependencyPass({ candidateModules: [...plugin.modules] })
-          .pipe(Effect.either);
-        if (result._tag === 'Left') {
-          this.#state.recordFailure(id, 'activation', result.left);
+        const pass = this.#scheduler
+          .runDependencyPass({
+            candidateModules: plugin.modules.filter((module) => this.#scheduler.isEligible(module)),
+          })
+          .pipe(
+            Effect.either,
+            Effect.map((result) => {
+              if (result._tag === 'Left') {
+                this.#state.recordFailure(id, 'activation', result.left);
+              }
+            }),
+          );
+        // Streaming bootstrap: fork so `enable` (and thus `initialized`, which event dispatch
+        // awaits) completes on REGISTRATION — awaiting here would serialize the entire startup
+        // fan-out into the enable chain. `start()` waits for loads to settle before ready.
+        if (yield* Deferred.isDone(this.#state.initialized)) {
+          yield* pass;
+          // A plugin enabled after boot missed every host fire of its own start event, and the
+          // pending-reset replay above only covers events that fired — so fire it here, or the
+          // plugin's start-gated modules would never activate.
+          yield* this.#scheduler
+            .activate(ActivationEvent.pluginStart(id))
+            .pipe(Effect.catchAll((error) => Effect.sync(() => this.#state.recordFailure(id, 'activation', error))));
+        } else {
+          // Tracked so `shutdown()` interrupts an incremental pass still running from the
+          // bootstrap enable chain.
+          yield* this.#state.fibers.trackForked(yield* pass.pipe(Effect.forkDaemon));
         }
       }
 
@@ -347,6 +379,9 @@ export class PluginCatalog {
       return yield* Effect.gen(this, function* () {
         log('resolving lazy plugin', { id });
         yield* PubSub.publish(this.#state.activation, { event: '', state: 'activating', module: `lazy:${id}` });
+        // The plugin-definition chunk import is startup work that predates any module
+        // activation; measured so the profiler can attribute it per plugin.
+        performance.mark(`plugin-load:${id}:start`);
         const resolvedPlugin = yield* Plugin.resolveLazy(plugin).pipe(
           // Cap how long a remote import can hang. Without this the host can
           // sit on a pending dynamic `import()` indefinitely if the plugin's
@@ -361,6 +396,8 @@ export class PluginCatalog {
               }),
           }),
         );
+        performance.mark(`plugin-load:${id}:end`);
+        performance.measure(`plugin-load:${id}`, `plugin-load:${id}:start`, `plugin-load:${id}:end`);
         this.#state.replacePlugin(id, resolvedPlugin);
         yield* PubSub.publish(this.#state.activation, { event: '', state: 'activated', module: `lazy:${id}` });
         return resolvedPlugin;

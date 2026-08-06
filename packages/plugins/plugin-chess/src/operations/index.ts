@@ -2,11 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const ChessOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./move'),
-  () => import('./play'),
-  () => import('./print'),
-  () => import('./rebuild-position-index'),
-);
+import * as ChessOperation from '../types/ChessOperation';
+
+export const ChessOperationHandlerSet = OperationHandlerSet.lazy([
+  ChessOperation.Move.pipe(Operation.lazyHandler(() => import('./move'))),
+  ChessOperation.Play.pipe(Operation.lazyHandler(() => import('./play'))),
+  ChessOperation.Print.pipe(Operation.lazyHandler(() => import('./print'))),
+  ChessOperation.RebuildPositionIndex.pipe(Operation.lazyHandler(() => import('./rebuild-position-index'))),
+]);

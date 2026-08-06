@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
-
-import { TranscriptionCapabilities } from '#types';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { TranscriptionManagerImpl } from '../transcription-manager';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 /**
  * Provides the higher-level transcription manager to the app-framework so other plugins can obtain it

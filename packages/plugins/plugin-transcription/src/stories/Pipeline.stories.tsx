@@ -22,10 +22,13 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppNode, AppSpace } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -43,10 +46,11 @@ import {
   makeExtractionStage,
   makeSummarizationStage,
 } from '@dxos/pipeline-transcription';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
-import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -61,10 +65,10 @@ import { appendPendingText, cancelPendingText, setPendingAnchor, setPendingInter
 import { isNonNullable, trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { TranscriptionCapabilities } from '#types';
 
 import { enableQueryIndexes } from '../testing';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 const SAMPLE_CONTENT = trim`
   # Test

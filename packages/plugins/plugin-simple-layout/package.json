@@ -47,11 +47,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -69,9 +64,22 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./SimpleLayoutCapabilities": {
+      "source": "./src/types/SimpleLayoutCapabilities.ts",
+      "types": "./dist/types/src/types/SimpleLayoutCapabilities.d.ts",
+      "import": "./dist/lib/SimpleLayoutCapabilities.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SimpleLayoutCapabilities": [
+        "dist/types/src/types/SimpleLayoutCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Drawing } from '#types';
+
+import * as Drawing from './types/Drawing';
 
 /**
  * Headless variant of IllustratorPlugin (no React surfaces / CreateObject panel).

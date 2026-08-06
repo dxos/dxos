@@ -2,12 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { Instructions, Project, Routine } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
+import * as Routine from '@dxos/compute/Routine';
 
 import { meta } from '#meta';
-import { ProjectCapabilities } from '#types';
+
+import * as ProjectCapabilities from './types/ProjectCapabilities';
 
 // Headless variant registered by workers (e.g. the edge operation-service): operations and schema
 // only, so the React surface never reaches a bundle that cannot load it. The capability modules are

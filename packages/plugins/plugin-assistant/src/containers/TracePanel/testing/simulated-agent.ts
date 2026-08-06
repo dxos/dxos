@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, Trace } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { EntityId } from '@dxos/keys';
 
 export interface AgentScenario {

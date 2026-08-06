@@ -9,7 +9,9 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import { afterAll, beforeAll, describe, onTestFinished, test } from 'vitest';
 
-import { ActivationEvents, Capabilities, type Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { RpcClosedError } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -175,9 +177,14 @@ describe('ClientPlugin startup', () => {
     await startupDone;
     mark('total startup', totalStart);
 
-    // Verify client is ready.
+    // Verify client is ready. `initialize()` is forked off the startup pass, so Startup completing
+    // no longer implies an initialized client — that is the point of the fork, and reading `halo`
+    // before it settles trips the client's own not-initialized invariant.
     const client = manager.capabilities.get(ClientCapabilities.Client) as Client;
     expect(client).toBeDefined();
+    phaseStart = performance.now();
+    await client.waitUntilInitialized();
+    mark('client initialize (forked off startup)', phaseStart);
     expect(client.halo.identity.get()).toBeDefined();
 
     // Print summary.

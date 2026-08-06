@@ -2,19 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
-
-import { SpaceCapabilities, type SpacePluginOptions } from '#types';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { SpaceOperationConfig } from '../operations/helpers';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceCapability from '../types/SpaceCapability';
+import * as SpaceSchema from '../types/SpaceSchema';
 import { makeCreateInvitationUrl } from './helpers';
 
-export const CreateObject = Capability.lazyModule(
-  'CreateObject',
-  { provides: [SpaceCapabilities.CreateObjectEntry] },
-  () => import('./create-object'),
-);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const IdentityCreated = Capability.lazyModule(
   'IdentityCreated',
   {
@@ -34,7 +33,7 @@ export const UndoMappings = Capability.lazyModule(
   'UndoMappings',
   {
     provides: [Capabilities.UndoMapping, SpaceOperationConfig],
-    props: (options: SpacePluginOptions) => ({
+    props: (options: SpaceSchema.SpacePluginOptions) => ({
       createInvitationUrl: makeCreateInvitationUrl(options),
       observability: options.observability,
     }),

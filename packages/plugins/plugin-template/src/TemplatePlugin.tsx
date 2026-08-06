@@ -2,13 +2,14 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Template } from '#types';
+
+import * as Template from './types/Template';
 
 export const TemplatePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(CreateObject),

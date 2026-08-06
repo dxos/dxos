@@ -7,20 +7,24 @@ import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Calendar, getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
+import { getCalendarRangeSelectionId } from '@dxos/plugin-inbox';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { Selection, ViewState } from '@dxos/react-ui-attention';
 import { Event } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Segment, Trip, TripOperation } from '#types';
 
 import { getPlanningWindowDays } from '../operations/extractor/config';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
+import * as TripOperation from '../types/TripOperation';
 
 /**
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed

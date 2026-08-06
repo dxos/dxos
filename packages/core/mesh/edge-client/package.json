@@ -37,9 +37,21 @@
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
+    },
+    "./http": {
+      "source": "./src/edge-http-client.ts",
+      "types": "./dist/types/src/edge-http-client.d.ts",
+      "import": "./dist/lib/edge-http-client.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "http": [
+        "dist/types/src/edge-http-client.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src",

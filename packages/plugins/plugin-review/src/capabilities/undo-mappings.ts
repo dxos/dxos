@@ -4,10 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
+import { UndoMapping } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
-import { CommentOperation } from '#types';
+
+import * as CommentOperation from '../types/CommentOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

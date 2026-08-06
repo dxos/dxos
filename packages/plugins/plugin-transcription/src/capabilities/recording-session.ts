@@ -5,9 +5,9 @@
 import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { TranscriptionCapabilities } from '#types';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

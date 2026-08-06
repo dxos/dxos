@@ -2,12 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { MarkdownCapabilities } from '#types';
+import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
 
 // Ordering-only: registers the anchor text resolver once the app graph exists (mirrors the
 // AppGraphReady ordering the event-mode module used previously); the body reads nothing.
@@ -25,7 +26,9 @@ export const CommentConfig = AppCapability.commentConfig(() => import('./comment
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
+});
 export const MarkdownSettings = AppCapability.settings(() => import('./settings'), {
   provides: [MarkdownCapabilities.Settings],
 });

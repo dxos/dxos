@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 

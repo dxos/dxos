@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { FileOperation } from '../types';
+import * as FileOperation from '../types/FileOperation';
 
 export const SKILL_KEY = 'org.dxos.skill.file';
 

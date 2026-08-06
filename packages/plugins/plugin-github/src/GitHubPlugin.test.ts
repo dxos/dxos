@@ -20,8 +20,7 @@ describe('GitHubPlugin', () => {
       plugins: [ClientPlugin({}), ConnectorPlugin(), GitHubPlugin()],
     });
 
-    // Both modules are dependency-mode with no requires, so they activate in the
-    // startup wave without waiting on any legacy ordering event.
+    // The harness fires every plugin's start event after startup, so both start-gated modules are active.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('GitHubConnector'), moduleId('OperationHandler')]),
     );

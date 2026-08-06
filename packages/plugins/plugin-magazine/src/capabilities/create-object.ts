@@ -5,14 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
-
-import { CreateSubscription, FeedOperation, Magazine, Subscription } from '#types';
 
 import {
   browserCorsProxy,
@@ -21,6 +19,10 @@ import {
   searchStandardSiteHandles,
 } from '../operations/sources';
 import { getMagazinesPath } from '../paths';
+import * as CreateSubscription from '../types/CreateSubscription';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 
 const StandardSiteCreate = Schema.Struct({
   ...CreateSubscription.StandardSiteCreateBase.fields,

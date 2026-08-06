@@ -5,9 +5,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { ConnectionTestError, Connector, type CredentialForm, type TestConnection } from '@dxos/plugin-connector';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { BLUESKY_PROVIDER_ID, BLUESKY_SOURCE } from '../constants';
@@ -51,7 +52,7 @@ const AtprotoPreflightForm = Schema.Struct({
   }),
 });
 
-const credentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
+const credentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
   schema: AtprotoPreflightForm,
   defaultValues: { handle: '' },
   // atproto pre-flight: capture the handle as a `loginHint` and let the
@@ -67,7 +68,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightF
  * offer to reauthenticate. Credentials resolve through the client (handle → PDS
  * → proxy), so `client` is required here where HTTP-only connectors ignore it.
  */
-const testConnection: TestConnection = ({ connection, client }) =>
+const testConnection: ConnectorSpec.TestConnection = ({ connection, client }) =>
   BlueskyApi.getSavedFeeds().pipe(
     Effect.provide(BlueskyApi.Credentials.fromConnection(Ref.make(connection), client)),
     Effect.asVoid,
@@ -86,7 +87,7 @@ const testConnection: TestConnection = ({ connection, client }) =>
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: BLUESKY_PROVIDER_ID,
         source: BLUESKY_SOURCE,

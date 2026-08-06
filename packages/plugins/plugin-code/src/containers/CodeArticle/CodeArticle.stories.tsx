@@ -17,9 +17,11 @@ import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
-import { CodeProject, SourceFile, Spec } from '#types';
 
 import { CodePlugin } from '../../CodePlugin';
+import * as CodeProject from '../../types/CodeProject';
+import * as SourceFile from '../../types/SourceFile';
+import * as Spec from '../../types/Spec';
 import { CodeArticle } from './CodeArticle';
 
 const HELLO_WORLD = {

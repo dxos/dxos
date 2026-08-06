@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '../meta';
 import { type OnboardingManager } from '../onboarding-manager';

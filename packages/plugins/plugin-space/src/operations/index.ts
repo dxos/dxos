@@ -1,37 +1,40 @@
 // Copyright 2025 DXOS.org
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+
+import { SpaceOperation } from './definitions';
 
 export { SpaceOperation } from './definitions';
 
-export const SpaceOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-object'),
-  () => import('./add-relation'),
-  () => import('./add-type'),
-  () => import('./close'),
-  () => import('./create'),
-  () => import('./delete'),
-  () => import('./delete-field'),
-  () => import('./duplicate-object'),
-  () => import('./export-space'),
-  () => import('./find-duplicates'),
-  () => import('./get-share-link'),
-  () => import('./import-space'),
-  () => import('./join'),
-  () => import('./merge-duplicates'),
-  () => import('./migrate'),
-  () => import('./open'),
-  () => import('./open-create-object'),
-  () => import('./open-create-space'),
-  () => import('./open-import-space'),
-  () => import('./open-members'),
-  () => import('./open-settings'),
-  () => import('./remove-objects'),
-  () => import('./rename'),
-  () => import('./rename-object'),
-  () => import('./restore-field'),
-  () => import('./restore-objects'),
-  () => import('./share'),
-  () => import('./snapshot'),
-  () => import('./wait-for-object'),
-);
+export const SpaceOperationHandlerSet = OperationHandlerSet.lazy([
+  SpaceOperation.AddObject.pipe(Operation.lazyHandler(() => import('./add-object'))),
+  SpaceOperation.AddRelation.pipe(Operation.lazyHandler(() => import('./add-relation'))),
+  SpaceOperation.AddType.pipe(Operation.lazyHandler(() => import('./add-type'))),
+  SpaceOperation.Close.pipe(Operation.lazyHandler(() => import('./close'))),
+  SpaceOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  SpaceOperation.Delete.pipe(Operation.lazyHandler(() => import('./delete'))),
+  SpaceOperation.DeleteField.pipe(Operation.lazyHandler(() => import('./delete-field'))),
+  SpaceOperation.DuplicateObject.pipe(Operation.lazyHandler(() => import('./duplicate-object'))),
+  SpaceOperation.ExportSpace.pipe(Operation.lazyHandler(() => import('./export-space'))),
+  SpaceOperation.FindDuplicates.pipe(Operation.lazyHandler(() => import('./find-duplicates'))),
+  SpaceOperation.GetShareLink.pipe(Operation.lazyHandler(() => import('./get-share-link'))),
+  SpaceOperation.ImportSpace.pipe(Operation.lazyHandler(() => import('./import-space'))),
+  SpaceOperation.Join.pipe(Operation.lazyHandler(() => import('./join'))),
+  SpaceOperation.MergeDuplicates.pipe(Operation.lazyHandler(() => import('./merge-duplicates'))),
+  SpaceOperation.Migrate.pipe(Operation.lazyHandler(() => import('./migrate'))),
+  SpaceOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
+  SpaceOperation.OpenCreateObject.pipe(Operation.lazyHandler(() => import('./open-create-object'))),
+  SpaceOperation.OpenCreateSpace.pipe(Operation.lazyHandler(() => import('./open-create-space'))),
+  SpaceOperation.OpenImportSpace.pipe(Operation.lazyHandler(() => import('./open-import-space'))),
+  SpaceOperation.OpenMembers.pipe(Operation.lazyHandler(() => import('./open-members'))),
+  SpaceOperation.OpenSettings.pipe(Operation.lazyHandler(() => import('./open-settings'))),
+  SpaceOperation.RemoveObjects.pipe(Operation.lazyHandler(() => import('./remove-objects'))),
+  SpaceOperation.Rename.pipe(Operation.lazyHandler(() => import('./rename'))),
+  SpaceOperation.RenameObject.pipe(Operation.lazyHandler(() => import('./rename-object'))),
+  SpaceOperation.RestoreField.pipe(Operation.lazyHandler(() => import('./restore-field'))),
+  SpaceOperation.RestoreObjects.pipe(Operation.lazyHandler(() => import('./restore-objects'))),
+  SpaceOperation.Share.pipe(Operation.lazyHandler(() => import('./share'))),
+  SpaceOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot'))),
+  SpaceOperation.WaitForObject.pipe(Operation.lazyHandler(() => import('./wait-for-object'))),
+]);

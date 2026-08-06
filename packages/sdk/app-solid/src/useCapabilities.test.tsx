@@ -6,7 +6,9 @@ import * as Atom from '@effect-atom/atom/Atom';
 import { render, screen } from '@solidjs/testing-library';
 import { describe, expect, test } from 'vitest';
 
-import { Capability, type PluginManager, PluginManagerContext } from '@dxos/app-framework';
+import { PluginManagerContext } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
 import { useCapabilities, useCapability } from './useCapabilities';

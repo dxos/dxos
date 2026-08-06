@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { AnchoredTo } from '@dxos/types';
 
 import {
@@ -16,10 +16,10 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Meeting } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Meeting from './types/Meeting';
 
 export const MeetingPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

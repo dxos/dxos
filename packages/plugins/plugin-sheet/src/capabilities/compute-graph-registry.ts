@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation, ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { type SpaceId } from '@dxos/keys';
 
-import { SheetCapabilities } from '#types';
+import * as SheetCapabilities from '../types/SheetCapabilities';
 
 /**
  * Builds the per-space compute graph registry by adapting the shared

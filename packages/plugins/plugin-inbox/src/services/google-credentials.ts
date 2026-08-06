@@ -6,11 +6,11 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Credential } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
 

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Instructions from '@dxos/compute/Instructions';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import {
@@ -17,10 +17,11 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Magazine, Subscription } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Magazine from './types/Magazine';
+import * as Subscription from './types/Subscription';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

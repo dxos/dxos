@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Event, Message } from '@dxos/types';
 
 import { CreateObject, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-import { Calendar, Mailbox } from '#types';
+
+import * as Calendar from './types/Calendar';
+import * as Mailbox from './types/Mailbox';
 
 // TODO(wittjosiah): Factor out shared modules.
 

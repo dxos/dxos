@@ -17,6 +17,12 @@ export const usePluginManager = (): PluginManager.PluginManager =>
   useContext(PluginManagerContext) ?? raise(new Error('Missing PluginManagerContext'));
 
 /**
+ * Get the plugin manager, or undefined outside a provider. Surfaces and activation signals fire
+ * demand events opportunistically and must not throw when rendered standalone (stories, tests).
+ */
+export const useOptionalPluginManager = (): PluginManager.PluginManager | undefined => useContext(PluginManagerContext);
+
+/**
  * Context provider for a plugin manager.
  */
 export const PluginManagerProvider = PluginManagerContext.Provider;

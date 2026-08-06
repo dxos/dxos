@@ -12,9 +12,11 @@ import * as Schema$ from 'effect/Schema';
 
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
-import { Capability as Capability$ } from '@dxos/app-framework';
+import * as Capability$ from '@dxos/app-framework/Capability';
 import type { BuilderExtensions, GraphBuilder } from '@dxos/app-graph';
-import type { Credential, Operation, Skill } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import type { Database, Type } from '@dxos/echo';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';

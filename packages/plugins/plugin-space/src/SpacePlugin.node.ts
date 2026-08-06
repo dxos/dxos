@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Tag } from '@dxos/echo';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -21,11 +21,11 @@ import {
 
 import { CreateObject, IdentityCreated, OperationHandler, UndoMappings } from '#capabilities';
 import { meta } from '#meta';
-import { type SpacePluginOptions } from '#types';
 
 import { database, queue, space } from './commands';
+import * as SpaceSchema from './types/SpaceSchema';
 
-export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
+export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
   Plugin.addModule(AppCapability.commands([database, queue, space])),
   Plugin.addModule(CreateObject),

@@ -1119,14 +1119,14 @@ describe('PluginManager', () => {
           provides: [String],
           id: 'WithDeactivate',
           activatesOn: ActivationEvents.Startup,
-          activate: () =>
-            Effect.succeed([
-              Capability.contribute(String, { string: 'hello' }, () =>
-                Effect.sync(() => {
-                  deactivated = true;
-                }),
-              ),
-            ]),
+          activate: Effect.fnUntraced(function* () {
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                deactivated = true;
+              }),
+            );
+            return [Capability.contribute(String, { string: 'hello' })];
+          }),
         }),
         Plugin.make,
       );
@@ -1152,14 +1152,14 @@ describe('PluginManager', () => {
           provides: [String],
           activatesOn: ActivationEvents.Startup,
           id: 'First',
-          activate: () =>
-            Effect.succeed([
-              Capability.contribute(String, { string: 'first' }, () =>
-                Effect.sync(() => {
-                  deactivationOrder.push('First');
-                }),
-              ),
-            ]),
+          activate: Effect.fnUntraced(function* () {
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                deactivationOrder.push('First');
+              }),
+            );
+            return [Capability.contribute(String, { string: 'first' })];
+          }),
         }),
         Plugin.make,
       );
@@ -1174,13 +1174,12 @@ describe('PluginManager', () => {
           id: 'Second',
           activate: Effect.fnUntraced(function* () {
             yield* String;
-            return [
-              Capability.contribute(Number, { number: 2 }, () =>
-                Effect.sync(() => {
-                  deactivationOrder.push('Second');
-                }),
-              ),
-            ];
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                deactivationOrder.push('Second');
+              }),
+            );
+            return [Capability.contribute(Number, { number: 2 })];
           }),
         }),
         Plugin.make,
@@ -1338,6 +1337,230 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
     }),
   );
+
+  describe('self-referential activation', () => {
+    it.effect(
+      'a module may await an event that would activate itself',
+      () =>
+        Effect.gen(function* () {
+          // Regression: the wave `awaitSettled`s every matched module it finds mid-load, including
+          // the one whose body is calling it. That wait is circular and only ends at the activation
+          // timeout, which the failure supervisor reads as a broken plugin and disables.
+          const EventA = ActivationEvent.make('org.dxos.test.selfA');
+          const EventB = ActivationEvent.make('org.dxos.test.selfB');
+
+          const Test = Plugin.make(
+            Plugin.define(testMeta).pipe(
+              Plugin.addModule({
+                id: 'self',
+                activatesOn: ActivationEvent.oneOf(EventA, EventB),
+                provides: [String],
+                activate: Effect.fnUntraced(function* () {
+                  const manager = yield* Plugin.Service;
+                  yield* manager.activate(EventB);
+                  return [Capability.contribute(String, { string: 'self' })];
+                }),
+              }),
+            ),
+          );
+
+          const instance = Test();
+          const manager = PluginManager.make({
+            plugins: [instance],
+            enabled: [instance.meta.profile.key],
+            pluginLoader,
+          });
+          yield* manager.start();
+          yield* manager.activate(EventA);
+
+          assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'self' }]);
+          assert.deepStrictEqual(manager.getFailed(), []);
+        }),
+      { timeout: 20_000 },
+    );
+  });
+
+  describe('streaming start', () => {
+    const slowMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.slowdef'), name: 'SlowDef' });
+
+    // Real macrotask hops (bounded): the constructor's enable chain runs on a separate
+    // runtime whose fibers need actual event-loop turns.
+    const settle = (condition: () => boolean, iterations = 100) =>
+      Effect.gen(function* () {
+        for (let i = 0; i < iterations && !condition(); i++) {
+          yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve)));
+        }
+      });
+
+    it.effect('activates registered modules while another plugin definition is still loading', () =>
+      Effect.gen(function* () {
+        let releaseLoader!: () => void;
+        const gate = new Promise<void>((resolve) => {
+          releaseLoader = resolve;
+        });
+        const SlowReal = Plugin.define<void>(slowMeta).pipe(
+          Plugin.addModule({
+            id: 'slow',
+            provides: [Number],
+            activate: () => Effect.succeed([Capability.contribute(Number, { number: 2 })]),
+          }),
+          Plugin.make,
+        );
+        const SlowLazy = Plugin.lazy(slowMeta, async () => {
+          await gate;
+          return { default: SlowReal };
+        });
+        const Fast = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'fast',
+              activatesOn: ActivationEvents.Startup,
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'fast' })]),
+            }),
+          ),
+        );
+        plugins = [Fast(), SlowLazy()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, slowMeta.profile.key],
+        });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        // Streaming: the fast plugin's module activates while the slow definition still loads.
+        yield* settle(() => manager.capabilities.getAll(String).length > 0);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'fast' }]);
+        // The ready signal still waits for the complete registry.
+        assert.strictEqual((yield* Fiber.poll(startupFiber))._tag, 'None');
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), []);
+
+        releaseLoader();
+        yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 2 }]);
+      }),
+    );
+
+    it.effect('a consumer of a not-yet-registered provider waits instead of failing structurally', () =>
+      Effect.gen(function* () {
+        let releaseLoader!: () => void;
+        const gate = new Promise<void>((resolve) => {
+          releaseLoader = resolve;
+        });
+        const ProviderReal = Plugin.define<void>(slowMeta).pipe(
+          Plugin.addModule({
+            id: 'provider',
+            provides: [Number],
+            activate: () => Effect.succeed([Capability.contribute(Number, { number: 7 })]),
+          }),
+          Plugin.make,
+        );
+        const ProviderLazy = Plugin.lazy(slowMeta, async () => {
+          await gate;
+          return { default: ProviderReal };
+        });
+        const Consumer = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [Number],
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'consumer' })]),
+            }),
+          ),
+        );
+        plugins = [Consumer(), ProviderLazy()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, slowMeta.profile.key],
+        });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        // Give the streaming pass real turns: the consumer must wait (provider's definition
+        // has not registered), not be recorded as a structural MissingProvider failure.
+        yield* settle(() => manager.getFailed().length > 0, 30);
+        assert.deepStrictEqual(manager.getFailed(), []);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        releaseLoader();
+        yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
+        assert.deepStrictEqual(manager.getFailed(), []);
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 7 }]);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'consumer' }]);
+      }),
+    );
+
+    it.effect('a snapshot consumer waits for the complete registry before reading a multi capability', () =>
+      Effect.gen(function* () {
+        // Regression: multi requires never gate, so a consumer registered in the first streaming
+        // batch would activate against whatever had contributed so far. In dev (one request per
+        // plugin definition) that window is wide enough for the process manager to snapshot
+        // `Capabilities.LayerSpec` without the client's specs — identity creation then failed with
+        // `ServiceNotAvailable`.
+        let releaseLoader!: () => void;
+        const gate = new Promise<void>((resolve) => {
+          releaseLoader = resolve;
+        });
+        let snapshot: readonly { string: string }[] = [];
+        const ProviderReal = Plugin.define<void>(slowMeta).pipe(
+          Plugin.addModule({
+            id: 'late-provider',
+            provides: [MultiString],
+            activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'late' })]),
+          }),
+          Plugin.make,
+        );
+        const ProviderLazy = Plugin.lazy(slowMeta, async () => {
+          await gate;
+          return { default: ProviderReal };
+        });
+        const Snapshotter = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'early-provider',
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'early' })]),
+            }),
+            Plugin.addModule({
+              id: 'snapshotter',
+              requires: [MultiString],
+              provides: [String],
+              activate: Effect.fnUntraced(function* () {
+                snapshot = (yield* MultiString).get();
+                return [Capability.contribute(String, { string: 'snapshot' })];
+              }),
+            }),
+          ),
+        );
+        plugins = [Snapshotter(), ProviderLazy()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key, slowMeta.profile.key],
+        });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        // Real turns for the streaming pass: the same-plugin provider lands early, and the
+        // snapshotter must NOT ride along with it.
+        yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), []);
+
+        releaseLoader();
+        yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
+        assert.deepStrictEqual(snapshot, [{ string: 'early' }, { string: 'late' }]);
+      }),
+    );
+  });
 
   describe('Plugin.lazy', () => {
     const lazyMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.lazy'), name: 'Lazy' });
@@ -2039,6 +2262,20 @@ describe('PluginManager', () => {
       });
     };
 
+    /**
+     * Brings a manager up the way a host does. These fixtures declare no `activatesOn`, which now
+     * normalizes to the idle wave, and `start()` FORKS that wave rather than awaiting it — so
+     * asserting on `getActive()` straight after `start()` races the daemon. Firing `Idle` here is
+     * the barrier; it is idempotent against the wave guard whichever order the two land in.
+     * Returns whether either wave activated anything, which is what `start()` alone used to report.
+     */
+    const startAndSettle = (manager: PluginManager.PluginManager) =>
+      Effect.gen(function* () {
+        const started = yield* manager.start();
+        const idled = yield* manager.activate(ActivationEvents.Idle);
+        return started || idled;
+      });
+
     it.effect('activates a provider chain in topological order and yields the implementations', () =>
       Effect.gen(function* () {
         const Test = Plugin.make(
@@ -2072,7 +2309,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const result = yield* manager.start();
+        const result = yield* startAndSettle(manager);
         assert.isTrue(result);
         assert.deepStrictEqual(manager.getActive(), [
           'org.dxos.plugin.test.module.string',
@@ -2112,7 +2349,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         assert.strictEqual(manager.getActive().length, 2);
       }),
     );
@@ -2133,7 +2370,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.isTrue(activated);
         assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.root']);
       }),
@@ -2156,7 +2393,7 @@ describe('PluginManager', () => {
 
         const manager = makeManagerWith(Test);
         // Structural problems put the plugin into an error state; startup continues.
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         const failures = manager.getFailed();
         assert.strictEqual(failures.length, 1);
@@ -2190,7 +2427,7 @@ describe('PluginManager', () => {
 
         const manager = makeManagerWith(Test);
         // The consumer's chain roots at the provider's event: it pends through startup...
-        assert.isFalse(yield* manager.start());
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         assert.deepStrictEqual(manager.getFailed(), []);
 
@@ -2230,7 +2467,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         const failures = manager.getFailed();
         assert.isAbove(failures.length, 0);
@@ -2259,7 +2496,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         const failures = manager.getFailed();
         assert.isAbove(failures.length, 0);
@@ -2282,7 +2519,7 @@ describe('PluginManager', () => {
         const Undeclared = Plugin.make(builder);
 
         const manager = makeManagerWith(Undeclared);
-        assert.isFalse(yield* manager.start());
+        yield* startAndSettle(manager);
         const failures = manager.getFailed();
         assert.strictEqual(failures.length, 1);
         assert.instanceOf(failures[0].error, ProvidesMismatchError);
@@ -2304,7 +2541,7 @@ describe('PluginManager', () => {
         const Conditional = Plugin.make(builder);
 
         const manager = makeManagerWith(Conditional);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.conditional']);
         assert.deepStrictEqual(manager.capabilities.getAll(String), []);
       }),
@@ -2334,7 +2571,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Consumer);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         // Soft ordering: the same-pass provider activated first, so the snapshot saw it.
         assert.deepStrictEqual(snapshot, [{ widget: 'one' }, { widget: 'two' }]);
 
@@ -2425,7 +2662,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        assert.isTrue(yield* manager.start());
+        assert.isTrue(yield* startAndSettle(manager));
         assert.strictEqual(count, 0);
       }),
     );
@@ -2482,7 +2719,7 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), []);
         yield* manager.activate(CountEvent);
         assert.deepStrictEqual(manager.capabilities.get(String), { string: 'gated' });
@@ -2523,7 +2760,7 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key],
           pluginLoader,
         });
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.deepStrictEqual(manager.getActive(), ['org.dxos.plugin.test.module.provider']);
 
         yield* manager.add(lateMeta.profile.key);
@@ -2553,7 +2790,7 @@ describe('PluginManager', () => {
         const lateInstance = Late();
         plugins = [baseInstance, lateInstance];
         const manager = PluginManager.make({ plugins: [baseInstance], enabled: [testMeta.profile.key], pluginLoader });
-        yield* manager.start();
+        yield* startAndSettle(manager);
 
         yield* manager.add(lateMeta.profile.key);
         const enabled = yield* manager.enable(lateMeta.profile.key);
@@ -2574,14 +2811,14 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () =>
-                Effect.succeed([
-                  Capability.contribute(String, { string: 'base' }, () =>
-                    Effect.sync(() => {
-                      deactivations.push('provider');
-                    }),
-                  ),
-                ]),
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    deactivations.push('provider');
+                  }),
+                );
+                return [Capability.contribute(String, { string: 'base' })];
+              }),
             }),
           ),
         );
@@ -2593,13 +2830,12 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
-                return [
-                  Capability.contribute(Number, { number: string.length }, () =>
-                    Effect.sync(() => {
-                      deactivations.push('consumer');
-                    }),
-                  ),
-                ];
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    deactivations.push('consumer');
+                  }),
+                );
+                return [Capability.contribute(Number, { number: string.length })];
               }),
             }),
           ),
@@ -2613,7 +2849,7 @@ describe('PluginManager', () => {
           enabled: [providerMeta.profile.key, testMeta.profile.key],
           pluginLoader,
         });
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.strictEqual(manager.getActive().length, 2);
 
         yield* manager.disable(providerMeta.profile.key);
@@ -2640,7 +2876,10 @@ describe('PluginManager', () => {
             Plugin.addModule({
               id: 'provider',
               provides: [String],
-              activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' }, track('provider'))]),
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(track('provider'));
+                return [Capability.contribute(String, { string: 'p' })];
+              }),
             }),
             Plugin.addModule({
               id: 'consumer',
@@ -2648,20 +2887,24 @@ describe('PluginManager', () => {
               provides: [Number],
               activate: Effect.fnUntraced(function* () {
                 const { string } = yield* String;
-                return [Capability.contribute(Number, { number: string.length }, track('consumer'))];
+                yield* Effect.addFinalizer(track('consumer'));
+                return [Capability.contribute(Number, { number: string.length })];
               }),
             }),
             Plugin.addModule({
               id: 'event-root',
               provides: [Total],
               activatesOn: ActivationEvents.Startup,
-              activate: () => Effect.succeed([Capability.contribute(Total, { total: 0 }, track('event-root'))]),
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(track('event-root'));
+                return [Capability.contribute(Total, { total: 0 })];
+              }),
             }),
           ),
         );
 
         const manager = makeManagerWith(Test);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         assert.strictEqual(manager.getActive().length, 3);
 
         yield* manager.shutdown();
@@ -2672,6 +2915,72 @@ describe('PluginManager', () => {
       }),
     );
 
+    it.effect('a module finalizer runs on deactivation, not on activation', () =>
+      Effect.gen(function* () {
+        let finalized = 0;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'scratch',
+              provides: [String],
+              activatesOn: ActivationEvents.Startup,
+              activate: Effect.fnUntraced(function* () {
+                yield* Effect.addFinalizer(() =>
+                  Effect.sync(() => {
+                    finalized++;
+                  }),
+                );
+                return [Capability.contribute(String, { string: 'x' })];
+              }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* startAndSettle(manager);
+        assert.strictEqual(finalized, 0, 'finalizer ran while the module was still active');
+
+        yield* manager.shutdown();
+        assert.strictEqual(finalized, 1, 'finalizer did not run on shutdown');
+      }),
+    );
+
+    it.effect('re-dispatching a fired event does not pay for a second dispatch', () =>
+      Effect.gen(function* () {
+        const DemandEvent = ActivationEvent.make('org.dxos.test.demand');
+        const demandKey = ActivationEvent.eventKey(DemandEvent);
+        let activations = 0;
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'on-demand',
+              provides: [String],
+              activatesOn: DemandEvent,
+              activate: () =>
+                Effect.sync(() => {
+                  activations++;
+                  return [Capability.contribute(String, { string: 'demand' })];
+                }),
+            }),
+          ),
+        );
+
+        const manager = makeManagerWith(Test);
+        yield* startAndSettle(manager);
+
+        const marks = () => performance.getEntriesByName(`milestone:dispatch:${demandKey}:requested`).length;
+        assert.strictEqual(yield* manager.activate(DemandEvent), true);
+        assert.strictEqual(activations, 1);
+        const afterFirst = marks();
+
+        // Demand events fire from reactive paths that re-evaluate freely: the repeat must not
+        // re-activate the module (it never did) and must not emit a second dispatch either.
+        assert.strictEqual(yield* manager.activate(DemandEvent), false);
+        assert.strictEqual(activations, 1);
+        assert.strictEqual(marks(), afterFirst);
+      }),
+    );
+
     it.effect('publishes the event-level Startup message only after the dependency pass', () =>
       Effect.gen(function* () {
         const messages: Array<{ event: string; module?: string }> = [];
@@ -2679,6 +2988,7 @@ describe('PluginManager', () => {
           Plugin.define(testMeta).pipe(
             Plugin.addModule({
               id: 'provider',
+              activatesOn: ActivationEvents.Startup,
               provides: [String],
               activate: () => Effect.succeed([Capability.contribute(String, { string: 'p' })]),
             }),
@@ -2693,7 +3003,7 @@ describe('PluginManager', () => {
 
         const manager = makeManagerWith(Test);
         const subscription = yield* PubSub.subscribe(manager.activation);
-        yield* manager.start();
+        yield* startAndSettle(manager);
         while (true) {
           const message = yield* Queue.poll(subscription);
           if (message._tag === 'None') {
@@ -2713,6 +3023,246 @@ describe('PluginManager', () => {
         // The app-ready signal publishes after every dependency-mode module activated.
         assert.isAbove(readyIndex, providerIndex);
       }).pipe(Effect.scoped),
+    );
+  });
+
+  describe('default demand gates', () => {
+    const DemandEvent = ActivationEvent.make('org.dxos.test.demand');
+
+    it.effect('an event wave awaits a matched module already loading via a concurrent wave', () =>
+      Effect.gen(function* () {
+        const SlowEvent = ActivationEvent.make('org.dxos.test.slowDemand');
+        const OtherEvent = ActivationEvent.make('org.dxos.test.otherDemand');
+        const started = yield* Deferred.make<void>();
+        const gate = yield* Deferred.make<void>();
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'slowGated',
+              activatesOn: ActivationEvent.oneOf(SlowEvent, OtherEvent),
+              provides: [MultiString],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.succeed(started, undefined);
+                  yield* Deferred.await(gate);
+                  return [Capability.contribute(MultiString, { string: 'slow' })];
+                }),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins, enabled: [testMeta.profile.key] });
+        yield* manager.activate(ActivationEvents.Startup);
+
+        // Wave A claims the module and blocks in its activate body.
+        const fiberA = yield* Effect.fork(manager.activate(SlowEvent));
+        yield* Deferred.await(started);
+
+        // Wave B matches the same module mid-load. The round filters it (`isLoading`), so
+        // without the post-pass await B would resolve here — before the handlers exist —
+        // breaking the demand-pull contract (a lookup retry then misses and hard-fails).
+        const fiberB = yield* Effect.fork(manager.activate(OtherEvent));
+        for (let i = 0; i < 10; i++) {
+          yield* Effect.yieldNow();
+        }
+        assert.strictEqual((yield* Fiber.poll(fiberB))._tag, 'None');
+
+        yield* Deferred.succeed(gate, undefined);
+        yield* Fiber.join(fiberB);
+        // The contract under test: when activate(OtherEvent) resolves, the contribution is visible.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'slow' }]);
+        yield* Fiber.join(fiberA);
+      }),
+    );
+
+    it.effect('a demand pull stays scoped and does not drain unrelated runnable startup modules', () =>
+      Effect.gen(function* () {
+        const Event = ActivationEvent.make('org.dxos.test.pullScoped');
+        const gateA = yield* Deferred.make<void>();
+        const gateC = yield* Deferred.make<void>();
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            // Wave 1: blocks the startup round's wave barrier so wave-2 modules stay queued.
+            Plugin.addModule({
+              id: 'slowA',
+              provides: [Total],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.await(gateA);
+                  return [Capability.contribute(Total, { total: 1 })];
+                }),
+            }),
+            Plugin.addModule({
+              id: 'fastB',
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'b' })]),
+            }),
+            // Wave 2 (requires fastB): runnable once fastB contributes, but queued behind the
+            // wave barrier while slowA blocks.
+            Plugin.addModule({
+              id: 'pulledProvider',
+              requires: [String],
+              provides: [Number],
+              activate: () => Effect.succeed([Capability.contribute(Number, { number: 2 })]),
+            }),
+            Plugin.addModule({
+              id: 'slowC',
+              requires: [String],
+              provides: [MultiNumber],
+              activate: () =>
+                Effect.gen(function* () {
+                  yield* Deferred.await(gateC);
+                  return [Capability.contribute(MultiNumber, { number: 3 })];
+                }),
+            }),
+            Plugin.addModule({
+              id: 'evt',
+              activatesOn: Event,
+              requires: [Number],
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'evt' })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins, enabled: [testMeta.profile.key] });
+
+        // Real macrotask hops until the condition holds (bounded): the constructor's enable
+        // chain runs on a separate runtime whose fibers need actual event-loop turns.
+        const settle = (condition: () => boolean) =>
+          Effect.gen(function* () {
+            for (let i = 0; i < 100 && !condition(); i++) {
+              yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve)));
+            }
+          });
+
+        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        yield* settle(() => manager.capabilities.getAll(String).length > 0);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'b' }]);
+
+        const eventFiber = yield* Effect.fork(manager.activate(Event));
+        yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
+        // The contract under test: the pull activates only the event module's own transitive
+        // providers (pulledProvider); an unscoped follow-up round would pick up the runnable
+        // slowC and block the wave start behind gateC.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'evt' }]);
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 2 }]);
+
+        yield* Deferred.succeed(gateA, undefined);
+        yield* Deferred.succeed(gateC, undefined);
+        yield* Fiber.join(eventFiber);
+        yield* Fiber.join(startupFiber);
+        // Un-annotated modules are idle-gated, and `start()` forks the idle wave; join the
+        // startup fiber, then fire Idle to settle it before asserting.
+        yield* manager.activate(ActivationEvents.Idle);
+        // The scoped pull leaves slowC to the startup pass — nothing is orphaned.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 3 }]);
+      }),
+    );
+
+    it.effect('start-gated modules stay off startup and join their plugin start wave', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            // The startup half of the contrast, so it says so: omitting `activatesOn` now means idle.
+            Plugin.addModule({
+              id: 'keep',
+              activatesOn: ActivationEvent.Startup,
+              provides: [String],
+              activate: () => Effect.succeed([Capability.contribute(String, { string: 'keep' })]),
+            }),
+            Plugin.addModule({
+              id: 'deferred',
+              activatesOn: ActivationEvent.pluginStart(testMeta.profile.key),
+              provides: [Number],
+              activate: () => Effect.succeed([Capability.contribute(Number, { number: 1 })]),
+            }),
+            // Startup consumer of a deferred provider: waits at startup, self-heals on the wave.
+            Plugin.addModule({
+              id: 'consumer',
+              requires: [Number],
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'consumer' })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins,
+          enabled: [testMeta.profile.key],
+        });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'keep' }]);
+        // The deferred provider and its waiting consumer are absent at ready.
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), []);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.activate(ActivationEvent.pluginStart(testMeta.profile.key));
+        assert.deepStrictEqual(manager.capabilities.getAll(Number), [{ number: 1 }]);
+        // The post-wave pass unlocks the consumer that was waiting on the deferred provider.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'consumer' }]);
+      }),
+    );
+
+    it.effect('a plugin enabled after its demand event fired activates via pending reset', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'gated',
+              activatesOn: DemandEvent,
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'gated' })]),
+            }),
+            Plugin.addModule({
+              id: 'eager',
+              provides: [MultiNumber],
+              activate: () => Effect.succeed([Capability.contribute(MultiNumber, { number: 1 })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        yield* manager.activate(DemandEvent);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.add(testMeta.profile.key);
+        yield* manager.enable(testMeta.profile.key);
+        // The gated module joined after its event fired; pending-reset refired it on enable,
+        // and the eager module ran in the incremental dependency pass.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'gated' }]);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiNumber), [{ number: 1 }]);
+      }),
+    );
+
+    it.effect('a plugin enabled after startup activates its start-gated modules', () =>
+      Effect.gen(function* () {
+        const Test = Plugin.make(
+          Plugin.define(testMeta).pipe(
+            Plugin.addModule({
+              id: 'startGated',
+              activatesOn: ActivationEvent.pluginStart(testMeta.profile.key),
+              provides: [MultiString],
+              activate: () => Effect.succeed([Capability.contribute(MultiString, { string: 'started' })]),
+            }),
+          ),
+        );
+        plugins = [Test()];
+        const manager = PluginManager.make({ pluginLoader, plugins });
+
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), []);
+
+        yield* manager.add(testMeta.profile.key);
+        yield* manager.enable(testMeta.profile.key);
+        // The plugin's own start event never fired before it existed; enable fires it so the
+        // plugin converges without waiting for another host trickle.
+        assert.deepStrictEqual(manager.capabilities.getAll(MultiString), [{ string: 'started' }]);
+      }),
     );
   });
 });

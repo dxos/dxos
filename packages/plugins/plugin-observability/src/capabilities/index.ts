@@ -4,10 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { ObservabilityCapabilities, ObservabilityEvents, type ObservabilityPluginOptions } from '#types';
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
+import * as ObservabilityEvents from '../types/ObservabilityEvents';
+import * as ObservabilityOptions from '../types/ObservabilityOptions';
 
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
@@ -20,6 +23,9 @@ export const ClientReady = Capability.lazyModule(
       ObservabilityCapabilities.State,
     ],
     provides: [],
+    // Reads `client.services` (initialized-only) to wire metrics providers, so it needs the
+    // forked client initialization to have completed.
+    activatesOn: ObservabilityCapabilities.ClientInitialized,
   },
   () => import('./client-ready'),
 );
@@ -43,7 +49,7 @@ export const Namespace = Capability.inlineModule(
   'namespace',
   {
     provides: [ObservabilityCapabilities.Namespace],
-    props: (options: ObservabilityPluginOptions) => options.namespace,
+    props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
   (namespace) => Effect.succeed([Capability.contribute(ObservabilityCapabilities.Namespace, namespace)]),
 );
@@ -51,16 +57,19 @@ export const Observability = Capability.inlineModule(
   'observability',
   {
     provides: [ObservabilityCapabilities.Observability],
-    props: (options: ObservabilityPluginOptions) => options.observability,
+    props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
   (observability) =>
     Effect.gen(function* () {
       const obs = yield* Effect.tryPromise(() => observability());
-      return [Capability.contribute(ObservabilityCapabilities.Observability, obs, () => obs.close())];
+      yield* Effect.addFinalizer(() => obs.close());
+      return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
 export const ObservabilitySettings = AppCapability.settings(() => import('./settings'), {
   provides: [ObservabilityCapabilities.Settings],
 });
@@ -69,7 +78,7 @@ export const ObservabilityState = Capability.lazyModule(
   {
     requires: [Capabilities.AtomRegistry],
     provides: [ObservabilityCapabilities.State],
-    props: ({ namespace }: ObservabilityPluginOptions) => ({ namespace }),
+    props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
   },
   () => import('./state'),
 );

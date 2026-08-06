@@ -8,11 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 import { organizationIdentitySpec, personIdentitySpec } from '@dxos/extractor-lib';
@@ -29,7 +30,7 @@ import { ComplexMap } from '@dxos/util';
 import { translations } from '#translations';
 
 import { SpaceOperationHandlerSet } from '../../operations';
-import { SpaceCapabilities } from '../../types';
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 import { MergePreview } from '../MergePreview/MergePreview';
 import { ObjectCardStack } from '../ObjectCardStack/ObjectCardStack';
 import { TypeArticle } from './TypeArticle';

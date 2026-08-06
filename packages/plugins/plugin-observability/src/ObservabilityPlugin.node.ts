@@ -4,11 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#types';
+
+import * as ObservabilityOperation from './types/ObservabilityOperation';
 
 // TODO(wittjosiah): Hook up.
 export const ObservabilityPlugin = Plugin.define(meta).pipe(

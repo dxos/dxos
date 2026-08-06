@@ -6,7 +6,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { parseOBJ, presetObjData } from '../../engine';
-import { Model } from '../../types';
+import * as Model from '../../types/Model';
 import { type ActionHandler } from '../action';
 import { type ToolContext } from '../tool-context';
 

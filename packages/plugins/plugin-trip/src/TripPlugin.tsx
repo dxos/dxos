@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { InboxCapabilities } from '@dxos/plugin-inbox';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
 import {
   AppGraphBuilder,
@@ -20,10 +21,12 @@ import {
 import { meta } from '#meta';
 import { TripMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Booking, Segment, Trip } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Booking from './types/Booking';
+import * as Segment from './types/Segment';
+import * as Trip from './types/Trip';
 
 export const TripPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

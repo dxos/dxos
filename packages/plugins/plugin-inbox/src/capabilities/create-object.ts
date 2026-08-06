@@ -4,17 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Event, Message } from '@dxos/types';
 
-import { InboxOperation } from '#types';
-import { Calendar, Mailbox } from '#types';
-
 import { getCalendarsPath } from '../paths';
+import * as Calendar from '../types/Calendar';
+import * as InboxOperation from '../types/InboxOperation';
+import * as Mailbox from '../types/Mailbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -2,11 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { PaymentsCapabilities } from '#types';
+import * as PaymentsCapabilities from '../types/PaymentsCapabilities';
 
 export const Settings = AppCapability.settings(() => import('./settings'), {
+  activatesOn: ActivationEvents.Idle,
   provides: [PaymentsCapabilities.Settings],
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});

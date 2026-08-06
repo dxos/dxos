@@ -4,12 +4,41 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import {
+  AgentHandlers,
+  AgentSkillHandlers,
+  AgentWizardHandlers,
+  AlarmHandlers,
+  DatabaseHandlers,
+  DelegationHandlers,
+  PlanningHandlers,
+  ProjectHandlers,
+  SkillManagerHandlers,
+  WebSearchHandlers,
+} from '@dxos/assistant-toolkit';
 
 import { AssistantOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(Capabilities.OperationHandler, AssistantOperationHandlerSet);
+    return Capability.contributeAll(Capabilities.OperationHandler, [
+      AssistantOperationHandlerSet,
+      // Toolkit handler sets register here (eagerly) rather than with the start-gated skill
+      // definitions: their operations (e.g. runInstructions) are invoked headlessly by
+      // triggers, before any toolkit materialization fires the assistant's start event. The
+      // sets are lazy-bodied, so eager registration costs only the definition map.
+      AgentHandlers,
+      AgentSkillHandlers,
+      SkillManagerHandlers,
+      DatabaseHandlers,
+      WebSearchHandlers,
+      AgentWizardHandlers,
+      DelegationHandlers,
+      PlanningHandlers,
+      AlarmHandlers,
+      ProjectHandlers,
+    ]);
   }),
 );

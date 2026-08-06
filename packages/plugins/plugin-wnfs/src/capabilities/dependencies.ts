@@ -4,16 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client';
-
-import { WnfsCapabilities } from '#types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import * as Blockstore from '../blockstore';
+import * as WnfsCapabilities from '../types/WnfsCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* ClientCapabilities.Client;
+    // `config` is initialized-only, and this event wave can land before the forked client
+    // initialization completes.
+    yield* Effect.promise(() => client.waitUntilInitialized());
     const apiHost = client.config.values.runtime?.services?.edge?.url || 'http://localhost:8787';
     const blockstore = Blockstore.create(apiHost);
     yield* Effect.tryPromise(() => blockstore.open());

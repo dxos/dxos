@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AppCapability } from '@dxos/app-toolkit';
-import { SpaceCapability } from '@dxos/plugin-space';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
-import { MapCapabilities } from '#types';
+import * as MapCapabilities from '../types/MapCapabilities';
 
 // The capabilities `MapPlugin.node` activates, and only those. A lazy module defers its import at
 // runtime but a bundler still walks it, so listing `ReactSurface` here would pull the map
@@ -16,4 +17,6 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 });
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});

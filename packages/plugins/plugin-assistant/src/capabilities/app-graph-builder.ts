@@ -6,32 +6,33 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNode,
-  AppNodeMatcher,
-  AppSpace,
-  GraphPath,
-  LayoutOperation,
-  TypeSection,
-} from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Instructions, Operation, Project } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
-import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatsPath } from '../paths';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;

@@ -6,12 +6,14 @@ import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { ReactNode } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Settings, ThemeCapabilities } from './types';
+import * as Settings from './types/Settings';
+import * as ThemeCapabilities from './types/ThemeCapabilities';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'resourceExtensions'>> & {
   appName?: string;
@@ -72,32 +74,30 @@ export default Capability.makeModule(
     };
     window.addEventListener('storage', handleStorage);
 
-    return Capability.contribute(
-      Capabilities.ReactContext,
-      {
-        id: meta.profile.key,
-        context: ({ children }: { children?: ReactNode }) => {
-          const { themeMode } = useAtomValue(themeAtom);
-          // Translations are registered in the shared i18next instance by the Translator module; the
-          // theme provider only exposes that instance to React.
-          return (
-            <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
-              <Toast.Provider>
-                <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
-                  {children}
-                </Tooltip.Provider>
-                <Toast.Viewport />
-              </Toast.Provider>
-            </ThemeProvider>
-          );
-        },
-      },
-      () =>
-        Effect.sync(() => {
-          modeQuery.removeEventListener('change', handleModeChange);
-          window.removeEventListener('storage', handleStorage);
-          unsubscribe();
-        }),
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        modeQuery.removeEventListener('change', handleModeChange);
+        window.removeEventListener('storage', handleStorage);
+        unsubscribe();
+      }),
     );
+    return Capability.contribute(Capabilities.ReactContext, {
+      id: meta.profile.key,
+      context: ({ children }: { children?: ReactNode }) => {
+        const { themeMode } = useAtomValue(themeAtom);
+        // Translations are registered in the shared i18next instance by the Translator module; the
+        // theme provider only exposes that instance to React.
+        return (
+          <ThemeProvider {...{ tx: propsTx, themeMode, platform }}>
+            <Toast.Provider>
+              <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
+                {children}
+              </Tooltip.Provider>
+              <Toast.Viewport />
+            </Toast.Provider>
+          </ThemeProvider>
+        );
+      },
+    });
   }),
 );

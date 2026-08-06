@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import type { ProjectionModel } from '@dxos/schema';
 
-import { type Kanban } from '#types';
+import type * as Kanban from '../types/Kanban';
 
 /**
  * Minimal `ProjectionModel` for `spec.kind === 'items'` (no View). Supplies `pivotField`

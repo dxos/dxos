@@ -13,8 +13,8 @@ import * as Schedule from 'effect/Schedule';
 import type * as Scope from 'effect/Scope';
 
 import { type Client, ClientService } from '@dxos/client';
-import { type Trigger } from '@dxos/compute';
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
+import type * as Trigger from '@dxos/compute/Trigger';
 import { Context as DxosContext } from '@dxos/context';
 import { Ref } from '@dxos/echo';
 import { type EdgeTriggerStatus } from '@dxos/edge-client';

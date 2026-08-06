@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -26,10 +27,11 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { type AgentIdentity as AgentIdentityType, CommentCapabilities } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as AgentIdentity from './types/AgentIdentity';
+import * as CommentCapabilities from './types/CommentCapabilities';
 
 /**
  * Test/storybook hosts swap in a stub `AgentRunner`/`AgentIdentity` via these options rather
@@ -38,7 +40,7 @@ import pluginSpec from '../PLUGIN.mdl?raw';
  */
 export type ReviewPluginOptions = {
   agentRunner?: CommentCapabilities.AgentRunner;
-  agentIdentity?: AgentIdentityType;
+  agentIdentity?: AgentIdentity.AgentIdentity;
 };
 
 export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(

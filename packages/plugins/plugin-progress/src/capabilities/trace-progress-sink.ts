@@ -4,10 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
-import { Process, ServiceResolver, Trace } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import { type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ProcessManager, RemoteProcessManager } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
 
 /**
@@ -23,9 +27,7 @@ import { log } from '@dxos/log';
  * upfront, since the factory itself has no dependencies. Process-manager runtime is likewise
  * resolved lazily on cancel.
  */
-export default Capability.inlineModule(
-  'TraceProgressSink',
-  { provides: [Capabilities.TraceSink] },
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
     const runtime = yield* Effect.runtime<Capability.Service>();

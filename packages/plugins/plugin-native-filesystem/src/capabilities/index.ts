@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
+import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 
-import { NativeFilesystemCapabilities } from '#types';
+import * as NativeFilesystemCapabilities from '../types/NativeFilesystemCapabilities';
 
 export * from './state';
 
@@ -16,12 +19,18 @@ export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app
 export const Markdown = Capability.lazyModule(
   'MarkdownExtension',
   {
-    requires: [NativeFilesystemCapabilities.FilesystemManager],
+    // `State` is declared alongside the manager because the provider callbacks read it and it is
+    // contributed by this plugin's own idle-gated module, which markdown start can otherwise precede.
+    requires: [NativeFilesystemCapabilities.FilesystemManager, NativeFilesystemCapabilities.State],
     provides: [MarkdownCapabilities.ExtensionProvider],
+    activatesOn: MarkdownEvents.Start,
   },
   () => import('./markdown-extension'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
   requires: [NativeFilesystemCapabilities.State],
+  roles: ['org.dxos.role.article'],
 });

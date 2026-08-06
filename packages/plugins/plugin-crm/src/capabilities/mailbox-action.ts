@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Ref } from '@dxos/echo';
-import { InboxCapabilities } from '@dxos/plugin-inbox/types';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
-import { CrmOperation } from '../types';
+import * as CrmOperation from '../types/CrmOperation';
 
 /**
  * Injects the `Process CRM` action into plugin-inbox's mailbox toolbar menu (the CRM sibling of

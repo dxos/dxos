@@ -8,10 +8,17 @@ import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
-import { Capabilities, Capability, CapabilityManager, Plugin, PluginManager } from '@dxos/app-framework';
-import { type WithPluginManagerOptions } from '@dxos/app-framework/testing';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginManager from '@dxos/app-framework/PluginManager';
+import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
 import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities, AppSpace, GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import {
   Agent,
@@ -24,8 +31,13 @@ import {
 } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Instructions, Operation, OperationHandlerSet, ServiceResolver, Skill, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import { ExampleHandlers } from '@dxos/compute/testing';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
 import { EffectEx } from '@dxos/effect';
@@ -33,13 +45,17 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
+import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
-import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
+import * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { Markdown, MarkdownSkill } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import { MarkdownSkill } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -108,7 +124,7 @@ type DecoratorsProps = {
    * (supervisor + sub-agents).
    */
   scripted?: ScriptedLanguageModel.Script;
-} & (Omit<ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
+} & (Omit<ClientOptions.ClientPluginOptions, 'onClientInitialized' | 'onSpacesReady'> &
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent'>);
 
 /**
@@ -247,6 +263,21 @@ const PluginManagerHost = ({
       plugins: options.plugins ?? [],
       enabled: (options.plugins ?? []).map(({ meta }) => meta.profile.key),
     });
+
+    // `useApp` contributes these too, but from an effect registered AFTER this component's own —
+    // which kicks off activation — so the startup pass would reach a module requiring `AtomRegistry`
+    // with no provider registered and nothing to wait for. Contribute at construction instead.
+    pluginManager.capabilities.contribute({
+      interface: Capabilities.PluginManager,
+      implementation: pluginManager,
+      module: 'org.dxos.app-framework.plugin-manager',
+    });
+    pluginManager.capabilities.contribute({
+      interface: Capabilities.AtomRegistry,
+      implementation: pluginManager.registry,
+      module: 'org.dxos.app-framework.atom-registry',
+    });
+
     return pluginManager;
   }, [options]);
 
@@ -263,6 +294,12 @@ const PluginManagerHost = ({
       implementation: capability.implementation,
       module: 'org.dxos.app-framework.with-plugin-manager.lazy',
     });
+
+    // A story mounts one surface, so no demand ever reaches the modules gated behind it. The
+    // `withPluginManager` path does this for us; this lazy path builds its own manager and so
+    // must do it too, or Idle-gated contributions (assistant settings) never land and the first
+    // strict `useAtomCapability` read throws.
+    EffectEx.runDetached(activateDemandGatedModules(manager));
 
     return () => {
       manager.capabilities.remove(capability.interface, capability.implementation);

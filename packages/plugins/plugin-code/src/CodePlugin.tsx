@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AppGraphBuilder,
@@ -16,10 +16,12 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { CodeProject, SourceFile, Spec } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as CodeProject from './types/CodeProject';
+import * as SourceFile from './types/SourceFile';
+import * as Spec from './types/Spec';
 
 export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),

@@ -2,26 +2,44 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppCapability } from '@dxos/app-toolkit';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-import { DebugCapabilities, type DebugPluginOptions } from '#types';
+import * as Debug from '../types/Debug';
+import * as DebugEvents from '../types/DebugEvents';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
-  requires: [Capabilities.AtomRegistry, DebugCapabilities.Settings, AppCapabilities.FileUploader],
-  props: ({ logStore }: DebugPluginOptions) => ({ logStore }),
+  roles: [
+    'org.dxos.plugin.debug.surface.stats',
+    'org.dxos.role.article',
+    'org.dxos.role.deckCompanion.logs',
+    'org.dxos.role.deckCompanion.spaceObjects',
+    'org.dxos.role.section',
+    'org.dxos.role.statusIndicator',
+  ],
+  requires: [Capabilities.AtomRegistry, Debug.DebugCapabilities.Settings, AppCapabilities.FileUploader],
+  props: ({ logStore }: Debug.DebugPluginOptions) => ({ logStore }),
 });
 export const DebugSettings = AppCapability.settings(() => import('./settings'), {
-  provides: [DebugCapabilities.Settings],
+  activatesOn: ActivationEvents.Idle,
+  provides: [Debug.DebugCapabilities.Settings],
 });
 export const StatsPanel = Capability.lazyModule(
   'StatsPanel',
   {
     requires: [Capabilities.AtomRegistry],
     provides: [AppCapabilities.StatsPanel],
-    props: ({ persistStats }: DebugPluginOptions) => ({ persist: persistStats ?? true }),
+    props: ({ persistStats }: Debug.DebugPluginOptions) => ({ persist: persistStats ?? true }),
+    activatesOn: DebugEvents.Start,
   },
   () => import('./stats-panel'),
 );
-export const LogRecording = Capability.lazyModule('LogRecording', { provides: [] }, () => import('./log-recording'));
+export const LogRecording = Capability.lazyModule(
+  'LogRecording',
+  { provides: [], activatesOn: DebugEvents.Start },
+  () => import('./log-recording'),
+);

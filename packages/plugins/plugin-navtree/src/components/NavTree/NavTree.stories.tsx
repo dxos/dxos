@@ -8,11 +8,14 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';

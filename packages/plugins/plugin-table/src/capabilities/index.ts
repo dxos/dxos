@@ -4,18 +4,28 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { SpaceCapabilities, SpaceCapability, SpaceEvents } from '@dxos/plugin-space';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Operation from '@dxos/compute/Operation';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
-import { TableOperation } from '#types';
+import * as TableEvents from '../types/TableEvents';
+import * as TableOperation from '../types/TableOperation';
 
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
-export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'));
+export const CommentConfig = AppCapability.commentConfig(() => import('./comment-config'), {
+  activatesOn: TableEvents.Start,
+});
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.section', 'org.dxos.role.slide'],
+});
 
 // Genuine runtime event: fires whenever a new type is added to a space, not at startup.
 export const OnTypeAdded = Capability.inlineModule(

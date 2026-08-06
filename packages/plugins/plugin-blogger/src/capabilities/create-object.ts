@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
-
-import { Blog } from '#types';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { getPublicationsPath } from '../paths';
+import * as Blog from '../types/Blog';
 
 // `BloggerOperation.AddPublication`/`AddPost` persist via `CollectionModel.add` and return a `Ref`
 // for agent/skill callers; they don't produce the `{ id, subject, object }` shape the generic

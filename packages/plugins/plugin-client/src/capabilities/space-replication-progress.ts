@@ -8,15 +8,15 @@ import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { ServiceResolver } from '@dxos/compute';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';
 
-import { ClientCapabilities } from '#types';
-
 import { createSpaceFeedReplicationProgressKey, createSpaceReplicationProgressKey } from '../progress';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 type MonitorUpdate = {
   readonly label: string;

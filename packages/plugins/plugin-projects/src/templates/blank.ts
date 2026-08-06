@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Ref } from '@dxos/echo';
 
-import { ProjectCapabilities } from '#types';
-
+import * as ProjectCapabilities from '../types/ProjectCapabilities';
 import { scaffoldProject } from './scaffold';
 
 /**

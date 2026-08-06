@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -16,7 +17,7 @@ import {
   PortfolioReportDetail,
 } from '#containers';
 
-import { Ibkr } from '../types';
+import * as Ibkr from '../types/Ibkr';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

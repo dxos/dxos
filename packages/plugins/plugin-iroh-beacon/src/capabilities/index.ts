@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 
 import { BeaconCapabilities } from './beacon-service';
 
@@ -20,4 +21,6 @@ export const BeaconServiceModule = Capability.lazyModule(
   () => import('./beacon-service'),
 );
 
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.statusIndicator'],
+});

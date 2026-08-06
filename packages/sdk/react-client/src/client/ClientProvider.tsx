@@ -55,6 +55,15 @@ export type ClientProviderProps = Omit<ClientOptions, 'config' | 'services'> &
     fallback?: FunctionComponent<Partial<ClientContextProps>>;
 
     /**
+     * Provide the context immediately instead of rendering `fallback` until the client is
+     * initialized and active. Client-dependent hooks then suspend at their own Suspense
+     * boundaries, so the surrounding shell renders while initialization runs. Only valid with
+     * a caller-supplied `client` whose initialization the caller owns (e.g. a forked
+     * `initialize()`); the config/services paths keep the blocking behavior.
+     */
+    suspend?: boolean;
+
+    /**
      * Skip the DXOS banner.
      */
     noBanner?: boolean;
@@ -78,6 +87,7 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
       services: servicesProp,
       status: statusProp,
       fallback: Fallback = () => null,
+      suspend,
       noBanner,
       onInitialized,
       ...options
@@ -114,7 +124,11 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
     useAsyncEffect(async () => {
       let disposed = false;
       const initialize = async (client: Client) => {
-        if (!client.initialized) {
+        // In suspend mode the caller owns initialization (typically a forked `initialize()` whose
+        // failure raises the app's fatal error). A competing call here can succeed after that
+        // failure and wake suspended consumers into an app whose initialization events never
+        // fired — onboarding, app-graph, and migrations all gate on those.
+        if (!client.initialized && !(suspend && clientProp)) {
           await client.initialize().catch((err) => {
             if (!disposed) {
               setError(err);
@@ -166,9 +180,15 @@ export const ClientProvider = forwardRef<Client | undefined, ClientProviderProps
             .catch((err) => log.catch(err));
         }
       };
-    }, [configProp, clientProp, servicesProp, noBanner]);
+    }, [configProp, clientProp, servicesProp, noBanner, suspend]);
 
-    if (!client?.initialized || status !== SystemStatus.ACTIVE) {
+    // In suspend mode the (possibly uninitialized) client is provided immediately and hooks
+    // suspend individually; the status gate is skipped because status only becomes ACTIVE
+    // after the caller's forked initialization completes.
+    if (!suspend && (!client?.initialized || status !== SystemStatus.ACTIVE)) {
+      return <Fallback client={client} status={status} />;
+    }
+    if (!client) {
       return <Fallback client={client} status={status} />;
     }
 

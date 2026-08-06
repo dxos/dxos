@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
-
-import { Artifact, Lightbox } from '#types';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import { getArtifactsPath } from '../paths';
+import * as Artifact from '../types/Artifact';
+import * as Lightbox from '../types/Lightbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

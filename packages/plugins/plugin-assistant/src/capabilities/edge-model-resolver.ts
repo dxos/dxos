@@ -8,13 +8,13 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Header } from '@dxos/compute';
+import * as Header from '@dxos/compute/Header';
 import { EdgeAiHttpClient, EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { ANTHROPIC_SOURCE } from '../constants';
 
@@ -57,9 +57,8 @@ const edgeModelResolver = Capability.makeModule(
     const anthropicResolverLayer = AnthropicResolver.make().pipe(Layer.provide(anthropicClient));
 
     // A module providing exactly one capability may return the contribution directly.
-    return Capability.contribute(AppCapabilities.AiModelResolver, anthropicResolverLayer, () =>
-      Effect.sync(() => identitySubscription?.unsubscribe()),
-    );
+    yield* Effect.addFinalizer(() => Effect.sync(() => identitySubscription?.unsubscribe()));
+    return Capability.contribute(AppCapabilities.AiModelResolver, anthropicResolverLayer);
   }),
 );
 

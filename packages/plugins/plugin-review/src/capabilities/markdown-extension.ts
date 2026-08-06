@@ -5,14 +5,15 @@
 import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { type EditorState, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
-import { CommentCapabilities } from '#types';
 
 import { commentSync } from '../extensions';
+import * as CommentCapabilities from '../types/CommentCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

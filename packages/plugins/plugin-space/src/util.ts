@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
 import { type Label } from '@dxos/ui-types/translations';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { type SpaceCapabilities } from '#types';
+
+import type * as SpaceCapabilities from './types/SpaceCapabilities';
 
 //
 // Constants
@@ -21,7 +22,6 @@ const PERSONAL_SPACE_LABEL: Label = ['personal-space.label', { ns: meta.profile.
 const UNNAMED_SPACE_LABEL: Label = ['unnamed-space.label', { ns: meta.profile.key }];
 
 export const SPACES = `${meta.profile.key}-spaces`;
-export { SHARED } from './types';
 
 //
 // Helpers

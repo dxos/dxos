@@ -13,17 +13,15 @@ import type * as Runtime$ from 'effect/Runtime';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
-  OperationHandlerSet,
-  LayerSpec as LayerSpec$,
-  Operation as Operation$,
-  Process as Process$,
-  ServiceResolver as ServiceResolver$,
-  Trace as Trace$,
-} from '@dxos/compute';
-import type {
   ProcessManager as ProcessManager$,
   RemoteTraceMonitor as RemoteTraceMonitor$,
 } from '@dxos/compute-runtime';
+import * as LayerSpec$ from '@dxos/compute/LayerSpec';
+import * as Operation$ from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process$ from '@dxos/compute/Process';
+import * as ServiceResolver$ from '@dxos/compute/ServiceResolver';
+import * as Trace$ from '@dxos/compute/Trace';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
 import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';

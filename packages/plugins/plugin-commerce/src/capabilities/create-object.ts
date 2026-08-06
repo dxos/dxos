@@ -5,12 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { Provider, Search } from '../types';
+import * as Provider from '../types/Provider';
+import * as Search from '../types/Search';
 
 /** Input schema for creating a Search; types the `props` passed to createObject. */
 const CreateSearchSchema = Schema.Struct({

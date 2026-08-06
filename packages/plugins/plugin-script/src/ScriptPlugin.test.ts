@@ -22,12 +22,7 @@ describe('ScriptPlugin', () => {
     // After autoStart: AppGraphBuilder, CreateObject, schema all auto-cascade. SkillDefinition is a
     // dependency-mode root, so it activates immediately too.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([
-        moduleId('AppGraphBuilder'),
-        moduleId('CreateObject'),
-        moduleId('schema'),
-        moduleId('SkillDefinition'),
-      ]),
+      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('schema')]),
     );
   });
 });

@@ -9,11 +9,11 @@ import * as Duration from 'effect/Duration';
 import { pipe } from 'effect/Function';
 import React, { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import { EID } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
@@ -26,7 +26,8 @@ import { mx } from '@dxos/ui-theme';
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { type ExecutionGraph, buildExecutionGraph } from '#execution-graph';
 import { getTraceMessagesAtom, useTraceMessages } from '#hooks';
-import { AssistantCapabilities } from '#types';
+
+import * as AssistantCapabilities from '../../types/AssistantCapabilities';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 

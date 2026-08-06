@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { type Space } from '@dxos/react-client/echo';
 
 //

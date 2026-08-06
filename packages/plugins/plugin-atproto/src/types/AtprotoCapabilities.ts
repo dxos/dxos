@@ -4,8 +4,8 @@
 
 import type * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
-import { type Connection } from '@dxos/plugin-connector';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as Connection from '@dxos/plugin-connector/Connection';
 
 import { meta } from '#meta';
 

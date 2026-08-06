@@ -6,9 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
@@ -20,7 +21,8 @@ import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/
 
 import { ObjectCard } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation } from '#types';
+
+import * as ProjectOperation from '../../types/ProjectOperation';
 
 // Pick the editable header fields from the Project schema rather than redeclaring them.
 const HeaderValues = Type.getSchema(Project.Project).pipe(Schema.pick('name', 'description'));

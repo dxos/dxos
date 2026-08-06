@@ -18,10 +18,9 @@ describe('KanbanPlugin', () => {
       plugins: [KanbanPlugin()],
     });
 
-    // OperationHandler, UndoMappings, and SkillDefinition are all dependency-mode roots, so they all
-    // activate immediately.
+    // The harness fires every plugin's start event after startup, so both start-gated modules are active.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings'), moduleId('SkillDefinition')]),
+      expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
     );
   });
 });

@@ -6,7 +6,8 @@ import { type Decorator, type Meta, type StoryObj } from '@storybook/react-vite'
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
@@ -14,7 +15,7 @@ import { useQuery } from '@dxos/echo-react';
 import { Keyboard } from '@dxos/keyboard';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { MapInline } from '@dxos/plugin-map';
+import * as MapRole from '@dxos/plugin-map/MapRole';
 import { MapPlugin } from '@dxos/plugin-map/plugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -24,9 +25,14 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { PLACES, TripBuilder, fakeRoute, fakeRoutingService } from '#testing';
 import { translations } from '#translations';
-import { Booking, type Place, Routing, Segment, Trip, TripCapabilities } from '#types';
 
 import { TripPlugin } from '../../testing';
+import * as Booking from '../../types/Booking';
+import type * as Place from '../../types/Place';
+import * as Routing from '../../types/Routing';
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
+import * as TripCapabilities from '../../types/TripCapabilities';
 import { SegmentArticle } from '../SegmentArticle/SegmentArticle';
 import { TripArticle } from './TripArticle';
 
@@ -214,7 +220,7 @@ const MapStory = () => {
 
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <Surface.Surface type={MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+      <Surface.Surface type={MapRole.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
     </AttendableContainer>
   );
 };

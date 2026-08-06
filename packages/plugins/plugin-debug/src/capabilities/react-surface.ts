@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -15,8 +16,10 @@ import { Position } from '@dxos/util';
 
 import { DebugStatus, LogStatus, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
-import { DebugCapabilities, DebugNodes, DebugSurface } from '#types';
 
+import { DebugCapabilities } from '../types/Debug';
+import * as DebugNodes from '../types/DebugNodes';
+import * as DebugSurface from '../types/DebugSurface';
 import {
   DebugSettingsSurface,
   LoggerSurface,

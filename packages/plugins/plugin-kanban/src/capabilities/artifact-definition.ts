@@ -9,7 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { type PromiseIntentDispatcher } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
 import { Filter, Obj, Query, Type, View } from '@dxos/echo';
@@ -20,7 +22,8 @@ import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Kanban } from '#types';
+
+import * as Kanban from '../types/Kanban';
 
 const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the kanban `spaceID:objectID`',

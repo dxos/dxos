@@ -137,6 +137,50 @@ export type WithHandler<T extends Definition.Any> = T & {
   handler: Definition.HandlerType<T>;
 };
 
+export const LazyHandlerTypeId = '~@dxos/operation/LazyHandler' as const;
+export type LazyHandlerTypeId = typeof LazyHandlerTypeId;
+
+/**
+ * A definition paired with the module that implements it. The pairing is TYPED — the loaded
+ * module's default must be `WithHandler<Def>` for the same `Def` — so a definition can no longer be
+ * wired to another operation's handler and fail only at dispatch.
+ */
+export interface LazyHandler<Def extends Definition.Any = Definition.Any> {
+  readonly [LazyHandlerTypeId]: LazyHandlerTypeId;
+  readonly definition: Def;
+  readonly load: () => Promise<{ default: WithHandler<Def> }>;
+}
+
+/** Whether a value is a {@link LazyHandler}. */
+export const isLazyHandler = (value: unknown): value is LazyHandler =>
+  typeof value === 'object' && value !== null && LazyHandlerTypeId in value;
+
+/**
+ * Pairs a definition with a lazily-imported handler module, keeping the handler body out of the
+ * static graph while checking that it implements THIS definition.
+ *
+ * @example
+ * ```ts
+ * GetBlueskyTargets.pipe(Operation.lazyHandler(() => import('./get-bluesky-targets')))
+ * ```
+ */
+export const lazyHandler: {
+  <Def extends Definition<any, any>>(load: () => Promise<{ default: WithHandler<Def> }>): (op: Def) => LazyHandler<Def>;
+  <Def extends Definition<any, any>>(op: Def, load: () => Promise<{ default: WithHandler<Def> }>): LazyHandler<Def>;
+} = (<Def extends Definition<any, any>>(
+  opOrLoad: Def | (() => Promise<{ default: WithHandler<Def> }>),
+  load?: () => Promise<{ default: WithHandler<Def> }>,
+) => {
+  const make = (op: Def, loader: () => Promise<{ default: WithHandler<Def> }>): LazyHandler<Def> => ({
+    [LazyHandlerTypeId]: LazyHandlerTypeId,
+    definition: op,
+    load: loader,
+  });
+  return load === undefined
+    ? (op: Def) => make(op, opOrLoad as () => Promise<{ default: WithHandler<Def> }>)
+    : make(opOrLoad as Def, load);
+}) as any;
+
 /**
  * Checks if a value is an operation definition.
  */

@@ -5,6 +5,8 @@
 import { type Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as FiberRef from 'effect/FiberRef';
+import * as GlobalValue from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
@@ -28,6 +30,27 @@ export class Service extends Context.Tag('@dxos/app-framework/CapabilityManager'
   Service,
   CapabilityManager.CapabilityManager
 >() {}
+
+/**
+ * Module id of the activation currently executing — set by the loader around each module's
+ * `activate` so instrumentation inside module bodies (e.g. {@link lazyModule}'s chunk-import
+ * timing) can attribute itself to the module without threading the id through every body.
+ */
+export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValue.globalValue(
+  Symbol.for('@dxos/app-framework/Capability/CurrentModuleId'),
+  () => FiberRef.unsafeMake<string | undefined>(undefined),
+);
+
+/**
+ * Every module id whose `activate` body is on the current fiber's call stack, not just the
+ * innermost — a body may fire an activation event, and that event's wave must not wait on a module
+ * it is running inside. Such a wait only ends at the activation timeout, which the failure
+ * supervisor reads as a broken plugin and disables.
+ */
+export const ActivatingModuleIds: FiberRef.FiberRef<ReadonlySet<string>> = GlobalValue.globalValue(
+  Symbol.for('@dxos/app-framework/Capability/ActivatingModuleIds'),
+  () => FiberRef.unsafeMake<ReadonlySet<string>>(new Set<string>()),
+);
 
 /**
  * Get a single capability from the capability manager.
@@ -292,11 +315,6 @@ export type Capability<T> = {
    * The implementation of the capability.
    */
   readonly implementation: T;
-
-  /**
-   * Called when the capability is deactivated.
-   */
-  readonly deactivate?: () => Effect.Effect<void, Error>;
 };
 
 export type Any = Capability<any>;
@@ -339,7 +357,6 @@ export interface Contribution<Id = CapabilityIdentifier<string, Arity>> {
   // here would re-leak its service type into every consuming body's declaration emit.
   readonly capability: AnyTag;
   readonly values: readonly unknown[];
-  readonly deactivate?: () => Effect.Effect<void, Error>;
 }
 
 export type AnyContribution = Contribution;
@@ -362,29 +379,26 @@ export type IdentifierOf<C> =
  * Contributes an implementation for a declared capability.
  * Arity-aware: passing a multi capability where a singleton is expected (or vice versa)
  * is rejected by the value parameter type.
+ *
+ * Teardown belongs to the module's scope, not the contribution: `yield* Effect.addFinalizer(...)`
+ * in the module body. One mechanism covers resources that are not contributions, and finalizers
+ * run in a defined order relative to each other.
  */
 export const contribute: {
   <C extends Tag<any, any>>(
     capability: C,
     implementation: C extends Tag<infer T, any> ? T : never,
-    deactivate?: () => Effect.Effect<void, Error>,
   ): Contribution<IdentifierOf<C>>;
   <C extends MultiTag<any, any>>(
     capability: C,
     implementation: C extends MultiTag<infer T, any> ? T : never,
-    deactivate?: () => Effect.Effect<void, Error>,
   ): Contribution<IdentifierOf<C>>;
-} = <C extends AnyTag>(
-  capability: C,
-  implementation: unknown,
-  deactivate?: () => Effect.Effect<void, Error>,
-): Contribution<IdentifierOf<C>> => ({
+} = <C extends AnyTag>(capability: C, implementation: unknown): Contribution<IdentifierOf<C>> => ({
   // Controlled brand cast: `[ContributionTypeId]` is a type-only identifier brand; at runtime it
   // holds the tag ({@link CapabilityManager.isContribution} checks presence only).
   [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: [implementation],
-  deactivate,
 });
 
 /**
@@ -393,13 +407,11 @@ export const contribute: {
 export const contributeAll = <C extends MultiTag<any, any>>(
   capability: C,
   implementations: C extends MultiTag<infer T, any> ? readonly T[] : never,
-  deactivate?: () => Effect.Effect<void, Error>,
 ): Contribution<IdentifierOf<C>> => ({
   // Controlled brand cast: see {@link contribute}.
   [ContributionTypeId]: capability as unknown as IdentifierOf<C>,
   capability,
   values: implementations,
-  deactivate,
 });
 
 /**
@@ -473,7 +485,9 @@ export type LoadModule<Props, Requires extends readonly AnyTag[], Provides exten
  */
 export interface Module<Options = void> {
   (options: Options): Effect.Effect<any, Error, any>;
-  readonly requires: readonly AnyTag[];
+  // Optional to match the authoring records this flows into: `Plugin.normalizeActivation` is the
+  // single boundary where the spec becomes concrete, so defaulting here would only duplicate it.
+  readonly requires?: readonly AnyTag[];
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
 }
@@ -515,19 +529,26 @@ export const lazyModule = <
 ): Module<Options> => {
   const lazyFn = (options: Options): Effect.Effect<any, Error, any> =>
     Effect.gen(function* () {
+      // Chunk import measured separately from the body: on deferral the import moves to the
+      // interaction path wholesale, so its cost has its own axis in the startup profile.
+      const moduleId = (yield* FiberRef.get(CurrentModuleId)) ?? name;
+      performance.mark(`module-import:${moduleId}:start`);
       const { default: getModule } = yield* Effect.promise(() => loader());
+      performance.mark(`module-import:${moduleId}:end`);
+      performance.measure(
+        `module-import:${moduleId}`,
+        `module-import:${moduleId}:start`,
+        `module-import:${moduleId}:end`,
+      );
       // Correlation cast: when `spec.props` is absent, `Options` resolves to its `Props`
       // default, so `options` is a valid `Props` value.
       const props = spec.props ? spec.props(options) : (options as unknown as Props);
       return yield* getModule(props);
     });
 
-  // Correlation cast: when `spec.requires` is absent, `Requires` resolves to its
-  // `readonly []` default, so the fallback empty tuple is the correct value for it.
-  const requires = (spec.requires ?? []) as Requires;
   return Object.assign(lazyFn, {
     [ModuleTag]: name,
-    requires,
+    requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
   });
@@ -551,9 +572,6 @@ export const inlineModule = <
   spec: ModuleSpec<Provides, Requires, Props, Options>,
   activate: (props: Props) => Effect.Effect<ProvidesReturn<Provides>, Error, Requirements<Requires>>,
 ): Module<Options> => {
-  // Correlation cast: when `spec.requires` is absent, `Requires` resolves to its
-  // `readonly []` default, so the fallback empty tuple is the correct value for it.
-  const requires = (spec.requires ?? []) as Requires;
   const body = (options: Options): Effect.Effect<any, Error, any> => {
     // Correlation cast: when `spec.props` is absent, `Options` resolves to its `Props`
     // default, so `options` is a valid `Props` value.
@@ -562,7 +580,7 @@ export const inlineModule = <
   };
   return Object.assign(body, {
     [ModuleTag]: name,
-    requires,
+    requires: spec.requires,
     provides: spec.provides,
     activatesOn: spec.activatesOn,
   });
@@ -593,9 +611,14 @@ export type MakerOptions<
  * Builds a lazy-module maker for a capability, with the tag and default module name baked
  * in so the maker takes only a loader in the common case. Capability owners export makers
  * so consumers author modules without restating the spec.
+ *
+ * `defaults.activatesOn` sets the family's default demand gate: modules made by the maker are
+ * event-mode on it unless the call site declares its own `activatesOn`. This is how a capability
+ * owner makes the well-behaved activation the default for every provider (e.g. operation
+ * handlers park until an operation is invoked) — startup is not assumed.
  */
 export const moduleMaker =
-  <C extends AnyTag>(defaultName: string, capability: C) =>
+  <C extends AnyTag>(defaultName: string, capability: C, defaults?: { activatesOn?: ActivationEvent.Events }) =>
   <
     Props = void,
     Options = Props,
@@ -605,13 +628,18 @@ export const moduleMaker =
     loader: LoadModule<Props, Requires, readonly [C, ...Extra]>,
     options?: MakerOptions<Requires, Extra, Props, Options>,
   ): Module<Options> => {
-    // Correlation casts: when options are absent, Requires/Extra resolve to their
-    // `readonly []` defaults, so the fallback empty tuples are the correct values.
-    const requires = (options?.requires ?? []) as Requires;
+    // Correlation cast: `provides` is required, so the spread needs a concrete tuple; when
+    // options are absent `Extra` resolves to its `readonly []` default, making it the correct
+    // value. `requires` needs no such fallback — it stays optional all the way to the boundary.
     const extra = (options?.provides ?? []) as Extra;
     return lazyModule(
       options?.name ?? defaultName,
-      { requires, provides: [capability, ...extra], activatesOn: options?.activatesOn, props: options?.props },
+      {
+        requires: options?.requires,
+        provides: [capability, ...extra],
+        activatesOn: options?.activatesOn ?? defaults?.activatesOn,
+        props: options?.props,
+      },
       loader,
     );
   };

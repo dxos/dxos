@@ -18,7 +18,7 @@ import {
   nextIndex,
 } from '@dxos/plugin-illustrator/model';
 
-import { Tldraw } from '../types';
+import * as Tldraw from '../types/Tldraw';
 import { elementBoxes, readScene } from './read';
 import { DOCUMENT_ID, PAGE_ID } from './RecordBuilder';
 import { renderObject } from './render';

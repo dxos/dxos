@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppCapability } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { StateMap, TagIndex } from '@dxos/schema';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
-import { Magazine, Subscription } from '#types';
+
+import * as Magazine from './types/Magazine';
+import * as Subscription from './types/Subscription';
 
 export const MagazinePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),

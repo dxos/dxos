@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { type PlanetCache as PlanetCacheType } from '../engine';
 import { meta } from '../meta';

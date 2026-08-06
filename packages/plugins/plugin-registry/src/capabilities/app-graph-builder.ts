@@ -4,9 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';

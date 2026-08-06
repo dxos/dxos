@@ -2,10 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
 import { meta } from './meta';
 
 export const ObservabilityPlugin = Plugin.lazy(meta, () => import('#plugin'));
-
-export { ObservabilityOperationHandlerSet } from './operations';

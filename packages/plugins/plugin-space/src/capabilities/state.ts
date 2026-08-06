@@ -5,13 +5,15 @@
 import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { createKvsStore } from '@dxos/effect';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
-import { SpaceCapabilities } from '#types';
+
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
 
 /** Default persisted state. */
 const defaultSpaceState: SpaceCapabilities.SpaceState = {
@@ -56,13 +58,14 @@ export default Capability.makeModule(
     updateNavigableCollections();
     const unsubscribe = registry.subscribe(manager.enabled, updateNavigableCollections);
 
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        unsubscribe();
+      }),
+    );
     return [
       Capability.contribute(SpaceCapabilities.State, stateAtom),
-      Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralAtom, () =>
-        Effect.sync(() => {
-          unsubscribe();
-        }),
-      ),
+      Capability.contribute(SpaceCapabilities.EphemeralState, ephemeralAtom),
     ];
   }),
 );

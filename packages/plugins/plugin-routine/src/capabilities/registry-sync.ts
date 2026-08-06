@@ -4,11 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation, Skill } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 /**
  * Syncs plugin capability contributions into `client.graph.registry`.
@@ -66,7 +68,11 @@ export default Capability.makeModule(
       operationHandlersAtom,
       async (handlerSets) => {
         try {
-          const handlers = (await Promise.all(handlerSets.map((set) => set.getHandlers()))).flat();
+          // Serialization needs only the definitions: keyed sets enumerate them without loading
+          // any handler body (per-operation loading); unkeyed sets still force their handlers.
+          const handlers = (
+            await Promise.all(handlerSets.map((set) => (set.definitions ? set.definitions() : set.getHandlers())))
+          ).flat();
           const seenKeys = new Set<string>();
           const batch: Operation.PersistentOperation[] = [];
           for (const handler of handlers) {

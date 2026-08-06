@@ -12,14 +12,16 @@ import * as Fiber from 'effect/Fiber';
 import * as Match from 'effect/Match';
 import * as Schedule from 'effect/Schedule';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Update } from '#types';
 
 import { TAURI_LOCALHOST_PORT } from '../constants';
+import * as NativeCapabilities from '../types/NativeCapabilities';
+import type * as Update from '../types/Update';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 

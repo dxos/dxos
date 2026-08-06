@@ -12,9 +12,10 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TerraPlugin } from '#plugin';
 import { translations } from '#translations';
-import { Terra, TerraCapabilities } from '#types';
 
 import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
+import * as Terra from '../../types/Terra';
+import * as TerraCapabilities from '../../types/TerraCapabilities';
 import { TerraArticle } from './TerraArticle';
 
 type StoryArgs = Partial<Terra.TerraConfig>;

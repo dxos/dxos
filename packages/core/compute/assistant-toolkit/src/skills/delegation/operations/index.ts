@@ -2,8 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * as DelegationOperations from './delegate-task';
+import { DelegateTask } from './definitions';
 
-export const DelegationHandlers = OperationHandlerSet.lazy(() => import('./delegate-task'));
+export * as DelegationOperations from './definitions';
+
+export const DelegationHandlers = OperationHandlerSet.lazy([
+  DelegateTask.pipe(Operation.lazyHandler(() => import('./delegate-task'))),
+]);
