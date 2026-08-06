@@ -548,8 +548,8 @@ byte-identical to the locally verified merge of `de1ad824` with `main` `0604e5b8
 
 Work after the sixth addendum:
 
-- **Eighth through thirteenth main syncs** (`e2a9ccfc`, `67a8e4ab`, `e203681a`, `d83fdf5e`,
-  `6375e745`, `ef14a7bc`, `12fd52b6`, `de1ad824`). Standing method, and it earned its keep: after
+- **Eight further main syncs** (`e2a9ccfc`, `67a8e4ab`, `e203681a`, `d83fdf5e`, `6375e745`,
+  `ef14a7bc`, `12fd52b6`, `de1ad824`). Standing method, and it earned its keep: after
   each merge, scan **every** incoming `.ts`/`.tsx` for removed-API usage, not just the conflicted
   files. Four migrations were caught that way and by nothing else — `SurfaceComponent.test.tsx`
   (`Capability.contributes` + `MappedPropsPlugin` on `SetupReactSurface`), `plugin-crm`'s

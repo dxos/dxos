@@ -11,6 +11,7 @@ import * as Stream from 'effect/Stream';
 import { readFileSync } from 'node:fs';
 
 import { Pipeline } from '@dxos/pipeline';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { SemanticIndexError } from './errors';
 import { DEFAULT_EXTRACTION_RULES, buildExtractionPrompt } from './internal/stages/extract';
@@ -87,11 +88,13 @@ const QUESTION_OUTPUT = {
 };
 
 const TestLayer = FactStoreLive.layer.pipe(
+  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(mockAiService(LLM_OUTPUT)),
 );
 
 const FailingLayer = FactStoreLive.layer.pipe(
+  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(failingAiService()),
 );
@@ -268,6 +271,7 @@ describe('FactPipeline', () => {
         facts: [{ subject: 'Alice', predicate: 'travelsTo', object: 'Paris', factuality: 'PR+', polarity: '+' }],
       });
       const layer = FactStoreLive.layer.pipe(
+        Layer.provideMerge(SqlTransaction.layer),
         Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
         Layer.provideMerge(ai.layer),
       );

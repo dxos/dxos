@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
@@ -9,7 +10,9 @@ import * as Schema from 'effect/Schema';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
 import { EID } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/reverse-ref';
 import { EscapedPropPath } from '../utils';
 import type { Index, IndexerObject } from './interface';
 
@@ -70,18 +73,20 @@ export interface ReverseRefQuery {
  * Only indexes references, not relations.
  */
 export class ReverseRefIndex implements Index {
-  migrate = Effect.fn('ReverseRefIndex.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    yield* sql`CREATE TABLE IF NOT EXISTS reverseRef (
-      recordId INTEGER NOT NULL,
-      targetDXN TEXT NOT NULL,
-      propPath TEXT NOT NULL,
-      PRIMARY KEY (recordId, targetDXN, propPath)
-    )`;
-
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef(targetDXN)`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('ReverseRefIndex.migrate')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   /**
    * Query all references pointing to a target DXN.

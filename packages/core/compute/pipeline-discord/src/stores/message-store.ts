@@ -2,12 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
+import type * as SqlError from '@effect/sql/SqlError';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
 import { StoreError } from '../errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/message';
 
 /** A crawled message persisted outside ECHO — the pipeline's replayable working set. */
 export type StoredMessage = {
@@ -42,20 +47,20 @@ export interface MessageStoreApi {
 
 const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
 
-const migrate = (sql: SqlClient.SqlClient) =>
-  Effect.gen(function* () {
-    yield* sql`CREATE TABLE IF NOT EXISTS message (
-      id TEXT PRIMARY KEY,
-      target_id TEXT NOT NULL,
-      author_id TEXT NOT NULL,
-      author_label TEXT,
-      text TEXT NOT NULL,
-      created_at TEXT,
-      parent_id TEXT,
-      raw TEXT NOT NULL
-    )`;
-    yield* sql`CREATE INDEX IF NOT EXISTS message_target ON message (target_id, id)`;
-  });
+/**
+ * Applies any migrations this database has not recorded yet.
+ *
+ * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+ * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+ */
+const migrate = (): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+  Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('discord.messageStore.migrate'),
+  );
 
 type Row = {
   readonly id: string;
@@ -80,12 +85,12 @@ const toMessage = (row: Row): StoredMessage => ({
 });
 
 export class MessageStore extends Context.Tag('@dxos/pipeline-discord/MessageStore')<MessageStore, MessageStoreApi>() {
-  static layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient> = Layer.scoped(
+  static layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
     MessageStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-      yield* migrate(sql).pipe(Effect.orDie);
+      yield* migrate().pipe(Effect.orDie);
       return {
         has: (id) =>
           sql<{ found: number }>`SELECT COUNT(*) AS found FROM message WHERE id = ${id}`.pipe(

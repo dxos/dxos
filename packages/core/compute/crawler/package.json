@@ -36,6 +36,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
+    "@dxos/sql-sqlite": "workspace:*",
     "@effect/ai": "catalog:",
     "@effect/sql": "catalog:"
   },
