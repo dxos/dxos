@@ -703,22 +703,23 @@ jobs:
   # 31101995366 Knapsack's slowest node (3m03s) already sat under the phase's critical path — the
   # non-composer chromium shard at 3m25s — so its distribution may be buying nothing.
   #
-  # Note the two are not equivalent in kind: `--job` partitions whole *targets*, so it cannot split
-  # `composer-app:e2e` the way a file-level queue can. What it can replace is the hand-maintained
-  # "every suite except composer" target list in the `e2e` job, which silently omitted
-  # `plugin-script:e2e` once already.
+  # One flat pool, not a browser matrix. `tag-e2e.yml` now defines per-browser variants of `e2e`, so
+  # there are 24 browser targets (8 suites x 3) plus the vitest `plugin-script:e2e`, and a single
+  # `--job-total` can pack any of them onto any runner. Three per-browser pools cannot lend each
+  # other work, which is what stranded a webkit Knapsack node at 20s while chromium's ran 3m03s.
   #
-  # 9 cells (3 browsers x 3 jobs) to match the 9 runners the current split uses, so the comparison is
-  # per-runner-equal. Deliberately NOT wrapped in the Trunk uploader: quarantine masks failures, and
-  # an honest max-cell duration is the whole measurement.
+  # The atom is a (suite, browser) pair, so `composer-app:e2e-chromium` is still indivisible — this
+  # is coarser than a file-level queue by design, and whether that costs anything is the measurement.
+  # 9 cells to match the 9 runners the current split uses, so the comparison is per-runner-equal.
+  # Deliberately NOT wrapped in the Trunk uploader: quarantine masks failures, and an honest max-cell
+  # duration is the whole point.
   e2e-moon-shard:
     needs: e2e-bundle
     if: ${{ inputs.e2e_moon_shard }}
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit]
-        job: [0, 1, 2]
+        job: [0, 1, 2, 3, 4, 5, 6, 7, 8]
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -731,7 +732,6 @@ jobs:
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
-      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -743,8 +743,10 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
+      # All three engines: a cell can be handed targets for any browser, which is the point of the
+      # flat pool. Measured at ~5s more than installing one, so the packing win dwarfs it.
       - name: Install Playwright
-        run: pnpm run install-playwright ${{ matrix.browser }}
+        run: pnpm run install-playwright
 
       # The `e2e` job clears this because a stale optimizeDeps graph makes `storybook dev` serve a 504;
       # the storybook-backed suites are in scope here too, so it has to be cleared the same way.
@@ -754,23 +756,31 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
-      # Records which targets this cell was given, so the partition can be read off the log rather
-      # than inferred from durations. `--job` is undocumented as to ordering, and an uneven split is
-      # the expected failure mode given composer dwarfs the other eight targets.
+      # Echoes which targets this cell was given: `--job` ordering is undocumented, and an uneven
+      # split is the expected failure mode when composer dwarfs the other suites.
       - name: Test shard
         timeout-minutes: 35
         env:
-          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ matrix.browser }}-j${{ matrix.job }}
+          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-j${{ matrix.job }}
         run: |
-          moon run :e2e --job ${{ matrix.job }} --job-total 3 --concurrency=1 --summary 2>&1 | tee shard.log
-          printf '\n===== targets this cell ran =====\n'
-          grep -oE '^[▮ ]*[a-z0-9-]+:e2e' shard.log | tr -d '▮ ' | sort -u || true
+          set -o pipefail
+          moon run :e2e-chromium :e2e-firefox :e2e-webkit plugin-script:e2e \
+            --job ${{ matrix.job }} --job-total 9 --concurrency=1 2>&1 | tee shard.log
+
+      - name: Report this cell's targets and durations
+        if: ${{ always() }}
+        run: |
+          printf '===== cell %s =====\n' '${{ matrix.job }}'
+          grep -oE '[a-z0-9-]+:(e2e-(chromium|firefox|webkit)|e2e) \([^)]*\)' shard.log | sort -u || \
+            echo '(no target lines — cell may have been assigned nothing)'
+          printf '\n----- moon summary -----\n'
+          grep -E '^(Tasks| Time):' shard.log || true
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-report-moonshard-${{ matrix.browser }}-${{ matrix.job }}
+          name: playwright-report-moonshard-${{ matrix.job }}
           path: test-results/playwright
           retention-days: 7
 

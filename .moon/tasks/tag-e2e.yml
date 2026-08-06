@@ -34,5 +34,29 @@ tasks:
       - $DX_SHARED_WORKER
       - $PLAYWRIGHT_BROWSER
 
+  # Per-browser variants of `e2e`, so the browser is a moon target dimension rather than only a
+  # GitHub Actions matrix axis. That turns 8 suites x 3 browsers into one flat pool of 24 targets that
+  # `moon run --job/--job-total` can pack across runners, instead of three per-browser pools that
+  # cannot lend each other work — webkit's share of composer is nearly all skips, so a webkit-only
+  # runner sits idle while chromium's is still going.
+  #
+  # `extends` merges `env` over the base task's, so `DX_PWA` and every input carry through, and
+  # `$PLAYWRIGHT_BROWSER` already being a hash input gives each variant its own cache entry.
+  #
+  # Deliberately not applied to `plugin-script:e2e`: that project is not `e2e`-tagged and its `e2e`
+  # task is vitest, so it runs once rather than three times.
+  e2e-chromium:
+    extends: e2e
+    env:
+      PLAYWRIGHT_BROWSER: chromium
+  e2e-firefox:
+    extends: e2e
+    env:
+      PLAYWRIGHT_BROWSER: firefox
+  e2e-webkit:
+    extends: e2e
+    env:
+      PLAYWRIGHT_BROWSER: webkit
+
 inheritedBy:
   tags: e2e
