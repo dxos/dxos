@@ -28,7 +28,7 @@ REPORT.md, "In CI". What remains is operational hardening, not the rollout itsel
       file its own concealed field; `install-certs.sh --op` reads the three client files from it.
       `ca.key` is in the item but never fetched by that path.
 - [x] **Install once per machine, not per worktree** — certificates live in
-      `~/.config/dxos/moon-cache` and are found via `MOON_REMOTE_MTLS_*`, which take absolute
+      `~/.config/moon-cache` and are found via `MOON_REMOTE_MTLS_*`, which take absolute
       paths. The in-repo `.moon/certs` layout would have needed repeating in every checkout, and a
       machine here has twenty-three. CI keeps the in-repo layout via `--worktree`, since a runner
       has one.

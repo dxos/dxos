@@ -17,10 +17,10 @@ Once per machine, not per checkout:
 Then add the line it prints to your shell profile:
 
 ```bash
-[ -f ~/.config/dxos/moon-cache/env.sh ] && source ~/.config/dxos/moon-cache/env.sh
+[ -f ~/.config/moon-cache/env.sh ] && source ~/.config/moon-cache/env.sh
 ```
 
-Certificates live in `~/.config/dxos/moon-cache` and are found through `MOON_REMOTE_MTLS_*`, which
+Certificates live in `~/.config/moon-cache` and are found through `MOON_REMOTE_MTLS_*`, which
 take absolute paths — so every worktree on the machine uses the cache, including ones created
 later. Storing them in the repo would mean repeating this in each of them.
 
@@ -72,11 +72,11 @@ route returns 401 without one.
 
 ```bash
 # Health. No client certificate needed, but the CA is private, so it must still be trusted.
-curl -s --cacert ~/.config/dxos/moon-cache/ca.pem https://cache.dxos.network:9093/status
+curl -s --cacert ~/.config/moon-cache/ca.pem https://cache.dxos.network:9093/status
 
 # Anything real needs the client certificate.
-curl -s --cacert ~/.config/dxos/moon-cache/ca.pem \
-  --cert ~/.config/dxos/moon-cache/client.pem --key ~/.config/dxos/moon-cache/client.key \
+curl -s --cacert ~/.config/moon-cache/ca.pem \
+  --cert ~/.config/moon-cache/client.pem --key ~/.config/moon-cache/client.key \
   https://cache.dxos.network:9093/metrics | grep bazel_remote_incoming
 
 # Service state.
@@ -109,9 +109,9 @@ CI reads three of them from repository secrets — `MOON_CACHE_CA_PEM`, `MOON_CA
 survives:
 
 ```bash
-gh secret set MOON_CACHE_CA_PEM < ~/.config/dxos/moon-cache/ca.pem
-gh secret set MOON_CACHE_CLIENT_PEM < ~/.config/dxos/moon-cache/client.pem
-gh secret set MOON_CACHE_CLIENT_KEY < ~/.config/dxos/moon-cache/client.key
+gh secret set MOON_CACHE_CA_PEM < ~/.config/moon-cache/ca.pem
+gh secret set MOON_CACHE_CLIENT_PEM < ~/.config/moon-cache/client.pem
+gh secret set MOON_CACHE_CLIENT_KEY < ~/.config/moon-cache/client.key
 ```
 
 The server certificate carries the droplet IP and `cache.dxos.network` as SANs, so it stays valid
