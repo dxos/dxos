@@ -98,7 +98,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
         >
           {/* Only a row that draws an avatar needs the padding that aligns it with the first line of
               text; a continuation row lets the rail run its full height. */}
-          <div className={mx('flex flex-col items-center', showAvatar && 'pt-1')}>
+          <div className={mx('flex flex-col items-center', showAvatar && 'pt-2')}>
             {showAvatar && (
               <Avatar.Content
                 size={avatarSize}
@@ -108,10 +108,13 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
               />
             )}
             {/* The connector has to reach the next row's avatar to read as one rail: it starts flush
-                under this avatar (no gap) and `-mb-1` carries it across that row's `pt-1`. */}
-            {continues && <div className='w-px grow -mb-1 bg-separator' />}
+                under this avatar (no gap) and `-mb-2` carries it across that row's `pt-2`. */}
+            {continues && <div className='w-px grow -mb-2 bg-separator' />}
           </div>
-          <div className='py-1 min-w-0'>{children}</div>
+          {/* The block padding is the hover tint's inset: at 4px the avatar and the thread-summary
+              row sat flush against the ends of the band, which read as the tint having no padding
+              at all rather than as a compact row. */}
+          <div className='py-2 min-w-0'>{children}</div>
           {/* Anchored to the row's top-end corner, over the first line — the same place Discord puts
               it, and the corner of a message least likely to hold text worth reading. */}
           {controls && <div className='absolute z-1 top-0 end-1'>{controls}</div>}

@@ -378,6 +378,9 @@ const DEFAULT_GAP_DIVIDER_MS = 3 * 60 * 60 * 1000;
 /** Distance (px) from the foot within which the reader counts as "at the bottom" for auto-scroll. */
 const STICKY_THRESHOLD = 32;
 
+/** What moving the scroll position looks like when a reader does it rather than the component. */
+const READER_GESTURES = ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const;
+
 /** Virtualized stack of message tiles (via Mosaic), within an internal scroll area. */
 const ThreadMessages = ({
   messages,
@@ -400,15 +403,36 @@ const ThreadMessages = ({
   // Chat convention: the newest message stays in view, but only while the reader is already at the
   // foot — scrolling up to read history must not be yanked back by an arriving message.
   const sticky = useRef(true);
+  // Only the reader's own gestures may unstick the thread. The pin below writes `scrollTop`, and the
+  // event that write dispatches arrives a frame later — by which time the virtualizer has grown the
+  // content, so the position just pinned measures as "scrolled up" and unsticks the pin that set it.
+  // Nothing re-pins after that, which is why a thread opened part-way up its own history and stayed
+  // there while messages arrived below the fold.
+  const reading = useRef(false);
   useEffect(() => {
     if (!viewport) {
       return;
     }
     const handleScroll = () => {
+      if (!reading.current) {
+        return;
+      }
+
       sticky.current = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight <= STICKY_THRESHOLD;
     };
+    const handleGesture = () => {
+      reading.current = true;
+    };
     viewport.addEventListener('scroll', handleScroll, { passive: true });
-    return () => viewport.removeEventListener('scroll', handleScroll);
+    for (const event of READER_GESTURES) {
+      viewport.addEventListener(event, handleGesture, { passive: true });
+    }
+    return () => {
+      viewport.removeEventListener('scroll', handleScroll);
+      for (const event of READER_GESTURES) {
+        viewport.removeEventListener(event, handleGesture);
+      }
+    };
   }, [viewport]);
 
   // Observing the content height (rather than reacting to `items`) re-pins across the virtualizer's
@@ -419,6 +443,9 @@ const ThreadMessages = ({
     }
     const observer = new ResizeObserver(() => {
       if (sticky.current) {
+        // Cleared here rather than in the scroll handler: one gesture dispatches a run of scroll
+        // events (momentum outlasts the last wheel), and every one of them has to be read.
+        reading.current = false;
         viewport.scrollTop = viewport.scrollHeight;
       }
     });

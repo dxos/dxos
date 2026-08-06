@@ -579,10 +579,31 @@ Replaces 2c/2d's single-document direction. All on this branch/PR.
 
 - [x] Revert the `MessageDocument` container swap; `Thread.Messages` is the
       list again (round-14 revert commit).
-- [ ] Tiles render through the stage-A renderer; verify the four interface
-      reports jdw filed against the document build are absent on tiles:
-      bottom-pinned start, highlight padding, no send jitter, dark-theme
-      reaction pills.
+- [x] Tiles render through the stage-A renderer (`TextBlock` → `MessageRenderer`).
+- [x] Edit chrome to the document build's bar, all measured in the browser:
+      the frame is drawn outward (padding alone narrowed the measure by 30px,
+      which rewrapped the body and moved every word — now dx/dw/dh all 0); it
+      is an input surface with a separator edge reaching into the avatar
+      gutter; save/cancel leave the corner overlay, which while editing covers
+      the first line of the text being edited; and the body lost
+      `compactSlots`' 8px inline margin, which had it on a different column
+      from the heading, the quote and the reaction pills.
+- [x] **Bottom-pinned start and send jitter were one bug** (reports 1 and 3):
+      the pin writes `scrollTop` itself and the scroll event that write
+      dispatches arrives a frame later, by which time the virtualizer has grown
+      the content — so the position just pinned measured as "scrolled up" and
+      unstuck the pin that set it, after which nothing re-pinned. Stickiness now
+      follows the reader's own gestures. Measured: 96/466 at load before, 466/466
+      after; a send holds 742→784 with the last tile's y constant across every
+      frame.
+- [x] Highlight padding (report 2): the tint sat 4px from the avatar and the
+      thread row. The tile's block padding is 8px.
+- [x] Dark-theme reaction pills (report 4): `--color-neutral-surface` is a light
+      shade in both themes, so an unhued `Tag` read as light chrome on a dark
+      conversation. `dx-tag--button` at the default hue takes a surface-relative
+      fill. NOT document-specific — it reproduced in `Thread.Conversation`.
+- [x] The hovered row is tinted for its whole height, which the tile stack never
+      had at all (the document build did).
 
 ### C — assistant chat onto tiles + renderer
 
