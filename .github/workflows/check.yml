@@ -39,6 +39,19 @@ env:
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
+  # Ambient values for the e2e bundle's hash-relevant task inputs, shared by `e2e-bundle` and `e2e`.
+  # These are NOT what configures the build — `bundle-e2e` sets that in its own `env`, so a local
+  # `moon run composer-app:bundle-e2e` yields the same artifact. They are here because moon hashes the
+  # AMBIENT value of any env var listed in a task's `inputs`, even when the task's own `env` overrides
+  # it (verified: flipping ambient `DX_PWA` moved a hash whose task pinned `DX_PWA: 'false'`). With the
+  # two jobs setting different `DX_EDGE_BASE_URL` values, `bundle-e2e` therefore hashed differently in
+  # the warming job than in the cells consuming it, and the warmed entry was never read. Declared once
+  # at workflow level so the two cannot drift apart again.
+  DX_ENVIRONMENT: ci
+  DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+  DX_TELEMETRY_TAG: e2e
+  DX_PWA: false
+
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 # The event is part of the key because on a schedule `github.ref` is `refs/heads/main`: without it the
 # nightly shares a group with pushes to main and the next push cancels it mid-e2e.
@@ -424,11 +437,6 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
-    env:
-      DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://main.dxos.network/'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -444,20 +452,21 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      # Only composer-app and todomvc serve a production bundle to Playwright (`vite preview`); the other
-      # six e2e suites serve from source (`vite dev` / `storybook dev`) and need library builds, not
-      # bundles. `:bundle` built all eleven apps, so every e2e runner also hydrated the docs, cli,
-      # storybook-react, testbench-app, composer-crx, devtools-extension, examples and tasks closures —
-      # including docs' typedoc tasks, which cost more to download than composer's bundle does to build.
-      # `bundle-e2e`, not `bundle`: the e2e closure waits on that target, and warming any other hash
-      # leaves every node to rebuild the bundle itself.
+      # `:bundle-e2e`, not a project list and not `:bundle`. Only a project that serves a production
+      # bundle to Playwright (`vite preview`) defines `bundle-e2e`, so the glob is already exactly the
+      # set that needs warming and stays correct as suites are added — the other e2e suites serve from
+      # source (`vite dev` / `storybook dev`) and need library builds, not bundles. `:bundle` by contrast
+      # built all eleven apps, so every e2e runner also hydrated the docs, cli, storybook-react,
+      # testbench-app, composer-crx, devtools-extension, examples and tasks closures — including docs'
+      # typedoc tasks, which cost more to download than composer's bundle costs to build. Warming
+      # `bundle` instead would warm a hash the e2e closure never waits on.
       - name: Bundle Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
-        run: moon run composer-app:bundle-e2e todomvc:bundle-e2e --affected remote
+        run: moon run :bundle-e2e --affected remote
 
       - name: Bundle All
         if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
-        run: moon run composer-app:bundle-e2e todomvc:bundle-e2e
+        run: moon run :bundle-e2e
 
   # Sharded on two axes, browser × cell. The browser is a GitHub matrix axis rather than a moon task
   # dimension so that it cannot multiply with the shard dimension in the task namespace: composer
@@ -498,12 +507,9 @@ jobs:
     # whereas hitting this cap cancels it and proves nothing.
     timeout-minutes: 50
     env:
-      DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
-      # own remote-cache entry.
+      # own remote-cache entry. The DX_* ambient values these cells must share with `e2e-bundle` are
+      # declared at workflow level.
       PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
     steps:
       - name: Setup tmate session
@@ -554,6 +560,11 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
+      # `':e2e-ci*'`, glob and quoted, not `:e2e-ci`. A bare `:task` target matches that task name
+      # exactly, so it would collect the seven suites' `e2e-ci` and silently skip composer-app, whose
+      # halves are `e2e-ci-1of2`/`-2of2` — the suite most in need of running would never run. The quotes
+      # keep the shell from expanding it before moon sees it.
+      #
       # `plugin-script:e2e` is named explicitly because that project is not `e2e`-tagged (its `e2e` is
       # vitest, not Playwright) and so has no `e2e-ci`. It costs ~6s and every test skips in CI.
       - name: Test Affected
@@ -570,7 +581,7 @@ jobs:
           # spec instead, where the skip is visible in review.
           quarantine: false
           run: >-
-            moon exec --on-failure continue :e2e-ci plugin-script:e2e --affected remote
+            moon exec --on-failure continue ':e2e-ci*' plugin-script:e2e --affected remote
             --job ${{ matrix.job }} --job-total 3 --concurrency=1
 
       - name: Test All
@@ -591,7 +602,7 @@ jobs:
           # See "Test Affected": quarantine masks failures and is deliberately off.
           quarantine: false
           run: >-
-            moon exec --on-failure continue :e2e-ci plugin-script:e2e
+            moon exec --on-failure continue ':e2e-ci*' plugin-script:e2e
             --job ${{ matrix.job }} --job-total 3 --concurrency=1
 
       - name: Upload Traces
