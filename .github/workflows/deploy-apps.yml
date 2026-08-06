@@ -213,6 +213,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       # Build only — the artifact is deployed by `deploy` and embedded by the tauri jobs.
       - name: Build Composer bundle
@@ -256,6 +260,10 @@ jobs:
       # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       # Catches e.g. `app=storybook-react` on an environment it doesn't define (no env.staging/labs) —
       # before this existed, bundle-env.mjs/deploy-env.mjs silently no-op'd and the job still went green

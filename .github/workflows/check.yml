@@ -76,6 +76,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Check for import cycles
         run: pnpm run check-cycles
@@ -107,6 +111,14 @@ jobs:
       - name: Check All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
+
+      # Guards the self-hosted cache against silent degradation: an unreachable or unauthenticated
+      # cache still exits 0 and simply rebuilds everything. warn-only until the cache has a
+      # track record — flip to a hard failure once it has been green for a week.
+      - name: Assert remote cache
+        uses: ./.github/actions/assert-remote-cache
+        with:
+          warn-only: 'true'
 
       - name: Check module structure (affected)
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
@@ -158,6 +170,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Install Playwright
         run: pnpm run install-playwright
@@ -255,6 +271,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Install Playwright
         run: pnpm run install-playwright
@@ -352,6 +372,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Clean stale test results
         run: rm -rf test-results
@@ -438,6 +462,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Install Playwright
         run: pnpm run install-playwright
@@ -527,6 +555,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
       # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.

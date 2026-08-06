@@ -51,6 +51,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       # The index task imports @dxos/introspect compiled output via the
       # `source` export condition, so building first isn't strictly required —

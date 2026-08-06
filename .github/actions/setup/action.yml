@@ -13,6 +13,21 @@ inputs:
       Enable pnpm store integrity verification. Must be "true" for any workflow that
       holds publish credentials (id-token: write) to guard against cache poisoning.
     default: 'false'
+  cache-ca-pem:
+    description: 'PEM certificate authority that signed the moon remote cache server certificate.'
+    default: ''
+  cache-client-pem:
+    description: 'PEM client certificate presented to the moon remote cache.'
+    default: ''
+  cache-client-key:
+    description: 'PEM private key for the moon remote cache client certificate.'
+    default: ''
+  cache-certs-optional:
+    description: >
+      Warn instead of failing when the cache certificates are absent. Only for jobs that do not
+      rely on the remote cache — the default is to fail, because a job that quietly loses its
+      cache still passes and just runs an order of magnitude slower.
+    default: 'false'
 
 runs:
   using: 'composite'
@@ -22,6 +37,38 @@ runs:
     #   The checkout action also already runs this internally as a step as well.
     - name: Mark workspace as safe
       run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      shell: bash
+
+    # `.moon/workspace.yml` points the remote cache at a self-hosted bazel-remote behind mTLS.
+    # moon degrades to local-cache-only when it cannot authenticate — silently, and green — so a
+    # missing secret would cost every job its cache with no red build to notice it. Fail here
+    # instead, except on fork PRs, which cannot be given secrets at all.
+    - name: Install remote cache certificates
+      env:
+        CA_PEM: ${{ inputs.cache-ca-pem }}
+        CLIENT_PEM: ${{ inputs.cache-client-pem }}
+        CLIENT_KEY: ${{ inputs.cache-client-key }}
+        IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        OPTIONAL: ${{ inputs.cache-certs-optional }}
+      run: |
+        if [ -z "$CA_PEM" ] || [ -z "$CLIENT_PEM" ] || [ -z "$CLIENT_KEY" ]; then
+          if [ "$OPTIONAL" = "true" ]; then
+            echo "::warning::No remote cache credentials; this job opted out of requiring them."
+            exit 0
+          fi
+          if [ "$IS_FORK" = "true" ]; then
+            echo "::warning::Fork PR — no remote cache credentials, moon will use the local cache only."
+            exit 0
+          fi
+          echo "::error::Remote cache certificates are missing. Pass cache-ca-pem / cache-client-pem / cache-client-key from secrets."
+          exit 1
+        fi
+        mkdir -p .moon/certs
+        printf '%s\n' "$CA_PEM" > .moon/certs/ca.pem
+        printf '%s\n' "$CLIENT_PEM" > .moon/certs/client.pem
+        printf '%s\n' "$CLIENT_KEY" > .moon/certs/client.key
+        chmod 600 .moon/certs/client.key
+        openssl x509 -in .moon/certs/client.pem -noout -enddate
       shell: bash
 
     # TODO(wittjosiah): Install moon in docker image?

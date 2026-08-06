@@ -37,6 +37,10 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          cache-ca-pem: ${{ secrets.MOON_CACHE_CA_PEM }}
+          cache-client-pem: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+          cache-client-key: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
       - name: Bundle composer-app
         run: moon run composer-app:bundle

@@ -222,3 +222,6 @@ node_modules
 # encrypted archive staged for upload (see tools/fixtures). Never commit.
 /testing/fixtures/
 *.age
+
+# moon remote-cache mTLS material — never committed (tools/moon-cache/README.md).
+.moon/certs/
