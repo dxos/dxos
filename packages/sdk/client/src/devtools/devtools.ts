@@ -235,7 +235,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     hook.exportProfile = async () => {
       const { createStorageObjects, exportProfileData } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get('runtime.client.storage') ?? {};
 
       const { storage } = createStorageObjects(storageConfig);
 
@@ -254,7 +254,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
 
       const { createStorageObjects, decodeProfileArchive, importProfileData } = await import('@dxos/client-services');
 
-      const storageConfig = client.config.get('runtime.client.storage', {})!;
+      const storageConfig = client.config.get('runtime.client.storage') ?? {};
 
       // Kill client so it doesn't interfere.
       await client.destroy().catch(() => {});

@@ -51,6 +51,8 @@ export class EchoReplicant {
     log.trace('dxos.echo-replicant.close');
     void this._ctx.dispose();
     await this._testPeer!.close();
+    // storagePath keeps the SQLite runtime alive across close()/open(); dispose it for final teardown.
+    await this._testPeer!.disposeStorage();
   }
 
   @trace.span()

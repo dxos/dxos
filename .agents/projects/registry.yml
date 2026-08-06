@@ -14,8 +14,8 @@ projects:
     summary: Fully remove LevelDB and the @dxos/kv-store package — all consumers are superseded by SQLite storage; convert remaining tests/tooling and delete the package + level/abstract-level/level-transcoder deps.
     tasks: .agents/projects/leveldb-removal/TASKS.md
     design: .agents/projects/leveldb-removal/DESIGN.md
-    prs: []
-    resume: 'All phases complete: @dxos/kv-store deleted, LevelDB fully removed, tests/tooling converted to SQLite. Builds + tests + lint green (265 echo-host, 154 client-services). Pushing PR.'
+    prs: [12492]
+    resume: 'PR #12492 OPEN. @dxos/kv-store deleted, LevelDB fully removed, tests/tooling converted to SQLite. Builds + tests + lint green (265 echo-host, 154 client-services). Merged main (resolved sqlite-storage-adapter migrator conflict) and addressed CodeRabbit review; watching CI.'
   - name: crm-pipeline-operations
     status: active
     user: burdon

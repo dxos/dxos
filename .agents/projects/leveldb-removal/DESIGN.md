@@ -68,8 +68,9 @@ stability; only its handler is removed.
 
 - Delete `packlets/storage/level.ts` (`createLevel`).
 - `packlets/storage/profile-archive.ts`: keep `encode/decodeProfileArchive`
-  (pure CBOR); drop `level` param + `KEY_VALUE` case from
-  `exportProfileData` / `importProfileData`.
+  (pure CBOR); drop the `level` param so `exportProfileData` no longer emits
+  `ProfileArchiveEntryType.KEY_VALUE`. `importProfileData` keeps a compatibility
+  branch that skips any legacy `KEY_VALUE` entry with a warning.
 - Update `packlets/storage/index.ts` export list.
 - Drop `@dxos/kv-store` from `package.json`.
 
@@ -86,10 +87,13 @@ stability; only its handler is removed.
 ### blade-runner (`packages/e2e/blade-runner`)
 
 - `replicants/storage-replicant.ts`, `replicants/automerge-replicant.ts` —
-  remove the `LevelDBStorageAdapter` adapter kind (keep IndexedDB; SQLite where
-  applicable).
-- `replicants/echo-replicant.ts` — replace `createTestLevel` for the EchoTestPeer
-  `kv` (verify EchoTestPeer's storage expectations).
+  replace the `leveldb` benchmark adapter kind with `sqlite` (via
+  `createTestSqliteStorageAdapter`). The `idb` (IndexedDB) benchmark option
+  stays — this is a benchmark harness comparing backends, distinct from the
+  product's SQLite-only storage.
+- `replicants/echo-replicant.ts` — `EchoTestPeer({ storagePath })` (the `kv`
+  option no longer exists); `disposeStorage()` after `close()` so the persistent
+  SQLite runtime is released.
 - Drop `@dxos/kv-store` + `createLevel` import from `package.json` / code.
 
 ### package + catalog
@@ -107,4 +111,9 @@ stability; only its handler is removed.
 
 - `moon run <pkg>:build` for each touched package; converted tests green.
 - `pnpm format`, `moon run :lint -- --fix` on touched files.
-- Grep proves zero `level` / `abstract-level` / `@dxos/kv-store` references remain.
+- Grep proves zero `level` / `abstract-level` / `@dxos/kv-store` references
+  remain in **runtime, package, catalog, and lockfile source**. Excluded by
+  design: this project's docs and the changeset (which name the removed
+  packages), and the retained `ProfileArchiveEntryType.KEY_VALUE = 2` enum with
+  its doc comment in `packages/core/protocols/src/profile-archive.ts` (kept for
+  wire/CBOR compatibility).

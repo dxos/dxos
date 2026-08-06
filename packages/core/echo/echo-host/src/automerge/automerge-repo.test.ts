@@ -630,19 +630,13 @@ describe('AutomergeRepo', () => {
       expect(imported.doc()?.text).to.equal('mutated');
     });
 
-    // Open a file-backed SQLite storage adapter; caller disposes to release the file before reopening.
-    const openStorage = async (filename: string) => {
-      const { adapter, dispose } = await createTestSqliteStorageAdapter(filename);
-      return { storage: adapter, close: dispose };
-    };
-
     test('reload document with flush', async () => {
       const path = createTmpPath();
       const text = 'Hello World!';
       let url: AutomergeUrl;
 
       {
-        const { storage, close } = await openStorage(path);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
@@ -654,7 +648,7 @@ describe('AutomergeRepo', () => {
       }
 
       {
-        const { storage, close } = await openStorage(path);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
         await handle.whenReady();
@@ -669,7 +663,7 @@ describe('AutomergeRepo', () => {
       let url: AutomergeUrl;
 
       {
-        const { storage, close } = await openStorage(path);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
@@ -682,7 +676,7 @@ describe('AutomergeRepo', () => {
       }
 
       {
-        const { storage, close } = await openStorage(path);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
         await handle.whenReady();

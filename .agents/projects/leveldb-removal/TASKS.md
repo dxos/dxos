@@ -1,6 +1,6 @@
 # LevelDB / `@dxos/kv-store` removal — Tasks
 
-_Resume: complete — pushing PR. Uncommitted: none after commit. Last: all phases done, builds + tests + lint green._
+_Resume: PR #12492 OPEN. Merged main + addressed CodeRabbit review; watching CI. Last: all phases done, builds + tests + lint green._
 
 Full context and rationale in `DESIGN.md`. Branch `claude/leveldb-kv-store-audit-qa3zl2`.
 
@@ -43,10 +43,11 @@ Full context and rationale in `DESIGN.md`. Branch `claude/leveldb-kv-store-audit
 
 ## Phase 5: verify + PR
 
-- [x] **Grep** — zero residual `level`/`abstract-level`/`@dxos/kv-store` references (KEY_VALUE enum kept for wire compat; check.yml example updated to better-sqlite3).
+- [x] **Grep** — zero residual references across runtime/package/catalog/lockfile **source** (project docs, release notes, and the retained `ProfileArchiveEntryType.KEY_VALUE = 2` enum + its doc comment are intentional exceptions; check.yml example updated to better-sqlite3).
 - [x] **Build affected** — echo-host, client-services, client, plugin-client, blade-runner, echo-client, compute-runtime, app-framework (184 build tasks pass).
 - [x] **Format + lint** — `pnpm format`; lint green on all changed packages.
-- [ ] **Commit, push, open PR**.
+- [x] **Commit, push, open PR** — PR #12492.
+- [x] **Merge main + review** — resolved `sqlite-storage-adapter.ts` migrator conflict (main added a `Migrator`-based `migrate`; kept it + inline `StorageAdapterDataMonitor`); fixed `echo-replicant` SQLite runtime leak (`disposeStorage()` after `close()`), removed pre-existing `!` in devtools profile lookups.
 
 ### Notes
 
