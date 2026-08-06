@@ -7,16 +7,8 @@ projects:
   - tools/*/moon.yml
   - vendor/*/moon.yml
 
-# Self-hosted bazel-remote — operations in `tools/moon-cache/`, and why it is not Depot's hosted
-# cache in `.agents/projects/ci/REPORT.md`. Certificates come from `.github/actions/setup` in CI
-# and `tools/moon-cache/install-certs.sh` locally; moon falls back to local-cache-only without
-# them, silently and green, so both paths assert they exist.
-#
-# Any edit here re-hashes every task, so the next run after a change is a full cold build.
+# Self-hosted bazel-remote: tools/moon-cache/README.md.
 remote:
-  # The A record must stay DNS-only in Cloudflare: the proxy does not pass gRPC on 9092, and moon
-  # answers an unreachable cache with one warning and a green build, so proxying it would look
-  # like nothing was wrong.
   host: 'grpcs://cache.dxos.network:9092'
   mtls:
     caCert: '.moon/certs/ca.pem'

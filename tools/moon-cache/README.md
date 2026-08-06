@@ -39,11 +39,24 @@ degrades to the local cache:
 MOON_REMOTE_HOST='grpc://127.0.0.1:1' moon run :build
 ```
 
+## Things that will catch you out
+
+1. **The `cache.dxos.network` A record must stay DNS-only in Cloudflare.** The proxy does not pass
+   gRPC on 9092, and moon answers an unreachable cache with one warning and a green build — so
+   proxying it looks like nothing is wrong.
+2. **Any edit to `.moon/workspace.yml` re-hashes every task**, so the next run after a config
+   change is a full cold build regardless of which cache is configured.
+3. **Disk is bounded by `--max_size 100`** (GiB), enforced as an LRU: `bazel-remote` evicts the
+   least recently used blobs rather than filling the disk. Size it under the volume with room for
+   the OS — 100 GiB on the current 154 GB disk.
+4. **Release workflows deliberately skip the cache** — `remote-cache: 'false'` on the setup action,
+   or a workflow-level `MOON_REMOTE_HOST` where the workflow does not use that action.
+
 ## The server
 
 | | |
 | --- | --- |
-| hosts | `cache.dxos.network` -> 64.225.13.237 (NYC3) · 143.198.61.162 (SFO3, no DNS record; its certificate shares the same SAN so `mtls.domain` verifies) |
+| host | `cache.dxos.network` -> 64.225.13.237 (DigitalOcean NYC3) |
 | service | `bazel-remote` v2.5.0, systemd unit `bazel-remote` |
 | ports | 9092 gRPC, 9093 HTTPS (metrics + `/status`) |
 | storage | `/var/cache/moon`, zstd, 100 GB LRU |
@@ -83,13 +96,9 @@ the droplet and the CI secrets** — treat the CA key accordingly.
 `ca.key` signs new clients. It must never reach the droplet, the repository, or CI — only the
 operator's machine and whatever the team uses for shared secrets.
 
-All six files live in 1Password's `CI` vault as documents named `moon-cache-<filename>`:
-
-```bash
-for f in ca.key ca.pem client.pem client.key server.pem server.key; do
-  op document create "./certs/$f" --title "moon-cache-$f" --vault CI
-done
-```
+All six files live in one 1Password item — `moon-cache-certs` in the `CI` vault, one concealed
+field per file. `install-certs.sh --op` reads the three client files from it; `ca.key` is stored
+there but never fetched by that path.
 
 CI reads three of them from repository secrets — `MOON_CACHE_CA_PEM`, `MOON_CACHE_CLIENT_PEM`,
 `MOON_CACHE_CLIENT_KEY`. Set them from files rather than pasting, so the trailing newline
@@ -130,10 +139,12 @@ from a cache any CI job can write to.
 | `MOON_CACHE_CLIENT_PEM` | `client.pem` |
 | `MOON_CACHE_CLIENT_KEY` | `client.key` |
 
-`.github/actions/assert-remote-cache` checks the run report for a minimum number of
-`cached-from-remote` tasks. This exists because every remote-cache failure mode observed so far —
-absent credentials, rejected credentials, a dropped blob batch — produces a **green** run that
-silently rebuilt everything. It runs `warn-only` in the `check` job today.
+After writing the certificates the action probes the cache — `/status` for reachability and the
+server certificate, then a CAS path with the client certificate, where 404 means authorised and
+401 means rejected — and fails the job if either check does not pass. Every remote-cache failure
+mode observed so far (absent credentials, rejected credentials, an unresolvable host, a dropped
+blob batch) produces a **green** run that silently rebuilt everything, so a passing build is not
+evidence the cache worked.
 
 ## Rolling back
 
@@ -150,5 +161,6 @@ MOON_REMOTE_HOST='grpc://127.0.0.1:1' moon run :build
 
 ## Benchmarking a cache change
 
-[`bench/`](./bench/README.md) holds the harness that produced the numbers above — interleaved A/B
-reps, an RTT sweep, and the run-report parser. Use it before changing where the cache lives.
+[`bench/`](./bench/README.md) holds the harness that produced the numbers above: `bench.sh` runs
+interleaved reps against a cache, `analyze.mjs` reads the reports. Use it before changing where
+the cache lives.

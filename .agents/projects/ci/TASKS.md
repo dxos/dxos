@@ -18,8 +18,10 @@ CI — that is what opening the PR settles.
       `MOON_CACHE_*` environment variables, bound once per workflow rather than at every call
       site (a composite action cannot read the `secrets` context). It **fails** when they are
       absent, except on fork PRs.
-- [x] **Guard against silent degradation** — `.github/actions/assert-remote-cache`,
-      warn-only in `check`.
+- [x] **Guard against silent degradation** — the setup action probes the cache for reachability
+      and client-certificate acceptance before any task runs, and fails the job if either is
+      wrong. Connectivity rather than a hit count: a legitimately cold branch has zero hits, so a
+      hit count cannot tell "nothing to restore" from "cache is broken".
 - [x] **Document operations and local setup** — [`tools/moon-cache/`](../../../tools/moon-cache/README.md),
       including `install-certs.sh --op`.
 - [x] **Store the certificates** — one `moon-cache-certs` item in the 1Password `CI` vault, each
@@ -38,8 +40,6 @@ CI — that is what opening the PR settles.
       A dead cache is invisible: CI just gets slow.
 - [ ] **Read-only certificates for developers.** Any client with a certificate can write and
       `bazel-remote` has no per-client ACL, so a laptop can poison CI's cache today.
-- [ ] **Promote `assert-remote-cache` to failing** and add it to the other five moon jobs
-      (`test`, `storybook`, `workerd`, `e2e`, `cli`).
 - [ ] **Cancel the Depot cache subscription** once this has a track record. Depot remains the
       runner provider (`depot-ubuntu-24.04-8`); only the cache moved.
 

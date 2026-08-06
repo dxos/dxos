@@ -23,8 +23,9 @@ Two consequences that any change in this area has to respect:
 
 1. **Nothing here can be verified by "CI is green."** Correctness and cache health are independent
    signals, and only one of them turns the build red.
-2. **Every cache change needs an explicit assertion** on hits, or a regression is invisible.
-   `.github/actions/assert-remote-cache` exists for this.
+2. **Assert the cache works, not that it was used.** The setup action probes reachability and
+   certificate acceptance before any task runs. Counting cache hits cannot do this job — a
+   legitimately cold branch has zero hits too.
 
 A live example: `preview.yml`, `upload-introspect-cache.yml` and `publish-all.yml` call the setup
 action and run moon tasks but never set `DEPOT_TOKEN`, so they have had **no remote cache at all**

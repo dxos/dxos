@@ -117,14 +117,6 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
 
-      # Guards the self-hosted cache against silent degradation: an unreachable or unauthenticated
-      # cache still exits 0 and simply rebuilds everything. warn-only until the cache has a
-      # track record — flip to a hard failure once it has been green for a week.
-      - name: Assert remote cache
-        uses: ./.github/actions/assert-remote-cache
-        with:
-          warn-only: 'true'
-
       - name: Check module structure (affected)
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :check-module-structure --affected remote

@@ -119,8 +119,8 @@ variance is noise around a number an order of magnitude smaller.
 
 ## Silent-degradation modes
 
-All four produce a **green run that quietly rebuilt everything**, which is why
-`.github/actions/assert-remote-cache` exists.
+All four produce a **green run that quietly rebuilt everything**, which is why the setup action
+probes the cache before any task runs rather than trusting a green build.
 
 | condition                  | what moon does                                                                                  |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |

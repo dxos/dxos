@@ -27,8 +27,8 @@ permissions:
 env:
   CN_APPLICATION: dxos/composer
   # Released binaries are built from source, never restored from a cache any CI job can write to.
-  # An unroutable host rather than absent credentials, so this holds even if the cache is later
-  # bound here: moon logs one warning and uses the local cache.
+  # Set here rather than via the setup action's `remote-cache` input because this workflow does not
+  # use that action; an unroutable host disables the cache whatever else is configured.
   MOON_REMOTE_HOST: 'grpc://127.0.0.1:1'
 
 jobs:
