@@ -1,6 +1,6 @@
 # CI — Tasks
 
-_Resume: branch `claude/depot-vs-self-hosted-cache-3fbd62`, ready for a PR — that is the only step left. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS, and it is now **measured in CI**: a fully-cached 324-task `:build` takes **14 s against 161 s uncached** on a Depot runner, hydrating 324/324 in 13.6 s at 31 ms per task over a 7 ms link. Runners were compared and Depot stays: compute is identical and it sits closest to the cache. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
+_Resume: branch `claude/depot-vs-self-hosted-cache-3fbd62`, PR #12494 OPEN as a draft — watch Check, then mark ready. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS, and it is now **measured in CI**: a fully-cached 324-task `:build` takes **14 s against 161 s uncached** on a Depot runner, hydrating 324/324 in 13.6 s at 31 ms per task over a 7 ms link. Runners were compared and Depot stays: compute is identical and it sits closest to the cache. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
 
 Context and the failure mode that governs this area: [`DESIGN.md`](./DESIGN.md).
 
@@ -28,7 +28,7 @@ CI — that is what opening the PR settles.
 - [x] **Set the three `MOON_CACHE_*` repository secrets** on `dxos/dxos`.
 - [x] **Measure the cache in CI** — 14 s cached against 161 s uncached on a Depot runner,
       324/324 hits, mTLS working from inside the job container. REPORT.md, "In CI".
-- [ ] **Open the PR.**
+- [x] **Open the PR** — https://github.com/dxos/dxos/pull/12494 (draft).
 - [x] **DNS `cache.dxos.network` → the droplet** — A record, DNS-only (the Cloudflare proxy does
       not pass gRPC on 9092). `.moon/workspace.yml` now uses the name; verified 12/12 hits over it.
 - [ ] **Reserve the droplet IP.** Now that clients dial the name, a rebuild costs a DNS edit
