@@ -39,19 +39,6 @@ env:
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
-  # Ambient values for the e2e bundle's hash-relevant task inputs, shared by `e2e-bundle` and `e2e`.
-  # These are NOT what configures the build — `bundle-e2e` sets that in its own `env`, so a local
-  # `moon run composer-app:bundle-e2e` yields the same artifact. They are here because moon hashes the
-  # AMBIENT value of any env var listed in a task's `inputs`, even when the task's own `env` overrides
-  # it (verified: flipping ambient `DX_PWA` moved a hash whose task pinned `DX_PWA: 'false'`). With the
-  # two jobs setting different `DX_EDGE_BASE_URL` values, `bundle-e2e` therefore hashed differently in
-  # the warming job than in the cells consuming it, and the warmed entry was never read. Declared once
-  # at workflow level so the two cannot drift apart again.
-  DX_ENVIRONMENT: ci
-  DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-  DX_TELEMETRY_TAG: e2e
-  DX_PWA: false
-
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 # The event is part of the key because on a schedule `github.ref` is `refs/heads/main`: without it the
 # nightly shares a group with pushes to main and the next push cancels it mid-e2e.
@@ -437,6 +424,21 @@ jobs:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 30
+    env:
+      # These four must be IDENTICAL to `e2e`'s block below (and vice versa). moon hashes the AMBIENT
+      # value of any env var listed in a task's `inputs`, even when the task's own `env` overrides it
+      # (verified: flipping ambient `DX_PWA` moved a hash whose task pinned `DX_PWA: 'false'`), so if
+      # the two jobs disagree then `bundle-e2e` hashes differently here than in the cells that consume
+      # it and the warmed entry is never read — which is exactly the bug this replaced, where this job
+      # still said `wss://main.dxos.network/`. Scoped per job rather than declared once at workflow
+      # level: workflow level also applies to `test`, `storybook`, `workerd`, `check` and `cli`, none of
+      # which set these today, and silently changing their hashes and runtime env is not the intent.
+      # These are NOT what configures the build — `bundle-e2e` sets that in its own `env`, so a local
+      # `moon run composer-app:bundle-e2e` still yields the same artifact.
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -507,9 +509,22 @@ jobs:
     # whereas hitting this cap cancels it and proves nothing.
     timeout-minutes: 50
     env:
+      # These four must be IDENTICAL to `e2e`'s block below (and vice versa). moon hashes the AMBIENT
+      # value of any env var listed in a task's `inputs`, even when the task's own `env` overrides it
+      # (verified: flipping ambient `DX_PWA` moved a hash whose task pinned `DX_PWA: 'false'`), so if
+      # the two jobs disagree then `bundle-e2e` hashes differently here than in the cells that consume
+      # it and the warmed entry is never read — which is exactly the bug this replaced, where this job
+      # still said `wss://main.dxos.network/`. Scoped per job rather than declared once at workflow
+      # level: workflow level also applies to `test`, `storybook`, `workerd`, `check` and `cli`, none of
+      # which set these today, and silently changing their hashes and runtime env is not the intent.
+      # These are NOT what configures the build — `bundle-e2e` sets that in its own `env`, so a local
+      # `moon run composer-app:bundle-e2e` still yields the same artifact.
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
-      # own remote-cache entry. The DX_* ambient values these cells must share with `e2e-bundle` are
-      # declared at workflow level.
+      # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
     steps:
       - name: Setup tmate session
