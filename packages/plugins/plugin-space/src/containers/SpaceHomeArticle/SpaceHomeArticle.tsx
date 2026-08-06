@@ -19,7 +19,8 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { SpaceHomeContent, SpaceHomePinBottom } from '#types';
+
+import * as SpaceSurface from '../../types/SpaceSurface';
 
 export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 
@@ -48,12 +49,12 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
               <div className='dx-document flex flex-col gap-4 pb-12'>
-                <Surface.Surface type={SpaceHomeContent} data={{ space }} />
+                <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
               </div>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>
-            <Surface.Surface type={SpaceHomePinBottom} data={{ space }} limit={1} />
+            <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
       </Panel.Content>

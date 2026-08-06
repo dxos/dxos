@@ -76,9 +76,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-attention"
-    },
-    {
       "path": "../plugin-client"
     },
     {

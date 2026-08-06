@@ -1,5 +1,13 @@
 # @dxos/echo-panproto
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/invariant@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

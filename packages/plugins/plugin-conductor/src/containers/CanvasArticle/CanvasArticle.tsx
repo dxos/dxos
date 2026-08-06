@@ -7,10 +7,13 @@ import type * as Exit from 'effect/Exit';
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationRegistry from '@dxos/compute/OperationRegistry';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

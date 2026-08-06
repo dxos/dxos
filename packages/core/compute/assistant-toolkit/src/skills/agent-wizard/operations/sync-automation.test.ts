@@ -5,7 +5,9 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';

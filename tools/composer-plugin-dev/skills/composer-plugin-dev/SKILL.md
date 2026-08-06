@@ -54,7 +54,7 @@ Each topic below links to a focused reference file under `references/`. Read the
 12. **[External services & authentication (`AccessToken`)](references/external-services.md)** — store credentials as `AccessToken` ECHO objects referenced by `Ref.Ref<AccessToken>`; load inside an operation using an Effect helper. **Never** read raw secrets in containers. Worked example modeled after `plugin-inbox`.
 13. **[AI inference (`AiService`)](references/ai-service.md)** — when you need an LLM call, do it inside an operation with `AiService.model('ai.claude.model.claude-sonnet-4-5')`, tools via `OpaqueToolkit`, executor via `ToolExecutionService`. Don't call models from React.
 14. **[Skills — let agents use your plugin](references/skills.md)** — define a skill key, gather your operations, `Skill.toolDefinitions({ operations })`, write a short instruction template. **Every plugin worth writing should ship a skill** so the assistant can drive it. How to register via `addSkillDefinitionModule`.
-15. **[Capabilities](references/capabilities.md)** — `Capability.lazy()` in `capabilities/index.ts`, `Capability.makeModule()` per file, `Capability.contributes(Capabilities.X, ...)`. Why everything is lazy.
+15. **[Capabilities](references/capabilities.md)** — makers (`AppCapability.*`) or `Capability.lazyModule()` in `capabilities/index.ts`, `Capability.makeModule()` per file, `Capability.contribute(Capabilities.X, ...)`. Activation waves and why omitting `activatesOn` means idle.
 
 ### Packaging & publishing
 

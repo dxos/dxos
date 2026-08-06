@@ -2,16 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Capabilities } from '@dxos/app-framework';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account, ClientOperation } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client';
+import * as Account from '@dxos/plugin-client/Account';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { HelpOperation } from '@dxos/plugin-support';
+import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';

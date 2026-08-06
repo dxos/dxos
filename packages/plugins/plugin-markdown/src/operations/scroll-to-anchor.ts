@@ -5,12 +5,13 @@
 import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import { Cursor, isRangeVisible, scrollCommentIntoView } from '@dxos/ui-editor/headless';
 
-import { MarkdownCapabilities, MarkdownOperation } from '../types';
+import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const SCROLL_OPTIONS = { y: 'start', yMargin: 96 } as const;
 

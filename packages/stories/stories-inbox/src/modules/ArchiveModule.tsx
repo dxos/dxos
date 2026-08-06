@@ -5,13 +5,14 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Mailbox, SystemTags } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';

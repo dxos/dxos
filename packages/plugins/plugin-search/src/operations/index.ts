@@ -2,6 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const SearchOperationHandlerSet = OperationHandlerSet.lazy(() => import('./open-search'));
+import * as SearchOperation from '../types/SearchOperation';
+
+export const SearchOperationHandlerSet = OperationHandlerSet.lazy([
+  SearchOperation.OpenSearch.pipe(Operation.lazyHandler(() => import('./open-search'))),
+]);

@@ -23,17 +23,14 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/TestClock';
 
-import {
-  Cancellation,
-  Operation,
-  OperationHandlerSet,
-  Process,
-  RunAgainError,
-  ServiceNotAvailableError,
-  ServiceResolver,
-  Trace,
-} from '@dxos/compute';
+import { RunAgainError, ServiceNotAvailableError } from '@dxos/compute';
+import * as Cancellation from '@dxos/compute/Cancellation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as StorageService from '@dxos/compute/StorageService';
+import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, DXN } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';

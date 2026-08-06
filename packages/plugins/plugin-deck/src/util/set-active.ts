@@ -4,11 +4,11 @@
 
 import { Attention } from '@dxos/react-ui-attention';
 
-import { type DeckState } from '#types';
+import * as DeckSchema from '../types/DeckSchema';
 
 export type SetActiveOptions = {
   next: string[];
-  deck: DeckState;
+  deck: DeckSchema.DeckState;
   attention?: Attention.AttentionManager;
 };
 

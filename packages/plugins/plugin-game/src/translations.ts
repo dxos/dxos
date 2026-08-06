@@ -6,7 +6,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Game } from '#types';
+
+import * as Game from './types/Game';
 
 export const translations = [
   {

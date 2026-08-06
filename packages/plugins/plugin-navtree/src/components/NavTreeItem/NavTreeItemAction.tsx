@@ -12,7 +12,8 @@ import { Menu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { type ActionProperties } from '#types';
+
+import * as NavTreeNode from '../../types/NavTreeNode';
 
 const fallbackIcon = 'ph--circle-dashed--regular';
 
@@ -26,7 +27,7 @@ const lgActionButtonProps = {
   density: 'lg' as const,
 };
 
-export type NavTreeItemActionMenuProps = ActionProperties & {
+export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
   parent: Node.Node;
   path?: string[];
   caller?: string;

@@ -1,5 +1,21 @@
 # @dxos/compute-hyperformula
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/context@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/util@0.11.1
+- @dxos/vendor-hyperformula@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

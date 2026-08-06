@@ -1,5 +1,15 @@
 # @dxos/introspect-mcp
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/effect-zod@0.11.1
+- @dxos/introspect@0.11.1
+- @dxos/introspect-tools@0.11.1
+- @dxos/log@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

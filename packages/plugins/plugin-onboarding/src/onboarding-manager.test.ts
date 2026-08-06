@@ -4,10 +4,10 @@
 
 import { describe, onTestFinished, test } from 'vitest';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { ClientOperation } from '@dxos/plugin-client';
 
 import { OnboardingManager } from './onboarding-manager';

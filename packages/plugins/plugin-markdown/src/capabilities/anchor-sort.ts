@@ -4,18 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Relation, Type } from '@dxos/echo';
 import { getRangeFromCursor } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { type AnchoredTo } from '@dxos/types';
 
-import { Markdown } from '#types';
+import * as Markdown from '../types/Markdown';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(AppCapabilities.AnchorSort, {
+    Capability.contribute(AppCapabilities.AnchorSort, {
       key: Type.getTypename(Markdown.Document),
       sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
         const doc = Relation.getTarget(anchorA) as Markdown.Document;

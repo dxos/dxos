@@ -10,7 +10,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
 
-import { Book } from '#types';
+import * as Book from '../../types/Book';
 
 export type BookNotesCompanionProps = AppSurface.ArticleProps<Book.Book>;
 

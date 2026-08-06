@@ -13,9 +13,9 @@ import React, { useEffect, useRef } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { TerraObject } from '#types';
 
 import { EXPLOSION_SECONDS, type ObjectState, type SimObject } from '../sim';
+import * as TerraObject from '../types/TerraObject';
 import { ExplosionLayer } from './explosion-layer';
 import { createObjectForm } from './object-forms';
 import { SCALE_FACTOR } from './orientation';

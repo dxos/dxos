@@ -5,7 +5,7 @@
 import React, { memo, useMemo } from 'react';
 
 import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Space } from '@dxos/react-client/echo';
 import { Carousel, useTranslation } from '@dxos/react-ui';
 

@@ -5,12 +5,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { Button, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { type Mailbox } from '#types';
+
+import type * as Mailbox from '../../types/Mailbox';
 
 export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
   const { t } = useTranslation(meta.profile.key);

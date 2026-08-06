@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Credential, Operation } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 

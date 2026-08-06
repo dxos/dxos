@@ -1,6 +1,6 @@
 {
   "name": "@dxos/stories-projects",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Cross-cutting storybook stories for plugin-projects (project templates, routines, and artifacts driven end-to-end with sibling plugins).",
   "homepage": "https://dxos.org",

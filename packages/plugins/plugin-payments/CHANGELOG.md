@@ -1,5 +1,22 @@
 # @dxos/plugin-payments
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/client@0.11.1
+- @dxos/credentials@0.11.1
+- @dxos/edge-client@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/sql-sqlite",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Sqlite client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -53,6 +53,11 @@
       "types": "./dist/types/src/SqlTransaction.d.ts",
       "browser": "./dist/lib/browser/SqlTransaction.mjs",
       "node": "./dist/lib/node-esm/SqlTransaction.mjs"
+    },
+    "./SqlMigrations": {
+      "types": "./dist/types/src/SqlMigrations.d.ts",
+      "browser": "./dist/lib/browser/SqlMigrations.mjs",
+      "node": "./dist/lib/node-esm/SqlMigrations.mjs"
     }
   },
   "files": [

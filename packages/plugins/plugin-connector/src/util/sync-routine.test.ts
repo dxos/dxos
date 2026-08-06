@@ -6,12 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Operation, Routine, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { connectedRoutinesQuery } from '@dxos/plugin-routine';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -83,6 +86,8 @@ describe('createSyncRoutine', () => {
     const trigger = triggerRef.target;
     expect(trigger?.spec).toEqual({ kind: 'timer', cron: '*/10 * * * *' });
     expect(trigger?.enabled).toBe(true);
+    // A connector that does not declare `sync.remote` gets a local trigger, with nothing stored.
+    expect(trigger?.remote).toBeUndefined();
     // `input` carries only `binding` (matching the sync operation's input schema); the target is reached
     // through the binding cursor's `spec.target`, not smuggled in as an extra input key.
     expect(Object.keys(trigger?.input ?? {})).toEqual(['binding']);
@@ -96,6 +101,24 @@ describe('createSyncRoutine', () => {
     // The reverse-ref from the cursor is how a manual sync finds this trigger to force-run.
     const found = await findSyncTriggerForBinding(cursor).pipe(Effect.provide(Database.layer(db)), EffectEx.runPromise);
     expect(found?.id).toBe(trigger?.id);
+  });
+
+  test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
+    await using harness = await createComposerTestApp({ plugins: [ClientPlugin({ types })] });
+    const db = await initSpace(harness);
+
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
+    const cursor = makeCursor(db, target);
+    await createSyncRoutine({ target, cursor, operation: TestSync, spec: SYNC_SPEC, remote: true }).pipe(
+      Effect.provide(Database.layer(db)),
+      EffectEx.runPromise,
+    );
+    await db.flush();
+
+    await expect.poll(() => findSyncRoutine(db, target), { timeout: 5_000 }).toHaveLength(1);
+    const [routine] = await findSyncRoutine(db, target);
+    // The monitor routes a `remote` trigger to EDGE, so the schedule keeps running with the app closed.
+    expect(routine.triggers[0].target?.remote).toBe(true);
   });
 
   test('is idempotent: a second call is a no-op once a sync routine is connected', async ({ expect }) => {

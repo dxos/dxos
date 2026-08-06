@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { DraftMessage } from '@dxos/types';
 
-import { InboxOperation, SystemTags } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
+import * as SystemTags from '../types/SystemTags';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOperation.DraftEmail.pipe(
   Operation.withHandler(

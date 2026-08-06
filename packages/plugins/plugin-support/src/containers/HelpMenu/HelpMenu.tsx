@@ -6,7 +6,7 @@ import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { useConfig } from '@dxos/react-client';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';

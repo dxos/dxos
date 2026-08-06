@@ -1,5 +1,70 @@
 # @dxos/plugin-inbox
 
+## 0.11.1
+
+### Patch Changes
+
+- 5fde190: Sync Gmail and JMAP mailboxes automatically as soon as they are connected, and run their sync schedule on EDGE so mail keeps arriving while the app is closed.
+  - @dxos/ai@0.11.1
+  - @dxos/app-framework@0.11.1
+  - @dxos/app-graph@0.11.1
+  - @dxos/app-toolkit@0.11.1
+  - @dxos/assistant@0.11.1
+  - @dxos/async@0.11.1
+  - @dxos/client@0.11.1
+  - @dxos/compute@0.11.1
+  - @dxos/compute-runtime@0.11.1
+  - @dxos/context@0.11.1
+  - @dxos/debug@0.11.1
+  - @dxos/echo@0.11.1
+  - @dxos/echo-client@0.11.1
+  - @dxos/echo-doc@0.11.1
+  - @dxos/echo-query@0.11.1
+  - @dxos/echo-react@0.11.1
+  - @dxos/effect@0.11.1
+  - @dxos/errors@0.11.1
+  - @dxos/extractor@0.11.1
+  - @dxos/extractor-lib@0.11.1
+  - @dxos/invariant@0.11.1
+  - @dxos/keys@0.11.1
+  - @dxos/link@0.11.1
+  - @dxos/lit-ui@0.11.1
+  - @dxos/log@0.11.1
+  - @dxos/markdown@0.11.1
+  - @dxos/pipeline@0.11.1
+  - @dxos/pipeline-email@0.11.1
+  - @dxos/pipeline-rdf@0.11.1
+  - @dxos/protocols@0.11.1
+  - @dxos/random@0.11.1
+  - @dxos/react-client@0.11.1
+  - @dxos/react-hooks@0.11.1
+  - @dxos/react-ui-attention@0.11.1
+  - @dxos/react-ui-calendar@0.11.1
+  - @dxos/react-ui-card@0.11.1
+  - @dxos/react-ui-components@0.11.1
+  - @dxos/react-ui-editor@0.11.1
+  - @dxos/react-ui-form@0.11.1
+  - @dxos/react-ui-list@0.11.1
+  - @dxos/react-ui-menu@0.11.1
+  - @dxos/react-ui-mosaic@0.11.1
+  - @dxos/react-ui-rdf@0.11.1
+  - @dxos/react-ui-search@0.11.1
+  - @dxos/react-ui-table@0.11.1
+  - @dxos/schema@0.11.1
+  - @dxos/types@0.11.1
+  - @dxos/ui-editor@0.11.1
+  - @dxos/util@0.11.1
+  - @dxos/plugin-attention@0.11.1
+  - @dxos/plugin-client@0.11.1
+  - @dxos/plugin-connector@0.11.1
+  - @dxos/plugin-graph@0.11.1
+  - @dxos/plugin-markdown@0.11.1
+  - @dxos/plugin-observability@0.11.1
+  - @dxos/plugin-preview@0.11.1
+  - @dxos/plugin-routine@0.11.1
+  - @dxos/plugin-settings@0.11.1
+  - @dxos/plugin-space@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { Drawing } from '@dxos/plugin-illustrator/types';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
 import { RecordBuilder } from '#model';
-import { Tldraw } from '#types';
 
+import * as Tldraw from '../../types/Tldraw';
 import { TldrawCard } from './TldrawCard';
 
 const CardStory = () => {

@@ -6,7 +6,7 @@ import * as Chunk from 'effect/Chunk';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';

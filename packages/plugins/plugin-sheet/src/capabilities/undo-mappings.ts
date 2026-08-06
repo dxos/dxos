@@ -4,14 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
+import { UndoMapping } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#types';
+
+import * as SheetOperation from '../types/SheetOperation';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.UndoMapping, [
+    Capability.contribute(Capabilities.UndoMapping, [
       UndoMapping.make({
         operation: SheetOperation.DropAxis,
         inverse: SheetOperation.RestoreAxis,

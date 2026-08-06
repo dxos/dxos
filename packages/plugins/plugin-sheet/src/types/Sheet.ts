@@ -6,13 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import { addressFromA1Notation, isFormula } from '@dxos/compute-hyperformula/types';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { CollectionItemAnnotation } from '@dxos/schema';
 
-import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
+import { addressToIndex, initialize, mapFormulaRefsToIndices } from './SheetUtil';
 
 export const SKILL_KEY = 'org.dxos.skill.sheet';
 

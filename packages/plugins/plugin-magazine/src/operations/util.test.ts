@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { Subscription } from '../types';
+import * as Subscription from '../types/Subscription';
 import { partitionByKeepBound } from './util';
 
 const makePost = (props: { title: string; published?: string }): Subscription.Post =>

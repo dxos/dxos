@@ -15,7 +15,9 @@ import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { InboxOperation, Mailbox } from '#types';
+
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 
 type SubscriptionTileData = {
   readonly subscription: Mailbox.Subscription;

@@ -1,5 +1,18 @@
 # @dxos/react-ui-thread
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/react-ui-dnd@0.11.1
+- @dxos/react-ui-editor@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui-editor@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

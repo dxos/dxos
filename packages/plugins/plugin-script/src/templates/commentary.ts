@@ -12,16 +12,18 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Collection, Database, DXN, Filter, Obj, Ref, Relation, URI } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
-import { Chess } from '@dxos/plugin-chess';
-import { Game, loadGame } from '@dxos/plugin-game';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Chess from '@dxos/plugin-chess/Chess';
+import * as Game from '@dxos/plugin-game/Game';
+import * as GameUtil from '@dxos/plugin-game/GameUtil';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -60,7 +62,7 @@ export default Commentary.pipe(
       function* ({ game: gameRef }) {
         // Load the game and its Chess variant state.
         log.info('load game', { gameRef });
-        const { game: chessGame, variant: chessState } = yield* loadGame(gameRef, Chess.State);
+        const { game: chessGame, variant: chessState } = yield* GameUtil.loadGame(gameRef, Chess.State);
 
         // Load the chess position from PGN or FEN.
         const chess = new ChessJS();

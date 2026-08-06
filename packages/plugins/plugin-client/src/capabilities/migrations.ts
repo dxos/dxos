@@ -4,22 +4,28 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 
-import { ClientCapabilities } from '#types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const migrationsAtom = yield* Capability.atom(ClientCapabilities.Migration);
+    const registry = yield* Capabilities.AtomRegistry;
+    const client = yield* ClientCapabilities.Client;
+    const migrationContributions = yield* ClientCapabilities.Migration;
 
     // NOTE: Migrations are currently unidirectional and idempotent.
     const cancel = registry.subscribe(
-      migrationsAtom,
+      migrationContributions.atom,
       (_migrations: any[]) => {
+        // The activation wave can land while the client is mid-teardown (or not yet through its
+        // forked initialization); spaces are unreadable then and there is nothing to migrate.
+        if (!client.initialized) {
+          return;
+        }
         const migrations = Array.from(new Set(_migrations.flat()));
         const spaces = client.spaces.get();
         // Migrations run fire-and-forget from the subscription callback; an in-flight flush can be
@@ -33,6 +39,7 @@ export default Capability.makeModule(
       { immediate: true },
     );
 
-    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => cancel()));
+    yield* Effect.addFinalizer(() => Effect.sync(() => cancel()));
+    return [];
   }),
 );

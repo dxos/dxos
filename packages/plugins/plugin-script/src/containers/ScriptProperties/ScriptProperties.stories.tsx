@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Skill } from '@dxos/compute';
-import { Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';

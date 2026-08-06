@@ -5,12 +5,12 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useAtomState } from '@dxos/react-hooks';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
@@ -21,7 +21,8 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { IBKR_CONNECTOR_ID } from '../../constants';
 import { meta } from '../../meta';
 import { parseCash, parsePositions, parseTrades } from '../../services';
-import { Ibkr, IbkrOperation } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
+import * as IbkrOperation from '../../types/IbkrOperation';
 import { PortfolioImportAction } from './PortfolioImportAction';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;

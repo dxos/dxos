@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { TranscriptionSkill } from '#skills';
 
 const skillDefinition = () =>
-  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, TranscriptionSkill)]);
+  Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, TranscriptionSkill)]);
 
 export default skillDefinition;

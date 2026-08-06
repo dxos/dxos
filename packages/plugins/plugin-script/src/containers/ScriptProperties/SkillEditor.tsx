@@ -5,9 +5,10 @@
 import React, { useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { Skill, Template } from '@dxos/compute';
-import { type Script } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import type * as Script from '@dxos/compute/Script';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Button, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';

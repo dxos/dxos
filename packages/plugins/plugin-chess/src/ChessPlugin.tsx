@@ -2,30 +2,33 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { GameVariant, OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Chess, ChessPositionIndex, PlayerReview } from '#types';
 
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
+import * as Chess from './types/Chess';
+import * as ChessPositionIndex from './types/ChessPositionIndex';
+import * as PlayerReview from './types/PlayerReview';
 
 export const ChessPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    id: 'game-variant',
-    activatesOn: AppActivationEvents.SetupSchema,
-    activate: GameVariant,
-  }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
-  AppPlugin.addSchemaModule({ schema: [Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review] }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(GameVariant),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
+  Plugin.addModule(AppCapability.schema([Chess.State, ChessPositionIndex.PositionIndex, PlayerReview.Review])),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

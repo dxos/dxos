@@ -26,7 +26,7 @@ import { str } from '../../util';
 
 export const num = () => random.number.int({ min: 0, max: 9999 }).toLocaleString();
 
-export const img = '![dxos](https://dxos.network/dxos-logotype-blue.png)';
+export const img = '![dxos](https://media.dxos.network/dxos-logotype-blue.png)';
 
 export type GenerateListOptions = {
   /** Maximum nesting depth. */

@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type PluginManager, PluginManagerContext } from '@dxos/app-framework';
+import { PluginManagerContext } from '@dxos/app-framework';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { invariant } from '@dxos/invariant';
 import { useWebComponentContext } from '@dxos/web-context-solid';
 

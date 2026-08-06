@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { Button, Icon, IconButton, Input, Panel, Select, useTranslation } from '@dxos/react-ui';
@@ -22,7 +22,11 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
 import { VariantRenderer } from '#surfaces';
-import { type Artifact, StudioCapabilities, StudioOperation, Variant } from '#types';
+
+import type * as Artifact from '../../types/Artifact';
+import * as StudioCapabilities from '../../types/StudioCapabilities';
+import * as StudioOperation from '../../types/StudioOperation';
+import * as Variant from '../../types/Variant';
 
 export type ArtifactArticleProps = AppSurface.ObjectArticleProps<Artifact.Artifact>;
 

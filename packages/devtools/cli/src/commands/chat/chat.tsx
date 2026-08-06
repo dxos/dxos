@@ -12,15 +12,16 @@ import { createSignal } from 'solid-js';
 
 import { AiService, Model } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AiSession } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import * as Assistant from '@dxos/plugin-assistant/Assistant';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';

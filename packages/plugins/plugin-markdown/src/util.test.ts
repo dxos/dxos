@@ -17,7 +17,7 @@ describe('markdown utils', () => {
       },
       {
         content: trim`
-          ![img](https://dxos.network/dxos-logotype-blue.png)
+          ![img](https://media.dxos.network/dxos-logotype-blue.png)
 
           # Welcome to Composer by DXOS
 
@@ -27,7 +27,7 @@ describe('markdown utils', () => {
       },
       {
         content: trim`
-          ![img](https://dxos.network/dxos-logotype-blue.png)
+          ![img](https://media.dxos.network/dxos-logotype-blue.png)
 
           ---
 

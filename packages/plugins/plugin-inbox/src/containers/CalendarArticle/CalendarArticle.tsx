@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -28,9 +28,11 @@ import { Event } from '@dxos/types';
 
 import { EventStack, type EventStackActionHandler, useTargetConnection } from '#components';
 import { meta } from '#meta';
-import { Calendar, DraftEvent, SystemTags } from '#types';
 
 import { getCalendarRangeSelectionId } from '../../paths';
+import * as Calendar from '../../types/Calendar';
+import * as DraftEvent from '../../types/DraftEvent';
+import * as SystemTags from '../../types/SystemTags';
 import { InitializeCalendar } from './InitializeCalendar';
 
 const byDate =

@@ -1,5 +1,14 @@
 # @dxos/extractor-lib
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/extractor@0.11.1
+- @dxos/log@0.11.1
+- @dxos/types@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

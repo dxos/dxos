@@ -9,8 +9,8 @@ import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
-import { Bookmark } from '#types';
 
+import * as Bookmark from '../../types/Bookmark';
 import { BookmarkCard } from './BookmarkCard';
 
 const CardStory = () => {

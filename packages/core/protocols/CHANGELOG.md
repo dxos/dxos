@@ -1,5 +1,16 @@
 # @dxos/protocols
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/codec-protobuf@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/errors@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/timeframe@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

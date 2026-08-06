@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-client",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -67,11 +67,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -79,6 +74,36 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./Account": {
+      "source": "./src/types/Account.ts",
+      "types": "./dist/types/src/types/Account.d.ts",
+      "import": "./dist/lib/Account.mjs"
+    },
+    "./AccountCache": {
+      "source": "./src/types/AccountCache.ts",
+      "types": "./dist/types/src/types/AccountCache.d.ts",
+      "import": "./dist/lib/AccountCache.mjs"
+    },
+    "./ClientAction": {
+      "source": "./src/types/ClientAction.ts",
+      "types": "./dist/types/src/types/ClientAction.d.ts",
+      "import": "./dist/lib/ClientAction.mjs"
+    },
+    "./ClientCapabilities": {
+      "source": "./src/types/ClientCapabilities.ts",
+      "types": "./dist/types/src/types/ClientCapabilities.d.ts",
+      "import": "./dist/lib/ClientCapabilities.mjs"
+    },
+    "./ClientEvents": {
+      "source": "./src/types/ClientEvents.ts",
+      "types": "./dist/types/src/types/ClientEvents.d.ts",
+      "import": "./dist/lib/ClientEvents.mjs"
+    },
+    "./ClientOptions": {
+      "source": "./src/types/ClientOptions.ts",
+      "types": "./dist/types/src/types/ClientOptions.d.ts",
+      "import": "./dist/lib/ClientOptions.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
@@ -97,6 +122,28 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Account": [
+        "dist/types/src/types/Account.d.ts"
+      ],
+      "AccountCache": [
+        "dist/types/src/types/AccountCache.d.ts"
+      ],
+      "ClientAction": [
+        "dist/types/src/types/ClientAction.d.ts"
+      ],
+      "ClientCapabilities": [
+        "dist/types/src/types/ClientCapabilities.d.ts"
+      ],
+      "ClientEvents": [
+        "dist/types/src/types/ClientEvents.d.ts"
+      ],
+      "ClientOptions": [
+        "dist/types/src/types/ClientOptions.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Collection, Obj, Type } from '@dxos/echo';
@@ -31,13 +32,6 @@ import {
   SyncStatus,
 } from '#containers';
 import { meta } from '#meta';
-import {
-  HueAnnotationId,
-  IconAnnotationId,
-  SPACE_HOME_NODE_TYPE,
-  SpaceHomeContent,
-  TypeInputOptionsAnnotationId,
-} from '#types';
 
 import {
   CREATE_OBJECT_DIALOG,
@@ -46,6 +40,9 @@ import {
   JOIN_DIALOG,
   RENAME_POPOVER,
 } from '../constants';
+import { TypeInputOptionsAnnotationId } from '../types/SpaceForm';
+import { HueAnnotationId, IconAnnotationId, SPACE_HOME_NODE_TYPE } from '../types/SpaceSchema';
+import { SpaceHomeContent } from '../types/SpaceSurface';
 import { HueField, IconField, TypenameField } from './SpaceFormFields';
 import {
   NavbarPresenceSurface,
@@ -68,7 +65,7 @@ type ReactSurfaceOptions = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceHome',
         filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),

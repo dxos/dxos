@@ -13,14 +13,16 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { RelatedItemsList } from '#components';
-import type { SampleItem } from '#types';
-import { SampleItem as SampleItemSchema } from '#types';
+
+import type * as SampleItem from '../types/SampleItem';
+import * as SampleItemSchema from '../types/SampleItem';
 
 export type SampleCompanionPanelProps = {
   companionTo: SampleItem.SampleItem;

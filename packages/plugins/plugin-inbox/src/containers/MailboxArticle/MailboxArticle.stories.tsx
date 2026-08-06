@@ -9,18 +9,21 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -28,32 +31,34 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
-import { InboxCapabilities, Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as Mailbox from '../../types/Mailbox';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+const MockDeckOperations = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+        ),
+      ),
+    ]),
+);
+
 const MockDeckOperationsPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
     name: 'Mock Deck Ops',
   }),
-).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
-            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-          ),
-        ),
-      ),
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
 
 /** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
 const SEARCH_TERM = 'invoice';
@@ -104,7 +109,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

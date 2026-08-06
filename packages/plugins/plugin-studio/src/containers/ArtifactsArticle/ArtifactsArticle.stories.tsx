@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -17,9 +17,10 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Artifact, Variant } from '#types';
 
 import { StudioPlugin } from '../../StudioPlugin';
+import * as Artifact from '../../types/Artifact';
+import * as Variant from '../../types/Variant';
 import { ArtifactsArticle } from './ArtifactsArticle';
 
 const DefaultStory = () => {

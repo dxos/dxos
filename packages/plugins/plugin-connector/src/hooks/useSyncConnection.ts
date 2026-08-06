@@ -10,7 +10,8 @@ import { log } from '@dxos/log';
 
 import { useConnector } from '#hooks';
 
-import { Connection, ConnectorOperation } from '../types';
+import * as Connection from '../types/Connection';
+import * as ConnectorOperation from '../types/ConnectorOperation';
 
 export type UseSyncConnectionResult = {
   /** True when the connection's connector exposes a `sync` operation. Drives sync button visibility. */

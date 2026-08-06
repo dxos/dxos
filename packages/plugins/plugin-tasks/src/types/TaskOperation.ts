@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 // Person is referenced in Actor.Actor's inferred type (via the contact ref); importing it lets

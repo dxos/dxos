@@ -4,19 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 import { Message } from '@dxos/types';
 
-import { ThreadCapabilities, ThreadOperation, resolveProvider } from '../types';
+import * as ChannelBackend from '../types/ChannelBackend';
+import * as ThreadCapabilities from '../types/ThreadCapabilities';
+import * as ThreadOperation from '../types/ThreadOperation';
 
 const handler: Operation.WithHandler<typeof ThreadOperation.AppendChannelMessage> =
   ThreadOperation.AppendChannelMessage.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* ({ channel, sender, text }) {
         const providers = yield* Capability.getAll(ThreadCapabilities.ChannelBackend);
-        const provider = resolveProvider(providers, channel.backend.kind);
+        const provider = ChannelBackend.resolveProvider(providers, channel.backend.kind);
         invariant(provider, `No channel backend for kind: ${channel.backend.kind}`);
 
         const message = Message.make({

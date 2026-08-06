@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -15,8 +16,10 @@ import { Position } from '@dxos/util';
 
 import { DebugStatus, LogStatus, StatsPanel, Wireframe } from '#containers';
 import { meta } from '#meta';
-import { DebugCapabilities, DebugNodes, DebugSurface } from '#types';
 
+import { DebugCapabilities } from '../types/Debug';
+import * as DebugNodes from '../types/DebugNodes';
+import * as DebugSurface from '../types/DebugSurface';
 import {
   DebugSettingsSurface,
   LoggerSurface,
@@ -44,12 +47,11 @@ type ReactSurfaceOptions = {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ logStore }: ReactSurfaceOptions) {
-    const capabilities = yield* Capability.Service;
-    const registry = capabilities.get(Capabilities.AtomRegistry);
-    const settingsAtom = capabilities.get(DebugCapabilities.Settings);
-    const fileUploader = capabilities.getAll(AppCapabilities.FileUploader)[0];
+    const registry = yield* Capabilities.AtomRegistry;
+    const settingsAtom = yield* DebugCapabilities.Settings;
+    const fileUploader = (yield* Capability.getAll(AppCapabilities.FileUploader))[0];
 
-    return Capability.contributes(Capabilities.ReactSurface, [
+    return Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),

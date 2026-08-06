@@ -1,5 +1,16 @@
 # @dxos/react-ui-introspect
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/introspect-tools@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-syntax-highlighter@0.11.1
+- @dxos/ui-theme@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

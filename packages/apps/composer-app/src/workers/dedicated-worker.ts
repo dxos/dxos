@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { runDedicatedWorker } from '@dxos/client';
+import { runDedicatedWorker } from '@dxos/client/worker';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { isTauri } from '@dxos/util';

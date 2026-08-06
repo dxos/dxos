@@ -1,5 +1,12 @@
 # @dxos/functions-simulator-cloudflare
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/context@0.11.1
+- @dxos/protocols@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

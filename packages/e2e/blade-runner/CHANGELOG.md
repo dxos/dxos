@@ -1,5 +1,43 @@
 # @dxos/blade-runner
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/client@0.11.1
+- @dxos/client-services@0.11.1
+- @dxos/codec-protobuf@0.11.1
+- @dxos/compute-runtime@0.11.1
+- @dxos/config@0.11.1
+- @dxos/context@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-doc@0.11.1
+- @dxos/echo-host@0.11.1
+- @dxos/edge-client@0.11.1
+- @dxos/edge-compute@0.11.1
+- @dxos/esbuild-plugins@0.11.1
+- @dxos/feed-store@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keyring@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/kv-store@0.11.1
+- @dxos/log@0.11.1
+- @dxos/messaging@0.11.1
+- @dxos/network-manager@0.11.1
+- @dxos/node-std@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/random@0.11.1
+- @dxos/random-access-storage@0.11.1
+- @dxos/rpc@0.11.1
+- @dxos/teleport-extension-replicator@0.11.1
+- @dxos/timeframe@0.11.1
+- @dxos/tracing@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-script@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

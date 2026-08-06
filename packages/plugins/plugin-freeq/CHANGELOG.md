@@ -1,5 +1,23 @@
 # @dxos/plugin-freeq
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/client@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/errors@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/types@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-thread@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

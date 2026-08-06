@@ -5,27 +5,22 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapability } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 
-import {
-  DeckCapabilities,
-  type DeckPluginState,
-  type DeckState,
-  type EphemeralDeckState,
-  type StoredDeckState,
-} from '#types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
+import * as DeckSchema from '../types/DeckSchema';
 
 export type DeckStateHook = {
   /** Combined state value (reactive). Includes both persisted and ephemeral state. */
-  state: DeckPluginState;
+  state: DeckSchema.DeckPluginState;
   /** The active deck, computed from decks[activeDeck]. */
-  deck: DeckState;
+  deck: DeckSchema.DeckState;
   /** Update persisted state. */
-  updateState: (fn: (current: StoredDeckState) => StoredDeckState) => void;
+  updateState: (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => void;
   /** Update ephemeral state. */
-  updateEphemeral: (fn: (current: EphemeralDeckState) => EphemeralDeckState) => void;
+  updateEphemeral: (fn: (current: DeckSchema.EphemeralDeckState) => DeckSchema.EphemeralDeckState) => void;
 };
 
 /**
@@ -48,7 +43,7 @@ export const useDeckState = (): DeckStateHook => {
 
   // Combine persisted and ephemeral state into a unified view.
   const state = useMemo(
-    (): DeckPluginState => ({
+    (): DeckSchema.DeckPluginState => ({
       ...persistedState,
       ...ephemeralState,
     }),
@@ -56,14 +51,14 @@ export const useDeckState = (): DeckStateHook => {
   );
 
   const updateState = useCallback(
-    (fn: (current: StoredDeckState) => StoredDeckState) => {
+    (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
       registry.set(stateAtom, fn(registry.get(stateAtom)));
     },
     [registry, stateAtom],
   );
 
   const updateEphemeral = useCallback(
-    (fn: (current: EphemeralDeckState) => EphemeralDeckState) => {
+    (fn: (current: DeckSchema.EphemeralDeckState) => DeckSchema.EphemeralDeckState) => {
       registry.set(ephemeralAtom, fn(registry.get(ephemeralAtom)));
     },
     [registry, ephemeralAtom],

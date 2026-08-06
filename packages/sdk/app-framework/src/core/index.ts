@@ -5,6 +5,7 @@
 export * as ActivationEvent from './activation-event';
 export * as Capability from './capability';
 export * as CapabilityManager from './capability-manager';
+export * from './errors';
 export * as Plugin from './plugin';
 export * as PluginAssetCache from './plugin-asset-cache';
 export * as PluginManager from './plugin-manager';

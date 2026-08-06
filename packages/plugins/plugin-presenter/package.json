@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-presenter",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Braneframe presenter plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -54,11 +54,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -67,7 +62,33 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Presenter": {
+      "source": "./src/types/Presenter.ts",
+      "types": "./dist/types/src/types/Presenter.d.ts",
+      "import": "./dist/lib/Presenter.mjs"
+    },
+    "./PresenterCapabilities": {
+      "source": "./src/types/PresenterCapabilities.ts",
+      "types": "./dist/types/src/types/PresenterCapabilities.d.ts",
+      "import": "./dist/lib/PresenterCapabilities.mjs"
+    },
+    "./PresenterEvents": {
+      "source": "./src/types/PresenterEvents.ts",
+      "types": "./dist/types/src/types/PresenterEvents.d.ts",
+      "import": "./dist/lib/PresenterEvents.mjs"
+    },
+    "./PresenterOperation": {
+      "source": "./src/types/PresenterOperation.ts",
+      "types": "./dist/types/src/types/PresenterOperation.d.ts",
+      "import": "./dist/lib/PresenterOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -80,6 +101,25 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Presenter": [
+        "dist/types/src/types/Presenter.d.ts"
+      ],
+      "PresenterCapabilities": [
+        "dist/types/src/types/PresenterCapabilities.d.ts"
+      ],
+      "PresenterEvents": [
+        "dist/types/src/types/PresenterEvents.d.ts"
+      ],
+      "PresenterOperation": [
+        "dist/types/src/types/PresenterOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

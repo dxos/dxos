@@ -6,7 +6,9 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Profile, Sidekick } from '#types';
+
+import * as Profile from './types/Profile';
+import * as Sidekick from './types/Sidekick';
 
 export const translations = [
   {
