@@ -318,12 +318,13 @@ export class FeedStore {
 
         const hasMore = requestLimit != null && rows.length > requestLimit;
         const slice = hasMore ? rows.slice(0, requestLimit) : rows;
-        // Clones the buffer (else an empty Uint8Array) and decrypts sealed payloads back to plaintext.
-        const blocks = yield* Effect.forEach(
-          slice,
-          (row) => this.#openBlock(row, request.spaceId, request.feedNamespace),
-          { concurrency: 'unbounded' },
-        );
+        // Without a cypher, take the original synchronous path — decryption adds no async turns to
+        // the hot query path when encryption is off. Cloning the buffer avoids an empty Uint8Array.
+        const blocks = this.#options.cypher
+          ? yield* Effect.forEach(slice, (row) => this.#openBlock(row, request.spaceId, request.feedNamespace), {
+              concurrency: 'unbounded',
+            })
+          : slice.map((row) => ({ ...row, data: new Uint8Array(row.data) }));
 
         let nextCursor: FeedCursor = request.cursor ?? encodeCursor(validCursorToken, -1);
         if (blocks.length > 0 && request.spaceId) {
@@ -533,7 +534,11 @@ export class FeedStore {
       }
 
       // Seal payloads before the transaction so the WebCrypto round-trips do not hold it open.
-      const sealed = yield* this.#sealBlocks(request.spaceId, request.feedNamespace, request.blocks);
+      // Without a cypher, stay fully synchronous here so append adds no async turns when encryption
+      // is off (an extra turn can reorder concurrent appends racing for the same position).
+      const sealed = this.#options.cypher
+        ? yield* this.#sealBlocks(request.spaceId, request.feedNamespace, request.blocks)
+        : request.blocks.map((block) => ({ data: block.data, encryptionKeyId: null, iv: null }));
 
       // Wrap in transaction to ensure atomicity when assigning positions.
       const sqlTransaction = yield* SqlTransaction.SqlTransaction;
