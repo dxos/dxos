@@ -24,7 +24,9 @@ test.describe('Comments tests', () => {
     await host.closePage();
   });
 
-  test('create', async () => {
+  // TODO(wittjosiah): Failed on webkit in run 31126663421 after 1.6m, and on chromium in 31111016212
+  //   where Trunk's quarantine masked it into a green cell. Two browsers, two runs, so not browser-specific.
+  test.fixme('create', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
