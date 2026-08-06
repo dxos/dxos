@@ -4,23 +4,49 @@ Findings from instrumenting the `Check` workflow's e2e jobs while sharding the e
 (DX-1116, PR #12482). Two problems surfaced that are **not** e2e-specific and affect every
 CI job that runs moon — handing them off for a focused investigation.
 
-> **Read this first — the cache backend changed after these measurements were taken.**
-> Every number below was measured against **Depot** (`grpcs://cache.depot.dev`). PR #12482 has
-> since been rebased onto `claude/depot-vs-self-hosted-cache-3fbd62`, which **drops Depot** in
-> favour of a self-hosted `bazel-remote` (mTLS certs from 1Password, `tools/moon-cache/`). That
-> plausibly changes two of the three findings outright:
+> **Read this first — every number below was measured against Depot and is now obsolete.**
+> PR #12482 was rebased onto `claude/depot-vs-self-hosted-cache-3fbd62`, which **drops Depot**
+> (`grpcs://cache.depot.dev`) for a self-hosted `bazel-remote` (mTLS certs from 1Password,
+> `tools/moon-cache/`). Re-measured on the new backend in run
+> [31100457850](https://github.com/dxos/dxos/actions/runs/31100457850) (sha `4d822fa5`, seven
+> jobs), the headline finding does not survive:
 >
-> - **Finding 3 (uploads aborting on >4 MB blobs) may simply be fixed.** `bazel-remote` supports
->   the ByteStream API and zstd-compressed CAS blobs, so the per-blob ceiling that we believe
->   stopped `composer-app:bundle` and `docs:bundle` from ever caching may not exist there.
-> - **Finding 1 (restore slower than rebuild) is throughput-dependent** and was measured against
->   Depot's egress. A cache on the same network will have a different curve.
+> | quantity                                    | Depot          | bazel-remote                 |
+> | :------------------------------------------ | :------------- | :--------------------------- |
+> | hydration, composer-app e2e dep closure     | 920–1121 s     | **~12 s** (284 cached tasks) |
+> | `composer-app:bundle` (384 MB, 17954 files) | never hydrated | **hydrates in ≤13 s**        |
 >
-> So: **re-measure against the new backend before acting on any of this.** The _method_ below
-> (how to read moon's `cached from remote` lines, how to join build-vs-restore, the caveat that
-> vite's build table undercounts output size 3×) all still applies and is the durable part.
+> - **Finding 3 (uploads aborting on >4 MB blobs) is refuted for `bazel-remote`.** It speaks the
+>   ByteStream API, so the per-blob ceiling that stopped `composer-app:bundle` from ever caching
+>   does not apply: the `e2e-bundle` job restored composer's whole 384 MB / 17 954-file `out/`
+>   from the remote in a 13 s step.
+> - **Finding 2 is therefore void** for `composer-app:bundle`, the case it was built on.
+> - **Finding 1 (restore slower than rebuild) is unverified on the new backend.** It is
+>   throughput-dependent and was measured against Depot's egress; reproducing it needs the same
+>   build-vs-restore join, which this run did not produce (both warmed targets hydrated). The
+>   35× `composer-app:prebuild` case is the one worth re-checking, since it is dominated by file
+>   count rather than bytes.
+> - **Hydration is no longer a target worth optimising.** At ~12 s for 284 tasks it is ~10% of a
+>   ~2 min e2e job. Stripping sourcemaps (178 of composer's 384 MB) would shrink the restore, but
+>   the prize is now seconds.
+>
+> Note: `.moon/cache` is never restored by `actions/cache` (only the pnpm store is, per
+> `.github/actions/setup/action.yml`), so on a fresh container every "cached" task is necessarily
+> a remote hydration — that is what makes the ~12 s figure meaningful.
+>
+> The _method_ below (how to read moon's `cached from remote` lines, how to join build-vs-restore,
+> the caveat that vite's build table undercounts output size 3×) still applies and is the durable
+> part.
+>
+> **Separate cause, now fixed:** the reason `composer-app:bundle` appeared not to hydrate in the
+> e2e shards was never the cache. `tag-e2e.yml` declared the dependency as `bundle` with a
+> three-variable `env` override, and moon hashes a dependency-level `env` map into the
+> dependency — so `moon run composer-app:bundle` and the bundle the e2e closure waited on were
+> two different task hashes. The warming job populated an entry no consumer could read, and every
+> node rebuilt the bundle (19 s each). Fixed by splitting out a `bundle-e2e` target that declares
+> the env on the task itself, so one hash serves both paths.
 
-## TL;DR
+## TL;DR (as measured on Depot — see the caveat above for what still holds)
 
 1. **For 8 of 12 measured tasks, restoring the cached artifact costs more than rebuilding it
    from scratch** — up to 35×. 146 s of pure loss per job on those tasks alone. Restore cost
