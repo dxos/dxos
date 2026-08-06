@@ -34,11 +34,7 @@ test.describe('Basic tests', () => {
     await expect(plank.locator.getByRole('heading', { name: 'Welcome to Composer' })).toBeVisible();
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31130465200 — 30s timeout clicking
-  //   `create-space-form`'s save button, "element is not stable" then "detached from the DOM"
-  //   (app-manager.ts:197). Same signature as the failures that made `workers: 4` untenable, so
-  //   `createSpace()` re-renders the form mid-click; other tests calling it may be exposed too.
-  test.fixme('create space, which is displayed in tree', async () => {
+  test('create space, which is displayed in tree', async () => {
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
   });
