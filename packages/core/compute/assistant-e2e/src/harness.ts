@@ -129,17 +129,12 @@ const makeLanguageModelFixtureMiddleware = (
 ): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.AiService.pipe(
     Effect.provide(
+      // `dynamicValuePatterns` defaults to LanguageModelFixture.DEFAULT_DYNAMIC_VALUE_PATTERNS
+      // (space keys, entity IDs, UUIDs, timestamps) — the ids that differ across runs are
+      // canonicalized for matching and substituted back into memoized responses on a cache hit.
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',
         disableMemoization: options.disableLlmMemoization ?? false,
-        // Space keys, entity IDs, and ids minted by external services on every live tool call
-        // (e.g. an image-hosting upload id) differ across runs; canonicalize for matching and
-        // substitute live values back into memoized responses on a cache hit.
-        dynamicValuePatterns: [
-          LanguageModelFixture.SPACE_ID_PATTERN,
-          LanguageModelFixture.ENTITY_ID_PATTERN,
-          LanguageModelFixture.UUID_PATTERN,
-        ],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     Effect.map((service) => (_upstream: AiService.Service) => service),
