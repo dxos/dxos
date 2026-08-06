@@ -82,9 +82,9 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   // forcing is skipped, where build speed wins over correctness for unchanged source.
   // Package-internal `#*` subpath imports must still resolve to source, or they fall
   // through to `dist/lib/neutral/*` and fail when a package has not been compiled.
-  // Packages whose source is not vite-safe opt out per-package via
-  // `dx.importSource: false` in their package.json (no app-local exclude list);
-  // the `dist-runtime` moon tag keeps their dist built for `serve-min`.
+  // Packages whose source is not vite-safe publish no `source` condition at all, so they resolve
+  // to dist here exactly as they do under node/bun — no app-local exclude list, and no divergence
+  // between runtimes. The `dist-runtime` moon tag keeps their dist built for `serve-min`.
   importSource({
     include: isFastBundle ? ['#*'] : ['@dxos/**', '#*'],
   }),

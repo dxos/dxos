@@ -43,17 +43,14 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
     "./transport/tcp": {
-      "source": "./src/transport/tcp/index.ts",
       "types": "./dist/types/src/transport/tcp/index.d.ts",
       "import": "./dist/lib/transport/tcp.mjs"
     }
@@ -98,8 +95,5 @@
         "root": "src/network-manager.ts"
       }
     ]
-  },
-  "dx": {
-    "importSource": false
   }
 }

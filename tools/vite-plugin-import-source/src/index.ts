@@ -3,7 +3,6 @@
 //
 
 import { minimatch as Minimatch } from 'minimatch';
-import { readFile } from 'node:fs/promises';
 import { ResolverFactory } from 'oxc-resolver';
 import { type Plugin, type ResolvedConfig } from 'vite';
 
@@ -15,8 +14,6 @@ interface PluginImportSourceOptions {
   include?: string[];
   /**
    * Package patterns to exclude from 'source' condition resolution.
-   * Prefer declaring `dx.importSource: false` in the package's own `package.json`
-   * (picked up automatically); this option is an app-local escape hatch.
    * @default []
    */
   exclude?: string[];
@@ -25,10 +22,6 @@ interface PluginImportSourceOptions {
 
 /**
  * Prefer "source" condition for specifc packages.
- *
- * Packages whose source is not safe to consume in Vite's pipeline (raw `node:*`
- * imports, decorators, etc.) opt out by declaring `"dx": { "importSource": false }`
- * in their `package.json`; resolution then falls through to the published dist.
  */
 const PluginImportSource = ({
   include = ['@dxos/**'],
@@ -36,30 +29,6 @@ const PluginImportSource = ({
   verbose = process.env.IMPORT_SOURCE_DEBUG === '1' || process.env.IMPORT_SOURCE_DEBUG === 'true',
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
-
-  // The package-level opt-out applies to bare specifiers only (`@dxos/config`), matching the
-  // specifier-pattern excludes it replaced: subpath imports (`@dxos/config/vite-plugin`,
-  // `@dxos/teleport/testing`) and package-internal `#*` imports must still reach source, or
-  // they fall through to `dist/lib/**` and fail when the package has not been compiled.
-  const isBareSpecifier = (specifier: string) =>
-    !specifier.startsWith('#') && specifier.split('/').length === (specifier.startsWith('@') ? 2 : 1);
-
-  // `dx.importSource === false` per package.json path; resolution runs for every
-  // import so the flag must not cost a file read each time.
-  const optOutCache = new Map<string, boolean>();
-  const isOptedOut = async (packageJsonPath: string): Promise<boolean> => {
-    let optedOut = optOutCache.get(packageJsonPath);
-    if (optedOut === undefined) {
-      try {
-        const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
-        optedOut = packageJson.dx?.importSource === false;
-      } catch {
-        optedOut = false;
-      }
-      optOutCache.set(packageJsonPath, optedOut);
-    }
-    return optedOut;
-  };
 
   // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
   // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
@@ -129,10 +98,6 @@ const PluginImportSource = ({
 
           if (resolved.packageJsonPath) {
             this.addWatchFile(resolved.packageJsonPath);
-            if (isBareSpecifier(source) && (await isOptedOut(resolved.packageJsonPath))) {
-              verbose && console.log(`[plugin-import-source] ${source} -> opted out (dx.importSource: false)`);
-              return null;
-            }
           }
 
           this.addWatchFile(resolved.path);

@@ -43,22 +43,18 @@
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
     "./esbuild-plugin": {
-      "source": "./src/plugin/esbuild-plugin.ts",
       "types": "./dist/types/src/plugin/esbuild-plugin.d.ts",
       "import": "./dist/lib/plugin/esbuild-plugin.mjs"
     },
     "./rollup-plugin": {
-      "source": "./src/plugin/rollup-plugin.ts",
       "types": "./dist/types/src/plugin/rollup-plugin.d.ts",
       "import": "./dist/lib/plugin/rollup-plugin.mjs"
     },
     "./vite-plugin": {
-      "source": "./src/plugin/vite-plugin.ts",
       "types": "./dist/types/src/plugin/vite-plugin.d.ts",
       "import": "./dist/lib/plugin/vite-plugin.mjs"
     }
@@ -95,9 +91,6 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "dx": {
-    "importSource": false
   },
   "typedoc": {
     "entryPoint": "src/index.ts"
