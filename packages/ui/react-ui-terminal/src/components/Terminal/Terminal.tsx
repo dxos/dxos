@@ -26,8 +26,11 @@ export type TerminalProps<Name extends string, R, E, A> = ThemedClassName<{
   /**
    * Services the command handlers need beyond the platform services provided internally, which is
    * why the terminal's own environment is excluded from what this must supply.
+   *
+   * Construction must not fail: the shell runs on a forked fiber with no surface to report a layer
+   * error on, so a host that can fail to build its services has to resolve that before mounting.
    */
-  layer: Layer.Layer<Exclude<R, XtermContext.Provided>, any, never>;
+  layer: Layer.Layer<Exclude<R, XtermContext.Provided>, never, never>;
   name?: string;
   version?: string;
   prompt?: string;
@@ -108,9 +111,18 @@ export const Terminal = <Name extends string, R, E, A>({
       cancelAnimationFrame(frame);
       themeObserver.disconnect();
       observer.disconnect();
-      Effect.runFork(Fiber.interrupt(fiber));
-      bridge.dispose();
-      xterm.dispose();
+      // Disposal is chained onto the interrupt rather than run beside it: the shell's finalizers
+      // still write their last output through the bridge, which throws once xterm is gone.
+      Effect.runFork(
+        Fiber.interrupt(fiber).pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              bridge.dispose();
+              xterm.dispose();
+            }),
+          ),
+        ),
+      );
     };
   }, [command, layer, name, version, prompt, banner, fontSize]);
 

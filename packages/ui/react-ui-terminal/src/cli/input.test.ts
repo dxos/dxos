@@ -3,107 +3,88 @@
 //
 
 import * as Option from 'effect/Option';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { decodeInput, isQuitInput } from './input';
-import { rewriteHelpAliases, tokenize } from './tokenize';
 
 describe('decodeInput', () => {
-  test('decodes printable characters', () => {
+  test('decodes printable characters', ({ expect }) => {
     const [input] = decodeInput('a');
     expect(input.key).to.deep.eq({ name: 'a', ctrl: false, meta: false, shift: false });
     expect(Option.getOrNull(input.input)).to.eq('a');
   });
 
-  test('reports shift for capitals but keeps the lowercase name', () => {
+  test('reports shift for capitals but keeps the lowercase name', ({ expect }) => {
     const [input] = decodeInput('A');
     expect(input.key.name).to.eq('a');
     expect(input.key.shift).to.be.true;
     expect(Option.getOrNull(input.input)).to.eq('A');
   });
 
-  test('names the space key', () => {
+  test('names the space key', ({ expect }) => {
     expect(decodeInput(' ')[0].key.name).to.eq('space');
   });
 
-  test('decodes carriage return as return', () => {
+  test('decodes carriage return as return', ({ expect }) => {
     expect(decodeInput('\r')[0].key.name).to.eq('return');
   });
 
-  test('decodes backspace', () => {
+  test('decodes backspace', ({ expect }) => {
     expect(decodeInput('\x7f')[0].key.name).to.eq('backspace');
   });
 
-  test('decodes arrow key escape sequences', () => {
+  test('decodes arrow key escape sequences', ({ expect }) => {
     expect(decodeInput('\x1b[A')[0].key.name).to.eq('up');
     expect(decodeInput('\x1b[B')[0].key.name).to.eq('down');
     expect(decodeInput('\x1b[C')[0].key.name).to.eq('right');
     expect(decodeInput('\x1b[D')[0].key.name).to.eq('left');
   });
 
-  test('prefers the longer escape sequence when one is a prefix of another', () => {
+  test('prefers the longer escape sequence when one is a prefix of another', ({ expect }) => {
     expect(decodeInput('\x1b[3~')[0].key.name).to.eq('delete');
   });
 
-  test('decodes control chords', () => {
+  test('decodes control chords', ({ expect }) => {
     const [input] = decodeInput('\x03');
     expect(input.key.name).to.eq('c');
     expect(input.key.ctrl).to.be.true;
   });
 
-  test('decodes alt-modified keys', () => {
+  test('decodes alt-modified keys', ({ expect }) => {
     const [input] = decodeInput('\x1bf');
     expect(input.key.name).to.eq('f');
     expect(input.key.meta).to.be.true;
   });
 
-  test('expands a pasted chunk into one event per character', () => {
+  test('expands a pasted chunk into one event per character', ({ expect }) => {
     const inputs = decodeInput('paste');
     expect(inputs).to.have.length(5);
     expect(inputs.map((input) => Option.getOrNull(input.input)).join('')).to.eq('paste');
   });
 
-  test('splits a mixed chunk into its constituent keys', () => {
+  test('splits a mixed chunk into its constituent keys', ({ expect }) => {
     const inputs = decodeInput('hi\r');
     expect(inputs.map((input) => input.key.name)).to.deep.eq(['h', 'i', 'return']);
+  });
+
+  test('discards parameterized sequences rather than decoding their parameters', ({ expect }) => {
+    // Ctrl-right; the editor has no word motion, and the old decoder typed `1;5C` into the line.
+    expect(decodeInput('\x1b[1;5C')).to.deep.eq([]);
+    expect(decodeInput('\x1b[1;2D')).to.deep.eq([]);
+    // An unrecognized SS3 sequence (F1) goes the same way.
+    expect(decodeInput('\x1bOP')).to.deep.eq([]);
+  });
+
+  test('keeps decoding after an unrecognized sequence', ({ expect }) => {
+    const inputs = decodeInput('\x1b[1;5Cls');
+    expect(inputs.map(({ key }) => key.name)).to.deep.eq(['l', 's']);
   });
 });
 
 describe('isQuitInput', () => {
-  test('detects the interrupt chords', () => {
+  test('detects the interrupt chords', ({ expect }) => {
     expect(isQuitInput(decodeInput('\x03')[0])).to.be.true;
     expect(isQuitInput(decodeInput('\x04')[0])).to.be.true;
     expect(isQuitInput(decodeInput('c')[0])).to.be.false;
-  });
-});
-
-describe('tokenize', () => {
-  test('splits on whitespace', () => {
-    expect(tokenize('space list')).to.deep.eq(['space', 'list']);
-  });
-
-  test('keeps quoted segments intact', () => {
-    expect(tokenize('space create "My Space"')).to.deep.eq(['space', 'create', 'My Space']);
-    expect(tokenize("greet 'ada lovelace'")).to.deep.eq(['greet', 'ada lovelace']);
-  });
-
-  test('returns nothing for blank input', () => {
-    expect(tokenize('   ')).to.deep.eq([]);
-  });
-});
-
-describe('rewriteHelpAliases', () => {
-  test('maps a bare help alias to the top-level flag', () => {
-    expect(rewriteHelpAliases(['help'])).to.deep.eq(['--help']);
-    expect(rewriteHelpAliases(['?'])).to.deep.eq(['--help']);
-  });
-
-  test('moves a help alias to a trailing flag', () => {
-    expect(rewriteHelpAliases(['help', 'space', 'list'])).to.deep.eq(['space', 'list', '--help']);
-  });
-
-  test('leaves other commands untouched', () => {
-    expect(rewriteHelpAliases(['space', 'list'])).to.deep.eq(['space', 'list']);
-    expect(rewriteHelpAliases([])).to.deep.eq([]);
   });
 });

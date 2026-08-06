@@ -64,6 +64,33 @@ const matchEscapeSequence = (data: string, index: number): { name: string; lengt
 };
 
 /**
+ * Length of the unrecognized escape sequence at `index`, or zero if what follows is not one.
+ *
+ * The table above covers only unmodified navigation keys, so a chord like ctrl-right arrives as
+ * the parameterized `\x1b[1;5C` and matches nothing. Measuring the whole sequence lets the caller
+ * discard it; decoding it byte by byte would type `1;5C` into the line instead.
+ */
+const unrecognizedEscapeLength = (data: string, index: number): number => {
+  const introducer = data[index];
+  if (introducer === '[') {
+    // CSI: parameter and intermediate bytes up to a final byte in `@`–`~`.
+    let end = index + 1;
+    while (end < data.length && !(data[end] >= '@' && data[end] <= '~')) {
+      end += 1;
+    }
+
+    return end < data.length ? end - index + 1 : data.length - index;
+  }
+
+  // SS3: a single final byte follows the introducer.
+  if (introducer === 'O' && index + 1 < data.length) {
+    return 2;
+  }
+
+  return 0;
+};
+
+/**
  * Decodes a chunk of xterm `onData` output into the keypress events that `@effect/platform`
  * consumers (notably `@effect/cli` prompts) expect, using the same key names as Node's readline.
  *
@@ -82,6 +109,12 @@ export const decodeInput = (data: string): Terminal.UserInput[] => {
       if (escape) {
         inputs.push(makeInput(escape.name));
         index += escape.length + 1;
+        continue;
+      }
+
+      const unrecognized = unrecognizedEscapeLength(data, index + 1);
+      if (unrecognized > 0) {
+        index += unrecognized + 1;
         continue;
       }
 

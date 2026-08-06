@@ -10,6 +10,7 @@ import type * as Terminal from '@effect/platform/Terminal';
 import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import type { TerminalBridge } from './bridge';
 import { readLineResult } from './line-editor';
@@ -90,7 +91,7 @@ export const runShell = <Name extends string, R, E, A>(
           }
 
           const failure = Cause.failureOption(cause);
-          if (failure._tag === 'Some' && ValidationError.isValidationError(failure.value)) {
+          if (Option.isSome(failure) && ValidationError.isValidationError(failure.value)) {
             return Effect.void;
           }
 

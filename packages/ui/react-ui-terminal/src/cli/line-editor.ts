@@ -111,6 +111,12 @@ export const readLineResult = (bridge: TerminalBridge, options: ReadLineOptions 
         }
       }
 
+      // Alt chords carry the bare character, so without this the editor types the `f` of alt-f
+      // rather than ignoring a word motion it does not implement.
+      if (key.meta) {
+        return;
+      }
+
       switch (key.name) {
         case 'return': {
           bridge.write('\n');

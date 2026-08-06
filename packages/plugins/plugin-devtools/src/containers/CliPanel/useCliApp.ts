@@ -87,8 +87,10 @@ export const useCliApp = (client: Client) => {
       operationLayer,
     );
 
-    // Plugins carry anything further their own commands need.
-    const layer = Layer.mergeAll(hostLayer, ...contributed);
+    // Plugins carry anything further their own commands need. A contributed layer may fail to
+    // build, and the shell runs on a fiber with nowhere to report that, so it dies here instead
+    // of being smuggled into the terminal as an unhandled error channel.
+    const layer = Layer.orDie(Layer.mergeAll(hostLayer, ...contributed));
 
     return { command, layer };
   }, [client, manager, commands, contributed]);

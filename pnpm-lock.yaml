@@ -25204,6 +25204,9 @@ importers:
 
   packages/ui/react-ui-terminal:
     dependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
@@ -25232,9 +25235,6 @@ importers:
         specifier: 3.21.4
         version: 3.21.4
     devDependencies:
-      '@dxos/effect':
-        specifier: workspace:*
-        version: link:../../common/effect
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
