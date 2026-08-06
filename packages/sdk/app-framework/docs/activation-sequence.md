@@ -131,7 +131,7 @@ Three mechanisms move work off it:
 Demand comes from the UI, so environments that render nothing produce none of it. A headless
 harness mounts no surfaces and a story mounts exactly one, so both would otherwise sit at whatever
 the startup pass activated. `activateDemandGatedModules` (in `./testing`) substitutes for that by
-firing the idle wave and every plugin's start event unconditionally.
+firing the idle wave, `CommandsRequested`, and every plugin's start event unconditionally.
 
 The cost is that **storybook cannot catch demand-gating regressions** — a module gated behind a
 surface nobody renders still passes there. Only the runtime modules-at-ready budget covers that
