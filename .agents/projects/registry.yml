@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/leveldb-removal/TASKS.md
     design: .agents/projects/leveldb-removal/DESIGN.md
     prs: [12492]
-    resume: 'PR #12492 OPEN. @dxos/kv-store deleted, LevelDB fully removed, tests/tooling converted to SQLite. Builds + tests + lint green (265 echo-host, 154 client-services). Merged main (resolved sqlite-storage-adapter migrator conflict) and addressed CodeRabbit review; watching CI.'
+    resume: 'PR #12492 OPEN. @dxos/kv-store deleted, LevelDB fully removed, tests/tooling converted to SQLite. Builds + tests + lint green (274 echo-host post-merge, 154 client-services). Merged main (resolved sqlite-storage-adapter migrator conflict) and addressed CodeRabbit review; watching CI.'
   - name: crm-pipeline-operations
     status: active
     user: burdon

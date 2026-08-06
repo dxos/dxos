@@ -50,9 +50,11 @@ export class EchoReplicant {
   async close(): Promise<void> {
     log.trace('dxos.echo-replicant.close');
     void this._ctx.dispose();
-    await this._testPeer!.close();
+    const testPeer = this._testPeer;
+    invariant(testPeer, 'EchoTestPeer not initialized.');
+    await testPeer.close();
     // storagePath keeps the SQLite runtime alive across close()/open(); dispose it for final teardown.
-    await this._testPeer!.disposeStorage();
+    await testPeer.disposeStorage();
   }
 
   @trace.span()
