@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import CRC32 from 'crc-32';
@@ -30,6 +31,7 @@ import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type Timeframe } from '@dxos/timeframe';
 import { ComplexMap, arrayToBuffer, forEachAsync, isNonNullable } from '@dxos/util';
 
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/metadata';
 import { type IMetadataStore, IMetadataStoreService, hasInvitationExpired } from './metadata-store';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
@@ -77,24 +79,19 @@ export class SqliteMetadataStore implements IMetadataStore {
   }
 
   /**
-   * Creates the space_metadata and space_large tables if they do not exist.
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteMetadataStore.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS space_metadata (
-          key TEXT PRIMARY KEY,
-          value BLOB NOT NULL
-        )`;
-      yield* sql`CREATE TABLE IF NOT EXISTS space_large (
-          space_key TEXT PRIMARY KEY,
-          value BLOB NOT NULL
-        )`;
-      log('space_metadata and space_large tables ready');
-    }).pipe(Effect.withSpan('SqliteMetadataStore.migrate')),
-  )();
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteMetadataStore.migrate'),
+  );
 
   get metadata(): EchoMetadata {
     return this.#metadata;

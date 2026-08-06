@@ -10,6 +10,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
 import { FactStore } from '../../store';
 import { type ExtractDocument } from '../../types';
 import { queuedAiService } from '../index';
@@ -91,6 +93,7 @@ const STUB_PAYLOADS: readonly unknown[] = [
 ];
 
 const TestLayer = FactStore.layer.pipe(
+  Layer.provideMerge(SqlTransaction.layer),
   Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
   Layer.provideMerge(queuedAiService(STUB_PAYLOADS)),
 );

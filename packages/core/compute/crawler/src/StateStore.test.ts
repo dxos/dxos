@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
 import { StateStore } from './StateStore';
 import type * as Type from './types';
 
@@ -93,14 +95,19 @@ describe('StateStore', () => {
   suite('memory', StateStore.layerMemory);
   suite(
     'sql',
-    StateStore.layerSql.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
+    StateStore.layerSql.pipe(
+      Layer.provideMerge(SqlTransaction.layer),
+      Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie)),
+    ),
   );
 
   it.effect(
     'sql state survives a fresh layer over the same database',
     Effect.fnUntraced(function* () {
       // Two StateStore layers over ONE memoized client layer: the second sees the first's writes.
-      const shared = Layer.memoize(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie));
+      const shared = Layer.memoize(
+        SqlTransaction.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.orDie))),
+      );
       yield* Effect.scoped(
         Effect.gen(function* () {
           const memoized = yield* shared;

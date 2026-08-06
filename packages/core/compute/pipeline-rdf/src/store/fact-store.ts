@@ -8,6 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type Quad } from 'n3';
 
+import { type SqlTransaction } from '@dxos/sql-sqlite';
+
 import { SemanticIndexError } from '../errors';
 import { insertQuadsMemory, makeMemorySource } from '../internal/source/memory-source';
 import { insertQuads, makeSqliteSource } from '../internal/source/sqlite-source';
@@ -50,7 +52,7 @@ export interface FactStoreApi {
 }
 
 export class FactStore extends Context.Tag('@dxos/pipeline-rdf/FactStore')<FactStore, FactStoreApi>() {
-  static layer: Layer.Layer<FactStore, never, SqlClient.SqlClient> = Layer.scoped(
+  static layer: Layer.Layer<FactStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
     FactStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;

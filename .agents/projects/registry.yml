@@ -51,6 +51,16 @@ projects:
       - agents/superpowers/specs/2026-08-01-task-plugin-reconciliation-design.md (RESOLVED)
     prs: [12423, 12428, 12432, 12443, 'edge#785', 'edge#786']
     resume: '2026-08-03 (hydrated). MERGED: #12443 (plugin-projects workerd entry, task set in project scaffold, plugin-space worker-safe imports) at 2026-08-03 05:06Z. PR OPEN: edge#789 (MCP project+task verbs, 3 worker fixes, DESIGN.md + TESTING.md; CI red until @dxos/plugin-projects publishes (12443 has landed; watch pkg.pr.new for a main SHA >= 71aa2a68, then flip the operation-service deps from the local tarballs back to catalog:dxos) — it consumes local tarballs from ~/Code/dxos/edge/temp-tarballs). LANDED: #12423 #12428 #12432 #12443 edge#785 edge#786. MCP surface now: object CRUD + discovery + task verbs (live-verified) + project verbs (unit-tested). NEXT = M6 passkey auth, RESHAPED by Josiah edge#789: no new storage (HALO credentials via agents service = IdentityRecovery + verifyWebauthnSignature + hub lookupAccount), rp.id stays composer.space via Related Origin Requests (no re-registration), @simplewebauthn/server comes out of hub-service. FIRST TASK: dev-origin problem (local passkeys scoped to localhost by rp.id = location.hostname, so the composer.space well-known cannot reach them). Then M7 identity-through-invoke, M8 space CRUD + sticky enter/exit (needs space.create-in-workerd spike), M9 connector-directory listing. BLOCKED: #12446 (dmaretskyi) objectCreate hangs after the write lands — blocks M8 live acceptance only; device-invitation admission still fails. Spec: edge:packages/services/mcp-space-service/DESIGN.md (§4.2-4.6, §9); runbook: same dir TESTING.md.'
+  - name: sql-migrations
+    status: active
+    user: mykola
+    host: mac
+    created: 2026-07-31
+    summary: Move every SQLite schema (9 packages, 18 stores) out of TS string literals into numbered .sql migrations with per-store history tables — @effect/sql Migrator + SqlTransaction.clientLayer (DO-safe), SqlMigrations splitter; Prisma ruled out (no browser/DO driver adapter).
+    tasks: .agents/projects/sql-migrations/TASKS.md
+    design: .agents/projects/sql-migrations/DESIGN.md
+    prs: [12449, 'edge#790']
+    resume: 'Conversion + verification DONE (inline DDL 41→0; old-DB idempotency proven three ways incl. cross-version interop for all 18 stores; DO path proven in edge#790 via linked packages, db-service 140/140). NEXT: watch dxos#12449 Check to green and land (react-ui-form story flaked once — quarantine via trunk-quarantine if it recurs); edge#790 stays red until a dxos release carries the migrations, then bump edge catalog and merge. Backlog: ts-test-workerd DO coverage for sql-sqlite in dxos CI; shared *.sql?raw typings package.'
   - name: email-sync-stability
     status: active
     user: mykola
