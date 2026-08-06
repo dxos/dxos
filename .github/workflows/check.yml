@@ -420,7 +420,7 @@ jobs:
     timeout-minutes: 90
     env:
       DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_EDGE_BASE_URL: 'wss://main.dxos.network/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
     steps:

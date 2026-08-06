@@ -44,12 +44,11 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
       const offer = await peerConnection.createOffer();
       await peerConnection.setLocalDescription(offer);
 
-      // Send offer to backend and get answer
-      const AiServiceUrl = new URL(
-        '/rtc-connect',
-        config.values.runtime?.services?.ai?.server ?? DEFAULT_AI_SERVICE_URL,
-      );
-      const response = await fetch(AiServiceUrl, {
+      // Send offer to backend and get answer. AI is served through edge's /ai/* proxy;
+      // the configured edge URL uses a ws(s) scheme, so swap it for http(s).
+      const aiServiceUrl = new URL('/ai/rtc-connect', config.values.runtime?.services?.edge?.url ?? DEFAULT_EDGE_URL);
+      aiServiceUrl.protocol = aiServiceUrl.protocol.replace('ws', 'http');
+      const response = await fetch(aiServiceUrl, {
         method: 'POST',
         body: offer.sdp,
         headers: {
@@ -138,4 +137,4 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
   );
 };
 
-const DEFAULT_AI_SERVICE_URL = 'http://localhost:8788';
+const DEFAULT_EDGE_URL = 'http://localhost:8787';

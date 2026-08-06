@@ -12,7 +12,7 @@ import * as Connection from '@dxos/plugin-connector/Connection';
 import { TYPEFULLY_CONNECTOR_ID, TYPEFULLY_SOURCE } from '../constants';
 import { makeTypefullyPublisherService } from './typefully-api';
 
-const PROXY = 'https://cors-proxy.dxos.workers.dev/api.typefully.com/v2';
+const PROXY = 'https://cors.dxos.network/api.typefully.com/v2';
 
 // Records what the stubbed `fetch` was called with so tests can assert the real request (method, URL,
 // auth header, body). Requests are routed through the DXOS CORS proxy, which relays the caller's

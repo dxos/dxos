@@ -12,11 +12,9 @@ runtime:
 
   services:
     edge:
-      url: wss://edge-production.dxos.workers.dev/
+      url: wss://dxos.network/
     iceProviders:
-      - urls: https://edge-production.dxos.workers.dev/ice
-    ai:
-      server: https://ai-service.dxos.workers.dev
+      - urls: https://dxos.network/ice
     sandbox:
       url: https://sandbox-service.dxos.workers.dev
     ipfs:
@@ -24,10 +22,10 @@ runtime:
       gateway: https://gateway.ipfs.dxos.network/ipfs
     edgeServices:
       - name: calls
-        endpoint: https://calls-service.dxos.workers.dev
+        endpoint: https://calls.dxos.network
       - name: transcription
-        endpoint: https://calls-service.dxos.workers.dev
+        endpoint: https://calls.dxos.network
       - name: image
-        endpoint: https://image-service-main.dxos.workers.dev
+        endpoint: https://image.main.dxos.network
       - name: discord
-        endpoint: https://discord-service.dxos.workers.dev
+        endpoint: https://discord.dxos.network
