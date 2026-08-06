@@ -25,8 +25,38 @@ const canonicalStringify = (value: unknown): string => {
   return JSON.stringify(sortKeys(value));
 };
 
-const canonicalJsonOf = (json: Record<string, unknown>): string =>
-  canonicalStringify(EchoFeedCodec.stripQueuePosition(json));
+/**
+ * 128-bit synchronous string hash (cyrb128). Reconciliation only ever compares states for
+ * equality, so retaining a fixed-size digest instead of the canonical JSON keeps per-object
+ * memory O(1) — with whole mailboxes live, retained canonical strings dominated the main-thread
+ * heap (one full copy of every message).
+ */
+const hash128 = (input: string): string => {
+  let h1 = 1779033703;
+  let h2 = 3144134277;
+  let h3 = 1013904242;
+  let h4 = 2773480762;
+  for (let i = 0; i < input.length; i++) {
+    const k = input.charCodeAt(i);
+    h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+    h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+    h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+    h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+  }
+  h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+  h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+  h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+  h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+  return (
+    (h1 >>> 0).toString(16).padStart(8, '0') +
+    (h2 >>> 0).toString(16).padStart(8, '0') +
+    (h3 >>> 0).toString(16).padStart(8, '0') +
+    (h4 >>> 0).toString(16).padStart(8, '0')
+  );
+};
+
+const canonicalHashOf = (json: Record<string, unknown>): string =>
+  hash128(canonicalStringify(EchoFeedCodec.stripQueuePosition(json)));
 
 const positionOf = (entity: Entity.Unknown): number | undefined => {
   const key = Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION).at(0);
@@ -48,7 +78,7 @@ const positionOf = (entity: Entity.Unknown): number | undefined => {
  * coalesce to a single append (the latest combined state), so only ONE state is ever pending — we
  * never queue intermittent states.
  *
- * Reconciliation is a small state machine over a single `#state` (the latest known canonical JSON)
+ * Reconciliation is a small state machine over a single `#state` (a digest of the latest known canonical JSON)
  * and a version (`KEY_QUEUE_POSITION`) baseline:
  *
  *   Obj.update → dirty (local, unappended) → appended (awaiting echo) → roundtripped (came back)
@@ -78,8 +108,10 @@ export class FeedObjectCore {
   #unsubscribe: (() => void) | undefined;
 
   /**
-   * Canonical (position-stripped) JSON of the entity's current known state — the single source of
-   * truth for reconciliation comparisons (updated on capture and on applied remote reads).
+   * Digest of the canonical (position-stripped) JSON of the entity's current known state — the
+   * single source of truth for reconciliation comparisons (updated on capture and on applied
+   * remote reads). A digest, not the JSON: comparisons are equality-only, and retaining the string
+   * kept a full copy of every live feed object (e.g. a whole mailbox) on the heap.
    */
   #state: string;
 
@@ -90,15 +122,15 @@ export class FeedObjectCore {
   #version: number | undefined;
 
   /**
-   * Canonical JSON of the state captured for append and awaiting its echo (roundtrip). A single
-   * slot, not a list: appends coalesce to the latest combined state, so at most one write is in
-   * flight; a later capture simply replaces it. `undefined` once roundtripped.
+   * Digest of the state captured for append and awaiting its echo (roundtrip). A single slot, not
+   * a list: appends coalesce to the latest combined state, so at most one write is in flight; a
+   * later capture simply replaces it. `undefined` once roundtripped.
    */
   #pendingAppend: string | undefined;
 
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
-    this.#state = canonicalJsonOf(Entity.toJSON(entity) as Record<string, unknown>);
+    this.#state = canonicalHashOf(Entity.toJSON(entity) as Record<string, unknown>);
     this.#version = positionOf(entity);
     this.#unsubscribe = Entity.subscribe(entity, () => {
       if (this.#applyingRemote || this.#deleted) {
@@ -117,7 +149,7 @@ export class FeedObjectCore {
    */
   captureForAppend(): { json: Record<string, unknown>; token: string } {
     const json = Entity.toJSON(this.entity) as Record<string, unknown>;
-    const canonical = canonicalJsonOf(json);
+    const canonical = canonicalHashOf(json);
     this.#pendingAppend = canonical;
     this.#state = canonical;
     this.#dirty = false;
@@ -147,7 +179,7 @@ export class FeedObjectCore {
       return;
     }
 
-    const inboundCanonical = canonicalJsonOf(inboundJson);
+    const inboundCanonical = canonicalHashOf(inboundJson);
     const inboundPosition = positionOf(decoded);
 
     if (this.#pendingAppend !== undefined) {
