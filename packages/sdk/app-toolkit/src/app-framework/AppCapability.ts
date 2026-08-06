@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import type * as Command$ from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
@@ -274,9 +273,7 @@ export const pluginAsset = (
  * keeps them in the module body chunk, which is what makes the gating worth anything.
  */
 export const commands = (
-  values:
-    | ReadonlyArray<Command$.Command<any, any, any, any>>
-    | (() => Promise<{ default: ReadonlyArray<Command$.Command<any, any, any, any>> }>),
+  values: ReadonlyArray<Capabilities.AnyCommand> | (() => Promise<{ default: ReadonlyArray<Capabilities.AnyCommand> }>),
   options?: { name?: string },
 ) => {
   const spec = { activatesOn: ActivationEvents.CommandsRequested, provides: [Capabilities.Command] } as const;

@@ -14,7 +14,7 @@ import * as Connection from './types/Connection';
 
 export const ConnectorPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(AppGraphBuilder),
-  Plugin.addModule(AppCapability.commands(() => import('./command-defs'))),
+  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands'))),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(AppCapability.schema([AccessToken.AccessToken, Connection.Connection, Cursor.Cursor, Feed.Feed])),

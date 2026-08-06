@@ -8,7 +8,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { meta } from '#meta';
 
 export const RegistryPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AppCapability.commands(() => import('./command-defs'))),
+  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands'))),
   Plugin.make,
 );
 

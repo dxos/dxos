@@ -28,7 +28,7 @@ import { translations } from '#translations';
 import * as ClientOptions from './types/ClientOptions';
 
 export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
-  Plugin.addModule(AppCapability.commands(() => import('./command-defs'))),
+  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands'))),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(OperationHandler),

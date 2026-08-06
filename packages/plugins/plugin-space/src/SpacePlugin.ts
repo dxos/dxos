@@ -47,7 +47,7 @@ import * as SpaceSchema from './types/SpaceSchema';
 
 export const SpacePlugin = Plugin.define<SpaceSchema.SpacePluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addModule(AppCapability.commands(() => import('./command-defs'))),
+  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands'))),
   Plugin.addModule(CreateObject),
   Plugin.addModule(NavigationHandler),
   Plugin.addModule(NavigationTargetResolver),

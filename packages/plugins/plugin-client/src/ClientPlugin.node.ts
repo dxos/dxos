@@ -12,7 +12,7 @@ import * as ClientOptions from './types/ClientOptions';
 
 export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
-  Plugin.addModule(AppCapability.commands(() => import('./command-defs.node'))),
+  Plugin.addModule(AppCapability.commands(() => import('./capabilities/commands.node'))),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(Client),
   Plugin.addModule(SchemaDefs),

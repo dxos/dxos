@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Command from '@effect/cli/Command';
-
-import { config, device, edge, halo } from './commands';
+import { config, device, edge, halo } from '../commands';
 
 // `account` needs the OAuth callback server and `profile` a filesystem, so both are node-only
 // (see the .node variant); the rest resolve through the client alone.
-const commands: ReadonlyArray<Command.Command<any, any, any, any>> = [config, device, edge, halo];
+const commands = [config, device, edge, halo];
 
 export default commands;
