@@ -46,12 +46,15 @@ test.describe('Basic test', () => {
     await guest.page.close();
   });
 
-  test.describe('Default space', () => {
-    // TODO(wittjosiah): These two are the only tests here that assert on host-to-guest replication,
-    //   and they are the two that come and go: green in run 31101995366 (14.4s, 15.3s), both failed
-    //   in run 31105198682 at 19.7s/20.1s with the element never appearing. The `beforeEach` runs a
-    //   full WebRTC invitation per test and four of those proceed concurrently, so a 5s expect budget
-    //   for replication is the suspect — unconfirmed, hence deferred rather than retuned.
+  // TODO(wittjosiah): The whole group is deferred, not individual tests — which of them fails moves
+  //   between runs, so picking them off one at a time does not converge. `create a task` and
+  //   `toggle a task` failed in run 31105198682; with only those two marked, run 31106982347 failed
+  //   `filter active tasks` instead, on a 30s `waitFor` rather than the 5s replication assert.
+  //   The common factor is the `beforeEach` above: it runs a full WebRTC invitation per test, and
+  //   four of those proceed concurrently at `workers: 4`. Same shape as plugin-kanban's
+  //   `waitUntilReady` and the note in composer's `startup.spec.ts` about `waitForReady` being too
+  //   tight under load; all three are probably one fix, and this group comes back with it.
+  test.describe.fixme('Default space', () => {
     test.fixme('create a task', async () => {
       await host.createTodo(Groceries.Eggs);
 
