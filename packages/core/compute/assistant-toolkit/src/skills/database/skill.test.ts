@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation, Skill } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Entity, Feed, Filter, JsonSchema, Obj, Query, Ref, Relation, Scope, Tag, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EID, EntityId } from '@dxos/keys';
