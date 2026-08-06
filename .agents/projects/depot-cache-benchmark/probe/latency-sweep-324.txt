@@ -1,0 +1,11 @@
+rtt_ms  n  hits  hydration_ms  delta_vs_0  wall_s
+     0  3   324         12784  +0                      14.7
+     2  3   324         15320  +2535                   14.6
+     5  3   324         16077  +3292                   15.0
+    10  3   324         20112  +7328                   15.5
+    20  3   324         27311  +14526                  17.0
+    40  3   324         43091  +30307                  20.2
+
+slope: 748.1 ms hydration per 1 ms RTT over 324 tasks
+     = 2.31 ms per task per ms RTT  (~2.3 sequential round-trips per cached task)
+wall-clock slope: 143.0 ms per 1 ms RTT
