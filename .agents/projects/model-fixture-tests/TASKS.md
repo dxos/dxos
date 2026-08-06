@@ -73,15 +73,16 @@ the new store + tag.
 
 ### Tasks
 
-- [x] **Git-dig complete** — seeded from all 3-week `*.conversations.json`, widened to every deleted `*.test.ts` referencing the memoized layer. 12 suites; 3 false positives excluded.
-- [x] **Recovered 7 suites** onto the new tag + store, forced to **sonnet** (`com.anthropic.model.claude-sonnet-4-6.default`) to hold regen cost, fixtures regenerated live and replay green:
-  - Group B (4): `assistant-toolkit skills/{memory,database}/skill.test.ts`, `plugin-magazine/.../curate-magazine.skill.test.ts`, `plugin-markdown/operations/update.test.ts`.
-  - Group A (3): `assistant-e2e/src/testing/{database,smoke,web-search}.test.ts`.
-- [x] **Recover _alongside_, not replacing** — the deterministic per-operation/unit tests stay; these add LLM fixture-replay coverage on top.
-- [ ] **Deferred (5), reasons:**
-  - `assistant-toolkit skills/{planning,agent}/skill.test.ts` — tested the removed `Plan` type (now an `Outline` model in `@dxos/types`; `Chat.ensurePlan`/`Chat.plan`/`Plan.hasIncompleteTasks` gone). Faithful recovery needs a semantic rewrite; the current `planning/operations/plan-reminder.test.ts` already covers today's behavior.
-  - Group A `crm-mailbox`/`markdown` — import `@dxos/plugin-crm` / `@dxos/plugin-markdown`, which are not `assistant-e2e` deps (would need new devDeps + cycle check).
-  - Group A `planning` — regeneration failed on a malformed object reference (`Unable to parse object reference`); the outline/plan drift likely reaches this scenario too.
+- [x] **Scope decision** — model-fixture coverage stays focused on **harness** (agent-runtime `AgentService` / `assistant-session` / `functions`, plus the `ai` engine) + **core skills** (`memory`, `database`). Plugin-operation and assistant-e2e agent suites are out of scope; their deterministic per-operation tests already live on `main` and stay.
+- [x] **Kept (core set)** — forced to **sonnet** (`com.anthropic.model.claude-sonnet-4-6.default`), fixtures regenerated live and replay green:
+  - `ai` engine `LanguageModelFixture.test.ts`; agent-runtime `AgentService` / `assistant-session-tests/{request,xml-response}` / `functions`.
+  - `assistant-toolkit skills/{memory,database}/skill.test.ts`.
+- [x] **Removed (out of scope)** — deleted the suites + their fixtures and dropped the stale `model-fixture` moon tag from the packages:
+  - `assistant-e2e/src/testing/{database,smoke,web-search}.test.ts` (agent harness e2e).
+  - `plugin-magazine/.../curate-magazine.skill.test.ts`, `plugin-markdown/operations/update.test.ts` (plugin operations; `curate-magazine.test.ts` / `update-markdown.test.ts` on `main` keep deterministic coverage).
+- [ ] **Deferred, reasons:**
+  - `assistant-toolkit skills/planning/skill.test.ts` — **in-scope core skill**, but its old test targeted the removed `Plan` type (now an `Outline` model in `@dxos/types`; `Chat.ensurePlan`/`Chat.plan`/`Plan.hasIncompleteTasks` gone). Needs a semantic rewrite against the `Outline` API — tracked as the next follow-up. `planning/operations/plan-reminder.test.ts` covers today's behavior meanwhile.
+  - `assistant-toolkit skills/agent/skill.test.ts` — same removed-`Plan` dependency.
 - [ ] **(Optional/backlog)** deeper dig outside the 3-week window — `blueprints/*`, `conductor/gpt`, `trace-timeline`, `database/agent-firewall`.
 
 ## Reviewer follow-ups (not blocking this PR)
