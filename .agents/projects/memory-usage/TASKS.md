@@ -68,11 +68,17 @@ Ranked by measured impact — see DESIGN.md "Fix ranking".
 
 ### Tasks
 
-- [ ] **Feed/mail data double-retention** — (a) `FeedObjectCore.#state`:
-      replace the retained canonical-JSON string with a hash (equality-only
-      use); (b) `IndexQuerySourceProvider._lastRemoteResults`: stop retaining
-      `documentJson` strings for the subscription lifetime (re-hydrate from
-      identity map / re-fetch). Biggest mail-open lever (~2× the mail bytes).
+- [x] **Feed/mail data double-retention (client side)** — DONE, commit
+      e9871910d0 + changeset; Linear DX-1148. (a) `FeedObjectCore.#state` →
+      128-bit cyrb128 digest; (b) `_lastRemoteResults` drops `documentJson`
+      after hydration into an identity-tracked core (re-resolves via
+      `getCachedObjectById`; degraded no-handle path keeps its JSON).
+      echo-client 523 tests green. Manual verification pending (user):
+      reload with mail open → Main heap snapshot → doubled message strings
+      gone.
+- [ ] **Worker-side result retention (DX-1148 item 3)** — `_lastResultSet`
+      reuses `item.doc` across runs for diff/serialization; dropping it
+      forces re-reads. Needs a design pass.
 - [ ] **Shrink structural baseline** — audit the Idle activation wave: which
       of the 63 `ActivationEvents.Idle` registrations pull how much closure,
       and why do disabled/Labs plugins load at all; evaluate dropping the
