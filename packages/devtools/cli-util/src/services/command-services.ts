@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Capability, Plugin } from '@dxos/app-framework';
+import type * as Capability from '@dxos/app-framework/Capability';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import type { ClientService, ConfigService } from '@dxos/client';
-import type { Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 
 /**
  * The services a host owes the commands it collects from plugins.

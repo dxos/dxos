@@ -6,17 +6,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import {
-  // eslint-disable-next-line unused-imports/no-unused-imports
-  type Connection,
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
+// Referenced only from a JSDoc {@link}, which the rule cannot see; the suppression rode the
+// pre-subpath barrel import too.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 
@@ -35,8 +32,8 @@ export const GetLinearTeams = Operation.make({
     description: 'List Linear teams reachable from a connection without materializing local objects.',
     icon: 'ph--users--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 /**
@@ -53,8 +50,8 @@ export const MaterializeLinearTarget = Operation.make({
     description: 'Create the empty local root Project bound to a selected Linear team.',
     icon: 'ph--users--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**

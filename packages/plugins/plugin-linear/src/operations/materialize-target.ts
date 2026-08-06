@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TaskSet } from '@dxos/types';
 
 import { LINEAR_SOURCE } from '../constants';
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
 

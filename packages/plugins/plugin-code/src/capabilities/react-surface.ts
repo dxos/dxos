@@ -4,19 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
-import { CodeProject, Spec } from '#types';
 
 import { isPluginSpecSubject } from '../plugin-spec';
+import * as CodeProject from '../types/CodeProject';
+import * as Spec from '../types/Spec';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),

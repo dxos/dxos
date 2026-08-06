@@ -10,8 +10,8 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { VersionInfo } from '#types';
 
+import * as DeckRole from '../../types/DeckRole';
 import { CloseSidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'topbar' | 'sidebar' }>) => {
@@ -36,7 +36,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
         </div>
       )}
       <span className='grow' />
-      <Surface.Surface type={VersionInfo} limit={1} />
+      <Surface.Surface type={DeckRole.VersionInfo} limit={1} />
     </header>
   );
 };

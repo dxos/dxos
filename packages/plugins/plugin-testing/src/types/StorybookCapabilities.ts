@@ -6,8 +6,8 @@
 
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
-import { type LayoutOperation } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Label } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -38,4 +38,4 @@ export type LayoutStateProps = {
   workspace: string;
 };
 
-export const LayoutState = Capability.make<Atom.Writable<LayoutStateProps>>(`${meta.profile.key}.state`);
+export const LayoutState = Capability.makeSingleton<Atom.Writable<LayoutStateProps>>()(`${meta.profile.key}.state`);

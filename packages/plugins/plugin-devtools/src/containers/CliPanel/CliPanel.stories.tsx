@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { userEvent } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -25,7 +24,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
+      // No setup event: the panel fires `CommandsRequested` itself, which is what pulls the
+      // plugins' command modules in — the same path the app takes.
       plugins: [
         ...corePlugins(),
         // The identity brings a personal space, which is what the commands resolve against.

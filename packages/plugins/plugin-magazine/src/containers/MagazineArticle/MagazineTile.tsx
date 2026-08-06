@@ -9,8 +9,9 @@ import { Card, Focus, SystemIconButton } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';
-import { type Magazine, type Subscription } from '#types';
 
+import type * as Magazine from '../../types/Magazine';
+import type * as Subscription from '../../types/Subscription';
 import { formatDate } from '../../util/date';
 
 export type MagazineTileProps = {

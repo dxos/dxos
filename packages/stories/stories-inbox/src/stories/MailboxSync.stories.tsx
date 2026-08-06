@@ -7,19 +7,19 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager, withSurfaceDebug } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { persistentClientServices } from '@dxos/client/testing';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Feed, Tag } from '@dxos/echo';
 import { AccessToken, Cursor } from '@dxos/link';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { ConnectorPlugin } from '@dxos/plugin-connector/plugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -60,7 +60,6 @@ const DECORATORS = [
   withSurfaceDebug(false),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
-    setupEvents: [AppActivationEvents.SetupSchema, AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({

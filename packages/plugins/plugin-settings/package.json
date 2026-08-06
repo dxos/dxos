@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-settings",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS Settings plugin for managing application settings.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,14 +18,18 @@
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
     "#plugin": "./src/SettingsPlugin.ts",
-    "#translations": "./src/translations.ts",
-    "#types": "./src/types/index.ts"
+    "#translations": "./src/translations.ts"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./SettingsPath": {
+      "source": "./src/types/SettingsPath.ts",
+      "types": "./dist/types/src/types/SettingsPath.d.ts",
+      "import": "./dist/lib/SettingsPath.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
@@ -44,6 +48,13 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SettingsPath": [
+        "dist/types/src/types/SettingsPath.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

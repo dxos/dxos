@@ -28,7 +28,8 @@ import {
   runDiagnostics,
 } from '#diagnostics';
 import { meta } from '#meta';
-import { DoctorCapabilities } from '#types';
+
+import * as DoctorCapabilities from '../../types/DoctorCapabilities';
 
 type RunState =
   | { readonly status: 'idle' }
@@ -195,7 +196,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
       </header>
       {result.error && (
         <Message.Root valence='error' classNames='m-2'>
-          <Message.Content>{result.error}</Message.Content>
+          <Message.Body>{result.error}</Message.Body>
         </Message.Root>
       )}
       {result.issues.length > 0 && (

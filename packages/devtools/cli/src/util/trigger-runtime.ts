@@ -19,9 +19,11 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { OperationHandlerSet, ServiceResolver, Trace } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { TriggerDispatcher, TriggerStateStore } from '@dxos/compute-runtime';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, type Key } from '@dxos/echo';
 
 import { type AiChatServices, chatLayer } from './runtime';

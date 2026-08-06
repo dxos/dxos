@@ -4,11 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { Instructions } from '@dxos/compute';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, type Database, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, Tagging, TagIndex } from '@dxos/schema';
 import { Message } from '@dxos/types';
 
@@ -83,7 +83,10 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     FeedAnnotation.set(true),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the mailbox toolbar; bind the mailbox as the new connection's sync target.
-    ConnectorAuthAnnotation.set({ connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID], bindTarget: true }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({
+      connectorIds: [GMAIL_CONNECTOR_ID, JMAP_MAIL_CONNECTOR_ID],
+      bindTarget: true,
+    }),
   ),
 ) {}
 
@@ -155,7 +158,12 @@ export const recordExtraction = (mailbox: Mailbox, messageId: string, objectIds:
     return;
   }
   Obj.update(mailbox, (mailbox) => {
-    const map = (mailbox.extracted ??= {});
+    if (!mailbox.extracted) {
+      mailbox.extracted = {};
+    }
+    // Re-read through the proxy: `??=` would evaluate to the plain right-hand object, and mutations
+    // of a detached record are not written through, silently dropping the first recorded entry.
+    const map = mailbox.extracted;
     const merged = [...(map[messageId] ?? [])];
     for (const id of objectIds) {
       if (!merged.includes(id)) {

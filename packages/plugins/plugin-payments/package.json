@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-payments",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Pay for edge resources via x402 (USDC) or Stripe Checkout.",
   "homepage": "https://dxos.org",
@@ -43,11 +43,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -60,9 +55,38 @@
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
-    }
+    },
+    "./PaymentsCapabilities": {
+      "source": "./src/types/PaymentsCapabilities.ts",
+      "types": "./dist/types/src/types/PaymentsCapabilities.d.ts",
+      "import": "./dist/lib/PaymentsCapabilities.mjs"
+    },
+    "./PaymentsEvents": {
+      "source": "./src/types/PaymentsEvents.ts",
+      "types": "./dist/types/src/types/PaymentsEvents.d.ts",
+      "import": "./dist/lib/PaymentsEvents.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "PaymentsCapabilities": [
+        "dist/types/src/types/PaymentsCapabilities.d.ts"
+      ],
+      "PaymentsEvents": [
+        "dist/types/src/types/PaymentsEvents.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

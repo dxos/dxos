@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-inbox",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -68,11 +68,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -81,15 +76,81 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
+    "./Calendar": {
+      "source": "./src/types/Calendar.ts",
+      "types": "./dist/types/src/types/Calendar.d.ts",
+      "import": "./dist/lib/Calendar.mjs"
     },
+    "./DraftEvent": {
+      "source": "./src/types/DraftEvent.ts",
+      "types": "./dist/types/src/types/DraftEvent.d.ts",
+      "import": "./dist/lib/DraftEvent.mjs"
+    },
+    "./ExtractedFrom": {
+      "source": "./src/types/ExtractedFrom.ts",
+      "types": "./dist/types/src/types/ExtractedFrom.d.ts",
+      "import": "./dist/lib/ExtractedFrom.mjs"
+    },
+    "./InboxCapabilities": {
+      "source": "./src/types/InboxCapabilities.ts",
+      "types": "./dist/types/src/types/InboxCapabilities.d.ts",
+      "import": "./dist/lib/InboxCapabilities.mjs"
+    },
+    "./InboxEvents": {
+      "source": "./src/types/InboxEvents.ts",
+      "types": "./dist/types/src/types/InboxEvents.d.ts",
+      "import": "./dist/lib/InboxEvents.mjs"
+    },
+    "./InboxOperation": {
+      "source": "./src/types/InboxOperation.ts",
+      "types": "./dist/types/src/types/InboxOperation.d.ts",
+      "import": "./dist/lib/InboxOperation.mjs"
+    },
+    "./Mailbox": {
+      "source": "./src/types/Mailbox.ts",
+      "types": "./dist/types/src/types/Mailbox.d.ts",
+      "import": "./dist/lib/Mailbox.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./SyncOptions": {
+      "source": "./src/types/SyncOptions.ts",
+      "types": "./dist/types/src/types/SyncOptions.d.ts",
+      "import": "./dist/lib/SyncOptions.mjs"
+    },
+    "./SyncStreamConfig": {
+      "source": "./src/types/SyncStreamConfig.ts",
+      "types": "./dist/types/src/types/SyncStreamConfig.d.ts",
+      "import": "./dist/lib/SyncStreamConfig.mjs"
+    },
+    "./SystemTags": {
+      "source": "./src/types/SystemTags.ts",
+      "types": "./dist/types/src/types/SystemTags.d.ts",
+      "import": "./dist/lib/SystemTags.mjs"
+    },
+    "./containers": {
+      "source": "./src/containers/index.ts",
+      "types": "./dist/types/src/containers/index.d.ts",
+      "import": "./dist/lib/containers.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
+    },
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
     },
     "./testing": {
       "source": {
@@ -104,19 +165,46 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Calendar": [
+        "dist/types/src/types/Calendar.d.ts"
+      ],
+      "DraftEvent": [
+        "dist/types/src/types/DraftEvent.d.ts"
+      ],
+      "ExtractedFrom": [
+        "dist/types/src/types/ExtractedFrom.d.ts"
+      ],
+      "InboxCapabilities": [
+        "dist/types/src/types/InboxCapabilities.d.ts"
+      ],
+      "InboxEvents": [
+        "dist/types/src/types/InboxEvents.d.ts"
+      ],
+      "InboxOperation": [
+        "dist/types/src/types/InboxOperation.d.ts"
+      ],
+      "Mailbox": [
+        "dist/types/src/types/Mailbox.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "SyncOptions": [
+        "dist/types/src/types/SyncOptions.d.ts"
+      ],
+      "SyncStreamConfig": [
+        "dist/types/src/types/SyncStreamConfig.d.ts"
+      ],
+      "SystemTags": [
+        "dist/types/src/types/SystemTags.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

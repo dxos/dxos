@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type SystemTags } from '../../../../types';
+import type * as SystemTags from '../../../../types/SystemTags';
 
 /**
  * Gmail system label id → canonical system tag ({@link SystemTags.SystemTag}). A system label absent

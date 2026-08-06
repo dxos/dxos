@@ -3,4 +3,5 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as LinearEvents from './types/LinearEvents';
+export * as LinearOperation from './types/LinearOperation';

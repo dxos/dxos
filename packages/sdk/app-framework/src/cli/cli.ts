@@ -79,8 +79,12 @@ export const createCliApp = Effect.fn(function* ({
     module: 'org.dxos.app-framework.atom-registry',
   });
 
-  // Activate startup event to load CLI commands and Effect layers.
+  // Activate startup event to load Effect layers.
   yield* manager.activate(ActivationEvents.Startup);
+
+  // Awaited, not forked: the command tree below is built from one read of the capability, so a
+  // command still activating when that read happens would be missing from the binary's help.
+  yield* manager.activate(ActivationEvents.CommandsRequested);
 
   // Gather all layers and merge them into a single layer.
   const layers = manager.capabilities.getAll(Capabilities.Layer);

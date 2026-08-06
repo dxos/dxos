@@ -11,8 +11,13 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger, type TriggerEvent } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
+import * as Trace from '@dxos/compute/Trace';
+import * as Trigger from '@dxos/compute/Trigger';
+import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { invariant } from '@dxos/invariant';

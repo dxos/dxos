@@ -5,18 +5,19 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
+import { type CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps, translationKey } from '@dxos/shell/react';
 
-import { type ClientPluginOptions } from '#types';
+import * as ClientOptions from '../../types/ClientOptions';
 
 export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> &
-  Pick<ClientPluginOptions, 'onReset'> & {
+  Pick<ClientOptions.ClientPluginOptions, 'onReset'> & {
     capabilityManager: CapabilityManager.CapabilityManager;
     /**
      * Optional async action run before `client.reset()`. Throwing here aborts the

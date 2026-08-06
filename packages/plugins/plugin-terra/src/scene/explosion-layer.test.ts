@@ -8,7 +8,8 @@ import { Scene } from '@babylonjs/core/scene';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { type SimObject, evaluate, initialState } from '../sim';
-import { Terra, TerraObject } from '../types';
+import * as Terra from '../types/Terra';
+import * as TerraObject from '../types/TerraObject';
 import { ExplosionLayer } from './explosion-layer';
 
 const config = Terra.toConfigValues(Terra.make({ config: { seed: 'explosion-1' } }));

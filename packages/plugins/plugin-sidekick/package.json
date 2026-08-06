@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sidekick",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Personal companion agent plugin",
   "homepage": "https://dxos.org",
@@ -48,11 +48,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -71,9 +66,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Profile": {
+      "source": "./src/types/Profile.ts",
+      "types": "./dist/types/src/types/Profile.d.ts",
+      "import": "./dist/lib/Profile.mjs"
+    },
+    "./Sidekick": {
+      "source": "./src/types/Sidekick.ts",
+      "types": "./dist/types/src/types/Sidekick.d.ts",
+      "import": "./dist/lib/Sidekick.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Profile": [
+        "dist/types/src/types/Profile.d.ts"
+      ],
+      "Sidekick": [
+        "dist/types/src/types/Sidekick.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

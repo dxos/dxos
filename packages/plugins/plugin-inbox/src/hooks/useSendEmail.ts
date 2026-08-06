@@ -5,21 +5,25 @@
 import * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
-import { Operation, ServiceResolver } from '@dxos/compute';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Connection, findBindingForTarget } from '@dxos/plugin-connector';
+import { findBindingForTarget } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
 import { meta } from '#meta';
-import { InboxOperation, Mailbox, SystemTags } from '#types';
 
 import { JMAP_MAIL_CONNECTOR_ID } from '../constants';
+import * as InboxOperation from '../types/InboxOperation';
+import * as Mailbox from '../types/Mailbox';
+import * as SystemTags from '../types/SystemTags';
 
 /**
  * The send callback for the composer: routes the draft to its mailbox's provider, records the provider

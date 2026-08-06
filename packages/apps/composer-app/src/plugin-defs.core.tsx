@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
-import { NativePasskey } from '@dxos/app-toolkit';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
@@ -40,6 +41,8 @@ export type State = {
 };
 
 export type PluginConfig = State & {
+  /** Raises a fatal client-initialization failure to the entry point (see `onFatalError` in main.tsx). */
+  onFatalError?: (error: unknown) => void;
   isDev?: boolean;
   isLocal?: boolean;
   isPwa?: boolean;
@@ -60,6 +63,7 @@ export const getCorePlugins = ({
   services,
   observability,
   logStore,
+  onFatalError,
   isLocal,
   isTauri,
   isPopover,
@@ -75,6 +79,9 @@ export const getCorePlugins = ({
       shareableLinkOrigin: origin,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
+      // The forked init is outside the render tree, so a failure or a stalled handshake reaches
+      // the user only if the entry point raises it — React never sees one.
+      onClientInitializationError: ({ error }) => Effect.sync(() => onFatalError?.(error)),
       onReset: ({ target }) =>
         Effect.sync(() => {
           localStorage.clear();

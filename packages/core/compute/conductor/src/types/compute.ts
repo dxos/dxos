@@ -7,7 +7,9 @@ import type * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
-import type { Credential, Operation, Trace } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import type { Database, Registry } from '@dxos/echo';
 import { mapValues } from '@dxos/util';
 

@@ -4,17 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Position } from '@dxos/util';
 
 import { FeedArticle, FeedProperties, MagazineArticle, PostArticle, PostCard } from '#containers';
-import { Magazine, Subscription } from '#types';
+
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'magazineArticle',
         filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),

@@ -100,22 +100,49 @@ Corollary: `AGENTS.md` should hold the canonical wording (for humans and other
 harnesses) while the hook carries the enforcing copy per turn. Rules that govern
 **every** response get delivered on **every** prompt.
 
-### Why not a slash command
+### The slash command, and why it is safe
 
-`/mode terse` cannot write state — a command expands into a prompt and depends
-on the agent to run the script, and the expansion lands _after_ the turn begins
-so it cannot gate that turn's output. Keep the sentinel as the deterministic
-path; add `/mode` as an ergonomic front door backed by a `UserPromptExpansion`
-hook that performs the same write.
+A command **body** cannot write state: it expands into a prompt that depends on
+the agent to run the script, and the expansion lands _after_ the turn begins so
+it cannot gate that turn's own output. That argued against `/mode` — until the
+premise turned out to be wrong at one step earlier in the lifecycle.
+
+`UserPromptSubmit` carries the **raw typed text**, and fires before the command
+expands. So `hooks/mode.sh` greps `/mode <MODE>` there and performs exactly the
+write the sentinel performed, at exactly the same point in the turn. The command
+file is then pure ergonomics — autocomplete and a name — and its body only
+reports. No `UserPromptExpansion` hook is needed; that event is for _blocking_ an
+expansion, not for beating it.
+
+Generalised: **a slash command that must change state should be implemented as a
+`UserPromptSubmit` grep on its raw text, with a thin body.** The determinism
+comes from the event, never from the command.
 
 ### Sentinel grammar
 
-Target: `$mode <MODE>` only, with the two values `terse` and `normal`. The
-regex still accepts the bare one-token forms (plus the `concise` /
-`natural`/`default`/`off` aliases), so prose _about_ the modes flips them —
-observed live on 2026-08-03 when a message containing
-"`$natural/$concise/$verbose`" set the mode. Dropping the bare forms is the
-remaining half of this item.
+`/mode <MODE>` only, anchored to the start of the message, with the two values
+`terse` and `normal` (the `concise` / `natural`/`default`/`off` aliases survive as
+_values_). It got there in two steps, both driven by the same failure: a
+grep-driven hook cannot distinguish a command from a mention of one.
+
+1. The regex accepted bare one-token forms, so prose _about_ the modes flipped
+   them — observed live on 2026-08-03 when a message containing
+   "`$natural/$concise/$verbose`" set the mode. Fix: make the verb mandatory.
+2. `$mode <MODE>` still matched anywhere in a message, so writing the sentinel in
+   documentation prose would fire it. Fix: move to `/mode`, anchored to the start
+   — where a slash command must appear anyway, and where prose cannot reach.
+
+Generalised: **prefer an anchored command form over a free-floating sentinel.**
+
+`$project` proved the point within the day. On 2026-08-04 the message asking to
+convert it — which contained `"$project"` in prose — fired `$project list`. It
+was converted the same way: `/project VERB [ARGS]` matched on the first line
+only, with the legacy `$track` / `track:` / `$hydrate` / `$checkpoint` /
+`$resume` / `$rehydrate` aliases removed, since each carried the identical flaw.
+
+Both hooks now extract `head -1` of the prompt before matching. Anchoring with
+`^` alone is not enough: `grep -E` applies `^` per line, so a quoted command on a
+later line of a multi-line message would still fire.
 
 ## Open decisions
 

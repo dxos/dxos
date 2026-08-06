@@ -4,7 +4,6 @@
 
 import { describe, test } from 'vitest';
 
-import { ActivationEvents } from '@dxos/app-framework';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SpotlightPlugin } from '#plugin';
@@ -19,13 +18,15 @@ describe('SpotlightPlugin', () => {
       plugins: [SpotlightPlugin()],
     });
 
-    // State, SpotlightDismiss, and ReactRoot all activate on Startup.
+    // State, SpotlightDismiss, ReactRoot, and OperationHandler are all dependency-mode roots, so they
+    // all activate immediately.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('State'), moduleId('SpotlightDismiss'), moduleId('ReactRoot')]),
+      expect.arrayContaining([
+        moduleId('State'),
+        moduleId('SpotlightDismiss'),
+        moduleId('ReactRoot'),
+        moduleId('OperationHandler'),
+      ]),
     );
-
-    // OperationHandler fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupProcessManager);
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

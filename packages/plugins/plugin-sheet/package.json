@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sheet",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Braneframe sketch plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -67,11 +67,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -80,7 +75,38 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Sheet": {
+      "source": "./src/types/Sheet.ts",
+      "types": "./dist/types/src/types/Sheet.d.ts",
+      "import": "./dist/lib/Sheet.mjs"
+    },
+    "./SheetCapabilities": {
+      "source": "./src/types/SheetCapabilities.ts",
+      "types": "./dist/types/src/types/SheetCapabilities.d.ts",
+      "import": "./dist/lib/SheetCapabilities.mjs"
+    },
+    "./SheetEvents": {
+      "source": "./src/types/SheetEvents.ts",
+      "types": "./dist/types/src/types/SheetEvents.d.ts",
+      "import": "./dist/lib/SheetEvents.mjs"
+    },
+    "./SheetOperation": {
+      "source": "./src/types/SheetOperation.ts",
+      "types": "./dist/types/src/types/SheetOperation.d.ts",
+      "import": "./dist/lib/SheetOperation.mjs"
+    },
+    "./SheetRange": {
+      "source": "./src/types/SheetRange.ts",
+      "types": "./dist/types/src/types/SheetRange.d.ts",
+      "import": "./dist/lib/SheetRange.mjs"
+    },
+    "./SheetUtil": {
+      "source": "./src/types/SheetUtil.ts",
+      "types": "./dist/types/src/types/SheetUtil.d.ts",
+      "import": "./dist/lib/SheetUtil.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -93,6 +119,28 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Sheet": [
+        "dist/types/src/types/Sheet.d.ts"
+      ],
+      "SheetCapabilities": [
+        "dist/types/src/types/SheetCapabilities.d.ts"
+      ],
+      "SheetEvents": [
+        "dist/types/src/types/SheetEvents.d.ts"
+      ],
+      "SheetOperation": [
+        "dist/types/src/types/SheetOperation.d.ts"
+      ],
+      "SheetRange": [
+        "dist/types/src/types/SheetRange.d.ts"
+      ],
+      "SheetUtil": [
+        "dist/types/src/types/SheetUtil.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -105,6 +153,7 @@
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",

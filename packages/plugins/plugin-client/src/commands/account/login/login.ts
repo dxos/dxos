@@ -11,7 +11,8 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig, print } from '@dxos/cli-util';
 import { performRecoveryOAuthFlow } from '@dxos/cli-util/oauth';
 import { type Client, ClientService } from '@dxos/client';

@@ -3,19 +3,21 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
-import { AppAnnotation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations, MigrationVersionAnnotation } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { hues } from '@dxos/ui-types';
 import { iconValues } from '@dxos/ui-types';
 
 import { SpaceNotReadyError } from '../errors';
-import { SpaceCapabilities, SpaceEvents } from '../types';
+import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import * as SpaceEvents from '../types/SpaceEvents';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 

@@ -14,7 +14,9 @@ import { Form } from '@dxos/react-ui-form';
 import { Combobox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { AssistantCapabilities, type Ollama } from '#types';
+
+import * as AssistantCapabilities from '../../types/AssistantCapabilities';
+import type * as Ollama from '../../types/Ollama';
 
 /** Quick-pick model names (Ollama pull tags) sourced from the curated catalog. */
 const QUICK_PICKS = Model.forProvider(Provider.ollama.id).map((model) => model.backend);

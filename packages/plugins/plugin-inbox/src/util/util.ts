@@ -20,7 +20,8 @@ import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 
 import { meta } from '#meta';
-import { type Mailbox } from '#types';
+
+import type * as Mailbox from '../types/Mailbox';
 
 export const REPLY_DELIMITER = '\n\n---';
 export const REPLY_REGEXP = /^---\s*$/m;

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { DeckLayout } from '#containers';
 import { useDeckState } from '#hooks';
@@ -13,7 +14,7 @@ import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactRoot, {
+    Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
         const { state, updateEphemeral } = useDeckState();

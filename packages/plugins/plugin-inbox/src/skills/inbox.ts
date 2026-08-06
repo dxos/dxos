@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '#types';
-import { Mailbox } from '#types';
+import * as InboxOperation from '../types/InboxOperation';
+import * as Mailbox from '../types/Mailbox';
 
 const make = () =>
   Skill.make({

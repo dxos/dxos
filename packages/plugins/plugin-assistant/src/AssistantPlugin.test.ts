@@ -10,13 +10,16 @@ import { describe, test } from 'vitest';
 import { AgentService as AgentServiceRuntime } from '@dxos/agent-runtime';
 import { AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AgentWizardSkill, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
-import { AgentService, Instructions, Operation, ServiceResolver, Skill } from '@dxos/compute';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref, Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
@@ -26,6 +29,7 @@ import { AssistantPlugin } from '#plugin';
 
 import { meta } from './meta';
 import { AssistantSkill } from './skills/assistant';
+import * as AssistantEvents from './types/AssistantEvents';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -40,22 +44,21 @@ describe('AssistantPlugin', () => {
       plugins: [ClientPlugin({}), AssistantPlugin()],
     });
 
-    // After autoStart: AppGraphBuilder, CreateObject, schema, OperationHandler all auto-cascade.
+    // Dependency-mode roots activate immediately during the startup dependency pass.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('AppGraphBuilder'), moduleId('CreateObject'), moduleId('schema')]),
+      expect.arrayContaining([
+        moduleId('AppGraphBuilder'),
+        moduleId('schema'),
+        moduleId('OperationHandler'),
+        moduleId('AiService'),
+        moduleId('AiContext'),
+        moduleId('AgentRuntime'),
+      ]),
     );
-
-    // AssistantPlugin fires SetupArtifactDefinition itself, so it can test its own skill.
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
+    // Demand-gated modules park until their events fire (CreateObjectRequested).
+    expect(harness.manager.getActive()).not.toContain(moduleId('CreateObject'));
+    // Skills ride the assistant's start event, which the harness fires post-startup.
     expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
-
-    // OperationHandler auto-cascades from ProcessManagerPlugin.
-    expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
-
-    // Process-manager layer specs must activate on SetupProcessManager.
-    expect(harness.manager.getActive()).toContain(moduleId('AiService'));
-    expect(harness.manager.getActive()).toContain(moduleId('AiContext'));
-    expect(harness.manager.getActive()).toContain(moduleId('AgentRuntime'));
 
     // Space-affinity LayerSpec — resolution requires a space context.
     const { personalSpace } = await EffectEx.runAndForwardErrors(
@@ -114,8 +117,6 @@ describe('AssistantPlugin', () => {
       ],
     });
 
-    await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-
     const { personalSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
@@ -162,11 +163,13 @@ describe('AssistantPlugin', () => {
         ],
       });
 
-      await harness.fire(AppActivationEvents.SetupArtifactDefinition);
-
       const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
         EffectEx.runAndForwardErrors,
       );
+
+      // Skills ride the assistant's start event; the harness already fired it, but fire
+      // deterministically here to mirror the headless toolkit-materialization path.
+      await EffectEx.runAndForwardErrors(harness.manager.activate(AssistantEvents.Start));
 
       await harness.runPromise(
         Effect.gen(function* () {

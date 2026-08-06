@@ -8,19 +8,18 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
+import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
-import { CallsCapabilities } from '@dxos/plugin-calls/types';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
-import { TranscriptionCapabilities } from '@dxos/plugin-transcription/types';
+import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import { Config } from '@dxos/react-client';
 import { getSpace, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -29,7 +28,7 @@ import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
-import { Meeting } from '../types';
+import * as Meeting from '../types/Meeting';
 
 type StoryArgs = {};
 
@@ -153,7 +152,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(() => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

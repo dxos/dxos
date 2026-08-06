@@ -7,7 +7,8 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
@@ -33,7 +34,8 @@ import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { TableOperation } from '#types';
+
+import * as TableOperation from '../../types/TableOperation';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 

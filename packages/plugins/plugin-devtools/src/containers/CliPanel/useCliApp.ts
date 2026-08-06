@@ -6,13 +6,17 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
 import { CommandConfig, type CommandServices } from '@dxos/cli-util';
 import { type Client, ClientService, ConfigService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import { EffectEx } from '@dxos/effect';
 
 const OPERATIONS_UNAVAILABLE = 'Operations are not available in the devtools terminal.';
 
@@ -29,19 +33,26 @@ const operationLayer = Layer.succeed(Operation.Service, {
 /**
  * Builds the `dx` command tree and the services its handlers need.
  *
- * Subcommands are read through the capability atom, so enabling or disabling a plugin rebuilds the
- * tree rather than leaving the terminal on whichever set existed when it mounted.
+ * Mounting is the demand signal: command modules are gated on `CommandsRequested`, which nothing
+ * else in the app fires, so a plugin's commands stay off the critical path until a terminal opens.
+ * The capability is read through its atom, so commands appear as they activate and enabling or
+ * disabling a plugin later rebuilds the tree rather than leaving the terminal on the set that
+ * existed when it mounted.
  *
  * The root mirrors the binary's, minus the options that only mean something on a filesystem
  * (`--config`, `--profile`); everything else resolves the same way, including `--space-id`
  * defaulting to the first available space.
  *
- * Returns `undefined` when nothing contributes commands — there is no shell to offer.
+ * Returns `undefined` until something contributes commands — there is no shell to offer yet.
  */
 export const useCliApp = (client: Client) => {
   const manager = usePluginManager();
   const commands = useCapabilities(Capabilities.Command);
   const contributed = useCapabilities(Capabilities.Layer);
+
+  useEffect(() => {
+    EffectEx.runDetached(manager.activate(ActivationEvents.CommandsRequested));
+  }, [manager]);
 
   return useMemo(() => {
     // Destructured rather than passed as an array so the non-empty shape `withSubcommands` requires

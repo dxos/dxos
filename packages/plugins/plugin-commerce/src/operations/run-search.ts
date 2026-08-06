@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { SearchOperation } from '../types';
+import * as SearchOperation from '../types/SearchOperation';
 
 const handler: Operation.WithHandler<typeof SearchOperation.RunSearch> = SearchOperation.RunSearch.pipe(
   Operation.withHandler(

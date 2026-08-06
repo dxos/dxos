@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { Provider, SearchOperation } from '../types';
+import * as Provider from '../types/Provider';
+import * as SearchOperation from '../types/SearchOperation';
 
 const operations = [SearchOperation.AnalyzeProvider, SearchOperation.SetProviderTemplate];
 

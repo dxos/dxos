@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const SettingsOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./open'),
-  () => import('./open-plugin-registry'),
-);
+export const SettingsOperationHandlerSet = OperationHandlerSet.lazy([
+  SettingsOperation.Open.pipe(Operation.lazyHandler(() => import('./open'))),
+  SettingsOperation.OpenPluginRegistry.pipe(Operation.lazyHandler(() => import('./open-plugin-registry'))),
+]);

@@ -2,12 +2,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { RENAME_POPOVER } from '@dxos/plugin-space/constants';
 
-import { InboxOperation } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
 
 export default InboxOperation.RenameFilter.pipe(
   Operation.withHandler(

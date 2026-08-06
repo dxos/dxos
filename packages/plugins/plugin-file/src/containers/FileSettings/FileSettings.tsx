@@ -11,7 +11,9 @@ import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { FileCapabilities, Settings } from '#types';
+
+import * as FileCapabilities from '../../types/FileCapabilities';
+import * as Settings from '../../types/Settings';
 
 export type FileSettingsProps = AppSurface.SettingsData;
 

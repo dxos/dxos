@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 
 import { PlaygroundRoles } from '../roles';
@@ -30,7 +31,7 @@ export const Layout = () => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactRoot, {
+    Capability.contribute(Capabilities.ReactRoot, {
       id: 'org.dxos.test.layout.root',
       root: Layout,
     }),

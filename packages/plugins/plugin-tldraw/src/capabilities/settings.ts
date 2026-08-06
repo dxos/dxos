@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '#meta';
-import { Settings, TldrawCapabilities } from '#types';
+
+import * as Settings from '../types/Settings';
+import * as TldrawCapabilities from '../types/TldrawCapabilities';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -20,8 +22,8 @@ export default Capability.makeModule(() =>
     });
 
     return [
-      Capability.contributes(TldrawCapabilities.Settings, settingsAtom),
-      Capability.contributes(AppCapabilities.Settings, {
+      Capability.contribute(TldrawCapabilities.Settings, settingsAtom),
+      Capability.contribute(AppCapabilities.Settings, {
         prefix: meta.profile.key,
         schema: Settings.Settings,
         atom: settingsAtom,

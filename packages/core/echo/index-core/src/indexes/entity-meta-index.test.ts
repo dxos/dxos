@@ -11,6 +11,7 @@ import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { EntityMetaIndex } from './entity-meta-index';
 import type { IndexerObject } from './interface';
@@ -23,11 +24,13 @@ const TYPE_WITH_UNDERSCORE = DXN.make('com.example.type.personextra', '0.1.0');
 const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.make('com.example.type.personextra');
 const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.make('com.example.type.personaextra', '0.1.0');
 
-const TestLayer = Layer.merge(
-  SqliteClient.layer({
-    filename: ':memory:',
-  }),
-  Reactivity.layer,
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+  Layer.provideMerge(Reactivity.layer),
 );
 
 describe('EntityMetaIndex', () => {

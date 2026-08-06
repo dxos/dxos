@@ -78,6 +78,7 @@
       "@dxos/extractor-lib",
       "@dxos/feed",
       "@dxos/feed-store",
+      "@dxos/fixtures",
       "@dxos/functions-runtime-cloudflare",
       "@dxos/functions-simulator-cloudflare",
       "@dxos/functions-testing",
@@ -328,7 +329,6 @@
   "ignore": [
     "@dxos/composer-app",
     "@dxos/composer-crx",
-    "@dxos/composer-dxos-org",
     "@dxos/docs",
     "@dxos/todomvc",
     "tasks",

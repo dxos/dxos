@@ -12,23 +12,25 @@ import * as Schema from 'effect/Schema';
 
 import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';
-import { MemoizedAiService, MemoizedLanguageModel, TestAiService } from '@dxos/ai/testing';
-import { type Plugin } from '@dxos/app-framework';
+import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import type * as Skill from '@dxos/compute/Skill';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -121,23 +123,18 @@ const formatInstructions = (instructions: string, completionCriteria: readonly s
   return `${instructions}\n\nCompletion criteria:\n${criteria}`;
 };
 
-const makeMemoizedAiServiceMiddleware = (
+const makeLanguageModelFixtureMiddleware = (
   ctx: TestContext,
   options: Pick<AgentTestOptions, 'inferenceProvider' | 'disableLlmMemoization'>,
 ): Promise<(_upstream: AiService.Service) => AiService.Service> =>
   AiService.AiService.pipe(
     Effect.provide(
+      // `dynamicValuePatterns` defaults to LanguageModelFixture.DEFAULT_DYNAMIC_VALUE_PATTERNS
+      // (space keys, entity IDs, UUIDs, timestamps) — the ids that differ across runs are
+      // canonicalized for matching and substituted back into memoized responses on a cache hit.
       TestAiService({
         preset: options.inferenceProvider ?? 'direct',
         disableMemoization: options.disableLlmMemoization ?? false,
-        // Space keys, entity IDs, and ids minted by external services on every live tool call
-        // (e.g. an image-hosting upload id) differ across runs; canonicalize for matching and
-        // substitute live values back into memoized responses on a cache hit.
-        dynamicValuePatterns: [
-          MemoizedLanguageModel.SPACE_ID_PATTERN,
-          MemoizedLanguageModel.ENTITY_ID_PATTERN,
-          MemoizedLanguageModel.UUID_PATTERN,
-        ],
       }).pipe(Layer.provideMerge(Layer.succeed(TestContextService, ctx))),
     ),
     Effect.map((service) => (_upstream: AiService.Service) => service),
@@ -160,7 +157,7 @@ const createDefaultPlugins = async (ctx: TestContext, options: AgentTestOptions)
     types: [...DEFAULT_CLIENT_TYPES, ...(options.clientTypes ?? [])],
   }),
   AssistantPlugin({
-    aiServiceMiddleware: await makeMemoizedAiServiceMiddleware(ctx, options),
+    aiServiceMiddleware: await makeLanguageModelFixtureMiddleware(ctx, options),
   }),
   RoutinePlugin(),
   InboxPlugin(),
@@ -266,8 +263,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
           (testHarness) => Effect.promise(() => testHarness.dispose()),
         );
 
-        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
-
         const { personalSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
@@ -308,4 +303,4 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
  * enabled or memoization is disabled, and a shorter replay timeout for memoized runs.
  */
 export const agentTestTimeout = (opts?: Pick<AgentTestOptions, 'disableLlmMemoization'>) =>
-  MemoizedAiService.isGenerationEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;
+  LanguageModelFixture.isUpdateEnabled() || opts?.disableLlmMemoization ? DEFAULT_TEST_TIMEOUT : MEMOIZED_TEST_TIMEOUT;

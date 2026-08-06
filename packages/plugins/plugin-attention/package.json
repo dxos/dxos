@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-attention",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Plugin for attention",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,11 +32,6 @@
       "source": "./src/AttentionPlugin.ts",
       "types": "./dist/types/src/AttentionPlugin.d.ts",
       "default": "./dist/lib/AttentionPlugin.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -44,6 +39,16 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./AttentionAction": {
+      "source": "./src/types/AttentionAction.ts",
+      "types": "./dist/types/src/types/AttentionAction.d.ts",
+      "import": "./dist/lib/AttentionAction.mjs"
+    },
+    "./AttentionCapabilities": {
+      "source": "./src/types/AttentionCapabilities.ts",
+      "types": "./dist/types/src/types/AttentionCapabilities.d.ts",
+      "import": "./dist/lib/AttentionCapabilities.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
@@ -57,6 +62,16 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "AttentionAction": [
+        "dist/types/src/types/AttentionAction.d.ts"
+      ],
+      "AttentionCapabilities": [
+        "dist/types/src/types/AttentionCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -64,6 +79,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/keyboard": "workspace:*",

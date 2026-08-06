@@ -4,8 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, createProgressRegistry } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import { createProgressRegistry } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 /**
  * Contributes the always-on {@link AppCapabilities.ProgressRegistry}. Built from the shared atom
@@ -13,7 +15,7 @@ import { AppCapabilities, createProgressRegistry } from '@dxos/app-toolkit';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    return Capability.contributes(AppCapabilities.ProgressRegistry, createProgressRegistry(registry));
+    const registry = yield* Capabilities.AtomRegistry;
+    return [Capability.contribute(AppCapabilities.ProgressRegistry, createProgressRegistry(registry))];
   }),
 );

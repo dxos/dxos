@@ -6,15 +6,15 @@ import { useFocusFinders } from '@fluentui/react-tabster';
 import React, { type KeyboardEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { Plank } from '#components';
 import { useBreadcrumbs, useDeckSettings } from '#hooks';
-import { type ResolvedPart } from '#types';
 
+import * as DeckSchema from '../../types/DeckSchema';
 import { CompanionPlank } from './CompanionPlank';
 import { PlankControls } from './PlankControls';
 import { PlankErrorFallback, PlankLoading } from './PlankFallback';
@@ -24,7 +24,7 @@ const PLANK_LOADING = <PlankLoading />;
 
 export type DeckPlankProps = ThemedClassName<{
   id: string;
-  part: ResolvedPart;
+  part: DeckSchema.ResolvedPart;
   /** Whether this plank is displayed fullscreen (headless, no chrome). */
   fullscreen?: boolean;
   /** The real active planks (excludes the derived companion plank), for ordering/close semantics. */

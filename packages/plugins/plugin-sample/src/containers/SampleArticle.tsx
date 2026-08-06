@@ -28,7 +28,8 @@ import {
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
-import type { SampleItem } from '#types';
+
+import type * as SampleItem from '../types/SampleItem';
 
 export type SampleArticleProps = AppSurface.ObjectArticleProps<SampleItem.SampleItem>;
 

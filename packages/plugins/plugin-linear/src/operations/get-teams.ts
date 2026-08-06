@@ -5,11 +5,11 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { LinearApi } from '../services';
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 /**
  * Discovery only — list Linear teams reachable from the connection's token.

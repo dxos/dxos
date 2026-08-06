@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import type * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, asyncTimeout } from '@dxos/async';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

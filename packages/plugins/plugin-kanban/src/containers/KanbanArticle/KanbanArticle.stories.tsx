@@ -33,9 +33,9 @@ import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
 import { translations } from '#translations';
-import { Kanban } from '#types';
 
 import { KanbanPlugin } from '../../KanbanPlugin';
+import * as Kanban from '../../types/Kanban';
 
 random.seed(0);
 

@@ -14,9 +14,11 @@ import { Menu, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilde
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
-import type { Score, Sequence, Track } from '#types';
 
 import { ScorePlayer } from '../../audio';
+import type * as Score from '../../types/Score';
+import type * as Sequence from '../../types/Sequence';
+import type * as Track from '../../types/Track';
 import { type LeadSheetDocument, formatLeadSheet, parseLeadSheet } from '../../util/lead-sheet';
 import { type MutableScore, applyLeadSheetToScore, scoreToLeadSheet } from '../../util/score-leadsheet';
 

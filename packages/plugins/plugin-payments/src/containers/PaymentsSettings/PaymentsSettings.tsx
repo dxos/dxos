@@ -13,7 +13,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
-import { Settings } from '#types';
+
+import * as Settings from '../../types/Settings';
 
 type Status = {
   kind: 'idle' | 'pending' | 'result' | 'error';
@@ -89,7 +90,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
               {status.kind === 'error' && (
                 <Message.Root valence='error'>
                   <Message.Title>{t('error.label')}</Message.Title>
-                  <Message.Content>{status.text}</Message.Content>
+                  <Message.Body>{status.text}</Message.Body>
                 </Message.Root>
               )}
             </div>

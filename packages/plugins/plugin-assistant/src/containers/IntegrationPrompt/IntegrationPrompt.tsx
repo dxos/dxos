@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Connector, type ConnectorEntry } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { Icon, useTranslation } from '@dxos/react-ui';
 
 import { ConnectorAuthMenu } from '#components';
@@ -19,14 +19,14 @@ export type IntegrationPromptProps = {
 
 /**
  * Agent-facing connector prompt: rendered when the assistant needs a service the user has not yet
- * connected. Resolves the matching {@link Connector} entries for `service` and offers to connect via
+ * connected. Resolves the matching {@link ConnectorSpec.Connector} entries for `service` and offers to connect via
  * the shared connector-auth menu, so the user can grant access inline instead of the agent failing
  * silently.
  */
 export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
   const space = useActiveSpace();
-  const connectors = useCapabilities(Connector).flat();
+  const connectors = useCapabilities(ConnectorSpec.Connector).flat();
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
   const connectorIds = useMemo(() => matched.map((connector) => connector.id), [matched]);
 
@@ -63,7 +63,10 @@ export const IntegrationPrompt = ({ service }: IntegrationPromptProps) => {
  * leading token (e.g. `gmail` from `gmail.com`) so model-supplied hostnames resolve to connectors
  * keyed by short id or provider domain.
  */
-const matchConnectors = (connectors: ConnectorEntry[], service: string): ConnectorEntry[] => {
+const matchConnectors = (
+  connectors: ConnectorSpec.ConnectorEntry[],
+  service: string,
+): ConnectorSpec.ConnectorEntry[] => {
   const needle = service.trim().toLowerCase();
   // A malformed service (e.g. `.gmail.com` or `/`) can yield an empty base token, which would make
   // `value.includes(base)` match every connector; bail so the unavailable state is shown instead.

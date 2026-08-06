@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EdgeServiceName, getEdgeServiceEndpoint } from '@dxos/config';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
@@ -13,9 +13,9 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackSubmitHandler } from '#components';
 import { meta } from '#meta';
-import { SupportOperation } from '#types';
 
 import { GITHUB_NEW_ISSUE_URL } from '../../constants';
+import * as SupportOperation from '../../types/SupportOperation';
 import { captureScreenshot, uploadScreenshot } from './screenshot';
 
 const CUSTOM_LABEL = 'Composer';

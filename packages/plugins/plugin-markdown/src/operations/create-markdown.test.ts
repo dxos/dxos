@@ -10,7 +10,8 @@ import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { MarkdownPlugin } from '#plugin';
 
-import { Markdown, MarkdownOperation } from '../types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 describe('CreateMarkdown', () => {
   test('returns an unpersisted document with the given name and content', async ({ expect }) => {

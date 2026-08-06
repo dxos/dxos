@@ -5,13 +5,14 @@
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Mailbox, SystemTags } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
@@ -40,6 +41,17 @@ const getMessageHtml = (message: Message.Message): string | undefined =>
   message.blocks
     .filter((block): block is ContentBlock.Text => block._tag === 'text')
     .find((block) => block.mimeType === 'text/html')?.text;
+
+/**
+ * Capture-time stamp matching the fixture tooling's version format (`20260804-185124`), so the
+ * downloaded file carries the moment the mailbox was captured and `moon run fixtures:push` adopts
+ * it verbatim — the archive keeps one identity on disk and in R2 rather than gaining an unrelated
+ * upload time.
+ */
+const timestamp = (): string => new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
+
+/** Archive filename for the whole mailbox: `<asset>-<version>.json`, the shape `push` parses. */
+const archiveFilename = (): string => `mailbox-${timestamp()}.json`;
 
 /** Filesystem-safe fixture name derived from the sender and date, e.g. `2026-07-30-alex-example-com`. */
 const getFixtureName = (message: Message.Message): string => {
@@ -105,6 +117,26 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
     setStatus({ action: 'downloaded starred', count: serialized.length });
     return new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' });
   }, [feed, space.db, isStarred]);
+
+  // The whole feed, unfiltered: starring curates a fixture, but capturing a corpus (volume,
+  // bulk-mail headers, senders the extraction gate rejects) means taking the mailbox as it is.
+  const handleDownloadAll = useCallback(async (): Promise<void> => {
+    if (!feed) {
+      return;
+    }
+
+    setBusy(true);
+    try {
+      const serialized = await exportFeedMessages(feed, space.db);
+      downloadBlob(new Blob([JSON.stringify(serialized, null, 2)], { type: 'application/json' }), archiveFilename());
+      setStatus({ action: 'downloaded all', count: serialized.length });
+    } catch (error) {
+      log.warn('feed export failed', { error });
+      setStatus({ action: `export failed: ${error instanceof Error ? error.message : String(error)}`, count: 0 });
+    } finally {
+      setBusy(false);
+    }
+  }, [feed, space.db]);
 
   // Saves the selected message as a single fixture: its raw email HTML when it has an html body (what
   // the HtmlViewer work needs), else the serialized message so a markdown/plaintext body is still
@@ -177,9 +209,16 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           <SystemIconButton.Download
             iconOnly
             label={`Download starred (${starredIds.length})`}
-            filename='mailbox-feed.json'
+            filename={archiveFilename()}
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
+          />
+          <IconButton
+            iconOnly
+            icon='ph--tray-arrow-down--regular'
+            label={`Download all (${messages.length})`}
+            disabled={!feed || busy || messages.length === 0}
+            onClick={() => void handleDownloadAll()}
           />
           <IconButton
             iconOnly

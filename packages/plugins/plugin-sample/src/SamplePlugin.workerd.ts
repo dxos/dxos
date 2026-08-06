@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { SampleItem } from '#types';
+
+import * as SampleItem from './types/SampleItem';
 
 export const SamplePlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [SampleItem.SampleItem] }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([SampleItem.SampleItem])),
   Plugin.make,
 );
 

@@ -7,17 +7,22 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { ActivationEvents, Capabilities, Capability, type Plugin } from '@dxos/app-framework';
-import { Plugin as PluginBuilder } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
-import { Instructions, LayerSpec, Project, Routine, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Project from '@dxos/compute/Project';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Feed, type Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Builder, InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
 import { ProjectsPlugin } from '@dxos/plugin-projects/plugin';
@@ -48,15 +53,15 @@ export const storyParameters = {
 };
 
 /** Contributes this package's module surfaces so a story can drive them from a `ModuleContainer` layout. */
-const StoryModulesPlugin = PluginBuilder.define(
-  PluginBuilder.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.modules'), name: 'Project Story Modules' }),
+const StoryModulesPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.modules'), name: 'Project Story Modules' }),
 ).pipe(
-  PluginBuilder.addModule({
+  Plugin.addModule({
     id: 'project-story-modules',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, moduleSurfaces)),
+    provides: [Capabilities.ReactSurface],
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.ReactSurface, moduleSurfaces)]),
   }),
-  PluginBuilder.make,
+  Plugin.make,
 );
 
 /**
@@ -91,16 +96,18 @@ export type DecoratorsProps = {
  * prompt) reaches a model instead of failing to resolve the service.
  */
 const StoryAiPlugin = (kind: StoryAiService) =>
-  PluginBuilder.define(
-    PluginBuilder.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.ai'), name: 'Project Story AI Service' }),
+  Plugin.define(
+    Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.projects.story.ai'), name: 'Project Story AI Service' }),
   ).pipe(
-    PluginBuilder.addModule({
+    Plugin.addModule({
       id: 'project-story-ai',
-      activatesOn: ActivationEvents.SetupProcessManager,
+      // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+      activatesOn: ActivationEvents.Startup,
+      provides: [Capabilities.LayerSpec],
       activate: Capability.makeModule(
         Effect.fnUntraced(function* () {
           return [
-            Capability.contributes(
+            Capability.contribute(
               Capabilities.LayerSpec,
               LayerSpec.make({ affinity: 'space', requires: [], provides: [AiService.AiService] }, () =>
                 kind === 'ollama'
@@ -114,22 +121,20 @@ const StoryAiPlugin = (kind: StoryAiService) =>
         }),
       ),
     }),
-    PluginBuilder.make,
+    Plugin.make,
   )();
 
 /**
  * Story decorators for a project template scenario: a personal space seeded with one mailbox, the
  * plugin set that owns the project machinery, and this package's module surfaces.
  *
- * `SetupArtifactDefinition` matters as much as the plugin list — skill-definition modules activate
- * on it, and the registry it populates is what resolves a skill ref to a display label. Without it
- * the article's skill rows and picker render empty even when the owning plugin is loaded.
+ * The plugin list is what populates the skill-definition registry that resolves a skill ref to a
+ * display label; without the owning plugin the article's skill rows and picker render empty.
  */
 export const createDecorators = ({ mailboxName, messages, ai, plugins = [], types = [] }: DecoratorsProps) => [
   withTheme(),
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
-    setupEvents: [AppActivationEvents.SetupSettings, AppActivationEvents.SetupArtifactDefinition],
     plugins: [
       ...corePlugins(),
       ClientPlugin({

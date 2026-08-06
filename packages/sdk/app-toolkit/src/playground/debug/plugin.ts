@@ -2,17 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
-const Debug = Capability.lazy('Debug', () => import('./Debug'));
+const Debug = Capability.lazyModule('Debug', { provides: [Capabilities.ReactSurface] }, () => import('./Debug'));
 
 export const DebugPlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.test.pluginDebug'), name: 'Debug' }),
-).pipe(
-  Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    activate: Debug,
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addModule(Debug), Plugin.make);

@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -18,7 +19,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { meta } from '#meta';
 
 import { connectionDeckSubject } from '../../constants';
-import { Connection } from '../../types';
+import * as Connection from '../../types/Connection';
 
 // The add-connection action uses Form's `settings` variant for its labeled-row chrome
 // (an action-mode `Form.Row`); there are no fields to bind, so the schema is empty.

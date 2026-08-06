@@ -2,9 +2,14 @@
 #
 # Copyright 2026 DXOS.org
 #
-# Backs the UserPromptSubmit hook that toggles response verbosity via
-# "$mode <terse | normal>". `concise` aliases terse; `natural`/`default`/`off`
-# alias normal.
+# State backend for the response-verbosity mode. `concise` aliases terse;
+# `natural`/`default`/`off` alias normal.
+#
+# Two callers, which is why this is separate from ../hooks/mode.sh (the
+# UserPromptSubmit adapter that parses stdin JSON): `.claude/commands/mode.md`
+# runs `get` to report, and the adapter runs `set`/`context`. It is also
+# hand-runnable — `bash .claude/scripts/mode.sh get|context` — for checking what
+# a turn will actually be told, without going through a hook.
 #
 #   mode.sh get      -> print current mode (terse|normal)
 #   mode.sh toggle   -> flip the mode, print the new mode
@@ -111,9 +116,6 @@ case "${1:-get}" in
     # skill loads — re-injecting per turn is the only position that survives.
     cat <<'EOF'
 RESPONSE RULES (re-injected every turn; these govern the reply, not the work).
-- Open with one line naming the worktree directory you are in and the
-  instruction/skill files you actually read this turn. State it every time, not
-  just in the first reply of a session.
 - Every question or set of options is a NUMBERED list — never an unnumbered
   a-or-b, never a bare open question.
 - Lead with the direct answer or result. No preamble, no restatement of the
@@ -133,8 +135,8 @@ EOF
     fi
     cat <<'EOF'
 - These govern form only. They do NOT override correctness, required safety
-  steps, showing test/command output, or reporting a failure honestly. The
-  worktree line and numbered options survive in every mode.
+  steps, showing test/command output, or reporting a failure honestly. Numbered
+  options survive in every mode.
 EOF
     ;;
   *)

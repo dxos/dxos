@@ -62,7 +62,11 @@ export class AppManager {
     this.page = page;
     this.page.on('console', (message) => this._onConsoleMessage(message));
 
-    await this.isAuthenticated({ timeout: 15_000 });
+    // Assert boot rather than proceed on a swallowed `false`, so a failed boot fails here instead of as
+    // a bare `Test timeout` inside the first action. 30s is ~2x the slowest healthy boot (CI firefox
+    // measures ~16s); past that it is not booting, and waiting only eats the test's budget.
+    const authenticated = await this.isAuthenticated({ timeout: 30_000 });
+    expect(authenticated, 'app did not boot: treeView.userAccount never appeared').toBe(true);
 
     this.shell = new ShellManager(this.page, this._inIframe);
     this._initialized = true;
@@ -422,7 +426,7 @@ export class AppManager {
   async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {
-        (window as any).composer.changeStorageVersionInMetadata(version);
+        window.composer?.changeStorageVersionInMetadata?.(version);
       },
       { version },
     );

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-illustrator",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Headless diagramming plugin for DXOS Composer (unifies canvas renderers like tldraw and excalidraw).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -64,11 +64,6 @@
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
     },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
-    },
     "#util": "./src/util/index.ts"
   },
   "exports": {
@@ -93,13 +88,53 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    }
+    "./Drawing": {
+      "source": "./src/types/Drawing.ts",
+      "types": "./dist/types/src/types/Drawing.d.ts",
+      "import": "./dist/lib/Drawing.mjs"
+    },
+    "./LegacySketch": {
+      "source": "./src/types/LegacySketch.ts",
+      "types": "./dist/types/src/types/LegacySketch.d.ts",
+      "import": "./dist/lib/LegacySketch.mjs"
+    },
+    "./DrawingOperation": {
+      "source": "./src/types/DrawingOperation.ts",
+      "types": "./dist/types/src/types/DrawingOperation.d.ts",
+      "import": "./dist/lib/DrawingOperation.mjs"
+    },
+    "./IllustratorCapabilities": {
+      "source": "./src/types/IllustratorCapabilities.ts",
+      "types": "./dist/types/src/types/IllustratorCapabilities.d.ts",
+      "import": "./dist/lib/IllustratorCapabilities.mjs"
+    },
+    "./IllustratorEvents": {
+      "source": "./src/types/IllustratorEvents.ts",
+      "types": "./dist/types/src/types/IllustratorEvents.d.ts",
+      "import": "./dist/lib/IllustratorEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Drawing": [
+        "dist/types/src/types/Drawing.d.ts"
+      ],
+      "LegacySketch": [
+        "dist/types/src/types/LegacySketch.d.ts"
+      ],
+      "DrawingOperation": [
+        "dist/types/src/types/DrawingOperation.d.ts"
+      ],
+      "IllustratorCapabilities": [
+        "dist/types/src/types/IllustratorCapabilities.d.ts"
+      ],
+      "IllustratorEvents": [
+        "dist/types/src/types/IllustratorEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
