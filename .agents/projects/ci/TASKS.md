@@ -1,12 +1,13 @@
 # CI — Tasks
 
-_Resume: branch `claude/depot-vs-self-hosted-cache-3fbd62`, being prepared for a PR. The moon remote cache is migrated to a self-hosted `bazel-remote` on a DO NYC3 droplet (64.225.13.237) behind mTLS — 12.6× faster than Depot on the 324-task `:build` from a dev machine. **Blocked on two things only the user can do: `ca.key` into 1Password, and the three `MOON_CACHE_*` repository secrets — without which every job fails at setup, by design.** Benchmark evidence: [`REPORT.md`](./REPORT.md)._
+_Resume: branch `claude/depot-vs-self-hosted-cache-3fbd62`, ready for a PR — that is the next step and the only thing left before this is live. The moon remote cache is a self-hosted `bazel-remote` at `cache.dxos.network` (DO NYC3) behind mTLS: **11.3× faster than Depot** on the 324-task `:build` from a dev machine, 338 s → 30 s wall. Certificates, repository secrets and DNS are all in place and verified end-to-end; nothing has run in CI yet. Evidence in [`REPORT.md`](./REPORT.md), runbook in [`tools/moon-cache/`](../../../tools/moon-cache/README.md)._
 
 Context and the failure mode that governs this area: [`DESIGN.md`](./DESIGN.md).
 
 ## Phase 1: Adopt the self-hosted cache
 
-Committed on the branch; none of it has run in CI yet.
+Everything below is committed on the branch and verified from a dev machine. None of it has run in
+CI — that is what opening the PR settles.
 
 - [x] **Provision and harden the cache** — `bazel-remote` v2.5.0 on `s-4vcpu-8gb` NYC3,
       systemd, zstd, 100 GB LRU, mTLS via a private CA. Verified 401 without a client
@@ -31,7 +32,9 @@ Committed on the branch; none of it has run in CI yet.
       re-hashes every task.
 - [x] **DNS `cache.dxos.network` → the droplet** — A record, DNS-only (the Cloudflare proxy does
       not pass gRPC on 9092). `.moon/workspace.yml` now uses the name; verified 12/12 hits over it.
-- [ ] **Reserve the droplet IP** — a rebuild currently invalidates the certificate's IP SAN.
+- [ ] **Reserve the droplet IP.** Now that clients dial the name, a rebuild costs a DNS edit
+      rather than a config change — but it still invalidates the certificate's IP SAN, and a
+      reserved IP removes both.
 - [ ] **Monitoring** on `:9093/metrics` — disk against the 100 GB bound, liveness on `/status`.
       A dead cache is invisible: CI just gets slow.
 - [ ] **Read-only certificates for developers.** Any client with a certificate can write and
@@ -79,10 +82,10 @@ only `push`/`schedule`/`workflow_dispatch` on the default branch may commit at a
 
 ## Phase 3: Backlog
 
-- [ ] **Fix the three cacheless workflows properly.** `preview.yml`,
-      `upload-introspect-cache.yml` and `publish-all.yml` run moon tasks with no cache
-      credential. Incidentally fixed by the mTLS change, but the class of bug deserves a check
-      that a moon-running job always has a cache credential.
+- [ ] **Check that every moon-running job has a cache credential.** `preview.yml` and
+      `upload-introspect-cache.yml` ran moon tasks with no `DEPOT_TOKEN` and so had no remote cache
+      at all, silently, for an unknown length of time. Both are fixed, and `publish-all` now opts
+      out deliberately — but nothing stops the next workflow from reintroducing the bug.
 - [x] **Reword the cache warning** in `AGENTS.md`, `REPOSITORY_GUIDE.md` and the
       composer-plugin-dev skill — it is harmless, but it means no shared cache, and the docs said
       to filter it rather than fix it.
