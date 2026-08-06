@@ -141,7 +141,7 @@ const DefaultStory = ({ type }: StoryArgs) => {
 const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) => {
   const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
   if (mergePreview?.typeUri === Type.getURI(type)) {
-    return <MergePreview type={type} spaceId={space.id} preview={mergePreview} />;
+    return <MergePreview type={type} preview={mergePreview} />;
   }
 
   return <ObjectCardStack objectId={Type.getURI(type)} db={space.db} type={type} />;
