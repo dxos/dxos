@@ -109,16 +109,11 @@ tasks:
       - prebuild
       # dist consumed at runtime.
       - '#dist-runtime:build'
-      # dist consumed at config-load time (vite.config.ts imports run in Node,
-      # before importSource is active) — derived from vite.config.ts's own
-      # `@dxos/*` imports; a missing entry fails fast at server startup.
-      - app-framework:build
-      - ui-theme:build
-      - util:build
-      - vite-plugin-icons:build
-      - vite-plugin-import-source:build
-      - vite-plugin-log:build
-      - vite-plugin-shutdown:build
+      # dist consumed at config-load time: `vite.config.ts`'s own imports run in Node, before
+      # importSource is active. Those packages carry the `vite-plugin` tag; anything they import
+      # in turn (e.g. `@dxos/util`) is built by their own `^:build`, so only the directly
+      # imported ones need the tag.
+      - '#vite-plugin:build'
   # Production startup harness — all four `startup.spec.ts` scenarios (cold, warm-cold, throttled,
   # boot-loader paint) against `vite preview`. Its own task because the spec records benchmark rows
   # rather than asserting behaviour: `e2e` ignores it so a timing measurement never gates a merge.
