@@ -7,17 +7,12 @@ projects:
   - tools/*/moon.yml
   - vendor/*/moon.yml
 
-# Self-hosted bazel-remote. Depot's hosted cache spent ~1,100 s hydrating a 324-task `:build`
-# against this server's ~86 s from the same machine — see .agents/projects/depot-cache-benchmark.
-# Certificates are materialised by `.github/actions/setup` in CI and by `tools/moon-cache/install-certs.sh`
-# locally; without them moon silently falls back to local-cache-only, so the setup asserts they exist.
+# Self-hosted bazel-remote — operations in `tools/moon-cache/`, and why it is not Depot's hosted
+# cache in `.agents/projects/ci/REPORT.md`. Certificates come from `.github/actions/setup` in CI
+# and `tools/moon-cache/install-certs.sh` locally; moon falls back to local-cache-only without
+# them, silently and green, so both paths assert they exist.
 #
-# Rollback to Depot is this block:
-#   host: 'grpcs://cache.depot.dev'
-#   auth:
-#     token: 'DEPOT_TOKEN'
-#     headers:
-#       'X-Depot-Org': 't8fblrl00n'
+# Any edit here re-hashes every task, so the next run after a change is a full cold build.
 remote:
   # Addressed by IP until `cache.dxos.network` has a DNS record — the server certificate carries
   # both, so switching to the name later needs no re-issue. moon disables the cache and continues

@@ -126,7 +126,9 @@ Tasks run through `moon` (`moon run <package>:<task>`). See a package's
 - Format: `pnpm format` (oxfmt — CI checks `oxfmt --check`, not prettier)
 - Storybook: `moon run storybook-react:serve` (port 9009)
 
-Ignore the `Auth token DEPOT_TOKEN does not exist` warning (remote-cache auth).
+The remote cache is self-hosted and needs certificates — `tools/moon-cache/install-certs.sh --op`.
+Without them moon logs one warning and builds with the local cache only, green and much slower, so
+treat a remote-cache warning as a broken setup rather than noise.
 
 ## Code style
 

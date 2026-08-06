@@ -23,9 +23,6 @@ permissions:
   contents: read
   packages: read
 
-env:
-  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
-
 # A second main commit cancels the in-flight build — only the latest matters
 # because newer commits invalidate the cache anyway.
 concurrency:

@@ -33,4 +33,4 @@ MOON_CONCURRENCY=4 moon run :test -- --no-file-parallelism
 moon run :lint -- --fix
 ```
 
-The `Auth token DEPOT_TOKEN does not exist` warning is normal. Filter it out.
+A remote-cache warning means the cache is off, not that it is noise — see `tools/moon-cache/`.

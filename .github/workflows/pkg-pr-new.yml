@@ -10,9 +10,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
-
 jobs:
   publish:
     runs-on: depot-ubuntu-24.04-4

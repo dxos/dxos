@@ -31,7 +31,6 @@ permissions:
   packages: read
 
 env:
-  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
   TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 

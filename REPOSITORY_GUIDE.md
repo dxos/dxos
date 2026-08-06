@@ -478,7 +478,8 @@ See the [Run commands](#run-commands) section above for the full list.
 ### Gotchas
 
 - `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git-hooks setup prompt.
-- The `DEPOT_TOKEN` warning from moon is expected and harmless (remote-cache auth token).
+- A remote-cache warning from moon is **not** harmless: it means the cache is off and every build
+  is local-only. Install the certificates with `tools/moon-cache/install-certs.sh --op`.
 - The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.

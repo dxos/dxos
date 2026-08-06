@@ -6,8 +6,8 @@ const dir = process.argv[2];
 const ms = (op) => (op.duration?.secs ?? 0) * 1000 + (op.duration?.nanos ?? 0) / 1e6;
 
 const reps = [];
-for (const file of readdirSync(dir).filter((f) => /^s2-report-.+\.json$/.test(f))) {
-  const label = file.replace(/^s2-report-|\.json$/g, '');
+for (const file of readdirSync(dir).filter((f) => /^report-.+\.json$/.test(f))) {
+  const label = file.replace(/^report-|\.json$/g, '');
   const report = JSON.parse(readFileSync(join(dir, file), 'utf8'));
   let hydration = 0;
   let hits = 0;

@@ -225,3 +225,6 @@ node_modules
 
 # moon remote-cache mTLS material — never committed (tools/moon-cache/README.md).
 .moon/certs/
+
+# Remote-cache benchmark output (tools/moon-cache/bench).
+.moon-bench/

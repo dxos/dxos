@@ -1,7 +1,7 @@
 # moon remote cache (self-hosted)
 
 `bazel-remote` on a DigitalOcean droplet, behind mTLS, replacing Depot's hosted cache.
-Measurements and the decision behind it: [`.agents/projects/depot-cache-benchmark/REPORT.md`](../../.agents/projects/depot-cache-benchmark/REPORT.md).
+Measurements and the decision behind it: [`.agents/projects/ci/REPORT.md`](../../.agents/projects/ci/REPORT.md).
 
 Depot spent **1,100 s** hydrating a 324-task `:build`; this server spends **109 s** from the same
 machine, over the same 25 ms of RTT. Wall clock per run: **338 s → 30 s**.
@@ -121,8 +121,20 @@ secrets and fall back to local-cache-only with a warning.
 absent credentials, rejected credentials, a dropped blob batch — produces a **green** run that
 silently rebuilt everything. It runs `warn-only` in the `check` job today.
 
-## Rolling back to Depot
+## Rolling back
 
-Restore the commented block in `.moon/workspace.yml` and make sure `DEPOT_TOKEN` is set. Note
-that **any change to `.moon/workspace.yml` re-hashes every task**, so the first run after a switch
-in either direction is a full cold build.
+Revert the `remote:` block in `.moon/workspace.yml` and restore the `DEPOT_TOKEN` env entries in
+the workflows — both are one commit back in history. **Any change to `.moon/workspace.yml`
+re-hashes every task**, so the first run after a switch in either direction is a full cold build
+regardless of which cache is at fault.
+
+To turn the cache off entirely without editing config, point it at nothing:
+
+```bash
+MOON_REMOTE_HOST='grpc://127.0.0.1:1' moon run :build
+```
+
+## Benchmarking a cache change
+
+[`bench/`](./bench/README.md) holds the harness that produced the numbers above — interleaved A/B
+reps, an RTT sweep, and the run-report parser. Use it before changing where the cache lives.

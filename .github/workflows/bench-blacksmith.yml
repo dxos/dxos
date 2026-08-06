@@ -5,7 +5,7 @@
 #   1. Does the sticky disk mount reach inside the job container? Jobs run in
 #      ghcr.io/dxos/gh-actions, and the mount happens on the runner.
 #   2. How fast is hydration off a bind-mounted clone, against the 86 s (self-hosted
-#      bazel-remote) and 1,100 s (Depot) measured in .agents/projects/depot-cache-benchmark?
+#      bazel-remote) and 1,100 s (Depot) measured in .agents/projects/ci/REPORT.md?
 #   3. Do the local-cache hits actually materialise, or does moon re-hash and rebuild anyway?
 #
 # Run it twice: once to populate and commit the snapshot, once to measure hydration.

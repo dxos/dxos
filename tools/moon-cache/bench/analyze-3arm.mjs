@@ -7,8 +7,8 @@ const ms = (op) => (op.duration?.secs ?? 0) * 1000 + (op.duration?.nanos ?? 0) /
 const NAMES = { A: 'Depot', B: 'loopback', C: 'DO NYC3 droplet' };
 
 const reps = [];
-for (const file of readdirSync(dir).filter((f) => /^s3-report-[ABC]\d+\.json$/.test(f))) {
-  const label = file.replace(/^s3-report-|\.json$/g, '');
+for (const file of readdirSync(dir).filter((f) => /^report-[ABC]\d+\.json$/.test(f))) {
+  const label = file.replace(/^report-|\.json$/g, '');
   const report = JSON.parse(readFileSync(join(dir, file), 'utf8'));
   let hydration = 0;
   let hits = 0;
