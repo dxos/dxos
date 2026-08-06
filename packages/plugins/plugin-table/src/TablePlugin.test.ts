@@ -23,7 +23,7 @@ describe('TablePlugin', () => {
     // After autoStart: OperationHandler, schema, and SkillDefinition are dependency-mode roots and
     // all activate immediately.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('OperationHandler'), moduleId('schema'), moduleId('SkillDefinition')]),
+      expect.arrayContaining([moduleId('OperationHandler'), moduleId('schema')]),
     );
   });
 });

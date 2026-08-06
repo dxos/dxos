@@ -10,7 +10,7 @@ import { describe, test, vi } from 'vitest';
 import { DXN } from '@dxos/keys';
 import { Position } from '@dxos/util';
 
-import { Capabilities } from '../../../common';
+import { ActivationEvents, Capabilities } from '../../../common';
 import * as Role from '../../../common/Role';
 import { Capability, Plugin } from '../../../core';
 import { createTestApp } from '../../../testing/harness';

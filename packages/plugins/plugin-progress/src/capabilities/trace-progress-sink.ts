@@ -27,9 +27,7 @@ import { log } from '@dxos/log';
  * upfront, since the factory itself has no dependencies. Process-manager runtime is likewise
  * resolved lazily on cancel.
  */
-export default Capability.inlineModule(
-  'TraceProgressSink',
-  { provides: [Capabilities.TraceSink] },
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
     const runtime = yield* Effect.runtime<Capability.Service>();
