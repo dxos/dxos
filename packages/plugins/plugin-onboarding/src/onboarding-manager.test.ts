@@ -96,7 +96,9 @@ const stubEmailExists = (exists: boolean) => {
       headers: { 'Content-Type': 'application/json' },
     });
   });
-  onTestFinished(() => vi.unstubAllGlobals());
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+  });
 };
 
 const createManager = async (options: {
