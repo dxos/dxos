@@ -32,6 +32,12 @@ on:
         required: false
         default: false
 
+      e2e_compare:
+        type: boolean
+        description: 'Run all three sharding strategies head-to-head (DX-1116; 27 jobs)'
+        required: false
+        default: false
+
 permissions:
   contents: read
   packages: read
@@ -423,7 +429,8 @@ jobs:
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
       inputs.e2e ||
-      inputs.e2e_moon_shard
+      inputs.e2e_moon_shard ||
+      inputs.e2e_compare
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -459,11 +466,11 @@ jobs:
       # `bundle-e2e`, not `bundle`: the e2e closure waits on that target, and warming any other hash
       # leaves every node to rebuild the bundle itself.
       - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e && !inputs.e2e_moon_shard }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e && !inputs.e2e_moon_shard && !inputs.e2e_compare }}
         run: moon run composer-app:bundle-e2e todomvc:bundle-e2e --affected remote
 
       - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_moon_shard }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_moon_shard || inputs.e2e_compare }}
         run: moon run composer-app:bundle-e2e todomvc:bundle-e2e
 
   e2e:
@@ -476,7 +483,8 @@ jobs:
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+      inputs.e2e ||
+      inputs.e2e_compare
     # One shard per Playwright browser: the serial three-browser suite measured 43m+, so splitting by
     # browser bounds each shard at roughly a third of that. Every shard runs the same tests, so the
     # split is near-even by construction — no duration bookkeeping needed. `fail-fast: false` keeps one
@@ -555,7 +563,7 @@ jobs:
           run: moon run :e2e --affected remote --concurrency=1
 
       - name: Test All
-        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e) && env.KNAPSACK_PRO_TOKEN == '' }}
+        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_compare) && env.KNAPSACK_PRO_TOKEN == '' }}
         # The serial three-browser suite measured 43m+; a single browser's shard plus retries stays well
         # under this, and the step (not job) timeout fails cleanly with traces attached.
         timeout-minutes: 40
@@ -566,7 +574,7 @@ jobs:
           # test (and the nightly exists to catch live-edge regressions a replay cannot see). A unique
           # task-input value forces only the e2e tasks to run — unlike MOON_CACHE=off, which would
           # also rebuild every cached bundle/build dependency in each shard.
-          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+          DX_E2E_RUN_ID: ${{ (inputs.e2e || inputs.e2e_compare || github.event_name == 'schedule') && format('{0}-{1}-armA', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -581,12 +589,12 @@ jobs:
       # measured 13m33s in run 31056219946 against ~3m30s of actual e2e task time. Read per-task
       # durations out of the log rather than trusting the step total.
       - name: Test All (every suite except composer)
-        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e) && env.KNAPSACK_PRO_TOKEN != '' }}
+        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_compare) && env.KNAPSACK_PRO_TOKEN != '' }}
         timeout-minutes: 40
         uses: trunk-io/analytics-uploader@v1
         env:
           # See "Test All": force execution on dispatch/nightly without discarding the dep cache.
-          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+          DX_E2E_RUN_ID: ${{ (inputs.e2e || inputs.e2e_compare || github.event_name == 'schedule') && format('{0}-{1}-armA', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -622,7 +630,8 @@ jobs:
     needs: e2e-bundle
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
-      inputs.e2e
+      inputs.e2e ||
+      inputs.e2e_compare
     strategy:
       fail-fast: false
       matrix:
@@ -715,7 +724,7 @@ jobs:
   # duration is the whole point.
   e2e-moon-shard:
     needs: e2e-bundle
-    if: ${{ inputs.e2e_moon_shard }}
+    if: ${{ inputs.e2e_moon_shard || inputs.e2e_compare }}
     strategy:
       fail-fast: false
       matrix:
@@ -764,7 +773,7 @@ jobs:
         timeout-minutes: 35
         shell: bash
         env:
-          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-j${{ matrix.job }}
+          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-armB-j${{ matrix.job }}
         run: |
           set -o pipefail
           moon run :e2e-chromium :e2e-firefox :e2e-webkit plugin-script:e2e \
@@ -786,6 +795,85 @@ jobs:
         if: always()
         with:
           name: playwright-report-moonshard-${{ matrix.job }}
+          path: test-results/playwright
+          retention-days: 7
+
+  # ARM C of the DX-1116 comparison: moon's `--job` sharding with the browser left as a GitHub matrix
+  # axis, i.e. no per-browser task variants. Three isolated pools of 8 targets rather than one flat
+  # pool of 24, which is the shape Knapsack also has — a cell can only be handed work for its own
+  # browser, so idle webkit capacity cannot absorb chromium's backlog.
+  #
+  # Runs the bare `:e2e` glob, so composer-app and the vitest `plugin-script:e2e` are both included
+  # and no target list is hand-maintained. 9 cells, matching arms A and B for a per-runner-equal
+  # comparison. Not wrapped in the Trunk uploader — see arm B.
+  e2e-moon-shard-browser:
+    needs: e2e-bundle
+    if: ${{ inputs.e2e_compare }}
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+        job: [0, 1, 2]
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    env:
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
+      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # Only this cell's browser: unlike the flat pool, a cell here can never be given another one.
+      - name: Install Playwright
+        run: pnpm run install-playwright ${{ matrix.browser }}
+
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      # `armC` in the run id keeps this arm's task hashes distinct from arm A's, which resolves the
+      # same `:e2e` targets with the same env — without it one arm would hydrate the other's result.
+      - name: Test shard
+        timeout-minutes: 35
+        shell: bash
+        env:
+          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-armC-${{ matrix.browser }}-j${{ matrix.job }}
+        run: |
+          set -o pipefail
+          moon run :e2e --job ${{ matrix.job }} --job-total 3 --concurrency=1 2>&1 | tee shard.log
+
+      - name: Report this cell's targets and durations
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          [ -f shard.log ] || { echo 'shard.log absent — the moon step never ran'; exit 0; }
+          printf '===== arm C cell %s/%s =====\n' '${{ matrix.browser }}' '${{ matrix.job }}'
+          grep -oE '[a-z0-9-]+:e2e \([^)]*\)' shard.log | sort -u || echo '(no target lines)'
+          printf '\n----- moon summary -----\n'
+          grep -E '^(Tasks| Time):' shard.log || true
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report-armc-${{ matrix.browser }}-${{ matrix.job }}
           path: test-results/playwright
           retention-days: 7
 
