@@ -13,9 +13,9 @@ import { getTarget } from './VaultSelector';
 
 const edgeServers = [
   { value: 'https://edge.dxos.workers.dev', label: 'Dev' },
-  { value: 'https://edge-main.dxos.workers.dev', label: 'Main' },
-  { value: 'https://edge-labs.dxos.workers.dev', label: 'Labs' },
-  { value: 'https://edge-production.dxos.workers.dev', label: 'Production' },
+  { value: 'https://main.dxos.network', label: 'Main' },
+  { value: 'https://labs.dxos.network', label: 'Labs' },
+  { value: 'https://dxos.network', label: 'Production' },
 ];
 
 export const EdgeSelector = () => {
