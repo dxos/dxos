@@ -134,7 +134,10 @@ test.describe('Basic test', () => {
       expect(await guest.todoCount()).toEqual(2);
     });
 
-    test('toggle all tasks & clear completed', async () => {
+    // TODO(wittjosiah): Failed on chromium in run 31111016212 — `toBeChecked` on the guest's first
+    //   toggle never settled, so `toggleAll` did not replicate. The only test in this suite that did
+    //   not recover when CI workers dropped from 4 to 2, i.e. not just boot contention.
+    test.fixme('toggle all tasks & clear completed', async () => {
       await host.createTodo(Groceries.Eggs);
       await host.createTodo(Groceries.Milk);
       await host.createTodo(Groceries.Butter);

@@ -1,5 +1,12 @@
 layer: application
 language: typescript
+# `e2e-ci` is the target CI's sharded pool globs; this suite is too big for one cell, so it opts out
+# and supplies `e2e-ci-1of2`/`-2of2` below instead. Excluding it rather than the workflow excluding
+# this project keeps the pool a plain glob that picks up any future suite automatically.
+workspace:
+  inheritedTasks:
+    exclude:
+      - e2e-ci
 tags:
   - e2e
   - tauri
@@ -138,24 +145,25 @@ tasks:
       - vite-plugin-import-source:build
       - vite-plugin-log:build
       - vite-plugin-shutdown:build
-  # `e2e` under the Knapsack Pro queue: the wrapper lists the suite, pulls file batches from the
-  # duration-ordered queue and re-invokes `playwright test` per batch. Deps mirror `e2e` (tag-e2e.yml)
-  # so the bundle and library builds hydrate from the remote cache instead of being rebuilt per node.
-  # Never cacheable — every node runs the same target with a different, queue-assigned subset, so a
-  # shared task hash would let one node replay another's result without running a test.
-  e2e-knapsack:
-    command: pnpm exec knapsack-pro-playwright --config=src/playwright/playwright.config.ts
-    env:
-      DX_PWA: 'false'
-    deps:
-      - test-utils:build
-      - vite-plugin-icons:build
-      - target: ^:build
-        optional: true
-      - target: bundle-e2e
-        optional: true
-    options:
-      cache: false
+  # Halves of `e2e` for CI's sharded pool, replacing the inherited `e2e-ci` excluded above.
+  # `moon --job` partitions targets and can never split one, which made this suite the floor of the
+  # whole phase: 3m28s on chromium against ~160s of fixed per-cell overhead, with no other target
+  # above 1m9s. Playwright's `--shard` splits per *test* rather than per file wherever `fullyParallel`
+  # is set and no `beforeAll` welds a group together — the only two specs here that use `beforeAll`
+  # are `testIgnore`d by this config. `args` appends to the base task's and is hashed (verified:
+  # distinct hashes), so the halves cannot replay each other's cache entry.
+  #
+  # Two, not more: another cell costs ~160s of setup plus a fresh chance of drawing a stalled checkout
+  # (2 of 27 cells lost >18m to one in run 31111016212), so a half at ~104s already sits under the
+  # overhead splitting it again would buy. Split one browser further if it runs consistently hotter.
+  e2e-ci-1of2:
+    extends: e2e
+    args:
+      - --shard=1/2
+  e2e-ci-2of2:
+    extends: e2e
+    args:
+      - --shard=2/2
   # Dev-server startup harness — measures `vite serve` against the shared
   # `dev-startup.spec.ts`. Distinct from `e2e` (which inherits from `ts-test`'s
   # default playwright config and runs the production preview harness).

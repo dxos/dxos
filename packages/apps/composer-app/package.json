@@ -292,7 +292,6 @@
     "@effect/cli": "catalog:",
     "@effect/platform": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@knapsack-pro/playwright": "catalog:",
     "@tauri-apps/cli": "catalog:",
     "@tldraw/store": "catalog:",
     "@tldraw/tlschema": "catalog:",

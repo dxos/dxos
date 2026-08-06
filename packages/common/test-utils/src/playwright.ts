@@ -53,17 +53,9 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
     throw new Error('packageDirName not found');
   }
 
-  // Under the Knapsack Pro wrapper each fetched batch is a separate `playwright test` process:
-  // a fixed report filename would be overwritten by every batch and Playwright clears outputDir
-  // at run start, deleting earlier batches' traces — so both must be unique per invocation.
-  const knapsack = !!(
-    process.env.KNAPSACK_PRO_TEST_SUITE_TOKEN_PLAYWRIGHT || process.env.KNAPSACK_PRO_TEST_SUITE_TOKEN
-  );
-  const runName = knapsack ? `${packageDirName}-${process.pid}-${Date.now()}` : packageDirName;
-
   const workspaceRoot = findWorkspaceRoot(packageDir);
-  const testResultOuputDir = join(workspaceRoot, 'test-results/playwright/output', runName);
-  const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${runName}.json`);
+  const testResultOuputDir = join(workspaceRoot, 'test-results/playwright/output', packageDirName);
+  const reporterOutputFile = join(workspaceRoot, 'test-results/playwright/report', `${packageDirName}.json`);
 
   const browser = process.env.PLAYWRIGHT_BROWSER || (process.env.CI ? 'all' : 'chromium');
   const projects = [
@@ -126,9 +118,6 @@ export const e2ePreset = (testDir: string): PlaywrightTestConfig => {
             ['junit', { outputFile: reporterOutputFile.replace(/\.json$/, '.xml') }],
           ] satisfies ReporterDescription[])
         : ([['list']] satisfies ReporterDescription[])),
-      // Feeds per-file timings and failures back to the Knapsack Pro queue; required in every
-      // batch invocation or the wrapper aborts on a missing batch.json.
-      ...(knapsack ? ([['@knapsack-pro/playwright/reporters/batch']] satisfies ReporterDescription[]) : []),
     ],
     use: {
       trace: 'retain-on-failure',

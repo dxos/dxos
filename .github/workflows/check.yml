@@ -26,18 +26,6 @@ on:
         required: false
         default: false
 
-      e2e_moon_shard:
-        type: boolean
-        description: "Run moon's native task sharding against Knapsack (DX-1116; 9 jobs)"
-        required: false
-        default: false
-
-      e2e_compare:
-        type: boolean
-        description: 'Run all three sharding strategies head-to-head (DX-1116; 27 jobs)'
-        required: false
-        default: false
-
 permissions:
   contents: read
   packages: read
@@ -428,9 +416,7 @@ jobs:
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e ||
-      inputs.e2e_moon_shard ||
-      inputs.e2e_compare
+      inputs.e2e
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -466,13 +452,26 @@ jobs:
       # `bundle-e2e`, not `bundle`: the e2e closure waits on that target, and warming any other hash
       # leaves every node to rebuild the bundle itself.
       - name: Bundle Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e && !inputs.e2e_moon_shard && !inputs.e2e_compare }}
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
         run: moon run composer-app:bundle-e2e todomvc:bundle-e2e --affected remote
 
       - name: Bundle All
-        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_moon_shard || inputs.e2e_compare }}
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
         run: moon run composer-app:bundle-e2e todomvc:bundle-e2e
 
+  # Sharded on two axes, browser × cell. The browser is a GitHub matrix axis rather than a moon task
+  # dimension so that it cannot multiply with the shard dimension in the task namespace: composer
+  # needs two task definitions to split, not six (see `.moon/tasks/tag-e2e.yml`).
+  #
+  # Cells are `moon exec --job/--job-total` over `:e2e-ci`, so moon packs whichever targets it assigns
+  # and no target list is hand-maintained — a new e2e-tagged suite joins the pool by existing. Three
+  # cells per browser: each cell costs ~160s of fixed setup (checkout, toolchain, browser install,
+  # cache hydration) against ~450-590s of test work per browser, and every extra cell also carries an
+  # independent chance of drawing a stalled checkout (2 of 27 lost >18m to one in run 31111016212).
+  #
+  # `--on-failure continue`: moon's default bails on the first failing target, which silently dropped
+  # the two heaviest targets from a cell in run 31111016212 and made that cell look 3x cheaper than it
+  # was. A red cell must still report what the rest of its targets cost.
   e2e:
     # e2e runs on pushes/schedules to main AND on the Changesets "Version Packages" PR (so we never
     # publish untested). For push events github.ref is refs/heads/<branch>; for pull_request events
@@ -483,36 +482,29 @@ jobs:
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e ||
-      inputs.e2e_compare
-    # One shard per Playwright browser: the serial three-browser suite measured 43m+, so splitting by
-    # browser bounds each shard at roughly a third of that. Every shard runs the same tests, so the
-    # split is near-even by construction — no duration bookkeeping needed. `fail-fast: false` keeps one
-    # browser's failure from cancelling the other shards' signal (and their traces).
+      inputs.e2e
     strategy:
       fail-fast: false
       matrix:
         browser: [chromium, firefox, webkit]
+        job: [0, 1, 2]
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
-    # Headroom over the 40m test cap plus ~10m of bundling: the step timeout fails the job cleanly with
-    # traces attached, whereas hitting this cap cancels it and proves nothing.
-    timeout-minutes: 60
+    # Headroom over the 35m test cap: the step timeout fails the job cleanly with traces attached,
+    # whereas hitting this cap cancels it and proves nothing.
+    timeout-minutes: 50
     env:
       DX_ENVIRONMENT: ci
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
-      # Selects this shard's Playwright project; also a moon task hash input, so each shard gets its
+      # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
-      # Exposed so step conditions can branch on token presence without referencing
-      # secrets directly (secrets are not allowed in if: expressions).
-      KNAPSACK_PRO_TOKEN: ${{ secrets.KNAPSACK_PRO_TOKEN }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -534,13 +526,13 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      # Only this shard's browser — the other two engines' downloads are dead weight here.
+      # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
         run: pnpm run install-playwright ${{ matrix.browser }}
 
-      # No bundle step: the `:e2e` targets below declare `bundle` as a dep, so moon resolves it and
-      # hydrates it from the cache `e2e-bundle` warmed. An explicit step would only duplicate that
-      # resolution, and scoping it correctly per shard is what the dep graph already encodes.
+      # No bundle step: the `e2e-ci` targets below declare `bundle-e2e` as a dep, so moon resolves it
+      # and hydrates it from the cache `e2e-bundle` warmed. An explicit step would only duplicate that
+      # resolution, and scoping it correctly per cell is what the dep graph already encodes.
 
       # Static boot-graph budget over the bundle just built. The class it catches is a property of an
       # IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a refactor
@@ -548,10 +540,9 @@ jobs:
       # three separate fixes were undone that way. Not `--affected`-scoped, because the offending
       # edit lands in some other package. NOTE: this job is gated to main/changeset-release/dispatch,
       # so today the check runs post-merge and does not gate the PR that introduces the regression.
-      # Skipped for a comparison dispatch: it only exists in this job, so counting it would charge arm A
-      # for work the other arms never do.
+      # One cell only: it is a property of the bundle, identical across every cell of the matrix.
       - name: Check boot budget
-        if: ${{ !inputs.e2e_compare }}
+        if: ${{ matrix.browser == 'chromium' && matrix.job == 0 }}
         run: moon run composer-app:check-boot-budget
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps run.
@@ -563,332 +554,51 @@ jobs:
       - name: Clean stale test results
         run: rm -rf test-results
 
-      # `!inputs.e2e_compare` as well as `!inputs.e2e`: without it a comparison dispatch satisfies this
-      # condition too, so arm A ran the affected subset here *and* the full suite below — inflating the
-      # arm under scrutiny with a duplicate run.
+      # `plugin-script:e2e` is named explicitly because that project is not `e2e`-tagged (its `e2e` is
+      # vitest, not Playwright) and so has no `e2e-ci`. It costs ~6s and every test skips in CI.
       - name: Test Affected
-        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e && !inputs.e2e_compare }}
-        timeout-minutes: 30
+        if: ${{ steps.extract_branch.outputs.branch != 'main' && !inputs.e2e }}
+        timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon run :e2e --affected remote --concurrency=1
+          # Failures are surfaced, not absorbed. With quarantine on, two cells of run 31111016212
+          # reported success while a test failed ("All test failures were quarantined, overriding exit
+          # code"), which makes a green cell unfalsifiable. Unstable tests get `test.fixme` in the
+          # spec instead, where the skip is visible in review.
+          quarantine: false
+          run: >-
+            moon exec --on-failure continue :e2e-ci plugin-script:e2e --affected remote
+            --job ${{ matrix.job }} --job-total 3 --concurrency=1
 
       - name: Test All
-        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_compare) && env.KNAPSACK_PRO_TOKEN == '' }}
-        # The serial three-browser suite measured 43m+; a single browser's shard plus retries stays well
-        # under this, and the step (not job) timeout fails cleanly with traces attached.
-        timeout-minutes: 40
+        if: ${{ steps.extract_branch.outputs.branch == 'main' || inputs.e2e }}
+        timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
         env:
           # Manual dispatches and the nightly must execute the suite: re-running the same commit
           # otherwise replays a remote cache hit in seconds, which reports green without running a
           # test (and the nightly exists to catch live-edge regressions a replay cannot see). A unique
           # task-input value forces only the e2e tasks to run — unlike MOON_CACHE=off, which would
-          # also rebuild every cached bundle/build dependency in each shard.
-          DX_E2E_RUN_ID: ${{ (inputs.e2e || inputs.e2e_compare || github.event_name == 'schedule') && format('{0}-{1}-armA', github.run_id, github.run_attempt) || '' }}
+          # also rebuild every cached bundle/build dependency in each cell.
+          DX_E2E_RUN_ID: ${{ (inputs.e2e || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          run: moon exec --on-failure continue :e2e --concurrency=1
-
-      # When the Knapsack Pro token is present, composer-app runs in the `e2e-knapsack` job instead —
-      # keep this target list in sync with the `e2e`-tagged projects minus composer-app.
-      #
-      # Most of this step's duration is moon hydrating the dep closure, not running tests: it
-      # measured 13m33s in run 31056219946 against ~3m30s of actual e2e task time. Read per-task
-      # durations out of the log rather than trusting the step total.
-      - name: Test All (every suite except composer)
-        if: ${{ (steps.extract_branch.outputs.branch == 'main' || inputs.e2e || inputs.e2e_compare) && env.KNAPSACK_PRO_TOKEN != '' }}
-        timeout-minutes: 40
-        uses: trunk-io/analytics-uploader@v1
-        env:
-          # See "Test All": force execution on dispatch/nightly without discarding the dep cache.
-          DX_E2E_RUN_ID: ${{ (inputs.e2e || inputs.e2e_compare || github.event_name == 'schedule') && format('{0}-{1}-armA', github.run_id, github.run_attempt) || '' }}
-        with:
-          junit-paths: 'test-results/playwright/report/*.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
+          # See "Test Affected": quarantine masks failures and is deliberately off.
+          quarantine: false
           run: >-
-            moon exec --on-failure continue
-            todomvc:e2e rpc-tunnel-e2e:e2e plugin-kanban:e2e plugin-script:e2e plugin-sheet:e2e
-            lit-grid:e2e react-ui-mosaic:e2e react-ui-table:e2e
-            --concurrency=1
+            moon exec --on-failure continue :e2e-ci plugin-script:e2e
+            --job ${{ matrix.job }} --job-total 3 --concurrency=1
 
       - name: Upload Traces
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-report-${{ matrix.browser }}
-          path: test-results/playwright
-          retention-days: 7
-
-  # Composer-app's Playwright suite through Knapsack Pro queue mode (DX-1116 Option B): nodes pull test
-  # files from a queue ordered by recorded duration, so imbalance self-corrects mid-run instead of
-  # being fixed up front — a node that starts late simply takes fewer batches.
-  #
-  # Sharded on two axes, browser × node, because the queue's atom is a whole test file and a file
-  # therefore bounds a node's floor. Running all three browsers per node made `comments.spec.ts` a
-  # single 8m24s unit; per browser it is ~2m50s, so the same suite fits in far less wall time.
-  # Composer's measured test work is ~7m40s per browser (run 31052131651), so 2 nodes each lands
-  # around 4m — inside the 10m target with room for the slowest file.
-  #
-  # Token-gated: without KNAPSACK_PRO_TOKEN every step below skips and the `e2e` matrix keeps
-  # composer, so fork PRs and pre-token runs lose nothing.
-  e2e-knapsack:
-    needs: e2e-bundle
-    if: >-
-      startsWith(github.ref, 'refs/heads/main') ||
-      inputs.e2e ||
-      inputs.e2e_compare
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chromium, firefox, webkit]
-        node: [0, 1]
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 45
-    env:
-      DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
-      # One browser per node, so the queue distributes (file × browser) rather than whole files.
-      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
-      # Exposed so step conditions can branch on token presence without referencing
-      # secrets directly (secrets are not allowed in if: expressions).
-      KNAPSACK_PRO_TOKEN: ${{ secrets.KNAPSACK_PRO_TOKEN }}
-    steps:
-      - name: Checkout
-        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          lfs: true
-          persist-credentials: false
-
-      - name: Setup
-        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
-        uses: ./.github/actions/setup
-
-      # Only this shard's browser — the other two engines' downloads are dead weight here.
-      - name: Install Playwright
-        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
-        run: pnpm run install-playwright ${{ matrix.browser }}
-
-      - name: Clean stale test results
-        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
-        run: rm -rf test-results
-
-      - name: Test composer-app (queue mode)
-        if: ${{ env.KNAPSACK_PRO_TOKEN != '' }}
-        timeout-minutes: 30
-        uses: trunk-io/analytics-uploader@v1
-        env:
-          KNAPSACK_PRO_TEST_SUITE_TOKEN_PLAYWRIGHT: ${{ secrets.KNAPSACK_PRO_TOKEN }}
-          KNAPSACK_PRO_CI_NODE_TOTAL: 2
-          KNAPSACK_PRO_CI_NODE_INDEX: ${{ matrix.node }}
-          # One queue per browser. Both of these default to values that are identical across the
-          # browser axis (the queue id falls back to nodeTotal-branch-commitHash), which would put
-          # all three browsers on one queue — each file then gets claimed by whichever browser's node
-          # reached it first and the other two browsers would silently never run it.
-          KNAPSACK_PRO_TEST_QUEUE_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.browser }}
-          KNAPSACK_PRO_CI_NODE_BUILD_ID: ${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.browser }}
-        with:
-          junit-paths: 'test-results/playwright/report/*.xml'
-          org-slug: dxos
-          token: ${{ secrets.TRUNK_TOKEN }}
-          quarantine: true
-          # Through moon so the bundle and library builds hydrate from the cache `e2e-bundle` warmed —
-          # the deps of a task are the only thing that materializes its outputs on a fresh runner.
-          run: moon run composer-app:e2e-knapsack
-
-      - name: Upload Traces
-        uses: actions/upload-artifact@v7
-        if: ${{ always() && env.KNAPSACK_PRO_TOKEN != '' }}
-        with:
-          name: playwright-report-knapsack-${{ matrix.browser }}-${{ matrix.node }}
-          path: test-results/playwright
-          retention-days: 7
-
-  # EXPERIMENT (DX-1116, remove once decided): does moon's own `--job/--job-total` make Knapsack Pro
-  # redundant? With `workers: 4` the parallelism that matters moved inside the runner, and in run
-  # 31101995366 Knapsack's slowest node (3m03s) already sat under the phase's critical path — the
-  # non-composer chromium shard at 3m25s — so its distribution may be buying nothing.
-  #
-  # One flat pool, not a browser matrix. `tag-e2e.yml` now defines per-browser variants of `e2e`, so
-  # there are 24 browser targets (8 suites x 3) plus the vitest `plugin-script:e2e`, and a single
-  # `--job-total` can pack any of them onto any runner. Three per-browser pools cannot lend each
-  # other work, which is what stranded a webkit Knapsack node at 20s while chromium's ran 3m03s.
-  #
-  # The atom is a (suite, browser) pair, so `composer-app:e2e-chromium` is still indivisible — this
-  # is coarser than a file-level queue by design, and whether that costs anything is the measurement.
-  # 9 cells to match the 9 runners the current split uses, so the comparison is per-runner-equal.
-  # Deliberately NOT wrapped in the Trunk uploader: quarantine masks failures, and an honest max-cell
-  # duration is the whole point.
-  e2e-moon-shard:
-    needs: e2e-bundle
-    if: ${{ inputs.e2e_moon_shard || inputs.e2e_compare }}
-    strategy:
-      fail-fast: false
-      matrix:
-        job: [0, 1, 2, 3, 4, 5, 6, 7, 8]
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 45
-    env:
-      DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          lfs: true
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      # All three engines: a cell can be handed targets for any browser, which is the point of the
-      # flat pool. Measured at ~5s more than installing one, so the packing win dwarfs it.
-      - name: Install Playwright
-        run: pnpm run install-playwright
-
-      # The `e2e` job clears this because a stale optimizeDeps graph makes `storybook dev` serve a 504;
-      # the storybook-backed suites are in scope here too, so it has to be cleared the same way.
-      - name: Clear Storybook Vite cache
-        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
-
-      - name: Clean stale test results
-        run: rm -rf test-results
-
-      # Echoes which targets this cell was given: `--job` ordering is undocumented, and an uneven
-      # split is the expected failure mode when composer dwarfs the other suites.
-      # `shell: bash` because the workflow default is `sh -e` (dash), which rejects `set -o pipefail`
-      # — without it `tee` masks moon's exit code and a failing shard reports green.
-      - name: Test shard
-        timeout-minutes: 35
-        shell: bash
-        env:
-          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-armB-j${{ matrix.job }}
-        run: |
-          set -o pipefail
-          moon run :e2e-chromium :e2e-firefox :e2e-webkit plugin-script:e2e \
-            --job ${{ matrix.job }} --job-total 9 --concurrency=1 2>&1 | tee shard.log
-
-      - name: Report this cell's targets and durations
-        if: ${{ always() }}
-        shell: bash
-        run: |
-          [ -f shard.log ] || { echo 'shard.log absent — the moon step never ran'; exit 0; }
-          printf '===== cell %s =====\n' '${{ matrix.job }}'
-          grep -oE '[a-z0-9-]+:(e2e-(chromium|firefox|webkit)|e2e) \([^)]*\)' shard.log | sort -u || \
-            echo '(no target lines — cell may have been assigned nothing)'
-          printf '\n----- moon summary -----\n'
-          grep -E '^(Tasks| Time):' shard.log || true
-
-      - name: Upload Traces
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: playwright-report-moonshard-${{ matrix.job }}
-          path: test-results/playwright
-          retention-days: 7
-
-  # ARM C of the DX-1116 comparison: moon's `--job` sharding with the browser left as a GitHub matrix
-  # axis, i.e. no per-browser task variants. Three isolated pools of 8 targets rather than one flat
-  # pool of 24, which is the shape Knapsack also has — a cell can only be handed work for its own
-  # browser, so idle webkit capacity cannot absorb chromium's backlog.
-  #
-  # Runs the bare `:e2e` glob, so composer-app and the vitest `plugin-script:e2e` are both included
-  # and no target list is hand-maintained. 9 cells, matching arms A and B for a per-runner-equal
-  # comparison. Not wrapped in the Trunk uploader — see arm B.
-  e2e-moon-shard-browser:
-    needs: e2e-bundle
-    if: ${{ inputs.e2e_compare }}
-    strategy:
-      fail-fast: false
-      matrix:
-        browser: [chromium, firefox, webkit]
-        job: [0, 1, 2]
-    runs-on: depot-ubuntu-24.04-8
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 45
-    env:
-      DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
-      DX_TELEMETRY_TAG: e2e
-      DX_PWA: false
-      PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          lfs: true
-          persist-credentials: false
-
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      # Only this cell's browser: unlike the flat pool, a cell here can never be given another one.
-      - name: Install Playwright
-        run: pnpm run install-playwright ${{ matrix.browser }}
-
-      - name: Clear Storybook Vite cache
-        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
-
-      - name: Clean stale test results
-        run: rm -rf test-results
-
-      # `armC` in the run id keeps this arm's task hashes distinct from arm A's, which resolves the
-      # same `:e2e` targets with the same env — without it one arm would hydrate the other's result.
-      - name: Test shard
-        timeout-minutes: 35
-        shell: bash
-        env:
-          DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-armC-${{ matrix.browser }}-j${{ matrix.job }}
-        run: |
-          set -o pipefail
-          moon run :e2e --job ${{ matrix.job }} --job-total 3 --concurrency=1 2>&1 | tee shard.log
-
-      - name: Report this cell's targets and durations
-        if: ${{ always() }}
-        shell: bash
-        run: |
-          [ -f shard.log ] || { echo 'shard.log absent — the moon step never ran'; exit 0; }
-          printf '===== arm C cell %s/%s =====\n' '${{ matrix.browser }}' '${{ matrix.job }}'
-          grep -oE '[a-z0-9-]+:e2e \([^)]*\)' shard.log | sort -u || echo '(no target lines)'
-          printf '\n----- moon summary -----\n'
-          grep -E '^(Tasks| Time):' shard.log || true
-
-      - name: Upload Traces
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: playwright-report-armc-${{ matrix.browser }}-${{ matrix.job }}
+          name: playwright-report-${{ matrix.browser }}-${{ matrix.job }}
           path: test-results/playwright
           retention-days: 7
 
@@ -975,7 +685,7 @@ jobs:
   # former in-job step used `success() || failure()`, which skips on cancellation) and so the other three
   # reports can no longer go out green while e2e is still running.
   report:
-    needs: [test, storybook, workerd, e2e, e2e-knapsack]
+    needs: [test, storybook, workerd, e2e]
     if: always() && github.event_name == 'schedule'
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -1017,12 +727,6 @@ jobs:
         with:
           name: e2e
           result: ${{ needs.e2e.result }}
-      - name: Send e2e-knapsack report
-        if: always()
-        uses: ./.github/actions/test-report
-        with:
-          name: e2e-knapsack
-          result: ${{ needs.e2e-knapsack.result }}
 
   # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
   # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.
