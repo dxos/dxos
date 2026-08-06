@@ -5,7 +5,6 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
-import { type ColumnGap, columnGapClasses } from '../Column/Column.theme';
 import { withColumn } from '../Column/withColumn';
 
 export type CardStyleProps = {
@@ -15,18 +14,15 @@ export type CardStyleProps = {
   variant?: 'default' | 'subtitle' | 'description';
   density?: Density;
   truncate?: boolean;
-  /** Vertical gap between the card's rows; defaults to the `gap-1` the card always had. */
-  gap?: ColumnGap;
 };
 
 const subgrid = 'col-span-3 grid grid-cols-subgrid gap-1 items-center';
 
-const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth, gap }, ...etc) =>
+// Row gap comes from `Column.Root`'s `gap` prop (Card.Root defaults it to `sm`); only the
+// column gap is set here — the axes are separate tailwind-merge groups, so they compose.
+const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    // Row gap is applied here (not via `Column.Root`'s `gap` prop) so the card's default
-    // `gap-x-1` never collides with a threaded gap class in tailwind-merge ordering.
     'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) p-1 gap-x-1',
-    gap ? columnGapClasses[gap] : 'gap-y-1',
     'group/card relative shrink-0 overflow-hidden',
     border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
