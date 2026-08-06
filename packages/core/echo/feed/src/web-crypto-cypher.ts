@@ -25,17 +25,17 @@ const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => bytes.slice().buffer;
  * KMS-DO-backed provider on the edge, over one unchanged crypto body.
  */
 export interface CypherKeyProvider {
-  /** Generation new writes seal under. */
-  currentDekId(): Promise<string>;
-  /** Resolve the AES-GCM key for a generation, throwing if it is unknown. */
-  resolveKey(dekId: string): Promise<CryptoKey>;
+  /** Identifier of the key new writes seal under. */
+  currentKeyId(): Promise<string>;
+  /** Resolve the AES-GCM key for an identifier, throwing if it is unknown. */
+  resolveKey(keyId: string): Promise<CryptoKey>;
 }
 
 /**
  * Options for {@link createWebCryptoCypher}.
  */
 export interface WebCryptoCypherOptions {
-  /** Key source; defaults to a single-generation in-memory provider. */
+  /** Source of the active and historical encryption keys; callers must supply one. */
   keyProvider: CypherKeyProvider;
   /** Per-feed encryption predicate; defaults to sealing every feed. */
   shouldEncrypt?: (feed: FeedMetadata) => boolean;
@@ -57,16 +57,16 @@ export const createWebCryptoCypher = (options: WebCryptoCypherOptions): Cypher =
     shouldEncrypt,
 
     encrypt: async (plaintext, context): Promise<EncryptedPayload> => {
-      const dekId = await options.keyProvider.currentDekId();
-      const key = await options.keyProvider.resolveKey(dekId);
+      const encryptionKeyId = await options.keyProvider.currentKeyId();
+      const key = await options.keyProvider.resolveKey(encryptionKeyId);
       const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
       const params = { name: 'AES-GCM' as const, iv, additionalData: aad(context) };
       const ciphertext = new Uint8Array(await crypto.subtle.encrypt(params, key, toArrayBuffer(plaintext)));
-      return { dekId, iv, ciphertext };
+      return { encryptionKeyId, iv, ciphertext };
     },
 
     decrypt: async (payload, context): Promise<Uint8Array> => {
-      const key = await options.keyProvider.resolveKey(payload.dekId);
+      const key = await options.keyProvider.resolveKey(payload.encryptionKeyId);
       const params = { name: 'AES-GCM' as const, iv: toArrayBuffer(payload.iv), additionalData: aad(context) };
       return new Uint8Array(await crypto.subtle.decrypt(params, key, toArrayBuffer(payload.ciphertext)));
     },
@@ -74,17 +74,17 @@ export const createWebCryptoCypher = (options: WebCryptoCypherOptions): Cypher =
 };
 
 /**
- * A one-generation in-memory {@link CypherKeyProvider}, for tests and single-process use.
+ * A one-key in-memory {@link CypherKeyProvider}, for tests and single-process use.
  *
- * The DEK never leaves the process; production callers back the provider with the KMS DO instead.
+ * The key never leaves the process; production callers back the provider with the KMS DO instead.
  */
-export const createInMemoryKeyProvider = async (dekId = 'dek-in-memory'): Promise<CypherKeyProvider> => {
+export const createInMemoryKeyProvider = async (keyId = 'in-memory-key'): Promise<CypherKeyProvider> => {
   const key = await crypto.subtle.generateKey(AES_GCM, false, ['encrypt', 'decrypt']);
   return {
-    currentDekId: async () => dekId,
-    resolveKey: async (requestedDekId) => {
-      if (requestedDekId !== dekId) {
-        throw new Error(`Unknown DEK generation '${requestedDekId}'.`);
+    currentKeyId: async () => keyId,
+    resolveKey: async (requestedKeyId) => {
+      if (requestedKeyId !== keyId) {
+        throw new Error(`Unknown encryption key '${requestedKeyId}'.`);
       }
       return key;
     },

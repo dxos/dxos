@@ -144,7 +144,7 @@ export class FeedStore {
     spaceId: string,
     feedNamespace: string,
     blocks: readonly Block[],
-  ): Effect.Effect<{ data: Uint8Array; dekId: string | null; iv: Uint8Array | null }[], CypherError> => {
+  ): Effect.Effect<{ data: Uint8Array; encryptionKeyId: string | null; iv: Uint8Array | null }[], CypherError> => {
     const cypher = this.#options.cypher;
     return Effect.forEach(
       blocks,
@@ -152,14 +152,14 @@ export class FeedStore {
         Effect.gen(this, function* () {
           const feed = { spaceId, feedId: block.feedId!, feedNamespace };
           if (!cypher || !cypher.shouldEncrypt(feed)) {
-            return { data: block.data, dekId: null, iv: null };
+            return { data: block.data, encryptionKeyId: null, iv: null };
           }
           const blockId = blockNaturalKey(block.feedId!, block.actorId, block.sequence);
           const payload = yield* Effect.tryPromise({
             try: () => cypher.encrypt(block.data, { feed, blockId }),
             catch: (error) => new CypherError({ operation: 'encrypt', blockId, cause: error }),
           });
-          return { data: payload.ciphertext, dekId: payload.dekId, iv: payload.iv };
+          return { data: payload.ciphertext, encryptionKeyId: payload.encryptionKeyId, iv: payload.iv };
         }),
       { concurrency: 'unbounded' },
     );
@@ -172,20 +172,32 @@ export class FeedStore {
   #openBlock = (row: Block, spaceId: string, feedNamespace: string): Effect.Effect<Block, CypherError> =>
     Effect.gen(this, function* () {
       const data = new Uint8Array(row.data);
-      const cypher = this.#options.cypher;
-      if (!cypher || row.dekId == null || row.iv == null) {
-        return { ...row, data, dekId: row.dekId ?? undefined, iv: row.iv != null ? new Uint8Array(row.iv) : undefined };
-      }
       const blockId = blockNaturalKey(row.feedId!, row.actorId, row.sequence);
+      // Both envelope fields move together; exactly one present is a corrupt row, never plaintext —
+      // fail closed rather than hand ciphertext to a caller as if it were cleartext.
+      if ((row.encryptionKeyId == null) !== (row.iv == null)) {
+        return yield* Effect.fail(
+          new CypherError({ operation: 'decrypt', blockId, cause: new Error('Partial encryption envelope.') }),
+        );
+      }
+      const cypher = this.#options.cypher;
+      if (!cypher || row.encryptionKeyId == null || row.iv == null) {
+        return {
+          ...row,
+          data,
+          encryptionKeyId: row.encryptionKeyId ?? undefined,
+          iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
+        };
+      }
       const plaintext = yield* Effect.tryPromise({
         try: () =>
           cypher.decrypt(
-            { dekId: row.dekId!, iv: new Uint8Array(row.iv!), ciphertext: data },
+            { encryptionKeyId: row.encryptionKeyId!, iv: new Uint8Array(row.iv!), ciphertext: data },
             { feed: { spaceId, feedId: row.feedId!, feedNamespace }, blockId },
           ),
         catch: (error) => new CypherError({ operation: 'decrypt', blockId, cause: error }),
       });
-      return { ...row, data: plaintext, dekId: undefined, iv: undefined };
+      return { ...row, data: plaintext, encryptionKeyId: undefined, iv: undefined };
     });
 
   /**
@@ -572,7 +584,7 @@ export class FeedStore {
           for (const [blockIndex, block] of request.blocks.entries()) {
             const key = block.feedId!;
             const feedPrivateId = feedPrivateIds.get(key)!;
-            const { data, dekId, iv } = sealed[blockIndex];
+            const { data, encryptionKeyId, iv } = sealed[blockIndex];
 
             let positionToInsert: number | null = null;
             if (this.#options.assignPositions) {
@@ -584,10 +596,10 @@ export class FeedStore {
             const inserted = yield* sql<{ position: number | null }>`
               INSERT INTO blocks (
                 feedPrivateId, position, sequence, actorId,
-                prevSequence, prevActorId, timestamp, data, dekId, iv
+                prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv
               ) VALUES (
                 ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
-                ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${dekId}, ${iv}
+                ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv}
               )
               ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING
               RETURNING position
@@ -858,7 +870,7 @@ export class FeedStore {
           blocks: blocks.map((row) => ({
             ...row,
             data: new Uint8Array(row.data),
-            dekId: row.dekId ?? undefined,
+            encryptionKeyId: row.encryptionKeyId ?? undefined,
             iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
           })),
         });

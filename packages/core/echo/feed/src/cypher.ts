@@ -30,8 +30,8 @@ export interface CypherContext {
  * A sealed block payload plus the envelope needed to open it. Persisted alongside the ciphertext.
  */
 export interface EncryptedPayload {
-  /** Generation that sealed the payload; a decryptor resolves the key from it. */
-  dekId: string;
+  /** Identifier of the key that sealed the payload; a decryptor resolves the key from it. */
+  encryptionKeyId: string;
   /** 96-bit GCM nonce, fresh per seal. */
   iv: Uint8Array;
   /** Ciphertext, including the GCM tag. */

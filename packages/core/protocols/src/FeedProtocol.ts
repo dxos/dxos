@@ -71,18 +71,18 @@ export const Block = Schema.Struct({
   timestamp: Schema.Number,
 
   /**
-   * Serialized application payload. Ciphertext when a cypher sealed the block (see `dekId`).
+   * Serialized application payload. Ciphertext when a cypher sealed the block (see `encryptionKeyId`).
    */
   data: Schema.Uint8Array,
 
   /**
-   * Generation of the data-encryption key that sealed `data`, when the block is encrypted at rest.
+   * Identifier of the key that sealed `data`, when the block is encrypted at rest.
    * Absent on plaintext blocks.
    */
-  dekId: Schema.optional(Schema.String),
+  encryptionKeyId: Schema.optional(Schema.String),
 
   /**
-   * 96-bit GCM nonce used to seal `data`. Present iff `dekId` is.
+   * 96-bit GCM nonce used to seal `data`. Present iff `encryptionKeyId` is.
    */
   iv: Schema.optional(Schema.Uint8Array),
 
