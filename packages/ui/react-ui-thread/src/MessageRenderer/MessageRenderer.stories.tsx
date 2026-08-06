@@ -3,17 +3,34 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { type PropsWithChildren, useEffect, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { type ContentBlock } from '@dxos/types';
+import { type ContentBlock, Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
+import { Message } from '../Message';
+import { STORY_IDENTITY, getStoryMetadata } from '../testing';
 import { MessageRenderer } from './MessageRenderer';
 
 const text = (text: string): ContentBlock.Any => ({ _tag: 'text', text }) as ContentBlock.Any;
+
+/**
+ * A message as the transcript renders it, so a story is comparable with `Thread.Conversation`
+ * rather than being a bare editor on an empty canvas — the body is only ever seen inside its row.
+ */
+const Row = ({ children }: PropsWithChildren) => {
+  const metadata = getStoryMetadata(MessageType.make({ sender: STORY_IDENTITY, blocks: [] }));
+  return (
+    <Message.Root {...metadata} continues={false}>
+      <Message.Heading authorName={metadata.authorName} timestamp={metadata.timestamp} />
+      {children}
+    </Message.Root>
+  );
+};
 
 const BODY = [
   'A message body is **markdown**, so `code`, _emphasis_ and [links](https://dxos.org) render.',
@@ -22,14 +39,18 @@ const BODY = [
   '- renders as one',
 ].join('\n');
 
-const DefaultStory = () => <MessageRenderer blocks={[text(BODY)]} />;
+const DefaultStory = () => (
+  <Row>
+    <MessageRenderer blocks={[text(BODY)]} />
+  </Row>
+);
 
 /** Tokens arriving one at a time, as a model streams them into the tail block. */
 const StreamingStory = () => {
   const [blocks, setBlocks] = useState<ContentBlock.Any[]>(() => [text('')]);
 
   useEffect(() => {
-    const tokens = 'Streaming arrives one token at a time, growing the tail of the message.'.split(' ');
+    const tokens = 'Streaming arrives one token at a time, **growing the tail** of the message.'.split(' ');
     let index = 0;
     const interval = setInterval(() => {
       if (index >= tokens.length) {
@@ -37,37 +58,45 @@ const StreamingStory = () => {
         return;
       }
 
-      const next = tokens.slice(0, ++index).join(' ');
-      setBlocks([text(next)]);
+      setBlocks([text(tokens.slice(0, ++index).join(' '))]);
     }, 60);
 
     return () => clearInterval(interval);
   }, []);
 
-  return <MessageRenderer blocks={blocks} />;
+  return (
+    <Row>
+      <MessageRenderer blocks={blocks} />
+    </Row>
+  );
 };
 
 /** Editing in place: the same view becomes writable rather than being rebuilt as one. */
 const EditingStory = () => {
-  const [blocks, setBlocks] = useState<ContentBlock.Any[]>(() => [text('The stored body.')]);
+  const [blocks, setBlocks] = useState<ContentBlock.Any[]>(() => [text('The stored body, with **markdown** in it.')]);
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState('The stored body.');
+  const [draft, setDraft] = useState('');
 
   return (
     <div className='flex flex-col gap-2'>
-      <button type='button' data-testid='story.toggle-edit' onClick={() => setEditing((value) => !value)}>
-        {editing ? 'editing' : 'read-only'}
-      </button>
-      <MessageRenderer
-        blocks={blocks}
-        editing={editing}
-        onChange={setDraft}
-        onCommit={() => {
-          setBlocks([text(draft)]);
-          setEditing(false);
-        }}
-        onCancel={() => setEditing(false)}
-      />
+      <Toolbar.Root>
+        <Button data-testid='story.toggle-edit' onClick={() => setEditing((value) => !value)}>
+          {editing ? 'Editing' : 'Edit'}
+        </Button>
+      </Toolbar.Root>
+      <Row>
+        <MessageRenderer
+          classNames={editing ? 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5' : undefined}
+          blocks={blocks}
+          editing={editing}
+          onChange={setDraft}
+          onCommit={() => {
+            setBlocks([text(draft)]);
+            setEditing(false);
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      </Row>
     </div>
   );
 };
@@ -88,8 +117,14 @@ const content = (canvasElement: HTMLElement) => canvasElement.querySelector<HTML
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(content(canvasElement)).not.toBeNull());
-    // Markdown is decorated rather than shown as source: the link's syntax does not survive as text.
-    await expect(content(canvasElement)!.textContent).toContain('and a list');
+    // Decorated, not shown as source — which is the whole claim, and what asserting on the rendered
+    // words alone would have missed: `**markdown**` reads as `markdown`, the link keeps its label
+    // and drops its target, and the list marker is drawn rather than typed.
+    const rendered = content(canvasElement)!.textContent ?? '';
+    await expect(rendered).toContain('A message body is markdown');
+    await expect(rendered).not.toContain('**');
+    await expect(rendered).not.toContain('https://dxos.org');
+    await expect(rendered).not.toContain('- and a list');
   },
 };
 

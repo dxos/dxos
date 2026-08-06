@@ -12,6 +12,7 @@ import {
   type Extension,
   compactSlots,
   createBasicExtensions,
+  createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
   keymap,
@@ -132,7 +133,11 @@ export const MessageRenderer = ({
         createBasicExtensions({ lineWrapping: true }),
         // `compactSlots`, not `documentSlots`: the latter centres content in a 50rem column, which
         // is a document's layout and not a chat row's.
-        createThemeExtensions({ themeMode, slots: compactSlots }),
+        createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: compactSlots }),
+        // The parser, not only the decorator: `decorateMarkdown` reads a syntax tree, so without the
+        // markdown language nothing is decorated and a body renders as its own source — asterisks,
+        // backticks and link brackets and all.
+        createMarkdownExtensions(),
         decorateMarkdown(),
         command,
         chunkSync({ model, autoScroll: false }),
