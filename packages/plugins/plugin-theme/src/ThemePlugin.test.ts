@@ -5,14 +5,16 @@
 import * as Effect from 'effect/Effect';
 import { beforeEach, describe, test, vi } from 'vitest';
 
-import { Capabilities, Capability, ProcessManagerPlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { createTestApp } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import { ThemePlugin } from '#plugin';
 
 import { meta } from './meta';
-import { ThemeCapabilities } from './types';
+import * as ThemeCapabilities from './types/ThemeCapabilities';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 

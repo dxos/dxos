@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as EffectContext from 'effect/Context';
@@ -14,6 +15,7 @@ import { FeedProtocol } from '@dxos/protocols';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { PositionConflictError } from './errors';
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type AppendResponse = FeedProtocol.AppendResponse;
@@ -61,58 +63,25 @@ export class FeedStore {
   readonly onNewBlocks = new Event<void>();
 
   /**
-   * Creates required feed store tables and indexes if they do not exist.
+   * Applies any migrations this database has not recorded yet.
+   *
+   * A database created before migration tracking existed already holds migration 1's tables, and
+   * needs no special handling: every statement in it is `IF NOT EXISTS`, so it applies as a no-op
+   * and is recorded like any other.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd, where this runs inside
+   * a Durable Object.
    */
   migrate = Effect.fn('FeedStore.migrate')(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-
-      // Feeds Table
-      yield* sql`CREATE TABLE IF NOT EXISTS feeds (
-        feedPrivateId INTEGER PRIMARY KEY AUTOINCREMENT,
-        spaceId TEXT NOT NULL,
-        feedId TEXT NOT NULL,
-        feedNamespace TEXT
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_feeds_spaceId_feedId ON feeds(spaceId, feedId)`;
-
-      // Blocks Table
-      yield* sql`CREATE TABLE IF NOT EXISTS blocks (
-        insertionId INTEGER PRIMARY KEY AUTOINCREMENT,
-        feedPrivateId INTEGER NOT NULL,
-        position INTEGER,
-        sequence INTEGER NOT NULL,
-        actorId TEXT NOT NULL,
-        prevSequence INTEGER,
-        prevActorId TEXT,
-        timestamp INTEGER NOT NULL,
-        data BLOB NOT NULL,
-        FOREIGN KEY(feedPrivateId) REFERENCES feeds(feedPrivateId)
-      )`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_position ON blocks(feedPrivateId, position)`;
-      yield* sql`CREATE UNIQUE INDEX IF NOT EXISTS idx_blocks_feedPrivateId_sequence_actorId ON blocks(feedPrivateId, sequence, actorId)`;
-
-      // Subscriptions Table
-      yield* sql`CREATE TABLE IF NOT EXISTS subscriptions (
-          subscriptionId TEXT PRIMARY KEY,
-          expiresAt INTEGER NOT NULL,
-          feedPrivateIds TEXT NOT NULL -- JSON array
-      )`;
-
-      // Cursor Tokens Table
-      yield* sql`CREATE TABLE IF NOT EXISTS cursor_tokens (
-          spaceId TEXT PRIMARY KEY,
-          token TEXT NOT NULL
-      )`;
-
-      // Sync State Table.
-      yield* sql`CREATE TABLE IF NOT EXISTS sync_state (
-          spaceId TEXT NOT NULL,
-          feedNamespace TEXT NOT NULL,
-          lastPulledPosition INTEGER NOT NULL DEFAULT -1,
-          PRIMARY KEY (spaceId, feedNamespace)
-      )`;
-    }).pipe(Effect.withSpan('FeedStore.migrate')),
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A MigrationError means the bundled manifest is malformed — a defect, not something a caller
+      // can recover from — so it dies rather than widening this signature beyond SqlError.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+      Effect.withSpan('FeedStore.migrate'),
+    ),
   );
 
   /**

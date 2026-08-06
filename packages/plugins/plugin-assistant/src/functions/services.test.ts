@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import {
   AgentHandlers,
   AgentSkillHandlers,
@@ -14,7 +14,8 @@ import {
   SkillManagerHandlers,
   WebSearchHandlers,
 } from '@dxos/assistant-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { EffectEx } from '@dxos/effect';
 
 import { AssistantOperationHandlerSet } from '#operations';

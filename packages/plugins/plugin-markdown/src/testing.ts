@@ -6,12 +6,13 @@ import * as Toolkit from '@effect/ai/Toolkit';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Collection, Feed } from '@dxos/echo';
 import { HasSubject } from '@dxos/types';
 
 import { MarkdownOperationHandlerSet } from '#operations';
-import { Markdown } from '#types';
+
+import * as Markdown from './types/Markdown';
 
 // Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
 // for the rationale. Uses the `#plugin` subpath so the node-only build is

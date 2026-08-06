@@ -11,14 +11,13 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { AtprotoRecordAnnotation, AtprotoVisibilityAnnotation } from '@dxos/schema';
-
-import { AtprotoPublication } from '#types';
 
 import { computePublishedValues } from './field-values';
 import { computeStatus, deriveDisplayStatus, publishObject, unpublishObject } from './publish';
 import * as AtprotoRepo from './services/AtprotoRepo';
+import * as AtprotoPublication from './types/AtprotoPublication';
 
 // A minimal atproto-annotated type. Its lens projects only the public `text` field, exercising the
 // generic publish machinery without depending on a specific content plugin.

@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { IconButton, type Label, Main, Panel, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';

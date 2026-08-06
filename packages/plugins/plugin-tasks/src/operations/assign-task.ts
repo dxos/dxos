@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Entity, Obj } from '@dxos/echo';
 
-import { TaskOperation } from '../types';
+import * as TaskOperation from '../types/TaskOperation';
 
 const handler: Operation.WithHandler<typeof TaskOperation.AssignTask> = TaskOperation.AssignTask.pipe(
   Operation.withHandler(

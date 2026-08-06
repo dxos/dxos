@@ -6,8 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { DXN, URI } from '@dxos/keys';
 
 const NAVIGATION_PLUGIN = 'org.dxos.plugin.navigation';

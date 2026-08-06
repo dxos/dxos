@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { ConnectorAuthAnnotation } from '@dxos/plugin-connector';
+import * as ConnectorAnnotations from '@dxos/plugin-connector/ConnectorAnnotations';
 import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 import { GOOGLE_CALENDAR_CONNECTOR_ID } from '../constants';
@@ -27,7 +27,10 @@ export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.
     Annotation.IconAnnotation.set({ icon: 'ph--calendar--regular', hue: 'rose' }),
     AppAnnotation.SkillsAnnotation.set([SKILL_KEY]),
     // Offer "Connect" in the calendar toolbar; bind the calendar as the new connection's sync target.
-    ConnectorAuthAnnotation.set({ connectorIds: [GOOGLE_CALENDAR_CONNECTOR_ID], bindTarget: true }),
+    ConnectorAnnotations.ConnectorAuthAnnotation.set({
+      connectorIds: [GOOGLE_CALENDAR_CONNECTOR_ID],
+      bindTarget: true,
+    }),
   ),
 ) {}
 

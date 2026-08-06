@@ -7,7 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -18,9 +19,12 @@ import { TagIndex } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps, ObjectArticle, useTargetConnection } from '#components';
-import { Calendar, DraftEvent, InboxOperation, SystemTags } from '#types';
 
 import { getCalendarEventPath, getEventNodeId } from '../../paths';
+import * as Calendar from '../../types/Calendar';
+import * as DraftEvent from '../../types/DraftEvent';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as SystemTags from '../../types/SystemTags';
 
 // Stable fallback so `useAtomValue` always receives an atom when the event isn't starrable.
 const NOT_STARRED = Atom.make(false);

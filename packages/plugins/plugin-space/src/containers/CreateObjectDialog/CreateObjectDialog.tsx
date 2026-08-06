@@ -7,11 +7,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Capability } from '@dxos/app-framework';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppSpace, LayoutOperation, TypeOptions } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { PluginRegistryButton } from '@dxos/app-toolkit/ui';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
@@ -24,8 +26,9 @@ import { CollectionItemAnnotation, ViewAnnotation } from '@dxos/schema';
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
 import { type CreateObjectOption, CreateObjectPanel, type CreateObjectPanelProps } from '#components';
 import { meta } from '#meta';
-import { SpaceCapabilities } from '#types';
 
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../types/SpaceEvents';
 import { getSpaceDisplayName } from '../../util';
 
 export const CREATE_OBJECT_DIALOG = `${meta.profile.key}.CreateObjectDialog`;
@@ -48,6 +51,9 @@ export const CreateObjectDialog = ({
 }: CreateObjectDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const manager = usePluginManager();
+  // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
+  // reactively, so entries pop in as their chunks arrive.
+  useActivationSignal(SpaceEvents.CreateObjectRequested);
   const operationInvoker = useOperationInvoker();
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);

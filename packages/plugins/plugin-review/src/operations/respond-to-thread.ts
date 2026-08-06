@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
-import { CommentCapabilities, CommentOperation } from '../types';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = CommentOperation.RespondToThread.pipe(
   Operation.withHandler(

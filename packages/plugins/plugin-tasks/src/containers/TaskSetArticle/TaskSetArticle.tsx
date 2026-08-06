@@ -14,7 +14,8 @@ import { TaskList, type TaskPatch, type TaskStatus } from '@dxos/react-ui-task';
 import { Task, type TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
-import { TaskOperation } from '#types';
+
+import * as TaskOperation from '../../types/TaskOperation';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>;
 

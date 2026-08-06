@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { getSpace } from '@dxos/client/echo';
 import { Feed, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { Message, Transcript } from '@dxos/types';
@@ -14,7 +14,7 @@ import { renderByline } from '../util';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(AppCapabilities.TextContent, {
+    return Capability.contribute(AppCapabilities.TextContent, {
       id: Type.getTypename(Transcript.Transcript),
       getTextContent: async (transcript: Transcript.Transcript) => {
         const space = getSpace(transcript);

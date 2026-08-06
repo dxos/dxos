@@ -8,16 +8,15 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { DatabaseHandlers, DatabaseSkill, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Feed, Obj } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Message, Organization, Person } from '@dxos/types';
 
-import { ProfileOf } from '#types';
-
 import { EMAIL_FIXTURES, makeEmailMessage } from '../../testing';
+import * as ProfileOf from '../../types/ProfileOf';
 import CrmSkill from './skill';
 
 EntityId.dangerouslyDisableRandomness();

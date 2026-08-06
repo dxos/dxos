@@ -4,11 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 
 import { meta } from '#meta';
-import { ObservabilityCapabilities } from '#types';
+
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
 
 /**
  * Shows the privacy notice toast once when an identity is first created.
@@ -18,10 +21,10 @@ import { ObservabilityCapabilities } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = yield* Capability.get(ObservabilityCapabilities.State);
-    const client = yield* Capability.get(ObservabilityCapabilities.ClientCapability);
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* ObservabilityCapabilities.State;
+    const client = yield* ObservabilityCapabilities.ClientCapability;
 
     const environment = client?.config?.values.runtime?.app?.env?.DX_ENVIRONMENT;
     const notify =

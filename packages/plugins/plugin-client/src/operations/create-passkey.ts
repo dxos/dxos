@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 
-import { Capability } from '@dxos/app-framework';
-import { NativePasskey } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { PublicKey } from '@dxos/client';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { invariant } from '@dxos/invariant';
 
-import { ClientCapabilities } from '../types';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 import { CreatePasskey } from './definitions';
 
 const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(

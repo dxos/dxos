@@ -14,9 +14,10 @@ import {
   ToolExecutionService,
   ToolResolverService,
 } from '@dxos/ai';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AiAssistantError, AiRequest } from '@dxos/assistant';
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Type } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
@@ -24,7 +25,7 @@ import { log } from '@dxos/log';
 import { Transcript } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { type Meeting } from '#types';
+import type * as Meeting from './types/Meeting';
 
 // TODO(wittjosiah): Also include content of object which are linked to the meeting.
 export const getMeetingContent = async (

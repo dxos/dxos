@@ -6,14 +6,9 @@ import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import { useCallback } from 'react';
 
-import { invariant } from '@dxos/invariant';
-
 import { Capabilities } from '../../common';
 import { type Capability } from '../../core';
-import { useOptionalPluginManager, usePluginManager } from '../components';
-
-/** Stable empty result for capability lookups made outside a plugin manager. */
-const emptyCapabilities = Atom.make(() => [] as const);
+import { usePluginManager } from '../components';
 
 /** Stable atom yielding `undefined`, used as the fallback for optional atom-capability lookups. */
 const emptyAtomValue = Atom.make(() => undefined);
@@ -29,30 +24,37 @@ export const useCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>) => 
 
 /**
  * Hook to request a capability from the plugin context.
+ *
+ * Suspends (throws the contribution promise) while nothing has contributed the interface yet, so a
+ * reader that renders before its provider activates parks at its nearest Suspense boundary. An
+ * invariant here cannot tell "not yet" from "never": most providers are idle-gated or wait on a
+ * runtime event, so the reader legitimately renders first, and hard-failing on that blanks the
+ * subtree. Declaring the dependency as the module's `requires` is NOT the alternative — that
+ * demotes the reader's module into the provider's (later) wave.
+ *
  * @returns The capability.
- * @throws If no capability is found.
  */
-// TODO(burdon): Option not to throw?
 export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
+  const manager = usePluginManager();
   const capabilities = useCapabilities(interfaceDef);
-  invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+  if (capabilities.length === 0) {
+    throw manager.capabilities.waitForPromise(interfaceDef);
+  }
   return capabilities[0];
 };
 
 /**
- * Hook to request capabilities without requiring a plugin manager.
- * @returns An array of capabilities, or an empty array when rendered outside a {@link PluginManagerProvider}.
+ * Hook to request capabilities that a plugin may or may not contribute.
+ * @returns An array of capabilities, empty when none is registered.
  */
 export const useOptionalCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>): readonly T[] => {
-  const manager = useOptionalPluginManager();
-  return useAtomValue(
-    manager ? manager.capabilities.atom(interfaceDef) : (emptyCapabilities as Atom.Atom<readonly T[]>),
-  );
+  const manager = usePluginManager();
+  return useAtomValue(manager.capabilities.atom(interfaceDef));
 };
 
 /**
- * Hook to request a single capability without requiring a plugin manager.
- * @returns The first matching capability, or `undefined` when none is registered (or there is no plugin manager).
+ * Hook to request a single capability that a plugin may or may not contribute.
+ * @returns The first matching capability, or `undefined` when none is registered.
  */
 export const useOptionalCapability = <T>(interfaceDef: Capability.InterfaceDef<T>): T | undefined =>
   useOptionalCapabilities(interfaceDef)[0];
@@ -65,6 +67,17 @@ export const useOptionalCapability = <T>(interfaceDef: Capability.InterfaceDef<T
 export const useAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T => {
   const atom = useCapability(atomCapability);
   return useAtomValue(atom);
+};
+
+/**
+ * Tolerant variant of {@link useAtomCapability}: returns `undefined` while the atom capability is
+ * not registered, rather than throwing. Use it wherever a reader can render before its provider —
+ * a provider gated on a genuine runtime event (a status indicator whose state arrives with the
+ * client) cannot be pulled onto the startup pass with `requires`.
+ */
+export const useOptionalAtomCapability = <T>(atomCapability: Capability.InterfaceDef<Atom.Atom<T>>): T | undefined => {
+  const atom = useOptionalCapability(atomCapability);
+  return useAtomValue(atom ?? emptyAtomValue) as T | undefined;
 };
 
 /**

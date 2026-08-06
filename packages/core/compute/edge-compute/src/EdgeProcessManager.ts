@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Client } from '@dxos/client';
-import { type Process } from '@dxos/compute';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
+import type * as Process from '@dxos/compute/Process';
 import { Context as DxosContext } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { SpaceId } from '@dxos/keys';

@@ -5,17 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '@dxos/react-ui-form';
-
-import { Book } from '#types';
 
 import { lookupHiveBook, searchBooks } from '../operations/bookhive';
 import { browserCorsProxy } from '../operations/cors';
 import { getBooksPath } from '../paths';
+import * as Book from '../types/Book';
 
 type CreateBookValues = {
   hiveId?: string;
@@ -64,7 +64,7 @@ const CreateBook = Schema.Struct({
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Book.Book),
       inputSchema: CreateBook,
       // The embedded catalog is filled from the selected hive book on submit; its `hiveId` is what

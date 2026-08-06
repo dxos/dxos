@@ -20,7 +20,7 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
-import { Provider } from '../../types';
+import * as Provider from '../../types/Provider';
 
 export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provider>;
 

@@ -15,7 +15,7 @@ import { Common } from '@dxos/cli-util';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 
-import { Connection } from '../../types';
+import * as Connection from '../../types/Connection';
 import { performOAuthFlow } from './oauth';
 import { OAUTH_PRESETS, type OAuthPreset, printTokenAdded } from './util';
 

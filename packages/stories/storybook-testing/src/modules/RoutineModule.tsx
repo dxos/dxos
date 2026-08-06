@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Instructions } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
 import { Filter } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';

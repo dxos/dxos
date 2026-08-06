@@ -8,25 +8,35 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { LayerSpec, Operation, OperationHandlerSet } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '@dxos/plugin-inbox';
 import { MessageArticle } from '@dxos/plugin-inbox/containers';
+import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
 import { translations as inboxTranslations } from '@dxos/plugin-inbox/translations';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Booking, Segment, Trip } from '@dxos/plugin-trip';
+import * as Booking from '@dxos/plugin-trip/Booking';
+import * as Segment from '@dxos/plugin-trip/Segment';
 import { TripPlugin } from '@dxos/plugin-trip/testing';
+import * as Trip from '@dxos/plugin-trip/Trip';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -44,10 +54,10 @@ const MockDeckOperationsPlugin = Plugin.define(
     name: 'Mock Deck Ops',
   }),
 ).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+  Plugin.addModule(
+    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([
+        Capability.contribute(
           Capabilities.OperationHandler,
           OperationHandlerSet.make(
             Operation.withHandler(LayoutOperation.Select, () => Effect.void),
@@ -55,8 +65,9 @@ const MockDeckOperationsPlugin = Plugin.define(
             Operation.withHandler(LayoutOperation.Open, () => Effect.succeed([])),
           ),
         ),
-      ),
-  }),
+      ]),
+    ),
+  ),
   Plugin.make,
 );
 
@@ -91,9 +102,9 @@ const ImportantExtractorPlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'extractor',
-    activatesOn: ActivationEvents.Startup,
+    provides: [InboxCapabilities.ObjectExtractor],
     activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)),
+      Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ImportantMessageExtractor)]),
   }),
   Plugin.make,
 );
@@ -142,10 +153,12 @@ const MockAiServicePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
     activate: () =>
-      Effect.succeed(
-        Capability.contributes(
+      Effect.succeed([
+        Capability.contribute(
           Capabilities.LayerSpec,
           LayerSpec.make({ affinity: 'application', requires: [], provides: [AiService.AiService] }, () =>
             // Mock model: `generateText` returns a static summary (for SummarizeMessageExtractor),
@@ -154,7 +167,7 @@ const MockAiServicePlugin = Plugin.define(
             mockAiService({ text: MOCK_SUMMARY, object: MOCK_FLIGHT_PAYLOAD }),
           ),
         ),
-      ),
+      ]),
   }),
   Plugin.make,
 );
@@ -221,7 +234,6 @@ const meta = {
     withTheme(),
     withPluginManager({
       setupEvents: [
-        AppActivationEvents.SetupSettings,
         // TripPlugin contributes TripMessageExtractor on Startup; fire it explicitly so the
         // capability is contributed before MessageArticle's toolbar reads the extractor list.
         ActivationEvents.Startup,

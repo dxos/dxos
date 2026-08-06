@@ -15,17 +15,18 @@ import {
 } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
-import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '#types';
 
 import { type SheetModel } from '../../model';
+import * as SheetRange from '../../types/SheetRange';
+import * as SheetUtil from '../../types/SheetUtil';
 import { useSheetContext } from '../SheetRoot';
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
-export type AlignAction = { key: AlignKey; value: AlignValue };
+export type AlignAction = { key: SheetRange.AlignKey; value: SheetRange.AlignValue };
 
-export type AlignState = { [alignKey]: AlignValue | undefined };
+export type AlignState = { [SheetRange.alignKey]: SheetRange.AlignValue | undefined };
 
-const aligns: Record<AlignValue, string> = {
+const aligns: Record<SheetRange.AlignValue, string> = {
   start: 'ph--text-align-left--regular',
   center: 'ph--text-align-center--regular',
   end: 'ph--text-align-right--regular',
@@ -39,21 +40,22 @@ export const useAlignState = (stateAtom: ToolbarStateAtom) => {
     const alignValue = (
       cursor
         ? model.sheet.ranges?.findLast(
-            ({ range, key }) => key === alignKey && inRange(rangeFromIndex(model.sheet, range), cursor),
+            ({ range, key }) =>
+              key === SheetRange.alignKey && inRange(SheetUtil.rangeFromIndex(model.sheet, range), cursor),
           )?.value
         : undefined
-    ) as AlignValue | undefined;
+    ) as SheetRange.AlignValue | undefined;
     const prev = registry.get(stateAtom);
-    registry.set(stateAtom, { ...prev, [alignKey]: alignValue });
+    registry.set(stateAtom, { ...prev, [SheetRange.alignKey]: alignValue });
   }, [cursor, model.sheet, registry, stateAtom]);
 };
 
-const createAlignGroupAction = (value?: AlignValue) =>
+const createAlignGroupAction = (value?: SheetRange.AlignValue) =>
   createMenuItemGroup('align', {
     label: ['align.label', { ns: meta.profile.key }],
     variant: 'toggleGroup',
     selectCardinality: 'single',
-    value: `${alignKey}--${value}`,
+    value: `${SheetRange.alignKey}--${value}`,
   } as ToolbarMenuActionGroupProperties);
 
 type AlignActionsContext = {
@@ -67,7 +69,7 @@ type AlignActionsContext = {
 const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackRange }: AlignActionsContext) =>
   Object.entries(aligns).map(([alignValue, icon]) => {
     return createMenuAction<AlignAction>(
-      `${alignKey}--${alignValue}`,
+      `${SheetRange.alignKey}--${alignValue}`,
       () => {
         if (!cursorFallbackRange) {
           return;
@@ -75,44 +77,45 @@ const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackR
         const index =
           model.sheet.ranges?.findIndex(
             (range) =>
-              range.key === alignKey && inRange(rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
+              range.key === SheetRange.alignKey &&
+              inRange(SheetUtil.rangeFromIndex(model.sheet, range.range), cursorFallbackRange.from),
           ) ?? -1;
         const nextRangeEntity = {
-          range: rangeToIndex(model.sheet, cursorFallbackRange),
-          key: alignKey,
-          value: alignValue as AlignValue,
+          range: SheetUtil.rangeToIndex(model.sheet, cursorFallbackRange),
+          key: SheetRange.alignKey,
+          value: alignValue as SheetRange.AlignValue,
         };
         const currentState = registry.get(stateAtom);
         if (index < 0) {
           Obj.update(model.sheet, (obj) => {
             obj.ranges?.push(nextRangeEntity);
           });
-          registry.set(stateAtom, { ...currentState, [alignKey]: nextRangeEntity.value });
+          registry.set(stateAtom, { ...currentState, [SheetRange.alignKey]: nextRangeEntity.value });
         } else if (model.sheet.ranges![index].value === nextRangeEntity.value) {
           Obj.update(model.sheet, (obj) => {
             obj.ranges?.splice(index, 1);
           });
-          registry.set(stateAtom, { ...currentState, [alignKey]: undefined });
+          registry.set(stateAtom, { ...currentState, [SheetRange.alignKey]: undefined });
         } else {
           Obj.update(model.sheet, (obj) => {
             obj.ranges?.splice(index, 1, nextRangeEntity);
           });
-          registry.set(stateAtom, { ...currentState, [alignKey]: nextRangeEntity.value });
+          registry.set(stateAtom, { ...currentState, [SheetRange.alignKey]: nextRangeEntity.value });
         }
       },
       {
-        key: alignKey,
-        value: alignValue as AlignValue,
-        checked: state[alignKey] === alignValue,
+        key: SheetRange.alignKey,
+        value: alignValue as SheetRange.AlignValue,
+        checked: state[SheetRange.alignKey] === alignValue,
         label: [`range-value.${alignValue}.label`, { ns: meta.profile.key }],
         icon,
-        testId: `grid.toolbar.${alignKey}.${alignValue}`,
+        testId: `grid.toolbar.${SheetRange.alignKey}.${alignValue}`,
       },
     );
   });
 
 export const createAlign = (context: AlignActionsContext): ActionGraphProps => {
-  const alignGroup = createAlignGroupAction(context.state[alignKey]);
+  const alignGroup = createAlignGroupAction(context.state[SheetRange.alignKey]);
   const alignActions = createAlignActions(context);
   return {
     nodes: [alignGroup, ...alignActions],

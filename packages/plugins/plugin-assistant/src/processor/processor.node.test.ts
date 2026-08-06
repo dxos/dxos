@@ -11,7 +11,7 @@ import * as Option from 'effect/Option';
 import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { AiSession } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Database, Feed } from '@dxos/echo';

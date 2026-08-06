@@ -4,7 +4,7 @@
 
 import { describe, test } from '@effect/vitest';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 
 import { ProjectOperationHandlerSet } from './index';
 

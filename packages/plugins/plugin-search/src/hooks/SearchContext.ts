@@ -6,8 +6,7 @@ import { createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
-
-import { type SearchResult } from '#types';
+import { type SearchResult } from '@dxos/react-ui-search';
 
 import { filterObjectsSync } from './sync';
 

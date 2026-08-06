@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
 import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { ScrollArea } from '@dxos/react-ui';
 
 // Fallback so the atom hook is called unconditionally when no store is contributed (host plugin not

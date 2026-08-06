@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
 import { instanceOf as isInstanceOf } from '@dxos/echo/Obj';
 import { invariant } from '@dxos/invariant';

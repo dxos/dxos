@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type EntityLookup, makeDatabaseLookup } from '@dxos/pipeline-transcription';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { TranscriptionCapabilities } from '#types';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 /**
  * Contributes an {@link EntityLookup} backed by the personal space's full-text index. Resolved lazily
@@ -27,6 +27,6 @@ export default Capability.makeModule(
       }
       return makeDatabaseLookup(space.db)(noun, context);
     };
-    return Capability.contributes(TranscriptionCapabilities.EntityLookup, lookup);
+    return Capability.contribute(TranscriptionCapabilities.EntityLookup, lookup);
   }),
 );

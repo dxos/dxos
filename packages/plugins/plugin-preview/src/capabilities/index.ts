@@ -2,7 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-export const PreviewPopover = Capability.lazy('PreviewPopover', () => import('./preview-popover'));
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
+import { PreviewEvents } from '../events';
+
+export const PreviewPopover = Capability.lazyModule(
+  'PreviewPopover',
+  { provides: [], activatesOn: PreviewEvents.Start },
+  () => import('./preview-popover'),
+);
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.cardContent'],
+});

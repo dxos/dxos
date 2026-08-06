@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { BaseError } from '@dxos/errors';
 
 import { ConnectionAuthExpiredError, isUnauthorizedError } from './errors';

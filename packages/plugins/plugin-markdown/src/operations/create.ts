@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { Markdown, MarkdownOperation } from '../types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = MarkdownOperation.Create.pipe(
   Operation.withHandler(

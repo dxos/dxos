@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-projects",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -51,11 +51,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -64,15 +59,31 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./ProjectCapabilities": {
+      "source": "./src/types/ProjectCapabilities.ts",
+      "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
+      "import": "./dist/lib/ProjectCapabilities.mjs"
+    },
+    "./ProjectMcpOperation": {
+      "source": "./src/types/ProjectMcpOperation.ts",
+      "types": "./dist/types/src/types/ProjectMcpOperation.d.ts",
+      "import": "./dist/lib/ProjectMcpOperation.mjs"
+    },
+    "./ProjectOperation": {
+      "source": "./src/types/ProjectOperation.ts",
+      "types": "./dist/types/src/types/ProjectOperation.d.ts",
+      "import": "./dist/lib/ProjectOperation.mjs"
+    },
+    "./ProjectsEvents": {
+      "source": "./src/types/ProjectsEvents.ts",
+      "types": "./dist/types/src/types/ProjectsEvents.d.ts",
+      "import": "./dist/lib/ProjectsEvents.mjs"
+    },
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     },
     "./templates": {
       "source": "./src/templates/index.ts",
@@ -86,6 +97,22 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "ProjectCapabilities": [
+        "dist/types/src/types/ProjectCapabilities.d.ts"
+      ],
+      "ProjectMcpOperation": [
+        "dist/types/src/types/ProjectMcpOperation.d.ts"
+      ],
+      "ProjectOperation": [
+        "dist/types/src/types/ProjectOperation.d.ts"
+      ],
+      "ProjectsEvents": [
+        "dist/types/src/types/ProjectsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

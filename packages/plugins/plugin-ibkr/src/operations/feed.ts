@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Feed, Filter } from '@dxos/echo';
 
 import { IBKR_FEED_KIND } from '../constants';
-import { Ibkr } from '../types';
+import * as Ibkr from '../types/Ibkr';
 
 /** Per-space feed holding the daily {@link Ibkr.Report} snapshots, or undefined before the first sync. */
 export const findPortfolioFeed = Effect.gen(function* () {

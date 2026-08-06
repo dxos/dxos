@@ -9,14 +9,17 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { type IndexCursor, IndexTracker } from './index-tracker';
 
-const TestLayer = Layer.merge(
-  SqliteClient.layer({
-    filename: ':memory:',
-  }),
-  Reactivity.layer,
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+  Layer.provideMerge(Reactivity.layer),
 );
 
 describe('IndexTracker', () => {

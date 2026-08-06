@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';

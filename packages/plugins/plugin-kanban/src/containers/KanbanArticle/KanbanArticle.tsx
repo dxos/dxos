@@ -6,7 +6,7 @@ import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { type AppSurface, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
@@ -15,8 +15,9 @@ import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { KanbanBoard } from '#components';
 import { useEchoChangeCallback, useItemsProjection, useProjectionModel } from '#hooks';
-import { KanbanOperation } from '#types';
-import { Kanban } from '#types';
+
+import * as Kanban from '../../types/Kanban';
+import * as KanbanOperation from '../../types/KanbanOperation';
 
 export type KanbanArticleProps = AppSurface.ObjectArticleProps<Kanban.Kanban>;
 

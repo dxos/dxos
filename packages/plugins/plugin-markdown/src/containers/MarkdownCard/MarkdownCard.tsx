@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { MarkdownEditor, MarkdownEditorProvider } from '#components';
 import { meta } from '#meta';
-import { Markdown } from '#types';
 
+import * as Markdown from '../../types/Markdown';
 import { getContentSnippet } from '../../util';
 import { snippet as snippetExtension } from './snippet';
 

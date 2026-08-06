@@ -5,7 +5,7 @@
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
-import { type Markdown } from '@dxos/plugin-markdown/types';
+import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space } from '@dxos/react-client/echo';
 import { type Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';

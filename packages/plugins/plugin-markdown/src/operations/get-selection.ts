@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, URI } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 
 import { type SelectionRange, getSelectionRanges } from '../model/selection';
-import { Markdown, MarkdownOperation } from '../types';
+import * as Markdown from '../types/Markdown';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.GetSelection> = MarkdownOperation.GetSelection.pipe(
   Operation.withHandler(

@@ -13,22 +13,24 @@ import * as Schema from 'effect/Schema';
 import { traceFeedPrettyPrintSubscription } from '@dxos/agent-runtime/testing';
 import { AiService } from '@dxos/ai';
 import { LanguageModelFixture, TestAiService } from '@dxos/ai/testing';
-import { type Plugin } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Chat, DatabaseSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
 import { type ClientOptions } from '@dxos/client';
-import { Instructions, Operation, ServiceResolver, type Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
+import type * as Skill from '@dxos/compute/Skill';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -265,8 +267,6 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
           ),
           (testHarness) => Effect.promise(() => testHarness.dispose()),
         );
-
-        yield* Effect.promise(() => harness.fire(AppActivationEvents.SetupArtifactDefinition));
 
         const { personalSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),

@@ -5,18 +5,25 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, View } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { MapOperation } from '#types';
-import { Map, MapCapabilities } from '#types';
+
+import * as Map from '../types/Map';
+import * as MapCapabilities from '../types/MapCapabilities';
+import * as MapOperation from '../types/MapOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    // Hoisted so the connector below reads it reactively via `get` instead of a sync
+    // `Capability.getAll` snapshot, which would never heal once the capability lands.
+    const markerProvidersAtom = yield* Capability.atom(MapCapabilities.MarkerProvider);
+
     const extensions = yield* GraphBuilder.createExtension({
       id: MapOperation.Toggle.meta.key,
       match: (node, get) => Option.map(NodeMatcher.whenEchoType(View.View)(node, get), (view) => ({ view, node })),
@@ -51,9 +58,9 @@ export default Capability.makeModule(
     const companion = yield* GraphBuilder.createExtension({
       id: 'mapCompanion',
       match: whenPlottable,
-      connector: (object) =>
+      connector: (object, get) =>
         Effect.gen(function* () {
-          const providers = yield* Capability.getAll(MapCapabilities.MarkerProvider);
+          const providers = get(markerProvidersAtom);
           if (!providers.some((provider) => provider.match(object))) {
             return [];
           }
@@ -68,6 +75,6 @@ export default Capability.makeModule(
         }),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [extensions, companion]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extensions, companion]);
   }),
 );

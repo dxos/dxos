@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-kanban",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Kanban DXOS Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -68,11 +68,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -81,29 +76,82 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
+    "./Kanban": {
+      "source": "./src/types/Kanban.ts",
+      "types": "./dist/types/src/types/Kanban.d.ts",
+      "import": "./dist/lib/Kanban.mjs"
     },
+    "./KanbanConstants": {
+      "source": "./src/types/KanbanConstants.ts",
+      "types": "./dist/types/src/types/KanbanConstants.d.ts",
+      "import": "./dist/lib/KanbanConstants.mjs"
+    },
+    "./KanbanEvents": {
+      "source": "./src/types/KanbanEvents.ts",
+      "types": "./dist/types/src/types/KanbanEvents.d.ts",
+      "import": "./dist/lib/KanbanEvents.mjs"
+    },
+    "./KanbanLayout": {
+      "source": "./src/types/KanbanLayout.ts",
+      "types": "./dist/types/src/types/KanbanLayout.d.ts",
+      "import": "./dist/lib/KanbanLayout.mjs"
+    },
+    "./KanbanOperation": {
+      "source": "./src/types/KanbanOperation.ts",
+      "types": "./dist/types/src/types/KanbanOperation.d.ts",
+      "import": "./dist/lib/KanbanOperation.mjs"
+    },
+    "./KanbanSchema": {
+      "source": "./src/types/KanbanSchema.ts",
+      "types": "./dist/types/src/types/KanbanSchema.d.ts",
+      "import": "./dist/lib/KanbanSchema.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     },
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Kanban": [
+        "dist/types/src/types/Kanban.d.ts"
+      ],
+      "KanbanConstants": [
+        "dist/types/src/types/KanbanConstants.d.ts"
+      ],
+      "KanbanEvents": [
+        "dist/types/src/types/KanbanEvents.d.ts"
+      ],
+      "KanbanLayout": [
+        "dist/types/src/types/KanbanLayout.d.ts"
+      ],
+      "KanbanOperation": [
+        "dist/types/src/types/KanbanOperation.d.ts"
+      ],
+      "KanbanSchema": [
+        "dist/types/src/types/KanbanSchema.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

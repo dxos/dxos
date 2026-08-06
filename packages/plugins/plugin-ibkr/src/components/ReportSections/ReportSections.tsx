@@ -9,7 +9,7 @@ import { Select, useTranslation } from '@dxos/react-ui';
 import { DynamicTable, type TablePropertyDefinition } from '@dxos/react-ui-table';
 
 import { meta } from '../../meta';
-import { type Ibkr } from '../../types';
+import type * as Ibkr from '../../types/Ibkr';
 
 export type ReportSectionsProps = {
   positions: readonly Ibkr.Position[];

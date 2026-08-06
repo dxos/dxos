@@ -1,5 +1,5 @@
 <!--
-.slide: data-background-video="https://dxos.network/DXOS.mp4" data-background-video-loop="true"
+.slide: data-background-video="https://media.dxos.network/DXOS.mp4" data-background-video-loop="true"
 -->
 
 ---
@@ -8,7 +8,7 @@
 .slide: data-background="#151515"
 -->
 
-![img](https://dxos.network/dxos-logotype-blue.png)
+![img](https://media.dxos.network/dxos-logotype-blue.png)
 
 Join us on 𝕏 and Discord <!-- .element: class="!text-center" -->
 <br>
@@ -53,7 +53,7 @@ notes:
 
 <!--
 ECHO
-.slide: data-background="#96254F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-echo.svg" data-background-position="100% 50%"
+.slide: data-background="#96254F" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-echo.svg" data-background-position="100% 50%"
 -->
 
 # ECHO
@@ -70,7 +70,7 @@ ECHO
 
 <!--
 HALO
-.slide: data-background="#D95B3C" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-halo.svg" data-background-position="100% 50%"
+.slide: data-background="#D95B3C" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-halo.svg" data-background-position="100% 50%"
 -->
 
 # HALO
@@ -87,7 +87,7 @@ HALO
 
 <!--
 MESH
-.slide: data-background="#3A2862" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-mesh.svg" data-background-position="100% 50%"
+.slide: data-background="#3A2862" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-mesh.svg" data-background-position="100% 50%"
 -->
 
 # MESH
@@ -104,7 +104,7 @@ MESH
 
 <!--
 KUBE
-.slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://dxos.network/bg-kube.svg" data-background-position="100% 50%"
+.slide: data-background="#08754F" data-background-opacity="0.5" data-background-image="https://media.dxos.network/bg-kube.svg" data-background-position="100% 50%"
 -->
 
 # EDGE
@@ -167,5 +167,5 @@ const Component = ({ str }: { str?: string }) => {
 ---
 
 <!--
-.slide: data-background-video="https://dxos.network/DXOS.mp4"
+.slide: data-background-video="https://media.dxos.network/DXOS.mp4"
 -->

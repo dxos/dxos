@@ -5,17 +5,21 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, GraphPath, LayoutOperation, NotFound } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
+import * as Operation from '@dxos/compute/Operation';
 import { EID, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph } from '@dxos/plugin-graph';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { addSubjectsToActiveDeck, resolveLevelOpen, resolveSeededPlanks, updatePlankNames } from '../layout';
-import { DeckCapabilities } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import { computeActiveUpdates, openableChildren, resolveDeckSpec } from '../util';
 import { updateActiveDeck } from './helpers';
 

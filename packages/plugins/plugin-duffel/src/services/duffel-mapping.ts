@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type BookingSearch, type Segment } from '@dxos/plugin-trip/types';
+import type * as BookingSearch from '@dxos/plugin-trip/BookingSearch';
+import type * as Segment from '@dxos/plugin-trip/Segment';
 
 /** Duffel cabin_class values. */
 const DuffelCabin = Schema.Literal('economy', 'premium_economy', 'business', 'first');

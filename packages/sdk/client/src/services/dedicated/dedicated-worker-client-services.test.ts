@@ -14,7 +14,9 @@ import { TestBuilder } from '../../testing';
 import { LEADER_LOCK_KEY } from './dedicated-worker-client-services';
 
 describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
-  test('open & close', async () => {
+  // First connect pays the one-time dynamic load of the RTC stack (lazy so it stays out of
+  // the app's static boot graph), so this gets the same headroom as 'connect client'.
+  test('open & close', { timeout: 2_000 }, async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
     await using _services = await testBuilder.createDedicatedWorkerClientServices().open();

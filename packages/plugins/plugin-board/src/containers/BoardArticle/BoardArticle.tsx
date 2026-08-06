@@ -12,15 +12,21 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Board, type BoardController, type BoardRootProps, type Layout, resizeToFit } from '@dxos/react-ui-board';
+import {
+  Board as BoardComponent,
+  type BoardController,
+  type BoardRootProps,
+  type Layout,
+  resizeToFit,
+} from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
 import { isNonNullable } from '@dxos/util';
 
-import { type Board as BoardType } from '#types';
+import type * as Board from '../../types/Board';
 
 type Position = { x: number; y: number };
 
@@ -28,7 +34,7 @@ const DEFAULT_POSITION: Position = { x: 0, y: 0 };
 
 // Legacy boards stored cells with a centre origin (signed coords); the engine is 0-based, so shift all
 // cells to non-negative before handing them to the component. Freshly-created boards are already 0-based.
-const normalizeCells = (cells: BoardType.Board['layout']['cells']): Layout['items'] => {
+const normalizeCells = (cells: Board.Board['layout']['cells']): Layout['items'] => {
   const values = Object.values(cells);
   const minX = Math.min(0, ...values.map((cell) => cell.x));
   const minY = Math.min(0, ...values.map((cell) => cell.y));
@@ -40,7 +46,7 @@ const normalizeCells = (cells: BoardType.Board['layout']['cells']): Layout['item
   );
 };
 
-export type BoardArticleProps = AppSurface.ObjectArticleProps<BoardType.Board>;
+export type BoardArticleProps = AppSurface.ObjectArticleProps<Board.Board>;
 
 export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticleProps) => {
   const { t } = useTranslation(translationKey);
@@ -152,7 +158,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
       open={!!pickerState}
       onOpenChange={(next: boolean) => setPickerState(next ? { position: DEFAULT_POSITION } : null)}
     >
-      <Board.Root
+      <BoardComponent.Root
         ref={controller}
         layout={layout}
         bounds={bounds}
@@ -194,30 +200,30 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <Board.Container classNames='absolute inset-0'>
-              <Board.Viewport>
-                <Board.Backdrop />
-                <Board.Content>
+            <BoardComponent.Container classNames='absolute inset-0'>
+              <BoardComponent.Viewport>
+                <BoardComponent.Backdrop />
+                <BoardComponent.Content>
                   {items?.map((item) => {
                     const itemLayout = layout.items[item.id];
                     return itemLayout ? (
-                      <Board.Cell item={item} key={item.id} layout={itemLayout}>
+                      <BoardComponent.Cell item={item} key={item.id} layout={itemLayout}>
                         <Surface.Surface
                           type={AppSurface.CardContent}
                           data={{ subject: item, editable: true }}
                           limit={1}
                         />
-                      </Board.Cell>
+                      </BoardComponent.Cell>
                     ) : null;
                   })}
-                </Board.Content>
-              </Board.Viewport>
+                </BoardComponent.Content>
+              </BoardComponent.Viewport>
               {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
-              <Board.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
-            </Board.Container>
+              <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
+            </BoardComponent.Container>
           </Panel.Content>
         </Panel.Root>
-      </Board.Root>
+      </BoardComponent.Root>
       <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />
       <ObjectPicker.VirtualTrigger virtualRef={addTriggerRef} />
     </ObjectPicker.Root>

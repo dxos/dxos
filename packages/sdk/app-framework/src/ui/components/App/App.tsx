@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useLayoutEffect } from 'react';
+import React, { type PropsWithChildren, Suspense, useEffect, useLayoutEffect } from 'react';
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
@@ -22,6 +22,10 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
   const stage = useLoading(ready, debounce);
   const placeholderDismissed = stage >= LoadingState.Done;
+  // The shell mounts a tick EARLIER than the dismissal, at the same stage that starts the loader's
+  // outro: the loader is still on screen (z-index 10) and fading, so the real UI paints beneath it
+  // instead of after it — gating both on `Done` leaves a blank frame between the two.
+  const shellMounted = stage >= LoadingState.FadeOut;
 
   // Relay the startup lifecycle into the boot loader injected by
   // `@dxos/app-framework/vite-plugin` (a Solid app inlined into `index.html`,
@@ -83,21 +87,30 @@ export const App = ({ ready, error, debounce, progress }: AppProps) => {
     throw error;
   }
 
-  // The boot loader owns the screen until handoff completes; render nothing
+  // The boot loader owns the screen until its outro starts; render nothing
   // until then (any DOM here would sit invisibly behind the `z-index: 10`
   // loader anyway).
   // TODO(wittjosiah): Consider using Suspense instead.
-  if (!placeholderDismissed) {
+  if (!shellMounted) {
     return null;
   }
 
   const ComposedContext = composeContexts(reactContexts);
   return (
-    <ComposedContext>
-      {reactRoots.map(({ id, root: Component }) => (
-        <Component key={id} />
-      ))}
-    </ComposedContext>
+    // Contexts nest, so one suspending provider necessarily withholds everything below it; the
+    // boundary here at least keeps that from unwinding past the app's providers.
+    <Suspense fallback={null}>
+      <ComposedContext>
+        {reactRoots.map(({ id, root: Component }) => (
+          // One boundary per root: roots read capabilities whose providers activate in a later
+          // wave, and `useCapability` suspends on that. A shared boundary would let one late root
+          // withhold every other root's already-renderable content — the blank shell this fixes.
+          <Suspense key={id} fallback={null}>
+            <Component />
+          </Suspense>
+        ))}
+      </ComposedContext>
+    </Suspense>
   );
 };
 

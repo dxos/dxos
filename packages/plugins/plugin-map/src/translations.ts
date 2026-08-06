@@ -7,7 +7,8 @@ import { type Resource } from '@dxos/react-ui';
 import { translations as geoTranslations } from '@dxos/react-ui-geo/translations';
 
 import { meta } from '#meta';
-import { Map } from '#types';
+
+import * as Map from './types/Map';
 
 export const translations = [
   {

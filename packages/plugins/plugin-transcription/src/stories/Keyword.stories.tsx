@@ -23,9 +23,9 @@ import { useSpeechRecognition } from '@dxos/react-ui-transcription';
 
 import { Mic } from '#components';
 import { translations } from '#translations';
-import { TranscriptionCapabilities } from '#types';
 
 import { createStoryDecorators } from '../testing';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
 
 // Stable session key for the Mic button; any non-editor id works (the editor driver ignores it).
 const DOC_ID = 'keyword-detection';

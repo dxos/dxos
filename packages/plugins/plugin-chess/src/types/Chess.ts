@@ -5,7 +5,7 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, HiddenAnnotation } from '@dxos/echo/Annotation';
 import { log } from '@dxos/log';

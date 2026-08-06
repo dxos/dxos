@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';
-import { Game } from '@dxos/plugin-game/types';
+import * as Game from '@dxos/plugin-game/Game';
 
 /** Side the reviewed player may play in indexed games. */
 export const Side = Schema.Literal('white', 'black');

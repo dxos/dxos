@@ -5,21 +5,22 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { MarkdownCapabilities } from '@dxos/plugin-markdown';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 import { Channel } from '@dxos/types';
 import { createComment } from '@dxos/ui-editor/headless';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { CommentOperation } from '#types';
 
+import * as CommentOperation from '../types/CommentOperation';
 // Not the `../util` barrel: it re-exports `author-hue`, whose palette lookup is UI-only.
 import { getAnchor } from '../util/message';
 
@@ -124,6 +125,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

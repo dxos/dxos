@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-tldraw",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "tldraw canvas renderer for the DXOS Illustrator plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -53,11 +53,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -66,7 +61,28 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./Tldraw": {
+      "source": "./src/types/Tldraw.ts",
+      "types": "./dist/types/src/types/Tldraw.d.ts",
+      "import": "./dist/lib/Tldraw.mjs"
+    },
+    "./TldrawCapabilities": {
+      "source": "./src/types/TldrawCapabilities.ts",
+      "types": "./dist/types/src/types/TldrawCapabilities.d.ts",
+      "import": "./dist/lib/TldrawCapabilities.mjs"
+    },
+    "./TldrawEvents": {
+      "source": "./src/types/TldrawEvents.ts",
+      "types": "./dist/types/src/types/TldrawEvents.d.ts",
+      "import": "./dist/lib/TldrawEvents.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -84,6 +100,22 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "Tldraw": [
+        "dist/types/src/types/Tldraw.d.ts"
+      ],
+      "TldrawCapabilities": [
+        "dist/types/src/types/TldrawCapabilities.d.ts"
+      ],
+      "TldrawEvents": [
+        "dist/types/src/types/TldrawEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

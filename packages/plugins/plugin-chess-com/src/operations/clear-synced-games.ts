@@ -4,12 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game } from '@dxos/plugin-game/types';
+import * as Chess from '@dxos/plugin-chess/Chess';
+import * as Game from '@dxos/plugin-game/Game';
 
-import { ChessComOperation } from '../types';
+import * as ChessComOperation from '../types/ChessComOperation';
 
 export default ChessComOperation.ClearSyncedGames.pipe(
   Operation.withHandler(

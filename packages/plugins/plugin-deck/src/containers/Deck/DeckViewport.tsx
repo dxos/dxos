@@ -18,7 +18,7 @@ import React, {
 } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
@@ -49,8 +49,9 @@ import {
   useSelectedCompanionVariant,
 } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, Keyshortcuts } from '#types';
 
+import * as DeckOperation from '../../types/DeckOperation';
+import * as DeckRole from '../../types/DeckRole';
 import { findAttendedPlank, getRenderedPlanks, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -215,7 +216,7 @@ export const DeckContentEmpty = () => {
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
     <div className='grid place-items-center p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface type={Keyshortcuts} />
+      <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );

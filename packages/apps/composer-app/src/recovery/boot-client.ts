@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Client, type LocalClientServices, fromHost } from '@dxos/client';
+import { Client } from '@dxos/client';
 import { mountDevtoolsHooks } from '@dxos/client/devtools';
+import { type LocalClientServices, fromHost } from '@dxos/client/local';
 import { Config, defs } from '@dxos/config';
 import { Runtime } from '@dxos/protocols/proto/dxos/config';
 

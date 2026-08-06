@@ -5,12 +5,11 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Obj } from '@dxos/echo';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { MapCapabilities } from '#types';
-
+import * as MapCapabilities from '../../types/MapCapabilities';
 // Import the lazy wrapper (ComponentType<any>) so JSX assignment is not blocked by the
 // compound GeoControlProps & MapArticleProps intersection that TS cannot unify directly.
 import { MapArticle } from '../index';

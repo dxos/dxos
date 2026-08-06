@@ -13,7 +13,8 @@ import { log } from '@dxos/log';
 import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
-import { TranscriptionCapabilities, TranscriptOperation } from '#types';
+import * as TranscriptionCapabilities from '../types/TranscriptionCapabilities';
+import * as TranscriptOperation from '../types/TranscriptOperation';
 
 export type TranscriptionRecording = {
   recording: boolean;

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-voxel",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "3D voxel editor plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -52,11 +52,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -75,9 +70,38 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Voxel": {
+      "source": "./src/types/Voxel.ts",
+      "types": "./dist/types/src/types/Voxel.d.ts",
+      "import": "./dist/lib/Voxel.mjs"
+    },
+    "./VoxelEvents": {
+      "source": "./src/types/VoxelEvents.ts",
+      "types": "./dist/types/src/types/VoxelEvents.d.ts",
+      "import": "./dist/lib/VoxelEvents.mjs"
+    },
+    "./VoxelOperation": {
+      "source": "./src/types/VoxelOperation.ts",
+      "types": "./dist/types/src/types/VoxelOperation.d.ts",
+      "import": "./dist/lib/VoxelOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Voxel": [
+        "dist/types/src/types/Voxel.d.ts"
+      ],
+      "VoxelEvents": [
+        "dist/types/src/types/VoxelEvents.d.ts"
+      ],
+      "VoxelOperation": [
+        "dist/types/src/types/VoxelOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
+import * as InboxOperation from '../../../types/InboxOperation';
 import Create from './create';
 import List from './list';
 import Sync from './sync';
@@ -18,8 +20,8 @@ export const CalendarFunctions: {
   Sync,
 };
 
-export const CalendarHandlers = OperationHandlerSet.lazy(
-  () => import('./create'),
-  () => import('./list'),
-  () => import('./sync'),
-);
+export const CalendarHandlers = OperationHandlerSet.lazy([
+  InboxOperation.CreateGoogleCalendarEvent.pipe(Operation.lazyHandler(() => import('./create'))),
+  InboxOperation.GetGoogleCalendars.pipe(Operation.lazyHandler(() => import('./list'))),
+  InboxOperation.GoogleCalendarSync.pipe(Operation.lazyHandler(() => import('./sync'))),
+]);

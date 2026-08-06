@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { ServiceResolver } from '@dxos/compute';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 

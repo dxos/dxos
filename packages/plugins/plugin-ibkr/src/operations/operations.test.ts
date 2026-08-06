@@ -8,14 +8,15 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Operation } from '@dxos/compute';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 
 import { CUSIP_SOURCE, IBKR_SOURCE, TRADINGVIEW_SOURCE, tickerSource } from '../constants';
-import { Ibkr, IbkrOperation } from '../types';
+import * as Ibkr from '../types/Ibkr';
+import * as IbkrOperation from '../types/IbkrOperation';
 import GetInstrumentFundamentalsHandler from './get-instrument-fundamentals';
 import GetPortfolioHandler from './get-portfolio';
 import GetTradesHandler from './get-trades';

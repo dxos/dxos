@@ -5,12 +5,13 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { type SpaceCapabilities } from '@dxos/plugin-space';
+import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
-import { RoutineCapabilities } from '#types';
+
+import * as RoutineCapabilities from '../../types/RoutineCapabilities';
 
 export type CreateRoutinePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to RoutineCapabilities.Template. */

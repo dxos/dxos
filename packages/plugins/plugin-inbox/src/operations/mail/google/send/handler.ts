@@ -5,13 +5,14 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { GoogleMail } from '../../../../apis';
 import { GmailSendMessageInvalidError } from '../../../../errors';
 import { GoogleCredentials } from '../../../../services/google-credentials';
-import { InboxOperation, SystemTags } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
+import * as SystemTags from '../../../../types/SystemTags';
 
 const handler = InboxOperation.GmailSend.pipe(
   Operation.withHandler(({ userId = 'me', message, connection: connectionRef }) =>

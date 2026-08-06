@@ -5,16 +5,19 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
-import { Markdown, MarkdownOperation } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Card, Icon, Message, Panel, ScrollArea, Toolbar, Trans, useTranslation } from '@dxos/react-ui';
 import { useAttention, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -26,12 +29,12 @@ import { hexToHue } from '@dxos/util';
 
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { meta } from '#meta';
-import { ReviewCapabilities } from '#types';
-import { CommentOperation } from '#types';
-import { CommentCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state';
 import { type SuggestionGroup, useStatus } from '../../hooks';
+import * as CommentCapabilities from '../../types/CommentCapabilities';
+import * as CommentOperation from '../../types/CommentOperation';
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { getMessageMetadata } from '../../util';
 
 /**

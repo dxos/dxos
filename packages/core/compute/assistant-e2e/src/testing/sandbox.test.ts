@@ -5,7 +5,7 @@
 import { describe, it } from '@effect/vitest';
 
 import { SandboxPlugin } from '@dxos/plugin-sandbox/plugin';
-import { Sandbox } from '@dxos/plugin-sandbox/types';
+import * as Sandbox from '@dxos/plugin-sandbox/Sandbox';
 import { trim } from '@dxos/util';
 
 import { DEFAULT_TEST_TIMEOUT, agentTest, agentTestTimeout } from '../harness';

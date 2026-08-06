@@ -19,7 +19,8 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '../../plugin';
 import { makeSampleProvider, makeSampleResults } from '../../testing';
 import { translations } from '../../translations';
-import { Provider, Result } from '../../types';
+import * as Provider from '../../types/Provider';
+import * as Result from '../../types/Result';
 import { ResultCard } from './ResultCard';
 
 // `ResultCard` subscribes to its subject via `useObject`, so the story renders a live ECHO object

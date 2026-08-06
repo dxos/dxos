@@ -5,15 +5,18 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { ConnectorSync, LayoutOperation, SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 const { mergeDeep, mergeField, snapshotField } = ConnectorSync;
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
+import * as Kanban from '@dxos/plugin-kanban/Kanban';
+import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -21,7 +24,7 @@ import { meta } from '#meta';
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
 import { formatTrelloSyncFailure } from '../errors';
 import { TrelloApi } from '../services';
-import { TrelloOperation } from '../types';
+import * as TrelloOperation from '../types/TrelloOperation';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
@@ -283,11 +286,15 @@ export const reconcileBoardCards: (
         const merged = columnsMerge.value as Record<string, { ids: string[]; hidden?: boolean }>;
         // Remote columns are only Trello lists — never include UNCATEGORIZED. mergeDeep(remote-wins)
         // would drop the initial `{ hidden: true }` bucket from findOrCreateKanbanForBoard.
-        const uncategorizedIds = merged[UNCATEGORIZED_VALUE]?.ids ?? prev[UNCATEGORIZED_VALUE]?.ids ?? [];
-        const uncategorizedHidden = merged[UNCATEGORIZED_VALUE]?.hidden ?? prev[UNCATEGORIZED_VALUE]?.hidden ?? true;
+        const uncategorizedIds =
+          merged[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? prev[KanbanConstants.UNCATEGORIZED_VALUE]?.ids ?? [];
+        const uncategorizedHidden =
+          merged[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden ??
+          prev[KanbanConstants.UNCATEGORIZED_VALUE]?.hidden ??
+          true;
         kanban.arrangement.columns = {
           ...merged,
-          [UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
+          [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
         };
       });
     } else if (columnsMerge.source === 'local') {
@@ -479,7 +486,7 @@ export const makeEmptyKanbanForBoard = (boardId: string, name: string): Kanban.K
     name,
     arrangement: {
       order: [],
-      columns: { [UNCATEGORIZED_VALUE]: { ids: [], hidden: true } },
+      columns: { [KanbanConstants.UNCATEGORIZED_VALUE]: { ids: [], hidden: true } },
     },
     spec: { kind: 'items' as const, pivotField: TRELLO_PIVOT_FIELD, items: [] },
   });

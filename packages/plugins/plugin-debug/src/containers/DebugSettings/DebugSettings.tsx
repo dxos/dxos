@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
@@ -16,7 +17,8 @@ import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Settings } from '#types';
+
+import * as Settings from '../../types/Settings';
 
 type Toast = {
   title: string;

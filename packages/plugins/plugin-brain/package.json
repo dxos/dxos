@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-brain",
-  "version": "0.1.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Assistant skill and operations for querying and summarizing the space fact store",
   "homepage": "https://dxos.org",
@@ -48,11 +48,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -62,28 +57,73 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
-    },
     "./containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/neutral/containers/index.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    }
+    "./BrainCapabilities": {
+      "source": "./src/types/BrainCapabilities.ts",
+      "types": "./dist/types/src/types/BrainCapabilities.d.ts",
+      "import": "./dist/lib/BrainCapabilities.mjs"
+    },
+    "./BrainEvents": {
+      "source": "./src/types/BrainEvents.ts",
+      "types": "./dist/types/src/types/BrainEvents.d.ts",
+      "import": "./dist/lib/BrainEvents.mjs"
+    },
+    "./BrainOperation": {
+      "source": "./src/types/BrainOperation.ts",
+      "types": "./dist/types/src/types/BrainOperation.d.ts",
+      "import": "./dist/lib/BrainOperation.mjs"
+    },
+    "./BrainSettings": {
+      "source": "./src/types/BrainSettings.ts",
+      "types": "./dist/types/src/types/BrainSettings.d.ts",
+      "import": "./dist/lib/BrainSettings.mjs"
+    },
+    "./BrainSurface": {
+      "source": "./src/types/BrainSurface.ts",
+      "types": "./dist/types/src/types/BrainSurface.d.ts",
+      "import": "./dist/lib/BrainSurface.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "BrainCapabilities": [
+        "dist/types/src/types/BrainCapabilities.d.ts"
+      ],
+      "BrainEvents": [
+        "dist/types/src/types/BrainEvents.d.ts"
+      ],
+      "BrainOperation": [
+        "dist/types/src/types/BrainOperation.d.ts"
+      ],
+      "BrainSettings": [
+        "dist/types/src/types/BrainSettings.d.ts"
+      ],
+      "BrainSurface": [
+        "dist/types/src/types/BrainSurface.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
