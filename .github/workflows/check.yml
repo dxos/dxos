@@ -758,8 +758,11 @@ jobs:
 
       # Echoes which targets this cell was given: `--job` ordering is undocumented, and an uneven
       # split is the expected failure mode when composer dwarfs the other suites.
+      # `shell: bash` because the workflow default is `sh -e` (dash), which rejects `set -o pipefail`
+      # — without it `tee` masks moon's exit code and a failing shard reports green.
       - name: Test shard
         timeout-minutes: 35
+        shell: bash
         env:
           DX_E2E_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}-j${{ matrix.job }}
         run: |
@@ -769,7 +772,9 @@ jobs:
 
       - name: Report this cell's targets and durations
         if: ${{ always() }}
+        shell: bash
         run: |
+          [ -f shard.log ] || { echo 'shard.log absent — the moon step never ran'; exit 0; }
           printf '===== cell %s =====\n' '${{ matrix.job }}'
           grep -oE '[a-z0-9-]+:(e2e-(chromium|firefox|webkit)|e2e) \([^)]*\)' shard.log | sort -u || \
             echo '(no target lines — cell may have been assigned nothing)'
