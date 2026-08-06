@@ -319,6 +319,36 @@ Context: the same trace shows two other non-Composer renderers at ~1.3 GB
 each (one blink_gc-heavy at 620 MB — likely a mail tab) — machine pressure
 is not all Composer.
 
+### 2026-08-06 — MAIL-OPEN LEDGER + the doubled-JSON mechanism (both retainers named)
+
+Second user trace (`trace_abc.json.gz`, DevTools CLOSED, after reloading with
+mail open): Composer renderer attributed **1,887 MB**:
+
+- v8 **1,074 MB** — main 852 (old_space 587 + **large_object_space 166** —
+  the big message strings) + workers 220.
+- partition_alloc 411 MB; malloc 275 MB (**down from 537 with DevTools open —
+  DevTools retention ≈ 260 MB, confirmed**); blink ~85 MB; cc 35 MB.
+
+Retainer-path analysis of the user's Main heap snapshot pinned both copies of
+each message's JSON:
+
+1. **`FeedObjectCore.#state`** (echo-client `feed/feed-object-core.ts`) —
+   canonical sorted JSON string of EVERY live feed-backed entity, kept for
+   write reconciliation. All uses are string equality (`===` against inbound
+   canonical / pending-append token) → **a 128-bit hash would serve
+   identically**, reducing per-object cost from O(size) to ~16 bytes.
+2. **`IndexQuerySourceProvider._lastRemoteResults`** (echo-client
+   `client/index-query-source-provider.ts:257`) — reactive queries remember
+   the raw wire records including each result's full `documentJson` string so
+   later object-update events can re-hydrate. An open mailbox = a reactive
+   query over all messages = every message JSON retained for the
+   subscription's lifetime. Fix directions: drop `documentJson` after
+   hydration and re-hydrate from the feed-handle identity map / re-fetch, or
+   retain a parsed+shared form.
+
+So mail-open main-thread memory ≈ 3× the mail data (materialized objects +
+copy A + copy B) plus V8 overhead — matching old_space 587 MB + LO 166 MB.
+
 **Fix ranking (Phase 3):**
 
 1. Shrink the structural baseline — audit the Idle wave (why do disabled/Labs

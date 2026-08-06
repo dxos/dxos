@@ -55,10 +55,12 @@ Chrome's number is renderer process footprint, not JS heap.
       (~0.5–1 MB/min idle, recalibrated); the fast linear climb was
       DevTools/CDP-attach retention, which the user's DevTools-open tab
       shares.
-- [ ] **Loaded-profile pass** — user captures a heap snapshot of the 3 GB
-      tab's Main + a chrome://tracing memory-infra trace; analyze with
-      `analyze.mjs` / the dump rollup to decompose the data-proportional
-      816 MB. (Or synthetic-data local approximation.)
+- [x] **Loaded-profile pass** — DONE with the user's real captures: heap
+      snapshot + two memory-infra traces (DevTools open: 1,444 MB attributed;
+      closed + mail open: 1,887 MB — v8 main 852). Retainer analysis named
+      both message-JSON copies: `FeedObjectCore.#state` and
+      `IndexQuerySourceProvider._lastRemoteResults[].documentJson`.
+      DESIGN.md "MAIL-OPEN LEDGER".
 
 ## Phase 3: Fix
 
@@ -66,6 +68,11 @@ Ranked by measured impact — see DESIGN.md "Fix ranking".
 
 ### Tasks
 
+- [ ] **Feed/mail data double-retention** — (a) `FeedObjectCore.#state`:
+      replace the retained canonical-JSON string with a hash (equality-only
+      use); (b) `IndexQuerySourceProvider._lastRemoteResults`: stop retaining
+      `documentJson` strings for the subscription lifetime (re-hydrate from
+      identity map / re-fetch). Biggest mail-open lever (~2× the mail bytes).
 - [ ] **Shrink structural baseline** — audit the Idle activation wave: which
       of the 63 `ActivationEvents.Idle` registrations pull how much closure,
       and why do disabled/Labs plugins load at all; evaluate dropping the
@@ -73,11 +80,15 @@ Ranked by measured impact — see DESIGN.md "Fix ranking".
 - [ ] **Gate performance.mark/measure emitters** behind a default-off debug
       flag — sql-sqlite ×2, echo-host ×3, query-executor, effect
       Performance.ts, tracing api.ts; plus bounded entry names (no SQL text).
+      (User tab carried 135,976 accumulated worker measures.)
 - [ ] **Reduce idle chatter** — 51 SQL/s at idle (1 s polling fan-out);
       coordinate with feed-live-objects push roadmap.
 - [ ] **Harness into repo** — promote scratchpad memory-harness scripts
-      (measure/soak/memory-dump/snapshot-diff/count-entries) into a tools
-      package or composer-app scripts with a README.
+      (measure/soak/memory-dump/snapshot-diff/count-entries/retainers/
+      parse-trace-stream) into a tools package with a README; copy also at
+      /tmp/composer-memory-harness.
+- [ ] **Docs** — user-facing note: DevTools attached to a Composer tab adds
+      ~250 MB+ and grows; Chrome's tab flag reports process footprint.
 
 ### References
 
