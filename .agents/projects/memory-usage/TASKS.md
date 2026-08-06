@@ -73,9 +73,12 @@ Ranked by measured impact — see DESIGN.md "Fix ranking".
       128-bit cyrb128 digest; (b) `_lastRemoteResults` drops `documentJson`
       after hydration into an identity-tracked core (re-resolves via
       `getCachedObjectById`; degraded no-handle path keeps its JSON).
-      echo-client 523 tests green. Manual verification pending (user):
-      reload with mail open → Main heap snapshot → doubled message strings
-      gone.
+      echo-client 523 tests green. VERIFIED in the user's capture
+      (2026-08-06): Main snapshot from the fixed dev server has ZERO
+      serialized message strings (either variant) and no strings >100 KB;
+      dev-tab footprint stays ~1.4 GB because vite-dev serving is
+      ~400–500 MB and item 3 + poll churn remain — production is where the
+      delta shows.
 - [ ] **Worker-side result retention (DX-1148 item 3)** — `_lastResultSet`
       reuses `item.doc` across runs for diff/serialization; dropping it
       forces re-reads. Needs a design pass.
