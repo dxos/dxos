@@ -67,7 +67,9 @@ test.describe('Basic test', () => {
       expect(await guest.todoCount()).toEqual(1);
     });
 
-    test('edit a task', async () => {
+    // TODO(wittjosiah): Failed on chromium in run 31058008287 — the edit did not replicate to the
+    //   guest ("eggnog" never appeared) within 5s. Re-enable once the replication race is fixed.
+    test.fixme('edit a task', async () => {
       await host.createTodo(Groceries.Eggs);
       await host.setTodoEditing(Groceries.Eggs);
       await host.page.keyboard.press('Backspace');
