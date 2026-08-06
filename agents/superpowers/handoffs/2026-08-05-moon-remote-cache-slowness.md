@@ -4,6 +4,22 @@ Findings from instrumenting the `Check` workflow's e2e jobs while sharding the e
 (DX-1116, PR #12482). Two problems surfaced that are **not** e2e-specific and affect every
 CI job that runs moon — handing them off for a focused investigation.
 
+> **Read this first — the cache backend changed after these measurements were taken.**
+> Every number below was measured against **Depot** (`grpcs://cache.depot.dev`). PR #12482 has
+> since been rebased onto `claude/depot-vs-self-hosted-cache-3fbd62`, which **drops Depot** in
+> favour of a self-hosted `bazel-remote` (mTLS certs from 1Password, `tools/moon-cache/`). That
+> plausibly changes two of the three findings outright:
+>
+> - **Finding 3 (uploads aborting on >4 MB blobs) may simply be fixed.** `bazel-remote` supports
+>   the ByteStream API and zstd-compressed CAS blobs, so the per-blob ceiling that we believe
+>   stopped `composer-app:bundle` and `docs:bundle` from ever caching may not exist there.
+> - **Finding 1 (restore slower than rebuild) is throughput-dependent** and was measured against
+>   Depot's egress. A cache on the same network will have a different curve.
+>
+> So: **re-measure against the new backend before acting on any of this.** The _method_ below
+> (how to read moon's `cached from remote` lines, how to join build-vs-restore, the caveat that
+> vite's build table undercounts output size 3×) all still applies and is the durable part.
+
 ## TL;DR
 
 1. **For 8 of 12 measured tasks, restoring the cached artifact costs more than rebuilding it
