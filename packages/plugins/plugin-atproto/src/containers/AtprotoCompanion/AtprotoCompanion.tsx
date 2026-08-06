@@ -9,7 +9,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Button, Message, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { Treegrid } from '@dxos/react-ui-list';
@@ -17,7 +17,6 @@ import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { AtprotoCapabilities, AtprotoPublication } from '#types';
 
 import { getFieldPublishFlags } from '../../annotation';
 import { isAtprotoConnection } from '../../connection';
@@ -32,6 +31,8 @@ import {
   unpublishObject,
 } from '../../publish';
 import * as AtprotoRepo from '../../services/AtprotoRepo';
+import * as AtprotoCapabilities from '../../types/AtprotoCapabilities';
+import * as AtprotoPublication from '../../types/AtprotoPublication';
 
 export type AtprotoCompanionProps = AppSurface.ArticleProps<Obj.Unknown>;
 
@@ -223,25 +224,25 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
               {/* Reasons publishing is unavailable. */}
               {!connection && (
                 <Message.Root valence='info'>
-                  <Message.Content>{t('no-connection.label')}</Message.Content>
+                  <Message.Body>{t('no-connection.label')}</Message.Body>
                 </Message.Root>
               )}
               {ineligibleReason && (
                 <Message.Root valence={reasonValence}>
-                  <Message.Content>{ineligibleReason}</Message.Content>
+                  <Message.Body>{ineligibleReason}</Message.Body>
                 </Message.Root>
               )}
               {error && (
                 <Message.Root valence='error'>
-                  <Message.Content>{error}</Message.Content>
+                  <Message.Body>{error}</Message.Body>
                 </Message.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
                 <Message.Root valence='warning'>
-                  <Message.Content>{t('confirm-publish.message')}</Message.Content>
-                  <Message.Content asChild>
+                  <Message.Body>{t('confirm-publish.message')}</Message.Body>
+                  <Message.Body asChild>
                     <div role='none' className='flex gap-2 pbs-2'>
                       <Button variant='primary' disabled={busy} onClick={handlePublish}>
                         {t('confirm-publish.label')}
@@ -250,7 +251,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                         {t('cancel.label')}
                       </Button>
                     </div>
-                  </Message.Content>
+                  </Message.Body>
                 </Message.Root>
               )}
 
@@ -261,7 +262,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Message.Root valence='warning'>
-                    <Message.Content>{t('mirror-unresolved.label')}</Message.Content>
+                    <Message.Body>{t('mirror-unresolved.label')}</Message.Body>
                   </Message.Root>
                 )}
                 <Treegrid.Root gridTemplateColumns='minmax(0, 1fr) minmax(0, 1fr) min-content' classNames='gap-x-3'>

@@ -8,11 +8,14 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useRef } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Focus, IconButton, Input, Main, Panel, Toolbar } from '@dxos/react-ui';
@@ -28,7 +31,7 @@ import { NavTreePlugin } from '../../NavTreePlugin';
 
 random.seed(1234);
 
-const StoryState = Capability.make<Atom.Atom<{ tab: string }>>('story-state');
+const StoryState = Capability.makeSingleton<Atom.Atom<{ tab: string }>>()('org.dxos.test.storyState');
 
 const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 
@@ -76,7 +79,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
       <Panel.Root
         {...attentionAttrs}
         role='article'
-        classNames='w-[30rem] shrink-0 h-full bg-base-surface border-e border-separator'
+        classNames='w-[30rem] shrink-0 h-full dx-base-surface border-e border-separator'
       >
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Content classNames='grid'>
@@ -88,7 +91,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
             <Input.Root>
               <Input.Label>Level 1 (group)</Input.Label>
             </Input.Root>
-            <div className={mx(container, 'bg-base-surface')}>
+            <div className={mx(container, 'dx-base-surface')}>
               <Input.Root>
                 <Input.Label>Level 2 (base)</Input.Label>
                 <Input.TextArea placeholder='Enter text' />
@@ -149,9 +152,9 @@ const meta = {
       capabilities: () => {
         const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
         return [
-          Capability.contributes(StoryState, storyStateAtom),
-          Capability.contributes(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.contributes(
+          Capability.contribute(StoryState, storyStateAtom),
+          Capability.contribute(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
+          Capability.contribute(
             Capabilities.OperationHandler,
             OperationHandlerSet.make(
               Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>

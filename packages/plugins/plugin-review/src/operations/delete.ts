@@ -4,15 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Thread } from '@dxos/types';
 
-import { CommentCapabilities } from '../types';
-import { CommentOperation } from '../types';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Delete> = CommentOperation.Delete.pipe(
   Operation.withHandler(

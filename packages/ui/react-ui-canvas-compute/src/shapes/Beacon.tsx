@@ -2,29 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { DEFAULT_INPUT, isTruthy } from '@dxos/conductor';
 import { Icon } from '@dxos/react-ui';
-import { type ShapeComponentProps, type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
+import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs';
-
-export const BeaconShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('beacon'),
-  }),
-);
-
-export type BeaconShape = Schema.Schema.Type<typeof BeaconShape>;
-
-export type CreateBeaconProps = CreateShapeProps<BeaconShape>;
-
-export const createBeacon = (props: CreateBeaconProps) =>
-  createShape<BeaconShape>({ type: 'beacon', size: { width: 64, height: 64 }, ...props });
+import { type BeaconShape } from './beacon-def';
 
 export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => {
   const { runtime } = useComputeNodeState(shape);
@@ -40,16 +25,4 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
       />
     </div>
   );
-};
-
-export const beaconShape: ShapeDef<BeaconShape> = {
-  type: 'beacon',
-  name: 'Beacon',
-  icon: 'ph--sun--regular',
-  component: BeaconComponent,
-  createShape: createBeacon,
-  getAnchors: (shape) =>
-    createAnchorMap(shape, {
-      [createAnchorId('input')]: { x: -1, y: 0 },
-    }),
 };

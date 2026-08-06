@@ -6,11 +6,11 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
 import { SyncDatabaseMissingError } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { TrelloApi } from '../services';
-import { TrelloOperation } from '../types';
+import * as TrelloOperation from '../types/TrelloOperation';
 
 /**
  * Discovery only — list Trello boards reachable from the connection's token

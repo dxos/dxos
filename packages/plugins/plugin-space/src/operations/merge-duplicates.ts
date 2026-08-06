@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { applyMerge, findDuplicates, planMerge } from '@dxos/extractor';
 import { invariant } from '@dxos/invariant';

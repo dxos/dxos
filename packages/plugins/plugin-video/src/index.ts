@@ -3,4 +3,6 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as Video from './types/Video';
+export * as VideoEvents from './types/VideoEvents';
+export * as VideoOperation from './types/VideoOperation';

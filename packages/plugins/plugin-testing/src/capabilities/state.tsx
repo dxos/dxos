@@ -5,10 +5,10 @@
 import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { StorybookCapabilities } from '#types';
+import * as StorybookCapabilities from '../types/StorybookCapabilities';
 
 const defaultState: StorybookCapabilities.LayoutStateProps = {
   sidebarState: 'closed',
@@ -38,8 +38,8 @@ export default Capability.makeModule(
     });
 
     return [
-      Capability.contributes(StorybookCapabilities.LayoutState, stateAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(StorybookCapabilities.LayoutState, stateAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

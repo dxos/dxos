@@ -2,12 +2,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { TableOperation } from '../types';
+import * as TableOperation from '../types/TableOperation';
 
 const handler: Operation.WithHandler<typeof TableOperation.OnTypeAdded> = TableOperation.OnTypeAdded.pipe(
   Operation.withHandler(

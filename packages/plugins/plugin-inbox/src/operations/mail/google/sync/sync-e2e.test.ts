@@ -9,8 +9,9 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Operation, Trigger } from '@dxos/compute';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
@@ -19,13 +20,13 @@ import { bundleFunction } from '@dxos/edge-compute/native';
 import { failedInvariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { Message } from '@dxos/types';
 
 import { GMAIL_CONNECTOR_ID } from '../../../../constants';
-import { Mailbox } from '../../../../types';
+import * as Mailbox from '../../../../types/Mailbox';
 
 const config = configPreset({ edge: 'local' });
 

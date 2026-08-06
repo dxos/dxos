@@ -3,4 +3,5 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as GitHubEvents from './types/GitHubEvents';
+export * as GitHubOperation from './types/GitHubOperation';

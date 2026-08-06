@@ -7,13 +7,12 @@ import { defineConfig } from '@playwright/test';
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
 /**
- * Dev-server harness config — measures `vite serve` startup, not `vite preview`.
+ * Dev-server harness config — runs against `vite serve`, not `vite preview`.
  *
  * The webServer command is `pnpm vite --port 4173` (`serve` is vite's default
  * subcommand) so the app-manager's `INITIAL_URL` (also 4173) keeps working
- * without a second URL constant. The `testMatch` constraint scopes this
- * config to `dev-startup.spec.ts` only — the production `startup.spec.ts`
- * continues to run under `playwright.config.ts`.
+ * without a second URL constant. The `testMatch` constraint scopes this config
+ * to the `dev-*` specs; everything else runs under `playwright.config.ts`.
  *
  * Run with:
  *
@@ -25,7 +24,8 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
  */
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
-  testMatch: '**/dev-startup.spec.ts',
+  testMatch: '**/dev-*.spec.ts',
+  workers: 1,
   // Dev pre-bundling + per-file transformation can swing wide on a cold cache.
   timeout: 180_000,
   webServer: {

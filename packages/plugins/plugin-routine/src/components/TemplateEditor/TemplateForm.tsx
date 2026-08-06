@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { Fragment, useCallback, useEffect } from 'react';
 
-import { type Template } from '@dxos/compute';
+import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
@@ -60,7 +60,7 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
 
   return (
     <div className='flex flex-col w-full overflow-hidden gap-4'>
-      <TemplateEditor id={id} source={template.source} classNames='bg-base-surface min-h-[120px]' />
+      <TemplateEditor id={id} source={template.source} classNames='dx-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>

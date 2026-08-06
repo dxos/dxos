@@ -4,11 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 
-import { DeckCapabilities } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.UpdateSidebar> = LayoutOperation.UpdateSidebar.pipe(
   Operation.withHandler(

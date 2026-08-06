@@ -11,8 +11,9 @@ import { Panel } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Model, Scene } from '#types';
 
+import * as Model from '../../types/Model';
+import * as Scene from '../../types/Scene';
 import { type SpacetimeController, SpacetimeEditor } from './SpacetimeEditor';
 
 const DefaultStory = () => {

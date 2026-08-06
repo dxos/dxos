@@ -3,4 +3,5 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as SlackEvents from './types/SlackEvents';
+export * as SlackOperation from './types/SlackOperation';

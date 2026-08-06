@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { CollectionModel } from '@dxos/app-toolkit';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { HiddenAnnotation, getTypeAnnotation } from '@dxos/echo/Annotation';
 import { Kind as EntityKind } from '@dxos/echo/Entity';

@@ -4,12 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { SpaceOperation } from '@dxos/plugin-space';
 
-import { CrxOperation } from '#types';
-
 import { toOrganization } from '../mapping';
+import * as CrxOperation from '../types/CrxOperation';
 
 const handler: Operation.WithHandler<typeof CrxOperation.AddOrganizationFromSnapshot> =
   CrxOperation.AddOrganizationFromSnapshot.pipe(

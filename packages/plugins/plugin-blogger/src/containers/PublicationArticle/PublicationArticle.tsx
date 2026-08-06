@@ -5,12 +5,13 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector/types';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
@@ -21,7 +22,9 @@ import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from
 import { PostCard } from '#components';
 import { meta } from '#meta';
 import { BloggerOperation } from '#operations';
-import { Blog, BloggerCapabilities } from '#types';
+
+import * as Blog from '../../types/Blog';
+import * as BloggerCapabilities from '../../types/BloggerCapabilities';
 
 type ViewMode = 'gallery' | 'instructions';
 
@@ -193,7 +196,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
     <Menu.Root {...menuActions} onAction={runAction} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
+          <Menu.Toolbar classNames='dx-document' />
         </Panel.Toolbar>
         <Panel.Content>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>

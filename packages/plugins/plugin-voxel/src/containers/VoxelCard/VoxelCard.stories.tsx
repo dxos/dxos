@@ -7,8 +7,7 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Voxel } from '#types';
-
+import * as Voxel from '../../types/Voxel';
 import { VoxelCard } from './VoxelCard';
 
 const SAMPLE_VOXELS: Voxel.VoxelData[] = [

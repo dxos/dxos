@@ -14,7 +14,7 @@ import { ObjectForm } from '@dxos/react-ui-form';
 import { meta } from '#meta';
 
 import { SpaceOperation } from '../../operations';
-import { SpaceCapabilities } from '../../types';
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 
 export type MergePreviewProps = {
   type: Type.AnyEntity;
@@ -73,7 +73,7 @@ export const MergePreview = forwardRef<HTMLDivElement, MergePreviewProps>(
             </Toolbar.Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <ScrollArea.Root orientation='vertical' centered>
             <ScrollArea.Viewport>
               <Card.Root fullWidth classNames='pb-form-gap'>

@@ -2,39 +2,21 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-
-import { OperationHandler, State } from '#capabilities';
-import { Layout } from '#components';
+import { OperationHandler, ReactContext, State } from '#capabilities';
 import { meta } from '#meta';
-import { StorybookCapabilities } from '#types';
+
+import * as StorybookCapabilities from './types/StorybookCapabilities';
 
 export type StorybookPluginOptions = {
   initialState?: Partial<StorybookCapabilities.LayoutStateProps>;
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
-  AppPlugin.addReactContextModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactContext, {
-          id: 'storybook-layout',
-          context: Layout,
-        }),
-      ),
-  }),
-  Plugin.addModule(({ initialState }) => ({
-    id: Capability.getModuleTag(State),
-    activatesOn: ActivationEvents.Startup,
-    firesAfterActivation: [AppActivationEvents.LayoutReady],
-    activate: () => State({ initialState }),
-  })),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(State),
   Plugin.make,
 );
 

@@ -6,8 +6,9 @@ import * as Function from 'effect/Function';
 import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Client, Config, DXOS_VERSION, LocalClientServices } from '@dxos/client';
+import { Client, Config, DXOS_VERSION } from '@dxos/client';
 import { performInvitation } from '@dxos/client-services/testing';
+import { LocalClientServices } from '@dxos/client/local';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { MemoryTransportFactory } from '@dxos/network-manager';

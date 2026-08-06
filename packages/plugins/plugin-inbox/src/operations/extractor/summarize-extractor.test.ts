@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor';

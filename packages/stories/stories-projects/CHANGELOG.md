@@ -1,0 +1,182 @@
+# @dxos/stories-projects
+
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [430bcab]
+- Updated dependencies [5fde190]
+  - @dxos/plugin-crm@0.11.1
+  - @dxos/plugin-inbox@0.11.1
+  - @dxos/plugin-brain@0.11.1
+  - @dxos/plugin-projects@0.11.1
+  - @dxos/ai@0.11.1
+  - @dxos/app-framework@0.11.1
+  - @dxos/app-toolkit@0.11.1
+  - @dxos/client@0.11.1
+  - @dxos/compute@0.11.1
+  - @dxos/echo@0.11.1
+  - @dxos/echo-react@0.11.1
+  - @dxos/effect@0.11.1
+  - @dxos/extractor@0.11.1
+  - @dxos/keys@0.11.1
+  - @dxos/react-client@0.11.1
+  - @dxos/react-ui@0.11.1
+  - @dxos/react-ui-form@0.11.1
+  - @dxos/schema@0.11.1
+  - @dxos/storybook-testing@0.11.1
+  - @dxos/types@0.11.1
+  - @dxos/util@0.11.1
+  - @dxos/plugin-assistant@0.11.1
+  - @dxos/plugin-client@0.11.1
+  - @dxos/plugin-markdown@0.11.1
+  - @dxos/plugin-routine@0.11.1
+  - @dxos/plugin-space@0.11.1
+  - @dxos/plugin-table@0.11.1
+  - @dxos/plugin-testing@0.11.1
+
+## 0.11.0
+
+### Patch Changes
+
+- Updated dependencies [f9ba47a]
+- Updated dependencies [4e64123]
+- Updated dependencies [c035062]
+- Updated dependencies [9da013f]
+- Updated dependencies [48d168e]
+- Updated dependencies [e0e1a9f]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [46ec569]
+- Updated dependencies [5b05d75]
+- Updated dependencies [b5ecf54]
+- Updated dependencies [3f6ac61]
+- Updated dependencies [091ebe4]
+- Updated dependencies [a77e1a2]
+- Updated dependencies [a256a87]
+- Updated dependencies [eec72c5]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [724d468]
+- Updated dependencies [fe63f19]
+- Updated dependencies [a19443b]
+- Updated dependencies [dd190a0]
+- Updated dependencies [3f1fc67]
+- Updated dependencies [2fb1993]
+- Updated dependencies [6df314a]
+- Updated dependencies [2048cb3]
+- Updated dependencies [856c4f0]
+- Updated dependencies [382d00d]
+- Updated dependencies [382d00d]
+- Updated dependencies [46ec569]
+- Updated dependencies [f8637f1]
+- Updated dependencies [b8c0825]
+- Updated dependencies [4e64123]
+- Updated dependencies [2e10525]
+- Updated dependencies [6a03a30]
+- Updated dependencies [77fff35]
+- Updated dependencies [2fe5a7a]
+- Updated dependencies [7b270f2]
+- Updated dependencies [7b270f2]
+- Updated dependencies [af5fbf4]
+- Updated dependencies [717edc0]
+- Updated dependencies [c58ebb7]
+- Updated dependencies [d547045]
+- Updated dependencies [b602d44]
+- Updated dependencies [98d79ec]
+- Updated dependencies [6439417]
+- Updated dependencies [1872bc0]
+- Updated dependencies [ba7aabf]
+- Updated dependencies [410a019]
+- Updated dependencies [d958118]
+- Updated dependencies [2a68c3b]
+- Updated dependencies [30ae5eb]
+- Updated dependencies [3b4a7c8]
+- Updated dependencies [6dd1aa8]
+- Updated dependencies [2543b63]
+- Updated dependencies [33e1a3d]
+- Updated dependencies [6d2afe0]
+- Updated dependencies [e65432c]
+- Updated dependencies [c9651f1]
+- Updated dependencies [a2447cd]
+- Updated dependencies [9cde1c6]
+- Updated dependencies [0afbf15]
+- Updated dependencies [5e7839e]
+- Updated dependencies [923d5be]
+- Updated dependencies [85893fe]
+- Updated dependencies [9f7d5ad]
+- Updated dependencies [6067460]
+- Updated dependencies [717edc0]
+- Updated dependencies [12fd785]
+- Updated dependencies [51aaffe]
+- Updated dependencies [801b77f]
+- Updated dependencies [1a989ed]
+- Updated dependencies [d547045]
+- Updated dependencies [bda1a02]
+- Updated dependencies [0a4bbde]
+- Updated dependencies [832d150]
+- Updated dependencies [aea1e6e]
+- Updated dependencies [f10b1ce]
+- Updated dependencies [f7d7735]
+- Updated dependencies [cec59a4]
+- Updated dependencies [717edc0]
+- Updated dependencies [cd3ed11]
+- Updated dependencies [5f08a6a]
+- Updated dependencies [37874ce]
+- Updated dependencies [848ba1b]
+- Updated dependencies [f15c632]
+- Updated dependencies [3761762]
+- Updated dependencies [c9da903]
+- Updated dependencies [a83d98a]
+- Updated dependencies [bf055c8]
+- Updated dependencies [55bb048]
+- Updated dependencies [bdf9f68]
+- Updated dependencies [4bb7e3b]
+- Updated dependencies [179afc6]
+- Updated dependencies [7b270f2]
+- Updated dependencies [77fff35]
+- Updated dependencies [6e624bd]
+- Updated dependencies [686fac1]
+- Updated dependencies [ed992c2]
+- Updated dependencies [25272e3]
+- Updated dependencies [0e3a1a9]
+- Updated dependencies [cb14d6e]
+- Updated dependencies [96109be]
+- Updated dependencies [37c17cc]
+- Updated dependencies [f0ec728]
+- Updated dependencies [08a3eea]
+- Updated dependencies [bb63d91]
+- Updated dependencies [ed992c2]
+- Updated dependencies [ed992c2]
+- Updated dependencies [a49131a]
+- Updated dependencies [5585ec8]
+- Updated dependencies [31fe0b8]
+- Updated dependencies [ac51564]
+- Updated dependencies [499dde4]
+  - @dxos/echo@0.11.0
+  - @dxos/plugin-assistant@0.11.0
+  - @dxos/plugin-markdown@0.11.0
+  - @dxos/schema@0.11.0
+  - @dxos/plugin-routine@0.11.0
+  - @dxos/plugin-inbox@0.11.0
+  - @dxos/react-ui@0.11.0
+  - @dxos/app-toolkit@0.11.0
+  - @dxos/plugin-client@0.11.0
+  - @dxos/client@0.11.0
+  - @dxos/compute@0.11.0
+  - @dxos/util@0.11.0
+  - @dxos/app-framework@0.11.0
+  - @dxos/keys@0.11.0
+  - @dxos/react-ui-form@0.11.0
+  - @dxos/types@0.11.0
+  - @dxos/echo-react@0.11.0
+  - @dxos/plugin-space@0.11.0
+  - @dxos/extractor@0.11.0
+  - @dxos/plugin-projects@0.11.0
+  - @dxos/react-client@0.11.0
+  - @dxos/ai@0.11.0
+  - @dxos/plugin-brain@0.11.0
+  - @dxos/plugin-crm@0.11.0
+  - @dxos/plugin-table@0.11.0
+  - @dxos/storybook-testing@0.11.0
+  - @dxos/plugin-testing@0.11.0
+  - @dxos/effect@0.11.0

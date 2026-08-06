@@ -7,7 +7,7 @@ import { createContext } from '@radix-ui/react-context';
 import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
-import { type Capabilities } from '@dxos/app-framework';
+import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { type Graph } from '@dxos/app-graph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
@@ -23,12 +23,14 @@ import { mx } from '@dxos/ui-theme';
 
 import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmail } from '#hooks';
 import { meta } from '#meta';
-import { Mailbox, SystemTags } from '#types';
 
+import * as Mailbox from '../../types/Mailbox';
+import * as SystemTags from '../../types/SystemTags';
 import { createDraftMessage, getMessageProps } from '../../util';
 import { EditMessage } from '../EditMessage';
 import { MarkdownViewer } from '../MarkdownViewer';
 import { type ViewMode, viewModeGroup } from '../ViewMode';
+import { keyOf } from './key-of';
 import { ExtractorMenuItem } from './useExtractorActions';
 import { useMessageExtractedObjects } from './useMessageExtractedObjects';
 import { useMessageActions } from './useToolbar';
@@ -37,11 +39,7 @@ import { useMessageActions } from './useToolbar';
 // Types
 //
 
-type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
-
-/** Stable id for a message or unresolved ref, keying tiles and collapse state. */
-export const keyOf = (message: MessageOrRef): string =>
-  Ref.isRef(message) ? String(message.uri) : Obj.getURI(message);
+export type MessageOrRef = MessageType.Message | Ref.Ref<MessageType.Message>;
 
 /**
  * Reactive view options for a rendered message (body render mode + image loading). Passed in as a

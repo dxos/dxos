@@ -2,11 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const DiscordOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./get-discord-channels'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-  () => import('./crawl'),
-);
+import * as DiscordOperation from '../types/DiscordOperation';
+
+export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
+  DiscordOperation.GetDiscordChannels.pipe(Operation.lazyHandler(() => import('./get-discord-channels'))),
+  DiscordOperation.MaterializeDiscordTarget.pipe(Operation.lazyHandler(() => import('./materialize-target'))),
+  DiscordOperation.SyncDiscordChannel.pipe(Operation.lazyHandler(() => import('./sync'))),
+  DiscordOperation.CrawlDiscordChannels.pipe(Operation.lazyHandler(() => import('./crawl'))),
+]);

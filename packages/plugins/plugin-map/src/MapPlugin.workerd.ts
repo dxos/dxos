@@ -2,16 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { Map } from '#types';
+
+import * as Map from './types/Map';
 
 export const MapPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Map.Map] }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Map.Map])),
   Plugin.make,
 );
 

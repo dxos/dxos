@@ -34,7 +34,7 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
   return (
     <Message.Root classNames={['m-1', classNames]} valence='warning'>
       <Message.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Message.Title>
-      <Message.Content asChild>
+      <Message.Body asChild>
         <ul className='flex flex-col gap-0.5 text-sm'>
           {errors.map((error) => (
             <li key={`${error.url}::${error.protocol}`} className='truncate'>
@@ -44,7 +44,7 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
             </li>
           ))}
         </ul>
-      </Message.Content>
+      </Message.Body>
     </Message.Root>
   );
 };

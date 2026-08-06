@@ -5,15 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import {
-  ATMOSPHERE_PROVIDER_ID,
-  ATMOSPHERE_SOURCE,
-  ATPROTO_OAUTH_SCOPES,
-  Connector,
-  type ConnectorEntry,
-  type CredentialForm,
-} from '@dxos/plugin-connector';
+import * as Capability from '@dxos/app-framework/Capability';
+import { ATMOSPHERE_PROVIDER_ID, ATMOSPHERE_SOURCE, ATPROTO_OAUTH_SCOPES } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 /** Pre-flight form for the atproto OAuth flow: the user's handle becomes the login hint. */
@@ -25,7 +19,7 @@ const AtprotoPreflightForm = Schema.Struct({
   }),
 });
 
-const atprotoCredentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
+const atprotoCredentialForm: ConnectorSpec.CredentialForm<Schema.Schema.Type<typeof AtprotoPreflightForm>> = {
   schema: AtprotoPreflightForm,
   defaultValues: { handle: '' },
   onSubmit: ({ values }) => Effect.succeed({ kind: 'oauth', loginHint: values.handle.trim() }),
@@ -34,12 +28,11 @@ const atprotoCredentialForm: CredentialForm<Schema.Schema.Type<typeof AtprotoPre
 /**
  * The generic "Atmosphere" atproto connector: connects an atproto account (credential-only, no sync
  * targets) and is the connector the OAuth account-recovery flow routes its Connection to. Owned by
- * this plugin so the atproto connection capability lives with the rest of the atproto integration;
- * contributed on `SetupConnectors` like every other connector.
+ * this plugin so the atproto connection capability lives with the rest of the atproto integration.
  */
-export default Capability.makeModule<ConnectorEntry[]>(
+export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: ATMOSPHERE_PROVIDER_ID,
         source: ATMOSPHERE_SOURCE,

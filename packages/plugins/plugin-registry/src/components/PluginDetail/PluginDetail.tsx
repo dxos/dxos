@@ -4,7 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { type Plugin, type PluginManager } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import {
   Button,
   Carousel,

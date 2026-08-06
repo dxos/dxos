@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppSpace } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
-import { Journal, OutlineOperation } from '../types';
+import * as Journal from '../types/Journal';
+import * as OutlineOperation from '../types/OutlineOperation';
 
 const handler: Operation.WithHandler<typeof OutlineOperation.QuickJournalEntry> =
   OutlineOperation.QuickJournalEntry.pipe(

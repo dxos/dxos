@@ -5,7 +5,7 @@
 import type * as Effect from 'effect/Effect';
 
 import { type AiService } from '@dxos/ai';
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj, type Relation } from '@dxos/echo';
 
 import { type Resolver } from './Resolver';

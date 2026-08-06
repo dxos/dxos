@@ -5,10 +5,11 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { ConnectorSync, LayoutOperation } from '@dxos/app-toolkit';
+import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 const { mergeField, snapshotField } = ConnectorSync;
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { Cursor } from '@dxos/link';
@@ -20,7 +21,7 @@ import { meta } from '#meta';
 import { LINEAR_SOURCE } from '../constants';
 import { formatLinearSyncFailure } from '../errors';
 import { LinearApi } from '../services';
-import { LinearOperation } from '../types';
+import * as LinearOperation from '../types/LinearOperation';
 
 //
 // Direction: bidirectional (pull-then-push) for projects and tasks.

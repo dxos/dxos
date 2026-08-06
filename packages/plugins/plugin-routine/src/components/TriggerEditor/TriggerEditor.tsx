@@ -5,7 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Routine, Trigger } from '@dxos/compute';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { IconButton, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -200,7 +201,7 @@ export const TriggerEditor = ({ classNames, db, routine, trigger, readonly }: Tr
         onValuesChanged={handleValuesChanged}
       >
         {/* TODO(burdon): Generalize Form handling (indented section) for discriminated unions. */}
-        <Form.Content classNames={mx(kind && 'pb-2 bg-card-surface border border-separator rounded-xs', classNames)}>
+        <Form.Content classNames={mx(kind && 'pb-2 dx-card-surface border border-separator rounded-xs', classNames)}>
           {kind ? (
             <>
               <div className='flex items-center'>

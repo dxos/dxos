@@ -43,7 +43,7 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
           <Toolbar.Root />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <div className={mx('grid divide-y divide-separator', db && 'grid-rows-[1fr_2fr]')}>
+          <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
             {db && (
               <ScrollArea.Root>
                 <ScrollArea.Viewport>

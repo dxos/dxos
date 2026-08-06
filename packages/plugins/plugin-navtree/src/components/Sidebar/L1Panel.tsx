@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { memo, useCallback, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph } from '@dxos/plugin-graph';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
@@ -45,7 +45,7 @@ export type L1PanelProps = {
  * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1Panel$ = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
@@ -117,7 +117,7 @@ const L1PanelContent = ({
   return (
     <DensityProvider density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
-      <ScrollArea.Root thin orientation='vertical'>
+      <ScrollArea.Root centered thin orientation='vertical'>
         <ScrollArea.Viewport>
           <Tree
             classNames='pt-[2px]'
@@ -258,4 +258,4 @@ const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: N
   return { menuActions, onAction };
 };
 
-export const L1Panel = memo(L1Panel$);
+export const L1Panel = memo(L1PanelInner);

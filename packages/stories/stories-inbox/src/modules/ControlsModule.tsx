@@ -7,7 +7,7 @@ import * as Exit from 'effect/Exit';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Ref } from '@dxos/echo';
@@ -16,8 +16,9 @@ import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { BrainCapabilities } from '@dxos/plugin-brain/types';
-import { InboxOperation, Mailbox } from '@dxos/plugin-inbox';
+import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
+import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -193,7 +194,7 @@ const ControlsModuleContainer = ({ space }: { space: Space }) => {
           )}
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content className='flex flex-col gap-2 p-2 text-sm'>
+      <Panel.Content classNames='flex flex-col gap-2 p-2 text-sm'>
         <JsonHighlighter
           data={{ identity: identity?.identityKey.truncate(), processed: processedCount, facts: factsCount }}
         />

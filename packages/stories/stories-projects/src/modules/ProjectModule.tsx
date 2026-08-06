@@ -6,11 +6,11 @@ import React, { useCallback, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { ProjectOperation } from '@dxos/plugin-projects/types';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { Loading } from '@dxos/react-ui/testing';

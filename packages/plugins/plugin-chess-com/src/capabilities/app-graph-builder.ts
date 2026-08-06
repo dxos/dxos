@@ -4,14 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { ChessComAccount, ChessComOperation } from '#types';
+
+import * as ChessComAccount from '../types/ChessComAccount';
+import * as ChessComOperation from '../types/ChessComOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -43,6 +45,6 @@ export default Capability.makeModule(
         ]),
     });
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [accountActions]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [accountActions]);
   }),
 );

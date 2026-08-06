@@ -6,7 +6,7 @@ import React, { type KeyboardEvent } from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
 
-import { type TerraObject } from '#types';
+import type * as TerraObject from '../../types/TerraObject';
 
 /**
  * One object's telemetry at the panel's sampling instant. Plain data rather than `SimObject`, so
@@ -68,7 +68,7 @@ export const TelemetryPanel = ({ rows, selectedId, onSelect }: TelemetryPanelPro
                 key={row.id}
                 className={
                   row.id === selectedId
-                    ? 'border-t border-separator bg-activeSurface text-accent-text'
+                    ? 'border-t border-separator bg-current-surface text-accent-text'
                     : onSelect
                       ? 'border-t border-separator cursor-pointer'
                       : 'border-t border-separator'

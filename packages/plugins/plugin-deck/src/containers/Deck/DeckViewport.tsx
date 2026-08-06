@@ -18,7 +18,7 @@ import React, {
 } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
@@ -49,8 +49,9 @@ import {
   useSelectedCompanionVariant,
 } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation, Keyshortcuts } from '#types';
 
+import * as DeckOperation from '../../types/DeckOperation';
+import * as DeckRole from '../../types/DeckRole';
 import { findAttendedPlank, getRenderedPlanks, layoutAppliesTopbar } from '../../util';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
@@ -214,8 +215,8 @@ export const DeckContentEmpty = () => {
   const { state } = useDeckState();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
-    <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface type={Keyshortcuts} />
+    <div className='grid place-items-center p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
+      <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </div>
   );
@@ -557,7 +558,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           deck surface, and the outline is what makes it read as a tile at all. */}
       {exposed && (
         <button
-          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-accentSurface'
+          className='absolute inset-(--deck-expose-gutter) z-10 cursor-pointer rounded-sm outline outline-separator transition-colors hover:outline-focus-ring'
           aria-label={spineLabel}
           onClick={handleExposeSelect}
         />
@@ -1595,7 +1596,7 @@ export const DeckPlanks = () => {
           but no style. */}
       <div
         ref={hostRef}
-        className='relative bg-deck-surface overflow-hidden'
+        className='relative dx-deck-surface overflow-hidden'
         // `--deck-expose-scale` is absent here on purpose: `useExposeScale` writes it directly so it is in
         // place before the FLIP measures. The rest are constants.
         style={

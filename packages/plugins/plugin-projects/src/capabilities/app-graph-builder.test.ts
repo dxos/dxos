@@ -7,13 +7,13 @@ import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { Instructions, Project } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
-import { ProjectOperation } from '#types';
-
+import * as ProjectOperation from '../types/ProjectOperation';
 import { createProjectActionExtension } from './app-graph-builder';
 
 describe('project app graph builder', () => {

@@ -4,16 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { Score } from '#types';
+import * as Score from '../types/Score';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Score.Score),
       createObject: (props: Partial<Parameters<typeof Score.make>[0]> | undefined, options) =>
         Effect.gen(function* () {

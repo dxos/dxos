@@ -16,7 +16,7 @@ import React, {
   useState,
 } from 'react';
 
-import { NativePasskey } from '@dxos/app-toolkit';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { Button, DropdownMenu, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';

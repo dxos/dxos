@@ -5,11 +5,11 @@
 import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Node } from '@dxos/plugin-graph';
 
-import { SimpleLayoutCapabilities } from '#types';
+import * as SimpleLayoutCapabilities from '../types/SimpleLayoutCapabilities';
 
 const defaultState: SimpleLayoutCapabilities.SimpleLayoutState = {
   dialogOpen: false,
@@ -44,8 +44,8 @@ export default Capability.makeModule(({ initialState }: SimpleLayoutStateOptions
     });
 
     return [
-      Capability.contributes(SimpleLayoutCapabilities.State, stateAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(SimpleLayoutCapabilities.State, stateAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );

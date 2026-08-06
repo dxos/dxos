@@ -10,7 +10,7 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
-import { Subscription } from '#types';
+import * as Subscription from '../../types/Subscription';
 
 export type PostStackAction = { type: 'current'; postId: string };
 

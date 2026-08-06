@@ -2,6 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const CrmOperationHandlerSet = OperationHandlerSet.lazy(() => import('./attach-image'));
+import * as CrmOperation from '../types/CrmOperation';
+
+export const CrmOperationHandlerSet = OperationHandlerSet.lazy([
+  CrmOperation.AttachImage.pipe(Operation.lazyHandler(() => import('./attach-image'))),
+  CrmOperation.ProcessMailbox.pipe(Operation.lazyHandler(() => import('./process-mailbox'))),
+  CrmOperation.ResearchPerson.pipe(Operation.lazyHandler(() => import('./research-person'))),
+  CrmOperation.ResearchOrganization.pipe(Operation.lazyHandler(() => import('./research-organization'))),
+]);

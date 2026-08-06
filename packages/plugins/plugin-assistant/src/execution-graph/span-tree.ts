@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { AgentRequestBegin, AgentRequestEnd } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 import { EID } from '@dxos/keys';
 
 /**

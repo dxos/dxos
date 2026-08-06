@@ -10,7 +10,7 @@ import { type IdentitySpec, planMerge } from '@dxos/extractor';
 import { type Space } from '@dxos/react-client/echo';
 
 import { SpaceOperation } from '../../operations/definitions';
-import { SpaceCapabilities } from '../../types';
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
 
 export type UseDuplicatesProps = {
   space: Space;

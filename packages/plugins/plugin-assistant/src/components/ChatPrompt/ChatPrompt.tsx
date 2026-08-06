@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useId, useMemo, useRef } from 'react';
 
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Event } from '@dxos/async';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
@@ -25,9 +25,9 @@ import { type Merge } from '@dxos/util';
 
 import { useChatKeymapExtensions } from '#hooks';
 import { meta } from '#meta';
-import { type ChatPresetProps } from '#types';
 
 import { type AiChatProcessor } from '../../processor';
+import * as AssistantPreset from '../../types/AssistantPreset';
 import { type ChatEvent } from '../Chat';
 import { ChatActions, type ChatActionsProps } from './ChatActions';
 import { ChatMcpErrors } from './ChatMcpErrors';
@@ -50,7 +50,7 @@ export type ChatPromptProps = Merge<
     /** Object the chat is attached to; its project instructions (if any) supply sentinel-command completion. */
     companionTo?: Obj.Unknown;
   }>,
-  ChatPresetProps
+  AssistantPreset.ChatPresetProps
 >;
 
 export const ChatPrompt = ({
@@ -131,7 +131,7 @@ export const ChatPrompt = ({
       className={mx(
         'flex flex-col w-full dx-density-md',
         outline &&
-          'bg-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
+          'dx-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
       )}
     >

@@ -2,14 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, NativePasskey } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { EffectEx } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities } from '#types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 
 /** Identifier for the native redirect dialog surface (defined in welcome plugin). */
 const NATIVE_REDIRECT_DIALOG = 'org.dxos.plugin.welcome.component.native-redirect-dialog';
@@ -81,16 +86,6 @@ const tryOpenNativeApp = (): Promise<boolean> => {
   });
 };
 
-/** Dispatch all NavigationHandler contributions with the current page URL. */
-const dispatchNavigationHandlers = Effect.fn(function* () {
-  const url = new URL(window.location.href);
-  const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-  yield* Effect.all(
-    handlers.map((handler) => handler(url)),
-    { concurrency: 'unbounded' },
-  );
-});
-
 /**
  * Checks whether the native redirect setting is enabled and the redirect should be attempted.
  * Exported for the URL handler to decide whether to defer NavigationHandler dispatch.
@@ -110,13 +105,38 @@ export const shouldDeferNavigationHandlers = (): boolean => {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-    const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invoke } = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
     const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
     if (!settings?.enableNativeRedirect || !shouldDeferNavigationHandlers()) {
-      return;
+      return [];
     }
+
+    /**
+     * Dispatch all NavigationHandler contributions with the current page URL.
+     *
+     * Each handler is isolated with `catchAllCause`, not `catchAll`: a handler that invokes an
+     * operation fails as a DEFECT (`Process.fromOperation` uses `Effect.orDie`), which the Fail
+     * channel does not carry. An escaping defect would fail this module's activation and take the
+     * popstate listener, the URL<->state sync and the leave-trap down for the whole session — so
+     * one handler's failure must not decide whether URL handling exists.
+     */
+    const dispatchNavigationHandlers = () => {
+      const url = new URL(window.location.href);
+      return Effect.all(
+        navigationHandlers
+          .get()
+          .map((handler) =>
+            handler(url).pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
+              ),
+            ),
+          ),
+        { concurrency: 'unbounded' },
+      );
+    };
 
     const appOpened = yield* Effect.promise(() => tryOpenNativeApp());
     if (appOpened) {
@@ -124,7 +144,7 @@ export default Capability.makeModule(
         Effect.gen(function* () {
           yield* dispatchNavigationHandlers();
           yield* invoke(LayoutOperation.UpdateDialog, { state: false });
-        }).pipe(Effect.provideService(Capability.Service, capabilities), EffectEx.runAndForwardErrors);
+        }).pipe(EffectEx.runAndForwardErrors);
 
       yield* invoke(LayoutOperation.UpdateDialog, {
         subject: NATIVE_REDIRECT_DIALOG,
@@ -135,5 +155,7 @@ export default Capability.makeModule(
     } else {
       yield* dispatchNavigationHandlers();
     }
+
+    return [];
   }),
 );

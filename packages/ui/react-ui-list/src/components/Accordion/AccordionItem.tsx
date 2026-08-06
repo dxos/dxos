@@ -3,7 +3,6 @@
 //
 
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
-import { createContext } from '@radix-ui/react-context';
 import React, { type CSSProperties, type PropsWithChildren, type ReactNode } from 'react';
 
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
@@ -13,20 +12,10 @@ import { listTheme } from '../List.theme';
 
 // See `AccordionRoot.tsx` for the rationale on `ListItemRecord = any`.
 type ListItemRecord = any;
+import { ACCORDION_ITEM_NAME, AccordionItemProvider } from './AccordionItemContext';
 import { useAccordionContext } from './AccordionRoot';
 
-const ACCORDION_ITEM_NAME = 'AccordionItem';
-
 const styles = listTheme.styles();
-
-type AccordionItemContext<T extends ListItemRecord> = {
-  item: T;
-};
-
-// TODO(wittjosiah): This seems to be conflicting with something in the bundle.
-//  Perhaps @radix-ui/react-accordion?
-export const [AccordionItemProvider, useDxAccordionItemContext] =
-  createContext<AccordionItemContext<any>>(ACCORDION_ITEM_NAME);
 
 export type AccordionItemProps<T extends ListItemRecord> = ThemedClassName<PropsWithChildren<{ item: T }>>;
 

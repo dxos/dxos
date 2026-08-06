@@ -10,15 +10,17 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppPlugin } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { LayerSpec } from '@dxos/compute';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { DXN, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -32,10 +34,11 @@ import { Text } from '@dxos/schema';
 
 import { MagazineSkill } from '#skills';
 import { translations } from '#translations';
-import { Magazine, Subscription } from '#types';
 
 import { MagazineArticle } from '../containers/MagazineArticle/MagazineArticle';
 import { MagazinePlugin } from '../MagazinePlugin';
+import * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 
 // Curation runs the agent (CurateMagazine → RunInstructions). The process-manager runtime therefore needs
 // the full agent stack: RoutinePlugin supplies the OpaqueToolkit / Registry / Trace LayerSpecs and
@@ -49,17 +52,17 @@ const aiServiceSpec = LayerSpec.make({ affinity: 'space', requires: [], provides
 const AgentRuntimePlugin = Plugin.define(
   Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.magazineStoryAgent'), name: 'Magazine Story Agent Runtime' }),
 ).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: Capability.makeModule(() =>
-      Effect.succeed([Capability.contributes(Capabilities.OperationHandler, AgentHandlers)]),
+  Plugin.addModule<void>(
+    Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, AgentHandlers)]),
     ),
-  }),
+  ),
   Plugin.addModule({
     id: 'ai-service',
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: Capability.makeModule(() =>
-      Effect.succeed([Capability.contributes(Capabilities.LayerSpec, aiServiceSpec)]),
-    ),
+    // Restart-scoped: the process manager snapshots LayerSpecs once at boot (see AppCapability.layerSpec).
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
+    activate: () => Effect.succeed([Capability.contribute(Capabilities.LayerSpec, aiServiceSpec)]),
   }),
   Plugin.make,
 );
@@ -107,7 +110,7 @@ const DefaultStory = () => {
 
   return (
     <Panel.Root classNames='border-is border-separator'>
-      <Panel.Content className='px-3 grid grid-cols-2 gap-3'>
+      <Panel.Content classNames='px-3 grid grid-cols-2 gap-3'>
         {/* Rendered directly: the `article` role is shared with plugin-space's catch-all RecordArticle
             (position:last), so a raw `Surface type={Article}` here is ambiguous and resolves to the
             fallback — the deck disambiguates via the app-graph node, which a story has no equivalent of. */}

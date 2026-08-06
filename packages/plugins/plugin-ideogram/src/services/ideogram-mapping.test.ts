@@ -5,7 +5,7 @@
 import * as Redacted from 'effect/Redacted';
 import { afterEach, describe, test } from 'vitest';
 
-import { GenerationService } from '@dxos/plugin-studio/types';
+import * as GenerationService from '@dxos/plugin-studio/GenerationService';
 
 import { IDEOGRAM_GENERATE_URL } from '../constants';
 import { generateWithIdeogram } from './ideogram-client';

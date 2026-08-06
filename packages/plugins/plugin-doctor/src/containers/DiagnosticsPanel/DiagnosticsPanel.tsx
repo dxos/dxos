@@ -28,7 +28,8 @@ import {
   runDiagnostics,
 } from '#diagnostics';
 import { meta } from '#meta';
-import { DoctorCapabilities } from '#types';
+
+import * as DoctorCapabilities from '../../types/DoctorCapabilities';
 
 type RunState =
   | { readonly status: 'idle' }
@@ -182,7 +183,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
   const status = result.error ? 'error' : result.issues.length === 0 ? 'pass' : 'issues';
   const label = toLocalizedString(result.label, t);
   return (
-    <section className='rounded border border-separator bg-base-surface'>
+    <section className='rounded border border-separator dx-base-surface'>
       <header className='flex items-center justify-between gap-2 p-2'>
         <span className='text-sm font-medium truncate'>{label}</span>
         {status === 'pass' && (
@@ -195,11 +196,11 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
       </header>
       {result.error && (
         <Message.Root valence='error' classNames='m-2'>
-          <Message.Content>{result.error}</Message.Content>
+          <Message.Body>{result.error}</Message.Body>
         </Message.Root>
       )}
       {result.issues.length > 0 && (
-        <ul className='border-t border-separator divide-y divide-separator'>
+        <ul className='border-t border-separator divide-y divide-subdued-separator'>
           {result.issues.map((issue) => (
             <IssueRow key={issue.id} issue={issue} />
           ))}

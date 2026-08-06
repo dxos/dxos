@@ -11,10 +11,12 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { dispatch, fromExtractors, fromResolvers } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
-import { ExtractedFrom } from '@dxos/plugin-inbox';
+import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { Booking, Segment, Trip } from '../../types';
+import * as Booking from '../../types/Booking';
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
 import { TripMessageExtractor } from './trip-extractor';
 
 // Empty resolver — the trip extractor dedupes/groups via direct db queries, not the Resolver.

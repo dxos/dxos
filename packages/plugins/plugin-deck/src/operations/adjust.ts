@@ -6,16 +6,20 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Graph } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { incrementPlank } from '../layout';
-import { DeckCapabilities, DeckOperation, PLANK_COMPANION_TYPE } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
+import * as DeckOperation from '../types/DeckOperation';
+import * as DeckSchema from '../types/DeckSchema';
 import { COMPANION_VIEW_STATE_CONTEXT, companionAspect, computeActiveUpdates } from '../util';
 import { addCompanionPlank, updateActiveDeck } from './helpers';
 
@@ -66,7 +70,7 @@ const handler: Operation.WithHandler<typeof DeckOperation.Adjust> = DeckOperatio
             Graph.getNode(graph, input.id),
             Option.map((node) =>
               Graph.getConnections(graph, node.id, 'child')
-                .filter((n) => n.type === PLANK_COMPANION_TYPE)
+                .filter((n) => n.type === DeckSchema.PLANK_COMPANION_TYPE)
                 .toSorted((a, b) =>
                   Position.compare({ position: a.properties?.position }, { position: b.properties?.position }),
                 ),

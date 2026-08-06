@@ -9,7 +9,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ToolResult, createTool } from '@dxos/ai';
-import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
+import { type PromiseIntentDispatcher } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
 import { Filter, Obj, Query, Type, View } from '@dxos/echo';
@@ -237,6 +239,6 @@ export default Capability.makeModule(() =>
       ],
     });
 
-    return Capability.contributes(Capabilities.ArtifactDefinition, definition);
+    return Capability.contribute(Capabilities.ArtifactDefinition, definition);
   }),
 );

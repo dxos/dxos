@@ -3,6 +3,7 @@
 //
 
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { ensureSyntaxTree } from '@codemirror/language';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
 import { describe, test } from 'vitest';
 
@@ -12,7 +13,16 @@ import { findBlocks, moveBlocksSpec, replaceBlocksSpec } from './blocks';
 import { blockSelectionField } from './selection';
 
 const extensions = [markdown({ base: markdownLanguage }), blockSelectionField];
-const create = (doc: string) => EditorState.create({ doc, extensions });
+
+// `findBlocks` walks the syntax tree, and CodeMirror's initial parse is budgeted in wall-clock time —
+// on a loaded CI runner it can expire having parsed almost nothing, collapsing the document to a single
+// block. Parse to the end before asserting so the tests measure `findBlocks`, not the parse scheduler.
+const parsed = (state: EditorState): EditorState => {
+  ensureSyntaxTree(state, state.doc.length, 10_000);
+  return state;
+};
+
+const create = (doc: string) => parsed(EditorState.create({ doc, extensions }));
 
 describe('findBlocks', () => {
   test('splits into top-level blocks', ({ expect }) => {
@@ -127,7 +137,7 @@ const selectedText = (state: EditorState): string[] => {
 // Applies a (non-null) transaction spec and returns the resulting state.
 const apply = (state: EditorState, spec: TransactionSpec | null): EditorState => {
   invariant(spec, 'expected a transaction spec');
-  return state.update(spec).state;
+  return parsed(state.update(spec).state);
 };
 
 // The character at the caret's left, so tests can assert the caret lands at the end of a moved block.

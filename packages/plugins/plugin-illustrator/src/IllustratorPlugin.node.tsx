@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { OperationHandler, SkillDefinition } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Drawing } from '#types';
+
+import * as Drawing from './types/Drawing';
 
 /**
  * Headless variant of IllustratorPlugin (no React surfaces / CreateObject panel).
@@ -17,10 +18,10 @@ import { Drawing } from '#types';
  * downstream bundlers don't resolve cleanly under nested pnpm symlinks.
  */
 export const IllustratorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing, Drawing.Canvas] }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Drawing.Drawing, Drawing.Canvas])),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(AppCapability.translations(translations)),
   Plugin.make,
 );
 

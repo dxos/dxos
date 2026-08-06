@@ -8,9 +8,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Capabilities, Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation, ServiceResolver, Trigger } from '@dxos/compute';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
+import * as Trigger from '@dxos/compute/Trigger';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -18,8 +22,8 @@ import { invariant } from '@dxos/invariant';
 import { AccessToken, Cursor } from '@dxos/link';
 import { Expando } from '@dxos/schema';
 
-import { Connection, Connector, type ConnectorEntry } from '#types';
-
+import * as Connection from '../types/Connection';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { syncTarget } from './sync-target';
 
 describe('syncTarget', () => {
@@ -42,7 +46,7 @@ describe('syncTarget', () => {
     output: Schema.Any,
   });
 
-  const connector: ConnectorEntry = {
+  const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
@@ -74,7 +78,7 @@ describe('syncTarget', () => {
 
   const capabilities = () => {
     const manager = CapabilityManager.make({ registry: Registry.make() });
-    manager.contribute({ module: 'test', interface: Connector, implementation: [connector] });
+    manager.contribute({ module: 'test', interface: ConnectorSpec.Connector, implementation: [connector] });
     manager.contribute({
       module: 'test',
       interface: Capabilities.ServiceResolver,

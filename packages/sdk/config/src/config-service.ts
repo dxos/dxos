@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import { dirname } from 'node:path';
-import * as Yaml from 'yaml';
 
 import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
@@ -70,6 +69,9 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
     const defaultConfigPath = getProfileConfigPath(DX_CONFIG, args.profile);
     return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
+      // Loaded on demand: this node-side profile loader is exported from the browser barrel,
+      // and the yaml parser must not ride the app's static boot graph.
+      const Yaml = yield* Effect.promise(() => import('yaml'));
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
       const configContent = yield* fs.readFileString(configPath);
       const configValues = Yaml.parse(configContent);
@@ -78,6 +80,7 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
       // If the config file doesn't exist, create it.
       Effect.catchTag('SystemError', () =>
         Effect.gen(function* () {
+          const Yaml = yield* Effect.promise(() => import('yaml'));
           const configValues = defaultConfig.values;
           const fs = yield* FileSystem.FileSystem;
           const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);

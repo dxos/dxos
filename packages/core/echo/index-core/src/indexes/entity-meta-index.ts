@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import type * as Statement from '@effect/sql/Statement';
@@ -10,7 +11,9 @@ import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId, URI } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/entity-meta';
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
 
@@ -113,45 +116,20 @@ const buildSourceCondition = (
 };
 
 export class EntityMetaIndex implements Index {
-  migrate = Effect.fn('EntityMetaIndex.runMigrations')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    yield* sql`CREATE TABLE IF NOT EXISTS objectMeta (
-      recordId INTEGER PRIMARY KEY AUTOINCREMENT,
-      objectId TEXT NOT NULL,
-      queueId TEXT NOT NULL DEFAULT '',
-      queueNamespace TEXT NOT NULL DEFAULT '',
-      spaceId TEXT NOT NULL,
-      documentId TEXT NOT NULL DEFAULT '',
-      entityKind TEXT NOT NULL,
-      typeDXN TEXT NOT NULL,
-      deleted INTEGER NOT NULL,
-      source TEXT,
-      target TEXT,
-      parent TEXT,
-      version INTEGER NOT NULL,
-      createdAt INTEGER,
-      updatedAt INTEGER
-    )`;
-
-    // Add `parent` column for tables created before it was introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
-    // Add timestamp columns for tables created before they were introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
-    // Add queueNamespace column for tables created before it was introduced.
-    yield* Effect.catchAll(
-      sql`ALTER TABLE objectMeta ADD COLUMN queueNamespace TEXT NOT NULL DEFAULT ''`,
-      () => Effect.void,
-    );
-
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_createdAt ON objectMeta(createdAt)`;
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('EntityMetaIndex.runMigrations')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   query = Effect.fn('EntityMetaIndex.query')(
     (

@@ -14,7 +14,10 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Settings, type Update } from '#types';
+
+import * as NativeCapabilities from '../../types/NativeCapabilities';
+import type * as Settings from '../../types/Settings';
+import type * as Update from '../../types/Update';
 
 export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
@@ -26,9 +29,13 @@ type UpdateActions = {
   onRelaunch: () => Promise<void>;
 };
 
-type UpdateRow = { description: string; button: ReactNode };
+type UpdateRow = {
+  description: string;
+  button: ReactNode;
+};
 
-export const NativeSettings = (_props: NativeSettingsProps) => {
+/** Update status comes from the update-manager capability, so this panel takes no settings props. */
+export const NativeSettings = () => {
   const { t } = useTranslation(meta.profile.key);
   const manager = useCapability(NativeCapabilities.UpdateManager);
   const status = useAtomValue(manager.status);

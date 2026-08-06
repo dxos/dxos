@@ -4,7 +4,8 @@
 
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
-import { type Plugin, type PluginManager } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import {
   Button,
   type ChromaticPalette,
@@ -141,7 +142,7 @@ export const PluginItem = ({
         gridCols,
         // Override `Listbox.Item`'s default row chrome (flex/items-center/padding/cursor) so the
         // bespoke card grid stretches both columns to full height and controls its own padding.
-        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 bg-modal-surface rounded-md overflow-hidden',
+        'items-stretch p-0 pe-2 cursor-default h-[14rem] w-full gap-3 dx-modal-surface rounded-md overflow-hidden',
       )}
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>

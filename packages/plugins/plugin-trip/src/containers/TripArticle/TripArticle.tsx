@@ -6,13 +6,14 @@ import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { MapInline } from '@dxos/plugin-map';
-import { MapCapabilities } from '@dxos/plugin-map/types';
+import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
+import * as MapRole from '@dxos/plugin-map/MapRole';
 import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -21,7 +22,11 @@ import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
 import { meta } from '#meta';
-import { Routing, RoutingOperation, Segment, Trip } from '#types';
+
+import * as Routing from '../../types/Routing';
+import * as RoutingOperation from '../../types/RoutingOperation';
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
   /** Start with the inline map surface visible (otherwise toggled via the toolbar). */
@@ -267,7 +272,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {/* Row 1: calendar + segment stack. */}
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] min-h-0 overflow-hidden'>
           <NaturalCalendar.Root>
-            <Panel.Root className='hidden @3xl:block border-r border-subdued-separator'>
+            <Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />
               </Panel.Toolbar>
@@ -298,7 +303,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface type={MapInline} data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

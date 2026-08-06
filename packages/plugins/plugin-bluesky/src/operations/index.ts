@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const BlueskyHandlers = OperationHandlerSet.lazy(
-  () => import('./get-bluesky-targets'),
-  () => import('./materialize-target'),
-  () => import('./sync'),
-);
+import { GetBlueskyTargets, MaterializeBlueskyTarget, SyncBlueskyTargets } from './definitions';
+
+export const BlueskyHandlers = OperationHandlerSet.lazy([
+  GetBlueskyTargets.pipe(Operation.lazyHandler(() => import('./get-bluesky-targets'))),
+  MaterializeBlueskyTarget.pipe(Operation.lazyHandler(() => import('./materialize-target'))),
+  SyncBlueskyTargets.pipe(Operation.lazyHandler(() => import('./sync'))),
+]);
 
 export * as BlueskyOperation from './definitions';

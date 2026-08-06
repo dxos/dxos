@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AgentIdentity, Operation } from '@dxos/compute';
+import * as AgentIdentity from '@dxos/compute/AgentIdentity';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { Branch } from '@dxos/versioning';
 
-import { MarkdownOperation } from '../types';
+import * as MarkdownOperation from '../types/MarkdownOperation';
 
 const handler: Operation.WithHandler<typeof MarkdownOperation.SuggestEdit> = MarkdownOperation.SuggestEdit.pipe(
   Operation.withHandler(

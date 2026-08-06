@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type Operation } from '@dxos/compute';
+import type * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 
-import { Connection, type ConnectorEntry } from '#types';
-
+import * as Connection from '../../types/Connection';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 import { ensureSyncTrigger } from '../../util';
 
 /**
@@ -22,7 +22,7 @@ import { ensureSyncTrigger } from '../../util';
 export const createSingleCursor = (
   invoker: Operation.OperationService,
   db: Database.Database,
-  connector: ConnectorEntry,
+  connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>

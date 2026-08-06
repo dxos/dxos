@@ -5,13 +5,14 @@
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { TriggerDispatcher } from '@dxos/compute-runtime';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { type Space } from '@dxos/react-client/echo';
 
 //
@@ -32,8 +33,8 @@ import { type Space } from '@dxos/react-client/echo';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const runtime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const client = yield* ClientCapabilities.Client;
+    const runtime = yield* Capabilities.ProcessManagerRuntime;
 
     /** Per-space property-subscription unsubscribe, last-seen disabled state, and in-flight transition fiber. */
     type Tracker = {
@@ -107,7 +108,7 @@ export default Capability.makeModule(
     const spacesSubscription = client.spaces.subscribe(installAll);
     installAll(client.spaces.get());
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         spacesSubscription.unsubscribe();
         for (const tracker of trackers.values()) {
@@ -119,5 +120,7 @@ export default Capability.makeModule(
         trackers.clear();
       }),
     );
+
+    return [];
   }),
 );

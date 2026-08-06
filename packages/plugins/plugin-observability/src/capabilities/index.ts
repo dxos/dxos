@@ -2,17 +2,83 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Effect from 'effect/Effect';
 
-import type { ClientReadyOptions } from './client-ready';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
-export const ClientReady = Capability.lazy<ClientReadyOptions>('ClientReady', () => import('./client-ready'));
-export const PrivacyNotice = Capability.lazy('PrivacyNotice', () => import('./privacy-notice'));
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+import * as ObservabilityCapabilities from '../types/ObservabilityCapabilities';
+import * as ObservabilityEvents from '../types/ObservabilityEvents';
+import * as ObservabilityOptions from '../types/ObservabilityOptions';
+
+export const ClientReady = Capability.lazyModule(
+  'ClientReady',
+  {
+    requires: [
+      Capabilities.PluginManager,
+      Capabilities.OperationInvoker,
+      ObservabilityCapabilities.ClientCapability,
+      ObservabilityCapabilities.Observability,
+      ObservabilityCapabilities.State,
+    ],
+    provides: [],
+    // Reads `client.services` (initialized-only) to wire metrics providers, so it needs the
+    // forked client initialization to have completed.
+    activatesOn: ObservabilityCapabilities.ClientInitialized,
+  },
+  () => import('./client-ready'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const ObservabilitySettings = Capability.lazy('ObservabilitySettings', () => import('./settings'));
-export const ObservabilityState = Capability.lazy('ObservabilityState', () => import('./state'));
+export const PrivacyNotice = Capability.lazyModule(
+  'PrivacyNotice',
+  {
+    requires: [
+      Capabilities.OperationInvoker,
+      Capabilities.AtomRegistry,
+      ObservabilityCapabilities.State,
+      ObservabilityCapabilities.ClientCapability,
+    ],
+    provides: [],
+    // Genuine runtime event: fired imperatively by `plugin-client`'s create-identity operation
+    // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
+    activatesOn: ObservabilityEvents.IdentityCreatedEvent,
+  },
+  () => import('./privacy-notice'),
+);
+export const Namespace = Capability.inlineModule(
+  'namespace',
+  {
+    provides: [ObservabilityCapabilities.Namespace],
+    props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
+  },
+  (namespace) => Effect.succeed([Capability.contribute(ObservabilityCapabilities.Namespace, namespace)]),
+);
+export const Observability = Capability.inlineModule(
+  'observability',
+  {
+    provides: [ObservabilityCapabilities.Observability],
+    props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
+  },
+  (observability) =>
+    Effect.gen(function* () {
+      const obs = yield* Effect.tryPromise(() => observability());
+      yield* Effect.addFinalizer(() => obs.close());
+      return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
+    }),
+);
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: ['org.dxos.role.article'],
+});
+export const ObservabilitySettings = AppCapability.settings(() => import('./settings'), {
+  provides: [ObservabilityCapabilities.Settings],
+});
+export const ObservabilityState = Capability.lazyModule(
+  'ObservabilityState',
+  {
+    requires: [Capabilities.AtomRegistry],
+    provides: [ObservabilityCapabilities.State],
+    props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
+  },
+  () => import('./state'),
+);

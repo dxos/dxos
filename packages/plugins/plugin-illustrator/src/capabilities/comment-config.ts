@@ -4,17 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 
-import { Drawing } from '#types';
+import * as Drawing from '../types/Drawing';
 
 const activate = Effect.fnUntraced(function* () {
-  return Capability.contributes(AppCapabilities.CommentConfig, {
-    id: Type.getTypename(Drawing.Drawing),
-    comments: 'unanchored',
-  });
+  return [
+    Capability.contribute(AppCapabilities.CommentConfig, {
+      id: Type.getTypename(Drawing.Drawing),
+      comments: 'unanchored',
+    }),
+  ];
 });
 
 export default activate;

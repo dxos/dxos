@@ -9,15 +9,14 @@ import { expect, screen, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
-import { Calendar } from '@dxos/plugin-inbox/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -29,7 +28,7 @@ import { TagIndex, Text } from '@dxos/schema';
 import { Actor, AnchoredTo, Event, Transcript } from '@dxos/types';
 
 import { MeetingPlugin } from '../MeetingPlugin';
-import { Meeting } from '../types';
+import * as Meeting from '../types/Meeting';
 
 type StoryArgs = {
   /** Seed a Meeting already linked to the event (toolbar shows "Open meeting"); otherwise "Create meeting". */
@@ -84,7 +83,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

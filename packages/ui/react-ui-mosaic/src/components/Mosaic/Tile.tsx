@@ -17,7 +17,6 @@ import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/elemen
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
@@ -42,34 +41,12 @@ import {
   sizeStyle,
 } from '@dxos/react-ui-dnd';
 
-import { useMosaicContainerContext } from './Container';
+import { useMosaicContainerContext } from './MosaicContainerContext';
+import { MOSAIC_TILE_NAME, MosaicTileContextProvider, type MosaicTileState } from './MosaicTileContext';
 
 //
 // Tile
 //
-
-const MOSAIC_TILE_NAME = 'Mosaic.Tile';
-
-type MosaicTileState =
-  | { type: 'idle' }
-  | { type: 'preview'; container: HTMLElement; rect: DOMRect }
-  | { type: 'dragging' }
-  | { type: 'target'; closestEdge: Edge | null };
-
-type MosaicTileContextValue = {
-  state: MosaicTileState;
-  /** Register the element that initiates dragging; set by a child `Mosaic.DragHandle`. */
-  setDragHandle: (element: HTMLElement | null) => void;
-  /** Current extent (rem) during/after resize; undefined when the tile is not sized. */
-  size?: Size;
-  /** Update the tile extent. A `commit` (drop) propagates to the consumer's `onSizeChange`. */
-  setSize: (size: Size, commit?: boolean) => void;
-  /** Resize bounds (rem) declared by the tile; consumed by `Mosaic.ResizeHandle`. */
-  minSize?: number;
-  maxSize?: number;
-};
-
-const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTileContextValue>('MosaicTile');
 
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
@@ -352,6 +329,6 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
 
 MosaicTile.displayName = MOSAIC_TILE_NAME;
 
-export { MosaicTile, useMosaicTileContext };
+export { MosaicTile };
 
-export type { MosaicTileProps, MosaicTileState };
+export type { MosaicTileProps };

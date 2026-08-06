@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-wnfs",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "WNFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,11 +43,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -66,9 +61,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./WnfsCapabilities": {
+      "source": "./src/types/WnfsCapabilities.ts",
+      "types": "./dist/types/src/types/WnfsCapabilities.d.ts",
+      "import": "./dist/lib/WnfsCapabilities.mjs"
+    },
+    "./WnfsEvents": {
+      "source": "./src/types/WnfsEvents.ts",
+      "types": "./dist/types/src/types/WnfsEvents.d.ts",
+      "import": "./dist/lib/WnfsEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "WnfsCapabilities": [
+        "dist/types/src/types/WnfsCapabilities.d.ts"
+      ],
+      "WnfsEvents": [
+        "dist/types/src/types/WnfsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -49,7 +49,7 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
           <div className='p-form-chrome'>
             <Message.Root valence='error'>
               {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
-              <Message.Content>{error instanceof Error ? error.message : String(error)}</Message.Content>
+              <Message.Body>{error instanceof Error ? error.message : String(error)}</Message.Body>
             </Message.Root>
           </div>
         )}

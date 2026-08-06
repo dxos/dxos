@@ -6,7 +6,8 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -18,8 +19,10 @@ import { Menu } from '@dxos/react-ui-menu';
 
 import { useVisibleMagazinePosts } from '#atoms';
 import { meta } from '#meta';
-import { FeedOperation, Magazine, Subscription } from '#types';
 
+import * as FeedOperation from '../../types/FeedOperation';
+import * as Magazine from '../../types/Magazine';
+import * as Subscription from '../../types/Subscription';
 import { MagazineTile } from './MagazineTile';
 import { useToolbar } from './useToolbar';
 

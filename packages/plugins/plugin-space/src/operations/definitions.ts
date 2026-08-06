@@ -4,18 +4,19 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, DXN, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
 
-// Direct module import: the `../types` barrel re-exports `capabilities.ts`, which pulls React UI
-// into any worker bundle that registers these operations.
-import { SpaceForm } from '../types/types';
+// `Module` suffix because the client's `SpaceSchema` (the Space entity schema) already holds the
+// bare name in this file.
+import * as SpaceSchemaModule from '../types/SpaceSchema';
 
 const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
@@ -46,7 +47,7 @@ export namespace SpaceOperation {
       icon: 'ph--plus--regular',
     },
     services: [Capability.Service, Plugin.Service],
-    input: SpaceForm,
+    input: SpaceSchemaModule.SpaceForm,
     output: Schema.Struct({
       id: Schema.String,
       subject: Schema.Array(Schema.String),

@@ -14,7 +14,8 @@ import { FundamentalsPanel, TradingViewChart } from '#components';
 
 import { meta } from '../../meta';
 import { resolveTradingViewSymbol } from '../../services';
-import { type Ibkr, IbkrOperation } from '../../types';
+import type * as Ibkr from '../../types/Ibkr';
+import * as IbkrOperation from '../../types/IbkrOperation';
 
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrument>;
 
@@ -58,7 +59,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
     <Panel.Root role={role}>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport className='p-4 space-y-4'>
+          <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root fullWidth border={false}>
               <Card.Header>
                 <Card.Block />

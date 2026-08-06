@@ -14,7 +14,9 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
-    types: 'src/types/index.ts',
+    Terra: 'src/types/Terra.ts',
+    TerraCapabilities: 'src/types/TerraCapabilities.ts',
+    TerraObject: 'src/types/TerraObject.ts',
   },
   jsx: 'react',
   // The Objects story generates a full planet + object sim (~30s under CI load, observed at

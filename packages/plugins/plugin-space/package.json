@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-space",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -67,11 +67,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -80,26 +75,57 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./plugin": {
-      "source": "./src/plugin.ts",
-      "types": "./dist/types/src/plugin.d.ts",
-      "import": "./dist/lib/plugin.mjs"
+    "./SpaceCapabilities": {
+      "source": "./src/types/SpaceCapabilities.ts",
+      "types": "./dist/types/src/types/SpaceCapabilities.d.ts",
+      "import": "./dist/lib/SpaceCapabilities.mjs"
     },
+    "./SpaceCapability": {
+      "source": "./src/types/SpaceCapability.ts",
+      "types": "./dist/types/src/types/SpaceCapability.d.ts",
+      "import": "./dist/lib/SpaceCapability.mjs"
+    },
+    "./SpaceEvents": {
+      "source": "./src/types/SpaceEvents.ts",
+      "types": "./dist/types/src/types/SpaceEvents.d.ts",
+      "import": "./dist/lib/SpaceEvents.mjs"
+    },
+    "./SpaceForm": {
+      "source": "./src/types/SpaceForm.ts",
+      "types": "./dist/types/src/types/SpaceForm.d.ts",
+      "import": "./dist/lib/SpaceForm.mjs"
+    },
+    "./SpaceSchema": {
+      "source": "./src/types/SpaceSchema.ts",
+      "types": "./dist/types/src/types/SpaceSchema.d.ts",
+      "import": "./dist/lib/SpaceSchema.mjs"
+    },
+    "./SpaceSurface": {
+      "source": "./src/types/SpaceSurface.ts",
+      "types": "./dist/types/src/types/SpaceSurface.d.ts",
+      "import": "./dist/lib/SpaceSurface.mjs"
+    },
+    "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
       "import": "./dist/lib/components.mjs"
+    },
+    "./constants": {
+      "source": "./src/constants.ts",
+      "types": "./dist/types/src/constants.d.ts",
+      "import": "./dist/lib/constants.mjs"
     },
     "./containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
       "import": "./dist/lib/containers.mjs"
     },
-    "./constants": {
-      "source": "./src/constants.ts",
-      "types": "./dist/types/src/constants.d.ts",
-      "import": "./dist/lib/constants.mjs"
+    "./package.json": "./package.json",
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "import": "./dist/lib/plugin.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
@@ -110,14 +136,31 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SpaceCapabilities": [
+        "dist/types/src/types/SpaceCapabilities.d.ts"
+      ],
+      "SpaceCapability": [
+        "dist/types/src/types/SpaceCapability.d.ts"
+      ],
+      "SpaceEvents": [
+        "dist/types/src/types/SpaceEvents.d.ts"
+      ],
+      "SpaceForm": [
+        "dist/types/src/types/SpaceForm.d.ts"
+      ],
+      "SpaceSchema": [
+        "dist/types/src/types/SpaceSchema.d.ts"
+      ],
+      "SpaceSurface": [
+        "dist/types/src/types/SpaceSurface.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -126,6 +169,7 @@
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/cli-util": "workspace:*",
@@ -146,6 +190,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/migrations": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

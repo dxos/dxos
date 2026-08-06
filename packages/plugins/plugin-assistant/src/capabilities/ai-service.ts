@@ -7,14 +7,16 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiModelResolver, AiService, Provider } from '@dxos/ai';
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Credential, LayerSpec } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Credential from '@dxos/compute/Credential';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 
-import type { AssistantPluginOptions } from '#types';
+import * as AssistantOptions from '../types/AssistantOptions';
 
-export default Capability.makeModule<AssistantPluginOptions | void, Capability.Any[]>(
-  Effect.fnUntraced(function* (options) {
+export default Capability.makeModule(
+  Effect.fnUntraced(function* (options: AssistantOptions.AssistantPluginOptions | void) {
     const resolvers = yield* Capability.getAll(AppCapabilities.AiModelResolver);
 
     // TODO(dmaretskyi): Extract function to reduce them.
@@ -46,6 +48,6 @@ export default Capability.makeModule<AssistantPluginOptions | void, Capability.A
       () => aiServiceLayer,
     );
 
-    return [Capability.contributes(Capabilities.LayerSpec, aiServiceSpec)];
+    return Capability.contribute(Capabilities.LayerSpec, aiServiceSpec);
   }),
 );
