@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-deck",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -52,11 +52,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -65,7 +60,33 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
+    "./DeckCapabilities": {
+      "source": "./src/types/DeckCapabilities.ts",
+      "types": "./dist/types/src/types/DeckCapabilities.d.ts",
+      "import": "./dist/lib/DeckCapabilities.mjs"
+    },
+    "./DeckOperation": {
+      "source": "./src/types/DeckOperation.ts",
+      "types": "./dist/types/src/types/DeckOperation.d.ts",
+      "import": "./dist/lib/DeckOperation.mjs"
+    },
+    "./DeckRole": {
+      "source": "./src/types/DeckRole.ts",
+      "types": "./dist/types/src/types/DeckRole.d.ts",
+      "import": "./dist/lib/DeckRole.mjs"
+    },
+    "./DeckSchema": {
+      "source": "./src/types/DeckSchema.ts",
+      "types": "./dist/types/src/types/DeckSchema.d.ts",
+      "import": "./dist/lib/DeckSchema.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./package.json": "./package.json",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
@@ -78,6 +99,25 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "DeckCapabilities": [
+        "dist/types/src/types/DeckCapabilities.d.ts"
+      ],
+      "DeckOperation": [
+        "dist/types/src/types/DeckOperation.d.ts"
+      ],
+      "DeckRole": [
+        "dist/types/src/types/DeckRole.d.ts"
+      ],
+      "DeckSchema": [
+        "dist/types/src/types/DeckSchema.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

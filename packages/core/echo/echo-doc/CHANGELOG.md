@@ -1,5 +1,15 @@
 # @dxos/echo-doc
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

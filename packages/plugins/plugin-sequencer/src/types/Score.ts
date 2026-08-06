@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 

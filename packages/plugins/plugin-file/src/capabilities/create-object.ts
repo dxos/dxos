@@ -4,18 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { File } from '@dxos/types';
 
-import { File, FileAction, FileOperation } from '#types';
+import * as FileCapabilities from '../types/FileCapabilities';
+import * as FileOperation from '../types/FileOperation';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(File.File),
-      inputSchema: FileAction.CreateFileSchema,
+      inputSchema: FileCapabilities.FileAction.CreateFileSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {
           const { object } = yield* Operation.invoke(FileOperation.Create, { ...props, db: options.db });

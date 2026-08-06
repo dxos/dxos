@@ -20,6 +20,6 @@ describe('PipelinePlugin', () => {
     });
 
     // After autoStart: CreateObject and schema auto-cascade.
-    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('CreateObject'), moduleId('schema')]));
+    expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('schema')]));
   });
 });

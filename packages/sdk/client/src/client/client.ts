@@ -20,7 +20,7 @@ import { Config, SaveConfig, resolveTelemetryTag } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Blob, type Hypergraph, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient } from '@dxos/edge-client/http';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -103,6 +103,9 @@ export class Client {
   private _services?: ClientServicesProvider;
 
   private _initialized = false;
+
+  /** Resolves when `initialize()` completes, so consumers can suspend on a forked init. */
+  private readonly _initializedTrigger = new Trigger();
 
   private _resetting = false;
 
@@ -192,6 +195,18 @@ export class Client {
    */
   get initialized() {
     return this._initialized;
+  }
+
+  /**
+   * Resolves once `initialize()` has completed. Waits indefinitely unless `timeout` is given, in
+   * which case it rejects with `TimeoutError` — opt-in because most consumers only want the
+   * completion signal, and bounding the session is the caller's job (see the app entry point).
+   *
+   * This is the completion signal, not the error channel: a failing `initialize()` rejects at its
+   * own call site, and this promise stays pending.
+   */
+  waitUntilInitialized({ timeout }: { timeout?: number } = {}): Promise<void> {
+    return this._initializedTrigger.wait({ timeout });
   }
 
   /**
@@ -355,6 +370,7 @@ export class Client {
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services');
     const { Runtime } = await import('@dxos/protocols/proto/dxos/config');
+    performance.mark('client.initialize:imports-loaded');
     log('client.initialize: imports loaded');
 
     this._ctx = new Context();
@@ -395,6 +411,7 @@ export class Client {
         createOpfsWorker: this._options.createOpfsWorker,
         sqlitePath: this._options.sqlitePath, // TODO(dmaretskyi): Remove and derive from dataRoot in config.
       }));
+    performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
@@ -402,6 +419,7 @@ export class Client {
     this._shellManager = this._iframeManager ? new ShellManager(this._iframeManager) : undefined;
     log('client.initialize: opening client');
     await this._open(this._ctx);
+    performance.mark('client.initialize:opened');
     log('client.initialize: client opened');
     invariant(this._runtime, 'Client runtime initialization failed.');
 
@@ -414,6 +432,7 @@ export class Client {
     }
 
     this._initialized = true;
+    this._initializedTrigger.wake();
     performance.mark('client.initialize:completed');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
@@ -615,6 +634,10 @@ export class Client {
     await this._ctx.dispose();
 
     this._initialized = false;
+    // Back to WAITING alongside `_initialized`: leaving the trigger resolved makes
+    // `waitUntilInitialized()` resolve for a client that is not initialized, which spins
+    // `useClient` — it throws an already-settled promise, React retries, and it suspends again.
+    this._initializedTrigger.reset();
   }
 
   async [Symbol.asyncDispose]() {

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-transcription",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Voice transcription.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -67,11 +67,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -81,33 +76,70 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
-    },
     "./components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
       "import": "./dist/lib/components.mjs"
+    },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "import": "./dist/lib/operations.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "import": "./dist/lib/plugin.mjs"
     },
+    "./skills": {
+      "source": "./src/skills/index.ts",
+      "types": "./dist/types/src/skills/index.d.ts",
+      "import": "./dist/lib/skills.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    }
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./TranscriptionCapabilities": {
+      "source": "./src/types/TranscriptionCapabilities.ts",
+      "types": "./dist/types/src/types/TranscriptionCapabilities.d.ts",
+      "import": "./dist/lib/TranscriptionCapabilities.mjs"
+    },
+    "./TranscriptionEvents": {
+      "source": "./src/types/TranscriptionEvents.ts",
+      "types": "./dist/types/src/types/TranscriptionEvents.d.ts",
+      "import": "./dist/lib/TranscriptionEvents.mjs"
+    },
+    "./TranscriptOperation": {
+      "source": "./src/types/TranscriptOperation.ts",
+      "types": "./dist/types/src/types/TranscriptOperation.d.ts",
+      "import": "./dist/lib/TranscriptOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "TranscriptionCapabilities": [
+        "dist/types/src/types/TranscriptionCapabilities.d.ts"
+      ],
+      "TranscriptionEvents": [
+        "dist/types/src/types/TranscriptionEvents.d.ts"
+      ],
+      "TranscriptOperation": [
+        "dist/types/src/types/TranscriptOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

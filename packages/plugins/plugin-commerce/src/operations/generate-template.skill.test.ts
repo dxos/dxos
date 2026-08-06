@@ -10,14 +10,14 @@ import { vi } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
 import { SearchOperationHandlerSet } from '../operations';
 import { ProviderSkill } from '../skills';
-import { Provider } from '../types';
+import * as Provider from '../types/Provider';
 import { extractResults } from '../util';
 
 // Cleaned capture of a real AutoTrader UK results page (raw save is gitignored). The mocked edge

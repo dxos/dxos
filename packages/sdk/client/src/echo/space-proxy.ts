@@ -25,7 +25,7 @@ import {
   SpaceProperties,
 } from '@dxos/client-protocol';
 import { Context, cancelWithContext } from '@dxos/context';
-import { type SpecificCredential, checkCredentialType } from '@dxos/credentials';
+import { type SpecificCredential, checkCredentialType } from '@dxos/credentials/assertions';
 import {
   type CustomInspectable,
   type CustomInspectFunction,

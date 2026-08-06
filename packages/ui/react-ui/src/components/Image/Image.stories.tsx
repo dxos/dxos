@@ -41,13 +41,13 @@ export const Default: Story = {
 const classNames = 'h-[12rem] w-[18rem]';
 
 /**
- * Access to image at 'https://dxos.network/dxos-logotype-blue.png'
+ * Access to image at 'https://media.dxos.network/dxos-logotype-blue.png'
  * from origin 'http://localhost:9009' has been blocked by CORS policy:
  * No 'Access-Control-Allow-Origin' header is present on the requested resource.
  */
 export const Cors: Story = {
   args: {
-    src: 'https://dxos.network/dxos-logotype-blue.png',
+    src: 'https://media.dxos.network/dxos-logotype-blue.png',
     classNames,
   },
 };
@@ -61,14 +61,14 @@ export const Corners: Story = {
 
 export const SVG: Story = {
   args: {
-    src: 'https://dxos.network/bg-kube.svg',
+    src: 'https://media.dxos.network/bg-kube.svg',
     classNames,
   },
 };
 
 export const Many: Story = {
   args: {
-    src: 'https://dxos.network/bg-kube.svg',
+    src: 'https://media.dxos.network/bg-kube.svg',
   },
   render: () => {
     const images = useMemo(

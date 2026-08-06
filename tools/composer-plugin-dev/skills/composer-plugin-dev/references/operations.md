@@ -60,16 +60,19 @@ export default handler;
 ## Barrel (`src/operations/index.ts`)
 
 ```ts
-import { OperationHandlerSet } from '@dxos/operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-const Handlers = OperationHandlerSet.lazy(
-  () => import('./create'),
-  () => import('./move'),
-);
+import * as FooOperation from '../types/FooOperation';
 
-export { Create, Move } from './definitions';
-export const FooHandlers = Handlers;
+export const FooOperationHandlerSet = OperationHandlerSet.lazy([
+  FooOperation.Create.pipe(Operation.lazyHandler(() => import('./create'))),
+  FooOperation.Move.pipe(Operation.lazyHandler(() => import('./move'))),
+]);
 ```
+
+`keyed` pairs each DEFINITION with its loader, so the set is a definition -> loader map with a thin
+closure: the operation registry is complete at boot while each handler's body still loads on first
+invocation. The deferral axis is the operation, not the module.
 
 Why two layers? Definitions are imported by **anyone** (UI, skills, CLI, tests) and must stay light. Handlers contain the heavy code path (HTTP, AI, DB writes) and are loaded lazily only when invoked.
 
@@ -85,7 +88,7 @@ import { FooHandlers } from '#operations';
 
 export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, FooHandlers);
+    return Capability.contribute(Capabilities.OperationHandler, FooHandlers);
   }),
 );
 ```

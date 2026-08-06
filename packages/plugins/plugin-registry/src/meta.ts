@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { GraphPath } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { DXN } from '@dxos/keys';
 
 import config from '../dx.config';

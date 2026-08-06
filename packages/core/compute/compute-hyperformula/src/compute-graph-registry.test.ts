@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 

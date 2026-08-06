@@ -8,7 +8,7 @@ import { Context as DxContext } from '@dxos/context';
 import { type Key } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 
-import { type ConnectorEntry } from '#types';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 
 /**
  * Parses `postMessage` payload from the OAuth relay into a narrow result.
@@ -41,7 +41,7 @@ export const decodeOAuthMessageData = (
 export const initiateOAuthFlow = (
   edge: EdgeHttpClient,
   spaceId: Key.SpaceId,
-  oauth: NonNullable<ConnectorEntry['oauth']>,
+  oauth: NonNullable<ConnectorSpec.ConnectorEntry['oauth']>,
   accessTokenId: string,
   loginHint: string | undefined,
 ): Effect.Effect<{ authUrl: string }, Error> =>

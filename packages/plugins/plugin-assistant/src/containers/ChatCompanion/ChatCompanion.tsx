@@ -6,11 +6,12 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
-import { Project, Skill } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
+import * as Skill from '@dxos/compute/Skill';
 import { Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -18,8 +19,8 @@ import { useRegistry } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { useContextBinder } from '#hooks';
-import { AssistantOperation } from '#types';
 
+import * as AssistantOperation from '../../types/AssistantOperation';
 import ChatArticle from '../ChatArticle';
 
 export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;

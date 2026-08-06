@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-devtools",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "DXOS developer inspector plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -43,11 +43,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -66,9 +61,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Devtools": {
+      "source": "./src/types/Devtools.ts",
+      "types": "./dist/types/src/types/Devtools.d.ts",
+      "import": "./dist/lib/Devtools.mjs"
+    },
+    "./DevtoolsEvents": {
+      "source": "./src/types/DevtoolsEvents.ts",
+      "types": "./dist/types/src/types/DevtoolsEvents.d.ts",
+      "import": "./dist/lib/DevtoolsEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Devtools": [
+        "dist/types/src/types/Devtools.d.ts"
+      ],
+      "DevtoolsEvents": [
+        "dist/types/src/types/DevtoolsEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -79,6 +95,7 @@
     "@antv/graphlib": "catalog:",
     "@antv/layout": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",

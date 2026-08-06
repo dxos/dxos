@@ -4,14 +4,15 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Collection, Database, Ref, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { Connection } from '@dxos/plugin-connector/types';
+import * as Connection from '@dxos/plugin-connector/Connection';
 
 import { meta } from '#meta';
-import { Blog } from '#types';
+
+import * as Blog from '../types/Blog';
 
 const makeKey = (name: string) => DXN.make(`${meta.profile.key}.operation.${name}`);
 

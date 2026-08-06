@@ -7,7 +7,7 @@ import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { createPortal } from 'react-dom';
 import { useDropzone } from 'react-dropzone';
 
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { addLink } from '@dxos/ui-editor';
 
 export const IMAGE_FILES = ['.jpg', '.jpeg', '.png', '.gif'];

@@ -9,7 +9,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 
 /**
  * Read-only view + invocation surface for triggers registered on a remote

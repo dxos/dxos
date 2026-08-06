@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
-import { type Support, SupportOperation } from '../types';
+import type * as Support from '../types/Support';
+import * as SupportOperation from '../types/SupportOperation';
 
 const handler: Operation.WithHandler<typeof SupportOperation.ResolveTicket> = SupportOperation.ResolveTicket.pipe(
   Operation.withHandler(

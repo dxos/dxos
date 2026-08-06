@@ -204,6 +204,19 @@ export const runAndForwardErrors = async <A, E>(
 export const runPromise = runAndForwardErrors;
 
 /**
+ * Runs a fire-and-forget effect whose fiber may be interrupted by teardown (component unmount,
+ * plugin-manager shutdown): interruption-only exits are absorbed, while failures and defects
+ * still surface as unhandled rejections (via {@link unwrapExit}) so real bugs are not silenced.
+ */
+export const runDetached = <A, E>(effect: Effect.Effect<A, E, never>): void => {
+  void Effect.runPromiseExit(effect).then((exit) => {
+    if (Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause)) {
+      unwrapExit(exit);
+    }
+  });
+};
+
+/**
  * Runs the embedded effect asynchronously and throws any failures and defects as errors.
  */
 export const runInRuntime: {

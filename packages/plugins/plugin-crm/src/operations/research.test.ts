@@ -6,14 +6,15 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { CrmOperation, ProfileOf } from '../types';
+import * as CrmOperation from '../types/CrmOperation';
+import * as ProfileOf from '../types/ProfileOf';
 import { CrmOperationHandlerSet } from './index';
 
 const TestLayer = AssistantTestLayer({

@@ -8,7 +8,7 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { AnchorWidget, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
-import { type Assistant } from '../../types';
+import type * as Assistant from '../../types/Assistant';
 import { type BlockRenderer, type MessageThreadContext, applyToolBlockToWidgetState } from './sync';
 import {
   BranchWidget,

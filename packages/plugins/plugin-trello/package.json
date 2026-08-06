@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-trello",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "DXOS plugin that integrates Trello as a sync source via the generic Integration mechanism.",
   "homepage": "https://dxos.org",
@@ -38,11 +38,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -61,9 +56,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./TrelloEvents": {
+      "source": "./src/types/TrelloEvents.ts",
+      "types": "./dist/types/src/types/TrelloEvents.d.ts",
+      "import": "./dist/lib/TrelloEvents.mjs"
+    },
+    "./TrelloOperation": {
+      "source": "./src/types/TrelloOperation.ts",
+      "types": "./dist/types/src/types/TrelloOperation.d.ts",
+      "import": "./dist/lib/TrelloOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "TrelloEvents": [
+        "dist/types/src/types/TrelloEvents.d.ts"
+      ],
+      "TrelloOperation": [
+        "dist/types/src/types/TrelloOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

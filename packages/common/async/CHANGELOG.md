@@ -1,5 +1,16 @@
 # @dxos/async
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/context@0.11.1
+- @dxos/debug@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/node-std@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

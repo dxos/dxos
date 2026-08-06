@@ -14,6 +14,7 @@ export default defineConfig({
     meta: 'src/meta.ts',
     plugin: 'src/plugin.ts',
     translations: 'src/translations.ts',
+    ConductorEvents: 'src/types/ConductorEvents.ts',
   },
   jsx: 'react',
   test: { node: true, storybook: true },

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Query } from '@dxos/echo';
 
-import { type Magazine, Subscription } from '../types';
+import type * as Magazine from '../types/Magazine';
+import * as Subscription from '../types/Subscription';
 import { publishedTimestamp } from '../util/date';
 
 /**

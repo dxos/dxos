@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Database, Feed, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
@@ -18,9 +17,9 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { Builder } from '#testing';
-import { Calendar } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
+import * as Calendar from '../../types/Calendar';
 import { CalendarArticle } from './CalendarArticle';
 
 type StoryArgs = {
@@ -44,7 +43,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 0 } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

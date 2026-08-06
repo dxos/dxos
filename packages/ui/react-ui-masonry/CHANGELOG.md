@@ -1,5 +1,15 @@
 # @dxos/react-ui-masonry
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/echo-react@0.11.1
+- @dxos/react-hooks@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui-types@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

@@ -22,7 +22,11 @@ import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { Operation, Process, RunAgainError, Trigger, TriggerEvent } from '@dxos/compute';
+import { RunAgainError } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Entity, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { failedInvariant, invariant } from '@dxos/invariant';

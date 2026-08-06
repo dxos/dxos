@@ -4,11 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 
 import { generateModel } from '../models';
-import { Voxel, VoxelOperation } from '../types';
+import * as Voxel from '../types/Voxel';
+import * as VoxelOperation from '../types/VoxelOperation';
 
 const handler: Operation.WithHandler<typeof VoxelOperation.GenerateShape> = VoxelOperation.GenerateShape.pipe(
   Operation.withHandler(

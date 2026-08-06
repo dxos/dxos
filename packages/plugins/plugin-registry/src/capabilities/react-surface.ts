@@ -5,7 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { type ComponentProps } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
@@ -23,7 +25,7 @@ import { RegistryCategoryArticle } from './RegistryCategoryArticle';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'bundled',
         filter: AppSurface.literal(AppSurface.Article, 'bundled'),

@@ -97,7 +97,7 @@ The `./cli` subpath is the **headless** entrypoint, intended to run under Node (
 - The browser variants of capability modules (e.g. the surface-rendering plugin).
 - `@dxos/plugin-client` main entrypoint — use `@dxos/plugin-client/cli` instead.
 
-A typical CLI plugin file is a stripped-down twin of the main plugin, omitting `addSurfaceModule` and `addSkillDefinitionModule` if the latter pulls UI:
+A typical CLI plugin file is a stripped-down twin of the main plugin, omitting the surface module and the skill-definition module if the latter pulls UI:
 
 ```ts
 // src/cli/plugin.ts

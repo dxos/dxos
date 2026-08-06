@@ -4,17 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
-import { Terra } from '#types';
+import * as Terra from '../types/Terra';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
+    return Capability.contribute(SpaceCapabilities.CreateObjectEntry, {
       id: Type.getTypename(Terra.Terra),
       createObject: (props, options) =>
         Effect.gen(function* () {

@@ -9,8 +9,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { Tour } from '#types';
-
+import * as Tour from '../../types/Tour';
 import { Tooltip, floaterProps } from '../Tooltip';
 
 const addStepClass = (target: string | HTMLElement) => {

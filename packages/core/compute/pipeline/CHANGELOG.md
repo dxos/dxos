@@ -1,5 +1,13 @@
 # @dxos/pipeline
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/invariant@0.11.1
+- @dxos/log@0.11.1
+- @dxos/progress@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

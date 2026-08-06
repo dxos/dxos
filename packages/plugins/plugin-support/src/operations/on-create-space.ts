@@ -4,10 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 
-import { SupportOperation } from '#types';
+import * as SupportOperation from '../types/SupportOperation';
 
 const handler: Operation.WithHandler<typeof SupportOperation.OnCreateSpace> = SupportOperation.OnCreateSpace.pipe(
   Operation.withHandler(

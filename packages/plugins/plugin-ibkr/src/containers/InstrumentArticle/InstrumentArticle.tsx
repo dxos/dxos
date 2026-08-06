@@ -14,7 +14,8 @@ import { FundamentalsPanel, TradingViewChart } from '#components';
 
 import { meta } from '../../meta';
 import { resolveTradingViewSymbol } from '../../services';
-import { type Ibkr, IbkrOperation } from '../../types';
+import type * as Ibkr from '../../types/Ibkr';
+import * as IbkrOperation from '../../types/IbkrOperation';
 
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrument>;
 

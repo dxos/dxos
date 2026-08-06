@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-library",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Reading-list plugin backed by the BookHive catalog.",
   "homepage": "https://dxos.org",
@@ -43,11 +43,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "exports": {
@@ -66,11 +61,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/neutral/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

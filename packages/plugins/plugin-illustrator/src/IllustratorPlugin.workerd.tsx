@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { meta } from '#meta';
-import { Drawing } from '#types';
+
+import * as Drawing from './types/Drawing';
 
 export const IllustratorPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Drawing.Drawing, Drawing.Canvas] }),
+  Plugin.addModule(AppCapability.schema([Drawing.Drawing, Drawing.Canvas])),
   Plugin.make,
 );
 

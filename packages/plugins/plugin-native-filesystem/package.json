@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-native-filesystem",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Composer plugin for native filesystem access via Tauri.",
   "homepage": "https://dxos.org",
@@ -48,11 +48,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -71,9 +66,38 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./NativeFilesystemCapabilities": {
+      "source": "./src/types/NativeFilesystemCapabilities.ts",
+      "types": "./dist/types/src/types/NativeFilesystemCapabilities.d.ts",
+      "import": "./dist/lib/NativeFilesystemCapabilities.mjs"
+    },
+    "./NativeFilesystemEvents": {
+      "source": "./src/types/NativeFilesystemEvents.ts",
+      "types": "./dist/types/src/types/NativeFilesystemEvents.d.ts",
+      "import": "./dist/lib/NativeFilesystemEvents.mjs"
+    },
+    "./NativeFilesystemOperation": {
+      "source": "./src/types/NativeFilesystemOperation.ts",
+      "types": "./dist/types/src/types/NativeFilesystemOperation.d.ts",
+      "import": "./dist/lib/NativeFilesystemOperation.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "NativeFilesystemCapabilities": [
+        "dist/types/src/types/NativeFilesystemCapabilities.d.ts"
+      ],
+      "NativeFilesystemEvents": [
+        "dist/types/src/types/NativeFilesystemEvents.d.ts"
+      ],
+      "NativeFilesystemOperation": [
+        "dist/types/src/types/NativeFilesystemOperation.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -2,8 +2,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as Operation from '@dxos/compute/Operation';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { SpaceOperation } from './definitions';
 

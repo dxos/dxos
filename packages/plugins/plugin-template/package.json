@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-template",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Template for new plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -37,11 +37,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -49,6 +44,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
+    },
+    "./Template": {
+      "source": "./src/types/Template.ts",
+      "types": "./dist/types/src/types/Template.d.ts",
+      "import": "./dist/lib/Template.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
@@ -62,6 +62,13 @@
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Template": [
+        "dist/types/src/types/Template.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

@@ -2,17 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 
-const Layout = Capability.lazy('Layout', () => import('./Layout'));
+const Layout = Capability.lazyModule('Layout', { provides: [Capabilities.ReactRoot] }, () => import('./Layout'));
 
 const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.test.layout'), name: 'Layout' });
 
-export const LayoutPlugin = Plugin.define(meta).pipe(
-  Plugin.addModule({
-    activatesOn: ActivationEvents.Startup,
-    activate: Layout,
-  }),
-  Plugin.make,
-);
+export const LayoutPlugin = Plugin.define(meta).pipe(Plugin.addModule(Layout), Plugin.make);

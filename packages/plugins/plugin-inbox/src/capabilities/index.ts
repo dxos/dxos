@@ -2,21 +2,64 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/compute';
+import * as Effect from 'effect/Effect';
 
-export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
-export const SkillDefinition = Capability.lazy('SkillDefinition', () => import('./skill-definition'));
-export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
-export const Connector = Capability.lazy('Connector', () => import('./connector'));
-export const IdentitySpecs = Capability.lazy('IdentitySpecs', () => import('./identity-specs'));
-export const NavigationTargetResolver = Capability.lazy(
-  'NavigationTargetResolver',
-  () => import('./navigation-target-resolver'),
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
+
+import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
+
+import * as InboxCapabilities from '../types/InboxCapabilities';
+
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'));
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object'));
+export const IdentitySpecs = Capability.lazyModule(
+  'IdentitySpecs',
+  { provides: [SpaceCapabilities.IdentitySpec] },
+  () => import('./identity-specs'),
 );
-export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
-  'OperationHandler',
-  () => import('./operation-handler'),
+export const Connector = Capability.lazyModule(
+  'Connector',
+  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
+  () => import('./connector'),
 );
-export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
-export const InboxSettings = Capability.lazy('InboxSettings', () => import('./settings'));
+export const ContactExtractor = Capability.inlineModule(
+  'contact-extractor',
+  { provides: [InboxCapabilities.ObjectExtractor] },
+  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)]),
+);
+export const SummarizeExtractor = Capability.inlineModule(
+  'summarize-extractor',
+  { provides: [InboxCapabilities.ObjectExtractor] },
+  () => Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)]),
+);
+export const NavigationTargetResolver = AppCapability.navigationResolver(() => import('./navigation-target-resolver'), {
+  requires: [ClientCapabilities.Client],
+  // Graph start, not the inbox's own: a deep link is resolved before any inbox surface exists,
+  // so gating this on the surface that the resolution leads to would never resolve.
+  activatesOn: ActivationEvents.Idle,
+});
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+  activatesOn: ActivationEvents.Idle,
+});
+export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+  roles: [
+    'org.dxos.role.article',
+    'org.dxos.role.cardContent',
+    'org.dxos.role.objectProperties',
+    'org.dxos.role.popover',
+    'org.dxos.role.related',
+    'org.dxos.role.section',
+  ],
+});
+export const InboxSettings = AppCapability.settings(() => import('./settings'), {
+  provides: [InboxCapabilities.Settings],
+  activatesOn: ActivationEvents.Idle,
+});

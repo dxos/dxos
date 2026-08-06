@@ -1,5 +1,59 @@
 # @dxos/plugin-space
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/async@0.11.1
+- @dxos/cli-util@0.11.1
+- @dxos/client@0.11.1
+- @dxos/client-protocol@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/context@0.11.1
+- @dxos/display-name@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-client@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/errors@0.11.1
+- @dxos/extractor@0.11.1
+- @dxos/halo@0.11.1
+- @dxos/halo-react@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/migrations@0.11.1
+- @dxos/protocols@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/react-ui-components@0.11.1
+- @dxos/react-ui-dashboard@0.11.1
+- @dxos/react-ui-dnd@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-masonry@0.11.1
+- @dxos/react-ui-menu@0.11.1
+- @dxos/react-ui-mosaic@0.11.1
+- @dxos/react-ui-pickers@0.11.1
+- @dxos/react-ui-search@0.11.1
+- @dxos/react-ui-table@0.11.1
+- @dxos/react-ui-tabs@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/shell@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/ui-types@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-attention@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-graph@0.11.1
+- @dxos/plugin-observability@0.11.1
+- @dxos/plugin-settings@0.11.1
+- @dxos/plugin-status-bar@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type LayoutOperation } from '@dxos/app-toolkit';
+import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
 /**
  * Adds a toast, replacing any live toast that shares its id. The toaster renders by `id` — it is the

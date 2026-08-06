@@ -5,13 +5,14 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { Jmap, JmapMail } from '../../../../apis';
 import { JmapApiError, JmapSendIdentityNotFoundError, JmapSendMessageInvalidError } from '../../../../errors';
 import { JmapCredentials } from '../../../../services';
-import { InboxOperation, SystemTags } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
+import * as SystemTags from '../../../../types/SystemTags';
 
 const MAIL_ACCOUNT_CAPABILITY = 'urn:ietf:params:jmap:mail';
 

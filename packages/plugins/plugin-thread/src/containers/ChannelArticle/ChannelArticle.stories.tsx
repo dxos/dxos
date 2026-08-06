@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -50,7 +50,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       capabilities: [
-        Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message]),
+        Capability.contribute(AppCapabilities.Schema, [Channel.Channel, Feed.Feed, Thread.Thread, Message.Message]),
       ],
       plugins: [
         ...corePlugins(),

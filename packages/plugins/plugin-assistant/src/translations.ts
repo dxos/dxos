@@ -3,7 +3,8 @@
 //
 
 import { Agent, Chat, McpServer } from '@dxos/assistant-toolkit';
-import { Instructions, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';

@@ -6,15 +6,61 @@ import { Atom, type Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 
-import { invariant } from '@dxos/invariant';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 import type * as Capability from './capability';
+import { ContributionTypeId } from './capability';
+import { CapabilityNotFoundError } from './errors';
 
 type CapabilityEntry<T> = {
   moduleId: string;
   implementation: T;
 };
+
+//
+// Contribution ingestion — manager-side machinery for a module's activate result. Lives here
+// rather than in `capability` so the authoring namespace exposes only the plugin-author API.
+//
+
+/**
+ * Type guard to check if a value is a {@link Capability.Contribution}.
+ */
+export const isContribution = (value: unknown): value is Capability.AnyContribution => {
+  return typeof value === 'object' && value !== null && ContributionTypeId in value;
+};
+
+/**
+ * Normalizes a module activate result into a flat list of items (legacy capabilities and
+ * typed contributions).
+ */
+export const normalizeActivateResult = (
+  result: Capability.ModuleReturn | Capability.AnyContribution | readonly Capability.AnyContribution[],
+): Array<Capability.Any | Capability.AnyContribution> => {
+  if (result == null) {
+    return [];
+  }
+  // Cast: Array.isArray does not narrow the ReadonlyArray members of ModuleReturn.
+  return (Array.isArray(result) ? [...result] : [result]) as Array<Capability.Any | Capability.AnyContribution>;
+};
+
+/**
+ * Expands typed contributions into per-value capability entries; legacy capability entries
+ * pass through.
+ */
+export const expandContributions = (
+  items: ReadonlyArray<Capability.Any | Capability.AnyContribution>,
+): Capability.Any[] =>
+  items.flatMap((item) =>
+    isContribution(item)
+      ? item.values.map(
+          (value): Capability.Any => ({
+            interface: item.capability,
+            implementation: value,
+          }),
+        )
+      : [item],
+  );
 
 /**
  * Options for creating a capability manager.
@@ -58,13 +104,27 @@ export interface CapabilityManager {
    * Waits for a capability to be available.
    * @returns The capability.
    */
-  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T, Error>;
+  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T>;
+
+  /**
+   * Promise form of {@link waitFor}, memoized per interface so repeated calls return the SAME
+   * reference — React dedupes suspended renders by thrown-promise identity, so a fresh promise per
+   * render would re-suspend forever.
+   * @returns A promise settling once at least one capability is contributed.
+   */
+  waitForPromise<T>(interfaceDef: Capability.InterfaceDef<T>): Promise<T>;
 
   /**
    * Get capabilities grouped by the module that contributed them.
    * @returns An atom containing a record from module ID to capability implementations.
    */
   atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>>;
+
+  /**
+   * Live view over all contributions for a capability interface.
+   * Stable per interface: repeated calls return the same object.
+   */
+  contributions<T>(interfaceDef: Capability.InterfaceDef<T>): Capability.Contributions<T>;
 
   /**
    * Lists capability interface identifiers that currently have at least one contribution.
@@ -79,6 +139,11 @@ class CapabilityManagerImpl implements CapabilityManager {
   private readonly _registry: Registry.Registry;
 
   private readonly _registeredIdentifiers = new Set<string>();
+
+  private readonly _contributionsViews = new Map<string, Capability.Contributions<unknown>>();
+
+  /** In-flight {@link waitForPromise} results, keyed by interface identifier. */
+  private readonly _waitPromises = new Map<string, Promise<unknown>>();
 
   private readonly _capabilityEntries = Atom.family<string, Atom.Writable<CapabilityEntry<unknown>[]>>(() => {
     return Atom.make<CapabilityEntry<unknown>[]>([]).pipe(Atom.keepAlive);
@@ -105,7 +170,9 @@ class CapabilityManagerImpl implements CapabilityManager {
   readonly _capability = Atom.family<string, Atom.Atom<unknown>>((id: string) => {
     return Atom.make((get) => {
       const current = get(this._capabilities(id));
-      invariant(current.length > 0, `No capability found for ${id}`);
+      if (current.length === 0) {
+        throw new CapabilityNotFoundError({ identifier: id, registered: this.listRegisteredIdentifiers() });
+      }
       return current[0];
     });
   });
@@ -174,7 +241,10 @@ class CapabilityManagerImpl implements CapabilityManager {
         requested: interfaceDef.identifier,
         registered: this.listRegisteredIdentifiers(),
       });
-      invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
+      throw new CapabilityNotFoundError({
+        identifier: interfaceDef.identifier,
+        registered: this.listRegisteredIdentifiers(),
+      });
     }
     return capabilities[0];
   }
@@ -183,14 +253,14 @@ class CapabilityManagerImpl implements CapabilityManager {
     return [...this._registeredIdentifiers].sort();
   }
 
-  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T, Error> {
+  waitFor<T>(interfaceDef: Capability.InterfaceDef<T>): Effect.Effect<T> {
     return Effect.gen(this, function* () {
       const [capability] = this.getAll(interfaceDef);
       if (capability) {
         return capability;
       }
 
-      const deferred = yield* Deferred.make<T, Error>();
+      const deferred = yield* Deferred.make<T>();
       const cancel = this._registry.subscribe(this.atom(interfaceDef), (capabilities) => {
         if (capabilities.length > 0) {
           Effect.runSync(Deferred.succeed(deferred, capabilities[0]));
@@ -202,8 +272,39 @@ class CapabilityManagerImpl implements CapabilityManager {
     });
   }
 
+  waitForPromise<T>(interfaceDef: Capability.InterfaceDef<T>): Promise<T> {
+    const existing = this._waitPromises.get(interfaceDef.identifier);
+    if (existing) {
+      return existing as Promise<T>;
+    }
+    const promise = EffectEx.runPromise(this.waitFor(interfaceDef)).finally(() => {
+      // Drop it once settled so a capability that is removed and re-contributed can be waited on
+      // again; until then every suspended reader shares this one reference.
+      this._waitPromises.delete(interfaceDef.identifier);
+    });
+    this._waitPromises.set(interfaceDef.identifier, promise);
+    return promise;
+  }
+
   atomByModule<T>(interfaceDef: Capability.InterfaceDef<T>): Atom.Atom<Record<string, T[]>> {
     return this._capabilitiesByModule(interfaceDef.identifier) as Atom.Atom<Record<string, T[]>>;
+  }
+
+  contributions<T>(interfaceDef: Capability.InterfaceDef<T>): Capability.Contributions<T> {
+    const existing = this._contributionsViews.get(interfaceDef.identifier);
+    if (existing) {
+      // NOTE: The type-checking for capabilities is done at the time of contribution.
+      return existing as Capability.Contributions<T>;
+    }
+
+    const atom = this._capabilities(interfaceDef.identifier);
+    const view: Capability.Contributions<unknown> = {
+      atom,
+      get: () => this._registry.get(atom),
+      subscribe: (cb) => this._registry.subscribe(atom, cb),
+    };
+    this._contributionsViews.set(interfaceDef.identifier, view);
+    return view as Capability.Contributions<T>;
   }
 }
 

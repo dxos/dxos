@@ -5,14 +5,19 @@
 import * as Effect from 'effect/Effect';
 import * as Redacted from 'effect/Redacted';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Credential, Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
 
-import { Generation, GenerationService, StudioCapabilities, StudioOperation, Variant } from '../types';
+import * as Generation from '../types/Generation';
+import * as GenerationService from '../types/GenerationService';
+import * as StudioCapabilities from '../types/StudioCapabilities';
+import * as StudioOperation from '../types/StudioOperation';
+import * as Variant from '../types/Variant';
 
 /** Route a provider rejection to the failure channel, preserving the original Error for name matching. */
 const toError = (error: unknown): Error =>
@@ -31,7 +36,7 @@ const handler: Operation.WithHandler<typeof StudioOperation.Generate> = StudioOp
       const artifactObj = yield* Database.load(artifact);
 
       // Resolve the provider by the artifact's kind, then by explicit id, else the first for the kind.
-      const services = yield* Capability.getAll(StudioCapabilities.GenerationService);
+      const services = (yield* Capability.contributions(StudioCapabilities.GenerationService)).get();
       const forKind = services.filter((candidate) => candidate.kind === artifactObj.kind);
       const service = provider ? forKind.find((candidate) => candidate.id === provider) : forKind[0];
       if (!service) {

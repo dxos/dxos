@@ -10,9 +10,9 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Blob, Database, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Panel } from '@dxos/react-ui';
+import { File } from '@dxos/types';
 
 import { FilePreview } from '#components';
-import { File } from '#types';
 
 export type FileArticleProps = AppSurface.ObjectArticleProps<File.File>;
 

@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
-import { NotFound } from '@dxos/app-toolkit';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
@@ -17,7 +18,7 @@ const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'home',
         filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === Node.RootId),

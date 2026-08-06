@@ -5,18 +5,17 @@
 import * as Effect from 'effect/Effect';
 import type { Blockstore } from 'interface-blockstore';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Client } from '@dxos/client';
 import { type BlobBackend } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { FileCapabilities } from '@dxos/plugin-file/types';
-
-import { WnfsCapabilities } from '#types';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as FileCapabilities from '@dxos/plugin-file/FileCapabilities';
 
 import { getBlobUrl, loadWnfs, readWnfsFile, upload } from '../helpers';
+import * as WnfsCapabilities from '../types/WnfsCapabilities';
 
 interface CreateWnfsBlobBackendOptions {
   client: Client;
@@ -82,23 +81,20 @@ export const createWnfsBlobBackend = ({ client, blockstore, instances }: CreateW
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const blockstore = yield* Capability.get(WnfsCapabilities.Blockstore);
-    const instances = yield* Capability.get(WnfsCapabilities.Instances);
+    const client = yield* ClientCapabilities.Client;
+    const blockstore = yield* WnfsCapabilities.Blockstore;
+    const instances = yield* WnfsCapabilities.Instances;
 
     const cleanup = client.graph.registerBlobBackend(
       WnfsCapabilities.WNFS_BACKEND,
       createWnfsBlobBackend({ client, blockstore, instances }),
     );
 
-    return Capability.contributes(
-      FileCapabilities.Backend,
-      {
-        name: 'WNFS',
-        description: 'Decentralized, end-to-end encrypted storage via Web Native File System.',
-        storage: WnfsCapabilities.WNFS_BACKEND,
-      },
-      () => Effect.sync(() => cleanup()),
-    );
+    yield* Effect.addFinalizer(() => Effect.sync(() => cleanup()));
+    return Capability.contribute(FileCapabilities.Backend, {
+      name: 'WNFS',
+      description: 'Decentralized, end-to-end encrypted storage via Web Native File System.',
+      storage: WnfsCapabilities.WNFS_BACKEND,
+    });
   }),
 );

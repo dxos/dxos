@@ -1,5 +1,32 @@
 # @dxos/react-ui-form
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/async@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-doc@0.11.1
+- @dxos/echo-protocol@0.11.1
+- @dxos/echo-react@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/invariant@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/lit-ui@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui-components@0.11.1
+- @dxos/react-ui-editor@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-markdown@0.11.1
+- @dxos/react-ui-pickers@0.11.1
+- @dxos/react-ui-search@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/types@0.11.1
+- @dxos/ui@0.11.1
+- @dxos/ui-editor@0.11.1
+- @dxos/util@0.11.1
+
 ## 0.11.0
 
 ### Minor Changes

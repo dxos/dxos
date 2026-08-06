@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-blogger",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Author blog posts with agent assistance.",
   "homepage": "https://dxos.org",
@@ -48,11 +48,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -71,13 +66,45 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    }
+    "./Blog": {
+      "source": "./src/types/Blog.ts",
+      "types": "./dist/types/src/types/Blog.d.ts",
+      "import": "./dist/lib/Blog.mjs"
+    },
+    "./BloggerCapabilities": {
+      "source": "./src/types/BloggerCapabilities.ts",
+      "types": "./dist/types/src/types/BloggerCapabilities.d.ts",
+      "import": "./dist/lib/BloggerCapabilities.mjs"
+    },
+    "./BloggerEvents": {
+      "source": "./src/types/BloggerEvents.ts",
+      "types": "./dist/types/src/types/BloggerEvents.d.ts",
+      "import": "./dist/lib/BloggerEvents.mjs"
+    },
+    "./Publisher": {
+      "source": "./src/types/Publisher.ts",
+      "types": "./dist/types/src/types/Publisher.d.ts",
+      "import": "./dist/lib/Publisher.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Blog": [
+        "dist/types/src/types/Blog.d.ts"
+      ],
+      "BloggerCapabilities": [
+        "dist/types/src/types/BloggerCapabilities.d.ts"
+      ],
+      "BloggerEvents": [
+        "dist/types/src/types/BloggerEvents.d.ts"
+      ],
+      "Publisher": [
+        "dist/types/src/types/Publisher.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

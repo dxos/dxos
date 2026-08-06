@@ -3,14 +3,16 @@
 //
 
 import { type Chunk, type StorageAdapterInterface, type StorageKey } from '@automerge/automerge-repo';
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { log } from '@dxos/log';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type MaybePromise } from '@dxos/util';
+
+import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks';
 
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
@@ -62,20 +64,19 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Creates the automerge_chunks table if it does not exist.
+   * Applies any migrations this database has not recorded yet. `SqlTransaction.clientLayer` is
+   * provided because the migrator wraps its work in the client's `withTransaction`, which emits
+   * `BEGIN` / `COMMIT` — rejected in workerd.
    */
-  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Effect.fn(
-    'SqliteStorageAdapter.migrate',
-  )(() =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      yield* sql`CREATE TABLE IF NOT EXISTS automerge_chunks (
-          key TEXT PRIMARY KEY,
-          data BLOB NOT NULL
-        )`;
-      log('automerge_chunks table ready');
-    }).pipe(Effect.withSpan('SqliteStorageAdapter.migrate')),
-  )();
+  readonly migrate: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag> = Migrator.make({})(
+    { loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE },
+  ).pipe(
+    Effect.provide(SqlTransaction.clientLayer),
+    // A malformed bundled manifest is a defect, not something a caller can recover from.
+    Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+    Effect.asVoid,
+    Effect.withSpan('SqliteStorageAdapter.migrate'),
+  );
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
     if (!this.isOpen) {

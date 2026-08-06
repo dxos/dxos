@@ -11,7 +11,7 @@ import { CommandConfig, Common, printList, spaceLayer, withTypes } from '@dxos/c
 import { Database, Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 
-import { Connection } from '../../types';
+import * as Connection from '../../types/Connection';
 import { printConnection } from './util';
 
 export const list = Command.make(

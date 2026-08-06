@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { debounce } from '@dxos/async';
 import { Keyboard } from '@dxos/keyboard';
 import { Graph, Node, runAction } from '@dxos/plugin-graph';
@@ -15,8 +16,8 @@ import { KEY_BINDING } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const invoker = yield* Capabilities.OperationInvoker;
     const pluginContext = yield* Capability.Service;
 
     // TODO(wittjosiah): Factor out.
@@ -59,11 +60,12 @@ export default Capability.makeModule(
     Keyboard.singleton.initialize();
     Keyboard.singleton.setCurrentContext(Node.RootId);
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsubscribe();
         Keyboard.singleton.destroy();
       }),
     );
+    return [];
   }),
 );

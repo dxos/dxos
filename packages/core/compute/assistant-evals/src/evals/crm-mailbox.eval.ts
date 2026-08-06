@@ -9,7 +9,7 @@ import { evalite } from 'evalite';
 import { Obj, Relation } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
-import { ProfileOf } from '@dxos/plugin-crm/types';
+import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';

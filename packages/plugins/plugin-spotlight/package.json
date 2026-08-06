@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-spotlight",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Spotlight search plugin for the Tauri popover window.",
   "homepage": "https://dxos.org",
@@ -43,11 +43,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -66,9 +61,22 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./SpotlightCapabilities": {
+      "source": "./src/types/SpotlightCapabilities.ts",
+      "types": "./dist/types/src/types/SpotlightCapabilities.d.ts",
+      "import": "./dist/lib/SpotlightCapabilities.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "SpotlightCapabilities": [
+        "dist/types/src/types/SpotlightCapabilities.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",

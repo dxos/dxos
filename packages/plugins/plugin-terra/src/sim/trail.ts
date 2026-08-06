@@ -3,7 +3,7 @@
 //
 
 import { type TerraConfigValues, type Vec3, add, scale, sub } from '../engine';
-import { type TerraObject } from '../types';
+import * as TerraObject from '../types/TerraObject';
 import { tangentFrame } from './geo';
 import { type MotionContext, type ObjectState, evaluate } from './motion';
 

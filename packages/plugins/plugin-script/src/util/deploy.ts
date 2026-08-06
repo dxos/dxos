@@ -3,8 +3,9 @@
 //
 
 import { type Client } from '@dxos/client';
-import { Operation, Script } from '@dxos/compute';
 import { getUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Script from '@dxos/compute/Script';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/edge-compute';

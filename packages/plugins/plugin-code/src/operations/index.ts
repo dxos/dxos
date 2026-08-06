@@ -2,18 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const CodeOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./verify-spec'),
-  () => import('./run-build-agent'),
-  () => import('./list-files'),
-  () => import('./read-file'),
-  () => import('./write-file'),
-  () => import('./delete-file'),
-  () => import('./scaffold-project'),
-  () => import('./hello-world'),
-  () => import('./reset-project'),
-  () => import('./build-project'),
-  () => import('./run-build'),
-);
+import * as CodeOperation from '../types/CodeOperation';
+
+export const CodeOperationHandlerSet = OperationHandlerSet.lazy([
+  CodeOperation.VerifySpec.pipe(Operation.lazyHandler(() => import('./verify-spec'))),
+  CodeOperation.RunBuildAgent.pipe(Operation.lazyHandler(() => import('./run-build-agent'))),
+  CodeOperation.ListFiles.pipe(Operation.lazyHandler(() => import('./list-files'))),
+  CodeOperation.ReadFile.pipe(Operation.lazyHandler(() => import('./read-file'))),
+  CodeOperation.WriteFile.pipe(Operation.lazyHandler(() => import('./write-file'))),
+  CodeOperation.DeleteFile.pipe(Operation.lazyHandler(() => import('./delete-file'))),
+  CodeOperation.ScaffoldProject.pipe(Operation.lazyHandler(() => import('./scaffold-project'))),
+  CodeOperation.HelloWorld.pipe(Operation.lazyHandler(() => import('./hello-world'))),
+  CodeOperation.ResetProject.pipe(Operation.lazyHandler(() => import('./reset-project'))),
+  CodeOperation.BuildProject.pipe(Operation.lazyHandler(() => import('./build-project'))),
+  CodeOperation.RunBuild.pipe(Operation.lazyHandler(() => import('./run-build'))),
+]);

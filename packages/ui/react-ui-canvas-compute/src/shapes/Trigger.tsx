@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { VoidInput } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/Obj';

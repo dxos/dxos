@@ -6,7 +6,8 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
-import { Instructions, Skill } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';

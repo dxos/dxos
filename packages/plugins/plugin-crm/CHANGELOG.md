@@ -1,5 +1,40 @@
 # @dxos/plugin-crm
 
+## 0.11.1
+
+### Patch Changes
+
+- 430bcab: The CRM automation template (`org.dxos.routine.crm`) now scaffolds a deterministic operation routine bound to `CrmOperation.ProcessMailbox` instead of an agentic instructions routine, so the mailbox's Automations companion offers the same cursored, idempotent CRM pipeline the `crmPipeline` project template does — no model between the feed trigger and the operation.
+- Updated dependencies [5fde190]
+  - @dxos/plugin-inbox@0.11.1
+  - @dxos/plugin-projects@0.11.1
+  - @dxos/app-framework@0.11.1
+  - @dxos/app-toolkit@0.11.1
+  - @dxos/assistant-toolkit@0.11.1
+  - @dxos/compute@0.11.1
+  - @dxos/config@0.11.1
+  - @dxos/echo@0.11.1
+  - @dxos/edge-client@0.11.1
+  - @dxos/extractor@0.11.1
+  - @dxos/extractor-lib@0.11.1
+  - @dxos/invariant@0.11.1
+  - @dxos/keys@0.11.1
+  - @dxos/link@0.11.1
+  - @dxos/log@0.11.1
+  - @dxos/react-client@0.11.1
+  - @dxos/react-ui@0.11.1
+  - @dxos/react-ui-attention@0.11.1
+  - @dxos/react-ui-form@0.11.1
+  - @dxos/react-ui-list@0.11.1
+  - @dxos/schema@0.11.1
+  - @dxos/types@0.11.1
+  - @dxos/ui-theme@0.11.1
+  - @dxos/util@0.11.1
+  - @dxos/plugin-graph@0.11.1
+  - @dxos/plugin-markdown@0.11.1
+  - @dxos/plugin-routine@0.11.1
+  - @dxos/plugin-space@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

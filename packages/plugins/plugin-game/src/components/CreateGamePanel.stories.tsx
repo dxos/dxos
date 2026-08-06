@@ -13,8 +13,8 @@ import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { type GameVariant } from '#types';
 
+import * as GameCapabilities from '../types/GameCapabilities';
 import { CreateGamePanel } from './CreateGamePanel';
 
 // Two dummy variants for the story — no real ECHO state required, just the shape
@@ -29,7 +29,7 @@ const Dice = Schema.Struct({
   faces: Schema.optional(Schema.Number.annotations({ title: 'Number of faces' })),
 }).pipe(Type.makeObject(DXN.make('org.dxos.story.dice', '0.1.0')));
 
-const dummyVariants: GameVariant[] = [
+const dummyVariants: GameCapabilities.GameVariant[] = [
   {
     id: 'org.dxos.story.cards',
     label: 'Card game',

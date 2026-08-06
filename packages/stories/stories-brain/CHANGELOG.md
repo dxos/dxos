@@ -1,5 +1,58 @@
 # @dxos/stories-brain
 
+## 0.11.1
+
+### Patch Changes
+
+- Updated dependencies [5fde190]
+  - @dxos/plugin-inbox@0.11.1
+  - @dxos/plugin-brain@0.11.1
+  - @dxos/ai@0.11.1
+  - @dxos/app-framework@0.11.1
+  - @dxos/app-toolkit@0.11.1
+  - @dxos/assistant-toolkit@0.11.1
+  - @dxos/client@0.11.1
+  - @dxos/compute@0.11.1
+  - @dxos/crawler@0.11.1
+  - @dxos/echo@0.11.1
+  - @dxos/echo-client@0.11.1
+  - @dxos/effect@0.11.1
+  - @dxos/keys@0.11.1
+  - @dxos/link@0.11.1
+  - @dxos/log@0.11.1
+  - @dxos/markdown@0.11.1
+  - @dxos/nlp@0.11.1
+  - @dxos/pipeline@0.11.1
+  - @dxos/pipeline-discord@0.11.1
+  - @dxos/pipeline-email@0.11.1
+  - @dxos/pipeline-rdf@0.11.1
+  - @dxos/pipeline-transcription@0.11.1
+  - @dxos/react-client@0.11.1
+  - @dxos/react-ui@0.11.1
+  - @dxos/react-ui-attention@0.11.1
+  - @dxos/react-ui-editor@0.11.1
+  - @dxos/react-ui-form@0.11.1
+  - @dxos/react-ui-graph@0.11.1
+  - @dxos/react-ui-list@0.11.1
+  - @dxos/react-ui-rdf@0.11.1
+  - @dxos/schema@0.11.1
+  - @dxos/sql-sqlite@0.11.1
+  - @dxos/storybook-testing@0.11.1
+  - @dxos/types@0.11.1
+  - @dxos/ui-editor@0.11.1
+  - @dxos/ui-theme@0.11.1
+  - @dxos/ui-types@0.11.1
+  - @dxos/util@0.11.1
+  - @dxos/plugin-client@0.11.1
+  - @dxos/plugin-discord@0.11.1
+  - @dxos/plugin-graph@0.11.1
+  - @dxos/plugin-markdown@0.11.1
+  - @dxos/plugin-progress@0.11.1
+  - @dxos/plugin-space@0.11.1
+  - @dxos/plugin-tasks@0.11.1
+  - @dxos/plugin-testing@0.11.1
+  - @dxos/plugin-transcription@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Operation, Trigger } from '@dxos/compute';
 import { createInvocationPayload } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { RoutineOperation } from '../types';
+import * as RoutineOperation from '../types/RoutineOperation';
 
 // A routine's action is its `runnable`: either an Operation (invoked directly) or the routine's owned
 // Instructions object (run as a background process — the same path triggers use — without creating a new

@@ -1,5 +1,20 @@
 # @dxos/plugin-iroh-beacon
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/async@0.11.1
+- @dxos/context@0.11.1
+- @dxos/halo@0.11.1
+- @dxos/keys@0.11.1
+- @dxos/log@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-status-bar@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

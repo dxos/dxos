@@ -5,7 +5,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Input, useTranslation } from '@dxos/react-ui';
@@ -13,7 +14,7 @@ import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from '../../sync';
-import { Ibkr } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
 
 export type PortfolioPropertiesProps = AppSurface.ObjectPropertiesProps<Ibkr.Portfolio>;
 

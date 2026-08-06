@@ -4,17 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { type DrawingVariant, IllustratorCapabilities } from '@dxos/plugin-illustrator/types';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 
 import { TldrawArticle, TldrawCard } from '#containers';
 import { TldrawBuilder } from '#model';
 
-import { Tldraw } from '../types';
+import * as Tldraw from '../types/Tldraw';
 
 // No `canvasType`/`createCanvas`: tldraw stores its records in the base `Drawing.Canvas`,
 // discriminated by `schema`.
-const variant: DrawingVariant = {
+const variant: IllustratorCapabilities.DrawingVariant = {
   id: Tldraw.TLDRAW_SCHEMA,
   label: 'tldraw',
   icon: 'ph--compass-tool--regular',
@@ -24,5 +24,5 @@ const variant: DrawingVariant = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(IllustratorCapabilities.VariantProvider, variant)),
+  Effect.succeed(Capability.contribute(IllustratorCapabilities.VariantProvider, variant)),
 );

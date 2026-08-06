@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { type IdentityIndex, buildIdentityIndex } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -21,7 +21,7 @@ import { Person } from '@dxos/types';
 import { GoogleContacts } from '../../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../../constants';
 import { GoogleCredentials } from '../../../../services';
-import { InboxOperation } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
 import { mapGooglePerson } from '../mapper';
 
 const COMMIT_PAGE_SIZE = 10;

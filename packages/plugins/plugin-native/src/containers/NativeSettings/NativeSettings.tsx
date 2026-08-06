@@ -9,11 +9,17 @@ import * as Schema from 'effect/Schema';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { NativeCapabilities, type Update } from '#types';
+
+import * as NativeCapabilities from '../../types/NativeCapabilities';
+import type * as Settings from '../../types/Settings';
+import type * as Update from '../../types/Update';
+
+export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 
 type Pending = null | 'check' | 'install' | 'relaunch';
 

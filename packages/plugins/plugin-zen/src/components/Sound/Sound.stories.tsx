@@ -7,8 +7,7 @@ import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Sequence } from '#types';
-
+import * as Sequence from '../../types/Sequence';
 import { Sound } from './Sound';
 
 const SampleStory = () => {

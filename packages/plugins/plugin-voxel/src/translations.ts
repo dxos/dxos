@@ -6,7 +6,8 @@ import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Voxel } from '#types';
+
+import * as Voxel from './types/Voxel';
 
 export const translations = [
   {

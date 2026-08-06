@@ -5,19 +5,21 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AgentService, ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AgentService from '@dxos/compute/AgentService';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { log } from '@dxos/log';
 
 //
 // Capability Module
 //
-// Rehydrates durable agent processes once {@link ActivationEvents.ProcessManagerReady} fires.
+// Rehydrates durable agent processes once `Capabilities.ProcessManagerRuntime` is contributed.
 //
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const runtime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const runtime = yield* Capabilities.ProcessManagerRuntime;
 
     runtime.runFork(
       Effect.gen(function* () {
@@ -31,6 +33,6 @@ export default Capability.makeModule(
       ),
     );
 
-    return Capability.contributes(Capabilities.Null, null);
+    return [];
   }),
 );

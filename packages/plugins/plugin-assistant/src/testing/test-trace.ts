@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Process } from '@dxos/compute';
+import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
 
 export const makeProcess = (

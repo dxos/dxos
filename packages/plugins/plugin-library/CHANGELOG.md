@@ -1,5 +1,32 @@
 # @dxos/plugin-library
 
+## 0.11.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.11.1
+- @dxos/app-toolkit@0.11.1
+- @dxos/compute@0.11.1
+- @dxos/echo@0.11.1
+- @dxos/echo-panproto@0.11.1
+- @dxos/effect@0.11.1
+- @dxos/react-client@0.11.1
+- @dxos/react-ui@0.11.1
+- @dxos/react-ui-attention@0.11.1
+- @dxos/react-ui-form@0.11.1
+- @dxos/react-ui-list@0.11.1
+- @dxos/react-ui-markdown@0.11.1
+- @dxos/react-ui-masonry@0.11.1
+- @dxos/react-ui-menu@0.11.1
+- @dxos/react-ui-search@0.11.1
+- @dxos/react-ui-table@0.11.1
+- @dxos/schema@0.11.1
+- @dxos/ui-theme@0.11.1
+- @dxos/util@0.11.1
+- @dxos/plugin-client@0.11.1
+- @dxos/plugin-graph@0.11.1
+- @dxos/plugin-space@0.11.1
+
 ## 0.11.0
 
 ### Patch Changes

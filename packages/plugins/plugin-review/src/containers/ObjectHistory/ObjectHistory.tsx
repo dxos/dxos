@@ -15,8 +15,8 @@ import { type Commit, Timeline } from '@dxos/react-ui-components';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
-import { ReviewCapabilities } from '#types';
 
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
@@ -35,7 +35,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
 
   // Selection is session-local: collaborators each view their own version.
   const objectId = subject.id;
-  const selection = useViewState(ReviewCapabilities.viewAspect, objectId).selection ?? { kind: 'current' as const };
+  const selection = useViewState(ReviewCapabilities.viewAspect, objectId).selection ?? {
+    kind: 'current' as const,
+  };
   const { update } = useViewStateActions(ReviewCapabilities.viewAspect, objectId);
   const setSelection = useCallback(
     (next: ReviewCapabilities.VersionSelection) => update((prev) => ({ ...prev, selection: next })),

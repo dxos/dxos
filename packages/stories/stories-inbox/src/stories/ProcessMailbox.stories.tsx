@@ -7,21 +7,22 @@ import * as Effect from 'effect/Effect';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { ActivationEvents, Capabilities } from '@dxos/app-framework';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
 import { CrmPlugin } from '@dxos/plugin-crm/plugin';
-import { CrmOperation, ProfileOf } from '@dxos/plugin-crm/types';
-import { Mailbox } from '@dxos/plugin-inbox';
+import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { InboxPlugin } from '@dxos/plugin-inbox/testing';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
@@ -129,7 +130,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings, ActivationEvents.Startup],
+      setupEvents: [ActivationEvents.Startup],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

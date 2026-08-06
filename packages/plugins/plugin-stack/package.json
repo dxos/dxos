@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-stack",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "DXOS Surface plugin for Stack entities",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,11 +42,6 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "default": "./dist/lib/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
@@ -65,9 +60,30 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
-    }
+    },
+    "./Stack": {
+      "source": "./src/types/Stack.ts",
+      "types": "./dist/types/src/types/Stack.d.ts",
+      "import": "./dist/lib/Stack.mjs"
+    },
+    "./StackEvents": {
+      "source": "./src/types/StackEvents.ts",
+      "types": "./dist/types/src/types/StackEvents.d.ts",
+      "import": "./dist/lib/StackEvents.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Stack": [
+        "dist/types/src/types/Stack.d.ts"
+      ],
+      "StackEvents": [
+        "dist/types/src/types/StackEvents.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
