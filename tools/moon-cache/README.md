@@ -43,7 +43,7 @@ MOON_REMOTE_HOST='grpc://127.0.0.1:1' moon run :build
 
 | | |
 | --- | --- |
-| host | `cache.dxos.network` → 64.225.13.237 (DigitalOcean NYC3, Cloudflare A record, DNS-only) |
+| hosts | `cache.dxos.network` -> 64.225.13.237 (NYC3) · 143.198.61.162 (SFO3, no DNS record; its certificate shares the same SAN so `mtls.domain` verifies) |
 | service | `bazel-remote` v2.5.0, systemd unit `bazel-remote` |
 | ports | 9092 gRPC, 9093 HTTPS (metrics + `/status`) |
 | storage | `/var/cache/moon`, zstd, 100 GB LRU |

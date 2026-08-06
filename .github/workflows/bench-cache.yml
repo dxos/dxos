@@ -1,14 +1,19 @@
-# Depot runners against Blacksmith runners, each with the self-hosted cache on and off.
+# Depot runners against Blacksmith runners, against a cache on each coast and no cache at all.
 # Dispatch only — an experiment, not a check.
 #
-# The 2x2 separates two things that a single job time confuses:
-#   cache off — nothing is restored, so this is the runner's raw compute throughput.
-#   cache on  — the same work arrives over the network instead, so this is restore speed.
-# Running both on both runners says whether a runner is faster at building, at restoring, or
-# neither.
+# The matrix separates three things that a single job time confuses:
+#   off  — nothing is restored, so this is the runner's raw compute throughput.
+#   nyc3 — the cache in New York. Near Depot (us-east-1), far from Blacksmith (us-west).
+#   sfo3 — the same cache in San Francisco. The mirror image.
+# Each runner therefore gets a near cache and a far one, which is what makes the runners
+# comparable: the first pass showed Depot restoring 4x faster than Blacksmith purely because the
+# only cache was on Depot's coast.
 #
-# Run it TWICE. The first run populates the cache with each runner's hashes (toolchain and
-# platform are hash inputs, so Depot and Blacksmith do not share entries); the second measures.
+# Both hosts run identical bazel-remote behind mTLS from one CA, and the sfo3 certificate carries
+# `cache.dxos.network` as a SAN, so `mtls.domain` in workspace.yml verifies against either without
+# a second client certificate or a DNS record.
+#
+# Run it TWICE — sfo3 starts empty, so the first pass populates it.
 name: Bench Cache
 
 on:
@@ -32,7 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         runner: ['depot-ubuntu-24.04-8', 'blacksmith-8vcpu-ubuntu-2404']
-        cache: ['on', 'off']
+        cache: ['nyc3', 'sfo3', 'off']
     runs-on: ${{ matrix.runner }}
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -54,20 +59,29 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          remote-cache: ${{ matrix.cache == 'on' }}
+          remote-cache: ${{ matrix.cache != 'off' }}
+
+      # sfo3 is addressed by IP because it has no DNS record; its certificate carries the same
+      # `cache.dxos.network` SAN, so mtls.domain verifies either way. nyc3 is workspace.yml's
+      # default and needs no override.
+      - name: Select cache
+        if: ${{ matrix.cache == 'sfo3' }}
+        run: echo 'MOON_REMOTE_HOST=grpcs://143.198.61.162:9092' >> "$GITHUB_ENV"
+        shell: bash
 
       - name: Machine
         run: |
           echo "runner=${{ matrix.runner }} cache=${{ matrix.cache }}"
           echo "cpus=$(nproc) mem=$(free -g | awk '/^Mem:/{print $2}')GB"
-          # Only meaningful for the cache-on arms, and it is the number that explains them.
-          if [ "${{ matrix.cache }}" = "on" ]; then
-            printf 'tcp_connect_s:'
+          # RTT is the number that explains the restore columns, so measure both hosts from every
+          # runner rather than only the one this arm uses.
+          for host in cache.dxos.network 143.198.61.162; do
+            printf 'rtt %-22s' "$host"
             for _ in 1 2 3; do
-              curl -o /dev/null -s --connect-timeout 5 -w ' %{time_connect}' https://cache.dxos.network:9093/status || true
+              curl -o /dev/null -s --connect-timeout 5 -w ' %{time_connect}' "https://$host:9093/status" || true
             done
             echo
-          fi
+          done
         shell: bash
 
       - name: Build
