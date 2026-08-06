@@ -324,7 +324,14 @@ export class FeedStore {
           ? yield* Effect.forEach(slice, (row) => this.#openBlock(row, request.spaceId, request.feedNamespace), {
               concurrency: 'unbounded',
             })
-          : slice.map((row) => ({ ...row, data: new Uint8Array(row.data) }));
+          : // Normalise the SQLite NULL envelope columns to undefined — the Block schema types them
+            // `string | undefined`, not nullable, so a raw null trips schema encode on the sync path.
+            slice.map((row) => ({
+              ...row,
+              data: new Uint8Array(row.data),
+              encryptionKeyId: row.encryptionKeyId ?? undefined,
+              iv: row.iv != null ? new Uint8Array(row.iv) : undefined,
+            }));
 
         let nextCursor: FeedCursor = request.cursor ?? encodeCursor(validCursorToken, -1);
         if (blocks.length > 0 && request.spaceId) {
