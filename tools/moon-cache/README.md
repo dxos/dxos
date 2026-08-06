@@ -8,15 +8,20 @@ machine, over the same 25 ms of RTT. Wall clock per run: **338 s → 30 s**.
 
 ## Local development
 
-You need three files — `ca.pem`, `client.pem`, `client.key` — from an admin (see
-[Certificates](#certificates) below). Then:
+One command, if you have the 1Password CLI and access to the `CI` vault:
+
+```bash
+./tools/moon-cache/install-certs.sh --op
+```
+
+Otherwise get `ca.pem`, `client.pem` and `client.key` from an admin and point the script at them:
 
 ```bash
 ./tools/moon-cache/install-certs.sh ~/Downloads/moon-cache-certs
 ```
 
-That drops them in `.moon/certs/`, which is gitignored. Nothing else changes; `moon run` picks the
-cache up from `.moon/workspace.yml`.
+Either way they land in `.moon/certs/`, which is gitignored. Nothing else changes; `moon run`
+picks the cache up from `.moon/workspace.yml`.
 
 Check it is actually working — moon **never fails** on a broken cache, it just quietly rebuilds:
 
@@ -77,6 +82,24 @@ the droplet and the CI secrets** — treat the CA key accordingly.
 
 `ca.key` signs new clients. It must never reach the droplet, the repository, or CI — only the
 operator's machine and whatever the team uses for shared secrets.
+
+All six files live in 1Password's `CI` vault as documents named `moon-cache-<filename>`:
+
+```bash
+for f in ca.key ca.pem client.pem client.key server.pem server.key; do
+  op document create "./certs/$f" --title "moon-cache-$f" --vault CI
+done
+```
+
+CI reads three of them from repository secrets — `MOON_CACHE_CA_PEM`, `MOON_CACHE_CLIENT_PEM`,
+`MOON_CACHE_CLIENT_KEY`. Set them from files rather than pasting, so the trailing newline
+survives:
+
+```bash
+gh secret set MOON_CACHE_CA_PEM < .moon/certs/ca.pem
+gh secret set MOON_CACHE_CLIENT_PEM < .moon/certs/client.pem
+gh secret set MOON_CACHE_CLIENT_KEY < .moon/certs/client.key
+```
 
 The server certificate carries the droplet IP and `cache.dxos.network` as SANs, so it stays valid
 whether clients dial the name or the address.
