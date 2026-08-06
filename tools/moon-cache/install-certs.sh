@@ -5,7 +5,7 @@
 #   ./install-certs.sh <source-dir>     from a directory holding ca.pem, client.pem, client.key
 #   ./install-certs.sh --worktree ...   into ./.moon/certs instead (see below)
 #
-# Certificates land in ~/.config/moon-cache and are read through the MOON_REMOTE_MTLS_*
+# Certificates land in ~/.config/dxos/moon-cache and are read through the MOON_REMOTE_MTLS_*
 # environment variables, which take absolute paths. `.moon/workspace.yml` points at
 # `.moon/certs/…` relative to the workspace root, so storing them in the repo would mean
 # repeating this in every worktree — and a machine can easily have twenty.
@@ -16,7 +16,7 @@
 # Never copy ca.key here. It signs new clients and belongs only on an operator's machine.
 set -euo pipefail
 
-CERT_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/moon-cache"
+CERT_HOME="${XDG_CONFIG_HOME:-$HOME/.config}/dxos/moon-cache"
 WORKTREE=false
 if [ "${1:-}" = "--worktree" ]; then
   WORKTREE=true
