@@ -208,8 +208,8 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         log.catch(err);
-        // The probe above reports `false` when rate-limited, so redemption is still the
-        // last line of defence against a collision.
+        // Another signup can register the email between the probe and redemption, so the
+        // server remains the final duplicate-email check.
         setError(isAccountErrorType(err, 'email_already_registered') ? 'account-exists' : 'email');
       } finally {
         pendingRef.current = false;

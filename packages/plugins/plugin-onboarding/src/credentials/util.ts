@@ -21,13 +21,30 @@ export type RedeemResult = { accountId: string; emailVerificationSent: boolean }
  */
 export type EmailProbeResult = 'exists' | 'available' | 'unavailable';
 
+/** Bounds the probe so an unresponsive hub cannot leave the signup flow pending. */
+const EMAIL_PROBE_TIMEOUT_MS = 10_000;
+
+/**
+ * Reads `data.exists` out of a hub success envelope, or `undefined` when the body isn't
+ * one. Narrowed field by field so a malformed response can't be mistaken for an answer.
+ */
+const readEmailExists = (body: unknown): boolean | undefined => {
+  if (typeof body !== 'object' || body === null || !('success' in body) || body.success !== true) {
+    return undefined;
+  }
+  if (!('data' in body) || typeof body.data !== 'object' || body.data === null || !('exists' in body.data)) {
+    return undefined;
+  }
+  return typeof body.data.exists === 'boolean' ? body.data.exists : undefined;
+};
+
 /**
  * POST `/account/email/exists` on hub-service. Lets the signup flow reject a
  * duplicate email before creating a local identity, since redemption rejects it
  * afterwards and the orphaned identity cannot be bound to any account.
  *
- * Rate limits (10/min) and transport errors both yield `unavailable`, so callers
- * must stop rather than assume the address is free.
+ * Rate limits (10/min), timeouts, transport errors, and unrecognised bodies all yield
+ * `unavailable`, so callers must stop rather than assume the address is free.
  */
 export const probeEmailExists = async ({
   hubUrl,
@@ -41,15 +58,16 @@ export const probeEmailExists = async ({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
+      signal: AbortSignal.timeout(EMAIL_PROBE_TIMEOUT_MS),
     });
     if (!response.ok) {
       return 'unavailable';
     }
-    const envelope = (await response.json()) as { success: boolean; data?: { exists: boolean } };
-    if (!envelope.success || typeof envelope.data?.exists !== 'boolean') {
+    const exists = readEmailExists(await response.json());
+    if (exists === undefined) {
       return 'unavailable';
     }
-    return envelope.data.exists ? 'exists' : 'available';
+    return exists ? 'exists' : 'available';
   } catch {
     return 'unavailable';
   }
