@@ -5,4 +5,5 @@
 export { useInColumn } from './ColumnContext';
 
 export * from './Column';
+export { type ColumnGap } from './Column.theme';
 export * from './withColumn';
