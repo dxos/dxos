@@ -179,3 +179,60 @@ Hypotheses for a native allocator growing with a flat sampled-JS heap:
 
 Discriminator in flight: memory-infra dumps (per-allocator, per-process) at
 t=1 min vs t=8 min, diffed.
+
+### 2026-08-06 — ROOT CAUSE: unbounded performance-timeline entries (marks/measures never cleared)
+
+memory-infra dump diff (renderer, t=1 → t=8 min idle, production):
+`partition_alloc` **+44 MB** (buffer partition +15 MB, allocated_objects
++26 MB), `v8/main/heap/old_space` **+24.5 MB**, `malloc` +11 MB,
+`blink_objects` +3.3 MB — including
+`blink_objects/.../workers/.../PerformanceMeasure` **+2.7 MB** and a growing
+main-thread `HashTable<AtomicString → HeapVector<PerformanceEntry>>` (the
+performance timeline's per-name index). Compositor (`cc`) shrank; media/GPU
+flat.
+
+The performance timeline for marks/measures is **unbounded by spec** (unlike
+resource timing's 250-entry buffer) and nothing in the codebase ever calls
+`performance.clearMeasures()`/`clearMarks()`. Unconditional emitters:
+
+- `sql-sqlite` `OpfsWorker.ts:165` + `internal/opfs-client.ts:108` — a
+  measure per SQLite statement, named with `sql.slice(0, 128)` and carrying
+  the **full SQL text** in `detail.properties`.
+- `echo-host` `query/query-executor.ts:251` (per query execution) and
+  `db-host/echo-host.ts:482–511` (marks + measures per index-update cycle).
+- `common/effect` `Performance.ts:37` `addTrackEntry` (per instrumented
+  effect).
+- `tracing` `api.ts:77/159` — spans with `showInBrowserTimeline: true`.
+
+Measured accumulation (production, fresh identity, idle):
+
+- Dedicated worker: 465 → **9,715 measures in 3 min (~3,080/min ≈ 51
+  SQL statements/second at idle)**, avg entry ~**5.2 KB** (SQL in name +
+  detail) → ~16 MB/min raw in the worker alone before Blink/V8 overhead
+  (AtomicString table, wrappers, old-space promotion).
+- Page: +~400 entries/min at ~235 B each.
+
+This explains: linear renderer-footprint growth at idle (~30–46 MB/min), the
+user's "High memory usage: 3.0 GB" tab on a small profile after a long
+session, DevTools JS heap (Main 816 MB) — old_space full of entry wrappers and
+name strings — and why my GC-forced short-soak baselines looked flat (the
+retention is mostly Blink-side and old-space, and my soaks were 1–10 min).
+
+Secondary finding en route: ~51 SQLite statements/s at idle is the 1 s polling
+loop fanning out — a perf issue in its own right (feed-live-objects roadmap
+has the push replacement).
+
+Causation check: identical soak with `performance.mark/measure` stubbed to
+no-ops in every context — in flight.
+
+### Fix directions (Phase 3)
+
+1. **Gate the devtools-track instrumentation off by default** — one shared
+   helper (in `@dxos/tracing` or `@dxos/util`) that no-ops unless a debug
+   flag is set (config/localStorage-seeded global that also reaches workers);
+   call sites: sql-sqlite ×2, echo-host ×3, query-executor, Performance.ts,
+   tracing api.ts.
+2. **Bound the timeline even when enabled** — periodic
+   `clearMeasures()`/`clearMarks()` keeping a rolling window.
+3. **Bounded entry names** — never SQL text as the entry name; constant label
+   with detail only when enabled.
