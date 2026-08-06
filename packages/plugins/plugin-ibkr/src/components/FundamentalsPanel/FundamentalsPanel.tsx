@@ -119,13 +119,17 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
             <Status indeterminate aria-label={t('fundamentals.heading')} />
           ) : error ? (
             <Message.Root valence='error'>
-              <Message.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Message.Title>
-              <Message.Body>{error}</Message.Body>
+              <Message.Content>
+                <Message.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Message.Title>
+                <Message.Body>{error}</Message.Body>
+              </Message.Content>
             </Message.Root>
           ) : empty ? (
             <Message.Root valence='neutral'>
-              <Message.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Message.Title>
-              <Message.Body>{t('fundamentals.empty.label')}</Message.Body>
+              <Message.Content>
+                <Message.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Message.Title>
+                <Message.Body>{t('fundamentals.empty.label')}</Message.Body>
+              </Message.Content>
             </Message.Root>
           ) : (
             <Form.FieldSet readonly fieldProvider={fieldProvider} />

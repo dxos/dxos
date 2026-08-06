@@ -62,7 +62,6 @@
   "devDependencies": {
     "@bufbuild/buf": "catalog:",
     "@bufbuild/protoc-gen-es": "catalog:",
-    "@dxos/protobuf-compiler": "workspace:*",
     "effect": "catalog:"
   },
   "peerDependencies": {

@@ -19,16 +19,13 @@ type StoryArgs = {
   title: string;
   body: string;
   button?: boolean;
-  /** Wrap the title/body in `Message.Content` so the message carries its own inset. */
-  padded?: boolean;
 };
 
-const DefaultStory = ({ valence, title, body, button, padded }: StoryArgs) => {
-  const Wrapper = padded ? Message.Content : React.Fragment;
+const DefaultStory = ({ valence, title, body, button }: StoryArgs) => {
   return (
     <div className='w-[30rem]'>
       <Message.Root valence={valence}>
-        <Wrapper>
+        <Message.Content>
           {title && <Message.Title onClose={() => console.log('close')}>{title}</Message.Title>}
           {body && (
             <Message.Body asChild classNames='gap-2'>
@@ -38,7 +35,7 @@ const DefaultStory = ({ valence, title, body, button, padded }: StoryArgs) => {
               </div>
             </Message.Body>
           )}
-        </Wrapper>
+        </Message.Content>
       </Message.Root>
     </div>
   );
@@ -106,15 +103,5 @@ export const Error: Story = {
     title: 'Error',
     body: random.lorem.paragraphs(1),
     button: true,
-  },
-};
-
-export const Padded: Story = {
-  args: {
-    valence: 'neutral',
-    title: 'Padded',
-    body: random.lorem.paragraphs(1),
-    button: true,
-    padded: true,
   },
 };

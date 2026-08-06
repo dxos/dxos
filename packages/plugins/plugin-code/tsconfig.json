@@ -31,9 +31,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -50,9 +47,6 @@
     },
     {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/halo/halo"
     },
     {
       "path": "../../core/halo/halo-react"

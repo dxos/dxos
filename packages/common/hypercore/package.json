@@ -41,9 +41,9 @@
   "devDependencies": {
     "@dxos/log": "workspace:*",
     "@dxos/random": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
     "@types/readable-stream": "catalog:",
+    "hypercore": "catalog:",
     "hypercore-protocol": "catalog:"
   },
   "publishConfig": {

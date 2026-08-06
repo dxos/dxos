@@ -27,24 +27,20 @@
   ],
   "scripts": {},
   "dependencies": {
-    "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "catalog:",
-    "@dxos/types": "workspace:*"
+    "@cloudflare/workers-types": "catalog:"
   },
   "publishConfig": {
     "access": "public"

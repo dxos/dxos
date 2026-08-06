@@ -34,10 +34,8 @@
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@effect/ai": "catalog:"
   },
   "devDependencies": {

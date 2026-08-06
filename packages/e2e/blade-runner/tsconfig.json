@@ -26,9 +26,6 @@
       "path": "../../common/esbuild-plugins"
     },
     {
-      "path": "../../common/feed-store"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -47,13 +44,7 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/random-access-storage"
-    },
-    {
       "path": "../../common/test-utils"
-    },
-    {
-      "path": "../../common/timeframe"
     },
     {
       "path": "../../common/tracing"
@@ -80,9 +71,6 @@
       "path": "../../core/echo/echo-host"
     },
     {
-      "path": "../../core/halo/keyring"
-    },
-    {
       "path": "../../core/mesh/edge-client"
     },
     {
@@ -93,9 +81,6 @@
     },
     {
       "path": "../../core/mesh/rpc"
-    },
-    {
-      "path": "../../core/mesh/teleport-extension-replicator"
     },
     {
       "path": "../../core/protocols"

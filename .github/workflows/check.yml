@@ -109,6 +109,12 @@ jobs:
       - name: Check remote cache wiring
         run: node scripts/check-cache-wiring.mjs
 
+      # Unused/undeclared dependencies and unreferenced files. Analyses the source tree — the knip
+      # config resolves workspace packages through their `source` export condition — so it needs no
+      # build and runs before the expensive `moon run :lint :build` step below.
+      - name: Check dependencies
+        run: pnpm run knip
+
       - name: Check formatting
         run: pnpm run format-check
 

@@ -33,7 +33,6 @@
   },
   "devDependencies": {
     "@dxos/echo": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@effect/vitest": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"

@@ -35,9 +35,6 @@
       "path": "../../common/display-name"
     },
     {
-      "path": "../../common/effect"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
@@ -48,9 +45,6 @@
     },
     {
       "path": "../../common/random"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -83,9 +77,6 @@
       "path": "../../sdk/react-client"
     },
     {
-      "path": "../../sdk/schema"
-    },
-    {
       "path": "../../sdk/types"
     },
     {
@@ -98,12 +89,6 @@
       "path": "../../ui/react-ui-components"
     },
     {
-      "path": "../../ui/react-ui-dnd"
-    },
-    {
-      "path": "../../ui/react-ui-syntax-highlighter"
-    },
-    {
       "path": "../../ui/ui-theme"
     },
     {
@@ -113,19 +98,7 @@
       "path": "../plugin-graph"
     },
     {
-      "path": "../plugin-inbox"
-    },
-    {
-      "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-preview"
-    },
-    {
       "path": "../plugin-testing"
-    },
-    {
-      "path": "../plugin-theme"
     }
   ]
 }

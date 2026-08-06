@@ -30,8 +30,7 @@
     "@effect-atom/atom-react": "catalog:"
   },
   "devDependencies": {
-    "react": "catalog:",
-    "react-dom": "catalog:"
+    "react": "catalog:"
   },
   "peerDependencies": {
     "effect": "catalog:",

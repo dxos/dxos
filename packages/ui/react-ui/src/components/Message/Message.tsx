@@ -5,11 +5,11 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, type CSSProperties, type PropsWithChildren, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useId } from '@dxos/react-hooks';
-import { type Elevation, type MessageValence } from '@dxos/ui-types';
+import { type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -20,15 +20,13 @@ import { Column } from '../Column';
 import { Icon } from '../Icon';
 import { messageIcons } from './message-icons';
 
-type MessageRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
+type MessageRootProps = PropsWithChildren<{
   valence?: MessageValence;
-  elevation?: Elevation;
-  asChild?: boolean;
   titleId?: string;
   descriptionId?: string;
   /** Overrides the default valence icon; consumed by {@link MessageTitle}. */
   icon?: string;
-};
+}>;
 
 type MessageContextValue = { titleId?: string; descriptionId: string; valence: MessageValence; icon?: string };
 
@@ -76,44 +74,22 @@ const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(
 // Root
 //
 
-const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
-  (
-    {
-      asChild,
-      valence = 'neutral',
-      elevation: propsElevation,
-      classNames,
-      titleId: propsTitleId,
-      descriptionId: propsDescriptionId,
-      icon,
-      children,
-      ...props
-    },
-    forwardedRef,
-  ) => {
-    const { tx } = useThemeContext();
-    const titleId = useId('message__title', propsTitleId);
-    const descriptionId = useId('message__description', propsDescriptionId);
-    const elevation = useElevationContext(propsElevation);
+/**
+ * Headless: renders no DOM element — only the shared message context (ids, valence, icon).
+ * The element, with its role/aria wiring, valence CSS variables and surface, is `Message.Content`.
+ */
+const MessageRoot = ({
+  valence = 'neutral',
+  titleId: propsTitleId,
+  descriptionId: propsDescriptionId,
+  icon,
+  children,
+}: MessageRootProps) => {
+  const titleId = useId('message__title', propsTitleId);
+  const descriptionId = useId('message__description', propsDescriptionId);
 
-    return (
-      <MessageProvider {...{ titleId, descriptionId, valence, icon }}>
-        <Column.Root
-          asChild={asChild}
-          role={valence === 'neutral' ? 'paragraph' : 'alert'}
-          aria-labelledby={titleId}
-          aria-describedby={descriptionId}
-          {...props}
-          style={{ ...valenceVars[valence], ...(props.style || {}) }}
-          classNames={tx('message.root', { valence, elevation }, classNames)}
-          ref={forwardedRef}
-        >
-          {children}
-        </Column.Root>
-      </MessageProvider>
-    );
-  },
-);
+  return <MessageProvider {...{ titleId, descriptionId, valence, icon }}>{children}</MessageProvider>;
+};
 
 MessageRoot.displayName = MESSAGE_NAME;
 
@@ -121,25 +97,38 @@ MessageRoot.displayName = MESSAGE_NAME;
 // Content
 //
 
-type MessageContentProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
-  asChild?: boolean;
-};
-
 const MESSAGE_CONTENT_NAME = 'Message.Content';
 
+// Narrowed to the composable surface because the element is a `Column.Root`, which only accepts
+// `classNames`/`role`/`style` (see `ComposableProps`).
+type MessageContentProps = SlottableProps<{ elevation?: Elevation }>;
+
 /**
- * Optional padded wrapper around a message's title and body — supplies the inset that hosts
- * otherwise had to add with their own wrapper `div`. Spans the root's tracks via subgrid so
- * `Message.Title` still places its icon in the gutter.
+ * The message's element: a `Column` grid carrying the role/aria wiring, the valence CSS variables
+ * and surface — so `Message.Title` places its icon in the gutter and `Message.Body` aligns to the
+ * content track. Required inside `Message.Root`, which renders no DOM element.
  */
 const MessageContent = forwardRef<HTMLDivElement, MessageContentProps>(
-  ({ asChild, classNames, children, ...props }, forwardedRef) => {
+  ({ asChild, classNames, role, style, children, elevation: propsElevation, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.div;
+    const { titleId, descriptionId, valence } = useMessageContext(MESSAGE_CONTENT_NAME);
+    const elevation = useElevationContext(propsElevation);
+    // Spread rather than inline attributes: `Column.Root`'s composable surface does not declare
+    // aria props, and assignability (unlike JSX literal attributes) admits them.
+    const aria = { 'aria-labelledby': titleId, 'aria-describedby': descriptionId };
+
     return (
-      <Comp {...props} className={tx('message.content', {}, classNames)} ref={forwardedRef}>
+      <Column.Root
+        asChild={asChild}
+        {...props}
+        {...aria}
+        role={role ?? (valence === 'neutral' ? 'paragraph' : 'alert')}
+        style={{ ...valenceVars[valence], ...style }}
+        classNames={tx('message.content', { valence, elevation }, classNames)}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </Column.Root>
     );
   },
 );
@@ -150,12 +139,12 @@ MessageContent.displayName = MESSAGE_CONTENT_NAME;
 // Title
 //
 
+const MESSAGE_TITLE_NAME = 'Message.Title';
+
 type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   icon?: string;
   onClose?: () => void;
 };
-
-const MESSAGE_TITLE_NAME = 'Message.Title';
 
 const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
   ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
@@ -196,11 +185,11 @@ MessageTitle.displayName = MESSAGE_TITLE_NAME;
 // Body
 //
 
+const MESSAGE_BODY_NAME = 'Message.Body';
+
 type MessageBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   asChild?: boolean;
 };
-
-const MESSAGE_BODY_NAME = 'Message.Body';
 
 const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
