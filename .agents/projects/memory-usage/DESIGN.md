@@ -180,7 +180,7 @@ Hypotheses for a native allocator growing with a flat sampled-JS heap:
 Discriminator in flight: memory-infra dumps (per-allocator, per-process) at
 t=1 min vs t=8 min, diffed.
 
-### 2026-08-06 — ROOT CAUSE: unbounded performance-timeline entries (marks/measures never cleared)
+### 2026-08-06 — CONFIRMED CONTRIBUTOR: unbounded performance-timeline entries (marks/measures never cleared)
 
 memory-infra dump diff (renderer, t=1 → t=8 min idle, production):
 `partition_alloc` **+44 MB** (buffer partition +15 MB, allocated_objects
@@ -222,8 +222,15 @@ Secondary finding en route: ~51 SQLite statements/s at idle is the 1 s polling
 loop fanning out — a perf issue in its own right (feed-live-objects roadmap
 has the push replacement).
 
-Causation check: identical soak with `performance.mark/measure` stubbed to
-no-ops in every context — in flight.
+**Causation check result — contributor, NOT sole driver.** Stub soak
+(mark/measure no-op'd in every listed context at t=0): renderer still grew
+~20 MB/min (vs ~24–30 unstubbed), both runs converging near 1.2 GB after
+10 min. So the timeline entries are one confirmed unbounded sink, but the
+majority of the idle native growth remains unattributed. Follow-up in flight:
+memory-infra allocator diff with the stub active, to see which allocator
+still grows (candidates: Blink buffer partition — MessagePort/structured-clone
+traffic from ~51 SQL ops/s, network buffers from the 1 s polling fetches,
+IDB transaction buffers, log-store writes).
 
 ### Fix directions (Phase 3)
 
