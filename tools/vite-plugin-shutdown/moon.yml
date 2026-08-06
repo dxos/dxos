@@ -1,4 +1,5 @@
 layer: library
 language: typescript
 tags:
+  - vite-plugin
   - ts-compile
