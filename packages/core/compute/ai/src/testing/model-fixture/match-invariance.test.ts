@@ -26,10 +26,10 @@ const makeRng = (seed: number): (() => number) => {
   let state = seed >>> 0;
   return () => {
     state = (state + 0x6d2b79f5) >>> 0;
-    let t = state;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    let mixed = state;
+    mixed = Math.imul(mixed ^ (mixed >>> 15), mixed | 1);
+    mixed ^= mixed + Math.imul(mixed ^ (mixed >>> 7), mixed | 61);
+    return ((mixed ^ (mixed >>> 14)) >>> 0) / 4294967296;
   };
 };
 
@@ -105,14 +105,11 @@ describe('fixture match-key invariance (fuzz)', { tags: ['manual'] }, () => {
     expect(twoEntities, 'collapsing distinct entity ids would produce false fixture hits').not.toEqual(oneEntity);
   });
 
-  test('a bare space id is not matched as a substring of a longer token', ({ expect }) => {
-    const rng = makeRng(7);
-    const space = randSpaceId(rng);
-    // A ULID that happens to be prefixed by a space-shaped run must still normalize as one entity id,
-    // not fracture at the space boundary — the pattern order + boundaries guard this.
-    const a = normalize([{ text: `echo://${space}/${randEntityId(rng)}` }]);
-    const b = normalize([{ text: `echo://${randSpaceId(rng)}/${randEntityId(rng)}` }]);
-    expect(b).toEqual(a);
+  test('a space-shaped run flanked by more base32 chars is not matched', ({ expect }) => {
+    // SPACE_ID_PATTERN's boundaries — (?<![A-Z2-7]) … (?![A-Z2-7]) — must reject a B…{32} run that is
+    // only part of a longer token; otherwise normalization would corrupt an unrelated identifier.
+    const embedded = [{ text: `A${`B${'A'.repeat(32)}`}A` }];
+    expect(normalize(embedded)).toEqual(embedded);
   });
 });
 
