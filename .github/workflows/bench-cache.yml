@@ -1,21 +1,14 @@
-# Two ways of caching moon on the same runner class: our self-hosted bazel-remote, against
-# Blacksmith's sticky disks. Dispatch only — an experiment, not a check.
+# Depot runners against Blacksmith runners, each with the self-hosted cache on and off.
+# Dispatch only — an experiment, not a check.
 #
-# The two arms are not the same mechanism, which is the point of measuring rather than reasoning:
-#   droplet — a fresh runner every time, so every cached task is a REMOTE hydration over the
-#             network (`cached-from-remote`).
-#   sticky  — the cache is a cloned block device, so a warm run is LOCAL hits (`cached`) with no
-#             network at all. Its cost moves to mount and snapshot-commit time instead.
+# The 2x2 separates two things that a single job time confuses:
+#   cache off — nothing is restored, so this is the runner's raw compute throughput.
+#   cache on  — the same work arrives over the network instead, so this is restore speed.
+# Running both on both runners says whether a runner is faster at building, at restoring, or
+# neither.
 #
-# Run it TWICE. The first run populates: the droplet arm uploads, and the sticky arm has an empty
-# snapshot to fill, so both look like cold builds. The second run is the measurement.
-#
-# Sticky-disk semantics worth knowing before reading the numbers (docs.blacksmith.sh):
-#   - Every job gets an isolated clone; concurrent jobs never share a live disk.
-#   - A clone is committed as the new snapshot only at job end, and with branch protection enabled
-#     only push/schedule/workflow_dispatch on the DEFAULT branch may commit at all. If that is on,
-#     a branch run can never accumulate a snapshot and the sticky arm will look permanently cold —
-#     which is itself the finding, not a broken benchmark.
+# Run it TWICE. The first run populates the cache with each runner's hashes (toolchain and
+# platform are hash inputs, so Depot and Blacksmith do not share entries); the second measures.
 name: Bench Cache
 
 on:
@@ -26,10 +19,6 @@ on:
     branches:
       - claude/depot-vs-self-hosted-cache-3fbd62
   workflow_dispatch:
-    inputs:
-      runner:
-        description: 'Blacksmith runner label.'
-        default: 'blacksmith-8vcpu-ubuntu-2404'
 
 env:
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
@@ -37,72 +26,24 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
-  # Blacksmith's runners expose an RE v2 cache on the host — BLACKSMITH_BAZELRE_CACHE_GRPC, an
-  # environment variable their agent injects. It is the protocol moon already speaks, so it needs
-  # no config change and none of the sticky-disk clone/commit semantics: a co-located cache that
-  # behaves like the droplet, minus the network.
-  blacksmith-re:
-    name: 'Blacksmith + their RE cache'
-    runs-on: ${{ inputs.runner || 'blacksmith-8vcpu-ubuntu-2404' }}
+  bench:
+    name: '${{ matrix.runner }} cache=${{ matrix.cache }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: ['depot-ubuntu-24.04-8', 'blacksmith-8vcpu-ubuntu-2404']
+        cache: ['on', 'off']
+    runs-on: ${{ matrix.runner }}
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
         username: dxos-bot
         password: ${{ secrets.GITHUB_TOKEN }}
     timeout-minutes: 60
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      # Certificates are installed even though this arm does not use them: MOON_REMOTE_HOST
-      # overrides the host but NOT the `mtls` block in workspace.yml, so moon still opens
-      # `.moon/certs/ca.pem` at startup and disables the cache when it is absent. That is exactly
-      # how the first attempt at this arm silently measured nothing.
-      - name: Setup
-        uses: ./.github/actions/setup
-
-      - name: Build
-        run: |
-          if [ -z "$BLACKSMITH_BAZELRE_CACHE_GRPC" ]; then
-            echo "::warning::BLACKSMITH_BAZELRE_CACHE_GRPC is unset — this runner exposes no RE cache."
-            exit 1
-          fi
-          # Their server only accepts instance names it has registered for the VM — moon's default
-          # `moon-outputs` is rejected outright, and the two registered names are the Bazel and
-          # Buck2 ones. Derived rather than hardcoded: the shape is
-          # production/<installation-model-id>/<github-repository-id>/<client>.
-          instance="production/${BLACKSMITH_INSTALLATION_MODEL_ID}/${GITHUB_REPOSITORY_ID}/bazel"
-          echo "endpoint: $BLACKSMITH_BAZELRE_CACHE_GRPC  instance: $instance"
-          start=$(date +%s)
-          MOON_REMOTE_HOST="$BLACKSMITH_BAZELRE_CACHE_GRPC" \
-            MOON_REMOTE_CACHE_INSTANCE_NAME="$instance" \
-            moon run :build 2>&1 | tee build.log
-          echo "wall_s=$(( $(date +%s) - start ))" | tee -a "$GITHUB_STEP_SUMMARY"
-          # A disabled backend is a warning and a green build, so say so loudly.
-          if grep -qE 'Failed to connect to storage backend|does not have permission' build.log; then
-            echo "::error::moon could not use the remote cache — this arm measured nothing."
-            grep 'moon_cache_storage' build.log | head -2
-            exit 1
-          fi
-        shell: bash
-
-      - name: Cache breakdown
-        if: always()
-        run: node tools/moon-cache/bench/analyze.mjs .moon/cache/runReport.json | tee -a "$GITHUB_STEP_SUMMARY"
-        shell: bash
-
-  droplet:
-    name: 'Blacksmith + droplet cache'
-    runs-on: ${{ inputs.runner || 'blacksmith-8vcpu-ubuntu-2404' }}
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 60
+    env:
+      # Matches the `test` job in check.yml: browser tests also need a chromium process, so 4
+      # leaves headroom.
+      MOON_CONCURRENCY: 4
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -112,100 +53,50 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          remote-cache: ${{ matrix.cache == 'on' }}
 
-      # Every local measurement was laptop -> NYC3 at ~23 ms. Blacksmith runs in us-west, so this
-      # arm is paying cross-country RTT — and at ~748 ms of hydration per ms of RTT over this
-      # graph, that is the number needed to interpret the result.
-      - name: Runner to cache RTT
+      - name: Machine
         run: |
-          rtt=$(for _ in 1 2 3 4 5; do
-            curl -o /dev/null -s --connect-timeout 5 -w '%{time_connect} ' https://cache.dxos.network:9093/status || true
-          done)
-          echo "region=${BLACKSMITH_REGION:-unknown} tcp_connect_s: $rtt" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "runner=${{ matrix.runner }} cache=${{ matrix.cache }}"
+          echo "cpus=$(nproc) mem=$(free -g | awk '/^Mem:/{print $2}')GB"
+          # Only meaningful for the cache-on arms, and it is the number that explains them.
+          if [ "${{ matrix.cache }}" = "on" ]; then
+            printf 'tcp_connect_s:'
+            for _ in 1 2 3; do
+              curl -o /dev/null -s --connect-timeout 5 -w ' %{time_connect}' https://cache.dxos.network:9093/status || true
+            done
+            echo
+          fi
         shell: bash
 
       - name: Build
         run: |
           start=$(date +%s)
           moon run :build
-          echo "wall_s=$(( $(date +%s) - start ))" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "BUILD_S=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
         shell: bash
 
-      - name: Cache breakdown
-        if: always()
-        run: node tools/moon-cache/bench/analyze.mjs .moon/cache/runReport.json | tee -a "$GITHUB_STEP_SUMMARY"
-        shell: bash
-
-  # Isolates the sticky-disk mount failure. Same action, same runner, but no job container — if it
-  # mounts here and not in the `sticky` job, the container is at fault; if it fails in both, the
-  # host cannot attach the device and it is Blacksmith's to fix.
-  sticky-mount-probe:
-    name: 'Sticky disk mount probe (no container)'
-    runs-on: ${{ inputs.runner || 'blacksmith-8vcpu-ubuntu-2404' }}
-    timeout-minutes: 10
-    steps:
-      - name: Mount a scratch sticky disk
-        uses: useblacksmith/stickydisk@v1
-        continue-on-error: true
-        with:
-          key: ${{ github.repository }}-mount-probe
-          path: /home/runner/sticky-probe
-
-      - name: Report
+      - name: Build breakdown
         run: |
-          df -h /home/runner/sticky-probe || true
-          lsblk 2>/dev/null | head -10 || true
-          mount | grep -E 'vd[b-z]|sticky' || echo "no sticky block device mounted"
-        shell: bash
-
-  sticky:
-    name: 'Blacksmith + sticky disk'
-    runs-on: ${{ inputs.runner || 'blacksmith-8vcpu-ubuntu-2404' }}
-    container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
-      credentials:
-        username: dxos-bot
-        password: ${{ secrets.GITHUB_TOKEN }}
-    timeout-minutes: 60
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-
-      # Keyed per job: on a shared key only the last job to finish keeps its artifacts, and this
-      # workflow runs two jobs at once.
-      - name: Mount moon cache
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-moon-cache-${{ github.job }}
-          path: .moon/cache
-
-      # The mount happens on the runner while the job runs in a container, so it may not arrive.
-      # If this reports the root filesystem, the arm measured a plain disk and its numbers mean
-      # nothing.
-      - name: Confirm the mount reached the container
-        run: |
-          df -h .moon/cache
-          echo "contents: $(du -sh .moon/cache 2>/dev/null | cut -f1) in $(find .moon/cache -type f 2>/dev/null | wc -l) files"
-        shell: bash
-
-      - name: Setup
-        uses: ./.github/actions/setup
-        with:
-          remote-cache: 'false'
-
-      - name: Build
-        run: |
-          start=$(date +%s)
-          moon run :build
-          echo "wall_s=$(( $(date +%s) - start ))" | tee -a "$GITHUB_STEP_SUMMARY"
-        shell: bash
-
-      - name: Cache breakdown
-        if: always()
-        run: |
+          echo "### build — ${{ matrix.runner }} cache=${{ matrix.cache }} — ${BUILD_S}s" >> "$GITHUB_STEP_SUMMARY"
           node tools/moon-cache/bench/analyze.mjs .moon/cache/runReport.json | tee -a "$GITHUB_STEP_SUMMARY"
-          echo "sticky disk now: $(du -sh .moon/cache | cut -f1)" | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      # A fixed set rather than `:test`, so the two runners execute identical work in a bounded
+      # time. With the cache on these hydrate instead of running, which is the comparison: restore
+      # cost against execution cost for the same targets.
+      - name: Test
+        run: |
+          start=$(date +%s)
+          moon run echo:test protocols:test client:test react-ui:test keys:test util:test crypto:test random:test -- --no-file-parallelism
+          echo "TEST_S=$(( $(date +%s) - start ))" >> "$GITHUB_ENV"
+        shell: bash
+
+      - name: Test breakdown
+        if: always()
+        run: |
+          echo "### test — ${{ matrix.runner }} cache=${{ matrix.cache }} — ${TEST_S}s" >> "$GITHUB_STEP_SUMMARY"
+          node tools/moon-cache/bench/analyze.mjs .moon/cache/runReport.json | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "TOTALS runner=${{ matrix.runner }} cache=${{ matrix.cache }} build_s=${BUILD_S} test_s=${TEST_S}" | tee -a "$GITHUB_STEP_SUMMARY"
         shell: bash
