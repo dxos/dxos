@@ -21,16 +21,16 @@ Committed on the branch; none of it has run in CI yet.
       warn-only in `check`.
 - [x] **Document operations and local setup** — [`tools/moon-cache/`](../../../tools/moon-cache/README.md),
       including `install-certs.sh --op`.
-- [ ] **Store `ca.key` in 1Password** — it exists only in a session scratchpad. Everything
-      else is recoverable from it; it is recoverable from nothing.
-- [ ] **Set `MOON_CACHE_CA_PEM` / `MOON_CACHE_CLIENT_PEM` / `MOON_CACHE_CLIENT_KEY`.**
-      Gates the PR: without them every cache-using job fails at setup, by design.
+- [x] **Store the certificates** — one `moon-cache-certs` item in the 1Password `CI` vault, each
+      file its own concealed field; `install-certs.sh --op` reads the three client files from it.
+      `ca.key` is in the item but never fetched by that path.
+- [x] **Set the three `MOON_CACHE_*` repository secrets** on `dxos/dxos`.
 - [ ] **Open the PR and read the CI numbers.** The first measurement of this cache from a
       real runner, and the first test of whether the mTLS path works from inside the job
       container. Expect a full cold build on the first run — a `workspace.yml` change
       re-hashes every task.
-- [ ] **DNS `cache.dxos.network` → the droplet**, then switch `workspace.yml` off the literal
-      IP. The server certificate already carries both, so no re-issue.
+- [x] **DNS `cache.dxos.network` → the droplet** — A record, DNS-only (the Cloudflare proxy does
+      not pass gRPC on 9092). `.moon/workspace.yml` now uses the name; verified 12/12 hits over it.
 - [ ] **Reserve the droplet IP** — a rebuild currently invalidates the certificate's IP SAN.
 - [ ] **Monitoring** on `:9093/metrics` — disk against the 100 GB bound, liveness on `/status`.
       A dead cache is invisible: CI just gets slow.

@@ -14,11 +14,10 @@ projects:
 #
 # Any edit here re-hashes every task, so the next run after a change is a full cold build.
 remote:
-  # Addressed by IP until `cache.dxos.network` has a DNS record — the server certificate carries
-  # both, so switching to the name later needs no re-issue. moon disables the cache and continues
-  # green when the host does not resolve, which is why this is not left pointing at a name that
-  # does not exist yet.
-  host: 'grpcs://64.225.13.237:9092'
+  # The A record must stay DNS-only in Cloudflare: the proxy does not pass gRPC on 9092, and moon
+  # answers an unreachable cache with one warning and a green build, so proxying it would look
+  # like nothing was wrong.
+  host: 'grpcs://cache.dxos.network:9092'
   mtls:
     caCert: '.moon/certs/ca.pem'
     clientCert: '.moon/certs/client.pem'
