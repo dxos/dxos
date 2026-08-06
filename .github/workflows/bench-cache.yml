@@ -57,22 +57,29 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      # Certificates are installed even though this arm does not use them: MOON_REMOTE_HOST
+      # overrides the host but NOT the `mtls` block in workspace.yml, so moon still opens
+      # `.moon/certs/ca.pem` at startup and disables the cache when it is absent. That is exactly
+      # how the first attempt at this arm silently measured nothing.
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          remote-cache: 'false'
 
       - name: Build
         run: |
           if [ -z "$BLACKSMITH_BAZELRE_CACHE_GRPC" ]; then
             echo "::warning::BLACKSMITH_BAZELRE_CACHE_GRPC is unset — this runner exposes no RE cache."
-            exit 0
+            exit 1
           fi
           echo "endpoint: $BLACKSMITH_BAZELRE_CACHE_GRPC"
           start=$(date +%s)
-          # Overrides the disable that `remote-cache: false` wrote to GITHUB_ENV.
-          MOON_REMOTE_HOST="$BLACKSMITH_BAZELRE_CACHE_GRPC" moon run :build
+          MOON_REMOTE_HOST="$BLACKSMITH_BAZELRE_CACHE_GRPC" moon run :build 2>&1 | tee build.log
           echo "wall_s=$(( $(date +%s) - start ))" | tee -a "$GITHUB_STEP_SUMMARY"
+          # A disabled backend is a warning and a green build, so say so loudly.
+          if grep -q 'Failed to connect to storage backend' build.log; then
+            echo "::error::moon disabled the remote cache — this arm measured nothing."
+            grep 'moon_cache_storage' build.log | head -3
+            exit 1
+          fi
         shell: bash
 
       - name: Cache breakdown
@@ -104,11 +111,10 @@ jobs:
       # graph, that is the number needed to interpret the result.
       - name: Runner to cache RTT
         run: |
-          echo "region: ${BLACKSMITH_REGION:-unknown}"
-          for _ in 1 2 3 4 5; do
+          rtt=$(for _ in 1 2 3 4 5; do
             curl -o /dev/null -s --connect-timeout 5 -w '%{time_connect} ' https://cache.dxos.network:9093/status || true
-          done
-          echo
+          done)
+          echo "region=${BLACKSMITH_REGION:-unknown} tcp_connect_s: $rtt" | tee -a "$GITHUB_STEP_SUMMARY"
         shell: bash
 
       - name: Build
