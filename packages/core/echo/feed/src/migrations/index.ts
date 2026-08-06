@@ -5,6 +5,7 @@
 import { SqlMigrations } from '@dxos/sql-sqlite';
 
 import init from './0001_init.sql?raw';
+import blockEncryption from './0002_block_encryption.sql?raw';
 
 /**
  * Feed store migrations, keyed `<id>_<name>` as `@effect/sql`'s `Migrator.fromRecord` expects.
@@ -19,6 +20,7 @@ import init from './0001_init.sql?raw';
  */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
+  '0002_block_encryption': SqlMigrations.apply(blockEncryption),
 };
 
 /**
