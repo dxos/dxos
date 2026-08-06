@@ -1265,6 +1265,25 @@ const useExposeScroll = ({
   }, [expose, viewportRef]);
 };
 
+/**
+ * Makes the exposé's miniature plank content inert: `pointer-events-none` alone leaves every control
+ * inside the miniatures tab-reachable and keyboard-operable. Inert is applied to the *children* of
+ * each attendable root rather than the root itself, so the root stays focusable — it is the target
+ * of the arrow navigation, the attention system, and the Escape restore.
+ */
+const useExposeInert = ({ getPlankTiles, expose }: { getPlankTiles: () => HTMLElement[]; expose: boolean }) => {
+  useLayoutEffect(() => {
+    if (!expose) {
+      return;
+    }
+    const elements = getPlankTiles()
+      .flatMap((tile) => Array.from(tile.querySelectorAll<HTMLElement>(Attention.ATTENDABLE_SELECTOR)))
+      .flatMap((root) => Array.from(root.children));
+    elements.forEach((el) => el.setAttribute('inert', ''));
+    return () => elements.forEach((el) => el.removeAttribute('inert'));
+  }, [expose, getPlankTiles]);
+};
+
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
 const useFullscreen = (fullscreenId: string | undefined) => {
   const { invokePromise } = useOperationInvoker();
@@ -1373,6 +1392,7 @@ export const DeckPlanks = () => {
     scrollIntentRef,
   });
   useScrollIntoView({ viewportRef, stackRef, getPlankTiles, scrollIntoViewId: state.scrollIntoView, scrollIntentRef });
+  useExposeInert({ getPlankTiles, expose });
   useExposeScale({ viewportRef, stackRef, hostRef, getPlankTiles, expose });
   // Last of the layout effects, so it measures the deck only once the scroll, the folds and the scale have
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
