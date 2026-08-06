@@ -195,6 +195,55 @@ lives. Tracked in [`TASKS.md`](./TASKS.md).
 3. **Hash-generation is the floor.** ~31 s on this graph, client-side, untouchable by any cache. It
    is 66% of run-task time against the loopback arm and 3% against Depot.
 
+## In CI
+
+Everything above is from a dev machine. These are the same graph on real runners, one rep per
+cell except where noted, all cache arms at 324/324 hits.
+
+| runner               | cache    |       RTT |    build | tests | hydration | per-task p50 |
+| -------------------- | -------- | --------: | -------: | ----: | --------: | -----------: |
+| Depot `us-east-1`    | off      |         — |    161 s |  16 s |         — |            — |
+| Depot                | **nyc3** |  **7 ms** | **14 s** |   2 s |    13.6 s |        31 ms |
+| Depot                | sfo3     |     66 ms |     26 s |   3 s |    59.5 s |       156 ms |
+| Blacksmith `us-west` | off      |         — |    177 s |  15 s |         — |            — |
+| Blacksmith           | nyc3     |     62 ms |     24 s |   3 s |    55.3 s |       146 ms |
+| Blacksmith           | **sfo3** | **19 ms** | **11 s** |   2 s |    25.4 s |        63 ms |
+
+**The cache is worth ~11× on a Depot runner: 161 s uncached against 14 s cached.** mTLS works
+from inside the job container, which had not been tested before this.
+
+**Cache location dominates; runner choice barely registers.** A near cache is 11–14 s, a
+cross-country one 24–26 s, none at all 161–177 s. Hydration tracks RTT across four independent
+points (7→13.6 s, 19→25.4 s, 62→55.3 s, 66→59.5 s), which is the latency-bound model holding on
+real runners rather than a laptop.
+
+### Runners
+
+Blacksmith was evaluated as an alternative and **rejected**:
+
+1. **Compute is a wash.** Cold builds: Depot 161–162 s over two runs, Blacksmith 164–177 s.
+   Blacksmith's 10 vCPUs against Depot's 8 buy nothing measurable here.
+2. **Depot sits closest to the cache.** 7 ms to NYC3, the tightest pairing available — Blacksmith's
+   own coast is 19 ms, because their `us-west` is not in DO's SFO3 metro.
+3. Migrating would mean `runs-on` changes across seven job definitions and leaving Depot's runners
+   entirely, for no measured gain.
+
+Two results worth keeping, since they cut against the recommendation:
+
+- **Blacksmith+sfo3 (11 s) edged out Depot+nyc3 (14 s)** despite nearly double the hydration.
+  Blacksmith parallelises restore better — ~2.3× effective against Depot's ~1.0× — so its extra
+  cores show up in restore rather than compilation. On single reps, an 11 s vs 14 s gap is not a
+  reason to migrate, but it is not noise-free either.
+- **Sticky disks were never measurable.** Four consecutive runs failed to mount
+  (`Device /dev/vdb still reports zero size after 10000ms`) across two host generations on the
+  latest action. Their action degrades to an empty directory, so the job goes green having
+  measured a plain disk.
+- **Blacksmith's own RE cache rejects moon.** It is gated to registered client identities and only
+  Bazel and Buck2 are registered: `instance_name "moon-outputs" does not match registered VM`.
+  moon can present another name via `MOON_REMOTE_CACHE_INSTANCE_NAME`, and the registered one is
+  derivable as `production/<installation-model-id>/<github-repository-id>/bazel` — but that
+  borrows Bazel's identity, and the endpoint is undocumented.
+
 ## Limits
 
 - **Nothing here was measured in CI.** Every number is from one dev machine. The
