@@ -33,11 +33,7 @@ test.describe('HALO tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Flaky on chromium, which the guards above leave as its only browser in CI, so
-  //   there is no passing configuration to fall back on. Two peers must converge on a replicated
-  //   identity over WebRTC and the assertions race that convergence. Re-enable once the join is
-  //   awaited on a signal rather than on space counts.
-  test.fixme('join new identity', async () => {
+  test('join new identity', async () => {
     test.setTimeout(90_000);
 
     await host.createSpace();

@@ -26,14 +26,7 @@ test.describe('Kanban MutableSchema', () => {
     await page.close();
   });
 
-  // TODO(wittjosiah): These four fail in `beforeEach` — `waitUntilReady` exceeds its 30s budget
-  //   waiting for `board-column` — whenever they run four-up, on chromium and webkit alike
-  //   (run 31105198682, cells 1 and 7). `create new item` runs last, alone, and passes in ~9s with
-  //   the same hook, so the board does render; it is the concurrency that starves it. Cause not yet
-  //   established, so these are deferred rather than papered over with a longer timeout.
-  //   `test.fixme` on the declaration, not inside the body: the body never runs when the failure is
-  //   in a hook, which is why an earlier in-body guard had no effect.
-  test.fixme('rearrange columns', async () => {
+  test('rearrange columns', async () => {
     const col1Label = await board.column(1).title().textContent();
     const col2Label = await board.column(2).title().textContent();
     expect(col1Label).not.toBeNull();
@@ -45,7 +38,7 @@ test.describe('Kanban MutableSchema', () => {
     await expect(board.column(2).title()).toHaveText(col1Label!);
   });
 
-  test.fixme('rearrange within column', async () => {
+  test('rearrange within column', async () => {
     // Column 0 is uncategorized (empty). Use column 1 (first status column).
     const column = board.column(1);
     const countBefore = await column.items().count();
@@ -68,7 +61,7 @@ test.describe('Kanban MutableSchema', () => {
     await expect(column.item(1).title()).toHaveText(firstLabel!);
   });
 
-  test.fixme('drag to beginning of another column', async () => {
+  test('drag to beginning of another column', async () => {
     // Column 0 is uncategorized (empty). Use columns 1 and 2 (both have items).
     const col1 = board.column(1);
     const col2 = board.column(2);
@@ -86,7 +79,7 @@ test.describe('Kanban MutableSchema', () => {
     await expect(col2.item(0).title()).toHaveText(draggedLabel!);
   });
 
-  test.fixme('drag into empty column', async () => {
+  test('drag into empty column', async () => {
     // Uncategorized is column 0 (empty); first populated column is at index 1.
     const emptyColumn = board.column(0);
     const sourceColumn = board.column(1);

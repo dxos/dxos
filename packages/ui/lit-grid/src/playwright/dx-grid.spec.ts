@@ -51,11 +51,7 @@ test.describe('dx-grid', () => {
     await grid.expectVirtualizationResult(nCols, nRows, 1, 1);
   });
 
-  // TODO(wittjosiah): Both fail on webkit and pass on chromium (measured 4.6s/4.7s there in run
-  //   31105198682 cell 2), so they are not reliably green across the matrix. Deferred wholesale
-  //   rather than guarded per browser, because a browser-conditional guard encodes a cause that has
-  //   not been established.
-  test.fixme('mouse access', async () => {
+  test('mouse access', async () => {
     await grid.listenForSelect();
 
     // Find and click on the cell at 0,0.
@@ -92,7 +88,7 @@ test.describe('dx-grid', () => {
     await grid.expectSelectionResult({ col: 2, row: 2 }, { col: 2, row: 2 });
   });
 
-  test.fixme('keyboard access', async () => {
+  test('keyboard access', async () => {
     // Tabbing to the first plane and enter to the first cell there.
     await page.keyboard.press('Tab');
     await page.keyboard.press('Enter');

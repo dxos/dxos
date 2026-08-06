@@ -47,10 +47,7 @@ test.describe('Collaboration tests', () => {
     }
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31108535628, the only failure in 36 tests. Joins two
-  //   peers over WebRTC and asserts on what replicates, the same class as halo.spec.ts's `join new
-  //   identity` and todomvc's `Default space` group — all deferred together pending one root cause.
-  test.fixme("guest joins host's space", async () => {
+  test("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
     await host.createObject({ type: 'Document' });

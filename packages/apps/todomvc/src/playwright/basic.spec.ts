@@ -46,23 +46,15 @@ test.describe('Basic test', () => {
     await guest.page.close();
   });
 
-  // TODO(wittjosiah): The whole group is deferred, not individual tests — which of them fails moves
-  //   between runs, so picking them off one at a time does not converge. `create a task` and
-  //   `toggle a task` failed in run 31105198682; with only those two marked, run 31106982347 failed
-  //   `filter active tasks` instead, on a 30s `waitFor` rather than the 5s replication assert.
-  //   The common factor is the `beforeEach` above: it runs a full WebRTC invitation per test, and
-  //   four of those proceed concurrently at `workers: 4`. Same shape as plugin-kanban's
-  //   `waitUntilReady` and the note in composer's `startup.spec.ts` about `waitForReady` being too
-  //   tight under load; all three are probably one fix, and this group comes back with it.
-  test.describe.fixme('Default space', () => {
-    test.fixme('create a task', async () => {
+  test.describe('Default space', () => {
+    test('create a task', async () => {
       await host.createTodo(Groceries.Eggs);
 
       await expect(guest.todo(Groceries.Eggs)).toBeVisible();
       expect(await guest.todoCount()).toEqual(1);
     });
 
-    test.fixme('toggle a task', async () => {
+    test('toggle a task', async () => {
       await host.createTodo(Groceries.Eggs);
       await host.toggleTodo(Groceries.Eggs);
 
