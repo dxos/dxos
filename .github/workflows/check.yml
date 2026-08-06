@@ -106,6 +106,9 @@ jobs:
       - name: Check package.json paths
         run: pnpm run pkg-lint
 
+      - name: Check remote cache wiring
+        run: node scripts/check-cache-wiring.mjs
+
       - name: Check formatting
         run: pnpm run format-check
 

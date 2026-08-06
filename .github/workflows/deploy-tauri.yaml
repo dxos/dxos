@@ -27,9 +27,9 @@ permissions:
 env:
   CN_APPLICATION: dxos/composer
   # Released binaries are built from source, never restored from a cache any CI job can write to.
-  # Set here rather than via the setup action's `remote-cache` input because this workflow does not
-  # use that action; an unroutable host disables the cache whatever else is configured.
-  MOON_REMOTE_HOST: 'grpc://127.0.0.1:1'
+  # Empty disables moon's remote cache; set here rather than via the setup action's
+  # `remote-cache` input because this workflow does not use that action.
+  MOON_REMOTE_HOST: ''
 
 jobs:
   draft_tauri:

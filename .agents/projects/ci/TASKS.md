@@ -45,10 +45,10 @@ CI — that is what opening the PR settles.
 
 ## Phase 2: Backlog
 
-- [ ] **Check that every moon-running job has a cache credential.** `preview.yml` and
-      `upload-introspect-cache.yml` ran moon tasks with no `DEPOT_TOKEN` and so had no remote cache
-      at all, silently, for an unknown length of time. Both are fixed, and `publish-all` now opts
-      out deliberately — but nothing stops the next workflow from reintroducing the bug.
+- [x] **Check that every moon-running job has a cache credential** —
+      `scripts/check-cache-wiring.mjs`, run in `check`. `model-fixture.yml` landed from main after
+      the call sites were wired and had neither binding nor opt-out, which the setup action caught
+      in CI; this catches it before pushing.
 - [x] **Reword the cache warning** in `AGENTS.md`, `REPOSITORY_GUIDE.md` and the
       composer-plugin-dev skill — it is harmless, but it means no shared cache, and the docs said
       to filter it rather than fix it.

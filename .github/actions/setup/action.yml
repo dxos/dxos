@@ -45,9 +45,10 @@ runs:
         REMOTE_CACHE: ${{ inputs.remote-cache }}
       run: |
         if [ "$REMOTE_CACHE" != "true" ]; then
-          # An unroutable host, not just absent credentials: this must not depend on a workflow
-          # having forgotten to bind the secrets.
-          echo 'MOON_REMOTE_HOST=grpc://127.0.0.1:1' >> "$GITHUB_ENV"
+          # Empty is moon's own "no remote": it makes no connection attempt and logs nothing.
+          # Set explicitly rather than relying on absent credentials, so this does not depend
+          # on a workflow having forgotten to bind the secrets.
+          echo "MOON_REMOTE_HOST=" >> "$GITHUB_ENV"
           echo "Remote cache disabled for this job."
           exit 0
         fi

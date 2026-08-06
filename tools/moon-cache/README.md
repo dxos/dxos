@@ -32,11 +32,10 @@ moon run :build && node -e 'const r=require("./.moon/cache/runReport.json");cons
 Zero on a warm tree means the cache is unreachable or your certificate is rejected, not that
 there was nothing to fetch.
 
-To bypass the remote cache for one command, point it somewhere that does not exist — moon
-degrades to the local cache:
+To bypass the remote cache for one command, blank the host — moon then uses the local cache only:
 
 ```bash
-MOON_REMOTE_HOST='grpc://127.0.0.1:1' moon run :build
+MOON_REMOTE_HOST= moon run :build
 ```
 
 ## Things that will catch you out
@@ -153,10 +152,10 @@ the workflows — both are one commit back in history. **Any change to `.moon/wo
 re-hashes every task**, so the first run after a switch in either direction is a full cold build
 regardless of which cache is at fault.
 
-To turn the cache off entirely without editing config, point it at nothing:
+To turn the cache off entirely without editing config, blank the host:
 
 ```bash
-MOON_REMOTE_HOST='grpc://127.0.0.1:1' moon run :build
+MOON_REMOTE_HOST= moon run :build
 ```
 
 ## Benchmarking a cache change
