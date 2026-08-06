@@ -26,7 +26,13 @@ test.describe('Kanban MutableSchema', () => {
     await page.close();
   });
 
-  test('rearrange columns', async () => {
+  // TODO(wittjosiah): Every drag test here fails on webkit while `create new item` — the only one
+  //   that does not drag — passes, so this is webkit's pointer-event synthesis not driving the dnd
+  //   sensors rather than four separate bugs. Guarded per test rather than in a nested describe to
+  //   keep the titles (and their Trunk/Knapsack history) stable. Re-enable once dnd works on webkit.
+  test('rearrange columns', async ({ browserName }) => {
+    test.fixme(browserName === 'webkit', 'drag-and-drop does not work under webkit');
+
     const col1Label = await board.column(1).title().textContent();
     const col2Label = await board.column(2).title().textContent();
     expect(col1Label).not.toBeNull();
@@ -38,7 +44,9 @@ test.describe('Kanban MutableSchema', () => {
     await expect(board.column(2).title()).toHaveText(col1Label!);
   });
 
-  test('rearrange within column', async () => {
+  test('rearrange within column', async ({ browserName }) => {
+    test.fixme(browserName === 'webkit', 'drag-and-drop does not work under webkit');
+
     // Column 0 is uncategorized (empty). Use column 1 (first status column).
     const column = board.column(1);
     const countBefore = await column.items().count();
@@ -61,7 +69,9 @@ test.describe('Kanban MutableSchema', () => {
     await expect(column.item(1).title()).toHaveText(firstLabel!);
   });
 
-  test('drag to beginning of another column', async () => {
+  test('drag to beginning of another column', async ({ browserName }) => {
+    test.fixme(browserName === 'webkit', 'drag-and-drop does not work under webkit');
+
     // Column 0 is uncategorized (empty). Use columns 1 and 2 (both have items).
     const col1 = board.column(1);
     const col2 = board.column(2);
@@ -79,7 +89,9 @@ test.describe('Kanban MutableSchema', () => {
     await expect(col2.item(0).title()).toHaveText(draggedLabel!);
   });
 
-  test('drag into empty column', async () => {
+  test('drag into empty column', async ({ browserName }) => {
+    test.fixme(browserName === 'webkit', 'drag-and-drop does not work under webkit');
+
     // Uncategorized is column 0 (empty); first populated column is at index 1.
     const emptyColumn = board.column(0);
     const sourceColumn = board.column(1);
