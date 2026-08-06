@@ -64,8 +64,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        {/* The card's only content is a form, so it takes the form gutter rather than the card's chrome inset. */}
-                        <Card.Root fullWidth gutter='sm' classNames='pb-form-gap'>
+                        <Card.Root fullWidth gutter='sm'>
                           <ObjectForm object={props.data} type={type} />
                         </Card.Root>
                       </Mosaic.Tile>

@@ -462,26 +462,24 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
         })}
       </div>
     ) : hasSuggestions ? null : (
-      <div className='p-form-padding'>
-        <Message.Root>
-          <Message.Content>
-            <Message.Body>
-              <span>
-                <Trans
-                  {...{
-                    t,
-                    i18nKey: 'no-comments.message',
-                    components: {
-                      commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
-                      versionsIcon: <Icon icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
-                    },
-                  }}
-                />
-              </span>
-            </Message.Body>
-          </Message.Content>
-        </Message.Root>
-      </div>
+      <Message.Root>
+        <Message.Content classNames='m-trim-md'>
+          <Message.Body>
+            <span>
+              <Trans
+                {...{
+                  t,
+                  i18nKey: 'no-comments.message',
+                  components: {
+                    commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
+                    versionsIcon: <Icon icon='ph--git-branch--regular' size={4} classNames='dx-icon-inline' />,
+                  },
+                }}
+              />
+            </span>
+          </Message.Body>
+        </Message.Content>
+      </Message.Root>
     );
 
   return (
