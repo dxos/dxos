@@ -125,8 +125,10 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(
       return (
         <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
           <Message.Root classNames='m-4' valence='error'>
-            <Message.Title>{t('connection-failed.title')}</Message.Title>
-            <Message.Body>{connectError.message}</Message.Body>
+            <Message.Content>
+              <Message.Title>{t('connection-failed.title')}</Message.Title>
+              <Message.Body>{connectError.message}</Message.Body>
+            </Message.Content>
           </Message.Root>
         </div>
       );

@@ -196,7 +196,9 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
       </header>
       {result.error && (
         <Message.Root valence='error' classNames='m-2'>
-          <Message.Body>{result.error}</Message.Body>
+          <Message.Content>
+            <Message.Body>{result.error}</Message.Body>
+          </Message.Content>
         </Message.Root>
       )}
       {result.issues.length > 0 && (

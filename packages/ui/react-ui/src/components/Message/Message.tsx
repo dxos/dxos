@@ -9,7 +9,7 @@ import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef } fro
 import { useTranslation } from 'react-i18next';
 
 import { useId } from '@dxos/react-hooks';
-import { type Elevation, type MessageValence } from '@dxos/ui-types';
+import { type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -76,6 +76,11 @@ const [MessageProvider, useMessageContext] = createContext<MessageContextValue>(
 // Root
 //
 
+/**
+ * Headless container: contributes the message context (ids, valence, icon), the alert/paragraph
+ * role and aria wiring, and the valence CSS variables — no layout or surface styling. The visual
+ * box (grid + valence surface) is `Message.Content`.
+ */
 const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
   (
     {
@@ -95,21 +100,21 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     const titleId = useId('message__title', propsTitleId);
     const descriptionId = useId('message__description', propsDescriptionId);
     const elevation = useElevationContext(propsElevation);
+    const Comp = asChild ? Slot : Primitive.div;
 
     return (
       <MessageProvider {...{ titleId, descriptionId, valence, icon }}>
-        <Column.Root
-          asChild={asChild}
+        <Comp
           role={valence === 'neutral' ? 'paragraph' : 'alert'}
           aria-labelledby={titleId}
           aria-describedby={descriptionId}
           {...props}
           style={{ ...valenceVars[valence], ...(props.style || {}) }}
-          classNames={tx('message.root', { valence, elevation }, classNames)}
+          className={tx('message.root', { valence, elevation }, classNames)}
           ref={forwardedRef}
         >
           {children}
-        </Column.Root>
+        </Comp>
       </MessageProvider>
     );
   },
@@ -121,25 +126,30 @@ MessageRoot.displayName = MESSAGE_NAME;
 // Content
 //
 
-type MessageContentProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
-  asChild?: boolean;
-};
-
 const MESSAGE_CONTENT_NAME = 'Message.Content';
 
+// Narrowed to the composable surface because the element is a `Column.Root`, which only accepts
+// `classNames`/`role`/`style` (see `ComposableProps`).
+type MessageContentProps = SlottableProps;
+
 /**
- * Optional padded wrapper around a message's title and body — supplies the inset that hosts
- * otherwise had to add with their own wrapper `div`. Spans the root's tracks via subgrid so
- * `Message.Title` still places its icon in the gutter.
+ * The message's visual box: a `Column` grid carrying the valence surface, so `Message.Title`
+ * places its icon in the gutter and `Message.Body` aligns to the content track. Required inside
+ * `Message.Root`, which is headless.
  */
 const MessageContent = forwardRef<HTMLDivElement, MessageContentProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.div;
+    const { valence } = useMessageContext(MESSAGE_CONTENT_NAME);
     return (
-      <Comp {...props} className={tx('message.content', {}, classNames)} ref={forwardedRef}>
+      <Column.Root
+        asChild={asChild}
+        {...props}
+        classNames={tx('message.content', { valence }, classNames)}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </Column.Root>
     );
   },
 );
@@ -150,12 +160,12 @@ MessageContent.displayName = MESSAGE_CONTENT_NAME;
 // Title
 //
 
+const MESSAGE_TITLE_NAME = 'Message.Title';
+
 type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   icon?: string;
   onClose?: () => void;
 };
-
-const MESSAGE_TITLE_NAME = 'Message.Title';
 
 const MessageTitle = forwardRef<HTMLDivElement, MessageTitleProps>(
   ({ classNames, children, icon: iconProp, onClose }, forwardedRef) => {
@@ -196,11 +206,11 @@ MessageTitle.displayName = MESSAGE_TITLE_NAME;
 // Body
 //
 
+const MESSAGE_BODY_NAME = 'Message.Body';
+
 type MessageBodyProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primitive.h2>>, 'id'> & {
   asChild?: boolean;
 };
-
-const MESSAGE_BODY_NAME = 'Message.Body';
 
 const MessageBody = forwardRef<HTMLParagraphElement, MessageBodyProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {

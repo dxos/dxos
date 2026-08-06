@@ -40,7 +40,9 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
       </Input.Root>
       {sheet.ranges.length === 0 ? (
         <Message.Root>
-          <Message.Title>{t('no-ranges.message')}</Message.Title>
+          <Message.Content>
+            <Message.Title>{t('no-ranges.message')}</Message.Title>
+          </Message.Content>
         </Message.Root>
       ) : (
         <OrderedList.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>

@@ -219,7 +219,9 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
               {/* If readonly is set, then the callout is not needed. */}
               {schemaReadonly && !readonly && (
                 <Message.Root valence='info' classNames='my-form-padding'>
-                  <Message.Title>{t('system-schema.description')}</Message.Title>
+                  <Message.Content>
+                    <Message.Title>{t('system-schema.description')}</Message.Title>
+                  </Message.Content>
                 </Message.Root>
               )}
               <Form.FieldSet />

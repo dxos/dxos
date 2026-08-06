@@ -48,8 +48,10 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
         {state === 'error' && (
           <div className='p-form-chrome'>
             <Message.Root valence='error'>
-              {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
-              <Message.Body>{error instanceof Error ? error.message : String(error)}</Message.Body>
+              <Message.Content>
+                {error instanceof Error && <Message.Title>{error.name}</Message.Title>}
+                <Message.Body>{error instanceof Error ? error.message : String(error)}</Message.Body>
+              </Message.Content>
             </Message.Root>
           </div>
         )}
