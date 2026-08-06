@@ -26,6 +26,12 @@ on:
         required: false
         default: false
 
+      e2e_workers_experiment:
+        type: boolean
+        description: 'Run the worker-contention experiment (DX-1116; 6 jobs, firefox only)'
+        required: false
+        default: false
+
 permissions:
   contents: read
   packages: read
@@ -412,11 +418,14 @@ jobs:
   # others' cache writes, duplicating ~10m of work per runner. The env block must match the shards'
   # hash-relevant task inputs ($DX_ENVIRONMENT, $DX_EDGE_BASE_URL, $DX_PWA) or their hashes miss.
   e2e-bundle:
+    # `e2e_workers_experiment` is included because the experiment job depends on this one; without it
+    # a dispatch that asks only for the experiment skips the bundle and takes the experiment with it.
     if: >-
       startsWith(github.ref, 'refs/heads/main') ||
       startsWith(github.ref, 'refs/heads/changeset-release/') ||
       startsWith(github.head_ref, 'changeset-release/') ||
-      inputs.e2e
+      inputs.e2e ||
+      inputs.e2e_workers_experiment
     runs-on: depot-ubuntu-24.04-8
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
@@ -712,6 +721,62 @@ jobs:
           name: playwright-report-knapsack-${{ matrix.browser }}-${{ matrix.node }}
           path: test-results/playwright
           retention-days: 7
+
+  # EXPERIMENT (DX-1116, remove once decided): does running Playwright workers in parallel on one
+  # runner cost more in flakes than it saves in time? Two in-repo notes say it might — the boot
+  # assert in `app-manager.ts` allows 30s against a ~16s firefox boot (1.9x headroom), and
+  # `startup.spec.ts` records `waitForReady` being "too tight" under load.
+  #
+  # Firefox only, because it has the thinnest margin: if 4 workers is clean here it is clean on
+  # chromium and webkit. Three trials per arm so a single green run cannot be mistaken for a
+  # verdict. Deliberately NOT wrapped in the Trunk uploader — quarantine masks failures, which is
+  # exactly the signal being measured.
+  e2e-workers-experiment:
+    needs: e2e-bundle
+    if: ${{ inputs.e2e_workers_experiment }}
+    strategy:
+      fail-fast: false
+      matrix:
+        workers: [1, 4]
+        trial: [1, 2, 3]
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 45
+    env:
+      DX_ENVIRONMENT: ci
+      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_TELEMETRY_TAG: e2e
+      DX_PWA: false
+      PLAYWRIGHT_BROWSER: firefox
+      PLAYWRIGHT_WORKERS: ${{ matrix.workers }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Install Playwright
+        run: pnpm run install-playwright firefox
+
+      - name: Clean stale test results
+        run: rm -rf test-results
+
+      # Every cell must actually execute: without a unique task input moon would replay one cell's
+      # cached result for all six and the experiment would measure nothing.
+      - name: Test composer-app
+        timeout-minutes: 35
+        env:
+          DX_E2E_RUN_ID: ${{ github.run_id }}-w${{ matrix.workers }}-t${{ matrix.trial }}
+        run: moon run composer-app:e2e
 
   # Builds, packs and smoke-tests the CLI on its own runner, in parallel with `e2e`. It used to ride along
   # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
