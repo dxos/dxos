@@ -13,7 +13,7 @@ import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
 import { Card, Focus, Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { Empty } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -86,9 +86,16 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
   const stagedPreview = mergePreview?.typeUri === typeUri ? mergePreview : undefined;
 
   // Merged-away ids would otherwise linger in the shared selection and the companion's card stack.
+  // Functional update against the live selection: the merge operation is async, so a snapshot of
+  // `selectedIds` taken at confirm time would drop any selection change made while it ran.
+  const { update: updateSelection } = useViewStateActions(Selection.aspect, typeUri);
   const handleConfirmed = useCallback(
-    (objectIds: string[]) => setSelectedObjects(selectedIds.filter((id) => !objectIds.includes(id))),
-    [setSelectedObjects, selectedIds],
+    (objectIds: string[]) =>
+      updateSelection((previous) => ({
+        mode: 'multi',
+        ids: Selection.resolve(previous, 'multi').filter((id) => !objectIds.includes(id)),
+      })),
+    [updateSelection],
   );
 
   const duplicatesGroup = useDuplicatesGroup({

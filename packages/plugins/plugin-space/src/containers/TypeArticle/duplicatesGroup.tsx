@@ -92,8 +92,13 @@ export const useDuplicatesGroup = ({
           return;
         }
         // Bumping the timestamp is what tells the open review to rescan; without it the group the
-        // user just merged stays on screen as a one-member "duplicate".
-        updateEphemeral((state) => ({ ...state, mergePreview: undefined, lastMergeAt: Date.now() }));
+        // user just merged stays on screen as a one-member "duplicate". Only the preview this
+        // operation was raised from is cleared — a preview staged elsewhere mid-flight survives.
+        updateEphemeral((state) => ({
+          ...state,
+          mergePreview: state.mergePreview === staged ? undefined : state.mergePreview,
+          lastMergeAt: Date.now(),
+        }));
         onConfirmed?.(staged.objectIds);
       })
       .finally(() => setMerging(false));
@@ -148,7 +153,7 @@ export const useDuplicatesGroup = ({
               icon: 'ph--arrows-merge--regular',
               variant: 'primary',
               iconOnly: false,
-              disabled: current.length < 2,
+              disabled: current.length < 2 || merging,
             },
             handleMerge,
           )
@@ -158,18 +163,20 @@ export const useDuplicatesGroup = ({
               label: ['skip-duplicates.label', { ns: meta.profile.key }],
               iconOnly: false,
               // Same bound as the next arrow: skipping past the last group left the counter out of range.
-              disabled: position >= total,
+              disabled: position >= total || merging,
             },
             handleAdvance,
           );
       }
+      // Every control below clears the staged preview, so all of them freeze while the merge
+      // operation is in flight — otherwise a mid-flight clear/restage races the completion handler.
       builder
         .action(
           'rescan',
           {
             label: ['rescan-duplicates.label', { ns: meta.profile.key }],
             icon: 'ph--arrows-clockwise--regular',
-            disabled: scanning,
+            disabled: scanning || merging,
             spin: scanning,
           },
           handleRefresh,
@@ -183,7 +190,7 @@ export const useDuplicatesGroup = ({
                   {
                     label: ['previous-duplicate.label', { ns: meta.profile.key }],
                     icon: 'ph--caret-left--regular',
-                    disabled: position <= 1,
+                    disabled: position <= 1 || merging,
                   },
                   handlePrevious,
                 )
@@ -207,7 +214,7 @@ export const useDuplicatesGroup = ({
                   {
                     label: ['next-duplicate.label', { ns: meta.profile.key }],
                     icon: 'ph--caret-right--regular',
-                    disabled: position >= total,
+                    disabled: position >= total || merging,
                   },
                   handleAdvance,
                 ),
