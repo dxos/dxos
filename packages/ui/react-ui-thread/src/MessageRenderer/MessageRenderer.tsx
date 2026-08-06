@@ -172,5 +172,15 @@ export const MessageRenderer = ({
     );
   }, [model, blocks, editing]);
 
-  return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
+  return <div ref={parentRef} className={mx(editing && EDIT_FRAME, classNames)} {...focusAttributes} />;
 };
+
+/**
+ * The frame an editable body wears — drawn outward, so entering edit mode costs no layout.
+ *
+ * The negative margins cancel the padding exactly: the border box grows by 6px/2px on each side
+ * while the content box keeps the width and origin it had at rest. Padding alone narrows the
+ * measure, which rewraps the body and moves every word in it — the text has to stay where the
+ * reader left it, with the box appearing around it.
+ */
+const EDIT_FRAME = 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5 -mx-1.5 -my-0.5';

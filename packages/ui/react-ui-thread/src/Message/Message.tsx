@@ -252,7 +252,6 @@ const TextBlock = ({
   /** Ends edit mode without committing. */
   onCancelEdit?: () => void;
 }) => {
-  const { t } = useTranslation(translationKey);
   const draftRef = useRef(block.text);
 
   const handleChange = useCallback((text: string) => {
@@ -275,11 +274,11 @@ const TextBlock = ({
     onCancelEdit?.();
   }, [block.text, onCancelEdit]);
 
-  // While editing, the body reads as an input rather than as text with a different button beside it:
-  // it takes an accented frame and states how to commit, so the mode is legible without hovering.
+  // The renderer wears the accented frame itself, so the mode is legible without hovering; how to
+  // commit is stated by the row the tile puts beneath it, alongside the save/cancel controls.
   const canEdit = !!isAuthor && !!editing;
   return (
-    <div className={mx('me-4', canEdit && 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5')}>
+    <div className='me-4'>
       <MessageRenderer
         blocks={[block]}
         editing={canEdit}
@@ -287,11 +286,6 @@ const TextBlock = ({
         onCommit={onCommitEdit}
         onCancel={handleCancel}
       />
-      {canEdit && (
-        <p data-testid='thread.message.edit-hint' className='pt-0.5 text-xs text-description'>
-          {t('editing.message')}
-        </p>
-      )}
     </div>
   );
 };
@@ -964,12 +958,16 @@ const MessageTile = ({ message, classNames, continues = true, continuation = fal
   const threadSummary = getThreadSummary?.(message);
 
   const controls = <MessageControls message={message} state={state} />;
+  const canEdit = isAuthor && editing;
 
   return (
     <MessageRoot
       {...metadata}
       continues={continues}
-      controls={controls}
+      // Editing moves the controls out of the corner overlay and into the flow beneath the body: the
+      // overlay is a hover affordance that hides what is behind it, which while editing is the first
+      // line of the very text being edited.
+      controls={canEdit ? undefined : controls}
       // Selecting a tile is how the host reveals what it refers to (a suggestion's range in the
       // document), so the whole tile is the target — the accent marks which one is showing.
       showAvatar={!continuation}
@@ -993,6 +991,14 @@ const MessageTile = ({ message, classNames, continues = true, continuation = fal
         onCommitEdit={handleExitEdit}
         onCancelEdit={handleExitEdit}
       />
+      {canEdit && (
+        <div className='flex items-center justify-between gap-2 pt-1 me-4'>
+          <p data-testid='thread.message.edit-hint' className='min-w-0 text-xs text-description'>
+            {t('editing.message')}
+          </p>
+          {controls}
+        </div>
+      )}
       {onMessageReact && <MessageReactions reactions={reactions} onReact={handleReact} state={state} />}
       {/* The summary row appears only once a thread exists; starting one is a hover control. */}
       {threadSummary && onThreadOpen && <MessageThreadLink summary={threadSummary} onOpen={handleOpenThread} />}

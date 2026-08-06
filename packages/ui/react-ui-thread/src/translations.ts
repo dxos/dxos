@@ -25,7 +25,7 @@ export const translations = [
         'edit-message.label': 'Edit',
         'save-message.label': 'Save',
         'cancel-edit.label': 'Cancel edit',
-        'editing.message': 'Enter to save · Escape to cancel · Shift+Enter for a new line',
+        'editing.message': 'Enter to save · Shift+Enter for a new line',
         'delete-message.label': 'Delete',
         'accept-proposal.label': 'Accept proposal',
         'accept-change.label': 'Accept change',

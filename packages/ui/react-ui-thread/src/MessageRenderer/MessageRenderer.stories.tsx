@@ -86,7 +86,6 @@ const EditingStory = () => {
       </Toolbar.Root>
       <Row>
         <MessageRenderer
-          classNames={editing ? 'rounded-sm ring-1 ring-accent-bg bg-attention-surface px-1.5 py-0.5' : undefined}
           blocks={blocks}
           editing={editing}
           onChange={setDraft}

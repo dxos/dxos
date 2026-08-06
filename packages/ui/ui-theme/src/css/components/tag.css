@@ -152,8 +152,18 @@
     @apply cursor-pointer transition-colors;
   }
 
+  /*
+   * Surface-relative rather than the hue palette's fixed pastel: `--color-neutral-surface` is a light
+   * shade in both themes (it is paired with a dark `-fg`), so an unhued pill reads as light chrome
+   * dropped onto a dark conversation. Scoped to the default hue, so a deliberately hued button tag
+   * keeps its palette.
+   */
+  .dx-tag.dx-tag--button[data-hue='neutral'] {
+    @apply bg-hover-surface text-base-fg ring-1 ring-inset ring-separator;
+  }
+
   .dx-tag.dx-tag--button:hover {
-    @apply bg-hover-surface;
+    @apply bg-current-surface;
   }
 
   .dx-tag.dx-tag--button[aria-pressed='true'] {
