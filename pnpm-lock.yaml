@@ -2777,15 +2777,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/network-manager':
-        specifier: workspace:*
-        version: link:../../core/mesh/network-manager
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
-      '@dxos/random-access-storage':
-        specifier: workspace:*
-        version: link:../../common/random-access-storage
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -2801,9 +2795,6 @@ importers:
       '@dxos/solid-ui-geo':
         specifier: workspace:*
         version: link:../../ui/solid-ui-geo
-      '@dxos/teleport':
-        specifier: workspace:*
-        version: link:../../core/mesh/teleport
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../common/test-utils
@@ -2852,9 +2843,6 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0)
-      lit:
-        specifier: 'catalog:'
-        version: 3.3.3
       pwa-asset-generator:
         specifier: 'catalog:'
         version: 6.4.0

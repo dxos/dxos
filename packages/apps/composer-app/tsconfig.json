@@ -64,9 +64,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/random-access-storage"
-    },
-    {
       "path": "../../common/sql-sqlite"
     },
     {
@@ -86,12 +83,6 @@
     },
     {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/mesh/network-manager"
-    },
-    {
-      "path": "../../core/mesh/teleport"
     },
     {
       "path": "../../core/protocols"
