@@ -34,14 +34,23 @@ checkpoints, and the top dominators from a snapshot.
 
 ## Phase 2: Reproduce the report
 
-The dev baseline may be far from the user's experience. Reproduce "incredibly
-high" with real or synthetic data.
+User evidence (2026-08-06): Chrome tab "High memory usage: 3.0 GB" on
+composer.space, small profile, fast onset; DevTools JS heap 941 MB total.
+Chrome's number is renderer process footprint, not JS heap.
 
 ### Tasks
 
-- [ ] **Decide data source** — live profile via /recovery.html debug port
-      (composer-forensics DOCTOR.md flow) vs synthetic large profile.
-- [ ] **Profile the loaded instance** — same checkpoint table + snapshots.
+- [x] **Reproduce** — fresh identity, production preview, idle: renderer RSS
+      climbs ~30 MB/min (630 → 994 MB over 10 min) while JS heap stays flat.
+      Non-JS (native) growth; no data needed. DESIGN.md Findings.
+- [x] **Allocation sampling** — idle churn is modest (~3.4 MB/min page); top
+      allocators include 3 Cloudflare Stream video iframes on the home surface.
+- [ ] **Video-block control soak** — same soak with `*cloudflarestream*`
+      blocked; if flat, media pipeline is the driver. RUNNING.
+- [ ] **Attribute the ~480 MB baseline RSS gap** (762 MB RSS at ready vs
+      ~280 MB heap+backing) — wasm reservations, media, canvas, code pages.
+- [ ] **Loaded-profile pass** — real (/recovery.html debug port) or synthetic
+      data to explain Main=816 MB JS heap on the user's instance.
 
 ## Phase 3: Fix
 

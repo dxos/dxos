@@ -133,3 +133,31 @@ Open threads from this composition: why 27.7 MB of chunk sources are resident
 at ready (matches startup-latency's boot-graph scope); whether the main thread
 needs the automerge wasm instance at all; Effect object counts as a
 scaling-with-data risk multiplier.
+
+### 2026-08-06 — REPRODUCED: renderer footprint grows ~30 MB/min at idle (fresh identity, production)
+
+User report: Chrome tab flags "High memory usage: 3.0 GB" on composer.space
+within minutes, small profile, while DevTools shows JS heap ~941 MB (Main
+816 MB + client worker 122 MB). Key fact: **Chrome's tab number is renderer
+process footprint, not JS heap.**
+
+10-min idle soak of the production preview (no forced GC, per-process RSS via
+`ps`, fresh identity, headless):
+
+- Renderer RSS: 762 MB at ready → dips to ~630 → climbs **linearly** to
+  **994 MB at t=10 min** (~30 MB/min from t≈4 min on).
+- JS heap the whole time: page oscillates 99–154 MB, worker 25–75 MB, backing
+  30–110 MB — flat. The growth is entirely **outside the JS heap**.
+- Extrapolation: hours-long session → multi-GB footprint. Matches the report
+  without any data in the profile.
+- Even at ready, RSS (762 MB) ≈ 2.7× total JS heap+backing (~280 MB) —
+  ~480 MB of baseline non-JS memory also unattributed.
+
+Allocation sampling (4 min idle, prod): page churns only ~3.4 MB/min — top
+allocators are V8 API + **three Cloudflare Stream video iframe SDKs**
+(`sdk-iframe-integration...?video=` ×3). Composer embeds autoplaying Stream
+players on the fresh-identity home surface (`SpaceHomeWelcome` in
+plugin-support; demo videos in plugin-markdown/plugin-game `dx.config.ts`),
+and deck planks stay mounted. Media decode buffers live outside the JS heap —
+prime suspect for the linear native growth. Control experiment in flight:
+identical soak with `*cloudflarestream*` requests blocked.
