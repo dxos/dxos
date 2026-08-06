@@ -8,8 +8,8 @@ import { trace } from '@dxos/tracing';
 import { CircularBuffer, SlidingWindowSummary, type SlidingWindowSummaryConfig, mapValues } from '@dxos/util';
 
 import { type NetworkDataMonitor } from './echo-network-adapter';
-import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
 import { isCollectionQueryMessage, isCollectionStateMessage } from './network-protocol';
+import { type StorageAdapterDataMonitor } from './sqlite-storage-adapter';
 
 const PER_SECOND_RATE_AVG_WINDOW_SIZE = 5;
 const DEFAULT_AVG_WINDOW_SIZE = 25;

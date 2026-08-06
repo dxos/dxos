@@ -4,9 +4,9 @@
 
 import { IndexedDBStorageAdapter } from '@automerge/automerge-repo-storage-indexeddb';
 
-import { createLevel } from '@dxos/client-services';
 import { Context } from '@dxos/context';
-import { LevelDBStorageAdapter } from '@dxos/echo-host';
+import { type SqliteStorageAdapter } from '@dxos/echo-host';
+import { createTestSqliteStorageAdapter } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -15,7 +15,7 @@ import { range } from '@dxos/util';
 
 import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
-export type AdaptorKind = 'idb' | 'node' | 'leveldb';
+export type AdaptorKind = 'idb' | 'node' | 'sqlite';
 
 export type RunResults = {
   saveDuration: number;
@@ -112,16 +112,13 @@ export class StorageReplicant {
     return results;
   }
 
-  private async _createStorage(kind: AdaptorKind): Promise<IndexedDBStorageAdapter | LevelDBStorageAdapter> {
+  private async _createStorage(kind: AdaptorKind): Promise<IndexedDBStorageAdapter | SqliteStorageAdapter> {
     switch (kind) {
       case 'idb':
         return new IndexedDBStorageAdapter();
-      case 'leveldb': {
-        const level = await createLevel({ persistent: true, dataRoot: `/tmp/dxos/${this.env.params.testId}` });
-        this._storageCtx.onDispose(() => level.close());
-        const adapter = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-        await adapter.open();
-        this._storageCtx.onDispose(() => adapter.close());
+      case 'sqlite': {
+        const { adapter, dispose } = await createTestSqliteStorageAdapter(`/tmp/dxos-${this.env.params.testId}.sqlite`);
+        this._storageCtx.onDispose(() => dispose());
         return adapter;
       }
       default: {

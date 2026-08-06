@@ -289,8 +289,6 @@ export class Client {
    * Test and repair database.
    */
   async repair(): Promise<any> {
-    const { createLevel } = await import('@dxos/client-services');
-
     // TODO(burdon): Factor out.
     const repairSummary: any = {};
 
@@ -329,22 +327,6 @@ export class Client {
       await SaveConfig(config);
 
       repairSummary.storageConfig = config;
-    }
-
-    {
-      repairSummary.levelDBRemovedEntries = 0;
-      // Cleanup old index-data from level db.
-      const level = await createLevel(this._config?.values.runtime?.client?.storage ?? {});
-      const sublevelsToCleanup = [
-        level.sublevel('index-store'),
-        level.sublevel('index-metadata').sublevel('clean'),
-        level.sublevel('index-metadata').sublevel('dirty'),
-      ];
-
-      for (const sublevel of sublevelsToCleanup) {
-        repairSummary.levelDBRemovedEntries += (await sublevel.keys().all()).length;
-        await sublevel.clear();
-      }
     }
 
     {

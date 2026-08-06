@@ -85,9 +85,6 @@
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/kv-store"
-    },
-    {
       "path": "../../common/log"
     },
     {

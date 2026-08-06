@@ -28,7 +28,7 @@ const decodeHeads = (data: Uint8Array): Heads => {
   try {
     return getHeadsCodec().decode(data).hashes!;
   } catch {
-    // Legacy encoding migration path (same as HeadsStore).
+    // Legacy encoding migration path for heads persisted before protobuf encoding.
     log.warn('Detected legacy encoding of heads in SQLite storage.');
     const concatenated = Buffer.from(data).toString('utf8').replace(/"/g, '');
     const heads: string[] = [];
@@ -45,7 +45,6 @@ export type SqliteHeadsStoreProps = {
 
 /**
  * SQLite-backed store for automerge document heads.
- * Replaces HeadsStore (LevelDB-based).
  */
 export class SqliteHeadsStore {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;

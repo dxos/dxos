@@ -226,7 +226,6 @@
     "@dxos/index-core": "workspace:*",
     "@dxos/keyboard": "workspace:*",
     "@dxos/keyring": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
     "@dxos/lit-grid": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",

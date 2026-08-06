@@ -59,7 +59,6 @@
     "@dxos/index-core": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -75,7 +74,6 @@
     "bs58check": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",
-    "level-transcoder": "catalog:",
     "semver": "catalog:"
   },
   "devDependencies": {

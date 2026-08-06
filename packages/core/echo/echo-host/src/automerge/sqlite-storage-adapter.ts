@@ -12,10 +12,15 @@ import { log } from '@dxos/log';
 import { SqlTransaction } from '@dxos/sql-sqlite';
 import { type MaybePromise } from '@dxos/util';
 
-import { type StorageAdapterDataMonitor } from './leveldb-storage-adapter';
-
 // SqlTransaction.SqlTransaction is the Tag class exported from the SqlTransaction namespace.
 type SqlTransactionTag = SqlTransaction.SqlTransaction;
+
+export interface StorageAdapterDataMonitor {
+  recordBytesStored(count: number): void;
+  recordBytesLoaded(count: number): void;
+  recordLoadDuration(durationMs: number): void;
+  recordStoreDuration(durationMs: number): void;
+}
 
 export type SqliteStorageAdapterProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
@@ -30,7 +35,6 @@ export type SqliteStorageCallbacks = {
 /**
  * SQLite-backed automerge StorageAdapterInterface.
  * Stores automerge document chunks in the `automerge_chunks` table.
- * Replaces LevelDBStorageAdapter.
  */
 export class SqliteStorageAdapter implements StorageAdapterInterface {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransactionTag>;
