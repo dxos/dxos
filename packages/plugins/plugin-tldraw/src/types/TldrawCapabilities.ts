@@ -6,12 +6,12 @@
 
 import { type Atom } from '@effect-atom/atom';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
 
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
-export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(
+export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings').Settings>>()(
   `${meta.profile.key}.capability.settings`,
 );

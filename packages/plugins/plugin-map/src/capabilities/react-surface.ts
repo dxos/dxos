@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -12,13 +13,15 @@ import { SchemaEx } from '@dxos/effect';
 import { Position } from '@dxos/util';
 
 import { MapSurface, MapViewEditor } from '#containers';
-import { LocationAnnotationId, Map, MapInline } from '#types';
 
+import * as Map from '../types/Map';
+import { LocationAnnotationId } from '../types/MapCapabilities';
+import { MapInline } from '../types/MapRole';
 import { LocationField } from './LocationField';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.map',
         filter: AppSurface.oneOf(

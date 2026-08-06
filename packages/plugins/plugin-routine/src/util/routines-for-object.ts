@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Instructions, Routine, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Routine from '@dxos/compute/Routine';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 

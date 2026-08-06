@@ -5,13 +5,15 @@
 import { describe, test } from 'vitest';
 
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SamplePlugin } from '#plugin';
 
 import { meta } from './meta';
-import { SampleOperation } from './types';
-import { SampleItem } from './types';
+import * as SampleItem from './types/SampleItem';
+import * as SampleOperation from './types/SampleOperation';
 
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
@@ -22,8 +24,22 @@ describe('SamplePlugin', () => {
     });
 
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
+  });
+
+  test('the create-object entry activates when a create is requested', async ({ expect }) => {
+    // Positive coverage for `CreateObjectRequested`, which had none repo-wide: ~17 plugin tests
+    // assert their CreateObject module is absent and none fires the event, so a broken
+    // `create-object` body is invisible to tests and surfaces in production as a type silently
+    // missing from the create dialog.
+    await using harness = await createComposerTestApp({
+      plugins: [ClientPlugin({}), SamplePlugin()],
+    });
+
+    await harness.fire(SpaceEvents.CreateObjectRequested);
+    expect(harness.manager.getActive()).toContain(moduleId('CreateObject'));
+    expect(harness.getAll(SpaceCapabilities.CreateObjectEntry).length).toBeGreaterThan(0);
   });
 
   test('CreateSampleItem returns a SampleItem object', async ({ expect }) => {

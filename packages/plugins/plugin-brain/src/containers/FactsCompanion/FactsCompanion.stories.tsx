@@ -6,9 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { EffectEx } from '@dxos/effect';
 import { type RDF } from '@dxos/pipeline-rdf';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -16,8 +15,8 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
-import { makeFactStoreRegistry } from '../../capabilities';
-import { BrainCapabilities } from '../../types';
+import { makeFactStoreRegistry } from '../../capabilities/fact-store';
+import * as BrainCapabilities from '../../types/BrainCapabilities';
 import { FactsCompanion } from './FactsCompanion';
 
 // A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's
@@ -48,9 +47,8 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withTheme(),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       // Contribute the seeded registry directly so the companion resolves it without the full FactStore module.
-      capabilities: [Capability.contributes(BrainCapabilities.FactStoreRegistry, registry)],
+      capabilities: [Capability.contribute(BrainCapabilities.FactStoreRegistry, registry)],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

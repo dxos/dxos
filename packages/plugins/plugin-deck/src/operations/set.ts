@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
 import { updatePlankNames } from '../layout';
-import { DeckCapabilities } from '../types';
+import * as DeckCapabilities from '../types/DeckCapabilities';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
 

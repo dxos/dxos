@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Resource } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

@@ -4,13 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Attention } from '@dxos/react-ui-attention/types';
 
-import { CommentCapabilities } from '../types';
-import { CommentOperation } from '../types';
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
 
 const handler: Operation.WithHandler<typeof CommentOperation.Select> = CommentOperation.Select.pipe(
   Operation.withHandler(

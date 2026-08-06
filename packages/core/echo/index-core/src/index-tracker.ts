@@ -2,12 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Migrator from '@effect/sql/Migrator';
 import * as SqlClient from '@effect/sql/SqlClient';
 import type * as SqlError from '@effect/sql/SqlError';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
+
+import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/tracker';
 
 export const IndexCursor = Schema.Struct({
   /**
@@ -35,30 +39,21 @@ export const IndexCursor = Schema.Struct({
 });
 export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 
-/**
- * Deprecated index names that are no longer used. Will be cleaned up on migration.
- */
-const DEPRECATED_INDEX_NAMES = ['fts'];
-
 export class IndexTracker {
-  migrate = Effect.fn('IndexTracker.migrate')(function* () {
-    const sql = yield* SqlClient.SqlClient;
-
-    // For automerge: last-indexed heads of the document
-    // For queue: the position of the item that was indexed last
-    yield* sql`CREATE TABLE IF NOT EXISTS indexCursor (
-      indexName TEXT NOT NULL,
-      spaceId TEXT NOT NULL DEFAULT '',
-      sourceName TEXT NOT NULL,
-      resourceId TEXT NOT NULL DEFAULT '',
-      cursor,
-      PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
-    )`;
-
-    yield* Effect.forEach(DEPRECATED_INDEX_NAMES, (indexName) => {
-      return sql`DELETE FROM indexCursor WHERE indexName = ${indexName}`;
-    });
-  });
+  /**
+   * Applies any migrations this database has not recorded yet.
+   *
+   * `SqlTransaction.clientLayer` is provided because the migrator wraps its work in the client's
+   * `withTransaction`, which emits `BEGIN` / `COMMIT` — rejected in workerd.
+   */
+  migrate = Effect.fn('IndexTracker.migrate')(() =>
+    Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+      Effect.provide(SqlTransaction.clientLayer),
+      // A malformed bundled manifest is a defect, not something a caller can recover from.
+      Effect.catchTag('MigrationError', (error) => Effect.die(error)),
+      Effect.asVoid,
+    ),
+  );
 
   queryCursors = Effect.fn('IndexTracker.queryCursors')(
     (

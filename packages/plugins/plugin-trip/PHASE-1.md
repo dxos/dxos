@@ -1499,7 +1499,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import { SpaceOperation } from '@dxos/plugin-space';
 
 import { Trip } from '#types';
 
@@ -2266,10 +2267,10 @@ export default handler;
 
 - [ ] **Step 4: Register in the operations barrel**
 
-In `packages/plugins/plugin-inbox/src/operations/index.ts`, find the `OperationHandlerSet.lazy(...)` array and add a new entry:
+In `packages/plugins/plugin-inbox/src/operations/index.ts`, find the `OperationHandlerSet.lazy(...)` array and add a new entry pairing the definition with its handler module:
 
 ```typescript
-() => import('./extract-message'),
+[InboxOperation.ExtractMessage, () => import('./extract-message')],
 ```
 
 - [ ] **Step 5: Re-run test**
@@ -3062,7 +3063,7 @@ git commit -m "feat(plugin-trip): TravelMessageExtractor dispatch + Trip resolut
 import { Effect } from 'effect';
 
 import { Capability } from '@dxos/app-framework';
-import { InboxCapabilities } from '@dxos/plugin-inbox';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 
 import { TravelMessageExtractor } from '../extractors/TravelMessageExtractor';
 

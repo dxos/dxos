@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { evalite } from 'evalite';
 
 import { ProjectSkill } from '@dxos/assistant-toolkit';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 import { Collection, Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { TablePlugin } from '@dxos/plugin-table/plugin';

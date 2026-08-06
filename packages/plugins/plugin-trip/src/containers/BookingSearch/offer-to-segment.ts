@@ -4,7 +4,10 @@
 
 import { type Obj } from '@dxos/echo';
 
-import { type Booking, type BookingSearch, type Place, type Segment } from '#types';
+import type * as Booking from '../../types/Booking';
+import type * as BookingSearch from '../../types/BookingSearch';
+import type * as Place from '../../types/Place';
+import type * as Segment from '../../types/Segment';
 
 /** First leg of an offer. */
 const firstSlice = (offer: BookingSearch.FlightOffer): BookingSearch.FlightSliceFields | undefined =>

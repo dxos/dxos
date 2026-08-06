@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Blob } from '@dxos/echo';
 
-import { FileCapabilities } from '#types';
+import * as FileCapabilities from '../types/FileCapabilities';
 
 /**
  * Inline backend descriptor: file bytes are stored on the ECHO object itself.
@@ -20,5 +20,5 @@ export const inlineBackend: FileCapabilities.Backend = {
 };
 
 export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(FileCapabilities.Backend, inlineBackend)),
+  Effect.succeed(Capability.contribute(FileCapabilities.Backend, inlineBackend)),
 );

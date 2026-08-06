@@ -4,11 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { FactStore, type SemanticIndexError } from '@dxos/pipeline-rdf';
 
-import { BrainOperation } from '#types';
-
+import * as BrainOperation from '../types/BrainOperation';
 import { toCompactFact } from './facts';
 
 export default BrainOperation.QueryFacts.pipe(

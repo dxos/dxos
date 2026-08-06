@@ -22,6 +22,11 @@
       "source": "./src/extraction/index.ts",
       "types": "./dist/types/src/extraction/index.d.ts",
       "import": "./dist/lib/extraction.mjs"
+    },
+    "./ExecutionGraph": {
+      "source": "./src/util/execution-graph.ts",
+      "types": "./dist/types/src/util/execution-graph.d.ts",
+      "import": "./dist/lib/ExecutionGraph.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

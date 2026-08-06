@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 
 import { TRADINGVIEW_SOURCE } from '../constants';
 import { foreignKeyEquals, mergeForeignKeys } from '../services';
-import { Ibkr, IbkrOperation } from '../types';
+import * as Ibkr from '../types/Ibkr';
+import * as IbkrOperation from '../types/IbkrOperation';
 
 const defaultForeignKeys = ({
   key,

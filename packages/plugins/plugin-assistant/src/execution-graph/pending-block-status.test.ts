@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Trace } from '@dxos/compute';
+import * as Trace from '@dxos/compute/Trace';
 
 import {
   formatPendingBlockStatus,

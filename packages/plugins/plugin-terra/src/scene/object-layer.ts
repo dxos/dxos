@@ -10,7 +10,7 @@ import { type Scene } from '@babylonjs/core/scene';
 
 import { scale } from '../engine';
 import { type SimObject } from '../sim';
-import { type TerraObject } from '../types';
+import type * as TerraObject from '../types/TerraObject';
 import { easeHeading } from './heading';
 import { createObjectForm } from './object-forms';
 import { SCALE_FACTOR, objectFrame } from './orientation';

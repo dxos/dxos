@@ -7,7 +7,7 @@
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 import { type Channel, type Message } from '@dxos/types';
 
@@ -44,4 +44,6 @@ export interface ChannelBackendProvider {
 }
 
 /** Registry of channel-message backends. Collect with `Capability.getAll`. */
-export const ChannelBackend = Capability.make<ChannelBackendProvider>(`${meta.profile.key}.capability.channel-backend`);
+export const ChannelBackend = Capability.make<ChannelBackendProvider>()(
+  `${meta.profile.key}.capability.channelBackend`,
+);

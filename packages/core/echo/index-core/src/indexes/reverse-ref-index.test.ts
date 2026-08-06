@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
@@ -17,11 +18,13 @@ import { ReverseRefIndex } from './reverse-ref-index';
 const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
 const TYPE_EXAMPLE = DXN.make('com.example.type.example', '0.1.0');
 
-const TestLayer = Layer.merge(
-  SqliteClient.layer({
-    filename: ':memory:',
-  }),
-  Reactivity.layer,
+const TestLayer = SqlTransaction.layer.pipe(
+  Layer.provideMerge(
+    SqliteClient.layer({
+      filename: ':memory:',
+    }),
+  ),
+  Layer.provideMerge(Reactivity.layer),
 );
 
 describe('ReverseRefIndex', () => {

@@ -10,14 +10,15 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Operation, Trace } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { registryLayerNoop } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { VideoOperation } from '../types';
+import * as VideoOperation from '../types/VideoOperation';
 
 const handler: Operation.WithHandler<typeof VideoOperation.Summarize> = VideoOperation.Summarize.pipe(
   Operation.withHandler(

@@ -8,9 +8,8 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { FactViewer } from '@dxos/react-ui-rdf';
 
-import { BrainCapabilities } from '#types';
-
-import { type FactStoreRegistry } from '../../capabilities';
+import { type FactStoreRegistry } from '../../capabilities/fact-store';
+import * as BrainCapabilities from '../../types/BrainCapabilities';
 import { useFacts } from './use-facts';
 
 /**

@@ -7,17 +7,18 @@ import * as Effect from 'effect/Effect';
 
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
-import { MemoizedAiService } from '@dxos/ai/testing';
+import { LanguageModelFixture } from '@dxos/ai/testing';
 import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { OperationHandlerSet, Skill } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import * as Skill from '@dxos/compute/Skill';
 import { Collection, Database, Feed, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MarkdownSkill } from '@dxos/plugin-markdown';
-import { Markdown } from '@dxos/plugin-markdown';
-import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/plugin';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { Person } from '@dxos/types';
 
 import { DatabaseHandlers, DatabaseSkill } from '../database';
@@ -57,6 +58,6 @@ describe('Browser', { tags: ['manual'] }, () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-    { timeout: MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000, tags: ['sync'] },
+    { timeout: LanguageModelFixture.isUpdateEnabled() ? 240_000 : 30_000, tags: ['sync'] },
   );
 });

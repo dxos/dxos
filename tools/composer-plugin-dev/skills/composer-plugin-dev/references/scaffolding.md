@@ -16,7 +16,7 @@ my-plugin/
     meta.ts               # Plugin.Meta — id, name, description, icon, iconHue
     translations.ts
     capabilities/
-      index.ts            # Capability.lazy(...) only
+      index.ts            # makers / Capability.lazyModule(...) only
       react-surface.tsx
     containers/
       index.ts            # lazy(() => import('./X'))
@@ -47,7 +47,7 @@ Build the smallest thing that runs, then add features:
 5. `src/translations.ts` — typename labels and `meta.id` plugin strings.
 6. `src/capabilities/react-surface.tsx` — one `article` surface.
 7. `src/containers/FooArticle/` — minimal `Panel.Root` shell.
-8. `src/plugin.tsx` — `Plugin.define(meta).pipe(addSchemaModule, addSurfaceModule, addTranslationsModule, Plugin.make)`.
+8. `src/plugin.tsx` — `Plugin.define(meta).pipe(Plugin.addModule(ReactSurface), Plugin.addModule(AppCapability.schema([...])), Plugin.addModule(AppCapability.translations(translations)), Plugin.make)`.
 
 Build, then load the dev URL into Composer (Settings → Plugins → Load by URL). Iterate. Add operations, skills, settings as features land.
 

@@ -6,10 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Trigger } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
 import { Reply } from '@dxos/compute/testing';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Query, Ref } from '@dxos/echo';
-import { ChessOperation } from '@dxos/plugin-chess';
+import * as ChessOperation from '@dxos/plugin-chess/ChessOperation';
 import { meta as automationMeta } from '@dxos/plugin-routine';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';

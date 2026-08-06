@@ -6,10 +6,10 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppAnnotation } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { WithProperties } from '@dxos/app-toolkit/testing';
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Query, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestHelpers } from '@dxos/effect/testing';

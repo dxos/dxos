@@ -2,12 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+
+import { AgentRules, CreateAgent, SyncAutomation } from './definitions';
 
 export * as AgentWizardOperations from './definitions';
 
-export const AgentWizardHandlers = OperationHandlerSet.lazy(
-  () => import('./create-agent'),
-  () => import('./agent-rules'),
-  () => import('./sync-automation'),
-);
+export const AgentWizardHandlers = OperationHandlerSet.lazy([
+  CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent'))),
+  AgentRules.pipe(Operation.lazyHandler(() => import('./agent-rules'))),
+  SyncAutomation.pipe(Operation.lazyHandler(() => import('./sync-automation'))),
+]);

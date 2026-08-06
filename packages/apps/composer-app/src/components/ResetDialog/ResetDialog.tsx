@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { type SupportOperation } from '@dxos/plugin-support';
 import { FeedbackForm } from '@dxos/plugin-support/components';
+import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import {
   AlertDialog,
   type AlertDialogRootProps,

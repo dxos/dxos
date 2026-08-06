@@ -11,7 +11,8 @@ import { useSelection } from '@dxos/react-ui-attention';
 import { type LatLngLiteral, type MapRootProps } from '@dxos/react-ui-geo';
 
 import { type GeoControlProps, GlobeControl, MapControl } from '#components';
-import { type MapCapabilities } from '#types';
+
+import type * as MapCapabilities from '../../types/MapCapabilities';
 
 // Shared defaults so toggling between map and globe starts at the same position
 // when the user hasn't interacted yet.

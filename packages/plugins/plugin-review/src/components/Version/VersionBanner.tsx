@@ -9,7 +9,7 @@ import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dx
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { type ReviewCapabilities } from '../../types';
+import * as ReviewCapabilities from '../../types/ReviewCapabilities';
 
 type BranchView = ReviewCapabilities.BranchView;
 

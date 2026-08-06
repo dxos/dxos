@@ -4,13 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { dispatch, fromExtractors } from '@dxos/extractor';
 import * as InboxResolver from '@dxos/extractor-lib';
 
-import { ExtractedFrom, InboxCapabilities, InboxOperation, Mailbox } from '../../types';
+import * as ExtractedFrom from '../../types/ExtractedFrom';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 
 /**
  * Inbox bridge over the generic `@dxos/extractor` dispatcher. Builds the extractor registry from

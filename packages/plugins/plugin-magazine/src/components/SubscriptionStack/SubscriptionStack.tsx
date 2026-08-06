@@ -8,7 +8,7 @@ import { Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
-import { type Subscription } from '#types';
+import type * as Subscription from '../../types/Subscription';
 
 export type SubscriptionStackAction =
   | { type: 'current'; feedId: string }

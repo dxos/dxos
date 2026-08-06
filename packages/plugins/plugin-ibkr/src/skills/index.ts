@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Skill, Template } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
 import { IBKR_SKILL_KEY } from '../constants';
-import { IbkrOperation } from '../types';
+import * as IbkrOperation from '../types/IbkrOperation';
 
 const make = () =>
   Skill.make({

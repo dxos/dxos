@@ -4,16 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Database, Type } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
-import { getPluginSettingsSectionPath } from '@dxos/plugin-settings';
+import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 
 import { meta } from '#meta';
-import { Mailbox } from '#types';
 
 import { getMailboxPath } from '../paths';
+import * as Mailbox from '../types/Mailbox';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -22,7 +22,7 @@ export default Capability.makeModule(
         if (!query?.uri) {
           return [
             {
-              path: getPluginSettingsSectionPath(meta.profile.key),
+              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
               label: 'Inbox settings',
               type: 'settings',
             },
@@ -50,6 +50,6 @@ export default Capability.makeModule(
         ];
       });
 
-    return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
+    return Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver);
   }),
 );

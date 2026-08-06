@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { type Plugin, Plugin as PluginNS } from '@dxos/app-framework';
+import * as PluginNS from '@dxos/app-framework/Plugin';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
 import { ScrollArea } from '@dxos/react-ui';

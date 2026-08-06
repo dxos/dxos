@@ -3,8 +3,8 @@
 //
 
 import { type Database, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 

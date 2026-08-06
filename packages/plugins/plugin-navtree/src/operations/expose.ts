@@ -5,14 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 import { Graph } from '@dxos/plugin-graph';
 import { Attention } from '@dxos/react-ui-attention';
 
-import { NavTreeCapabilities } from '../types';
+import * as NavTreeCapabilities from '../types/NavTreeCapabilities';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOperation.Expose.pipe(
   Operation.withHandler(

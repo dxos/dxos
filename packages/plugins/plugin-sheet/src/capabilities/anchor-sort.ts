@@ -4,15 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Relation, Type } from '@dxos/echo';
 
-import { Sheet, compareIndexPositions } from '#types';
+import * as Sheet from '../types/Sheet';
+import * as SheetUtil from '../types/SheetUtil';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(AppCapabilities.AnchorSort, {
+    Capability.contribute(AppCapabilities.AnchorSort, {
       key: Type.getTypename(Sheet.Sheet),
       sort: (anchorA, anchorB) => {
         const sheet = Relation.getTarget(anchorA) as Sheet.Sheet;
@@ -20,7 +21,9 @@ export default Capability.makeModule(() =>
           return 0;
         }
 
-        return !anchorA.anchor || !anchorB.anchor ? 0 : compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
+        return !anchorA.anchor || !anchorB.anchor
+          ? 0
+          : SheetUtil.compareIndexPositions(sheet, anchorA.anchor, anchorB.anchor);
       },
     }),
   ),

@@ -4,17 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/compute';
+import * as Project from '@dxos/compute/Project';
 
 import { ProjectArticle } from '#containers';
 
 /** React surfaces contributed by plugin-projects — the Project detail article. */
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'project.article',
         filter: AppSurface.object(AppSurface.Article, Project.Project),

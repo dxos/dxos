@@ -4,21 +4,25 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import { RunInstructions } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, Skill, Template } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
+import * as Template from '@dxos/compute/Template';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-import { RoutineOperation } from '@dxos/plugin-routine/types';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { Text } from '@dxos/schema';
 
-import { AssistantCapabilities, AssistantOperation } from '#types';
-
 import { getChatPath } from '../paths';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat> =
   RoutineOperation.RunPromptInNewChat.pipe(

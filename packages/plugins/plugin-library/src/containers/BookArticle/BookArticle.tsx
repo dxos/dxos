@@ -8,8 +8,8 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Book } from '#types';
 
+import * as Book from '../../types/Book';
 import { BookInfo } from './BookInfo';
 import { BookReader } from './BookReader';
 import { type EpubReaderHandle } from './EpubReader';

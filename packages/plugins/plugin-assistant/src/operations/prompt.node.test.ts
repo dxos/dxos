@@ -7,11 +7,13 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
-import { Instructions, Operation, ServiceResolver } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EntityId } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/plugin';
@@ -24,7 +26,7 @@ EntityId.dangerouslyDisableRandomness();
 
 describe('Agent prompt (composer plugin harness)', () => {
   // Hits RoutinePlugin compute runtime (plugin handlers, AiServiceLayer, skills).
-  // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
+  // Requires reachable edge AI (served through the edge /ai proxy); not memoized like AssistantTestLayer tests.
   test(
     'chat mode appends assistant messages to the chat queue',
     { tags: ['manual'], timeout: 60_000 },

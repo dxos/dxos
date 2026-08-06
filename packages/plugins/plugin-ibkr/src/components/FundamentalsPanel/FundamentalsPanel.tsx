@@ -10,7 +10,7 @@ import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { formatForDisplay } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { Ibkr } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;

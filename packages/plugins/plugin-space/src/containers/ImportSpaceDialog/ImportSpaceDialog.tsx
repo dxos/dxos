@@ -6,7 +6,8 @@ import React, { useCallback } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { GraphPath, LayoutOperation } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Button, Dialog, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

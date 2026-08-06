@@ -6,12 +6,13 @@ import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as FiberId from 'effect/FiberId';
 
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import { connectedRoutinesQuery, makeRoutine } from '@dxos/plugin-routine';
 
-import { type ConnectorEntry, type SyncInput, type SyncOutput } from '../types';
+import * as ConnectorSpec from '../types/ConnectorSpec';
 import { findSyncTriggerForBinding } from './sync-trigger';
 
 /**
@@ -40,7 +41,7 @@ export const createSyncRoutine = ({
 }: {
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<SyncInput, SyncOutput>;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
   spec: Trigger.Spec;
   remote?: boolean;
 }): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
@@ -70,7 +71,7 @@ const createRoutine = ({
 }: {
   target: Obj.Unknown;
   cursor: Cursor.ExternalCursor;
-  operation: Operation.Definition<SyncInput, SyncOutput>;
+  operation: Operation.Definition<ConnectorSpec.SyncInput, ConnectorSpec.SyncOutput>;
   spec: Trigger.Spec;
   remote?: boolean;
 }): Effect.Effect<Trigger.Trigger, never, Database.Service> =>
@@ -113,7 +114,7 @@ export const ensureSyncTrigger = ({
   connector,
   cursor,
 }: {
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   cursor: Cursor.ExternalCursor;
 }): Effect.Effect<Trigger.Trigger | undefined, never, Database.Service> =>
   Effect.gen(function* () {

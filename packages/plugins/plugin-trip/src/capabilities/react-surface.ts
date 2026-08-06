@@ -4,16 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SegmentArticle, TripArticle } from '#containers';
-import { Segment, Trip } from '#types';
+
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'surface.trip',
         filter: AppSurface.oneOf(

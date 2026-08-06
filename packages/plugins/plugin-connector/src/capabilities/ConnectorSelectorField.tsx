@@ -8,7 +8,7 @@ import { type Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 
-import { Connector } from '#types';
+import { Connector } from '../types/ConnectorSpec';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
 export type ConnectorSelectorFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &

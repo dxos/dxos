@@ -4,20 +4,22 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SchemaEx } from '@dxos/effect';
+import { File } from '@dxos/types';
 
 import { FileArticle, FileSettings } from '#containers';
 import { meta } from '#meta';
-import { File, FileAction } from '#types';
 
+import { FileAction } from '../types/FileCapabilities';
 import { FileUploadField } from './FileUploadField';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(Capabilities.ReactSurface, [
+    Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'article',
         filter: AppSurface.oneOf(

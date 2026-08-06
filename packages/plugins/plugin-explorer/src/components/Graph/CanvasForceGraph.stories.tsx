@@ -19,8 +19,8 @@ import { type ValueGenerator, createObjectFactory, createRelationFactory } from 
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '#hooks';
-import { Graph } from '#types';
 
+import * as Graph from '../../types/Graph';
 import { CanvasForceGraph } from './CanvasForceGraph';
 
 const generator = random as any as ValueGenerator;

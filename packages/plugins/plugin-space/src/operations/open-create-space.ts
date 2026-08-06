@@ -2,8 +2,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
 
 import { CREATE_SPACE_DIALOG } from '../constants';
 import { SpaceOperation } from './definitions';

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AppSpace } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
@@ -29,6 +29,9 @@ export const initializeIdentity = (
   { displayName }: InitializeIdentityOptions = {},
 ): Effect.Effect<InitializeIdentityResult, never, never> =>
   Effect.gen(function* () {
+    // The harness boots with client initialization forked off startup; `halo`/`spaces` are
+    // unreadable until it completes.
+    yield* Effect.promise(() => client.waitUntilInitialized());
     const identity = yield* Effect.promise(() => client.halo.createIdentity(displayName ? { displayName } : {}));
     const personalSpace = yield* Effect.promise(() =>
       client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),

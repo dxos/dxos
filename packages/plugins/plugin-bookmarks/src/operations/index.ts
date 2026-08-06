@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const BookmarkOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./add-from-snapshot'),
-  () => import('./summarize'),
-);
+import * as BookmarkOperation from '../types/BookmarkOperation';
+
+export const BookmarkOperationHandlerSet = OperationHandlerSet.lazy([
+  BookmarkOperation.AddFromSnapshot.pipe(Operation.lazyHandler(() => import('./add-from-snapshot'))),
+  BookmarkOperation.Summarize.pipe(Operation.lazyHandler(() => import('./summarize'))),
+]);

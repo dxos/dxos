@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj, Query } from '@dxos/echo';
 
-import { AssistantCapabilities, AssistantOperation } from '#types';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionChat> =
   AssistantOperation.EnsureCompanionChat.pipe(

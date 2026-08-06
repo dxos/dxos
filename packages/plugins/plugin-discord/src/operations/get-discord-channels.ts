@@ -6,11 +6,11 @@ import { DiscordREST } from 'dfx';
 import type { GuildChannelResponse, MyGuildResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { log } from '@dxos/log';
 
 import { makeDiscordLayer } from '../services';
-import { DiscordOperation } from '../types';
+import * as DiscordOperation from '../types/DiscordOperation';
 
 const GUILD_PAGE_LIMIT = 200;
 

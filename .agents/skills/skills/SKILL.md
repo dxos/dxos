@@ -91,7 +91,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { MarkdownSkill } from '../../skills';
 
 const skillDefinition = Capability.makeModule<[], Capability.Capability<typeof AppCapabilities.SkillDefinition>[]>(() =>
-  Effect.succeed([Capability.contributes(AppCapabilities.SkillDefinition, MarkdownSkill)]),
+  Effect.succeed([Capability.contribute(AppCapabilities.SkillDefinition, MarkdownSkill)]),
 );
 
 export default skillDefinition;

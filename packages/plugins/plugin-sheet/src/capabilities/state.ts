@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { SheetCapabilities } from '#types';
+import * as SheetCapabilities from '../types/SheetCapabilities';
 
 const createGridRegistry = (): SheetCapabilities.GridRegistry => {
   const grids = new Map<string, SheetCapabilities.GridEntry>();
@@ -24,6 +24,6 @@ const createGridRegistry = (): SheetCapabilities.GridRegistry => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const gridInstances = createGridRegistry();
-    return Capability.contributes(SheetCapabilities.GridInstances, gridInstances);
+    return Capability.contribute(SheetCapabilities.GridInstances, gridInstances);
   }),
 );

@@ -10,13 +10,13 @@ import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { OperationInvoker } from '@dxos/operation';
-import { type Markdown } from '@dxos/plugin-markdown';
+import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Text } from '@dxos/schema';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments } from '@dxos/ui-editor';
 
-import { CommentOperation } from '#types';
-import { type CommentState } from '#types';
+import * as CommentOperation from '../types/CommentOperation';
+import * as ReviewCapabilities from '../types/ReviewCapabilities';
 
 // Resolve the anchor snippet against the document the editor produced the cursor from: the branch
 // content Text in Branch view, else main. Resolving a branch-doc cursor against main throws (the
@@ -36,7 +36,7 @@ const getName = (text: Text.Text | undefined, anchor: string): string | undefine
 
 export type CommentSyncStore = {
   registry: Registry.Registry;
-  stateAtom: Atom.Writable<CommentState>;
+  stateAtom: Atom.Writable<ReviewCapabilities.CommentState>;
 };
 
 export type CommentSyncOptions = {

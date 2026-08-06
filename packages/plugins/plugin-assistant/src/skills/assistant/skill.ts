@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LayoutOperation, NavigationOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { templates } from '@dxos/assistant';
-import { Skill } from '@dxos/compute';
+import * as Skill from '@dxos/compute/Skill';
 
 const SKILL_KEY = 'org.dxos.skill.assistant';
 

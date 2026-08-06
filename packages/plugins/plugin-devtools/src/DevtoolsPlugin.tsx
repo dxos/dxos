@@ -4,8 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, ReactContext, ReactSurface } from '#capabilities';
@@ -15,23 +16,24 @@ import { translations } from '#translations';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../PLUGIN.mdl?raw';
 
+const SetupDevtools = Capability.inlineModule('setup-devtools', { provides: [] }, () =>
+  Effect.sync(() => setupDevtools()),
+);
+
 export const DevtoolsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addReactContextModule({ activate: ReactContext }),
-  Plugin.addModule({
-    id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
-    activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => ReactSurface(),
-  }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'setup-devtools',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.sync(() => setupDevtools()),
-  }),
-  AppPlugin.addPluginAssetModule({
-    asset: { pluginId: meta.profile.key, path: 'PLUGIN.mdl', content: pluginSpec, mimeType: 'application/x-mdl' },
-  }),
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(SetupDevtools),
+  Plugin.addModule(
+    AppCapability.pluginAsset({
+      pluginId: meta.profile.key,
+      path: 'PLUGIN.mdl',
+      content: pluginSpec,
+      mimeType: 'application/x-mdl',
+    }),
+  ),
   Plugin.make,
 );
 

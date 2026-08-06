@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { CollectionModel } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 
 import { getMailboxPath } from '../paths';
-import { InboxOperation } from '../types';
+import * as InboxOperation from '../types/InboxOperation';
 
 const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(

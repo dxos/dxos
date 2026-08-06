@@ -12,8 +12,8 @@ import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Book } from '#types';
 
+import * as Book from '../../types/Book';
 import { EpubReader, type EpubReaderHandle, type ReaderLocation } from './EpubReader';
 
 const ACCEPT = '.pdf,.epub,application/pdf,application/epub+zip';
