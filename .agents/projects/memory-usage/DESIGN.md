@@ -349,6 +349,23 @@ each message's JSON:
 So mail-open main-thread memory ≈ 3× the mail data (materialized objects +
 copy A + copy B) plus V8 overhead — matching old_space 587 MB + LO 166 MB.
 
+### 2026-08-06 — worker heap snapshot: the mail-copy census is ~4–5×
+
+User's `dxos-client-worker` snapshot (152 MB self size, ~30 min after
+reload): the WORKER retains its own `results` array (680+ items) with
+`documentJson` strings per message (built at echo-host
+`query-executor.ts:601`), plus message content again as `text` inside feed
+`blocks`. Also `PerformanceMeasure` ×47,398 (~1,600/min since reload).
+
+Census per large message with a mailbox open: (1) worker query-result
+`documentJson`, (2) worker feed-block `text`, (3) main
+`_lastRemoteResults[].documentJson`, (4) main `FeedObjectCore.#state`
+canonical string, (5) the materialized ECHO object. Four of five are
+bookkeeping copies. Third trace (`trace_composer2.json.gz`, +15 min of use):
+renderer 2,279 MB — partition_alloc 411 → 1,041 MB, worker large-object
+space → 319 MB; growth tracks active sync payload churn through the same
+pipeline.
+
 **Fix ranking (Phase 3):**
 
 1. Shrink the structural baseline — audit the Idle wave (why do disabled/Labs
