@@ -37,6 +37,49 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
+  # Blacksmith's runners expose an RE v2 cache on the host — BLACKSMITH_BAZELRE_CACHE_GRPC, an
+  # environment variable their agent injects. It is the protocol moon already speaks, so it needs
+  # no config change and none of the sticky-disk clone/commit semantics: a co-located cache that
+  # behaves like the droplet, minus the network.
+  blacksmith-re:
+    name: 'Blacksmith + their RE cache'
+    runs-on: ${{ inputs.runner || 'blacksmith-8vcpu-ubuntu-2404' }}
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          remote-cache: 'false'
+
+      - name: Build
+        run: |
+          if [ -z "$BLACKSMITH_BAZELRE_CACHE_GRPC" ]; then
+            echo "::warning::BLACKSMITH_BAZELRE_CACHE_GRPC is unset — this runner exposes no RE cache."
+            exit 0
+          fi
+          echo "endpoint: $BLACKSMITH_BAZELRE_CACHE_GRPC"
+          start=$(date +%s)
+          # Overrides the disable that `remote-cache: false` wrote to GITHUB_ENV.
+          MOON_REMOTE_HOST="$BLACKSMITH_BAZELRE_CACHE_GRPC" moon run :build
+          echo "wall_s=$(( $(date +%s) - start ))" | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+      - name: Cache breakdown
+        if: always()
+        run: node tools/moon-cache/bench/analyze.mjs .moon/cache/runReport.json | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
   droplet:
     name: 'Blacksmith + droplet cache'
     runs-on: ${{ inputs.runner || 'blacksmith-8vcpu-ubuntu-2404' }}
@@ -55,6 +98,18 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+
+      # Every local measurement was laptop -> NYC3 at ~23 ms. Blacksmith runs in us-west, so this
+      # arm is paying cross-country RTT — and at ~748 ms of hydration per ms of RTT over this
+      # graph, that is the number needed to interpret the result.
+      - name: Runner to cache RTT
+        run: |
+          echo "region: ${BLACKSMITH_REGION:-unknown}"
+          for _ in 1 2 3 4 5; do
+            curl -o /dev/null -s --connect-timeout 5 -w '%{time_connect} ' https://cache.dxos.network:9093/status || true
+          done
+          echo
+        shell: bash
 
       - name: Build
         run: |
