@@ -232,6 +232,30 @@ still grows (candidates: Blink buffer partition — MessagePort/structured-clone
 traffic from ~51 SQL ops/s, network buffers from the 1 s polling fetches,
 IDB transaction buffers, log-store writes).
 
+### 2026-08-06 — the idle-wave chunk import: big but BOUNDED; remaining tail still open
+
+- Stubbed allocator diff (perf entries verified zero at both dumps):
+  `partition_alloc` **+76.7 MB**, `v8/main old_space` +21 MB,
+  `blink_objects` +4.3 MB over t=1→8 min. Growing Blink types are
+  DOM/style-shaped: `GeometryMapperTransformCache::PlaneRootTransform`
+  +2.3 MB, `StyleRule`/`ComputedStyle`/`HTMLLinkElement`/`UniqueElementData`.
+- DOM grows after ready: 2,089 → 2,929 elements over 3 min, driven by
+  `<link rel=modulepreload>` 799 → **971, then STOPS (~t+2–3 min)** — the
+  **Idle activation wave**: 63 plugin capability modules
+  (`activatesOn: ActivationEvents.Idle`) import their registration closures
+  after first idle. Bounded, by design; costs ~170 chunks of code + module
+  records shortly after every boot (7,231 chunk files exist in the bundle —
+  the wave is a small fraction).
+- AFTER the wave and with perf stubbed, RSS still climbs ~11 MB/min
+  (t=4→10 min: 1143 → 1212 MB). Unattributed remainder. Candidates:
+  (a) `BufferedSpan` accumulation — no OTEL endpoint in the local preview, so
+  every `@trace.span()` buffers forever (the verified mechanism; rate scales
+  with the ~51 SQL ops/s + span-per-query); (b) **harness artifact**:
+  Playwright/DevTools enable the CDP Network domain, which makes Blink retain
+  response bodies (`NetworkResourcesData::ResourceData` appears in the dump) —
+  the user's DevTools-open tab has the same effect, a plain tab does not.
+  Discriminator in flight: constructor-level heap-snapshot diff t=1→7 min.
+
 ### Fix directions (Phase 3)
 
 1. **Gate the devtools-track instrumentation off by default** — one shared
