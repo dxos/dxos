@@ -6,6 +6,17 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: memory-usage
+    status: active
+    user: jdw
+    host: jdw-mbp
+    created: 2026-08-06
+    summary: "Profile Composer's runtime memory usage — find what dominates the heap (main thread + workers), attribute it to subsystems, and queue fixes."
+    tasks: .agents/projects/memory-usage/TASKS.md
+    design: .agents/projects/memory-usage/DESIGN.md
+    prs: []
+    resume: 'Phase 1: get a running Composer + baseline heap measurements (main thread and shared worker), then heap-snapshot attribution.'
+
   - name: crm-pipeline-operations
     status: active
     user: burdon
