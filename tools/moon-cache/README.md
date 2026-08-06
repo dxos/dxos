@@ -67,8 +67,8 @@ world-writable, which on a public IP means anyone can poison your build outputs.
 route returns 401 without one.
 
 ```bash
-# Health, no certificate needed.
-curl -s https://cache.dxos.network:9093/status
+# Health. No client certificate needed, but the CA is private, so it must still be trusted.
+curl -s --cacert .moon/certs/ca.pem https://cache.dxos.network:9093/status
 
 # Anything real needs the client certificate.
 curl -s --cacert .moon/certs/ca.pem --cert .moon/certs/client.pem --key .moon/certs/client.key \

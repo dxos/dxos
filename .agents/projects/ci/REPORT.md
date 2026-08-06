@@ -34,6 +34,7 @@ Four things that will silently invalidate a re-run of this:
 | `task-execution`                                | the task itself                         |
 | `hash-generation`                               | client-side, unrecoverable by any cache |
 | `process-execution`, `setup-operation`          | the pnpm install, not tasks             |
+| `sync-operation`                                | moon's own bookkeeping, not tasks       |
 
 `task-execution` is easy to miss: on a fully-cached run nothing executes, so it never appears, and
 `process-execution` looks like the execution channel. Any ratio computed without it understates
@@ -246,9 +247,12 @@ Two results worth keeping, since they cut against the recommendation:
 
 ## Limits
 
-- **Nothing here was measured in CI.** Every number is from one dev machine. The
-  runner→cache figure, and whether ten concurrent jobs bind on a droplet's shared egress, are
-  both unmeasured.
+- **Everything above "In CI" is from one dev machine**, and only the CI section is not. The
+  dev-machine numbers do not transfer as absolutes — see the next point.
+- **The CI numbers are one repetition per cell**, except the nyc3 and no-cache arms which have
+  two. An 11 s vs 14 s gap on single reps is not a result to act on.
+- **Concurrency is unmeasured everywhere.** Every measurement ran one cache client at a time;
+  whether ten concurrent CI jobs bind on the droplet's shared egress is still an open question.
 - **macOS, not Linux**, on hardware faster than an 8-vCPU containerised runner. Absolute times do
   not transfer; the round-trip slope and the hash-vs-hydration split plausibly do, being client
   properties — the slope reproducing across an 11× workload change is evidence for that.

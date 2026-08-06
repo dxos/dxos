@@ -45,31 +45,32 @@ san="IP:$IP"
 for name in "${DNS_NAMES[@]}"; do san="$san,DNS:$name"; done
 
 if [ "$SERVER_ONLY" = true ]; then
+  # The CA key is read from its own directory and never copied here: this output directory is
+  # about to be scp'd to a cache host, and a failure between copying and deleting it would ship
+  # the key that signs every client.
   cp "$CA_DIR/ca.pem" ca.pem
-  cp "$CA_DIR/ca.key" ca.key
+  CA_KEY="$CA_DIR/ca.key"
 else
   openssl req -x509 -newkey rsa:4096 -sha256 -days $DAYS -nodes \
     -keyout ca.key -out ca.pem \
     -subj "/CN=DXOS moon cache CA" \
     -addext "basicConstraints=critical,CA:TRUE" \
     -addext "keyUsage=critical,keyCertSign,cRLSign" 2>/dev/null
+  CA_KEY="ca.key"
 fi
 
 openssl req -newkey rsa:4096 -sha256 -nodes -keyout server.key -out server.csr \
   -subj "/CN=${DNS_NAMES[0]}" 2>/dev/null
-openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial \
+openssl x509 -req -in server.csr -CA ca.pem -CAkey "$CA_KEY" -CAcreateserial \
   -days $DAYS -sha256 -out server.pem \
   -extfile <(printf 'subjectAltName=%s\nextendedKeyUsage=serverAuth\nkeyUsage=critical,digitalSignature,keyEncipherment\n' "$san") 2>/dev/null
 
 if [ "$SERVER_ONLY" != true ]; then
   openssl req -newkey rsa:4096 -sha256 -nodes -keyout client.key -out client.csr \
     -subj "/CN=moon-client" 2>/dev/null
-  openssl x509 -req -in client.csr -CA ca.pem -CAkey ca.key -CAcreateserial \
+  openssl x509 -req -in client.csr -CA ca.pem -CAkey "$CA_KEY" -CAcreateserial \
     -days $DAYS -sha256 -out client.pem \
     -extfile <(printf 'extendedKeyUsage=clientAuth\nkeyUsage=critical,digitalSignature\n') 2>/dev/null
-else
-  # The CA key is never left beside a server certificate that is about to be copied to a host.
-  rm -f ca.key
 fi
 
 rm -f server.csr client.csr ca.srl

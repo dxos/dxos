@@ -478,9 +478,11 @@ See the [Run commands](#run-commands) section above for the full list.
 ### Gotchas
 
 - `pnpm install` must run with `CI=true` or `HUSKY=0` in non-interactive environments to skip the husky git-hooks setup prompt.
-- A remote-cache warning from moon means the certificates aren't installed. Nothing breaks — builds
-  just fall back to the local cache and don't share the team's. Install them with
-  `tools/moon-cache/install-certs.sh --op`.
+- A remote-cache warning from moon means the certificates aren't installed. Running moon directly,
+  nothing breaks — builds fall back to the local cache and just don't share the team's. Install
+  them with `tools/moon-cache/install-certs.sh --op`. In GitHub Actions it is stricter: any job
+  using `.github/actions/setup` **fails** when the credentials are missing or the cache does not
+  answer, unless it is a fork PR or the call passes `remote-cache: 'false'`.
 - The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.
