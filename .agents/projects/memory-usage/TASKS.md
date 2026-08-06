@@ -90,6 +90,28 @@ Ranked by measured impact — see DESIGN.md "Fix ranking".
 - [ ] **Docs** — user-facing note: DevTools attached to a Composer tab adds
       ~250 MB+ and grows; Chrome's tab flag reports process footprint.
 
+## Phase 4: Regression guard (CI)
+
+Template: `check-boot-budget` / `check-startup-budget` — gate on COUNTS,
+bytes trend-only (runner spread is 1.9× in-container). Scope note: the copy
+amplification is generic query machinery but only heavy where `documentJson`
+is populated (feed path today); automerge doc-handle eviction is a separate
+unmeasured scaling story.
+
+### Tasks
+
+- [ ] **Copy-census check** — seeded space, K messages with unique sentinel
+      strings; CDP heap snapshot per context; assert sentinel copies ≤ 2.
+      Deterministic → can hard-gate. Catches payload-hoarding generically.
+- [ ] **No-unbounded-accumulators idle check** — boot + idle N min +
+      constructor-level heap diff; assert no constructor grows > X/min and
+      perf-timeline entry counts stay bounded.
+- [ ] **Per-context heap budgets** — used-after-GC on a seeded profile,
+      median over repeats, non-required workflow first (model-fixture.yml
+      precedent), promote once stable.
+- [ ] **Per-fix unit locks** — FeedObjectCore O(1) retention after the hash
+      fix; `_lastRemoteResults` no large strings post-hydration.
+
 ### References
 
 - DESIGN.md (this project) — methodology + suspects.
