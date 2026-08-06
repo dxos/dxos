@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test, vi } from 'vitest';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Client } from '@dxos/client';
@@ -45,6 +45,20 @@ describe('OnboardingManager', () => {
       }),
     ]);
   });
+
+  test('url-driven signup with an already-registered email creates no identity', async ({ expect }) => {
+    const { manager, getCalls } = await createManager({
+      hubUrl: 'https://hub.example.com',
+      email: 'existing@example.com',
+      accountInvitationCode: 'XK4F9P2A',
+      emailExists: true,
+    });
+    await manager.initialize();
+
+    // Redemption would reject the duplicate email, stranding this identity unbindable.
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
+    expect(getCalls(ClientOperation.CreateAgent)).toHaveLength(0);
+  });
 });
 
 const createClient = async () => {
@@ -69,13 +83,46 @@ const createInvoker = () => {
   return { invokePromise, getCalls, calls };
 };
 
-const createManager = async (options: { identity?: boolean; deviceInvitationCode?: string }) => {
+/**
+ * Stubs the `/account/email/exists` probe. Any other hub request throws so a test can't
+ * pass off the back of a silently-failing fetch.
+ */
+const stubEmailExists = (exists: boolean) => {
+  vi.stubGlobal('fetch', async (input: unknown) => {
+    if (!(input instanceof URL) || input.pathname !== '/account/email/exists') {
+      throw new Error(`Unexpected hub request: ${String(input)}`);
+    }
+    return new Response(JSON.stringify({ success: true, data: { exists } }), {
+      headers: { 'Content-Type': 'application/json' },
+    });
+  });
+  onTestFinished(() => vi.unstubAllGlobals());
+};
+
+const createManager = async (options: {
+  identity?: boolean;
+  deviceInvitationCode?: string;
+  hubUrl?: string;
+  email?: string;
+  accountInvitationCode?: string;
+  emailExists?: boolean;
+}) => {
   const client = await createClient();
   if (options.identity) {
     await client.halo.createIdentity();
   }
+  if (options.emailExists !== undefined) {
+    stubEmailExists(options.emailExists);
+  }
   const { invokePromise, getCalls, calls } = createInvoker();
-  const manager = new OnboardingManager({ invokePromise, client, deviceInvitationCode: options.deviceInvitationCode });
+  const manager = new OnboardingManager({
+    invokePromise,
+    client,
+    deviceInvitationCode: options.deviceInvitationCode,
+    hubUrl: options.hubUrl,
+    email: options.email,
+    accountInvitationCode: options.accountInvitationCode,
+  });
   onTestFinished(() => manager.destroy());
   return { manager, getCalls, calls };
 };

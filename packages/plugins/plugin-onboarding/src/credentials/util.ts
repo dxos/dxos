@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type AccountErrorType } from '@dxos/protocols';
+
 /**
  * POST `/account/invitation-code/redeem` on hub-service. Unauthenticated.
  * Two-step signup: the redeemer supplies the invitation code + their identity
@@ -11,6 +13,28 @@
  * always pass all three.
  */
 export type RedeemResult = { accountId: string; emailVerificationSent: boolean } | { needsIdentity: true };
+
+/**
+ * POST `/account/email/exists` on hub-service. Lets the signup flow reject a
+ * duplicate email before creating a local identity, since redemption rejects it
+ * afterwards and the orphaned identity cannot be bound to any account.
+ *
+ * Reports `false` when the probe itself fails (network error, or the 10/min rate
+ * limit): redemption re-checks the collision server-side and stays the authority.
+ */
+export const checkEmailExists = async ({ hubUrl, email }: { hubUrl: string; email: string }): Promise<boolean> => {
+  try {
+    const response = await fetch(new URL('/account/email/exists', hubUrl), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const envelope = (await response.json()) as { success: boolean; data?: { exists: boolean } };
+    return !!envelope.success && !!envelope.data?.exists;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * POST `/account/invitation-code/validate` on hub-service. Returns true if the code
@@ -83,6 +107,21 @@ export const redeemAccountInvitation = async ({
     throw error;
   }
   return envelope.data as RedeemResult;
+};
+
+/**
+ * True when a rejected hub call carried this `data.type` discriminator, so callers can
+ * distinguish a known failure (e.g. `email_already_registered`) from a transport error.
+ */
+export const isAccountErrorType = (err: unknown, type: AccountErrorType): boolean => {
+  if (typeof err !== 'object' || err === null || !('data' in err)) {
+    return false;
+  }
+  const { data } = err;
+  if (typeof data !== 'object' || data === null || !('type' in data)) {
+    return false;
+  }
+  return typeof data.type === 'string' && data.type === type;
 };
 
 /**

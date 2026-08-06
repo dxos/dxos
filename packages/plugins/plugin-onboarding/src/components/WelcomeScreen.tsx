@@ -14,7 +14,14 @@ import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
-import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
+import {
+  checkEmailExists,
+  isAccountErrorType,
+  joinWaitlist,
+  login,
+  redeemAccountInvitation,
+  validateInvitationCode,
+} from '../credentials';
 import { useForceDarkTheme } from '../hooks';
 import { meta } from '../meta';
 import { OnboardingOperation } from '../operations';
@@ -165,6 +172,13 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
       }
       pendingRef.current = true;
       try {
+        // Probe before creating anything: redemption rejects a duplicate email, and an
+        // identity created first would be stranded with no account and no way to retry.
+        if (await checkEmailExists({ hubUrl, email })) {
+          setError('account-exists');
+          return;
+        }
+
         const ensureIdentity = async () => {
           if (identity) {
             return identity;
@@ -192,7 +206,9 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
       } catch (err) {
         log.catch(err);
-        setError('email');
+        // The probe above reports `false` when rate-limited, so redemption is still the
+        // last line of defence against a collision.
+        setError(isAccountErrorType(err, 'email_already_registered') ? 'account-exists' : 'email');
       } finally {
         pendingRef.current = false;
       }
