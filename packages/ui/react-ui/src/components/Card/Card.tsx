@@ -53,6 +53,8 @@ type CardRootProps = {
    * a standalone form rather than by the card's chrome.
    */
   'gutter'?: ColumnRootProps['gutter'];
+  /** Vertical gap between the card's rows; defaults to the card's standard `gap-1`. */
+  'gap'?: ColumnRootProps['gap'];
   'density'?: Density;
   'style'?: CSSProperties;
   'tabIndex'?: number;
@@ -74,7 +76,7 @@ type CardRootProps = {
  * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
-  ({ children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', density, ...props }, forwardedRef) => {
+  ({ children, id, role, border = true, fullWidth, subgrid, gutter = 'lg', gap, density, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
@@ -83,7 +85,7 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
         asChild
         gutter={gutter}
         subgrid={subgrid}
-        classNames={tx('card.root', { border, fullWidth }, className)}
+        classNames={tx('card.root', { border, fullWidth, gap }, className)}
         role={role ?? 'group'}
       >
         <div {...rest} {...(id && { 'data-object-id': id })} ref={forwardedRef}>

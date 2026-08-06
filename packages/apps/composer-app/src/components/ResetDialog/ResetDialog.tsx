@@ -185,10 +185,12 @@ export const ResetDialog = ({
                   </div>
                 </div>
                 {showStack && (
-                  <Message.Root key={error.message} classNames='overflow-auto' data-testid='resetDialog.stackTrace'>
-                    <Message.Content>
+                  <Message.Root key={error.message}>
+                    <Message.Content classNames='overflow-auto'>
                       <Message.Body asChild>
-                        <pre className='text-xs max-h-[136px]'>{error.stack}</pre>
+                        <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
+                          {error.stack}
+                        </pre>
                       </Message.Body>
                     </Message.Content>
                   </Message.Root>

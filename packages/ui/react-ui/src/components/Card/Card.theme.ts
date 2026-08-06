@@ -5,6 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
+import { type ColumnGap, columnGapClasses } from '../Column/Column.theme';
 import { withColumn } from '../Column/withColumn';
 
 export type CardStyleProps = {
@@ -14,13 +15,18 @@ export type CardStyleProps = {
   variant?: 'default' | 'subtitle' | 'description';
   density?: Density;
   truncate?: boolean;
+  /** Vertical gap between the card's rows; defaults to the `gap-1` the card always had. */
+  gap?: ColumnGap;
 };
 
 const subgrid = 'col-span-3 grid grid-cols-subgrid gap-1 items-center';
 
-const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
+const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth, gap }, ...etc) =>
   mx(
-    'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) p-1 gap-1',
+    // Row gap is applied here (not via `Column.Root`'s `gap` prop) so the card's default
+    // `gap-x-1` never collides with a threaded gap class in tailwind-merge ordering.
+    'dx-card dx-card-surface dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) p-1 gap-x-1',
+    gap ? columnGapClasses[gap] : 'gap-y-1',
     'group/card relative shrink-0 overflow-hidden',
     border && 'border-2 border-separator rounded-md dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
@@ -62,8 +68,8 @@ const action: ComponentFunction<CardStyleProps> = (_, ...etc) =>
 const actionLabel: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx('dx-card__action-label min-w-0 flex-1 truncate', ...etc);
 
-// Holds the label and its annotation in one grid cell: `action` puts every child in column 2, so
-// siblings would otherwise stack onto separate rows.
+// Holds the label and its annotation in one grid cell: `action` puts every child in column 2,
+// so siblings would otherwise stack onto separate rows.
 const actionContent: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx('dx-card__action-content min-w-0 flex-1 flex items-baseline gap-2 overflow-hidden', ...etc);
 

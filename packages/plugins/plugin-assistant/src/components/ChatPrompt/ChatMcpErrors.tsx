@@ -32,8 +32,8 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
   }
 
   return (
-    <Message.Root classNames={['m-1', classNames]} valence='warning'>
-      <Message.Content>
+    <Message.Root valence='warning'>
+      <Message.Content classNames={['m-1', classNames]}>
         <Message.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Message.Title>
         <Message.Body asChild>
           <ul className='flex flex-col gap-0.5 text-sm'>

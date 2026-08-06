@@ -10,10 +10,6 @@ export type MessageStyleProps = {
   elevation?: Elevation;
 };
 
-const root: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx(etc);
-};
-
 // The grid itself comes from `Column.Root`; this fragment only supplies the valence surface.
 const content: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
   return mx('rounded-sm', messageValence(valence), etc);
@@ -32,7 +28,6 @@ const body: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {
-  root,
   content,
   header,
   title,

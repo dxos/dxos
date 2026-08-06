@@ -78,8 +78,8 @@ export const ConfirmReset = ({
 
   return (
     <>
-      <Message.Root valence='error' classNames='mb-2'>
-        <Message.Content>
+      <Message.Root valence='error'>
+        <Message.Content classNames='mb-2'>
           <Message.Title>{resolvedTitle}</Message.Title>
           <Message.Body>{resolvedMessage}</Message.Body>
         </Message.Content>
