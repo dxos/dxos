@@ -100,7 +100,9 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
       {!githubToken && (
         <div className='flex flex-col py-form-gap'>
           <Message.Root valence='info'>
-            <Message.Title>{t('no-github-token.label')}</Message.Title>
+            <Message.Content>
+              <Message.Title>{t('no-github-token.label')}</Message.Title>
+            </Message.Content>
           </Message.Root>
           <div className='flex pt-form-gap'>
             <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>

@@ -89,8 +89,10 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
               )}
               {status.kind === 'error' && (
                 <Message.Root valence='error'>
-                  <Message.Title>{t('error.label')}</Message.Title>
-                  <Message.Body>{status.text}</Message.Body>
+                  <Message.Content>
+                    <Message.Title>{t('error.label')}</Message.Title>
+                    <Message.Body>{status.text}</Message.Body>
+                  </Message.Content>
                 </Message.Root>
               )}
             </div>

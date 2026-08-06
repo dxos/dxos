@@ -149,7 +149,7 @@ export const SelectedObjectsSurface = ({ companionTo, ref }: SelectedObjectsSurf
     }
 
     if (mergePreview?.typeUri === Type.getURI(companionTo)) {
-      return <MergePreview type={companionTo} spaceId={activeSpace.id} preview={mergePreview} ref={ref} />;
+      return <MergePreview type={companionTo} preview={mergePreview} ref={ref} />;
     }
 
     return (
