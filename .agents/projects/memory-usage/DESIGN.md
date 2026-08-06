@@ -161,3 +161,21 @@ plugin-support; demo videos in plugin-markdown/plugin-game `dx.config.ts`),
 and deck planks stay mounted. Media decode buffers live outside the JS heap —
 prime suspect for the linear native growth. Control experiment in flight:
 identical soak with `*cloudflarestream*` requests blocked.
+
+**Control result: videos exonerated.** With the stream CDN blocked the
+renderer grew _faster_: 777 MB → 1237 MB over 10 min (~46 MB/min), JS heap
+flat throughout (page 87–140 MB, worker 26–68 MB). The growth is native
+memory inside Composer's own behavior. Run-to-run rate varies (~30 vs
+~46 MB/min) — treat rates as indicative, direction as certain.
+
+Hypotheses for a native allocator growing with a flat sampled-JS heap:
+
+1. An **unsampled nested worker's V8 heap** (e.g. the sqlite OPFS
+   access-handle worker — nested dedicated workers don't appear in
+   `/json/list`).
+2. **malloc/partition_alloc retention** — e.g. network buffers from the 1 s
+   EDGE polling loop, IDB log-store writes, unclosed streams.
+3. Blink-side caches (web_cache, discardable) not under memory pressure.
+
+Discriminator in flight: memory-infra dumps (per-allocator, per-process) at
+t=1 min vs t=8 min, diffed.
