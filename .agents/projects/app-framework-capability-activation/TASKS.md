@@ -539,3 +539,43 @@ number). Disposition of open items at close:
 - CLOSED since the sixth addendum: startup A/B (above); plugin-assistant memoized-instructions
   failure (test replaced by ScriptedLanguageModel on main); simple-layout dep bug (fixed on main);
   the ~24 unrelated TS2883/TS2742 imports (full-repo build now 0 errors).
+
+## Closed — landed 2026-08-05
+
+`main` `34a84339` (PR #12414, squash: 1014 files, +15122/-8719). The merge-queue result is
+byte-identical to the locally verified merge of `de1ad824` with `main` `0604e5b8` (same tree
+`a463d811`, full build 325/325, 0 TS errors).
+
+Work after the sixth addendum:
+
+- **Eighth through thirteenth main syncs** (`e2a9ccfc`, `67a8e4ab`, `e203681a`, `d83fdf5e`,
+  `6375e745`, `ef14a7bc`, `12fd52b6`, `de1ad824`). Standing method, and it earned its keep: after
+  each merge, scan **every** incoming `.ts`/`.tsx` for removed-API usage, not just the conflicted
+  files. Four migrations were caught that way and by nothing else — `SurfaceComponent.test.tsx`
+  (`Capability.contributes` + `MappedPropsPlugin` on `SetupReactSurface`), `plugin-crm`'s
+  `mailbox-action.ts`, and `ProcessMailbox.stories.tsx` (`AppActivationEvents.SetupSettings` plus
+  its orphaned import). Git reported all four as clean auto-merges.
+- **Plugin-manager decomposition** (`a92ff7f9` → `ebac6700`): `core/plugin-manager.ts` (1719 lines)
+  → `core/plugin-manager/` with `index.ts` re-exporting only `plugin-manager.ts`. Intermediate
+  step `131774ef`/`385f84cf` tried per-unit callback bags first and backed it out — the units
+  genuinely share mutable state, and `ManagerState` gives that sharing one visible home with
+  enforceable invariants.
+- **`useOptionalPluginManager` removed** (`0ef0e208`, reverted `326b70c8`, reapplied `05670098`).
+  The hook predated this PR (byte-identical to `main`), so its removal was in scope, but it broke
+  the storybook job. Correct fix per user ruling: the bare test hosts get a real manager
+  (`6365ee76`) rather than the hook staying optional — `setupPluginManager` promoted out of
+  `@internal` (the tag stripped it from published types), `PluginManagerProvider` wrappers added to
+  plugin-review's headless hook tests, and per-story `withPluginManager()` decorators on
+  plugin-terra (bare manager on purpose: those stories exercise the fallback cache, which only runs
+  while `PlanetCache` is unregistered).
+
+Open at close, none blocking, carried to whoever touches the area next:
+
+- `urlKey: 'topic'` on the Project type section — never ruled on; changing it changes URL semantics.
+- `Plugin.addModule<void>` anchor (`MagazineCurate.stories.tsx`); node-barrel scoping gaps
+  (chess-com/transcription AppGraphBuilder, sheet ComputeGraphRegistry).
+- `react-ui-form` `FormLayout.stories.test.tsx` flake (Trunk `da851520`) — **not quarantined**.
+  Independent of this PR: the package is byte-identical to `main` and all 30 direct `@dxos` deps are
+  unmodified. Passes in isolation (1.3s against a 30s timeout), fails in-suite; running it alongside
+  `ObjectProperties.test.tsx` fails all 5 — Client-creating suites colliding under vitest worker
+  scheduling. Quarantining needs the Trunk MCP server authorized in an interactive session.
