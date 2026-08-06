@@ -70,14 +70,21 @@ jobs:
             echo "::warning::BLACKSMITH_BAZELRE_CACHE_GRPC is unset — this runner exposes no RE cache."
             exit 1
           fi
-          echo "endpoint: $BLACKSMITH_BAZELRE_CACHE_GRPC"
+          # Their server only accepts instance names it has registered for the VM — moon's default
+          # `moon-outputs` is rejected outright, and the two registered names are the Bazel and
+          # Buck2 ones. Derived rather than hardcoded: the shape is
+          # production/<installation-model-id>/<github-repository-id>/<client>.
+          instance="production/${BLACKSMITH_INSTALLATION_MODEL_ID}/${GITHUB_REPOSITORY_ID}/bazel"
+          echo "endpoint: $BLACKSMITH_BAZELRE_CACHE_GRPC  instance: $instance"
           start=$(date +%s)
-          MOON_REMOTE_HOST="$BLACKSMITH_BAZELRE_CACHE_GRPC" moon run :build 2>&1 | tee build.log
+          MOON_REMOTE_HOST="$BLACKSMITH_BAZELRE_CACHE_GRPC" \
+            MOON_REMOTE_CACHE_INSTANCE_NAME="$instance" \
+            moon run :build 2>&1 | tee build.log
           echo "wall_s=$(( $(date +%s) - start ))" | tee -a "$GITHUB_STEP_SUMMARY"
           # A disabled backend is a warning and a green build, so say so loudly.
-          if grep -q 'Failed to connect to storage backend' build.log; then
-            echo "::error::moon disabled the remote cache — this arm measured nothing."
-            grep 'moon_cache_storage' build.log | head -3
+          if grep -qE 'Failed to connect to storage backend|does not have permission' build.log; then
+            echo "::error::moon could not use the remote cache — this arm measured nothing."
+            grep 'moon_cache_storage' build.log | head -2
             exit 1
           fi
         shell: bash
@@ -127,6 +134,28 @@ jobs:
       - name: Cache breakdown
         if: always()
         run: node tools/moon-cache/bench/analyze.mjs .moon/cache/runReport.json | tee -a "$GITHUB_STEP_SUMMARY"
+        shell: bash
+
+  # Isolates the sticky-disk mount failure. Same action, same runner, but no job container — if it
+  # mounts here and not in the `sticky` job, the container is at fault; if it fails in both, the
+  # host cannot attach the device and it is Blacksmith's to fix.
+  sticky-mount-probe:
+    name: 'Sticky disk mount probe (no container)'
+    runs-on: ${{ inputs.runner || 'blacksmith-8vcpu-ubuntu-2404' }}
+    timeout-minutes: 10
+    steps:
+      - name: Mount a scratch sticky disk
+        uses: useblacksmith/stickydisk@v1
+        continue-on-error: true
+        with:
+          key: ${{ github.repository }}-mount-probe
+          path: /home/runner/sticky-probe
+
+      - name: Report
+        run: |
+          df -h /home/runner/sticky-probe || true
+          lsblk 2>/dev/null | head -10 || true
+          mount | grep -E 'vd[b-z]|sticky' || echo "no sticky block device mounted"
         shell: bash
 
   sticky:
