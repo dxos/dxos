@@ -1,6 +1,6 @@
 # SQL migrations — Tasks
 
-_Resume: watch dxos#12449 CI to green and land; edge#790 stays red until a dxos release carries the migrations (then bump edge's catalog and merge). Uncommitted: none. Last: code review addressed — feed PK-nullability fidelity, manifest-derived ids, legacy coverage in seven packages, and index-core's PRAGMA migration now covered in a real Durable Object._
+_Resume: edge#790 is the only open thread — it stays red until a dxos release carries the migrations; then bump edge's catalog to that version and merge. Uncommitted: none. Last: dxos#12449 MERGED 2026-08-06 as df93cc2749._
 
 ## Phase 1: Conversion (done)
 
@@ -30,8 +30,12 @@ rationale: [DESIGN.md](./DESIGN.md).
 
 ### Tasks
 
-- [ ] **Land dxos#12449** — watch Check to green; react-ui-form story test was
-      flaky once (passes locally); quarantine via `trunk-quarantine` if it recurs.
+- [x] **Land dxos#12449** — merged 2026-08-06 (`df93cc2749`), all checks green.
+      Review round before landing: dropped the Prisma-generated `NOT NULL` on
+      feed's four primary keys (a fresh-vs-legacy divergence), derived expected
+      ids from the manifests, added legacy + second-run coverage to the seven
+      packages that had only the static invariants, and cleared five stale JSDoc
+      blocks.
 - [ ] **Land edge#790 after a dxos release** — red by design until a published
       dxos version carries the migrations; bump edge's catalog to that version,
       then merge.

@@ -60,7 +60,7 @@ projects:
     tasks: .agents/projects/sql-migrations/TASKS.md
     design: .agents/projects/sql-migrations/DESIGN.md
     prs: [12449, 'edge#790']
-    resume: 'Conversion + verification DONE (inline DDL 41→0; old-DB idempotency proven three ways incl. cross-version interop for all 18 stores; DO path proven in edge#790 via linked packages, db-service 140/140). NEXT: watch dxos#12449 Check to green and land (react-ui-form story flaked once — quarantine via trunk-quarantine if it recurs); edge#790 stays red until a dxos release carries the migrations, then bump edge catalog and merge. Backlog: ts-test-workerd DO coverage for sql-sqlite in dxos CI; shared *.sql?raw typings package.'
+    resume: 'dxos#12449 MERGED 2026-08-06 (df93cc2749) — conversion complete, inline DDL 41 to 0. Old-DB safety proven three ways (per-package legacy tests, origin/main DDL replay across all 18 stores, cross-version interop for all 9 packages); DO path proven in edge#790 for BOTH feed (transaction control) and index-core (the PRAGMA table_info code migration), db-service 142/142. ONLY OPEN THREAD: edge#790 stays red until a dxos release carries the migrations — then bump edge catalog to that version and merge. Backlog: ts-test-workerd DO coverage for sql-sqlite inside dxos CI; shared *.sql?raw typings package.'
   - name: email-sync-stability
     status: active
     user: mykola
