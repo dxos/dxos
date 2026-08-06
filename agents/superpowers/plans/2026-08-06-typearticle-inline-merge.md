@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- No casts (`as any`, non-null `!`); no wrapper divs; comments say *why*, once.
+- No casts (`as any`, non-null `!`); no wrapper divs; comments say _why_, once.
 - Reuse translation keys `confirm-merge.label` / `cancel-merge.label` (exist in `translations.ts:340-341`).
 - `pnpm format` before every commit.
 - All paths relative to `packages/plugins/plugin-space/`.
@@ -22,9 +22,11 @@
 ### Task 1: Selection-aware staging + Confirm/Cancel in `useDuplicatesGroup`
 
 **Files:**
+
 - Modify: `src/containers/TypeArticle/duplicatesGroup.tsx`
 
 **Interfaces:**
+
 - Consumes: `SpaceOperation.MergeDuplicates`, `SpaceCapabilities.EphemeralState`, `buildMergePreview` (unchanged).
 - Produces: `UseDuplicatesGroupOptions` gains `spaceId: SpaceId`, `selectedIds: string[]`, `onConfirmed?: (objectIds: string[]) => void`. Task 2 passes these from `TypeArticle`.
 
@@ -130,16 +132,24 @@ return useMemo(
           clearPreview,
         );
     } else {
-      builder
-        .action('merge', { /* unchanged */ }, handleMerge)
-        .action('skip', { /* unchanged */ }, handleAdvance);
+      builder.action('merge', {/* unchanged */}, handleMerge).action('skip', {/* unchanged */}, handleAdvance);
     }
-    builder
-      .action('rescan', { /* unchanged */ }, handleRefresh)
-      .subgraph(/* arrows + counter, unchanged */)
-      .separator();
+    builder.action('rescan', {/* unchanged */}, handleRefresh).subgraph(/* arrows + counter, unchanged */).separator();
   },
-  [staged, merging, current.length, position, total, scanning, handleMerge, handleConfirm, clearPreview, handleAdvance, handlePrevious, handleRefresh],
+  [
+    staged,
+    merging,
+    current.length,
+    position,
+    total,
+    scanning,
+    handleMerge,
+    handleConfirm,
+    clearPreview,
+    handleAdvance,
+    handlePrevious,
+    handleRefresh,
+  ],
 );
 ```
 
@@ -156,9 +166,11 @@ Run: `moon run plugin-space:build` (expect a type error in `TypeArticle.tsx` for
 ### Task 2: Staged-state grid in `TypeArticle`
 
 **Files:**
+
 - Modify: `src/containers/TypeArticle/TypeArticle.tsx`
 
 **Interfaces:**
+
 - Consumes: Task 1's `UseDuplicatesGroupOptions` (`spaceId`, `selectedIds`, `onConfirmed`); `SpaceCapabilities.EphemeralState`.
 - Produces: `TileData` with optional `onSelect`/`onOpen` (read-only preview tile).
 
@@ -219,7 +231,7 @@ const tileItems = useMemo<TileData[]>(() => {
         })),
     ];
   }
-  return tiles.map((object) => ({ /* existing mapping, unchanged */ }));
+  return tiles.map((object) => ({/* existing mapping, unchanged */}));
 }, [layout, stagedPreview, tiles, selectedIds, toggleSelected, handleOpen, handleDelete]);
 ```
 
@@ -245,11 +257,13 @@ git commit -m "plugin-space: stage duplicate merges inline in TypeArticle"
 ### Task 3: Reduce the companion to a form
 
 **Files:**
+
 - Modify: `src/containers/MergePreview/MergePreview.tsx`
 - Modify: `src/capabilities/SpaceSurfaces.tsx` (call site)
 - Modify: `src/containers/TypeArticle/TypeArticle.stories.tsx` (`StoryCompanion` call site)
 
 **Interfaces:**
+
 - Produces: `MergePreviewProps = { type: Type.AnyEntity; preview: SpaceCapabilities.MergePreview }` (drops `spaceId`).
 
 - [ ] **Step 1: Strip the toolbar and merge invoke**
@@ -315,6 +329,7 @@ git commit -m "plugin-space: companion MergePreview is a form only"
 ### Task 4: Story + live verification
 
 **Files:**
+
 - Modify: `src/containers/TypeArticle/TypeArticle.stories.tsx` (Duplicates story test script)
 
 - [ ] **Step 1: Update the Duplicates story's numbered test script**
