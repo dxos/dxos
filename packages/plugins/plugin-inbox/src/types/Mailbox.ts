@@ -350,5 +350,11 @@ export const deriveSubscriptions = (messages: readonly MessageLike[]): Subscript
       byEmail.set(email, { email, name: message.sender?.name, unsubscribe: target, count: 1 });
     }
   }
-  return [...byEmail.values()].sort((left, right) => right.count - left.count);
+  // Count ties break alphabetically: Map insertion order follows message order, which is unstable
+  // across syncs and reads as an unsorted list.
+  return [...byEmail.values()].sort(
+    (left, right) =>
+      right.count - left.count ||
+      (left.name ?? left.email).localeCompare(right.name ?? right.email, undefined, { sensitivity: 'base' }),
+  );
 };
