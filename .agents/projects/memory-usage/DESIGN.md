@@ -292,6 +292,33 @@ Three closing measurements:
 - **Data-proportional heap** — user's Main = 816 MB vs 97 MB fresh; needs a
   snapshot of the real tab to decompose (ECHO objects, editors, history).
 
+### 2026-08-06 — USER-TAB LEDGER (memory-infra trace of the real 1.5 GB tab)
+
+User captured a chrome://tracing memory-infra trace (`trace_composer.json`) of
+the Chrome session whose Composer tab flagged 1.5 GB, plus a Main heap
+snapshot (`Heap-20260806T185842.heapsnapshot`, 310 MB self size). Composer =
+pid 4038 (the only renderer with SharedWorker + DedicatedWorker +
+ServiceWorker threads). Attributed **1,444 MB ≈ the flag**:
+
+- malloc 537 MB (471 live `<unspecified>`) — suspected DevTools-attach
+  retention (tab had DevTools open); verify by closing DevTools.
+- v8 473 MB — main 306 (old_space 228, large-object 43) + workers 160.
+- partition_alloc 307 MB — Blink buffers (perf-entry storage, strings, DOM).
+- blink_gc/objects 94 MB — DOM (Attr ×26k …) and **PerformanceMeasure
+  ×135,976 in the client worker** (15.6 MB direct) + PerformanceMark ×4.4k.
+- cc 29 MB.
+
+Main heap snapshot findings (the 310 MB slice): strings 104 MB — top strings
+are whole serialized `org.dxos.type.message` JSON (com.google.mail), **each
+message retained TWICE** (`{"id":…}` and `{"@meta":…}` variants, 0.5–0.8 MB
+each); native 78 MB across 768k nodes (DOM); code 38 MB; 1.15 M plain
+objects. → New lead: doubled message-JSON retention on the main thread
+(feed/inbox path).
+
+Context: the same trace shows two other non-Composer renderers at ~1.3 GB
+each (one blink_gc-heavy at 620 MB — likely a mail tab) — machine pressure
+is not all Composer.
+
 **Fix ranking (Phase 3):**
 
 1. Shrink the structural baseline — audit the Idle wave (why do disabled/Labs
