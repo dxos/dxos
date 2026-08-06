@@ -62,11 +62,16 @@ jobs:
         with:
           detached: true
 
+      # Full depth keeps the commit graph that `--affected remote` / `merge-base` resolve against,
+      # while `filter: blob:none` stops the transfer of every historical file version — the previous
+      # full fetch ranged 32s–15m on the same commit. No `lfs: true`: nothing in the tree is
+      # LFS-tracked. `fetch-tags: false` is not used because checkout ignores it at depth 0; at
+      # ~150 tags the residual refspec cost is noise.
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
@@ -155,7 +160,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -252,7 +257,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -349,7 +354,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -421,7 +426,7 @@ jobs:
     timeout-minutes: 90
     env:
       DX_ENVIRONMENT: ci
-      DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
+      DX_EDGE_BASE_URL: 'wss://main.dxos.network/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
     steps:
@@ -435,7 +440,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           persist-credentials: false
 
       - name: Extract branch
@@ -536,7 +541,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          lfs: true
+          filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
 
@@ -658,6 +663,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Detect missing changeset

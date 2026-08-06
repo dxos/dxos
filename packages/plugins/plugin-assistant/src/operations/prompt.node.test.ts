@@ -26,7 +26,7 @@ EntityId.dangerouslyDisableRandomness();
 
 describe('Agent prompt (composer plugin harness)', () => {
   // Hits RoutinePlugin compute runtime (plugin handlers, AiServiceLayer, skills).
-  // Requires reachable edge AI (see repo DX_EDGE_AI_SERVICE_URL); not memoized like AssistantTestLayer tests.
+  // Requires reachable edge AI (served through the edge /ai proxy); not memoized like AssistantTestLayer tests.
   test(
     'chat mode appends assistant messages to the chat queue',
     { tags: ['manual'], timeout: 60_000 },

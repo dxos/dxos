@@ -27,7 +27,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('Assistant Skill', () => {
-  // TODO(dmaretskyi): Regenerate memoized conversation with ALLOW_LLM_GENERATION=1.
+  // TODO(dmaretskyi): Regenerate memoized conversation with DX_UPDATE_MODEL_FIXTURES=1.
   it.effect.skip(
     'works with Database skill to create objects',
     Effect.fnUntraced(

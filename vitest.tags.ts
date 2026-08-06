@@ -4,6 +4,8 @@
 
 import type { TestProjectConfiguration } from 'vitest/config';
 
+const envEnabled = (name: string): boolean => ['1', 'true'].includes(process.env[name] ?? '');
+
 /**
  * Native Vitest tags used across the repo. Filter at the CLI with
  * `--tagsFilter "<expr>"` (boolean expressions over these names).
@@ -23,6 +25,15 @@ export const TEST_TAGS: NonNullable<TestProjectConfiguration['test']>['tags'] = 
     description: 'Opt-in tests run only when explicitly selected (local services, manual setup).',
     // Skipped by DEFAULT; DX_RUN_MANUAL_TESTS=1 opts in (these tests need local services
     // like Ollama/LM Studio that a plain `moon run :test` machine does not have).
-    skip: !['1', 'true'].includes(process.env.DX_RUN_MANUAL_TESTS ?? ''),
+    skip: !envEnabled('DX_RUN_MANUAL_TESTS'),
+  },
+  {
+    name: 'model-fixture',
+    description: 'Replay of recorded LLM turns from the model-fixture store. Skipped by default.',
+    // The single place model-fixture env-gating lives. Skipped by DEFAULT so a plain `moon run :test`
+    // never needs an API key; the dedicated model-fixture CI workflow opts in with
+    // DX_RUN_MODEL_FIXTURE_TESTS=1 (replay), and fixture regeneration sets DX_UPDATE_MODEL_FIXTURES=1
+    // (which must also un-skip, since generation runs through the same suites).
+    skip: !envEnabled('DX_RUN_MODEL_FIXTURE_TESTS') && !envEnabled('DX_UPDATE_MODEL_FIXTURES'),
   },
 ];

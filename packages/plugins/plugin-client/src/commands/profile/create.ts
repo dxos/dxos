@@ -37,8 +37,8 @@ const makeTemplate = (edgeUrl: string) => trim`
 `;
 
 const TEMPLATES = {
-  default: makeTemplate('https://edge-production.dxos.workers.dev'),
-  main: makeTemplate('https://edge-main.dxos.workers.dev'),
+  default: makeTemplate('https://dxos.network'),
+  main: makeTemplate('https://main.dxos.network'),
   dev: makeTemplate('https://edge.dxos.workers.dev'),
   local: makeTemplate('http://localhost:8787'),
 } as const;
