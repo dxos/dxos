@@ -10,10 +10,11 @@ import * as stories from './FormLayout.stories';
 
 const { NestedLabel, NestedLabelStatic } = composeStories(stories);
 
-// `withClientProvider` renders nothing until the client has created its identity and first space,
-// which takes seconds — well past testing-library's 1s `findBy*` default, so every query below
-// must opt into a longer window (still inside each test's own timeout).
-const FIND_TIMEOUT = 20_000;
+// `withClientProvider` renders nothing until the client has created its identity and first space —
+// measured at ~1.8s here, past testing-library's 1s `findBy*` default. Waiting for the form once
+// covers it: `Form.Content` renders `role="form"` with the fields as its children, so the whole
+// form lands in a single commit and every assertion after the wait can be synchronous.
+const CLIENT_READY_TIMEOUT = 10_000;
 
 describe('FormLayout — nested fields', () => {
   afterEach(async () => {
@@ -25,24 +26,24 @@ describe('FormLayout — nested fields', () => {
 
   test('renders nested struct labels and dotted sub-fields', { timeout: 30_000 }, async () => {
     await NestedLabel.run();
+    const form = await screen.findByRole('form', undefined, { timeout: CLIENT_READY_TIMEOUT });
 
     // `<field name="origin"/>` / `<field name="destination"/>` auto-convert to the
     // place's `LabelAnnotation` label (the `name` field), rendered as read-only text.
-    // `findByText` retries while the async client provider initializes.
-    expect(await screen.findByText('John F. Kennedy Intl', undefined, { timeout: FIND_TIMEOUT })).toBeInTheDocument();
-    expect(await screen.findByText('Charles de Gaulle', undefined, { timeout: FIND_TIMEOUT })).toBeInTheDocument();
+    expect(within(form).getByText('John F. Kennedy Intl')).toBeInTheDocument();
+    expect(within(form).getByText('Charles de Gaulle')).toBeInTheDocument();
 
     // `<field name="origin.code"/>` / `<field name="destination.code"/>` drill into the
     // leaf sub-field, rendered as editable inputs holding the code.
-    expect(await screen.findByDisplayValue('JFK', undefined, { timeout: FIND_TIMEOUT })).toBeInTheDocument();
-    expect(await screen.findByDisplayValue('CDG', undefined, { timeout: FIND_TIMEOUT })).toBeInTheDocument();
+    expect(within(form).getByDisplayValue('JFK')).toBeInTheDocument();
+    expect(within(form).getByDisplayValue('CDG')).toBeInTheDocument();
   });
 
   test('static layout formats dates and renders labels as read-only text', { timeout: 30_000 }, async () => {
     await NestedLabelStatic.run();
 
     // Scope assertions to the form: the debug panel echoes the raw values JSON.
-    const form = await screen.findByRole('form', undefined, { timeout: FIND_TIMEOUT });
+    const form = await screen.findByRole('form', undefined, { timeout: CLIENT_READY_TIMEOUT });
 
     // The depart date renders human-readable (contains the year) rather than the raw ISO
     // string. Match `2026` and assert no ISO time fragment leaks through — timezone-robust.
