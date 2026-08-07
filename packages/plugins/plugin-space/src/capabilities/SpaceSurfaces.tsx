@@ -15,6 +15,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useObject, useType } from '@dxos/echo-react';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
@@ -91,10 +92,16 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
     : undefined;
 
   const visibleSpaces = spaces.filter((space) => AppSpace.isVisibleSpace(space));
+  // The default space holds integration credentials (the Atmosphere `AccessToken` written by OAuth
+  // registration), so designating a shareable space would widen their audience.
+  // TODO(wittjosiah): Offer every visible space once OAuth registration no longer stores
+  //  credentials in the default space.
+  const eligibleSpaces = visibleSpaces.filter((space) => space.membershipPolicy === MembershipPolicy.LOCKED);
 
   return (
     <SpaceSettings
       spaces={visibleSpaces}
+      eligibleDefaultSpaces={eligibleSpaces}
       onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
       settings={settings}
       onSettingsChange={updateSettings}

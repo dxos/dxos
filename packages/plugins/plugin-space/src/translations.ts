@@ -239,7 +239,7 @@ export const translations = [
           'Include types annotated as hidden (e.g. Tag, View, Feed) in the database section.',
         'settings.default-space.label': 'Default space',
         'settings.default-space.description':
-          'Space used for content that is not scoped to the space you are in, such as quick entry and chat.',
+          'Space used for content that is not scoped to the space you are in, such as quick entry and chat. Only private spaces can be chosen, because this space also holds your connected integrations.',
         'settings.default-space.placeholder': 'Select space',
         'settings.space-list.label': 'Spaces',
         'settings.space-list.description': 'Settings for each space you belong to.',

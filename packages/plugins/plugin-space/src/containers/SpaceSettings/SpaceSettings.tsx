@@ -21,6 +21,8 @@ export type SpaceSettingsProps = {
   onSettingsChange?: (updater: (prev: Settings.Settings) => Settings.Settings) => void;
   /** Id of the space currently designated as the default. */
   defaultSpaceId?: string;
+  /** Spaces that may be designated as the default; defaults to all of `spaces`. */
+  eligibleDefaultSpaces?: Space[];
   onDefaultSpaceChange?: (spaceId: string) => void;
 };
 
@@ -30,6 +32,7 @@ export const SpaceSettings = ({
   settings,
   onSettingsChange,
   defaultSpaceId,
+  eligibleDefaultSpaces = spaces,
   onDefaultSpaceChange,
 }: SpaceSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -60,7 +63,7 @@ export const SpaceSettings = ({
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>
-                      {spaces?.map((space) => (
+                      {eligibleDefaultSpaces?.map((space) => (
                         <Select.Option key={space.id} value={space.id}>
                           {toLocalizedString(getSpaceDisplayName(space), t)}
                         </Select.Option>
