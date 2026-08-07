@@ -15,7 +15,6 @@
 import { chromium } from '@playwright/test';
 import { mkdirSync, writeFileSync, createWriteStream } from 'node:fs';
 import path from 'node:path';
-import WebSocket from 'ws';
 
 const url = process.argv[2] ?? 'http://localhost:5180';
 const soakIdx = process.argv.indexOf('--soak');
@@ -35,13 +34,13 @@ class Cdp {
 
   static async connect(wsUrl) {
     const client = new Cdp();
-    client.#ws = new WebSocket(wsUrl, { maxPayload: 512 * 1024 * 1024 });
+    client.#ws = new WebSocket(wsUrl);
     await new Promise((resolve, reject) => {
-      client.#ws.once('open', resolve);
-      client.#ws.once('error', reject);
+      client.#ws.addEventListener('open', resolve, { once: true });
+      client.#ws.addEventListener('error', reject, { once: true });
     });
-    client.#ws.on('message', (data) => {
-      const msg = JSON.parse(data.toString());
+    client.#ws.addEventListener('message', ({ data }) => {
+      const msg = JSON.parse(data);
       if (msg.id != null && client.#pending.has(msg.id)) {
         const { resolve, reject } = client.#pending.get(msg.id);
         client.#pending.delete(msg.id);

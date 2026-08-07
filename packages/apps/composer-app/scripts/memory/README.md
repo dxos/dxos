@@ -52,6 +52,11 @@ alongside any number:
 
 ## Running
 
+These use the repo's pinned Node (24.x) for its global `WebSocket` — the raw
+CDP connections need no dependency beyond Playwright. Run them through the
+toolchain (`moon`, or a shell with proto's shims on `PATH`); a stray Node 20
+fails with `WebSocket is not defined`.
+
 Serve a production build first (numbers from `vite serve` are not comparable):
 
 ```bash

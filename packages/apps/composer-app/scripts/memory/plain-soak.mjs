@@ -15,7 +15,6 @@ import { spawn, execSync } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import WebSocket from 'ws';
 
 const url = process.argv[2] ?? 'http://localhost:4173';
 const arg = (name, dflt) => {
@@ -35,11 +34,11 @@ class Cdp {
     const c = new Cdp();
     c.#ws = new WebSocket(wsUrl);
     await new Promise((res, rej) => {
-      c.#ws.once('open', res);
-      c.#ws.once('error', rej);
+      c.#ws.addEventListener('open', res, { once: true });
+      c.#ws.addEventListener('error', rej, { once: true });
     });
-    c.#ws.on('message', (d) => {
-      const m = JSON.parse(d.toString());
+    c.#ws.addEventListener('message', ({ data }) => {
+      const m = JSON.parse(data);
       if (m.id != null && c.#pending.has(m.id)) {
         const { resolve, reject } = c.#pending.get(m.id);
         c.#pending.delete(m.id);

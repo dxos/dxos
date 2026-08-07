@@ -218,7 +218,6 @@
     "vite-plugin-pwa": "catalog:",
     "vite-plugin-solid": "catalog:",
     "vite-plugin-wasm": "catalog:",
-    "workbox-window": "catalog:",
-    "ws": "catalog:"
+    "workbox-window": "catalog:"
   }
 }
