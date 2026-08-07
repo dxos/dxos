@@ -1,6 +1,5 @@
 ---
 '@dxos/app-framework': patch
-'@dxos/ui-theme': patch
 ---
 
 Bundler-plugin entrypoints no longer publish a `source` export condition: `@dxos/app-framework/vite-plugin` and `@dxos/ui-theme/plugin`. These run in Node inside a `vite.config.ts` and reach `node:*`, so a `source` condition let an app's `source`-first resolver pull their Node-only sources into a browser bundle.
