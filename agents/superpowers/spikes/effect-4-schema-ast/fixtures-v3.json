@@ -1,0 +1,129 @@
+{
+  "Org": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:com.example.type.Org:0.1.0",
+    "entityKind": "object",
+    "typename": "com.example.type.Org",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "website": {
+        "type": "string",
+        "description": "URL",
+        "title": "URL",
+        "pattern": "^(\\w+?:\\/\\/)?([\\da-z.-]+)\\.([a-z.]{2,6})([/\\w .-]*)*\\/?$",
+        "format": "url"
+      }
+    },
+    "required": ["name", "id"],
+    "propertyOrder": ["name", "website", "id"],
+    "additionalProperties": false
+  },
+  "Person": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "dxn:com.example.type.Person:0.1.0",
+    "entityKind": "object",
+    "typename": "com.example.type.Person",
+    "version": "0.1.0",
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string",
+        "description": "The person name",
+        "title": "Full name"
+      },
+      "email": {
+        "type": "string",
+        "description": "Email address",
+        "title": "Email",
+        "pattern": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+        "format": "email"
+      },
+      "age": {
+        "type": "integer",
+        "description": "a number between 0 and 150",
+        "title": "between(0, 150)",
+        "minimum": 0,
+        "maximum": 150
+      },
+      "active": {
+        "type": "boolean"
+      },
+      "tags": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "kind": {
+        "type": "string",
+        "enum": ["employee", "contractor"]
+      },
+      "employer": {
+        "$id": "/schemas/echo/ref",
+        "$ref": "/schemas/echo/ref",
+        "reference": {
+          "schema": {
+            "$ref": "dxn:com.example.type.Org"
+          },
+          "schemaVersion": "0.1.0"
+        }
+      },
+      "address": {
+        "type": "object",
+        "required": ["street", "city"],
+        "properties": {
+          "street": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "zip": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "propertyOrder": ["street", "city", "zip"]
+      },
+      "metadata": {
+        "type": "object",
+        "required": [],
+        "properties": {},
+        "additionalProperties": {
+          "$id": "/schemas/any",
+          "title": "any"
+        },
+        "propertyOrder": []
+      },
+      "note": {
+        "$id": "/schemas/unknown",
+        "title": "unknown"
+      }
+    },
+    "required": ["name", "active", "tags", "kind", "id"],
+    "propertyOrder": [
+      "name",
+      "email",
+      "age",
+      "active",
+      "tags",
+      "kind",
+      "employer",
+      "address",
+      "metadata",
+      "note",
+      "id"
+    ],
+    "additionalProperties": false
+  }
+}

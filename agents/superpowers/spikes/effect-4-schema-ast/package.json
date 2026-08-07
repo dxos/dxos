@@ -1,0 +1,16 @@
+{
+  "name": "effect-4-schema-ast-spike",
+  "private": true,
+  "type": "module",
+  "description": "Standalone spike — NOT part of the pnpm workspace. Run with `npm install && npm test` from this directory.",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "effect": "4.0.0-beta.105",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}
