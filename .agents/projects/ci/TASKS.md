@@ -65,3 +65,28 @@ REPORT.md, "In CI". What remains is operational hardening, not the rollout itsel
       compression. Its own arm, not folded into a hosting change.
 - [ ] **13 MB of video in `docs/public/`** — two checked-in mp4s that Astro copies into
       `docs:bundle`'s output. Worth removing on its own merits.
+
+## Phase 3: E2E stabilization
+
+Every disabled Playwright test, grouped by root cause and ordered by cost to fix, is in
+[`E2E-STABILIZATION.md`](./E2E-STABILIZATION.md) — 42 tests off across 16 `test.fixme`, 11
+`test.skip`, and 5 skipped suites. Work it top-down; each item is only done once it runs green in
+CI without a retry.
+
+- [x] **Fix `cli:bundle`** — #12398 dropped the five `@opentui/core-<platform>-<arch>` packages
+      from the CLI manifest as unused. Nothing imports them; they exist so pnpm installs all five
+      native libraries for the five-target cross-compile, and without them every run failed with
+      `Could not resolve: "@opentui/core-darwin-arm64/index.ts"`. Restored and registered in
+      knip's `BUNDLER_RESOLVED` so they are not stripped again.
+- [x] **`createSpace()` proves a space was created** — `waitForSpaceReady()` only requires the
+      selected workspace to match the URL, which the space the app is already in satisfies, so a
+      submit that did not take read as success and failed later in the calling test.
+- [ ] **Tier 1.1: testid on the type-picker option** — `createObject()` targets
+      `getByRole('listbox').getByText(type)`, which the `browser-e2e-tests` skill forbids. Highest
+      leverage item on the list: most of composer's suite goes through this helper.
+- [ ] **Tier 1.2: re-check the four wholesale-skipped suites** — `Inbox` and `Table tests` alone
+      are 10 tests, and each carries a stated condition that is cheaper to verify than to diagnose.
+- [ ] **Tier 1.3: delete rather than fix** the three tests carrying a `Remove?` note, and record a
+      reason for the three that have none.
+- [ ] **Tier 2**, then **Tier 3** — shared-cause groups first (halo `joinNewIdentity()`, comments
+      deletion, todomvc replication), then the product bugs and hard races.
