@@ -23,7 +23,7 @@ import { type LevelName, LEVELS } from './recorder';
 export const logLevelsAspect = ViewState.define<Record<string, LevelName>>({
   key: 'debug-logger-levels',
   backend: 'local',
-  schema: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Literal(...LEVELS) })),
+  schema: Schema.mutable(Schema.Record(Schema.String, Schema.Literal(...LEVELS))),
   defaultValue: () => ({}),
 });
 

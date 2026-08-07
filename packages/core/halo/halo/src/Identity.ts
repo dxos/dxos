@@ -19,7 +19,7 @@ import * as Invitation from './Invitation';
  * Device kind (platform / host class). Replaces the legacy protobuf `DeviceType` enum;
  * `agent`/`agent-managed` denote EDGE- or Hub-hosted agent devices.
  */
-export const DeviceKind = Schema.Literal('unknown', 'browser', 'native', 'mobile', 'agent', 'agent-managed');
+export const DeviceKind = Schema.Literals(['unknown', 'browser', 'native', 'mobile', 'agent', 'agent-managed']);
 export type DeviceKind = typeof DeviceKind.Type;
 
 /**
@@ -33,7 +33,7 @@ export const Info = Schema.Struct({
   identityKey: Schema.optional(Schema.String),
   displayName: Schema.optional(Schema.String),
   /** Arbitrary profile metadata. */
-  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type Info = typeof Info.Type;
 
@@ -60,7 +60,7 @@ export const Credential = Schema.Struct({
   id: Schema.optional(Schema.String),
   /** The subject assertion's `@type` (e.g. `dxos.halo.credentials.IdentityRecovery`). */
   type: Schema.String,
-  issuanceDate: Schema.optional(Schema.DateFromSelf),
+  issuanceDate: Schema.optional(Schema.Date),
 });
 export type Credential = typeof Credential.Type;
 

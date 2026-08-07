@@ -30,13 +30,13 @@ export const OnCreateSpace = Operation.make({
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
-export const IssueType = Schema.Literal('bug', 'feature').annotate({
+export const IssueType = Schema.Literals(['bug', 'feature']).annotate({
   title: 'Type',
   description: 'Whether this is a bug report or a feature request.',
 });
 export type IssueType = Schema.Schema.Type<typeof IssueType>;
 
-export const Severity = Schema.Literal('High priority', 'Medium priority', 'Low priority').annotate({
+export const Severity = Schema.Literals(['High priority', 'Medium priority', 'Low priority']).annotate({
   title: 'Severity',
   description: 'How disruptive the issue is.',
 });

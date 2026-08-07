@@ -34,7 +34,7 @@ export default ForexEffect.pipe(
         Effect.flatMap(
           HttpClientResponse.schemaBodyJson(
             Schema.Struct({
-              data: Schema.Struct({ rates: Schema.Record({ key: Schema.String, value: Schema.Number }) }),
+              data: Schema.Struct({ rates: Schema.Record(Schema.String, Schema.Number) }),
             }),
           ),
         ),

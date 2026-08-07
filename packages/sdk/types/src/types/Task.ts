@@ -22,7 +22,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
         args: [{ min: 3, max: 10 }],
       }),
     ),
-    priority: Schema.Literal('none', 'low', 'medium', 'high', 'urgent').pipe(
+    priority: Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
@@ -45,7 +45,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       Schema.optional,
     ),
     // `failed`/`cancelled` exist so delegated agent tasks and human tasks share one status vocabulary.
-    status: Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled').pipe(
+    status: Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',

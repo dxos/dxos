@@ -40,7 +40,7 @@ const ToString = Operation.make({
 });
 
 const Add = Operation.make({
-  input: Schema.Tuple(Schema.Number, Schema.Number),
+  input: Schema.Tuple([Schema.Number, Schema.Number]),
   output: Schema.Number,
   meta: { key: DXN.make('org.example.test.add') },
 });

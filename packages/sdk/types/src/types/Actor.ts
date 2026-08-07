@@ -11,7 +11,7 @@ import { Ref } from '@dxos/echo';
 import * as Person from './Person';
 
 // TOOD(burdon): This is very specific to AI.
-export const Role = Schema.Literal('user', 'assistant', 'tool');
+export const Role = Schema.Literals(['user', 'assistant', 'tool']);
 export type Role = Schema.Schema.Type<typeof Role>;
 
 /**

@@ -24,7 +24,7 @@ export type RouteProfile = Schema.Schema.Type<typeof RouteProfile>;
  * A stop on a route: either a resolved `Place` (which may already carry `geo`) or a free-text
  * place name that the routing service geocodes internally.
  */
-export const Waypoint = Schema.Union(Place, Schema.String);
+export const Waypoint = Schema.Union([Place, Schema.String]);
 export type Waypoint = Schema.Schema.Type<typeof Waypoint>;
 
 /** Returns a human label for a waypoint (place name / city / code, or the raw string). */

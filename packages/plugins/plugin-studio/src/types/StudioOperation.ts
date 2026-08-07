@@ -45,7 +45,7 @@ export const Generate = Operation.make({
       Schema.String.annotate({ description: 'Human label for the produced variant (defaults from the prompt).' }),
     ),
     config: Schema.optional(
-      Schema.Record({ key: Schema.String, value: Schema.Unknown }).annotate({
+      Schema.Record(Schema.String, Schema.Unknown).annotate({
         description: 'Kind-specific request config (recorded on the produced variant).',
       }),
     ),

@@ -65,7 +65,7 @@ export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
 export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.Struct({
   id: Schema.String,
 }).pipe(
-  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  Schema.extend(Schema.Record(Schema.String, Schema.Unknown)),
   Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Relation,

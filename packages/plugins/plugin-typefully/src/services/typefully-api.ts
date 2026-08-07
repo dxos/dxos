@@ -70,13 +70,11 @@ const TypefullyPlatformResponse = Schema.Struct({
   posts: Schema.optional(Schema.NullOr(Schema.Array(TypefullyPostResponse))),
 });
 const TypefullyDraftResponse = Schema.Struct({
-  id: Schema.Union(Schema.Number, Schema.String),
+  id: Schema.Union([Schema.Number, Schema.String]),
   draft_title: Schema.optional(Schema.NullOr(Schema.String)),
   scheduled_date: Schema.optional(Schema.NullOr(Schema.String)),
   // Platform values can be `null` for platforms the draft doesn't target (e.g. `"x_article": null`).
-  platforms: Schema.optional(
-    Schema.NullOr(Schema.Record({ key: Schema.String, value: Schema.NullOr(TypefullyPlatformResponse) })),
-  ),
+  platforms: Schema.optional(Schema.NullOr(Schema.Record(Schema.String, Schema.NullOr(TypefullyPlatformResponse)))),
 });
 type TypefullyDraftResponse = Schema.Schema.Type<typeof TypefullyDraftResponse>;
 
@@ -87,7 +85,7 @@ const TypefullyListResponse = Schema.Struct({ results: Schema.Array(TypefullyDra
 const SocialSetsResponse = Schema.Struct({
   results: Schema.Array(
     Schema.Struct({
-      id: Schema.Union(Schema.Number, Schema.String),
+      id: Schema.Union([Schema.Number, Schema.String]),
       name: Schema.optional(Schema.NullOr(Schema.String)),
       team: Schema.optional(
         Schema.NullOr(Schema.Struct({ id: Schema.String, name: Schema.optional(Schema.NullOr(Schema.String)) })),

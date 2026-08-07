@@ -20,7 +20,7 @@ export const CommercePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(SkillDefinition),
   Plugin.addModule(CreateObject),
   Plugin.addModule(OperationHandler),
-  Plugin.addModule(AppCapability.schema([Provider.Provider, Search.Search, Result.Result, TagIndex.TagIndex])),
+  Plugin.addModule(AppCapability.schema([Provider.Provider, Search.Search, Result.AsyncResult, TagIndex.TagIndex])),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(AppCapability.translations(translations)),
   Plugin.addModule(

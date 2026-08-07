@@ -46,7 +46,7 @@ export type EdgeSuccess<T> = {
 const _SerializedError = Schema.Struct({
   name: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
-  context: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  context: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   stack: Schema.optional(Schema.String),
   cause: Schema.optional(Schema.suspend(() => SerializedError)),
 });
@@ -361,7 +361,7 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   // kms-service mints a one-time `recoveryProof` the client forwards to db-service.
   registerRecovery: Schema.optional(Schema.Boolean),
   identityKey: Schema.optional(Schema.String),
-  purpose: Schema.optional(Schema.Literal('register', 'recovery')),
+  purpose: Schema.optional(Schema.Literals(['register', 'recovery'])),
 });
 export type InitiateOAuthFlowRequest = Schema.Schema.Type<typeof InitiateOAuthFlowRequestSchema>;
 

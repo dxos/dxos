@@ -263,6 +263,44 @@ for (const file of files) {
     });
   }
 
+  // `Record({key, value})` became positional. Uses the paren-matching walker rather than a
+  // regex: the value expression routinely nests braces and parens of its own.
+  source = mapCalls(source, 'Record', (inner) => {
+    const trimmed = inner.trim();
+    if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
+      return `Schema.Record(${inner})`;
+    }
+    const entries = splitArgs(trimmed.slice(1, -1));
+    const find = (name) => entries.find((entry) => entry.trim().startsWith(`${name}:`));
+    const key = find('key');
+    const value = find('value');
+    if (!key || !value || entries.length !== 2) {
+      return `Schema.Record(${inner})`;
+    }
+    bump('Schema.Record');
+    const strip = (entry, name) =>
+      entry
+        .trim()
+        .slice(name.length + 1)
+        .trim();
+    return `Schema.Record(${strip(key, 'key')}, ${strip(value, 'value')})`;
+  });
+
+  // The `*FromSelf` variants dropped their suffix.
+  source = source.replace(/\bSchema\.(\w+)FromSelf\b/g, (_match, name) => (bump('Schema.*FromSelf'), `Schema.${name}`));
+
+  // Variadic -> array, restricted to calls that fit on one line with no nested parens. The
+  // multi-line case still needs an AST tool; a scanner mismatched its closing paren (see above).
+  source = source.replace(/\bSchema\.(Literal|Union|Tuple)\(([^()\n]*)\)/g, (match, name, inner) => {
+    const parts = splitArgs(inner);
+    if (parts.length < 2) {
+      return match;
+    }
+    bump(`Schema.${name} variadic`);
+    const target = name === 'Literal' ? 'Literals' : name;
+    return `Schema.${target}([${parts.map((part) => part.trim()).join(', ')}])`;
+  });
+
   if (source !== before) {
     changedFiles += 1;
     if (!dry) {

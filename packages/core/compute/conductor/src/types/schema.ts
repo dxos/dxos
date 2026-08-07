@@ -64,7 +64,7 @@ export type AnyOutput = Schema.Schema.Type<typeof AnyOutput>;
 //
 
 // TODO(burdon): Define type.
-export const Scalar = Schema.Union(Schema.String, Schema.Number, Schema.Boolean);
+export const Scalar = Schema.Union([Schema.String, Schema.Number, Schema.Boolean]);
 
 export const ConstantOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Scalar });
 

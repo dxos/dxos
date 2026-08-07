@@ -27,7 +27,7 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 /** Schema for persisted space plugin state. */
 export const StateSchema = Schema.mutable(
   Schema.Struct({
-    spaceNames: Schema.Record({ key: Schema.String, value: Schema.String }),
+    spaceNames: Schema.Record(Schema.String, Schema.String),
     enabledEdgeReplication: Schema.Boolean,
   }),
 );

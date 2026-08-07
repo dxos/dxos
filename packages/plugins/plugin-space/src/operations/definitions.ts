@@ -455,7 +455,7 @@ export namespace SpaceOperation {
       source: Obj.Unknown,
       target: Obj.Unknown,
       // TODO(wittjosiah): Type based on relation schema.
-      fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+      fields: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
     }),
     output: Schema.Struct({
       relation: Schema.Any,

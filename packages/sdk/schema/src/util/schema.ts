@@ -26,7 +26,7 @@ export const createDefaultSchema = () => {
   const struct = Schema.Struct({
     title: Schema.optional(Schema.String).annotate({ title: 'Title' }),
     status: Schema.optional(
-      Schema.Literal('todo', 'in-progress', 'done')
+      Schema.Literals(['todo', 'in-progress', 'done'])
         .pipe(FormatAnnotation.set(Format.TypeFormat.SingleSelect))
         .annotate({
           title: 'Status',

@@ -82,7 +82,7 @@ const EmailSpecForm = Schema.extend(
   EnabledForm,
 );
 
-const TriggerForm = Schema.Union(TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm);
+const TriggerForm = Schema.Union([TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm]);
 type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
 
 // Flat view of the form values: `Partial<TriggerFormValues>` collapses a discriminated union to its common

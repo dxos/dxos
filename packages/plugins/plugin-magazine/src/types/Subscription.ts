@@ -18,7 +18,7 @@ import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex }
 // Consider making it extensible (e.g. a string schema with a well-known-values registry) so plugins can
 // register feed types without modifying core.
 /** Subscription protocol type. */
-export const FeedType = Schema.Literal('standard-site', 'rss', 'bluesky');
+export const FeedType = Schema.Literals(['standard-site', 'rss', 'bluesky']);
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**

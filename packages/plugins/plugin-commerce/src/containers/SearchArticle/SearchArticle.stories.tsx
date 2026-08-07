@@ -62,7 +62,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Provider.Provider, Result.Result, Search.Search],
+          types: [Feed.Feed, Provider.Provider, Result.AsyncResult, Search.Search],
           onClientInitialized: seedSpace,
         }),
         SpacePlugin({}),

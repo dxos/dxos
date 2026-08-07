@@ -14,7 +14,7 @@ import { type TYPES, schema } from './proto/gen/index.ts';
  */
 export const protoMessage = <K extends keyof TYPES & string>(typeName: K): Schema.Codec<TYPES[K], Uint8Array> =>
   Schema.transform(
-    Schema.Uint8ArrayFromSelf,
+    Schema.Uint8Array,
     Schema.declare<TYPES[K]>((_): _ is TYPES[K] => true),
     {
       strict: true,
@@ -29,7 +29,7 @@ export const protoMessage = <K extends keyof TYPES & string>(typeName: K): Schem
  * classes on decode so typed errors cross the RPC boundary.
  */
 export const serviceError: Schema.Codec<Error, Uint8Array> = Schema.transform(
-  Schema.Uint8ArrayFromSelf,
+  Schema.Uint8Array,
   Schema.declare<Error>((value): value is Error => value instanceof Error),
   {
     strict: true,

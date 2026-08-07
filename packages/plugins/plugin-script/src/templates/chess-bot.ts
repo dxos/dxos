@@ -22,7 +22,7 @@ const ChessBot = Operation.make({
     game: Game.GameRef(Chess.State).annotate({
       description: 'The chess game to comment on.',
     }),
-    player: Schema.optional(Schema.Literal('white', 'black')).annotate({
+    player: Schema.optional(Schema.Literals(['white', 'black'])).annotate({
       description: 'The player to play the game as.',
     }),
   }),

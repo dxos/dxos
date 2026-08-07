@@ -145,7 +145,7 @@ export const ObjectCreate = Operation.make({
       description: 'The typename of the object to create.',
       examples: ['dxn:org.dxos.type.person'],
     }),
-    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    properties: Schema.Record(Schema.String, Schema.Any),
     attach: Schema.optional(Schema.Boolean).annotate({
       description: trim`
         Attach the object to the space root collection so it appears in the navigation tree.
@@ -170,7 +170,7 @@ export const ObjectUpdate = Operation.make({
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown),
-    properties: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    properties: Schema.Record(Schema.String, Schema.Any),
   }),
   output: Schema.Unknown,
   services: [Database.Service],
@@ -210,7 +210,7 @@ export const SchemaAdd = Operation.make({
     // Typed as a record so the tool parameter advertises `type: object` to the LLM, forcing it to
     // emit the JSON Schema as an object rather than a JSON-encoded string (which an unconstrained
     // `Schema.Any` parameter would allow, breaking `makeObjectFromJsonSchema`).
-    jsonSchema: Schema.Record({ key: Schema.String, value: Schema.Any }).annotate({
+    jsonSchema: Schema.Record(Schema.String, Schema.Any).annotate({
       description: 'The JSON Schema (draft-07) object describing the fields of the new type.',
     }),
   }),

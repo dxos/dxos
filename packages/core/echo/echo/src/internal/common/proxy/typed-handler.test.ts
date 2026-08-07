@@ -63,7 +63,7 @@ describe('complex schema validations', () => {
 
   test('suspend', () => {
     const schema = Schema.Struct({
-      array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union(Schema.Null, Schema.Number)))),
+      array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union([Schema.Null, Schema.Number])))),
       object: Schema.optional(Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number })))),
     });
 

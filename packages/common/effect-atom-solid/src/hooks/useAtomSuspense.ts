@@ -11,7 +11,7 @@ import { useRegistry } from '../registry';
 /**
  * Hook to read an atom value with Suspense support
  */
-export function useAtomSuspense<A, E>(atom: Atom.Atom<AsyncResult.Result<A, E>>): () => A {
+export function useAtomSuspense<A, E>(atom: Atom.Atom<AsyncResult.AsyncResult<A, E>>): () => A {
   const registry = useRegistry();
 
   const [data, { mutate, refetch }] = createResource(async () => {

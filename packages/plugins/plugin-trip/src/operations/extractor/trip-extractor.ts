@@ -76,7 +76,7 @@ const matchMessage = (source: Obj.Any): MatchResult => {
 const PlacePayload = Schema.Struct({ code: Schema.String, name: Schema.optional(Schema.String) });
 
 /** Travel mode of the extracted segment. Defaults to `flight` when the LLM omits it. */
-const SegmentKind = Schema.Literal('flight', 'train');
+const SegmentKind = Schema.Literals(['flight', 'train']);
 
 /** A single travel leg within a booking. */
 const SegmentPayload = Schema.Struct({

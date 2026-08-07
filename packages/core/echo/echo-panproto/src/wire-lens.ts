@@ -21,7 +21,7 @@ import * as Schema from 'effect/Schema';
 const Path = Schema.Array(Schema.String);
 
 /** A parsed atproto lexicon document (opaque JSON; embedded so the lens is self-contained). */
-const Lexicon = Schema.Record({ key: Schema.String, value: Schema.Unknown });
+const Lexicon = Schema.Record(Schema.String, Schema.Unknown);
 
 /**
  * A ref-typed ECHO field carried on the wire as a plain string. `format` names a registered text

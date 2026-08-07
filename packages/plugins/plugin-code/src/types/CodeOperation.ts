@@ -42,7 +42,7 @@ export const RunBuildAgent = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    status: Schema.Literal('queued', 'running', 'succeeded', 'failed'),
+    status: Schema.Literals(['queued', 'running', 'succeeded', 'failed']),
   }),
   services: [Database.Service],
 });
@@ -206,7 +206,7 @@ const Diagnostic = Schema.Struct({
   path: Schema.optional(Schema.String),
   line: Schema.optional(Schema.Number),
   column: Schema.optional(Schema.Number),
-  severity: Schema.Literal('error', 'warning'),
+  severity: Schema.Literals(['error', 'warning']),
   code: Schema.optional(Schema.Number),
   message: Schema.String,
 });

@@ -48,7 +48,7 @@ export const Play = Operation.make({
     game: Game.GameRef(Chess.State).annotate({
       description: 'The ID of the game object (variant must be Chess).',
     }),
-    side: Schema.optional(Schema.Literal('white', 'black', 'any')).annotate({
+    side: Schema.optional(Schema.Literals(['white', 'black', 'any'])).annotate({
       description: 'The side to play.',
       defaultValue: 'any',
     }),

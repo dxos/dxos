@@ -107,7 +107,7 @@ const SavedFeedSchema = Schema.Struct({
   /** at-uri of the feed generator. */
   value: Schema.String,
   /** `feed` for custom feeds, `list` for list-backed feeds, `timeline` for the home timeline. */
-  type: Schema.Literal('feed', 'list', 'timeline'),
+  type: Schema.Literals(['feed', 'list', 'timeline']),
   pinned: Schema.optional(Schema.Boolean),
 });
 

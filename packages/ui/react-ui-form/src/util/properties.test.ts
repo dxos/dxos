@@ -140,7 +140,7 @@ describe('getFormProperties', () => {
 describe('getRootFormProperties', () => {
   const Timer = Schema.Struct({ kind: Schema.Literal('timer'), cron: Schema.String });
   const Feed = Schema.Struct({ kind: Schema.Literal('feed'), feed: Schema.String });
-  const Union = Schema.Union(Timer, Feed);
+  const Union = Schema.Union([Timer, Feed]);
 
   test('renders a non-union root unchanged', ({ expect }) => {
     const ast = Schema.Struct({ a: Schema.String, b: Schema.Number }).ast;
@@ -198,7 +198,7 @@ describe('getRootFormProperties', () => {
       ),
     });
 
-    const CreateUnion = Schema.Union(StandardSite, Rss);
+    const CreateUnion = Schema.Union([StandardSite, Rss]);
 
     test('expands to the standard-site member fields', ({ expect }) => {
       expect(getRootFormProperties(CreateUnion.ast, { type: 'standard-site' }).map((prop) => prop.name)).toEqual([

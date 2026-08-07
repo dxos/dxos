@@ -48,7 +48,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `data`: Data feed (default).
      * - `trace`: Trace feed.
      */
-    namespace: Schema.optional(Schema.Literal('data', 'trace')),
+    namespace: Schema.optional(Schema.Literals(['data', 'trace'])),
 
     /**
      * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,

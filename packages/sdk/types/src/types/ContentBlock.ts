@@ -262,7 +262,7 @@ export const HttpImageSource = Schema.Struct({
   url: Schema.String,
 });
 
-export const ImageSource = Schema.Union(Base64ImageSource, HttpImageSource);
+export const ImageSource = Schema.Union([Base64ImageSource, HttpImageSource]);
 
 // TODO(dmaretskyi): Combine image and file similar to effect-ai types.
 
@@ -322,7 +322,7 @@ export type Reference = Schema.Schema.Type<typeof Reference>;
  */
 export const Candidate = Schema.Struct({
   text: Schema.String,
-  kind: Schema.Literal('noun', 'proper-noun'),
+  kind: Schema.Literals(['noun', 'proper-noun']),
   start: Schema.Number,
   end: Schema.Number,
   suggested: Schema.optional(Schema.Struct({ typename: Schema.String })),
@@ -459,7 +459,7 @@ export const Surface = Schema.TaggedStruct('surface', {
   role: Schema.String,
 
   /** JSON-serializable payload passed to the surface, e.g. `{ service: 'gmail.com' }`. */
-  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
 
   ...Base.fields,
 });

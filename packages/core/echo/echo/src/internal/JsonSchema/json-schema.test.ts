@@ -482,7 +482,7 @@ describe('json-to-effect', () => {
         boolean: Schema.Boolean,
         array: Schema.Array(Schema.String),
         twoDArray: Schema.Array(Schema.Array(Schema.String)),
-        record: Schema.Record({ key: Schema.String, value: Schema.Number }),
+        record: Schema.Record(Schema.String, Schema.Number),
         object: Schema.Struct({ id: Schema.String, field: Ref(Organization) }),
         echoObject: Ref(Organization),
         echoObjectArray: Schema.Array(Ref(Organization)),

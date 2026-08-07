@@ -61,8 +61,8 @@ export const makeSampleProvider = (): Provider.Provider =>
     },
   });
 
-/** Creates fresh sample {@link Result.Result} objects (AutoTrader UK used cars) linked to `provider`. */
-export const makeSampleResults = (provider: Provider.Provider): Result.Result[] => [
+/** Creates fresh sample {@link Result.AsyncResult} objects (AutoTrader UK used cars) linked to `provider`. */
+export const makeSampleResults = (provider: Provider.Provider): Result.AsyncResult[] => [
   Result.make({
     title: '2020 Porsche 911 Carrera S',
     url: 'https://www.autotrader.co.uk/car-details/1',
@@ -119,8 +119,8 @@ export const makeSampleSearch = (provider: Provider.Provider): Search.Search =>
 
 export const sampleProvider: Provider.Provider = makeSampleProvider();
 
-export const sampleResults: Result.Result[] = makeSampleResults(sampleProvider);
+export const sampleResults: Result.AsyncResult[] = makeSampleResults(sampleProvider);
 
-export const sampleResult: Result.Result = sampleResults[0];
+export const sampleResult: Result.AsyncResult = sampleResults[0];
 
 export const sampleSearch: Search.Search = makeSampleSearch(sampleProvider);

@@ -557,7 +557,7 @@ export const SpawnedEvent = Trace.EventType('process.spawned', {
  */
 export const ExitedEvent = Trace.EventType('process.exited', {
   schema: Schema.Struct({
-    outcome: Schema.Literal('succeeded', 'failed', 'terminated'),
+    outcome: Schema.Literals(['succeeded', 'failed', 'terminated']),
   }),
   isEphemeral: false,
 });

@@ -198,7 +198,7 @@ const TagsResponse = Schema.Struct({
         size: Schema.optional(Schema.Number),
         modified_at: Schema.optional(Schema.String),
         digest: Schema.optional(Schema.String),
-        details: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+        details: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
       }),
     ),
   ),

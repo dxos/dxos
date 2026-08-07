@@ -27,7 +27,7 @@ const decodeAndHandleErrors =
   (
     data: unknown,
   ): Effect.Effect<Schema.Schema.Type<S>, GoogleError | ParseResult.ParseError, Schema.Schema.Context<S>> =>
-    Schema.decodeUnknown(Schema.Union(schema, ErrorResponse))(data).pipe(
+    Schema.decodeUnknown(Schema.Union([schema, ErrorResponse]))(data).pipe(
       Effect.flatMap((response) => {
         if ('error' in response) {
           return Effect.fail(GoogleError.fromErrorResponse(response));

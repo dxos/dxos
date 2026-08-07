@@ -66,7 +66,7 @@ export const ExtractorRef = Schema.Struct({
 });
 export type ExtractorRef = Schema.Schema.Type<typeof ExtractorRef>;
 
-export const Context = Schema.Literal('popup', 'page', 'selection', 'link', 'picker');
+export const Context = Schema.Literals(['popup', 'page', 'selection', 'link', 'picker']);
 export type Context = Schema.Schema.Type<typeof Context>;
 
 /** Serializable descriptor synced to the extension's registry cache. */
@@ -126,7 +126,7 @@ export const InvokeRequest = Schema.Struct({
   actionId: Schema.String,
   page: PageInfo,
   inputs: Schema.Unknown,
-  invokedFrom: Schema.Literal('popup', 'contextMenu', 'picker'),
+  invokedFrom: Schema.Literals(['popup', 'contextMenu', 'picker']),
 });
 export type InvokeRequest = Schema.Schema.Type<typeof InvokeRequest>;
 

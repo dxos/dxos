@@ -28,7 +28,7 @@ const InstructionsSpec = Schema.Struct({
   instructions: Ref.Ref(Instructions.Instructions),
 });
 
-const RoutineSpec = Schema.Union(RunnableSpec, InstructionsSpec);
+const RoutineSpec = Schema.Union([RunnableSpec, InstructionsSpec]);
 
 /**
  * User-facing routine: a thin aggregate of an action (`runnable`) and the triggers that fire it.

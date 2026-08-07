@@ -11,7 +11,7 @@ import * as Config2 from '../Config2.ts';
  * time (`{ "@dxos/app-framework": "0.8.3", "react": "19.2.0", … }`). The host derives SDK
  * compatibility from the subset it shares with the plugin (the externalized `@dxos/*` packages).
  */
-export const DependencyMapSchema = Schema.Record({ key: Schema.String, value: Schema.String });
+export const DependencyMapSchema = Schema.Record(Schema.String, Schema.String);
 export type DependencyMap = Schema.Schema.Type<typeof DependencyMapSchema>;
 
 /**

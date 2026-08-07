@@ -8,7 +8,7 @@ export type BrainwavePreset = 'delta' | 'theta' | 'alpha' | 'beta';
 
 /** Effect Schema for binaural generator configuration. */
 export const BinauralConfigSchema = Schema.Struct({
-  preset: Schema.Literal('delta', 'theta', 'alpha', 'beta').annotate({
+  preset: Schema.Literals(['delta', 'theta', 'alpha', 'beta']).annotate({
     description: 'Brainwave preset.',
   }),
   baseFrequency: Schema.Number.annotate({

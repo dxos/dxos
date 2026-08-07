@@ -37,7 +37,7 @@ export class Person extends Type.makeObject<Person>(DXN.make('org.dxos.type.pers
     ),
     employer: Schema.optional(Ref.Ref(Organization).annotate({ title: 'Employer' })),
     tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag)).annotate({ title: 'Tags' })),
-    status: Schema.optional(Schema.Literal('active', 'inactive').annotate({ title: 'Status' })),
+    status: Schema.optional(Schema.Literals(['active', 'inactive']).annotate({ title: 'Status' })),
     notes: Schema.optional(Format.Text.annotate({ title: 'Notes' })),
     location: Schema.optional(Format.GeoPoint.annotate({ title: 'Location' })),
     birthday: Schema.optional(Format.DateOnly.annotate({ title: 'Birthday' })),

@@ -10,7 +10,7 @@ import { PublicKey } from '@dxos/keys';
  * Effect schema for `dxos.keys.PublicKey`, encoded as raw key bytes on the wire.
  */
 export const publicKey: Schema.Codec<PublicKey, Uint8Array> = Schema.transform(
-  Schema.Uint8ArrayFromSelf,
+  Schema.Uint8Array,
   Schema.instanceOf(PublicKey),
   {
     strict: true,
@@ -22,15 +22,12 @@ export const publicKey: Schema.Codec<PublicKey, Uint8Array> = Schema.transform(
 /**
  * Effect schema for `google.protobuf.Struct`, matching the proto codec substitution shape.
  */
-export const protoStruct: Schema.Schema<Record<string, unknown>> = Schema.Record({
-  key: Schema.String,
-  value: Schema.Unknown,
-});
+export const protoStruct: Schema.Schema<Record<string, unknown>> = Schema.Record(Schema.String, Schema.Unknown);
 
 /**
  * Effect schema for `google.protobuf.Timestamp`, matching the proto codec substitution shape.
  */
-export const protoTimestamp: Schema.Codec<Date, Date> = Schema.DateFromSelf;
+export const protoTimestamp: Schema.Codec<Date, Date> = Schema.Date;
 
 /**
  * Mutable array schema for `repeated` proto fields.

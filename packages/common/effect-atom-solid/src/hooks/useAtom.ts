@@ -16,7 +16,7 @@ import { type SetAtomFn, createSetAtom } from './useAtomSet';
 export function useAtom<R, W, Mode extends 'value' | 'promise' | 'promiseExit' = never>(
   atom: Atom.Writable<R, W>,
   options?: {
-    readonly mode?: ([R] extends [AsyncResult.Result<any, any>] ? Mode : 'value') | undefined;
+    readonly mode?: ([R] extends [AsyncResult.AsyncResult<any, any>] ? Mode : 'value') | undefined;
   },
 ): readonly [Accessor<R>, SetAtomFn<R, W, Mode>] {
   const registry = useRegistry();

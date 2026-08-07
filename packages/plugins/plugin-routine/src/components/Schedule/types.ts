@@ -37,7 +37,7 @@ export const DailySpec = Schema.Struct({
 });
 
 // Named day-of-week literals for UX clarity; cron.ts maps them to numeric DOW values.
-export const DayOfWeek = Schema.Literal('sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat');
+export const DayOfWeek = Schema.Literals(['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']);
 export type DayOfWeek = Schema.Schema.Type<typeof DayOfWeek>;
 
 export const WeeklySpec = Schema.Struct({
@@ -78,9 +78,14 @@ export const CustomSpec = Schema.Struct({
   }),
 });
 
-export const CronSpec = Schema.Union(MinutelySpec, HourlySpec, DailySpec, WeeklySpec, MonthlySpec, CustomSpec).annotate(
-  { title: '' },
-);
+export const CronSpec = Schema.Union([
+  MinutelySpec,
+  HourlySpec,
+  DailySpec,
+  WeeklySpec,
+  MonthlySpec,
+  CustomSpec,
+]).annotate({ title: '' });
 
 export type CronSpecType = Schema.Schema.Type<typeof CronSpec>;
 export type Frequency = CronSpecType['frequency'];

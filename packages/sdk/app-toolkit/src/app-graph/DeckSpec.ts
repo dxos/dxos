@@ -30,7 +30,7 @@ export const DeckLevel = Schema.Struct({
 export type DeckLevel = Schema.Schema.Type<typeof DeckLevel>;
 
 /** What a deck opens when it is adopted. `'children'` opens the root node's graph children. */
-export const DeckInitial = Schema.Literal('children', 'none');
+export const DeckInitial = Schema.Literals(['children', 'none']);
 export type DeckInitial = Schema.Schema.Type<typeof DeckInitial>;
 
 /**

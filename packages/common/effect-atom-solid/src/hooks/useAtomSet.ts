@@ -29,14 +29,16 @@ export function createSetAtom<R, W, Mode extends 'value' | 'promise' | 'promiseE
   registry: AtomRegistry.AtomRegistry,
   atom: Atom.Writable<R, W>,
   options?: {
-    readonly mode?: ([R] extends [AsyncResult.Result<any, any>] ? Mode : 'value') | undefined;
+    readonly mode?: ([R] extends [AsyncResult.AsyncResult<any, any>] ? Mode : 'value') | undefined;
   },
 ): SetAtomFn<R, W, Mode> {
   if (options?.mode === 'promise' || options?.mode === 'promiseExit') {
     return ((value: W) => {
       registry.set(atom, value);
       const promise = Effect.runPromiseExit(
-        AtomRegistry.getResult(registry, atom as Atom.Atom<AsyncResult.Result<any, any>>, { suspendOnWaiting: true }),
+        AtomRegistry.getResult(registry, atom as Atom.Atom<AsyncResult.AsyncResult<any, any>>, {
+          suspendOnWaiting: true,
+        }),
       );
       return options!.mode === 'promise' ? promise.then(flattenExit) : promise;
     }) as SetAtomFn<R, W, Mode>;
@@ -53,7 +55,7 @@ export function createSetAtom<R, W, Mode extends 'value' | 'promise' | 'promiseE
 export function useAtomSet<R, W, Mode extends 'value' | 'promise' | 'promiseExit' = never>(
   atom: Atom.Writable<R, W>,
   options?: {
-    readonly mode?: ([R] extends [AsyncResult.Result<any, any>] ? Mode : 'value') | undefined;
+    readonly mode?: ([R] extends [AsyncResult.AsyncResult<any, any>] ? Mode : 'value') | undefined;
   },
 ): SetAtomFn<R, W, Mode> {
   const registry = useRegistry();

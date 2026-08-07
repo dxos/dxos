@@ -49,7 +49,7 @@ export namespace TestSchema {
     twoDimNumberArray: Schema.Array(Schema.Array(Schema.Number)),
     nested: Nested,
     nestedArray: Schema.Array(Nested),
-    nestedNullableArray: Schema.Array(Schema.Union(Nested, Schema.Null)),
+    nestedNullableArray: Schema.Array(Schema.Union([Nested, Schema.Null])),
     reference: Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example)),
     referenceArray: Schema.Array(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))),
     classInstance: Schema.instanceOf(TestClass),
@@ -85,12 +85,7 @@ export namespace TestSchema {
   export class Organization extends Type.makeObject<Organization>(DXN.make('com.example.type.organization', '0.1.0'))(
     Schema.Struct({
       name: Schema.String,
-      properties: Schema.optional(
-        Schema.Record({
-          key: Schema.String,
-          value: Schema.String,
-        }),
-      ),
+      properties: Schema.optional(Schema.Record(Schema.String, Schema.String)),
     }),
   ) {}
 

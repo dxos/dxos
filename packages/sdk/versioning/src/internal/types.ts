@@ -31,7 +31,7 @@ export const Version = Schema.mutable(
 );
 export interface Version extends Schema.Schema.Type<typeof Version> {}
 
-export const BranchStatus = Schema.Literal('active', 'merged', 'archived');
+export const BranchStatus = Schema.Literals(['active', 'merged', 'archived']);
 export type BranchStatus = Schema.Schema.Type<typeof BranchStatus>;
 
 /**
@@ -57,7 +57,7 @@ export const Branch = Schema.mutable(
     createdAt: Schema.String,
     creator: Schema.optional(Schema.String),
     /** Branch intent: one `suggestion` per author (review model) vs an explicit `draft` fork. Absent ⇒ draft. */
-    kind: Schema.optional(Schema.Literal('suggestion', 'draft')),
+    kind: Schema.optional(Schema.Literals(['suggestion', 'draft'])),
     mergedAt: Schema.optional(Schema.String),
   }),
 );

@@ -18,7 +18,7 @@ import type * as Skill from './Skill';
 export const Goal = Schema.Struct({
   id: Schema.String,
   text: Schema.String,
-  status: Schema.optional(Schema.Literal('open', 'met', 'dropped')),
+  status: Schema.optional(Schema.Literals(['open', 'met', 'dropped'])),
 });
 
 export type Goal = Schema.Schema.Type<typeof Goal>;

@@ -14,15 +14,15 @@ import { useRegistry } from '../registry';
  * Automatically handles loading and error states
  */
 export function useAtomResource<A, E>(
-  atom: Atom.Atom<AsyncResult.Result<A, E>>,
+  atom: Atom.Atom<AsyncResult.AsyncResult<A, E>>,
 ): {
   value: Accessor<A | undefined>;
   error: Accessor<E | undefined>;
   loading: Accessor<boolean>;
-  result: Accessor<AsyncResult.Result<A, E>>;
+  result: Accessor<AsyncResult.AsyncResult<A, E>>;
 } {
   const registry = useRegistry();
-  const [result, setResult] = createSignal<AsyncResult.Result<A, E>>(registry.get(atom));
+  const [result, setResult] = createSignal<AsyncResult.AsyncResult<A, E>>(registry.get(atom));
 
   const unsubscribe = registry.subscribe(
     atom,

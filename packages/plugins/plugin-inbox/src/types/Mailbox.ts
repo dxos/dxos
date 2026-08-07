@@ -59,7 +59,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     // Messages are immutable Queue items and cannot be ECHO relation endpoints, so (like `tags`)
     // the association lives here on the mutable Mailbox. The referenced objects are space-db
     // objects resolved by id (`db.getObjectById`).
-    extracted: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }).pipe(
+    extracted: Schema.Record(Schema.String, Schema.Array(Schema.String)).pipe(
       FormInputAnnotation.set(false),
       Schema.optional,
     ),

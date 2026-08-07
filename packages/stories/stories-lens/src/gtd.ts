@@ -25,11 +25,11 @@ export class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.demo.Gt
 
     /** Lossy on read: `false` cannot say whether the task is `todo` or `in-progress`. */
     done: Schema.optional(Schema.Boolean.annotate({ title: 'Done' })),
-    stage: Schema.optional(Schema.Literal('todo', 'in-progress', 'done').annotate({ title: 'Stage' })),
+    stage: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done']).annotate({ title: 'Stage' })),
     urgency: Schema.optional(Schema.Number.annotate({ title: 'Urgency (1-5)' })),
 
     /** Neither exists on `Task`: both persist in the object's annotation dictionary. */
-    context: Schema.optional(Schema.Literal('@home', '@work', '@errands').annotate({ title: 'Context' })),
+    context: Schema.optional(Schema.Literals(['@home', '@work', '@errands']).annotate({ title: 'Context' })),
     waitingOn: Schema.optional(Schema.String.annotate({ title: 'Waiting on' })),
   }).pipe(Annotation.LabelAnnotation.set(['title'])),
 ) {}

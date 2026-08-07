@@ -28,7 +28,7 @@ import { type EntityId } from '@dxos/keys';
 export class StateMap extends Type.makeObject<StateMap>(DXN.make('org.dxos.type.stateMap', '0.1.0'))(
   Schema.Struct({
     /** Per-object state keyed by object id. Values are open records projected to `S` by accessors. */
-    state: Schema.Record({ key: Obj.ID, value: Schema.Any }).pipe(FormInputAnnotation.set(false)),
+    state: Schema.Record(Obj.ID, Schema.Any).pipe(FormInputAnnotation.set(false)),
   }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 

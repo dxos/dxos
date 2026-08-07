@@ -23,7 +23,7 @@ export namespace AutomationAction {
         enabled: Schema.optional(Schema.Boolean),
         // TODO(wittjosiah): Improve how this lookup is done.
         scriptName: Schema.optional(Schema.String),
-        input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+        input: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
       }),
       output: Schema.Void,
     },

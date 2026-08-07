@@ -16,7 +16,7 @@ export const DECK_COMPANION_TYPE = AppNode.DECK_COMPANION_TYPE;
 export type Part = 'main' | 'complementary';
 export type ResolvedPart = Part;
 
-export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Number });
+export const PlankSizing = Schema.Record(Schema.String, Schema.Number);
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
 export const DeckState = Schema.Struct({
@@ -40,7 +40,7 @@ export const DeckState = Schema.Struct({
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.
    * Entries are pruned as their plank closes.
    */
-  plankNames: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String })),
+  plankNames: Schema.mutable(Schema.Record(Schema.String, Schema.String)),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -63,7 +63,7 @@ export const defaultDeck: DeckState = {
 // Layout
 //
 
-const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
+const LayoutMode = Schema.Literals(['multi', 'solo', 'solo--fullscreen']);
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
 
@@ -76,12 +76,12 @@ export const getMode = (deck: { active: readonly string[] }, fullscreen: boolean
 
 // Persisted plugin state (stored in KVS/localStorage).
 export const StoredDeckState = Schema.Struct({
-  sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
-  complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
+  sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  complementarySidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
+  decks: Schema.mutable(Schema.Record(Schema.String, Schema.mutable(DeckState))),
 }).pipe(Schema.mutable);
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
@@ -97,17 +97,17 @@ export const EphemeralDeckState = Schema.Struct({
   /** Whether the deck is showing every plank at once as shrunk-to-fit tiles. Transient. */
   expose: Schema.optional(Schema.Boolean),
   dialogOpen: Schema.Boolean,
-  dialogType: Schema.optional(Schema.Literal('default', 'alert')),
-  dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
+  dialogType: Schema.optional(Schema.Literals(['default', 'alert'])),
+  dialogBlockAlign: Schema.optional(Schema.Literals(['start', 'center', 'end'])),
   dialogOverlayClasses: Schema.optional(Schema.String),
-  dialogOverlayStyle: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  dialogOverlayStyle: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   /** Data to be passed to the dialog Surface. */
   dialogContent: Schema.NullOr(Schema.Struct({ component: Schema.String, props: Schema.optional(Schema.Any) })),
   popoverOpen: Schema.Boolean,
-  popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
+  popoverSide: Schema.optional(Schema.Literals(['top', 'right', 'bottom', 'left'])),
   popoverAnchor: Schema.optional(Schema.Any),
   popoverAnchorId: Schema.optional(Schema.String),
-  popoverKind: Schema.optional(Schema.Literal('base', 'card', 'rename')),
+  popoverKind: Schema.optional(Schema.Literals(['base', 'card', 'rename'])),
   popoverTitle: Schema.optional(Translations.Label.annotate({ description: 'The title of the popover.' })),
   /** Ref of the subject to be passed to the popover Surface. */
   popoverContentRef: Schema.optional(Schema.String),

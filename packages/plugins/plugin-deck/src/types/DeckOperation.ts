@@ -83,7 +83,7 @@ export const UpdatePlankSizes = Operation.make({
   input: Schema.Struct({
     // Applied in one update, so a split whose panes trade width never renders a frame with one pane
     // resized and the other not.
-    sizes: Schema.Record({ key: Schema.String, value: Schema.Number }).annotate({
+    sizes: Schema.Record(Schema.String, Schema.Number).annotate({
       description: 'New sizes, keyed by plank id.',
     }),
   }),

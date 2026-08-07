@@ -36,7 +36,7 @@ export interface RegistryProviderProps {
   children: any;
   registry?: AtomRegistry.AtomRegistry;
   initialValues?: Iterable<readonly [Atom.Atom<any>, any]>;
-  scheduleTask?: (f: () => void) => void;
+  scheduleTask?: (f: () => void) => () => void;
   timeoutResolution?: number;
   defaultIdleTTL?: number;
 }

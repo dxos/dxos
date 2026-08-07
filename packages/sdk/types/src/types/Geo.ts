@@ -53,5 +53,5 @@ export const PostalAddress = Schema.Struct({
   ),
   // TODO(burdon): Unknown error (handling tuples?)
   // location: Schema.optional(Format.GeoPoint),
-  // location: Schema.Tuple(S.Number, Schema.Number),
+  // location: Schema.Tuple([S.Number, Schema.Number]),
 });

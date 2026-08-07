@@ -24,9 +24,9 @@ export const OllamaManager = Capability.makeSingleton<Ollama.Manager>()(`${meta.
 export const StateSchema = Schema.mutable(
   Schema.Struct({
     /** Map of primary object dxn to current chat dxn. */
-    currentChat: Schema.Record({ key: Schema.String, value: Schema.UndefinedOr(Schema.String) }),
+    currentChat: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
     /** Map of chat object path to prompt text to auto-submit when the chat opens. */
-    pendingPrompts: Schema.Record({ key: Schema.String, value: Schema.UndefinedOr(Schema.String) }),
+    pendingPrompts: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
   }),
 );
 
@@ -40,15 +40,15 @@ export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<
 );
 
 export const HomeSuggestionsCacheSchema = Schema.mutable(
-  Schema.Record({
-    key: Schema.String,
-    value: Schema.Struct({
+  Schema.Record(
+    Schema.String,
+    Schema.Struct({
       /** Epoch ms timestamp of the successful generation that produced these prompts. */
       generatedAt: Schema.Number,
       /** Non-empty, trimmed prompts from a successful generation. */
       prompts: Schema.Array(Schema.String),
     }),
-  }),
+  ),
 );
 export type HomeSuggestionsCache = Schema.Schema.Type<typeof HomeSuggestionsCacheSchema>;
 

@@ -25,7 +25,7 @@ export const GeneratorSourceSchema = Schema.Struct({
 });
 
 /** Discriminated union of audio sources. */
-export const SourceSchema = Schema.Union(SampleSourceSchema, GeneratorSourceSchema);
+export const SourceSchema = Schema.Union([SampleSourceSchema, GeneratorSourceSchema]);
 
 export type Source = Schema.Schema.Type<typeof SourceSchema>;
 

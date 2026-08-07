@@ -42,7 +42,7 @@ export const DeckAnnotation = Annotation.make<DeckSpec.DeckSpec>({
 /** Per-type object ordering stored on space.properties, keyed by typename. */
 export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',
-  schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
+  schema: Schema.Record(Schema.String, Schema.Array(Ref.Ref(Obj.Unknown))),
 });
 
 /**
@@ -52,5 +52,5 @@ export const SectionOrderAnnotation = Annotation.make({
  */
 export const HomeVisibilityAnnotation = Annotation.make({
   id: 'org.dxos.space.homeVisibility',
-  schema: Schema.Record({ key: Schema.String, value: Schema.Boolean }),
+  schema: Schema.Record(Schema.String, Schema.Boolean),
 });

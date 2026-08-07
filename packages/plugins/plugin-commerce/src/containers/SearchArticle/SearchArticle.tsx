@@ -48,18 +48,18 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
   const echoFeed = search.feed?.target;
   const results = useQuery(
     db,
-    echoFeed ? Query.select(Filter.type(Result.Result)).from(echoFeed) : Query.select(Filter.nothing()),
+    echoFeed ? Query.select(Filter.type(Result.AsyncResult)).from(echoFeed) : Query.select(Filter.nothing()),
   );
 
   // Resolve the `starred` Tag uri (if any Result has ever been starred) for the filter/toggle.
   const [starredTag] = useQuery(db, Filter.foreignKeys(Tag.Tag, [Search.STARRED_TAG]));
   const starredUri = starredTag ? Obj.getURI(starredTag).toString() : undefined;
   const starredOf = useCallback(
-    (result: Result.Result) => Search.isStarred(search, result.id, starredUri),
+    (result: Result.AsyncResult) => Search.isStarred(search, result.id, starredUri),
     [search, starredUri],
   );
   const handleToggleStar = useCallback(
-    (result: Result.Result) => {
+    (result: Result.AsyncResult) => {
       if (db) {
         void Search.setStarred(search, result.id, db, !Search.isStarred(search, result.id, starredUri));
       }
@@ -176,11 +176,11 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
 };
 
 type TileData = {
-  result: Result.Result;
+  result: Result.AsyncResult;
   current: boolean;
   starred: boolean;
   onSelect: (id: string) => void;
-  onToggleStar: (result: Result.Result) => void;
+  onToggleStar: (result: Result.AsyncResult) => void;
 };
 
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {

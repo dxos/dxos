@@ -218,7 +218,7 @@ describe('create subscription', () => {
     const { db } = await builder.createDatabase();
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
@@ -245,7 +245,7 @@ describe('create subscription', () => {
     const { db } = await builder.createDatabase();
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order2',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const task = Obj.make(TestSchema.Expando, {});
     db.add(task);
@@ -271,7 +271,7 @@ describe('create subscription', () => {
     const { db } = await builder.createDatabase();
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order3',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const task = Obj.make(TestSchema.Expando, {});
     db.add(task);

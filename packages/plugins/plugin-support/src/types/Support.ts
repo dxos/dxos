@@ -10,7 +10,7 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 
 export const SKILL_KEY = 'org.dxos.skill.support';
 
-export const TicketStatus = Schema.Literal('open', 'in_progress', 'resolved');
+export const TicketStatus = Schema.Literals(['open', 'in_progress', 'resolved']);
 export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
 
 /**

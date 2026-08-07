@@ -84,7 +84,7 @@ const RssCreate = Schema.Struct({
   ),
 });
 
-const CreateSubscriptionSchema = Schema.Union(StandardSiteCreate, RssCreate);
+const CreateSubscriptionSchema = Schema.Union([StandardSiteCreate, RssCreate]);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

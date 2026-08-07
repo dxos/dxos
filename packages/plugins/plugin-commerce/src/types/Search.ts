@@ -19,7 +19,7 @@ export class Search extends Type.makeObject<Search>(DXN.make('org.dxos.type.comm
     name: Schema.String.pipe(Schema.annotate({ title: 'Name' }), Schema.optional),
     providers: Schema.Array(Ref.Ref(Provider)),
     /** Values for the union of provider fields, keyed by field name. */
-    params: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(FormInputAnnotation.set(false)),
+    params: Schema.Record(Schema.String, Schema.Unknown).pipe(FormInputAnnotation.set(false)),
     /** Backing ECHO feed (queue) of immutable Result entries appended by each run. */
     feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
     /** Per-Result tags keyed by tag uri → Result ids (the `starred` flag — see {@link STARRED_TAG}). */

@@ -55,7 +55,7 @@ export const ExtractedFact = Schema.Struct({
   validFrom: OptionalString,
   validTo: OptionalString,
   factuality: FactualityValue,
-  polarity: Schema.Literal('+', '-', '?'),
+  polarity: Schema.Literals(['+', '-', '?']),
   confidence: Schema.optionalWith(Schema.Number, { nullable: true }),
   nature: Nature,
   force: Force,

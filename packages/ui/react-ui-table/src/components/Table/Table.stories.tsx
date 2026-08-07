@@ -34,7 +34,7 @@ const Example = Schema.Struct({
   name: Schema.optional(Schema.String).annotate({ title: 'Title' }),
   urgent: Schema.optional(Schema.Boolean).annotate({ title: 'Urgent' }),
   status: Schema.optional(
-    Schema.Literal('todo', 'in-progress', 'done')
+    Schema.Literals(['todo', 'in-progress', 'done'])
       .pipe(Format.FormatAnnotation.set(Format.TypeFormat.SingleSelect))
       .annotate({
         title: 'Status',

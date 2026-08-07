@@ -20,7 +20,7 @@ const IdentitySchema = Schema.Struct({
     Schema.Struct({
       displayName: Schema.optional(Schema.String),
       avatarCid: Schema.optional(Schema.String),
-      data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+      data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
     }),
   ),
 });
@@ -28,7 +28,7 @@ const IdentitySchema = Schema.Struct({
 const ProfileSchema = Schema.Struct({
   displayName: Schema.optional(Schema.String),
   avatarCid: Schema.optional(Schema.String),
-  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 
 export const CreateIdentity = Operation.make({

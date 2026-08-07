@@ -31,7 +31,7 @@ export type AiChatServices =
   | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
-export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
+export const Provider = Schema.Literals(['edge', 'lmstudio', 'ollama']);
 export type Provider = Schema.Schema.Type<typeof Provider>;
 
 export type LayerOptions = {

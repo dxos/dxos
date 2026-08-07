@@ -8,7 +8,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
-export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
+export const ComputeValueType = Schema.Literals(['string', 'number', 'boolean', 'object']);
 
 export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
 

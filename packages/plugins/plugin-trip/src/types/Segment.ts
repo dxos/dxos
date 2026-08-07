@@ -20,13 +20,13 @@ import * as Routing from './Routing';
 // Enums
 //
 
-export const Kind = Schema.Literal('flight', 'train', 'boat', 'road', 'accommodation', 'activity');
+export const Kind = Schema.Literals(['flight', 'train', 'boat', 'road', 'accommodation', 'activity']);
 export type Kind = Schema.Schema.Type<typeof Kind>;
 
-export const RoadSubKind = Schema.Literal('bus', 'car', 'transfer', 'taxi', 'walk');
+export const RoadSubKind = Schema.Literals(['bus', 'car', 'transfer', 'taxi', 'walk']);
 export type RoadSubKind = Schema.Schema.Type<typeof RoadSubKind>;
 
-export const ServiceClass = Schema.Literal('economy', 'premium', 'business', 'first').annotate({
+export const ServiceClass = Schema.Literals(['economy', 'premium', 'business', 'first']).annotate({
   title: 'Service class',
 });
 export type ServiceClass = Schema.Schema.Type<typeof ServiceClass>;

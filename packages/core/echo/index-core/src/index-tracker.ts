@@ -35,7 +35,7 @@ export const IndexCursor = Schema.Struct({
   /**
    * Heads, queue position, version.
    */
-  cursor: Schema.Union(Schema.Number, Schema.String),
+  cursor: Schema.Union([Schema.Number, Schema.String]),
 });
 export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 

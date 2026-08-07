@@ -95,7 +95,7 @@ export const DraftEmailAndOpen = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
-    mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
+    mode: Schema.optional(Schema.Literals(['compose', 'reply', 'reply-all', 'forward'])),
     message: Schema.optional(Schema.Any),
     subject: Schema.optional(Schema.String),
     body: Schema.optional(Schema.String),

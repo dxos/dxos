@@ -120,7 +120,7 @@ export const SetValues = Operation.make({
   },
   input: Schema.Struct({
     sheet: Ref.Ref(Sheet.Sheet).annotate({ description: 'The sheet to write to.' }),
-    cells: Schema.Record({ key: Schema.String, value: Schema.Any }).annotate({
+    cells: Schema.Record(Schema.String, Schema.Any).annotate({
       description: 'Map of A1 address to value (e.g. { "A1": "Name", "B1": 42, "C1": "=A1+B1" }).',
     }),
   }),

@@ -21,7 +21,7 @@ import { CardAnnotation, CollectionItemAnnotation } from '@dxos/schema';
 export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canvas', '0.1.0'))(
   Schema.Struct({
     schema: Schema.String.pipe(Schema.optional),
-    content: Schema.Record({ key: Schema.String, value: Schema.Any }),
+    content: Schema.Record(Schema.String, Schema.Any),
   }).pipe(HiddenAnnotation.set(true)),
 ) {}
 

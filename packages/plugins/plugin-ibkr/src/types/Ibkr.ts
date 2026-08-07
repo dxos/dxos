@@ -70,7 +70,7 @@ export const LotSnapshot = Schema.Struct({
 });
 export type LotSnapshot = Schema.Schema.Type<typeof LotSnapshot>;
 
-export const AssetClass = Schema.Literal('stock', 'etf', 'mutual_fund', 'adr', 'reit', 'warrant', 'other');
+export const AssetClass = Schema.Literals(['stock', 'etf', 'mutual_fund', 'adr', 'reit', 'warrant', 'other']);
 export type AssetClass = Schema.Schema.Type<typeof AssetClass>;
 
 /** Valuation multiples (reserved for future market-data sources). */
@@ -149,7 +149,7 @@ export type FundamentalsRatios = Schema.Schema.Type<typeof FundamentalsRatios>;
 /** Remaining us-gaap concepts from SEC EDGAR, keyed by XBRL concept name. */
 export const FundamentalsAdditional = Schema.Struct({
   additionalFacts: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.Number }).pipe(
+    Schema.Record(Schema.String, Schema.Number).pipe(
       EdgarAdditionalFactsAnnotation.set(true),
       Schema.annotate({ title: 'Additional facts' }),
     ),

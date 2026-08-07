@@ -27,7 +27,7 @@ export const RemoteTarget = Schema.Struct({
   /** Optional secondary line. */
   description: Schema.String.pipe(Schema.optional),
   /** Service-specific extras for display. */
-  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
+  metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 });
 export interface RemoteTarget extends Schema.Schema.Type<typeof RemoteTarget> {}
 

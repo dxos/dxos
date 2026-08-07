@@ -28,7 +28,7 @@ import { EID, type EntityId } from '@dxos/keys';
 export class TagIndex extends Type.makeObject<TagIndex>(DXN.make('org.dxos.type.tagIndex', '0.1.0'))(
   Schema.Struct({
     /** Inverse index keyed by tag id; the value is the array of object ids carrying that tag. */
-    index: Schema.Record({ key: Schema.String, value: Schema.Array(Obj.ID) }).pipe(FormInputAnnotation.set(false)),
+    index: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(FormInputAnnotation.set(false)),
   }).pipe(Annotation.HiddenAnnotation.set(true)),
 ) {}
 

@@ -37,7 +37,7 @@ export const CreateTriggerFromTemplate = Operation.make({
     template: TriggerTemplate,
     enabled: Schema.optional(Schema.Boolean),
     scriptName: Schema.optional(Schema.String),
-    input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    input: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
   }),
   output: Schema.Void,
 });

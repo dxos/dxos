@@ -24,7 +24,7 @@ export const Invoke = Schema.TaggedStruct('page-actions.invoke', {
   actionId: Schema.String,
   page: PageAction.PageInfo,
   inputs: Schema.Unknown,
-  invokedFrom: Schema.Literal('popup', 'contextMenu', 'picker'),
+  invokedFrom: Schema.Literals(['popup', 'contextMenu', 'picker']),
 });
 export const InvokeAck = Schema.Union(
   Schema.TaggedStruct('page-actions.invoke-ack', {
@@ -37,7 +37,7 @@ export const InvokeAck = Schema.Union(
 export const Ready = Schema.TaggedStruct('page-actions.ready', { ...base });
 
 /** The full set of protocol messages. Extend by adding a variant here. */
-export const Union = Schema.Union(List, ListAck, Invoke, InvokeAck, Ready);
+export const Union = Schema.Union([List, ListAck, Invoke, InvokeAck, Ready]);
 export type Type = Schema.Schema.Type<typeof Union>;
 
 /**

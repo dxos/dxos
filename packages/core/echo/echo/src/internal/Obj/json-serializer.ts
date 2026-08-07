@@ -226,7 +226,7 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
 
 /**
  * Recursively replaces encoded `Uint8Array` JSON markers with actual `Uint8Array` instances.
- * Runs before schema decoding so `Schema.Uint8ArrayFromSelf` sees real bytes.
+ * Runs before schema decoding so `Schema.Uint8Array` sees real bytes.
  */
 const restoreUint8Arrays = (data: unknown): any =>
   deepMapValues(data, (value, recurse) => {

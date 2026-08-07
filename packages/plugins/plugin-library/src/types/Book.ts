@@ -23,7 +23,7 @@ import { bookLens, canPublishBook, enrichBook, inspectBook } from '../atproto';
  * (`finished`/`reading`/`wantToRead`/`abandoned`). Stored bare; the codec maps it to/from the
  * `buzz.bookhive.defs#<value>` knownValue reference on the wire.
  */
-export const Status = Schema.Literal('finished', 'reading', 'wantToRead', 'abandoned');
+export const Status = Schema.Literals(['finished', 'reading', 'wantToRead', 'abandoned']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
 /**

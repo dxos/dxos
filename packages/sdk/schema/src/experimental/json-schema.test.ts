@@ -16,7 +16,7 @@ const TestSchema = Schema.Struct({
     Schema.Array(
       Schema.Struct({
         id: Schema.String,
-        type: Schema.Literal('email', 'phone', 'other'),
+        type: Schema.Literals(['email', 'phone', 'other']),
       }),
     ),
   ),

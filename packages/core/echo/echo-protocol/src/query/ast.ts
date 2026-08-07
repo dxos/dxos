@@ -12,7 +12,7 @@ import { ForeignKey } from '../foreign-key';
 // Type identifier URI — either a DXN (typename) or an EID (stored-schema-as-object).
 // Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null
 // matches any type.
-const TypenameSpecifier = Schema.Union(URI.Schema, Schema.Null);
+const TypenameSpecifier = Schema.Union([URI.Schema, Schema.Null]);
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 
@@ -33,10 +33,10 @@ const FilterObject_ = Schema.Struct({
    * Filter by property.
    * Must not include object ID.
    */
-  props: Schema.Record({
-    key: Schema.String.annotate({ description: 'Property name' }),
-    value: Schema.suspend(() => Filter),
-  }),
+  props: Schema.Record(
+    Schema.String.annotate({ description: 'Property name' }),
+    Schema.suspend(() => Filter),
+  ),
 
   /**
    * Objects that have any of the given foreign keys.
@@ -64,7 +64,7 @@ export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
  */
 const FilterCompare_ = Schema.Struct({
   type: Schema.Literal('compare'),
-  operator: Schema.Literal('eq', 'neq', 'gt', 'gte', 'lt', 'lte'),
+  operator: Schema.Literals(['eq', 'neq', 'gt', 'gte', 'lt', 'lte']),
   value: Schema.Unknown,
 });
 export interface FilterCompare extends Schema.Schema.Type<typeof FilterCompare_> {}
@@ -142,8 +142,8 @@ export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
  */
 const FilterTimestamp_ = Schema.Struct({
   type: Schema.Literal('timestamp'),
-  field: Schema.Literal('createdAt', 'updatedAt'),
-  operator: Schema.Literal('gt', 'gte', 'lt', 'lte'),
+  field: Schema.Literals(['createdAt', 'updatedAt']),
+  operator: Schema.Literals(['gt', 'gte', 'lt', 'lte']),
   value: Schema.Number,
 });
 
@@ -156,7 +156,7 @@ export const FilterTimestamp: Schema.Schema<FilterTimestamp> = FilterTimestamp_;
 const FilterTextSearch_ = Schema.Struct({
   type: Schema.Literal('text-search'),
   text: Schema.String,
-  searchKind: Schema.optional(Schema.Literal('full-text', 'vector')),
+  searchKind: Schema.optional(Schema.Literals(['full-text', 'vector'])),
 });
 
 export interface FilterTextSearch extends Schema.Schema.Type<typeof FilterTextSearch_> {}
@@ -296,7 +296,7 @@ const QueryRelationClause_ = Schema.Struct({
    * incoming: anchor is the target of the relation.
    * both: anchor is either the source or target of the relation.
    */
-  direction: Schema.Literal('outgoing', 'incoming', 'both'),
+  direction: Schema.Literals(['outgoing', 'incoming', 'both']),
   filter: Schema.optional(Schema.suspend(() => Filter)),
 });
 
@@ -309,7 +309,7 @@ export const QueryRelationClause: Schema.Schema<QueryRelationClause> = QueryRela
 const QueryRelationTraversalClause_ = Schema.Struct({
   type: Schema.Literal('relation-traversal'),
   anchor: Schema.suspend(() => Query),
-  direction: Schema.Literal('source', 'target', 'both'),
+  direction: Schema.Literals(['source', 'target', 'both']),
 });
 
 export interface QueryRelationTraversalClause extends Schema.Schema.Type<typeof QueryRelationTraversalClause_> {}
@@ -325,7 +325,7 @@ const QueryHierarchyTraversalClause_ = Schema.Struct({
    * to-parent: traverse from child to parent.
    * to-children: traverse from parent to children.
    */
-  direction: Schema.Literal('to-parent', 'to-children'),
+  direction: Schema.Literals(['to-parent', 'to-children']),
 });
 
 export interface QueryHierarchyTraversalClause extends Schema.Schema.Type<typeof QueryHierarchyTraversalClause_> {}
@@ -355,7 +355,7 @@ const QuerySetDifferenceClause_ = Schema.Struct({
 export interface QuerySetDifferenceClause extends Schema.Schema.Type<typeof QuerySetDifferenceClause_> {}
 export const QuerySetDifferenceClause: Schema.Schema<QuerySetDifferenceClause> = QuerySetDifferenceClause_;
 
-export const OrderDirection = Schema.Literal('asc', 'desc');
+export const OrderDirection = Schema.Literals(['asc', 'desc']);
 export type OrderDirection = Schema.Schema.Type<typeof OrderDirection>;
 
 const Order_ = Schema.Union(
@@ -379,7 +379,7 @@ const Order_ = Schema.Union(
   Schema.Struct({
     // Order by system timestamp (createdAt / updatedAt) from the object meta index.
     kind: Schema.Literal('timestamp'),
-    field: Schema.Literal('createdAt', 'updatedAt'),
+    field: Schema.Literals(['createdAt', 'updatedAt']),
     direction: OrderDirection,
   }),
 );
@@ -536,7 +536,7 @@ export const QueryOptions = Schema.Struct({
   /**
    * Nested select statements will use this option to filter deleted objects.
    */
-  deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+  deleted: Schema.optional(Schema.Literals(['include', 'exclude', 'only'])),
 
   /**
    * Diagnostics-only label for logs / tooling (not used by execution semantics).
@@ -576,7 +576,7 @@ export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
  * To include both, add two separate `RegistryScope` entries to the `scopes` array.
  */
 export const RegistryScope = Schema.TaggedStruct('registry', {
-  location: Schema.Literal('local', 'remote'),
+  location: Schema.Literals(['local', 'remote']),
 });
 export interface RegistryScope extends Schema.Schema.Type<typeof RegistryScope> {}
 
@@ -584,7 +584,7 @@ export interface RegistryScope extends Schema.Schema.Type<typeof RegistryScope> 
  * Specifies the scope of the data to query from.
  * A `from` clause may carry multiple scopes; results are unioned across them.
  */
-export const Scope = Schema.Union(SpaceScope, FeedScope, RegistryScope);
+export const Scope = Schema.Union([SpaceScope, FeedScope, RegistryScope]);
 export type Scope = Schema.Schema.Type<typeof Scope>;
 
 export const visit = (query: Query, visitor: (node: Query) => void) => {

@@ -80,7 +80,7 @@ export const ExportRows = Operation.make({
     icon: 'ph--export--regular',
   },
   input: Schema.Struct({
-    format: Schema.Literal('csv', 'json', 'xml'),
+    format: Schema.Literals(['csv', 'json', 'xml']),
     rows: Schema.Array(Schema.Any),
     columns: Schema.Array(ExportColumnSchema),
   }),

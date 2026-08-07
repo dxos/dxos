@@ -154,7 +154,7 @@ export const Static: Story<ExcludeId<typeof PersonSchema>> = {
 
 const SettingsSchema = Schema.mutable(
   Schema.Struct({
-    viewMode: Schema.Literal('preview', 'readonly', 'source').annotate({
+    viewMode: Schema.Literals(['preview', 'readonly', 'source']).annotate({
       title: 'Default view mode',
       description: 'Set whether documents open in editing or read-only mode.',
     }),
@@ -383,7 +383,7 @@ const RssCreate = Schema.Struct({
   ),
 });
 
-const CreateFeedSchema = Schema.Union(StandardSiteCreate, RssCreate);
+const CreateFeedSchema = Schema.Union([StandardSiteCreate, RssCreate]);
 
 /**
  * A discriminated-union create form: selecting `type` reveals that member's fields (combobox + select for

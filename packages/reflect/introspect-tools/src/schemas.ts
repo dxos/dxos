@@ -66,9 +66,9 @@ export const ListOptionsInput = Schema.Struct({
   }),
 });
 
-const SymbolKindEnum = Schema.Literal('function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace');
+const SymbolKindEnum = Schema.Literals(['function', 'class', 'interface', 'type', 'enum', 'variable', 'namespace']);
 
-const IncludeEnum = Schema.Literal('source', 'jsdoc');
+const IncludeEnum = Schema.Literals(['source', 'jsdoc']);
 
 //
 // Packages
@@ -174,7 +174,7 @@ export const ListSchemasInput = PluginIdFilter;
 // Idioms
 //
 
-const IdiomHostKindEnum = Schema.Literal('story', 'test', 'symbol');
+const IdiomHostKindEnum = Schema.Literals(['story', 'test', 'symbol']);
 
 export const ListIdiomsInput = Schema.Struct({
   slug: Schema.optional(Schema.String).annotate({

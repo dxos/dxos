@@ -27,7 +27,7 @@ export class SampleItem extends Type.makeObject<SampleItem>(DXN.make('org.dxos.t
     // `FormatAnnotation.set(Format.TypeFormat.SingleSelect)` tells the form system
     // to render this as a dropdown select.
     // `PropertyMetaAnnotationId` provides display metadata (labels, colors) for each option.
-    status: Schema.Literal('active', 'archived', 'draft').pipe(
+    status: Schema.Literals(['active', 'archived', 'draft']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       Schema.annotate({
         title: 'Status',

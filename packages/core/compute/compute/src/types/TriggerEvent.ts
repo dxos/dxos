@@ -33,7 +33,7 @@ export type FeedEvent = Schema.Schema.Type<typeof FeedEvent>;
 /**
  * Kind of mutation a subscription trigger observed for its subject.
  */
-export const SubscriptionMutationType = Schema.Literal('created', 'updated', 'deleted');
+export const SubscriptionMutationType = Schema.Literals(['created', 'updated', 'deleted']);
 export type SubscriptionMutationType = Schema.Schema.Type<typeof SubscriptionMutationType>;
 
 export const SubscriptionEvent = Schema.Struct({
@@ -59,14 +59,14 @@ export const TimerEvent = Schema.Struct({ tick: Schema.Number });
 export type TimerEvent = Schema.Schema.Type<typeof TimerEvent>;
 
 export const DirectEvent = Schema.Struct({
-  data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+  data: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type DirectEvent = Schema.Schema.Type<typeof DirectEvent>;
 
 export const WebhookEvent = Schema.Struct({
   url: Schema.String,
-  method: Schema.Literal('GET', 'POST'),
-  headers: Schema.Record({ key: Schema.String, value: Schema.String }),
+  method: Schema.Literals(['GET', 'POST']),
+  headers: Schema.Record(Schema.String, Schema.String),
   bodyText: Schema.String,
 });
 export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;

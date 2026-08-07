@@ -27,18 +27,18 @@ const LegacyDeckState = Schema.Struct({
   solo: Schema.optional(Schema.String),
   initialized: Schema.optional(Schema.Boolean),
   fullscreen: Schema.optional(Schema.Boolean),
-  companionOrientation: Schema.optional(Schema.Literal('horizontal', 'vertical')),
+  companionOrientation: Schema.optional(Schema.Literals(['horizontal', 'vertical'])),
 }).pipe(Schema.mutable);
 type LegacyDeckState = Schema.Schema.Type<typeof LegacyDeckState>;
 
 const LegacyStoredDeckState = Schema.Struct({
-  sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
-  complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
+  sidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
+  complementarySidebarState: Schema.Literals(['closed', 'collapsed', 'expanded']),
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(LegacyDeckState) })),
-  previousMode: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.Any }))),
+  decks: Schema.mutable(Schema.Record(Schema.String, Schema.mutable(LegacyDeckState))),
+  previousMode: Schema.optional(Schema.mutable(Schema.Record(Schema.String, Schema.Any))),
 }).pipe(Schema.mutable);
 type LegacyStoredDeckState = Schema.Schema.Type<typeof LegacyStoredDeckState>;
 

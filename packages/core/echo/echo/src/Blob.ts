@@ -21,7 +21,7 @@ import * as Type from './Type';
  * Inline blob data: bytes stored directly on the ECHO object.
  */
 export const InlineData = Schema.TaggedStruct('inline', {
-  bytes: Schema.Uint8ArrayFromSelf.annotate({ jsonSchema: { type: 'string', contentEncoding: 'base64' } }),
+  bytes: Schema.Uint8Array.annotate({ jsonSchema: { type: 'string', contentEncoding: 'base64' } }),
 });
 
 /**
@@ -39,7 +39,7 @@ export const ExternalData = Schema.TaggedStruct('external', {
   uri: Schema.String,
 });
 
-export const BlobData = Schema.Union(InlineData, ExternalData);
+export const BlobData = Schema.Union([InlineData, ExternalData]);
 export type BlobData = Schema.Schema.Type<typeof BlobData>;
 
 /**

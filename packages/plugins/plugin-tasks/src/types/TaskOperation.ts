@@ -40,7 +40,7 @@ export const CreateTask = Operation.make({
     }),
     title: Schema.String,
     description: Schema.optional(Schema.String),
-    priority: Schema.optional(Schema.Literal('none', 'low', 'medium', 'high', 'urgent')),
+    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
     assignee: Schema.optional(Actor.Actor),
     /** Parent task for a sub-task; when set, the task is parented to it instead of the task set. */
     parent: Schema.optional(Ref.Ref(Task.Task)),
@@ -65,8 +65,8 @@ export const UpdateTask = Operation.make({
     task: Ref.Ref(Task.Task),
     title: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
-    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled')),
-    priority: Schema.optional(Schema.Literal('none', 'low', 'medium', 'high', 'urgent')),
+    status: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled'])),
+    priority: Schema.optional(Schema.Literals(['none', 'low', 'medium', 'high', 'urgent'])),
     estimate: Schema.optional(Schema.Number),
     assignee: Schema.optional(Actor.Actor),
   }),
@@ -135,7 +135,7 @@ export const ListTasks = Operation.make({
     project: Schema.optional(Ref.Ref(Obj.Unknown)).annotate({
       description: 'Project whose task sets are listed (org.dxos.type.project).',
     }),
-    status: Schema.optional(Schema.Literal('todo', 'in-progress', 'done', 'failed', 'cancelled')),
+    status: Schema.optional(Schema.Literals(['todo', 'in-progress', 'done', 'failed', 'cancelled'])),
     /** Matches the assignee by DID, email, or display name — whichever the actor carries. */
     assignee: Schema.optional(Schema.String),
     /** Include sub-tasks (children of tasks); by default only root tasks of the container. */

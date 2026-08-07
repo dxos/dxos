@@ -65,8 +65,8 @@ export const viewAspect: ViewState.Aspect<VersioningView> = ViewState.define<Ver
   backend: 'memory',
   schema: Schema.Struct({
     selection: Schema.optional(VersionSelectionSchema),
-    view: Schema.optional(Schema.Literal('base', 'diff', 'branch')),
-    mode: Schema.optional(Schema.Literal('editing', 'suggesting', 'viewing')),
+    view: Schema.optional(Schema.Literals(['base', 'diff', 'branch'])),
+    mode: Schema.optional(Schema.Literals(['editing', 'suggesting', 'viewing'])),
     suggestion: Schema.optional(Schema.Struct({ author: Schema.String, from: Schema.Number, to: Schema.Number })),
     hiddenAuthors: Schema.optional(Schema.mutable(Schema.Array(Schema.String))),
   }).pipe(Schema.mutable),

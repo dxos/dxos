@@ -34,7 +34,7 @@ export const UpdateSidebar = Operation.make({
       Schema.String.annotate({ description: 'URI of the component to display in the sidebar.' }),
     ),
     state: Schema.optional(
-      Schema.Literal('closed', 'collapsed', 'expanded').annotate({
+      Schema.Literals(['closed', 'collapsed', 'expanded']).annotate({
         description: 'Whether the sidebar is closed, collapsed, or expanded.',
       }),
     ),
@@ -56,7 +56,7 @@ export const UpdateComplementary = Operation.make({
       Schema.String.annotate({ description: 'URI of the component to display in the complementary area.' }),
     ),
     state: Schema.optional(
-      Schema.Literal('closed', 'collapsed', 'expanded').annotate({
+      Schema.Literals(['closed', 'collapsed', 'expanded']).annotate({
         description: 'Whether the complementary sidebar is closed, collapsed, or expanded.',
       }),
     ),
@@ -80,20 +80,20 @@ export const UpdateDialog = Operation.make({
   input: Schema.Struct({
     subject: Schema.optional(Schema.String.annotate({ description: 'URI of the component to display in the dialog.' })),
     state: Schema.optional(Schema.Boolean.annotate({ description: 'Whether the dialog is open or closed.' })),
-    type: Schema.optional(Schema.Literal('default', 'alert').annotate({ description: 'The type of dialog.' })),
+    type: Schema.optional(Schema.Literals(['default', 'alert']).annotate({ description: 'The type of dialog.' })),
     blockAlign: Schema.optional(
-      Schema.Literal('start', 'center', 'end').annotate({ description: 'The alignment of the dialog.' }),
+      Schema.Literals(['start', 'center', 'end']).annotate({ description: 'The alignment of the dialog.' }),
     ),
     overlayClasses: Schema.optional(
       Schema.String.annotate({ description: 'Additional classes for the dialog overlay.' }),
     ),
     overlayStyle: Schema.optional(
-      Schema.Record({ key: Schema.String, value: Schema.Any }).annotate({
+      Schema.Record(Schema.String, Schema.Any).annotate({
         description: 'Additional styles for the dialog overlay.',
       }),
     ),
     props: Schema.optional(
-      Schema.Record({ key: Schema.String, value: Schema.Any }).annotate({
+      Schema.Record(Schema.String, Schema.Any).annotate({
         description: 'Additional props for the dialog.',
       }),
     ),
@@ -113,11 +113,11 @@ const PopoverBaseInput = Schema.Struct({
     }),
   ),
   side: Schema.optional(
-    Schema.Literal('top', 'right', 'bottom', 'left').annotate({ description: 'The side of the anchor.' }),
+    Schema.Literals(['top', 'right', 'bottom', 'left']).annotate({ description: 'The side of the anchor.' }),
   ),
   state: Schema.optional(Schema.Boolean.annotate({ description: 'Whether the popover is open or closed.' })),
   props: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.Any }).annotate({
+    Schema.Record(Schema.String, Schema.Any).annotate({
       description: 'Additional props for the popover.',
     }),
   ),
@@ -290,7 +290,7 @@ export const RevertWorkspace = Operation.make({
 // Main Content Operations
 //
 
-const NavigationMode = Schema.Literal('immediate', 'validate');
+const NavigationMode = Schema.Literals(['immediate', 'validate']);
 
 export const Open = Operation.make({
   meta: {
@@ -344,7 +344,7 @@ export const Open = Operation.make({
     ),
     pivotId: Schema.optional(Schema.String.annotate({ description: 'The id of the item to place new items next to.' })),
     disposition: Schema.optional(
-      Schema.Literal('solo', 'add', 'auto').annotate({
+      Schema.Literals(['solo', 'add', 'auto']).annotate({
         description:
           'How the deck should place the opened items. `solo` (the default) navigates: the deck becomes ' +
           'just the opened items, unless they are all already open (the existing plank scrolls into view). ' +
@@ -444,7 +444,7 @@ export const UpdateCompanion = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    subject: Schema.Union(Schema.String, Schema.Null).annotate({
+    subject: Schema.Union([Schema.String, Schema.Null]).annotate({
       description:
         'The companion node id to show — either qualified (`<plank>/~<variant>`) or a bare `~<variant>`, which targets the given anchor, else the attended plank. Null closes a companion.',
     }),

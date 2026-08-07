@@ -17,7 +17,7 @@ describe('useAtomSuspense', () => {
   });
 
   test('suspends while waiting for value', async () => {
-    const atom = Atom.make<AsyncResult.Result<string, never>>(AsyncResult.initial());
+    const atom = Atom.make<AsyncResult.AsyncResult<string, never>>(AsyncResult.initial());
 
     function Child() {
       const value = useAtomSuspense(atom);

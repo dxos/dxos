@@ -32,7 +32,7 @@ const ApiAuthorizationOauth = Schema.Struct({
   grantType: Schema.String,
 });
 
-export const ApiAuthorization = Schema.Union(ApiAuthorizationKey, ApiAuthorizationOauth);
+export const ApiAuthorization = Schema.Union([ApiAuthorizationKey, ApiAuthorizationOauth]);
 export type ApiAuthorization = Schema.Schema.Type<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = Schema.Struct({

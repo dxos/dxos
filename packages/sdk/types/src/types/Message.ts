@@ -60,7 +60,7 @@ export class Message extends Type.makeObject<Message>(DXN.make('org.dxos.type.me
     /** Custom properties for specific message types (e.g. attention context, email subject, etc.). */
     // TODO(dmaretskyi): Add tool call ID here.
     properties: Schema.optional(
-      Schema.Record({ key: Schema.String, value: Schema.Any }).annotate({
+      Schema.Record(Schema.String, Schema.Any).annotate({
         description: 'Custom properties for specific message types (e.g. attention context, email subject, etc.).',
       }),
     ),

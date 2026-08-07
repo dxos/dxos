@@ -28,7 +28,7 @@ export class McpConnectionError extends Schema.TaggedError<McpConnectionError>('
   'McpConnectionError',
   {
     url: Schema.String,
-    protocol: Schema.Literal('sse', 'http'),
+    protocol: Schema.Literals(['sse', 'http']),
     message: Schema.String,
   },
 ) {}

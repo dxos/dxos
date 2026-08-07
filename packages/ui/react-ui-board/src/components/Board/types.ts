@@ -28,12 +28,7 @@ export const BoardLayout = Schema.Struct({
     height: Schema.Number,
   }),
 
-  cells: Schema.mutable(
-    Schema.Record({
-      key: Schema.String,
-      value: CellLayout,
-    }),
-  ),
+  cells: Schema.mutable(Schema.Record(Schema.String, CellLayout)),
 });
 
 export type BoardLayout = Schema.Schema.Type<typeof BoardLayout>;

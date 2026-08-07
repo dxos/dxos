@@ -18,7 +18,7 @@
 //   Schema.String                       → z.string()
 //   Schema.Number                       → z.number()
 //   Schema.Boolean                      → z.boolean()
-//   Schema.Literal('a','b')             → z.enum(['a','b'])
+//   Schema.Literals(['a', 'b'])             → z.enum(['a','b'])
 //   Schema.Array(x)                     → z.array(zodOf(x))
 //   Schema.optional(x)                  → .optional()
 //   Schema.int()                        → .int()        (via JSONSchema annotation)
@@ -131,7 +131,7 @@ const astToZod = (ast: AnyAst): z.ZodTypeAny => {
       break;
     case 'Union': {
       // Only support unions where every branch is a string literal — that's
-      // what `Schema.Literal('a', 'b', 'c')` produces, and it maps directly
+      // what `Schema.Literals(['a', 'b', 'c'])` produces, and it maps directly
       // to `z.enum`. Other unions (mixed types, refinements) aren't currently
       // used in our tool inputs and would need a richer conversion.
       const types = ast.types as AnyAst[];

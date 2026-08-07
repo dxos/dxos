@@ -28,7 +28,7 @@ export const SymbolKindSchema = Schema.Literal(
 );
 export type SymbolKind = typeof SymbolKindSchema.Type;
 
-export const SymbolIncludeSchema = Schema.Literal('source', 'jsdoc');
+export const SymbolIncludeSchema = Schema.Literals(['source', 'jsdoc']);
 export type SymbolInclude = typeof SymbolIncludeSchema.Type;
 
 export const SourceLocationSchema = Schema.Struct({
@@ -171,7 +171,7 @@ export type PluginDetail = typeof PluginDetailSchema.Type;
 // Idioms
 //
 
-export const IdiomHostKindSchema = Schema.Literal('story', 'test', 'symbol');
+export const IdiomHostKindSchema = Schema.Literals(['story', 'test', 'symbol']);
 export type IdiomHostKind = typeof IdiomHostKindSchema.Type;
 
 export const IdiomHostSchema = Schema.Struct({

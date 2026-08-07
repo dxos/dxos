@@ -10,19 +10,19 @@ import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-const LevelLetter = Schema.Literal('T', 'D', 'V', 'I', 'W', 'E');
-const SelectField = Schema.Literal('t', 'l', 'm', 'f', 'n', 'o', 'c', 'i', 'e');
+const LevelLetter = Schema.Literals(['T', 'D', 'V', 'I', 'W', 'E']);
+const SelectField = Schema.Literals(['t', 'l', 'm', 'f', 'n', 'o', 'c', 'i', 'e']);
 
 const GroupBy = Schema.Union(
-  Schema.Literal('level', 'message', 'file', 'tabId'),
+  Schema.Literals(['level', 'message', 'file', 'tabId']),
   Schema.TemplateLiteral('context.', Schema.String),
 );
 
-const Aggregate = Schema.Literal('count', 'sample', 'firstLast');
-const Order = Schema.Literal('asc', 'desc');
-const Format = Schema.Literal('json', 'jsonl', 'pretty');
+const Aggregate = Schema.Literals(['count', 'sample', 'firstLast']);
+const Order = Schema.Literals(['asc', 'desc']);
+const Format = Schema.Literals(['json', 'jsonl', 'pretty']);
 
-const TimeBound = Schema.Union(Schema.String, Schema.Number);
+const TimeBound = Schema.Union([Schema.String, Schema.Number]);
 
 const QueryComposerLogsInput = Schema.Struct({
   filters: Schema.optional(

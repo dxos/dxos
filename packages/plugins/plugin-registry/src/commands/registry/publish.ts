@@ -26,7 +26,7 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 const ManifestSchema = Schema.Struct({
   ...Config2.Plugin.fields,
   version: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
-  dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
+  dependencies: Schema.optional(Schema.Record(Schema.String, Schema.String)),
 });
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
 

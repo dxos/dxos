@@ -200,7 +200,7 @@ export class SchemaValidator {
 /**
  * Tuple AST is used both for:
  * fixed-length tuples ([string, number]) in which case AST will be { elements: [Schema.String, Schema.Number] }
- * variable-length arrays (Array<string | number>) in which case AST will be { rest: [Schema.Union(Schema.String, Schema.Number)] }
+ * variable-length arrays (Array<string | number>) in which case AST will be { rest: [Schema.Union([Schema.String, Schema.Number])] }
  */
 const getArrayElementSchema = (
   tupleAst: SchemaAST.TupleType,

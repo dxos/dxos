@@ -61,7 +61,7 @@ export type Project = Schema.Schema.Type<typeof ProjectSchema>;
  * categories. We map by category, not by name, so renamed states keep working.
  * `triage` exists in some workspaces; treat it as backlog.
  */
-const StateTypeSchema = Schema.Literal('triage', 'backlog', 'unstarted', 'started', 'completed', 'canceled');
+const StateTypeSchema = Schema.Literals(['triage', 'backlog', 'unstarted', 'started', 'completed', 'canceled']);
 export type StateType = Schema.Schema.Type<typeof StateTypeSchema>;
 
 const IssueStateSchema = Schema.Struct({

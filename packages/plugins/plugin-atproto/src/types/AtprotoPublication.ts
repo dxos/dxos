@@ -38,7 +38,7 @@ export class AtprotoPublication extends Type.makeRelation<AtprotoPublication>(
      * flag which individual Published fields have since diverged (older publications lack it — the
      * companion then shows no per-field Published divergence).
      */
-    publishedValues: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
+    publishedValues: Schema.optional(Schema.Record(Schema.String, Schema.String)),
     /** ISO timestamp of the last publish. */
     publishedAt: Schema.String,
   }),

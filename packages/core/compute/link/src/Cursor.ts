@@ -41,9 +41,9 @@ export const ExternalSpec = Schema.Struct({
   /** Cached display label for the remote target. */
   label: Schema.String.pipe(Schema.optional),
   /** Provider-specific options; opaque here — providers validate their shape. */
-  options: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  options: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /** Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`); drives 3-way merge. */
-  snapshots: Schema.Record({ key: Schema.String, value: Schema.Any }).pipe(Schema.optional),
+  snapshots: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /**
    * Opaque provider delta-resume token (Gmail `historyId`, JMAP `Email/get` `state`). An optional
    * fast-path alongside `max`/`min`: when valid the provider fetches an exact delta, else it falls back
@@ -63,7 +63,7 @@ export const FeedSpec = Schema.Struct({
 export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
 /** Discriminated union of what a cursor tracks progress against. Distinguished by `kind`. */
-export const Spec = Schema.Union(ExternalSpec, FeedSpec);
+export const Spec = Schema.Union([ExternalSpec, FeedSpec]);
 export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**

@@ -11,7 +11,7 @@ import { meta } from '../../meta';
 import type * as Result from '../../types/Result';
 
 export type ResultDetailProps = {
-  result?: Result.Result;
+  result?: Result.AsyncResult;
   /** Star state and toggle owned by the Search container (the immutable Result has no `starred`). */
   starred?: boolean;
   onToggleStar?: () => void;

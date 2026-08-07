@@ -55,7 +55,7 @@ export const Exec = Operation.make({
     cwd: Schema.optional(Schema.String).annotate({
       description: 'Working directory for the command (absolute path).',
     }),
-    env: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })).annotate({
+    env: Schema.optional(Schema.Record(Schema.String, Schema.String)).annotate({
       description:
         'Additional environment variables. Merged with env vars from the sandbox credentials field; these override on conflict.',
     }),

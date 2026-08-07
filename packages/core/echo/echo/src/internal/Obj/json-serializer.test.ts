@@ -323,7 +323,7 @@ describe('Object JSON serializer', () => {
     const Blob = Type.makeObject(DXN.make('com.example.type.blob', '0.1.0'))(
       Schema.Struct({
         name: Schema.String,
-        bytes: Schema.Uint8ArrayFromSelf,
+        bytes: Schema.Uint8Array,
       }),
     );
     type Blob = Type.InstanceType<typeof Blob>;

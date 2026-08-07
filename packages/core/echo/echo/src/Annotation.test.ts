@@ -443,7 +443,7 @@ describe('Annotation', () => {
     // Record-valued annotation mirroring a per-key ordering (e.g. SectionOrderAnnotation).
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const Container = Type.makeObject(DXN.make('com.example.type.container', '0.1.0'))(
       Schema.Struct({ name: Schema.String }),
@@ -520,11 +520,11 @@ describe('Annotation', () => {
   describe('reactive in-place mutation', () => {
     const OrderAnnotation = Annotation.make({
       id: 'org.dxos.test.mutable-order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Schema.String) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Schema.String)),
     });
     const RefOrderAnnotation = Annotation.make({
       id: 'org.dxos.test.mutable-ref-order',
-      schema: Schema.Record({ key: Schema.String, value: Schema.Array(Ref.Ref(Obj.Unknown)) }),
+      schema: Schema.Record(Schema.String, Schema.Array(Ref.Ref(Obj.Unknown))),
     });
     const Item = Type.makeObject(DXN.make('com.example.type.mutableItem', '0.1.0'))(
       Schema.Struct({ name: Schema.String }),

@@ -37,7 +37,7 @@ const Flight = Schema.Struct({
   destination: Schema.optional(Schema.String.annotate({ title: 'To' })),
   departAt: Schema.optional(Format.DateTime.annotate({ title: 'Depart' })),
   arriveAt: Schema.optional(Format.DateTime.annotate({ title: 'Arrive' })),
-  cabin: Schema.optional(Schema.Literal('economy', 'premium', 'business', 'first').annotate({ title: 'Cabin' })),
+  cabin: Schema.optional(Schema.Literals(['economy', 'premium', 'business', 'first']).annotate({ title: 'Cabin' })),
   notes: Schema.optional(Format.Text.annotate({ title: 'Notes' })),
 }).pipe(Type.makeObject(DXN.make('com.example.type.flight', '0.1.0')));
 

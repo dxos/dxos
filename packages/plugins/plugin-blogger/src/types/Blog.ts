@@ -14,7 +14,7 @@ import { Text } from '@dxos/schema';
 import { PublisherService } from './BloggerCapabilities';
 
 /** Publication lifecycle of a post: local-only `draft` vs synced-to-a-publisher `published`. */
-export const PostStatus = Schema.Literal('draft', 'published');
+export const PostStatus = Schema.Literals(['draft', 'published']);
 export type PostStatus = Schema.Schema.Type<typeof PostStatus>;
 
 /**

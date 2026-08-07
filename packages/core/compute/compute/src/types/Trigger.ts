@@ -156,7 +156,7 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, FeedSpec, DirectSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotate({
+export const Spec = Schema.Union([EmailSpec, FeedSpec, DirectSpec, SubscriptionSpec, TimerSpec, WebhookSpec]).annotate({
   title: 'Trigger',
 });
 export type Spec = Schema.Schema.Type<typeof Spec>;
@@ -172,7 +172,7 @@ export type Spec = Schema.Schema.Type<typeof Spec>;
  *   mailbox: { '/': 'echo://AAA/ZZZ' }
  * }
  */
-export const InputTemplate = Schema.Record({ key: Schema.String, value: Schema.Any });
+export const InputTemplate = Schema.Record(Schema.String, Schema.Any);
 
 /**
  * Function trigger.

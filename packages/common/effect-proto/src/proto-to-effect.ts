@@ -253,7 +253,7 @@ const SCALAR_SCHEMAS: Record<string, Schema.Schema<any>> = {
  */
 const WELL_KNOWN_SCHEMAS: Record<string, Schema.Schema<any>> = {
   'google.protobuf.Any': Schema.Unknown,
-  'google.protobuf.Struct': Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+  'google.protobuf.Struct': Schema.Record(Schema.String, Schema.Unknown),
   'google.protobuf.Value': Schema.Unknown,
   'google.protobuf.ListValue': Schema.Array(Schema.Unknown),
   'google.protobuf.NullValue': Schema.Null,

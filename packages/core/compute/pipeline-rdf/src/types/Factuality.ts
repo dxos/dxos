@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 /** FactBank factuality values: (CT|PR|PS) × (+|-) plus CTu (polarity unknown) and Uu (uncommitted). */
-export const FactualityValue = Schema.Literal('CT+', 'CT-', 'PR+', 'PR-', 'PS+', 'PS-', 'CTu', 'Uu');
+export const FactualityValue = Schema.Literals(['CT+', 'CT-', 'PR+', 'PR-', 'PS+', 'PS-', 'CTu', 'Uu']);
 export type FactualityValue = Schema.Schema.Type<typeof FactualityValue>;
 
 /**
@@ -14,9 +14,9 @@ export type FactualityValue = Schema.Schema.Type<typeof FactualityValue>;
  */
 export const Factuality = Schema.Struct({
   value: FactualityValue,
-  polarity: Schema.Literal('+', '-', '?'),
+  polarity: Schema.Literals(['+', '-', '?']),
   /** Model confidence 0..1. */
   confidence: Schema.optional(Schema.Number.pipe(Schema.between(0, 1))),
-  nature: Schema.optional(Schema.Literal('epistemic', 'aleatory')),
+  nature: Schema.optional(Schema.Literals(['epistemic', 'aleatory'])),
 });
 export interface Factuality extends Schema.Schema.Type<typeof Factuality> {}

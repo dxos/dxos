@@ -19,7 +19,7 @@ export const Settings = Schema.mutable(
     ).pipe(Schema.withConstructorDefault(() => true)),
 
     recordMode: Schema.optional(
-      Schema.Literal('toggle', 'hold').annotate({
+      Schema.Literals(['toggle', 'hold']).annotate({
         title: 'Record mode',
         description:
           'Whether the mic toggles recording on each click, or records only while the control is held (push-to-talk).',
@@ -41,7 +41,7 @@ export const Settings = Schema.mutable(
     ).pipe(Schema.withConstructorDefault(() => 4000)),
 
     streamMode: Schema.optional(
-      Schema.Literal('batch', 'word').annotate({
+      Schema.Literals(['batch', 'word']).annotate({
         title: 'Reveal mode',
         description: 'Whether transcribed text appears in batches or streams word-by-word.',
       }),

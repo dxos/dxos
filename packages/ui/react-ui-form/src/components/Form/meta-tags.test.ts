@@ -14,7 +14,7 @@ import { META_TAGS_KEY, withMetaTags } from './meta-tags';
 // array — mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-magazine `Subscription`.
 const TagIndexHost = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  tags: Schema.Record({ key: Schema.String, value: Schema.Array(Obj.ID) }).pipe(Schema.optional),
+  tags: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(Schema.optional),
 });
 
 const propertyNames = (schema: Schema.Schema.AnyNoContext): string[] =>

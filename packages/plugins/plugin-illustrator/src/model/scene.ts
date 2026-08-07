@@ -28,13 +28,13 @@ export const Color = Schema.Literal(
 );
 export type Color = Schema.Schema.Type<typeof Color>;
 
-export const Fill = Schema.Literal('none', 'solid', 'pattern');
+export const Fill = Schema.Literals(['none', 'solid', 'pattern']);
 export type Fill = Schema.Schema.Type<typeof Fill>;
 
-export const Stroke = Schema.Literal('sketchy', 'solid', 'dashed', 'dotted');
+export const Stroke = Schema.Literals(['sketchy', 'solid', 'dashed', 'dotted']);
 export type Stroke = Schema.Schema.Type<typeof Stroke>;
 
-export const Weight = Schema.Literal('s', 'm', 'l', 'xl');
+export const Weight = Schema.Literals(['s', 'm', 'l', 'xl']);
 export type Weight = Schema.Schema.Type<typeof Weight>;
 
 export const Point = Schema.Struct({
@@ -57,7 +57,7 @@ const id = Schema.String.annotate({
 
 /** Closed shape drawn inside a local bounding box. */
 export const Box = Schema.Struct({
-  kind: Schema.Literal('rect', 'ellipse', 'diamond', 'triangle'),
+  kind: Schema.Literals(['rect', 'ellipse', 'diamond', 'triangle']),
   id,
   x: Schema.Number.annotate({ description: 'Left edge (object-local units).' }),
   y: Schema.Number.annotate({ description: 'Top edge (object-local units).' }),
@@ -146,7 +146,7 @@ export const Arrow = Schema.Struct({
 });
 export type Arrow = Schema.Schema.Type<typeof Arrow>;
 
-export const Element = Schema.Union(Box, Circle, Polyline, Curve, Arc, Text, Arrow);
+export const Element = Schema.Union([Box, Circle, Polyline, Curve, Arc, Text, Arrow]);
 export type Element = Schema.Schema.Type<typeof Element>;
 
 /**
@@ -204,5 +204,5 @@ export const MoveObject = Schema.Struct({
   origin: Point.annotate({ description: 'New canvas position (px) for the object top-left.' }),
 });
 
-export const Command = Schema.Union(UpsertObject, UpsertElements, RemoveElements, RemoveObject, MoveObject);
+export const Command = Schema.Union([UpsertObject, UpsertElements, RemoveElements, RemoveObject, MoveObject]);
 export type Command = Schema.Schema.Type<typeof Command>;

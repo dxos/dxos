@@ -90,7 +90,7 @@ describe('EchoObjectSchema class DSL', () => {
 
     {
       const Test2 = Schema.Struct({
-        meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+        meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
       }).pipe(EchoObjectSchema(DXN.make('org.dxos.type.functionTrigger', '0.1.0')));
 
       const object = Obj.make(Test2, {});

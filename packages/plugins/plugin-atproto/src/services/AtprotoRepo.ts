@@ -150,7 +150,7 @@ const ListRecordsResponse = Schema.Struct({
     Schema.Struct({
       uri: Schema.String,
       cid: Schema.String,
-      value: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
+      value: Schema.Record(Schema.String, Schema.Unknown),
     }),
   ),
   cursor: Schema.optional(Schema.String),

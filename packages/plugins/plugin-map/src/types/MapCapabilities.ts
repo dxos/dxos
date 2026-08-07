@@ -20,7 +20,7 @@ const LatLngLiteralSchema = Schema.Struct({
 
 export const StateSchema = Schema.mutable(
   Schema.Struct({
-    type: Schema.Literal('globe', 'map'),
+    type: Schema.Literals(['globe', 'map']),
     center: Schema.optional(LatLngLiteralSchema),
     zoom: Schema.optional(Schema.Number),
   }),

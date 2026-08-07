@@ -20,7 +20,7 @@ import { useKanbanBoardModel } from './useKanbanBoardModel';
 const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0'))(
   Schema.Struct({
     title: Schema.optional(Schema.String),
-    status: Schema.Literal('__uncategorized__', 'a', 'b').pipe(
+    status: Schema.Literals(['__uncategorized__', 'a', 'b']).pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
       Schema.annotate({
         title: 'Status',

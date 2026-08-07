@@ -15,7 +15,7 @@ import { FormatAnnotation, TypeFormat } from '../Format';
 //
 
 // TODO(burdon): Reuse/reconcile with ScalarTypeEnum (handle arrays).
-const SimpleTypes = Schema.Literal('array', 'boolean', 'integer', 'null', 'number', 'object', 'string');
+const SimpleTypes = Schema.Literals(['array', 'boolean', 'integer', 'null', 'number', 'object', 'string']);
 
 const NonNegativeInteger = Schema.Number.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0)));
 
@@ -45,7 +45,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   generator: Schema.optional(
     Schema.Union(
       Schema.String,
-      Schema.Tuple(Schema.String, Schema.Number),
+      Schema.Tuple([Schema.String, Schema.Number]),
       Schema.Struct({
         generator: Schema.String,
         args: Schema.optional(Schema.Array(Schema.Any)),
@@ -57,12 +57,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   /**
    * {@link PropertyMeta} annotations get serialized here.
    */
-  meta: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.Any,
-    }),
-  ),
+  meta: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 
   /**
    * @deprecated
@@ -81,12 +76,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   /**
    * @deprecated Superseded by `meta`.
    */
-  annotations: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.Any,
-    }),
-  ),
+  annotations: Schema.optional(Schema.Record(Schema.String, Schema.Any)),
 });
 export type JsonSchemaEchoAnnotations = Schema.Schema.Type<typeof JsonSchemaEchoAnnotations>;
 
@@ -267,33 +257,33 @@ const _JsonSchemaType = Schema.Struct({
 
   additionalProperties: Schema.optional(JsonSchemaOrBoolean),
   properties: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.suspend(() => JsonSchemaType),
-    }),
+    Schema.Record(
+      Schema.String,
+      Schema.suspend(() => JsonSchemaType),
+    ),
   ),
   patternProperties: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.suspend(() => JsonSchemaType),
-    }),
+    Schema.Record(
+      Schema.String,
+      Schema.suspend(() => JsonSchemaType),
+    ),
   ),
   propertyNames: Schema.optional(Schema.suspend(() => JsonSchemaType)),
 
   definitions: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.suspend(() => JsonSchemaType),
-    }),
+    Schema.Record(
+      Schema.String,
+      Schema.suspend(() => JsonSchemaType),
+    ),
   ),
   dependencies: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.suspend(() => Schema.Union(Schema.String, StringArray, JsonSchemaType)).annotate({
+    Schema.Record(
+      Schema.String,
+      Schema.suspend(() => Schema.Union([Schema.String, StringArray, JsonSchemaType])).annotate({
         identifier: 'dependency',
         description: 'Dependency',
       }),
-    }),
+    ),
   ),
 
   contentMediaType: Schema.optional(Schema.String),
@@ -307,10 +297,10 @@ const _JsonSchemaType = Schema.Struct({
   oneOf: Schema.optional(Schema.Array(Schema.suspend(() => JsonSchemaType))),
   not: Schema.optional(Schema.suspend(() => JsonSchemaType)),
   $defs: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.suspend(() => JsonSchemaType),
-    }),
+    Schema.Record(
+      Schema.String,
+      Schema.suspend(() => JsonSchemaType),
+    ),
   ),
 
   //

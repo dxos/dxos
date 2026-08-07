@@ -18,7 +18,7 @@ export const TriggerState = Schema.Struct({
   state: Schema.optional(
     Schema.Union(
       Schema.TaggedStruct('subscription', {
-        processedVersions: Schema.Record({ key: EntityId, value: Schema.String }),
+        processedVersions: Schema.Record(EntityId, Schema.String),
       }),
     ),
   ),

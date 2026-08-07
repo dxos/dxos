@@ -356,7 +356,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
       'only one pattern property is supported',
     );
 
-    schema = Schema.Record({ key: Schema.String, value: toEffectSchema(root.patternProperties[''], defs) });
+    schema = Schema.Record(Schema.String, toEffectSchema(root.patternProperties[''], defs));
   } else if (typeof root.additionalProperties !== 'object') {
     schema = Schema.Struct(fields);
   } else {
@@ -364,7 +364,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
     if (propertyList.length > 0) {
       schema = Schema.Struct(fields, { key: Schema.String, value: indexValue });
     } else {
-      schema = Schema.Record({ key: Schema.String, value: indexValue });
+      schema = Schema.Record(Schema.String, indexValue);
     }
   }
 

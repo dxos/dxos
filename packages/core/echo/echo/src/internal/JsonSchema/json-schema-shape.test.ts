@@ -33,7 +33,7 @@ describe('toJsonSchema wire shape', () => {
       email: Schema.optional(Format.Email),
       age: Schema.optional(Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 150))),
       active: Schema.Boolean,
-      kind: Schema.Literal('personal', 'work'),
+      kind: Schema.Literals(['personal', 'work']),
     }),
   );
 

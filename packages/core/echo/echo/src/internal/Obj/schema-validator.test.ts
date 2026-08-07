@@ -98,7 +98,7 @@ describe('schema-validator', () => {
     test('discriminated union', () => {
       const square = Schema.Struct({ type: Schema.Literal('square'), side: Schema.Number });
       const circle = Schema.Struct({ type: Schema.Literal('circle'), radius: Schema.Number });
-      const shape = Schema.Union(square, circle);
+      const shape = Schema.Union([square, circle]);
       validateValueToAssign({
         schema: shape,
         target: { type: 'square' },
@@ -133,7 +133,7 @@ describe('schema-validator', () => {
     test('walking into an Unknown-typed value does not throw', ({ expect }) => {
       // Mirrors the annotation Dictionary (Record<string, Unknown>): nested keys/indices under an
       // Unknown slot are all valid, so the validator must not reject while walking them.
-      const schema = Schema.Struct({ dict: Schema.Record({ key: Schema.String, value: Schema.Unknown }) });
+      const schema = Schema.Struct({ dict: Schema.Record(Schema.String, Schema.Unknown) });
       for (const path of [
         ['dict', 'someType'],
         ['dict', 'someType', 'nested'],
@@ -158,7 +158,7 @@ describe('schema-validator', () => {
       for (const value of [42, '42']) {
         validateValueToAssign({
           schema: Schema.Struct({
-            field: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Number })),
+            field: Schema.optional(Schema.Record(Schema.String, Schema.Number)),
           }),
           target: {},
           path: ['field', 'unknownField'],
@@ -170,7 +170,7 @@ describe('schema-validator', () => {
 
     test('suspend', () => {
       const schemaWithSuspend = Schema.Struct({
-        array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union(Schema.Null, Schema.Number)))),
+        array: Schema.optional(Schema.suspend(() => Schema.Array(Schema.Union([Schema.Null, Schema.Number])))),
         object: Schema.optional(
           Schema.suspend(() => Schema.Union(Schema.Null, Schema.Struct({ field: Schema.Number }))),
         ),
