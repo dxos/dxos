@@ -1,8 +1,12 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 1 — baseline heap measurements on a fresh dev instance, then heap-snapshot attribution._
+_Resume: Phase 3 remainder (perf-timeline gating, worker-side retention), then the reduction phases 5–7 toward the 300–400 MB resting target. Uncommitted: none. Last: tier curve + barebones profiling scaffold landed (bf273b4912)._
 
-## Phase 1: Measure
+**Target (agreed with user 2026-08-06): 300–500 MB resting footprint for an
+idle tab, aiming 300–400 (Figma range). Baseline today: ~615 MB harness-measured
+floor (barebones), ~470–860 MB observed on real machines depending on slack.**
+
+## Phase 1: Measure — DONE
 
 Get trustworthy per-context numbers before touching anything. Deliverable: a
 Findings section in DESIGN.md with heap per execution context at defined
@@ -12,119 +16,119 @@ checkpoints, and the top dominators from a snapshot.
 
 - [x] **Boot a dev Composer and record baseline heap** — page 247MB / worker
       71MB / coordinator 9MB; flat over 60s idle. Table in DESIGN.md Findings.
-- [x] **Build a CDP profiling harness** — `measure.mjs` + `analyze.mjs`
-      (scratchpad `memory-harness/`; per-target CDP websockets over
-      `--remote-debugging-port`, GC-before-read, snapshot capture). TODO: move
-      into the repo once shape settles.
+- [x] **Build a CDP profiling harness** — `measure.mjs` + `analyze.mjs` +
+      soak/memory-dump/snapshot-diff/retainers/parse-trace-stream (scratchpad
+      `memory-harness/`, copy at /tmp/composer-memory-harness).
 - [ ] **Checkpoint measurements** — space open → N documents open still
       pending (app-ready + idle done).
 - [x] **Snapshot attribution** — dev page heap is ~80% module sources + inline
-      base64 sourcemaps (`ExternalStringData` 250MB + strings 126MB) + 45MB code;
-      worker adds 25MB automerge wasm ArrayBuffers.
-- [x] **Production comparison** — `vite preview` of `composer-app:bundle`
-      (PWA off): page 96.7MB / worker 24.2MB / coordinator 0.6MB ≈ 122MB total.
-      Dev is ~2.5× prod on the main thread; delta is module sources + inline
-      sourcemaps + unminified code. (serve-min is still dev-serving — 170MB.)
-- [x] **Verify tracing buffer behavior in-browser** — confirmed unbounded by
-      design when no `DX_OTEL_ENDPOINT` (extension.ts returns `stubExtension`,
-      backend never set, every `@trace.span()` buffers forever; coordinator
-      worker never initializes observability at all). Magnitude at fresh
-      baseline is negligible (9 BufferedSpans on the page); needs an
-      activity soak to quantify the growth rate before it's worth fixing.
+      base64 sourcemaps + 45MB code; worker adds 25MB automerge wasm buffers.
+- [x] **Production comparison** — prod preview: page 96.7MB / worker 24.2MB /
+      coordinator 0.6MB ≈ 122MB live at fresh boot.
+- [x] **Verify tracing buffer behavior in-browser** — unbounded without
+      `DX_OTEL_ENDPOINT`, negligible at fresh baseline (9 spans).
 
-## Phase 2: Reproduce the report
+## Phase 2: Attribute the real tab — DONE
 
-User evidence (2026-08-06): Chrome tab "High memory usage: 3.0 GB" on
-composer.space, small profile, fast onset; DevTools JS heap 941 MB total.
+User evidence: Chrome tab "High memory usage" 1.5–3 GB on composer.space.
 Chrome's number is renderer process footprint, not JS heap.
 
 ### Tasks
 
-- [x] **Reproduce** — fresh identity, production preview, idle: renderer RSS
-      climbs ~30 MB/min (630 → 994 MB over 10 min) while JS heap stays flat.
-      Non-JS (native) growth; no data needed. DESIGN.md Findings.
-- [x] **Allocation sampling** — idle churn is modest (~3.4 MB/min page); top
-      allocators include 3 Cloudflare Stream video iframes on the home surface.
-- [x] **Video-block control soak** — videos exonerated; growth persisted
-      (faster, even).
-- [x] **Attribution chain complete** — memory-infra dumps (±perf stub),
-      constructor heap diff, chunk-plateau watch, bare-chromium control.
-      Verdict in DESIGN.md "FINAL ATTRIBUTION": ~0.7–1.0 GB structural
-      baseline (971 chunks + wasm + overhead, plateaus t≈3 min);
-      perf-timeline entries the only true in-app unbounded leak
-      (~0.5–1 MB/min idle, recalibrated); the fast linear climb was
-      DevTools/CDP-attach retention, which the user's DevTools-open tab
-      shares.
-- [x] **Loaded-profile pass** — DONE with the user's real captures: heap
-      snapshot + two memory-infra traces (DevTools open: 1,444 MB attributed;
-      closed + mail open: 1,887 MB — v8 main 852). Retainer analysis named
-      both message-JSON copies: `FeedObjectCore.#state` and
-      `IndexQuerySourceProvider._lastRemoteResults[].documentJson`.
-      DESIGN.md "MAIL-OPEN LEDGER".
+- [x] **Reproduce + attribution chain** — memory-infra dumps (±perf stub),
+      constructor heap diffs, chunk-plateau watch, bare-chromium control.
+- [x] **Loaded-profile ledgers from user captures** — 1,444 MB (DevTools
+      open) / 1,887 MB (mail open) fully attributed; both message-JSON
+      retainers named (`FeedObjectCore.#state`,
+      `_lastRemoteResults[].documentJson`); DevTools-attach ≈ 260 MB;
+      135,976 retained PerformanceMeasures found in the worker.
+- [x] **Plugin-tier curve** — barebones 615 / minimal ~650 / full ~720–780 MB
+      RSS at ready; all content plugins together ≈ 150 MB. The floor is CORE
+      code execution + committed slack, not plugin count. DESIGN.md.
 
-## Phase 3: Fix
-
-Ranked by measured impact — see DESIGN.md "Fix ranking".
+## Phase 3: Leak fixes (quick wins)
 
 ### Tasks
 
-- [x] **Feed/mail data double-retention (client side)** — DONE, commit
-      e9871910d0 + changeset; Linear DX-1148. (a) `FeedObjectCore.#state` →
-      128-bit cyrb128 digest; (b) `_lastRemoteResults` drops `documentJson`
-      after hydration into an identity-tracked core (re-resolves via
-      `getCachedObjectById`; degraded no-handle path keeps its JSON).
-      echo-client 523 tests green. VERIFIED in the user's capture
-      (2026-08-06): Main snapshot from the fixed dev server has ZERO
-      serialized message strings (either variant) and no strings >100 KB;
-      dev-tab footprint stays ~1.4 GB because vite-dev serving is
-      ~400–500 MB and item 3 + poll churn remain — production is where the
-      delta shows.
+- [x] **Feed/mail data double-retention (client side)** — DX-1148 items 1+2,
+      commit e9871910d0 + changeset; verified in user capture (zero retained
+      message strings on Main).
+- [ ] **Gate performance.mark/measure emitters** behind a default-off debug
+      flag — sql-sqlite ×2, echo-host ×3, query-executor, effect
+      Performance.ts, tracing api.ts; bounded entry names (no SQL text).
 - [ ] **Worker-side result retention (DX-1148 item 3)** — `_lastResultSet`
       reuses `item.doc` across runs for diff/serialization; dropping it
       forces re-reads. Needs a design pass.
-- [ ] **Shrink structural baseline** — audit the Idle activation wave: which
-      of the 63 `ActivationEvents.Idle` registrations pull how much closure,
-      and why do disabled/Labs plugins load at all; evaluate dropping the
-      main-thread automerge wasm instance.
-- [ ] **Gate performance.mark/measure emitters** behind a default-off debug
-      flag — sql-sqlite ×2, echo-host ×3, query-executor, effect
-      Performance.ts, tracing api.ts; plus bounded entry names (no SQL text).
-      (User tab carried 135,976 accumulated worker measures.)
-- [ ] **Reduce idle chatter** — 51 SQL/s at idle (1 s polling fan-out);
-      coordinate with feed-live-objects push roadmap.
-- [ ] **Harness into repo** — promote scratchpad memory-harness scripts
-      (measure/soak/memory-dump/snapshot-diff/count-entries/retainers/
-      parse-trace-stream) into a tools package with a README; copy also at
-      /tmp/composer-memory-harness.
 - [ ] **Docs** — user-facing note: DevTools attached to a Composer tab adds
       ~250 MB+ and grows; Chrome's tab flag reports process footprint.
+- [ ] **Harness into repo** — promote memory-harness scripts into a tools
+      package with a README.
 
-## Phase 4: Regression guard (CI)
+## Phase 5: Core boot-execution reduction (biggest lever, ~-150–250 MB)
 
-Template: `check-boot-budget` / `check-startup-budget` — gate on COUNTS,
-bytes trend-only (runner spread is 1.9× in-container). Scope note: the copy
-amplification is generic query machinery but only heavy where `documentJson`
-is populated (feed path today); automerge doc-handle eviction is a separate
-unmeasured scaling story.
+The resting footprint tracks the boot peak: barebones still compiles 370k
+functions and runs their module bodies (registrations, schemas, Effect
+layers), and Chrome decommits lazily. Defer EXECUTION (not just download) of
+core code until first use — continuation of startup-latency's demand-driven
+activation applied to core.
 
 ### Tasks
 
-- [ ] **Copy-census check** — seeded space, K messages with unique sentinel
-      strings; CDP heap snapshot per context; assert sentinel copies ≤ 2.
-      Deterministic → can hard-gate. Catches payload-hoarding generically.
-- [ ] **No-unbounded-accumulators idle check** — boot + idle N min +
-      constructor-level heap diff; assert no constructor grows > X/min and
-      perf-timeline entry counts stay bounded.
-- [ ] **Per-context heap budgets** — used-after-GC on a seeded profile,
-      median over repeats, non-required workflow first (model-fixture.yml
-      precedent), promote once stable.
-- [ ] **Per-fix unit locks** — FeedObjectCore O(1) retention after the hash
-      fix; `_lastRemoteResults` no large strings post-hydration.
+- [ ] **Per-module boot cost census** — extend the startup profiler to
+      attribute heap/code bytes per module at ready (barebones bundle as the
+      control); rank core modules by cost.
+- [ ] **Defer top offenders** — move heavy core module bodies (schema
+      construction, layer building, registries) behind first-use; verify no
+      startup-latency regression (check-startup-budget).
+- [ ] **Re-measure the tier curve** after each tranche; ratchet a budget once
+      the number settles.
+
+## Phase 6: Idle-churn elimination (settles committed slack, ~-100–300 MB)
+
+~51 SQLite statements/second at idle (1 s polling fan-out) keeps allocator
+high-water marks pinned — pages stay committed to serve the churn, so the tab
+never settles toward its live size.
+
+### Tasks
+
+- [ ] **Census the idle work** — which queries/loops fire per tick and why
+      (dispatcher, sync, indexing); measure allocation rate per source.
+- [ ] **Push over poll** — coordinate with feed-live-objects stage 4 (EDGE
+      push replacing 1 s polling); interim: batch/dedupe per-tick queries,
+      lengthen intervals when tab hidden (Chrome freezing-compatible).
+- [ ] **Verify decommit** — soak after: renderer RSS should trend toward live
+      size at idle instead of plateauing at the high-water mark.
+
+## Phase 7: Wasm consolidation (~-30–50 MB now; bounds future growth)
+
+8 instantiated wasm modules in the worker + 2 on the main thread even in
+barebones; wasm linear memory never shrinks — the only reclaim is terminating
+the owning worker (industry pattern per RESEARCH.md).
+
+### Tasks
+
+- [ ] **Inventory instances** — name all 10 wasm modules (automerge, sqlite,
+      …) and why each context instantiates them.
+- [ ] **Drop main-thread automerge** — route through the worker; if the page
+      truly needs local doc ops, justify and bound it.
+- [ ] **Terminable-worker pattern** for growable wasm memories; instantiate
+      occasional-use wasm on demand, tear down after.
+
+## Phase 4 (deferred): Regression guard (CI)
+
+Deferred by user decision 2026-08-06 ("we can barely run playwright stably in
+CI") — manual verification with the harness for now. Design kept for later:
+copy-census check (sentinel strings ≤ 2 copies), no-unbounded-accumulators
+idle check, per-context heap budgets (counts gate, bytes trend), per-fix unit
+locks.
 
 ### References
 
-- DESIGN.md (this project) — methodology + suspects.
-- `.agents/projects/feed-live-objects/DESIGN.md` — partial replication roadmap.
-- `.agents/projects/email-sync-stability/DESIGN.md` — DX-1140 postmortem,
-  tracing-buffer backlog item.
+- DESIGN.md (this project) — methodology, findings, ledgers, fix ranking.
+- RESEARCH.md (this project) — industry norms, postmortems, strategy playbook.
+- Linear DX-1148 — feed/mail payload retention (items 1+2 fixed, 3 open).
+- `.agents/projects/feed-live-objects/DESIGN.md` — push-over-poll roadmap
+  (Phase 6 dependency).
+- `.agents/projects/startup-latency/DESIGN.md` — demand-driven activation
+  (Phase 5 foundation).
 - composer-forensics skill — live debug-port inspection.
