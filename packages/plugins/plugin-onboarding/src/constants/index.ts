@@ -14,5 +14,3 @@ export const WELCOME_SCREEN = `${meta.profile.key}.component.welcome-screen`;
 export const ABOUT_DIALOG = `${meta.profile.key}.component.about-dialog`;
 
 export const NATIVE_REDIRECT_DIALOG = `${meta.profile.key}.component.native-redirect-dialog`;
-
-export * from './overlay';
