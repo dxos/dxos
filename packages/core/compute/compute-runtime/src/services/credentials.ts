@@ -15,7 +15,7 @@ import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { isManagedAccessToken } from '@dxos/protocols';
 
-export class ConfiguredCredentialsService implements Context.Tag.Service<Credential.CredentialsService> {
+export class ConfiguredCredentialsService implements Context.Service.Shape<typeof Credential.CredentialsService> {
   constructor(private readonly credentials: Credential.ServiceCredential[] = []) {}
 
   addCredentials(credentials: Credential.ServiceCredential[]): ConfiguredCredentialsService {

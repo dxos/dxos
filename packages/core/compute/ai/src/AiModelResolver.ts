@@ -23,7 +23,7 @@ export class AiModelResolver extends Context.Service<AiModelResolver, AiService.
       return {
         metadata: resolver.metadata,
         model: (name, options) => resolver.model(name, options),
-      } satisfies Context.Tag.Service<AiService.AiService>;
+      } satisfies Context.Service.Shape<typeof AiService.AiService>;
     }),
   );
 

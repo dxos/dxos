@@ -276,17 +276,17 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
       Callbacks<
         Schema.Schema.Type<Opts['input']>,
         Schema.Schema.Type<Opts['output']>,
-        Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+        Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
         RpcGroup.Rpcs<Opts['rpcs']>
       >
     >,
     never,
-    Context.Tag.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
+    Context.Service.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
   >,
 ): Process<
   Schema.Schema.Type<Opts['input']>,
   Schema.Schema.Type<Opts['output']>,
-  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>,
+  Context.Service.Identifier<NonNullable<Opts['services']>[number]>,
   RpcGroup.Rpcs<Opts['rpcs']>
 > => {
   assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');

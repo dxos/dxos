@@ -256,7 +256,7 @@ type NsidParam<S extends string> = [DXN.Name<S>] extends [never]
 // are type-only, so assembling the concrete tag object requires a controlled cast at this boundary
 // (as Effect's own tag constructors do internally). Isolated here so call sites stay cast-free.
 const buildTag = <T, S extends string, A extends Arity>(identifier: S, arity: A) =>
-  Object.assign(Context.GenericTag<CapabilityIdentifier<S, A>, T>(identifier), {
+  Object.assign(Context.Service<CapabilityIdentifier<S, A>, T>(identifier), {
     identifier,
     arity,
   }) as unknown as A extends 'multi' ? MultiTag<T, S> : Tag<T, S>;
@@ -347,7 +347,7 @@ export type ContributionTypeId = typeof ContributionTypeId;
  * Carries one value for a singleton capability, n values for a multi capability.
  */
 // `Id` is a capability identifier (`CapabilityIdentifier<S, A>`) — left unconstrained because
-// `Context.Tag.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
+// `Context.Service.Identifier<C>` is opaque to the checker for a generic tag `C` and wouldn't satisfy
 // an explicit bound; the default documents the intended shape.
 export interface Contribution<Id = CapabilityIdentifier<string, Arity>> {
   readonly [ContributionTypeId]: Id;
@@ -361,7 +361,7 @@ export type AnyContribution = Contribution;
 
 /**
  * The capability identifier (NSID + arity) of a tag. Extracted from our own {@link Tag}/
- * {@link MultiTag} `S` parameter rather than via Effect's `Context.Tag.Identifier`, which — for a
+ * {@link MultiTag} `S` parameter rather than via Effect's `Context.Service.Identifier`, which — for a
  * generic tag parameter — falls through to its `TagClassShape` branch and yields the raw tag
  * (leaking the service type again). Singleton checked first; a singleton never matches the multi
  * arm and vice versa (the arity brand differs).
@@ -462,7 +462,7 @@ export type EnsureProvides<Ret, Provides extends readonly AnyTag[]> = [ProvidedI
  * The framework services ({@link Service}, Plugin.Service) and the module scope stay ambient.
  */
 export type Requirements<Requires extends readonly AnyTag[]> =
-  | Context.Tag.Identifier<Requires[number]>
+  | Context.Service.Identifier<Requires[number]>
   | Service
   | Plugin.Service
   | Scope.Scope;

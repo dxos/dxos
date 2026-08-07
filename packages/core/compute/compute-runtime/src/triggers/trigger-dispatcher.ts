@@ -252,7 +252,7 @@ export class TriggerDispatcher extends Context.Service<
 const DEFAULT_MAX_CONCURRENCY = 5;
 const DEFAULT_FAILURE_COOLDOWN = Duration.seconds(30);
 
-class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
+class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispatcher> {
   readonly livePollInterval: Duration.Duration;
   readonly timeControl: TimeControl;
 

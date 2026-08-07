@@ -125,10 +125,9 @@ export default Capability.makeModule(
         });
         return Effect.sync(cancel);
       }).pipe(
-        Effect.timeoutTo({
+        Effect.timeoutOrElse({
           duration: RESOLVE_TIMEOUT,
-          onTimeout: () => Option.none<A>(),
-          onSuccess: (parsed) => parsed,
+          orElse: () => Effect.succeed(Option.none<A>()),
         }),
       );
 

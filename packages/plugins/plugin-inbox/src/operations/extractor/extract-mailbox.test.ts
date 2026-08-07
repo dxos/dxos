@@ -89,7 +89,7 @@ const runExtractMailbox = (
       },
       schedule: () => Effect.void,
       invokePromise: async () => ({ error: new Error('Not available') }),
-    } as Context.Tag.Service<typeof Operation.Service>),
+    } as Context.Service.Shape<typeof Operation.Service>),
     Effect.provide(AiService.notAvailable),
   );
 

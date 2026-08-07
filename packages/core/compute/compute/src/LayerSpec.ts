@@ -76,9 +76,9 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeOpts, Opts>
   make: (
     context: LayerContext,
   ) => Layer.Layer<
-    Context.Tag.Identifier<Opts['provides'][number]>,
+    Context.Service.Identifier<Opts['provides'][number]>,
     never,
-    Context.Tag.Identifier<Opts['requires'][number]>
+    Context.Service.Identifier<Opts['requires'][number]>
   >,
 ): LayerSpec => {
   return {

@@ -38,7 +38,11 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
 export const useSpaceCallback = <const Tags extends readonly Context.Key<any, any>[], T>(
   spaceId: SpaceId | undefined,
   tags: Tags,
-  fn: () => Effect.Effect<T, any, Context.Tag.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
+  fn: () => Effect.Effect<
+    T,
+    any,
+    Context.Service.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices
+  >,
   deps?: DependencyList,
 ): (() => Promise<T>) => {
   const runtime = useProcessManagerRuntime();
@@ -62,7 +66,7 @@ export const useSpaceCallback = <const Tags extends readonly Context.Key<any, an
 export const useSpaceService = <T extends Context.Key<any, any>>(
   tag: T,
   spaceId: SpaceId | undefined,
-): Context.Tag.Service<T> | undefined => {
+): Context.Service.Shape<T> | undefined => {
   const runtime = useProcessManagerRuntime();
   const promise = useMemo(() => {
     if (spaceId === undefined) {
@@ -70,7 +74,7 @@ export const useSpaceService = <T extends Context.Key<any, any>>(
     }
     const layer = ServiceResolver.provide({ space: spaceId }, tag);
     const effect = Effect.flatMap(tag, (service) => Effect.succeed(service)).pipe(Effect.provide(layer));
-    return runtime.runPromiseExit(effect as Effect.Effect<Context.Tag.Service<T>, any, any>);
+    return runtime.runPromiseExit(effect as Effect.Effect<Context.Service.Shape<T>, any, any>);
   }, [runtime, spaceId, tag]);
   if (!promise) {
     return undefined;

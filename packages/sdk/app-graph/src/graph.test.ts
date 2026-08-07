@@ -183,7 +183,7 @@ describe('Graph', () => {
     const settled = await EffectEx.runPromise(
       Graph.waitFor(graph, EXAMPLE_ID).pipe(
         Effect.map(() => 'settled' as const),
-        Effect.timeoutTo({ duration: '50 millis', onTimeout: () => 'pending' as const, onSuccess: (value) => value }),
+        Effect.timeoutOrElse({ duration: '50 millis', orElse: () => Effect.succeed('pending' as const) }),
       ),
     );
     expect(settled).toEqual('pending');

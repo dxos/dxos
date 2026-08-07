@@ -1153,11 +1153,11 @@ describe('GraphBuilder', () => {
         const builder = GraphBuilder.make({ registry });
         const graph = builder.graph;
 
-        // Define a test service using Context.GenericTag pattern.
+        // Define a test service using Context.Service pattern.
         interface TestServiceInterface {
           getValue(): number;
         }
-        const TestService = Context.GenericTag<TestServiceInterface>('TestService');
+        const TestService = Context.Service<TestServiceInterface>('TestService');
 
         // Track whether the action was executed with the correct context.
         let executionResult: number | null = null;

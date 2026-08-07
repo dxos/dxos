@@ -53,7 +53,7 @@ export const makeToolResolverFromOperations = <R = never>({
             }
             return yield* Effect.fail(new AiToolNotFoundError(id));
           }),
-      } satisfies Context.Tag.Service<ToolResolverService>;
+      } satisfies Context.Service.Shape<typeof ToolResolverService>;
     }),
   );
 };

@@ -295,7 +295,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
           ),
         );
 
-      const context: Context.Tag.Service<typeof Ctx> = { summarize, db, stats };
+      const context: Context.Service.Shape<typeof Ctx> = { summarize, db, stats };
 
       // Index each message into the fact substrate. The model + provider ride on ExtractOptions so
       // pipeline-rdf resolves the Ollama model (its default is Anthropic); a failed extraction

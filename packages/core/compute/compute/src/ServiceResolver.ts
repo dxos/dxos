@@ -29,19 +29,19 @@ export interface ServiceResolver {
   resolve<Tag extends Context.Key<any, any>>(
     tag: Tag,
     context: ResolutionContext,
-  ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope>;
+  ): Effect.Effect<Context.Service.Shape<Tag>, ServiceNotAvailableError, Scope.Scope>;
 }
 
 /**
  * Tag for the ServiceResolver service.
  */
-export const ServiceResolver = Context.GenericTag<ServiceResolver>('@dxos/functions/ServiceResolver');
+export const ServiceResolver = Context.Service<ServiceResolver>('@dxos/functions/ServiceResolver');
 
 export const resolve: {
   <Tag extends Context.Key<any, any>>(
     tag: Tag,
     context: ResolutionContext,
-  ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope | ServiceResolver>;
+  ): Effect.Effect<Context.Service.Shape<Tag>, ServiceNotAvailableError, Scope.Scope | ServiceResolver>;
 } = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.resolve);
 
 export const resolveAll = <const Tags extends readonly Context.Key<any, any>[]>(
@@ -128,7 +128,7 @@ export const fromContext = <Services>(ctx: Context.Context<Services>): ServiceRe
  */
 export const fromRequirements = <const Tags extends readonly Context.Key<any, any>[]>(
   ...tags: Tags
-): Effect.Effect<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
+): Effect.Effect<ServiceResolver, never, Context.Service.Identifier<Tags[number]>> =>
   Effect.contextWith((parentCtx: Context.Context<any>) => {
     const available = new Set(tags.map((tag) => tag.key));
     return make((tag, context) =>
@@ -151,7 +151,7 @@ export const fromRequirements = <const Tags extends readonly Context.Key<any, an
  */
 export const layerRequirements = <const Tags extends readonly Context.Key<any, any>[]>(
   ...tags: Tags
-): Layer.Layer<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
+): Layer.Layer<ServiceResolver, never, Context.Service.Identifier<Tags[number]>> =>
   Layer.effect(ServiceResolver, fromRequirements(...tags));
 
 /**
@@ -171,7 +171,7 @@ export const layerRequirements = <const Tags extends readonly Context.Key<any, a
 export const provide = <const Tags extends readonly Context.Key<any, any>[]>(
   context: ResolutionContext,
   ...tags: Tags
-): Layer.Layer<Context.Tag.Identifier<Tags[number]>, ServiceNotAvailableError, ServiceResolver> =>
+): Layer.Layer<Context.Service.Identifier<Tags[number]>, ServiceNotAvailableError, ServiceResolver> =>
   Layer.effectContext(resolveAll(tags, context));
 
 /**

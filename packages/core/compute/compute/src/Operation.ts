@@ -215,7 +215,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 ): Definition<
   Schema$.Schema.Type<P['input']>,
   Schema$.Schema.Type<P['output']>,
-  Context.Tag.Identifier<NonNullable<P['services']>[number]>
+  Context.Service.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
     [DefinitionTypeId]: {},
@@ -432,7 +432,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
-    services: record.services?.map((service) => Context.GenericTag(service)) ?? [],
+    services: record.services?.map((service) => Context.Service(service)) ?? [],
     executionMode: 'async',
     types: [],
     meta: {

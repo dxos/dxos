@@ -21,7 +21,7 @@ import { GOOGLE_INTEGRATION_SOURCE } from '../constants';
  * Resolution is deferred to `get()` rather than done when the layer is built, so a long-running sync
  * picks up a rotated token instead of holding the one that was live when it started.
  */
-const makeService = (query: Credential.CredentialQuery): Context.Tag.Service<GoogleCredentials> => ({
+const makeService = (query: Credential.CredentialQuery): Context.Service.Shape<typeof GoogleCredentials> => ({
   get: () => Credential.getApiKeyValue(query),
 });
 

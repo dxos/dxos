@@ -17,7 +17,7 @@ import * as StorageService from '@dxos/compute/StorageService';
 export const layer = (
   kvStore: KeyValueStore.KeyValueStore,
   prefix: string,
-): Context.Tag.Service<StorageService.StorageService> => {
+): Context.Service.Shape<typeof StorageService.StorageService> => {
   const prefixed = KeyValueStore.prefix(kvStore, prefix);
   const knownKeys = new Set<string>();
 

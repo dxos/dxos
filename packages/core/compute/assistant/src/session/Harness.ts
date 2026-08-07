@@ -144,7 +144,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
 
 interface MakeOptions {
   conversation: URI.URI;
-  processManager: Context.Tag.Service<ProcessManager.Service>;
+  processManager: Context.Service.Shape<typeof ProcessManager.Service>;
   runtime: Context.Context<Database.Service>;
 }
 
@@ -215,7 +215,7 @@ const makeService = ({ feed, runtime, binder, owningHost }: MakeServiceOptions):
  * switch — is never captured stale) and exposes its `HarnessControl` RPC client.
  */
 const lookupOwningHost = (
-  processManager: Context.Tag.Service<ProcessManager.Service>,
+  processManager: Context.Service.Shape<typeof ProcessManager.Service>,
   conversation: URI.URI,
 ): Effect.Effect<RpcClient.RpcClient<HarnessControlRpcs>, NotSupportedError> =>
   Effect.gen(function* () {

@@ -238,7 +238,7 @@ const resolveKeyId = async (
   return EffectEx.runPromise(
     Effect.raceAll(
       candidateIds.map((candidateId) => Graph.waitFor(builder.graph, candidateId).pipe(Effect.as(candidateId))),
-    ).pipe(Effect.timeoutTo({ duration: wait, onTimeout: (): string | null => null, onSuccess: (id) => id })),
+    ).pipe(Effect.timeoutOrElse({ duration: wait, orElse: () => Effect.succeed<string | null>(null) })),
   );
 };
 

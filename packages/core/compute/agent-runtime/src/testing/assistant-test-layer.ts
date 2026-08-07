@@ -167,12 +167,12 @@ export const AssistantTestLayer = (
 
 /** Late-bound reference to the {@link ProcessManager.Service}, filled once the manager is built. */
 interface ProcessManagerHolder {
-  current?: Context.Tag.Service<ProcessManager.Service>;
+  current?: Context.Service.Shape<typeof ProcessManager.Service>;
 }
 
 /** Late-bound reference to the {@link AgentService.AgentService}, filled once the service is built. */
 interface AgentServiceHolder {
-  current?: Context.Tag.Service<AgentService.AgentService>;
+  current?: Context.Service.Shape<typeof AgentService.AgentService>;
 }
 
 /** Fills the {@link AgentServiceHolder}, letting the resolver serve operations that relay into agent sessions. */

@@ -11,7 +11,7 @@ import { ServiceNotAvailableError } from '@dxos/compute';
 
 export namespace ServiceRegistry {
   export interface Service {
-    resolve: <T extends Context.Key<any, any>>(tag: T) => Option.Option<Context.Tag.Service<T>>;
+    resolve: <T extends Context.Key<any, any>>(tag: T) => Option.Option<Context.Service.Shape<T>>;
   }
 }
 
@@ -40,7 +40,7 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
     ) => Effect.Effect<
       A,
       E | ServiceNotAvailableError,
-      Exclude<R, { [K in keyof Tags]: Context.Tag.Identifier<Tags[K]> }[number]> | ServiceRegistry
+      Exclude<R, { [K in keyof Tags]: Context.Service.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
   } = (...tags) =>
     (Function.flow as any)(...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag))));
@@ -53,7 +53,7 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
     ) => Effect.Effect<
       A,
       E,
-      Exclude<R, { [K in keyof Tags]: Context.Tag.Identifier<Tags[K]> }[number]> | ServiceRegistry
+      Exclude<R, { [K in keyof Tags]: Context.Service.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
   } = (...tags) =>
     (Function.flow as any)(

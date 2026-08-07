@@ -90,7 +90,7 @@ export type RecoverArgs =
  */
 /**
  * The service shape backing {@link Service}. Named (rather than inline in the `Context.Tag`) so
- * consumers referencing it — e.g. a capability typed `Context.Tag.Service<Identity.Service>` —
+ * consumers referencing it — e.g. a capability typed `Context.Service.Shape<typeof Identity.Service>` —
  * name it portably instead of expanding its structure and leaking the transitive
  * {@link Invitation} types into their declaration emit (TS2883).
  */

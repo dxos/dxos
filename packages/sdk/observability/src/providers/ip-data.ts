@@ -37,7 +37,10 @@ const getIPData = Effect.fn(function* (config: Config) {
   const httpClient = yield* HttpClient.HttpClient;
 
   // Disable tracing to avoid CORS errors from traceparent header on cross-origin requests.
-  const httpClientNoTrace = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
+  // v4 dropped the combinator; the predicate is a context reference provided around the response.
+  const httpClientNoTrace = httpClient.pipe(
+    HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+  );
 
   // Check cache first.
   // v2 key discards entries cached by the previous schema (which used `country` instead of `country_name`).
