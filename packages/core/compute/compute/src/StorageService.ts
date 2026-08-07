@@ -39,7 +39,7 @@ export interface Service {
  * Each process receives its own namespaced instance via the process manager.
  * Construct a live implementation with `StorageService.layer` from `@dxos/functions-runtime`.
  */
-export class StorageService extends Context.Tag('@dxos/functions/StorageService')<StorageService, Service>() {}
+export class StorageService extends Context.Service<StorageService, Service>()('@dxos/functions/StorageService') {}
 
 export const get = Effect.serviceFunctionEffect(StorageService, (_) => _.get);
 export const set = Effect.serviceFunctionEffect(StorageService, (_) => _.set);

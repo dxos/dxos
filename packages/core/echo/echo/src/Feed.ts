@@ -160,12 +160,12 @@ export interface SyncState {
  * Used to provide a specific feed to operations that operate on it without threading
  * the feed as an explicit parameter through every call site.
  */
-export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
+export class ContextFeedService extends Context.Service<
   ContextFeedService,
   {
     readonly feed: Feed;
   }
->() {
+>()('@dxos/echo/Feed/ContextFeedService') {
   static layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
 }
 

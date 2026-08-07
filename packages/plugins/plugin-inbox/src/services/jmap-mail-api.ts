@@ -171,7 +171,7 @@ const sortEmails = (
   );
 };
 
-export class JmapMailApi extends Context.Tag('@dxos/plugin-inbox/JmapMailApi')<JmapMailApi, JmapMailApiService>() {
+export class JmapMailApi extends Context.Service<JmapMailApi, JmapMailApiService>()('@dxos/plugin-inbox/JmapMailApi') {
   /**
    * Live layer backed by the real JMAP HTTP client. Captures the auth/HTTP context once and provides
    * it to each request, so the resulting service methods carry no requirements. Requires an

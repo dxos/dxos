@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 import * as AiService from './AiService';
 import { AiModelNotAvailableError } from './errors';
 
-export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiModelResolver, AiService.Service>() {
+export class AiModelResolver extends Context.Service<AiModelResolver, AiService.Service>()('@dxos/ai/AiModelResolver') {
   static buildAiService: Layer.Layer<AiService.AiService, never, AiModelResolver> = Layer.effect(
     AiService.AiService,
     Effect.gen(function* () {

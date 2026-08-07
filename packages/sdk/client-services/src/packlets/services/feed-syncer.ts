@@ -91,10 +91,9 @@ export type FeedSyncerOptions = {
  *
  * undefined if not initialized.
  */
-export class FeedSyncerService extends EffectContext.Tag('@dxos/client-services/FeedSyncer')<
-  FeedSyncerService,
-  FeedSyncer | undefined
->() {}
+export class FeedSyncerService extends EffectContext.Service<FeedSyncerService, FeedSyncer | undefined>()(
+  '@dxos/client-services/FeedSyncer',
+) {}
 
 export class FeedSyncer extends Resource {
   readonly #syncNamespaces: string[];

@@ -27,7 +27,7 @@ export interface TraceWriter {
  * Service that writes events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
-export class TraceService extends Context.Tag('@dxos/functions/TraceService')<TraceService, TraceWriter>() {}
+export class TraceService extends Context.Service<TraceService, TraceWriter>()('@dxos/functions/TraceService') {}
 
 /**
  * Writes an event to the trace.
@@ -371,7 +371,7 @@ export interface Sink {
  * The Process Manager forwards trace messages to it.
  */
 // TODO(dmaretskyi): Consider moving sink to the Process Manager.
-export class TraceSink extends Context.Tag('@dxos/functions/TraceSink')<TraceSink, Sink>() {}
+export class TraceSink extends Context.Service<TraceSink, Sink>()('@dxos/functions/TraceSink') {}
 
 export const noopWriter: TraceWriter = {
   write: () => {},

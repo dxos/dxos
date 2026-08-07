@@ -67,10 +67,9 @@ const toQuestion = (row: Row): ExtractedQuestion => ({
   ...(row.asked_at !== null ? { askedAt: row.asked_at } : {}),
 });
 
-export class ExtractedQuestionStore extends Context.Tag('@dxos/pipeline-discord/ExtractedQuestionStore')<
-  ExtractedQuestionStore,
-  ExtractedQuestionStoreApi
->() {
+export class ExtractedQuestionStore extends Context.Service<ExtractedQuestionStore, ExtractedQuestionStoreApi>()(
+  '@dxos/pipeline-discord/ExtractedQuestionStore',
+) {
   static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
     Layer.effect(
       ExtractedQuestionStore,

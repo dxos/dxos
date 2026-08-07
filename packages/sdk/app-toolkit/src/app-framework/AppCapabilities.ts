@@ -93,10 +93,9 @@ export const Translator = Capability$.makeSingleton<Translator$>()('org.dxos.app
  * Effect service for the {@link Translator} capability, consumable via `yield* TranslatorService`
  * once {@link translatorLayer} is provided.
  */
-export class TranslatorService extends Context.Tag('@dxos/app-toolkit/TranslatorService')<
-  TranslatorService,
-  Translator$
->() {}
+export class TranslatorService extends Context.Service<TranslatorService, Translator$>()(
+  '@dxos/app-toolkit/TranslatorService',
+) {}
 
 /**
  * Layer that resolves {@link TranslatorService} from the {@link Translator} capability.

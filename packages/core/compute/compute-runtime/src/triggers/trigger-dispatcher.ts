@@ -185,7 +185,7 @@ const MAX_TRACKED_INVOCATIONS = 10;
 const MAX_TRACKED_ERRORS = 10;
 
 // TODO(dmaretskyi): Extract a separate TriggerMonmitor service to @dxos/compute that would work with both local and edge dispatcher.
-export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispatcher')<
+export class TriggerDispatcher extends Context.Service<
   TriggerDispatcher,
   {
     readonly timeControl: TimeControl;
@@ -236,7 +236,7 @@ export class TriggerDispatcher extends Context.Tag('@dxos/functions/TriggerDispa
      */
     getCurrentTime(): Date;
   }
->() {
+>()('@dxos/functions/TriggerDispatcher') {
   static layer = (
     options: Omit<TriggerDispatcherOptions, 'services'>,
   ): Layer.Layer<TriggerDispatcher, never, TriggerDispatcherServices> =>

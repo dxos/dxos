@@ -32,7 +32,7 @@ export interface Service {
   hydrate: () => Effect.Effect<void>;
 }
 
-export class AgentService extends Context.Tag('@dxos/functions-runtime/AgentService')<AgentService, Service>() {}
+export class AgentService extends Context.Service<AgentService, Service>()('@dxos/functions-runtime/AgentService') {}
 
 /**
  * Handle to an agent session.

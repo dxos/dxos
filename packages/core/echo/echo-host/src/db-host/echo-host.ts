@@ -85,7 +85,7 @@ export type FeedSyncHandlers = {
 /**
  * Effect service tag for {@link EchoHost}.
  */
-export class EchoHostService extends EffectContext.Tag('@dxos/echo-host/EchoHost')<EchoHostService, EchoHost>() {}
+export class EchoHostService extends EffectContext.Service<EchoHostService, EchoHost>()('@dxos/echo-host/EchoHost') {}
 
 /**
  * Host for the Echo database.

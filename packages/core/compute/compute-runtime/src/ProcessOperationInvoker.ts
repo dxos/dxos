@@ -54,10 +54,10 @@ export interface ProcessOperationInvoker {
   attachFiber: <T>(pid: Process.ID) => Effect.Effect<OperationFiber<T>, ProcessNotFoundError>;
 }
 
-export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoker')<
+export class Service extends Context.Service<
   Service,
   Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker
->() {}
+>()('@dxos/functions/ProcessOperationInvoker') {}
 
 const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {

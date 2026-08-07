@@ -84,10 +84,10 @@ export type ServiceContextRuntimeProps = Pick<
  * Combined storage migration effect gathered from the concrete SQLite stores.
  * Run by {@link ClientServicesHost} during open (storage migration stage).
  */
-export class StorageMigrationService extends EffectContext.Tag('@dxos/client-services/StorageMigration')<
+export class StorageMigrationService extends EffectContext.Service<
   StorageMigrationService,
   Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient | SqlTransactionTag>
->() {}
+>()('@dxos/client-services/StorageMigration') {}
 
 export type ServiceContextLayerOptions = ServiceContextRuntimeProps & {
   edgeFeatures?: Runtime.Client.EdgeFeatures;

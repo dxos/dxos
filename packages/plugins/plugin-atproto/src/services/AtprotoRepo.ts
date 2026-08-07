@@ -68,7 +68,7 @@ export interface Repo {
   readonly listRecords: (params: ListRecordsParams) => Effect.Effect<ListRecordsResult, AtprotoRepoError>;
 }
 
-export class Service extends Context.Tag('@dxos/plugin-atproto/AtprotoRepo')<Service, Repo>() {}
+export class Service extends Context.Service<Service, Repo>()('@dxos/plugin-atproto/AtprotoRepo') {}
 
 //
 // Mock implementation.

@@ -28,7 +28,7 @@ export interface Service {
  * }));
  * ```
  */
-export class SqlTransaction extends Context.Tag('@dxos/sql-sqlite/SqlTransaction')<SqlTransaction, Service>() {}
+export class SqlTransaction extends Context.Service<SqlTransaction, Service>()('@dxos/sql-sqlite/SqlTransaction') {}
 
 /**
  * Default `SqlTransaction` layer backed by `SqlClient.withTransaction`.

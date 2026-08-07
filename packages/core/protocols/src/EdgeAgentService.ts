@@ -36,4 +36,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `EdgeAgentService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/EdgeAgentService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/EdgeAgentService') {}

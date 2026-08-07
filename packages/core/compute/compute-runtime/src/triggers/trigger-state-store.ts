@@ -25,13 +25,13 @@ export const TriggerState = Schema.Struct({
 });
 export interface TriggerState extends Schema.Schema.Type<typeof TriggerState> {}
 
-export class TriggerStateStore extends Context.Tag('@dxos/functions/TriggerStateStore')<
+export class TriggerStateStore extends Context.Service<
   TriggerStateStore,
   {
     getState(triggerId: EntityId): Effect.Effect<TriggerState, TriggerStateNotFoundError>;
     saveState(state: TriggerState): Effect.Effect<void>;
   }
->() {
+>()('@dxos/functions/TriggerStateStore') {
   static getState = Effect.serviceFunctionEffect(TriggerStateStore, (_) => _.getState);
   static saveState = Effect.serviceFunctionEffect(TriggerStateStore, (_) => _.saveState);
 

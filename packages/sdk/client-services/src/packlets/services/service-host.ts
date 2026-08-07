@@ -927,10 +927,9 @@ export class ClientServicesHost {
  * builds its component stack, so client RPC handler layers can resolve the orchestration entry
  * points (`createIdentity`, readiness gates, …) they need.
  */
-export class ClientServicesHostService extends EffectContext.Tag('@dxos/client-services/ClientServicesHost')<
-  ClientServicesHostService,
-  ClientServicesHost
->() {}
+export class ClientServicesHostService extends EffectContext.Service<ClientServicesHostService, ClientServicesHost>()(
+  '@dxos/client-services/ClientServicesHost',
+) {}
 
 /**
  * Layer that constructs a {@link ClientServicesHost} from its props and exposes it under

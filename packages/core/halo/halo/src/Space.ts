@@ -132,7 +132,7 @@ export interface ServiceApi {
   readonly import: (archive: Archive, options?: { tags?: readonly string[] }) => Effect.Effect<Info, SpaceError>;
 }
 
-export class Service extends Context.Tag('@dxos/halo/Space')<Service, ServiceApi>() {}
+export class Service extends Context.Service<Service, ServiceApi>()('@dxos/halo/Space') {}
 
 /** All spaces as a current-value stream (requires {@link Service}). */
 export const spaces: Stream.Stream<readonly Info[], never, Service> = Stream.unwrap(

@@ -31,10 +31,9 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** Conversation DXN for the scoped test harness feed. */
-class TestConversation extends Context.Tag('@dxos/assistant-toolkit/TestConversation')<
-  TestConversation,
-  { conversation: URI.URI }
->() {}
+class TestConversation extends Context.Service<TestConversation, { conversation: URI.URI }>()(
+  '@dxos/assistant-toolkit/TestConversation',
+) {}
 
 const ConversationHarnessLayer = Layer.unwrapScoped(
   Effect.gen(function* () {

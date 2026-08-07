@@ -736,7 +736,7 @@ export interface OperationService {
  * ```
  */
 // TODO(dmaretskyi): Rename Operation.Invoker
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
+export class Service extends Context.Service<Service, OperationService>()('@dxos/operation/Service') {}
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.

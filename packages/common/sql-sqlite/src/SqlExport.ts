@@ -12,4 +12,4 @@ export interface Service {
   export: Effect.Effect<Uint8Array, SqlError.SqlError>;
 }
 
-export class SqlExport extends Context.Tag('@dxos/sql-sqlite/SqlExport')<SqlExport, Service>() {}
+export class SqlExport extends Context.Service<SqlExport, Service>()('@dxos/sql-sqlite/SqlExport') {}

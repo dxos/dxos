@@ -108,10 +108,9 @@ const PageInfoSchema = Schema.Struct({
  * call pulls the token from this service rather than threading it through as
  * an explicit parameter.
  */
-export class LinearCredentials extends Context.Tag('@dxos/plugin-linear/LinearCredentials')<
-  LinearCredentials,
-  LinearCredentialsValue
->() {
+export class LinearCredentials extends Context.Service<LinearCredentials, LinearCredentialsValue>()(
+  '@dxos/plugin-linear/LinearCredentials',
+) {
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       LinearCredentials,

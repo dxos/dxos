@@ -70,4 +70,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `InvitationsService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/InvitationsService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/InvitationsService') {}

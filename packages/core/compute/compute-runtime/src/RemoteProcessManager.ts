@@ -40,7 +40,7 @@ export interface Manager {
   readonly cancel?: (target: CancelTarget) => Effect.Effect<void>;
 }
 
-export class Service extends Context.Tag('@dxos/compute-runtime/RemoteProcessManager')<Service, Manager>() {}
+export class Service extends Context.Service<Service, Manager>()('@dxos/compute-runtime/RemoteProcessManager') {}
 
 /**
  * Empty remote manager for local-only deployments.

@@ -67,10 +67,9 @@ export interface EdgeConnection extends Required<Lifecycle> {
 /**
  * Effect service tag for {@link EdgeConnection}.
  */
-export class EdgeConnectionService extends EffectContext.Tag('@dxos/edge-client/EdgeConnection')<
-  EdgeConnectionService,
-  EdgeConnection
->() {}
+export class EdgeConnectionService extends EffectContext.Service<EdgeConnectionService, EdgeConnection>()(
+  '@dxos/edge-client/EdgeConnection',
+) {}
 
 /**
  * Messenger client for EDGE:

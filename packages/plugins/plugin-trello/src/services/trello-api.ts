@@ -131,10 +131,9 @@ export const credentialsFromToken = (
  * (with `{ TrelloApi }` from `../services`) at the operation boundary instead
  * of plumbing creds through every call site.
  */
-export class TrelloCredentials extends Context.Tag('@dxos/plugin-trello/TrelloCredentials')<
-  TrelloCredentials,
-  TrelloCredentialsValue
->() {
+export class TrelloCredentials extends Context.Service<TrelloCredentials, TrelloCredentialsValue>()(
+  '@dxos/plugin-trello/TrelloCredentials',
+) {
   /** Loads the connection's access token and parses it into `TrelloCredentials`. */
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(

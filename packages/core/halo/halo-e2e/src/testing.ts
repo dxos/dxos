@@ -47,12 +47,12 @@ export const makeClientLayer = (options?: { identity?: boolean }): Layer.Layer<H
  * Spawns client peers on a shared in-memory network so they can invite one another. Used by
  * multi-client (invitation) tests; peers are torn down when the layer scope closes.
  */
-export class TestNetwork extends Context.Tag('@dxos/halo-e2e/TestNetwork')<
+export class TestNetwork extends Context.Service<
   TestNetwork,
   {
     spawn(options?: { identity?: boolean }): Effect.Effect<Context.Context<HaloServices>>;
   }
->() {}
+>()('@dxos/halo-e2e/TestNetwork') {}
 
 export const TestNetworkLive = Layer.effect(
   TestNetwork,

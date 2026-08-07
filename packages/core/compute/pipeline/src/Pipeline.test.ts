@@ -32,7 +32,7 @@ describe('Pipeline.run', () => {
   });
 
   test('propagates the shared context via the Requirements channel', async ({ expect }) => {
-    class Factor extends Context.Tag('Factor')<Factor, { readonly factor: number }>() {}
+    class Factor extends Context.Service<Factor, { readonly factor: number }>()('Factor') {}
     const { sink, items } = captureSink<number>();
     const program = Stream.fromIterable([1, 2]).pipe(
       Stage.map('scale', (n) => Factor.pipe(Effect.map(({ factor }) => n * factor))),

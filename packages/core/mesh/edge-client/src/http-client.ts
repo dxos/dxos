@@ -22,7 +22,7 @@ export type RetryOptions = {
 };
 
 // Layer pattern.
-export class HttpConfig extends Context.Tag('HttpConfig')<HttpConfig, RetryOptions>() {
+export class HttpConfig extends Context.Service<HttpConfig, RetryOptions>()('HttpConfig') {
   static default = Layer.succeed(HttpConfig, {
     timeout: Duration.millis(1_000),
     retryTimes: 3,

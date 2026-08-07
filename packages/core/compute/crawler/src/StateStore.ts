@@ -39,7 +39,7 @@ export interface StateStoreApi {
   readonly getRunStatus: () => Effect.Effect<RunStatus, StateError>;
 }
 
-export class StateStore extends Context.Tag('@dxos/crawler/StateStore')<StateStore, StateStoreApi>() {
+export class StateStore extends Context.Service<StateStore, StateStoreApi>()('@dxos/crawler/StateStore') {
   /** In-memory frontier (tests, demos, single-process browser runs). */
   static layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
 

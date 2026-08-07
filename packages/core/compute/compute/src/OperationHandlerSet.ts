@@ -243,10 +243,9 @@ export const getHandlerByKey = (
   key: string,
 ): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> => lookup(set, key);
 
-export class OperationHandlerProvider extends Context.Tag('@dxos/operation/OperationHandlerProvider')<
-  OperationHandlerProvider,
-  OperationHandlerSet
->() {}
+export class OperationHandlerProvider extends Context.Service<OperationHandlerProvider, OperationHandlerSet>()(
+  '@dxos/operation/OperationHandlerProvider',
+) {}
 
 export const provide = (handlers: OperationHandlerSet): Layer.Layer<OperationHandlerProvider, never, never> =>
   Layer.succeed(OperationHandlerProvider, handlers);

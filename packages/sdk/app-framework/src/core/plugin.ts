@@ -27,7 +27,9 @@ import type * as PluginManager from './plugin-manager';
  * Effect Context.Tag for accessing PluginManager via the Effect layer system.
  * This allows lifecycle operations to access the plugin manager without having it passed as an argument.
  */
-export class Service extends Context.Tag('@dxos/app-framework/PluginManager')<Service, PluginManager.PluginManager>() {}
+export class Service extends Context.Service<Service, PluginManager.PluginManager>()(
+  '@dxos/app-framework/PluginManager',
+) {}
 
 //
 // Lifecycle Functions

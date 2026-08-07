@@ -113,10 +113,9 @@ const parseDateWindow = (query: string): { after?: number; before?: number } => 
   };
 };
 
-export class GoogleMailApi extends Context.Tag('@dxos/plugin-inbox/GoogleMailApi')<
-  GoogleMailApi,
-  GoogleMailApiService
->() {
+export class GoogleMailApi extends Context.Service<GoogleMailApi, GoogleMailApiService>()(
+  '@dxos/plugin-inbox/GoogleMailApi',
+) {
   /**
    * Live layer backed by the real Gmail HTTP client. Captures the auth/HTTP context once and provides
    * it to each request, so the resulting service methods carry no requirements. Requires an

@@ -44,7 +44,7 @@ export interface Service {
  *
  * Replaces AiContextService and AiSessionService.
  */
-export class HarnessService extends Context.Tag('@dxos/assistant/HarnessService')<HarnessService, Service>() {}
+export class HarnessService extends Context.Service<HarnessService, Service>()('@dxos/assistant/HarnessService') {}
 
 /**
  * Acess current context binder.

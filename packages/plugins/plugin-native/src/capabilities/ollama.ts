@@ -277,12 +277,12 @@ export default Capability.makeModule(
   }),
 );
 
-class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
+class OllamaSidecar extends Context.Service<
   OllamaSidecar,
   {
     endpoint: string;
   }
->() {
+>()('@dxos/plugin-native/OllamaSidecar') {
   static layerLive = Layer.effect(
     OllamaSidecar,
     Effect.gen(function* () {

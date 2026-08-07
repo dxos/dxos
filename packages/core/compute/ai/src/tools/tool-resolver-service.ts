@@ -19,12 +19,12 @@ import { type ToolId } from './tool';
  * Resolves tool definitions.
  * Also is able to resolve tools backed by functions.
  */
-export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverService')<
+export class ToolResolverService extends Context.Service<
   ToolResolverService,
   {
     readonly resolve: (id: ToolId) => Effect.Effect<Tool.Any, AiToolNotFoundError>;
   }
->() {
+>()('@dxos/ai/ToolResolverService') {
   static layerEmpty = Layer.succeed(ToolResolverService, {
     resolve: (id) => Effect.fail(new AiToolNotFoundError(id)),
   });

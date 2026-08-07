@@ -80,7 +80,6 @@ export namespace TestHelpers {
 /**
  * Exposes vitest test context as an effect service.
  */
-export class TestContextService extends Context.Tag('@dxos/effect/TestContextService')<
-  TestContextService,
-  TestContext
->() {}
+export class TestContextService extends Context.Service<TestContextService, TestContext>()(
+  '@dxos/effect/TestContextService',
+) {}

@@ -42,10 +42,9 @@ type TypefullyCredentialsValue = {
  * explicit parameter. Typefully uses a static API key (not OAuth), stored on the
  * connection's linked `AccessToken`.
  */
-export class TypefullyCredentials extends Context.Tag('@dxos/plugin-typefully/TypefullyCredentials')<
-  TypefullyCredentials,
-  TypefullyCredentialsValue
->() {
+export class TypefullyCredentials extends Context.Service<TypefullyCredentials, TypefullyCredentialsValue>()(
+  '@dxos/plugin-typefully/TypefullyCredentials',
+) {
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
     Layer.effect(
       TypefullyCredentials,

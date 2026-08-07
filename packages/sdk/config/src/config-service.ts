@@ -57,7 +57,7 @@ export const defaultConfig = new Config({
   },
 });
 
-export class ConfigService extends Context.Tag('ConfigService')<ConfigService, Config>() {
+export class ConfigService extends Context.Service<ConfigService, Config>()('ConfigService') {
   static layerMemory = Layer.effect(ConfigService, Effect.succeed(memoryConfig));
 
   static fromConfig = (config: Config) => Layer.succeed(ConfigService, config);

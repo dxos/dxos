@@ -139,7 +139,7 @@ export interface ServiceApi {
   readonly invitations: Stream.Stream<readonly Invitation.Flow[]>;
 }
 
-export class Service extends Context.Tag('@dxos/halo/Identity')<Service, ServiceApi>() {}
+export class Service extends Context.Service<Service, ServiceApi>()('@dxos/halo/Identity') {}
 
 /** The local identity as a current-value stream (requires {@link Service}). */
 export const identity: Stream.Stream<Option.Option<Info>, never, Service> = Stream.unwrap(

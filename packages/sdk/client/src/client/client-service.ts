@@ -13,7 +13,7 @@ import { Client } from './client';
 
 // TODO(wittjosiah): Factor out.
 // TODO(dmaretskyi): For CLI its better to make this lazy to not load client in commands that do not require it.
-export class ClientService extends Context.Tag('ClientService')<ClientService, Client>() {
+export class ClientService extends Context.Service<ClientService, Client>()('ClientService') {
   static fromClient = (client: Client) => Layer.succeed(ClientService, client);
 
   static layer = Layer.effect(

@@ -122,10 +122,10 @@ export const ToolExecutionServices = Layer.mergeAll(
   makeToolExecutionServiceFromOperationInvoker(),
 );
 
-class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
+class FunctionToolAnnotation extends Context.Service<
   FunctionToolAnnotation,
   { definition: Operation.Definition.Any }
->() {}
+>()('@dxos/assistant/FunctionToolAnnotation') {}
 
 export const getOperationFromTool = (tool: Tool.Any): Option.Option<Operation.Definition.Any> => {
   return Context.getOption(FunctionToolAnnotation)(tool.annotations).pipe(Option.map(({ definition }) => definition));

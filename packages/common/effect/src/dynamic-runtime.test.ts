@@ -14,11 +14,11 @@ import * as DynamicRuntime from './dynamic-runtime';
 import { runAndForwardErrors } from './internal/errors';
 
 // Test service tags
-class Database extends Context.Tag('Database')<Database, { query: (sql: string) => Effect.Effect<string[]> }>() {}
+class Database extends Context.Service<Database, { query: (sql: string) => Effect.Effect<string[]> }>()('Database') {}
 
-class Logger extends Context.Tag('Logger')<Logger, { log: (msg: string) => Effect.Effect<void> }>() {}
+class Logger extends Context.Service<Logger, { log: (msg: string) => Effect.Effect<void> }>()('Logger') {}
 
-class Cache extends Context.Tag('Cache')<Cache, { get: (key: string) => Effect.Effect<string | undefined> }>() {}
+class Cache extends Context.Service<Cache, { get: (key: string) => Effect.Effect<string | undefined> }>()('Cache') {}
 
 describe('DynamicRuntime', () => {
   describe('Success Cases', () => {

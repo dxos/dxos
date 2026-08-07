@@ -221,4 +221,4 @@ export interface Handlers extends RpcGroup.HandlersFrom<RpcGroup.Rpcs<typeof Rpc
 /**
  * Effect service tag for the `DataService` RPC handlers.
  */
-export class Tag extends Context.Tag('@dxos/protocols/rpc/DataService')<Tag, Handlers>() {}
+export class Tag extends Context.Service<Tag, Handlers>()('@dxos/protocols/rpc/DataService') {}

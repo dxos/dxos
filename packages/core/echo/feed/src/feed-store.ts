@@ -51,7 +51,7 @@ export interface FeedStoreOptions {
 /**
  * Effect service tag for {@link FeedStore}.
  */
-export class FeedStoreService extends EffectContext.Tag('@dxos/feed/FeedStore')<FeedStoreService, FeedStore>() {}
+export class FeedStoreService extends EffectContext.Service<FeedStoreService, FeedStore>()('@dxos/feed/FeedStore') {}
 
 /**
  * Persistent storage for feed metadata, blocks, subscriptions, and sync state.

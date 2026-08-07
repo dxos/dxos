@@ -23,7 +23,7 @@ export interface Manager {
   readonly invokeTrigger: (options: Trigger.InvokeOptions) => Effect.Effect<void>;
 }
 
-export class Service extends Context.Tag('@dxos/compute-runtime/RemoteTriggerManager')<Service, Manager>() {}
+export class Service extends Context.Service<Service, Manager>()('@dxos/compute-runtime/RemoteTriggerManager') {}
 
 /**
  * Empty remote trigger manager for local-only deployments.

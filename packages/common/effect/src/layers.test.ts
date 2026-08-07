@@ -12,9 +12,9 @@ import { test } from 'vitest';
 
 import { runAndForwardErrors } from './internal/errors';
 
-class ClientConfig extends Context.Tag('ClientConfig')<ClientConfig, { endpoint: string }>() {}
+class ClientConfig extends Context.Service<ClientConfig, { endpoint: string }>()('ClientConfig') {}
 
-class Client extends Context.Tag('Client')<Client, { call: () => Effect.Effect<void> }>() {
+class Client extends Context.Service<Client, { call: () => Effect.Effect<void> }>()('Client') {
   static layer = Layer.effect(
     Client,
     Effect.gen(function* () {

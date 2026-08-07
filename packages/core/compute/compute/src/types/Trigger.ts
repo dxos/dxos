@@ -311,7 +311,6 @@ export interface Monitor {
 /**
  * Service for monitoring trigger executions.
  */
-export class TriggerMonitorService extends Context.Tag('@dxos/functions/TriggerMonitorService')<
-  TriggerMonitorService,
-  Monitor
->() {}
+export class TriggerMonitorService extends Context.Service<TriggerMonitorService, Monitor>()(
+  '@dxos/functions/TriggerMonitorService',
+) {}

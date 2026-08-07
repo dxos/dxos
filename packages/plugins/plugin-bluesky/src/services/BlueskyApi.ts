@@ -338,7 +338,7 @@ type CredentialsValue = {
  * Construction resolves the PDS once (via the public XRPC `resolveHandle`
  * and a DID-document lookup) so subsequent calls reuse it.
  */
-export class Credentials extends Context.Tag('@dxos/plugin-bluesky/Credentials')<Credentials, CredentialsValue>() {
+export class Credentials extends Context.Service<Credentials, CredentialsValue>()('@dxos/plugin-bluesky/Credentials') {
   /** Loads the connection's access token, resolves its PDS, and packages credentials. */
   static fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, client: Client) =>
     Layer.effect(

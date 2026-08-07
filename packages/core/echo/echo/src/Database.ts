@@ -329,12 +329,12 @@ export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((
 /**
  * Effect service tag for Database dependency injection.
  */
-export class Service extends Context.Tag('@dxos/echo/Database/Service')<
+export class Service extends Context.Service<
   Service,
   {
     readonly db: Database;
   }
->() {}
+>()('@dxos/echo/Database/Service') {}
 
 /**
  * Layer that provides a Database service that throws when accessed.

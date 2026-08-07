@@ -45,13 +45,13 @@ const makeServiceForToken = (accessToken: AccessToken.AccessToken | undefined) =
  * cursor no longer relates to `Connection`). Falls back to a by-service lookup when neither is in
  * scope (legacy / agent paths).
  */
-export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
+export class GoogleCredentials extends Context.Service<
   GoogleCredentials,
   {
     /** Returns the Google API token. */
     get: () => Effect.Effect<string, never, Credential.CredentialsService>;
   }
->() {
+>()('GoogleCredentials') {
   /** Creates a credentials layer bound to an AccessToken ref. */
   static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
     Layer.effect(GoogleCredentials, Effect.map(Database.load(accessTokenRef), makeServiceForToken));

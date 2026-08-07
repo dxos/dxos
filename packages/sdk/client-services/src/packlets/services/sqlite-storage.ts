@@ -43,10 +43,9 @@ export type SqliteStorageOptions = {
 /**
  * Effect service tag for {@link SqliteStorage}.
  */
-export class SqliteStorageService extends EffectContext.Tag('@dxos/client-services/SqliteStorage')<
-  SqliteStorageService,
-  SqliteStorage
->() {}
+export class SqliteStorageService extends EffectContext.Service<SqliteStorageService, SqliteStorage>()(
+  '@dxos/client-services/SqliteStorage',
+) {}
 
 /** Minimal cross-platform EventEmitter needed by the RandomAccessStorage contract. */
 class BaseEventEmitter {

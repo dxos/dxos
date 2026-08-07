@@ -62,7 +62,7 @@ export interface AgentRegistryApi {
   readonly setRef: (id: string, ref: string) => Effect.Effect<void, StateError>;
 }
 
-export class AgentRegistry extends Context.Tag('@dxos/crawler/AgentRegistry')<AgentRegistry, AgentRegistryApi>() {
+export class AgentRegistry extends Context.Service<AgentRegistry, AgentRegistryApi>()('@dxos/crawler/AgentRegistry') {
   /** In-memory registry (tests, demos). Browser path will back this with ECHO Person objects. */
   static layerMemory: Layer.Layer<AgentRegistry> = Layer.sync(AgentRegistry, () => makeMemory());
 

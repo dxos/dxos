@@ -33,9 +33,10 @@ import { IdentityManagerService, type JoinIdentityProps } from './identity-manag
 /**
  * Effect service tag for {@link EdgeIdentityRecoveryManager}.
  */
-export class EdgeIdentityRecoveryManagerService extends EffectContext.Tag(
-  '@dxos/client-services/EdgeIdentityRecoveryManager',
-)<EdgeIdentityRecoveryManagerService, EdgeIdentityRecoveryManager>() {}
+export class EdgeIdentityRecoveryManagerService extends EffectContext.Service<
+  EdgeIdentityRecoveryManagerService,
+  EdgeIdentityRecoveryManager
+>()('@dxos/client-services/EdgeIdentityRecoveryManager') {}
 
 export type AcceptRecoveredIdentity = (params: JoinIdentityProps) => Promise<Identity>;
 

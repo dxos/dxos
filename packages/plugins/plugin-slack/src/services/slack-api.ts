@@ -124,10 +124,9 @@ const SlackUsersInfoResponseSchema = Schema.Struct({
  * `Connection` directly) or `Effect.provide(SlackApi.SlackCredentials.fromAccessToken(ref))`
  * (sync, given an external-sync cursor's `spec.source`) once at the operation boundary.
  */
-export class SlackCredentials extends Context.Tag('@dxos/plugin-slack/SlackCredentials')<
-  SlackCredentials,
-  SlackCredentialsValue
->() {
+export class SlackCredentials extends Context.Service<SlackCredentials, SlackCredentialsValue>()(
+  '@dxos/plugin-slack/SlackCredentials',
+) {
   /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
   static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
     Layer.effect(

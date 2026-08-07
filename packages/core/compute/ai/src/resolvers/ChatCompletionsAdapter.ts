@@ -242,13 +242,13 @@ const DEFAULT_STREAM_IDLE_TIMEOUT: Duration.Duration = Duration.seconds(60);
  * This implementation provides a unified interface that abstracts over these differences,
  * allowing seamless switching between local and cloud providers via the `apiFormat` config.
  */
-export class ChatCompletionsClient extends Context.Tag('@dxos/ai/ChatCompletionsClient')<
+export class ChatCompletionsClient extends Context.Service<
   ChatCompletionsClient,
   {
     readonly config: ChatCompletionsClientConfig;
     readonly httpClient: HttpClient.HttpClient;
   }
->() {}
+>()('@dxos/ai/ChatCompletionsClient') {}
 
 /**
  * Convert Effect AI prompt to chat messages.

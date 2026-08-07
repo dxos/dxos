@@ -41,7 +41,7 @@ export interface Service {
 /**
  * AI Model Factory.
  */
-export class AiService extends Context.Tag('@dxos/ai/AiService')<AiService, Service>() {}
+export class AiService extends Context.Service<AiService, Service>()('@dxos/ai/AiService') {}
 
 /**
  * Resolves a model layer from a bare NSID name — validated at compile time like {@link DXN.make} and

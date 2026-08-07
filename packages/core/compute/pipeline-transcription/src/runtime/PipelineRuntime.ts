@@ -79,10 +79,9 @@ type Enriched = { readonly write: StageWrite; readonly window: Slice };
  * receiving `ctx: StageContext` as an explicit parameter; only this module's internal wiring into
  * `@dxos/pipeline` goes through Effect's Context/Layer mechanism.
  */
-class StageContextService extends Context.Tag('@dxos/pipeline-transcription/StageContextService')<
-  StageContextService,
-  StageContext
->() {}
+class StageContextService extends Context.Service<StageContextService, StageContext>()(
+  '@dxos/pipeline-transcription/StageContextService',
+) {}
 
 const triggerMatches = (stage: Stage<any, any>, kind: TranscriptEvent['kind']): boolean =>
   (stage.trigger === 'per-block' && kind === 'block') ||

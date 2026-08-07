@@ -93,10 +93,9 @@ const toQuestion = (row: Row): Question => ({
   updatedAt: row.updated_at,
 });
 
-export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionStore')<
-  QuestionStore,
-  QuestionStoreApi
->() {
+export class QuestionStore extends Context.Service<QuestionStore, QuestionStoreApi>()(
+  '@dxos/pipeline-discord/QuestionStore',
+) {
   static layerSql: Layer.Layer<QuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
     Layer.effect(
       QuestionStore,

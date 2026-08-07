@@ -288,11 +288,12 @@ describe('OperationInvoker.invokePromise', () => {
 
 describe('Operation.withHandler type safety', () => {
   test('handler using undeclared service is a type error', () => {
-    class DeclaredService extends Context.Tag('@test/DeclaredService')<DeclaredService, { declared: () => void }>() {}
-    class UndeclaredService extends Context.Tag('@test/UndeclaredService')<
-      UndeclaredService,
-      { undeclared: () => void }
-    >() {}
+    class DeclaredService extends Context.Service<DeclaredService, { declared: () => void }>()(
+      '@test/DeclaredService',
+    ) {}
+    class UndeclaredService extends Context.Service<UndeclaredService, { undeclared: () => void }>()(
+      '@test/UndeclaredService',
+    ) {}
 
     const opWithDeclaredService = Operation.make({
       input: Schema.Void,

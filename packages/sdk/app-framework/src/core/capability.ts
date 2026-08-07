@@ -26,10 +26,9 @@ import type * as Plugin from './plugin';
  * Effect Context.Tag for accessing CapabilityManager via the Effect layer system.
  * This allows capability modules to access the capability manager without having it passed as an argument.
  */
-export class Service extends Context.Tag('@dxos/app-framework/CapabilityManager')<
-  Service,
-  CapabilityManager.CapabilityManager
->() {}
+export class Service extends Context.Service<Service, CapabilityManager.CapabilityManager>()(
+  '@dxos/app-framework/CapabilityManager',
+) {}
 
 /**
  * Module id of the activation currently executing — set by the loader around each module's

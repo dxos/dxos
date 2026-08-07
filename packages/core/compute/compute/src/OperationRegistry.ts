@@ -21,7 +21,7 @@ export interface OperationRegistry {
   resolve(key: string): Effect.Effect<Option.Option<Operation.Definition.Any>>;
 }
 
-export class Service extends Context.Tag('@dxos/operation/OperationRegistry')<Service, OperationRegistry>() {}
+export class Service extends Context.Service<Service, OperationRegistry>()('@dxos/operation/OperationRegistry') {}
 
 /**
  * Resolve an operation by key.

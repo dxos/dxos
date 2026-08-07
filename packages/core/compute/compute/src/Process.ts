@@ -485,10 +485,9 @@ export interface Monitor {
   subscribeToTraceMessages(filter: Trace.Filter): Stream.Stream<Trace.Message>;
 }
 
-export class ProcessMonitorService extends Context.Tag('@dxos/functions/ProcessMonitorService')<
-  ProcessMonitorService,
-  Monitor
->() {}
+export class ProcessMonitorService extends Context.Service<ProcessMonitorService, Monitor>()(
+  '@dxos/functions/ProcessMonitorService',
+) {}
 
 export interface Info {
   readonly pid: ID;

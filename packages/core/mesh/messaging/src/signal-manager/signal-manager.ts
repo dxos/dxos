@@ -17,7 +17,6 @@ export interface SignalManager extends SignalMethods, Required<Lifecycle> {
   getStatus?: () => SignalStatus[];
 }
 
-export class SignalManagerService extends Context.Tag('@dxos/messaging/SignalManager')<
-  SignalManagerService,
-  SignalManager
->() {}
+export class SignalManagerService extends Context.Service<SignalManagerService, SignalManager>()(
+  '@dxos/messaging/SignalManager',
+) {}

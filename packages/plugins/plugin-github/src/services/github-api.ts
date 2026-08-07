@@ -129,10 +129,9 @@ export type GitHubComment = Schema.Schema.Type<typeof GitHubCommentSchema>;
  * `fromAccessToken(cursor.spec.source)` directly (the cursor no longer relates
  * to `Connection`).
  */
-export class GitHubCredentials extends Context.Tag('@dxos/plugin-github/GitHubCredentials')<
-  GitHubCredentials,
-  GitHubCredentialsValue
->() {
+export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHubCredentialsValue>()(
+  '@dxos/plugin-github/GitHubCredentials',
+) {
   /** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
   static fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
     Layer.effect(

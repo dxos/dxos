@@ -138,14 +138,14 @@ type Stats = {
 // `R = never` before `EffectEx.runPromise` — the same "provide at the edge" idiom used elsewhere in
 // this repo (e.g. `Database.layer`). The heavy bits (Ollama runtime, better-sqlite3-backed db) live
 // here in the test harness, which is why the whole suite is env-gated.
-class Ctx extends Context.Tag('EmailPipelineCtx')<
+class Ctx extends Context.Service<
   Ctx,
   {
     readonly summarize: (text: string) => Promise<Summary>;
     readonly db: Database.Database;
     readonly stats: Stats;
   }
->() {}
+>()('EmailPipelineCtx') {}
 
 // Stage 1: LLM summarization. Appends a second text block carrying the summary and records spam /
 // keyword metadata on `Message.properties` (ContentBlock.Text has no metadata field). Produces a new

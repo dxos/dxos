@@ -206,12 +206,12 @@ export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
  * contributes to it: a headless routine reaches here with no assistant UI open, and a synchronous
  * read would return whatever happened to be registered at that instant.
  */
-export class OpaqueToolkitProvider extends Context.Tag('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider')<
+export class OpaqueToolkitProvider extends Context.Service<
   OpaqueToolkitProvider,
   {
     readonly getToolkit: () => Effect.Effect<OpaqueToolkit>;
   }
->() {}
+>()('@dxos/ai/OpaqueToolkit.OpaqueToolkitProvider') {}
 
 /**
  * Layer for providing an opaque toolkit to the agent.

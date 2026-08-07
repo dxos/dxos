@@ -126,10 +126,9 @@ export type GetSpaceTriggersResponse = {
 
 export type EdgeHttpClientOptions = BaseHttpClientOptions;
 
-export class EdgeHttpClientService extends EffectContext.Tag('@dxos/edge-client/EdgeHttpClient')<
-  EdgeHttpClientService,
-  EdgeHttpClient
->() {}
+export class EdgeHttpClientService extends EffectContext.Service<EdgeHttpClientService, EdgeHttpClient>()(
+  '@dxos/edge-client/EdgeHttpClient',
+) {}
 
 /**
  * HTTP client for the edge worker API (spaces, queues, functions, agents, etc.).

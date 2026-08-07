@@ -31,13 +31,13 @@ export const query = Query.select(Filter.type(Feed.Feed, { kind: TRACE_FEED_KIND
  * The sink is provided as a field (rather than having the service *be* the
  * sink) so the higher-level routing sink can dispatch messages synchronously.
  */
-export class FeedTraceSink extends Context.Tag('@dxos/functions-runtime/FeedTraceSink')<
+export class FeedTraceSink extends Context.Service<
   FeedTraceSink,
   {
     readonly sink: Trace.Sink;
     readonly flush: () => Effect.Effect<void>;
   }
->() {}
+>()('@dxos/functions-runtime/FeedTraceSink') {}
 
 /**
  * Layer that resolves a space's trace feed, wires up a buffered flushing

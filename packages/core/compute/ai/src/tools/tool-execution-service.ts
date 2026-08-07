@@ -14,14 +14,14 @@ import { AiToolNotFoundError } from '../errors';
 /**
  * Provides handlers for tools.
  */
-export class ToolExecutionService extends Context.Tag('@dxos/ai/ToolExecutionService')<
+export class ToolExecutionService extends Context.Service<
   ToolExecutionService,
   {
     readonly handlersFor: <Tools extends Record<string, Tool.Any>>(
       toolkit: Toolkit.Toolkit<Tools>,
     ) => Toolkit.WithHandler<Tools>;
   }
->() {
+>()('@dxos/ai/ToolExecutionService') {
   static layerEmpty = Layer.succeed(ToolExecutionService, {
     handlersFor: (toolkit) =>
       toolkit.of(Record.map(toolkit.tools, (tool, name) => Effect.fail(new AiToolNotFoundError(name))) as any) as any,

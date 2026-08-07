@@ -26,7 +26,7 @@ export type MetadataService = {
   readonly serviceMs: number | undefined;
 };
 
-export class Metadata extends Context.Tag('RpcTimingMetadata')<Metadata, MetadataService>() {}
+export class Metadata extends Context.Service<Metadata, MetadataService>()('RpcTimingMetadata') {}
 
 export class Middleware extends RpcMiddleware.Tag<Middleware>()('RpcTimingMiddleware', {
   wrap: true,

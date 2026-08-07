@@ -14,10 +14,9 @@ export interface FormattingOptions<Tool extends Tool.Any> {
 /**
  * Formats the tool call or result into a string.
  */
-export class ToolFormatter extends Context.Tag('@dxos/ai/ToolFormatter')<
-  ToolFormatter,
-  FormattingOptions<Tool.Any>
->() {}
+export class ToolFormatter extends Context.Service<ToolFormatter, FormattingOptions<Tool.Any>>()(
+  '@dxos/ai/ToolFormatter',
+) {}
 
 export const assign =
   <Tool extends AnyTool>(options: FormattingOptions<Tool>) =>
