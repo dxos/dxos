@@ -14976,6 +14976,9 @@ importers:
         specifier: 'catalog:'
         version: 1.0.0(react@19.2.7)
     devDependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../../core/compute/extractor-lib
