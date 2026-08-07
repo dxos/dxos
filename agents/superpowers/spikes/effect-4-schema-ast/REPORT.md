@@ -3,7 +3,7 @@
 Ported ECHO's critical-path Effect-Schema code to `effect@4.0.0-beta.105` and proved that JSON
 Schema documents written by Effect 3 can be read back into Effect 4.
 
-**Result: both work.** 28 tests pass, `tsc --noEmit` is clean. Reproduce with
+**Result: both work.** 106 tests pass, `tsc --noEmit` is clean. Reproduce with
 `npm install && npm test` (this directory is deliberately outside the pnpm workspace so it can
 pin effect 4 without touching the monorepo lockfile).
 
@@ -173,5 +173,7 @@ losslessly, which the JSON Schema path provably does not.
   treatment before this ships.
 - `refToSchema` is a stand-in, not ECHO's real `Ref` declaration — it proves the reference
   payload survives, not that `Ref` resolution works.
-- Two fixture types, not a corpus. Before committing to a timeline, run the decoder over real
-  stored schemas from actual spaces.
+- Validated against `corpus-v3.json` — all 18 ECHO types exported by `@dxos/types`, emitted by
+  `toJsonSchema` on effect 3.21.4 (38 refs, 43 enums, 14 patterns, both `/schemas/*` sentinels).
+  These are production type definitions, but still not schemas pulled from real user spaces;
+  a user-authored type created through `schema-add` is the untested case.

@@ -1,6 +1,6 @@
 # effect-smol — Tasks
 
-_Resume: prototype the `org.dxos.type.schema` `0.1.0` → `0.2.0` ECHO migration in the spike. Uncommitted: none. Last: mixed-format dispatch landed (082684f4); EDGE confirmed to need no compat decoder._
+_Resume: Phase 2 — blocked on `effect` GA. Uncommitted: none. Last: Phase 1 complete (d79d6bad routes 77 files through the `@dxos/effect` SchemaAST facade; corpus + migration + shape-pin tests green)._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
@@ -40,29 +40,56 @@ Establish the size of the problem and de-risk the two unknowns (persisted schema
 - Branch `claude/effect-4-migration-audit-pq2m8z`, commits `275d4fc6`, `082684f4` (no PR — user
   asked for none).
 
-## Phase 1: De-risk on v3
+## Phase 1: De-risk on v3 — DONE
 
-Work that pays off whether or not v4 ever lands, and shrinks Phase 3 materially. Doable today.
+Work that pays off whether or not v4 ever lands, and shrinks Phase 3 materially. All done on v3.
 
 ### Tasks
 
-- [ ] **Consolidate `effect/SchemaAST` importers behind `@dxos/effect`'s `ast.ts`**
-  - 80 files import it directly today; 129 of 138 v4 exports are `@internal` (F1).
-  - Turns Phase 3's worst item from an 80-file rewrite into a one-module rewrite.
-- [ ] **Pin the LLM-facing `toJsonSchema` output shape** (D5, F4)
-  - Snapshot test in dxos/dxos covering `schema-list` output and `schema-add` input.
-  - EDGE's `ai-service/.../types.ts:69-78` throws on v4-shaped output; this is the guard.
-- [ ] **Prototype the `org.dxos.type.schema` `0.1.0` → `0.2.0` migration**
-  - `Migration.define` + `runMigrations`; transform is
-    `writeStoredSchema(readStoredSchema(old.jsonSchema))`.
-  - Test idempotency — running twice must be a no-op.
-- [ ] **Apply Tier 1 renames that v3 already supports**
-  - Reduces codemod surface later at near-zero cost.
-- [ ] **Sweep EDGE for transitive consumers of `toJsonSchema` output**
-  - Only direct callers were checked; code reading the returned object structurally may exist.
-- [ ] **Validate the decoder against a real corpus**
-  - Two fixture types is not a corpus — export stored schemas from actual spaces and run them
-    through `toEffectSchema`.
+- [x] **Consolidate `effect/SchemaAST` importers behind `@dxos/effect`** — commit `d79d6bad`.
+  - New curated facade `packages/common/effect/src/internal/schema-ast.ts` re-exports the 60
+    symbols actually used, surfaced as `SchemaAST` from the package index.
+  - 77 consumer files across 26 packages repointed; the only direct importers left are the 4
+    inside `@dxos/effect` itself. F1's blast radius drops from 80 files to one module.
+  - Added `@dxos/effect` to the five packages that lacked it (`react-ui-canvas-editor`,
+    `introspect-tools`, `plugin-thread`, `echo-protocol`, `compute-hyperformula`); no cycle.
+  - 180 moon build tasks green across all 27 touched projects; `effect`/`echo`/`schema`/
+    `conductor`/`echo-panproto` tests green.
+- [x] **Pin the LLM-facing `toJsonSchema` output shape** (D5, F4)
+  - `packages/core/echo/echo/src/internal/JsonSchema/json-schema-shape.test.ts`, 5 tests.
+  - Pins what the readers depend on: constraints and `description` at the TOP LEVEL of each
+    property (not nested under `allOf`), optional fields as the bare type omitted from
+    `required` (not `anyOf: [T, null]`), literal unions as a flat `enum`, and a flat document
+    with no `$ref`/`definitions`. Full echo suite green (493 passed).
+- [x] **Prototype the `org.dxos.type.schema` `0.1.0` → `0.2.0` migration**
+  - `spike/src/migration.ts` + `test/migration.test.ts` (5 tests). Idempotent by construction —
+    an already-v4 payload is returned by identity, so a re-run, or a space another peer already
+    migrated, is a no-op. Verified across the whole corpus, including a half-migrated space.
+  - Only the transform is modelled; wiring to `Migration.define` / `Database.runMigrations`
+    needs a live database and belongs in Phase 2.
+- [x] **Sweep EDGE for transitive consumers of `toJsonSchema` output**
+  - Exactly one: `ai-service/src/generation/tools/types.ts:73`. The `graphQuery/cypher`
+    `.properties[...]` hits are Cypher graph data, not JSON Schema. The shape contract does
+    extend past that call into the model-provider SDK via `parameters:`.
+- [x] **Validate the decoder against a real corpus**
+  - `corpus-v3.json`: all 18 ECHO types exported by `@dxos/types` (Person, Organization, Message,
+    Task, Event, Transcript, Thread, Channel, File, Outline, 5 relations, …), emitted by
+    `toJsonSchema` on effect 3.21.4 — 38 refs, 43 enums, 14 patterns, both `/schemas/*` sentinels.
+  - `test/corpus.test.ts`, 73 tests: every type decodes to `Objects`, keeps its declared property
+    set and per-property optionality, keeps its type identity, and survives a v3 → v4 rewrite
+    with an unchanged property shape.
+- [x] **Apply Tier 1 renames that v3 already supports** — **not applicable, nothing to do.**
+  - Checked every v4 target name against `effect@3.21.4`: `Effect.catch`, `result`, `callback`,
+    `catchCause`, `catchDefect`, `tapCause`, `Layer.tapCause`, `Stream.catch`, `result`,
+    `fromEffectRepeat`, `catchCause`, `Scope.provide` are all absent.
+  - The three that DO exist are semantic traps, not free renames: v3's `Effect.catchIf` is
+    predicate-based recovery (not v4's `catchSome` replacement), and v3's `Layer.effect` /
+    `effectDiscard` are distinct from `Layer.scoped` / `scopedDiscard` (v4 merges them because
+    every layer is scoped). Renaming any of them on v3 would change behaviour.
+
+### References
+
+- Spike now at 106 tests: `agents/superpowers/spikes/effect-4-schema-ast/`.
 
 ## Phase 2: Migrate dxos/dxos
 
