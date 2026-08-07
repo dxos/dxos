@@ -86,8 +86,14 @@ test.describe('Comments tests', () => {
   //   the delete click itself: `thread.message.delete` resolves, then loops "element is not stable" /
   //   "detached from the DOM" until timeout — the message row is being re-rendered continuously.
   //   Likely the same family as `undo delete thread`'s cm-comment count flapping in run 31215927769.
-  //   Diagnose the re-render loop (comment-sync's updateListener writing thread.name back on each
-  //   doc change is a candidate) before re-enabling.
+  //   Instrumentation refuted the comment-sync updateListener theory (zero thread.name writes) and
+  //   traced the storm to echo property atoms re-firing on every owner write; the array case is
+  //   fixed in core (snapshotEquals), record-valued atoms deliberately keep legacy always-fire
+  //   because kanban depends on nested-record notifications. Under that fix this test still fails
+  //   (3-sample runs split between the add step and the delete click), so a second churn source
+  //   remains — suspect record/block-level atoms on the message tiles. Measure with render
+  //   counters again before the next attempt; 3-sample verdicts on a ~27%-flaky test have misled
+  //   this session twice.
   test.fixme('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
