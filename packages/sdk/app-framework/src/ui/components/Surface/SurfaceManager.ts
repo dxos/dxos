@@ -12,7 +12,7 @@ import { Capabilities } from '../../../common';
 import { type CapabilityManager } from '../../../core';
 import { type Definition, isValidLocalId } from './types';
 
-const EMPTY_CANDIDATES: ReadonlyArray<Definition> = Data.array<Definition[]>([]);
+const EMPTY_CANDIDATES: ReadonlyArray<Definition> = [];
 
 /**
  * Groups definitions by role with each bucket pre-sorted by {@link Position}, so
@@ -60,7 +60,7 @@ export class SurfaceManager {
   readonly #candidates = Atom.family<string, Atom.Atom<ReadonlyArray<Definition>>>((role) =>
     Atom.make((get) => {
       const bucket = get(this.#index).get(role);
-      return bucket ? Data.array(bucket) : EMPTY_CANDIDATES;
+      return bucket ? [...bucket] : EMPTY_CANDIDATES;
     }).pipe(Atom.keepAlive),
   );
 

@@ -209,8 +209,8 @@ export interface ProcessManagerRuntime {
   ): Promise<Exit$.Exit<A, E>>;
   runFork<A, E>(
     effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>,
-    options?: Runtime$.RunForkOptions,
-  ): Fiber$.RuntimeFiber<A, E>;
+    options?: Effect.RunOptions,
+  ): Fiber$.Fiber<A, E>;
   runSync<A, E>(effect: Effect.Effect<A, E, ProcessManagerRuntimeServices>): A;
 }
 

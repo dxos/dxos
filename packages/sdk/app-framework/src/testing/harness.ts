@@ -193,7 +193,7 @@ class TestHarnessImpl implements TestHarness {
       this.manager.capabilities.waitFor(iface).pipe(
         Effect.timeoutOrElse({
           duration: Duration.millis(timeout),
-          orElse: () => timeoutError(iface.identifier),
+          orElse: () => Effect.fail(timeoutError(iface.identifier)),
         }),
       ),
     );
@@ -211,7 +211,7 @@ class TestHarnessImpl implements TestHarness {
         return;
       }
       while (true) {
-        const message = yield* Queue.take(queue);
+        const message = yield* PubSub.take(queue);
         if (message.event === key && message.state === 'activated') {
           return;
         }
@@ -220,7 +220,7 @@ class TestHarnessImpl implements TestHarness {
       Effect.scoped,
       Effect.timeoutOrElse({
         duration: Duration.millis(timeout),
-        orElse: () => timeoutError(key),
+        orElse: () => Effect.fail(timeoutError(key)),
       }),
     );
 

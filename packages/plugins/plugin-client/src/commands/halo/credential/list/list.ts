@@ -5,6 +5,7 @@
 import * as Console from 'effect/Console';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Latch from 'effect/Latch';
 import * as Option from 'effect/Option';
 import * as Command from 'effect/unstable/cli/Command';
 import * as Options from 'effect/unstable/cli/Flag';
@@ -66,7 +67,7 @@ export const handler = Effect.fn(function* ({
     }
 
     // Wait for at least one credential
-    const latch = yield* Effect.makeLatch();
+    const latch = yield* Latch.make();
     const subscription = client.halo.credentials.subscribe((creds) => {
       if (creds.length > 0) {
         Effect.runSync(latch.open);

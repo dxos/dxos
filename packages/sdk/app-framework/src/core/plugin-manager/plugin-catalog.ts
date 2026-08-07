@@ -221,7 +221,7 @@ export class PluginCatalog {
             'load',
             new Plugin.PluginDependencyError({
               context: { id, reason: 'install-failed', dependency: next },
-              cause: installResult.left,
+              cause: installResult.failure,
             }),
           );
           return false;

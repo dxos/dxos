@@ -9,6 +9,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
+import * as Latch from 'effect/Latch';
 import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
@@ -471,13 +472,13 @@ describe('PluginManager', () => {
       ];
 
       const manager = PluginManager.make({ pluginLoader });
-      const activating = yield* Effect.makeLatch(false);
-      const activated = yield* Effect.makeLatch(false);
-      const error = yield* Effect.makeLatch(false);
+      const activating = yield* Latch.make(false);
+      const activated = yield* Latch.make(false);
+      const error = yield* Latch.make(false);
 
       const activationFiber = PubSub.subscribe(manager.activation).pipe(
         Effect.flatMap((queue) =>
-          Queue.take(queue).pipe(
+          PubSub.take(queue).pipe(
             Effect.flatMap(({ state }) =>
               Match.value(state).pipe(
                 Match.when('activating', () => activating.open),
@@ -499,10 +500,10 @@ describe('PluginManager', () => {
       yield* activating.await;
       yield* activated.await;
 
-      const activating2 = yield* Effect.makeLatch(false);
+      const activating2 = yield* Latch.make(false);
       const activationFiber2 = PubSub.subscribe(manager.activation).pipe(
         Effect.flatMap((queue) =>
-          Queue.take(queue).pipe(
+          PubSub.take(queue).pipe(
             Effect.flatMap(({ state }) =>
               Match.value(state).pipe(
                 Match.when('activating', () => activating2.open),
@@ -1227,8 +1228,8 @@ describe('PluginManager', () => {
 
   it.effect('should interrupt in-flight activation during shutdown', () =>
     Effect.gen(function* () {
-      const activationStarted = yield* Effect.makeLatch(false);
-      const allowActivationToComplete = yield* Effect.makeLatch(false);
+      const activationStarted = yield* Latch.make(false);
+      const allowActivationToComplete = yield* Latch.make(false);
       const Test = Plugin.define(testMeta).pipe(
         Plugin.addModule({
           provides: [String],
@@ -1432,7 +1433,7 @@ describe('PluginManager', () => {
         yield* settle(() => manager.capabilities.getAll(String).length > 0);
         assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'fast' }]);
         // The ready signal still waits for the complete registry.
-        assert.strictEqual((yield* Fiber.poll(startupFiber))._tag, 'None');
+        assert.strictEqual(startupFiber.pollUnsafe(), undefined);
         assert.deepStrictEqual(manager.capabilities.getAll(Number), []);
 
         releaseLoader();
@@ -1713,7 +1714,7 @@ describe('PluginManager', () => {
         const queue = yield* PubSub.subscribe(manager.activation);
         yield* manager.add(lazyMeta.profile.key);
         yield* Effect.exit(manager.enable(lazyMeta.profile.key));
-        const messages = yield* Queue.takeAll(queue);
+        const messages = yield* PubSub.takeAll(queue);
 
         const errorMessage = [...messages].find(
           (m) => m.module === `lazy:${lazyMeta.profile.key}` && m.state === 'error',
@@ -2635,7 +2636,7 @@ describe('PluginManager', () => {
         const eventFiber = yield* Effect.forkChild(manager.activate(EventX));
         // Let the event fiber run to its snapshot (broken) or its provider wait (fixed) before
         // the provider is released — otherwise the race can accidentally resolve correctly.
-        yield* Effect.yieldNow.pipe(Effect.repeatN(50));
+        yield* Effect.yieldNow.pipe(Effect.repeat({ times: 50 }));
         yield* Deferred.succeed(providerGate, undefined);
         yield* Fiber.join(eventFiber);
         yield* Fiber.join(startFiber);
@@ -3004,13 +3005,11 @@ describe('PluginManager', () => {
         const manager = makeManagerWith(Test);
         const subscription = yield* PubSub.subscribe(manager.activation);
         yield* startAndSettle(manager);
-        while (true) {
-          const message = yield* Queue.poll(subscription);
-          if (message._tag === 'None') {
-            break;
-          }
-          if (message.value.state === 'activated') {
-            messages.push({ event: message.value.event, module: message.value.module });
+        // v4 has no effectful poll on a subscription; drain whatever is buffered.
+        const buffered = yield* PubSub.takeUpTo(subscription, globalThis.Number.MAX_SAFE_INTEGER);
+        for (const message of buffered) {
+          if (message.state === 'activated') {
+            messages.push({ event: message.event, module: message.module });
           }
         }
 
@@ -3065,7 +3064,7 @@ describe('PluginManager', () => {
         for (let i = 0; i < 10; i++) {
           yield* Effect.yieldNow;
         }
-        assert.strictEqual((yield* Fiber.poll(fiberB))._tag, 'None');
+        assert.strictEqual(fiberB.pollUnsafe(), undefined);
 
         yield* Deferred.succeed(gate, undefined);
         yield* Fiber.join(fiberB);

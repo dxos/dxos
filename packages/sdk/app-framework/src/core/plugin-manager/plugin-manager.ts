@@ -367,7 +367,7 @@ class ManagerImpl implements PluginManager {
     }
     this._supervisor = PubSub.subscribe(this._state.activation).pipe(
       Effect.flatMap((subscription) =>
-        Queue.take(subscription).pipe(
+        PubSub.take(subscription).pipe(
           Effect.tap((message) => Effect.sync(() => this._autoDisableOnModuleError(message))),
           Effect.forever,
         ),

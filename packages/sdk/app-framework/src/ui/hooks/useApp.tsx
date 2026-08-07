@@ -190,7 +190,7 @@ export const useApp = ({
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDetach(
-        Queue.take(queue).pipe(
+        PubSub.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {
               // Event-level Startup activated (no `module` field) fires once,

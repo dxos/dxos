@@ -78,7 +78,7 @@ export class ActivationScheduler {
    * The ready signal below still waits for the complete set.
    */
   start(): Effect.Effect<boolean, Error, Plugin.Service> {
-    return Effect.withFiberRuntime<boolean, Error, Plugin.Service>((fiber) =>
+    return Effect.withFiber<boolean, Error, Plugin.Service>((fiber) =>
       this.#start(fiber).pipe(Effect.ensuring(this.#state.fibers.untrack(fiber))),
     );
   }
@@ -212,8 +212,8 @@ export class ActivationScheduler {
       // have newly-eligible modules. A fired event implies the wait below already completed once,
       // so the scan is safe this early.
       if (this.#state.eventFired(key)) {
-        const activatingEvents = yield* this.#activatingEvents;
-        const activatingModules = yield* this.#activatingModules;
+        const activatingEvents = yield* Ref.get(this.#activatingEvents);
+        const activatingModules = yield* Ref.get(this.#activatingModules);
         if (this.#getModulesForActivation(key, activatingEvents, activatingModules).length === 0) {
           log('no modules to activate', { key, ...params });
           return false;
@@ -231,7 +231,7 @@ export class ActivationScheduler {
       yield* Deferred.await(this.#state.initialized);
       performance.mark(`milestone:dispatch:${key}:initialized`);
 
-      return yield* Effect.withFiberRuntime<boolean, Error, Plugin.Service>((fiber) =>
+      return yield* Effect.withFiber<boolean, Error, Plugin.Service>((fiber) =>
         this.#activateEvent(key, params, fiber).pipe(
           together(
             Effect.sleep(Duration.seconds(15)).pipe(
@@ -324,8 +324,8 @@ export class ActivationScheduler {
       yield* Ref.update(this.#activatingEvents, (activating) => Array.append(activating, key));
       this.#state.clearPendingReset(key);
 
-      const activatingEvents = yield* this.#activatingEvents;
-      const activatingModules = yield* this.#activatingModules;
+      const activatingEvents = yield* Ref.get(this.#activatingEvents);
+      const activatingModules = yield* Ref.get(this.#activatingModules);
       const modules = this.#getModulesForActivation(key, activatingEvents, activatingModules);
       if (modules.length === 0) {
         log('no modules to activate', { key });

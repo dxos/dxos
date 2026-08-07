@@ -4,8 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
-import * as PlatformError from 'effect/PlatformError';
 import * as KeyValueStore from 'effect/unstable/persistence/KeyValueStore';
 import * as idb from 'idb-keyval';
 
@@ -13,13 +11,7 @@ const DB_NAME = 'dxos-process-manager';
 const STORE_NAME = 'keyval';
 
 const idbError = (method: string, key: string, cause: unknown) =>
-  new PlatformError.SystemError({
-    reason: 'Unknown',
-    module: 'KeyValueStore',
-    method,
-    pathOrDescriptor: key,
-    description: String(cause),
-  });
+  new KeyValueStore.KeyValueStoreError({ message: String(cause), method, key, cause });
 
 /**
  * KeyValueStore layer backed by IndexedDB via idb-keyval.
@@ -34,7 +26,7 @@ export const layerIdb: Layer.Layer<KeyValueStore.KeyValueStore> =
         return KeyValueStore.makeStringOnly({
           get: (key) =>
             Effect.tryPromise({
-              try: () => idb.get<string>(key, store).then(Option.fromNullishOr),
+              try: () => idb.get<string>(key, store),
               catch: (err) => idbError('get', key, err),
             }),
 

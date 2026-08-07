@@ -230,7 +230,7 @@ describe('HistoryTracker', () => {
           yield* TestClock.adjust('20 millis');
           yield* Fiber.join(fiber);
 
-          const undoable = yield* Queue.take(undoables);
+          const undoable = yield* PubSub.take(undoables);
           expect(undoable.message).toEqual(testMessage);
         }),
       );
@@ -265,7 +265,7 @@ describe('HistoryTracker', () => {
           yield* TestClock.adjust('20 millis');
           yield* Fiber.join(fiber);
 
-          const undoable = yield* Queue.take(undoables);
+          const undoable = yield* PubSub.take(undoables);
           expect(undoable.message).toEqual(['computed-2-to-4', { ns: 'test' }]);
         }),
       );
