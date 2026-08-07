@@ -21,7 +21,7 @@ import { OnboardingOperation } from '../operations';
 import { translations } from '../translations';
 import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
 
-export const WELCOME_SCREEN = `${meta.profile.key}.component.welcome-screen`;
+export { WELCOME_SCREEN } from './keys';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();
