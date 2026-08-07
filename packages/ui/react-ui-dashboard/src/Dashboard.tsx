@@ -309,7 +309,9 @@ const DashboardActivity = composable<HTMLDivElement, DashboardActivityCustomProp
               <span
                 key={`${year}-${month}`}
                 style={{ gridColumn: weekIndex + 1, gridRow: 1 }}
-                className='whitespace-nowrap text-xs text-description'
+                // justify-self-end sets the label's right edge on its week column so overflow
+                // extends left, keeping the last month label unclipped at the pinned right edge.
+                className='justify-self-end whitespace-nowrap text-xs text-description'
               >
                 {monthFormat.format(new Date(year, month, 1))}
               </span>
