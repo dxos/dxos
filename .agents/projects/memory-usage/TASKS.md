@@ -1,6 +1,6 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 3 remainder (worker-side retention design pass), then the reduction phases 5–7 toward the 300–400 MB resting target. Uncommitted: none. Last: plan trimmed per user — no perf-timeline gating, no CI guard._
+_Resume: Phase 5 idle-churn elimination (census → interim batching/throttle → decommit verification), then Phase 6 code trims, Phase 7 wasm. Reordered per user: churn first — slack+headroom (~380 MB/GB pool) is the top lever._
 
 **Target (agreed with user 2026-08-06): 300–500 MB resting footprint for an
 idle tab, aiming 300–400 (Figma range). Baseline today: ~615 MB harness-measured
@@ -66,7 +66,23 @@ Chrome's number is renderer process footprint, not JS heap.
 > (unbounded performance.measure accumulation; guard design sketch in git
 > history) if either is ever revisited.
 
-## Phase 5: Core boot-execution reduction — REFRAMED by census (2026-08-06)
+## Phase 5 (NEXT): Idle-churn elimination (settles committed slack, ~-100–300 MB)
+
+~51 SQLite statements/second at idle (1 s polling fan-out) keeps allocator
+high-water marks pinned — pages stay committed to serve the churn, so the tab
+never settles toward its live size.
+
+### Tasks
+
+- [ ] **Census the idle work** — which queries/loops fire per tick and why
+      (dispatcher, sync, indexing); measure allocation rate per source.
+- [ ] **Push over poll** — coordinate with feed-live-objects stage 4 (EDGE
+      push replacing 1 s polling); interim: batch/dedupe per-tick queries,
+      lengthen intervals when tab hidden (Chrome freezing-compatible).
+- [ ] **Verify decommit** — soak after: renderer RSS should trend toward live
+      size at idle instead of plateauing at the high-water mark.
+
+## Phase 6: Core code reduction — REFRAMED by census (2026-08-06)
 
 Boot census (`boot-census.mjs`: precise coverage + sourcemap attribution +
 module-activation marks, full prod build, ready+150 s): **465 chunks /
@@ -99,22 +115,6 @@ SchemaClass closures — plus wasm + DOM), not stray loading. Remaining angles:
       architecture).
 - [ ] **Re-measure the tier curve** after any change; ratchet a budget once
       the number settles.
-
-## Phase 6: Idle-churn elimination (settles committed slack, ~-100–300 MB)
-
-~51 SQLite statements/second at idle (1 s polling fan-out) keeps allocator
-high-water marks pinned — pages stay committed to serve the churn, so the tab
-never settles toward its live size.
-
-### Tasks
-
-- [ ] **Census the idle work** — which queries/loops fire per tick and why
-      (dispatcher, sync, indexing); measure allocation rate per source.
-- [ ] **Push over poll** — coordinate with feed-live-objects stage 4 (EDGE
-      push replacing 1 s polling); interim: batch/dedupe per-tick queries,
-      lengthen intervals when tab hidden (Chrome freezing-compatible).
-- [ ] **Verify decommit** — soak after: renderer RSS should trend toward live
-      size at idle instead of plateauing at the high-water mark.
 
 ## Phase 7: Wasm consolidation (~-30–50 MB now; bounds future growth)
 
