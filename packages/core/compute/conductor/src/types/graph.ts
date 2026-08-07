@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Operation from '@dxos/compute/Operation';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
@@ -66,9 +67,8 @@ export type ComputeNodeMeta = {
 /**
  * GraphEdge.
  */
-export const ComputeEdge = Schema.extend(
-  Graph.Edge,
-  Schema.Struct({
+export const ComputeEdge = Graph.Edge.mapFields(
+  Struct.assign({
     // TODO(burdon): Rename sourceProp, targetProp?
 
     /** Input property to target. */

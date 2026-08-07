@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { Format } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
@@ -37,9 +38,8 @@ export const BaseProperty = Schema.Struct({
 export type BaseProperty = Schema.Schema.Type<typeof BaseProperty>;
 
 const extend = <Fields extends Schema.Struct.Fields>(format: Format.TypeFormat, type: TypeEnum, fields?: Fields) =>
-  Schema.extend(
-    BaseProperty,
-    Schema.Struct({
+  BaseProperty.mapFields(
+    Struct.assign({
       type: Schema.Literal(type),
       format: Schema.Literal(format).annotate({
         title: 'Type format',
@@ -63,9 +63,8 @@ interface FormatSchemaCommon extends BaseProperty {
  */
 // TODO(burdon): Translations?
 export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchemaCommon>> = {
-  [Format.TypeFormat.None]: Schema.extend(
-    BaseProperty,
-    Schema.Struct({
+  [Format.TypeFormat.None]: BaseProperty.mapFields(
+    Struct.assign({
       type: Schema.Enum(TypeEnum),
       format: Schema.Literal(Format.TypeFormat.None) as Schema.Schema<Format.TypeFormat>,
     }),

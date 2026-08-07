@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -28,9 +29,8 @@ export type Shape = Schema.Schema.Type<typeof Shape>;
 /**
  * Connections between shapes.
  */
-export const Connection = Schema.extend(
-  Graph.Edge,
-  Schema.Struct({
+export const Connection = Graph.Edge.mapFields(
+  Struct.assign({
     input: Schema.optional(Schema.String),
     output: Schema.optional(Schema.String),
   }),

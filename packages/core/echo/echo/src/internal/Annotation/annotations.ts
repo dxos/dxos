@@ -5,6 +5,7 @@
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
@@ -114,9 +115,8 @@ export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 /**
  * Payload stored under {@link TypeAnnotationId}.
  */
-export const TypeAnnotation = Schema.extend(
-  TypeMeta,
-  Schema.Struct({
+export const TypeAnnotation = TypeMeta.mapFields(
+  Struct.assign({
     kind: Schema.Enum(EntityKind),
 
     /**

@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { AiService } from '@dxos/ai';
 import { SpaceSchema } from '@dxos/client/echo';
@@ -29,9 +30,8 @@ export const Create = Operation.make({
   }),
 });
 
-export const MessageWithRangeId = Schema.extend(
-  Type.getSchema(Message.Message),
-  Schema.Struct({
+export const MessageWithRangeId = Type.getSchema(Message.Message).mapFields(
+  Struct.assign({
     rangeId: Schema.optional(Schema.Array(Schema.String)).annotate({
       description: 'The IDs of the messages that contain the sentences.',
     }),

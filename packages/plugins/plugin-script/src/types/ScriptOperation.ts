@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Script from '@dxos/compute/Script';
@@ -31,9 +32,8 @@ export const NotebookProps = Schema.Struct({
 
 export const CreateScript = Operation.make({
   meta: { key: makeKey('createScript'), name: 'Create Script', icon: 'ph--code--regular' },
-  input: Schema.extend(
-    ScriptProps,
-    Schema.Struct({
+  input: ScriptProps.mapFields(
+    Struct.assign({
       db: Database.Database,
     }),
   ),

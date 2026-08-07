@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -48,7 +49,7 @@ export const EchoObjectSchema: {
     // Extract fields from the schema if available (Struct schemas have .fields).
     const fields = ((self as any).fields ?? {}) as Fields;
 
-    const schemaWithId = Schema.extend(self, Schema.Struct({ id: Schema.String }));
+    const schemaWithId = self.mapFields(Struct.assign({ id: Schema.String }));
     const ast = SchemaAST.annotate(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,

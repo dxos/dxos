@@ -299,6 +299,31 @@ for (const file of files) {
     return `Schema.${target}([${parts.map((part) => part.trim()).join(', ')}])`;
   });
 
+  // `Schema.extend(A, Schema.Struct({...}))` -> `A.mapFields(Struct.assign({...}))`. Only the
+  // form whose second argument is a literal struct converts: `mapFields` composes FIELDS, so an
+  // arbitrary schema expression there has no mechanical equivalent and is left visible.
+  source = mapCalls(source, 'extend', (inner) => {
+    const parts = splitArgs(inner);
+    if (parts.length !== 2) {
+      return `Schema.extend(${inner})`;
+    }
+    const [base, extension] = parts.map((part) => part.trim());
+    const match = /^Schema\.Struct\(([\s\S]*)\)$/.exec(extension);
+    if (!match) {
+      return `Schema.extend(${inner})`;
+    }
+    bump('Schema.extend');
+    return `${base}.mapFields(Struct.assign(${match[1].trim()}))`;
+  });
+
+  // `Struct.assign` needs its module in scope.
+  if (source.includes('Struct.assign(') && !/^import \* as Struct from 'effect\/Struct';$/m.test(source)) {
+    source = source.replace(
+      /^(import \* as Schema from 'effect\/Schema';)$/m,
+      "$1\nimport * as Struct from 'effect/Struct';",
+    );
+  }
+
   if (source !== before) {
     changedFiles += 1;
     if (!dry) {
