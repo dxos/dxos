@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { Provider } from '@dxos/ai';
 import { SchemaEx } from '@dxos/effect';
@@ -25,60 +26,56 @@ export const ChatView = Schema.Union([
 export type ChatView = Schema.Schema.Type<typeof ChatView>;
 export const ChatViews = SchemaEx.getLiteralValues(ChatView);
 
-export const ModelDefaults = Schema.mutable(
-  Schema.Struct({
-    edge: Schema.optional(
-      Schema.String.annotate({
-        title: 'Remote language model',
-        description: 'Choose the remote language model used for AI requests.',
-      }),
-    ),
-    // `built-in` (bundled sidecar) and `ollama` (external) share the `ollama` model source, so they
-    // share this single default key.
-    ollama: Schema.optional(
-      Schema.String.annotate({
-        title: 'Local language model',
-        description: 'Choose the locally hosted model used for AI requests.',
-      }),
-    ),
-    lmstudio: Schema.optional(
-      Schema.String.annotate({
-        title: 'LM Studio language model',
-        description: 'Choose the locally hosted LM Studio model for AI requests.',
-      }),
-    ),
-  }),
-);
+export const ModelDefaults = Schema.Struct({
+  edge: Schema.optional(
+    Schema.String.annotate({
+      title: 'Remote language model',
+      description: 'Choose the remote language model used for AI requests.',
+    }),
+  ),
+  // `built-in` (bundled sidecar) and `ollama` (external) share the `ollama` model source, so they
+  // share this single default key.
+  ollama: Schema.optional(
+    Schema.String.annotate({
+      title: 'Local language model',
+      description: 'Choose the locally hosted model used for AI requests.',
+    }),
+  ),
+  lmstudio: Schema.optional(
+    Schema.String.annotate({
+      title: 'LM Studio language model',
+      description: 'Choose the locally hosted LM Studio model for AI requests.',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 export type ModelDefaults = Schema.Schema.Type<typeof ModelDefaults>;
 
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    customPrompts: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Use custom prompts',
-        description: 'Allow the assistant to use custom prompts defined in your spaces.',
-      }),
-    ),
-    chatView: Schema.optional(
-      ChatView.annotate({
-        title: 'Chat view',
-        description:
-          'Controls which message blocks are shown in the chat: normal hides reasoning, thinking shows reasoning, debug shows raw blocks, summary shows only conversational text.',
-      }),
-    ),
-    modelProvider: Schema.optional(
-      ModelProvider.annotate({
-        title: 'LLM provider',
-        description: 'Select which language model service to use for AI responses.',
-      }),
-    ),
-    modelDefaults: Schema.optional(ModelDefaults.annotate({ title: 'Model defaults' })),
-    tracePanelDebug: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Trace panel debug',
-        description: 'Show the raw span tree as JSON in the trace panel instead of the commit graph.',
-      }),
-    ),
-  }),
-);
+export const Settings = Schema.Struct({
+  customPrompts: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Use custom prompts',
+      description: 'Allow the assistant to use custom prompts defined in your spaces.',
+    }),
+  ),
+  chatView: Schema.optional(
+    ChatView.annotate({
+      title: 'Chat view',
+      description:
+        'Controls which message blocks are shown in the chat: normal hides reasoning, thinking shows reasoning, debug shows raw blocks, summary shows only conversational text.',
+    }),
+  ),
+  modelProvider: Schema.optional(
+    ModelProvider.annotate({
+      title: 'LLM provider',
+      description: 'Select which language model service to use for AI responses.',
+    }),
+  ),
+  modelDefaults: Schema.optional(ModelDefaults.annotate({ title: 'Model defaults' })),
+  tracePanelDebug: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Trace panel debug',
+      description: 'Show the raw span tree as JSON in the trace panel instead of the commit graph.',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

@@ -38,8 +38,8 @@ const LegacyStoredDeckState = Schema.Struct({
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record(Schema.String, Schema.mutable(LegacyDeckState))),
-  previousMode: Schema.optional(Schema.mutable(Schema.Record(Schema.String, Schema.Any))),
+  decks: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutable(LegacyDeckState))),
+  previousMode: Schema.optional(Schema.mutableKey(Schema.Record(Schema.String, Schema.Any))),
 }).mapFields(Struct.map(Schema.mutableKey));
 type LegacyStoredDeckState = Schema.Schema.Type<typeof LegacyStoredDeckState>;
 

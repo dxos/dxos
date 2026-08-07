@@ -4,6 +4,7 @@
 
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { type Atom } from 'effect/unstable/reactivity';
 import type { ComponentType } from 'react';
 
@@ -25,12 +26,10 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 );
 
 /** Schema for persisted space plugin state. */
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    spaceNames: Schema.Record(Schema.String, Schema.String),
-    enabledEdgeReplication: Schema.Boolean,
-  }),
-);
+export const StateSchema = Schema.Struct({
+  spaceNames: Schema.Record(Schema.String, Schema.String),
+  enabledEdgeReplication: Schema.Boolean,
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type SpaceState = Schema.Schema.Type<typeof StateSchema>;
 

@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { type Atom } from 'effect/unstable/reactivity';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -18,13 +19,11 @@ const LatLngLiteralSchema = Schema.Struct({
   lng: Schema.Number,
 });
 
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    type: Schema.Literals(['globe', 'map']),
-    center: Schema.optional(LatLngLiteralSchema),
-    zoom: Schema.optional(Schema.Number),
-  }),
-);
+export const StateSchema = Schema.Struct({
+  type: Schema.Literals(['globe', 'map']),
+  center: Schema.optional(LatLngLiteralSchema),
+  zoom: Schema.optional(Schema.Number),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = {
   type: MapControlType;

@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
 
@@ -39,69 +40,67 @@ export type DiffViewMode = Schema.Schema.Type<typeof DiffViewMode>;
 /**
  * Plugin settings.
  */
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    defaultViewMode: EditorViewMode.annotate({
-      title: 'Default view mode',
-      description: 'Set whether documents open in editing or read-only mode.',
-    }),
-    commentAgentMode: Schema.optional(
-      CommentAgentMode.annotate({
-        title: 'Comment agent mode',
-        description:
-          "How new comment threads on markdown documents are processed: 'off' (no AI), 'auto' (AI responds to every user message), or 'mention' (AI responds only on @mention).",
-      }),
-    ),
-    editorInputMode: Schema.optional(
-      EditorInputMode.annotate({
-        title: 'Editor input mode',
-        description: 'Choose keyboard bindings for the editor.',
-      }),
-    ),
-    toolbar: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Show toolbar',
-        description: 'Display a formatting toolbar above the editor.',
-      }),
-    ),
-    numberedHeadings: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Numbered headings',
-        description: 'Automatically number heading levels in the document.',
-      }),
-    ),
-    diffView: Schema.optional(
-      DiffViewMode.annotate({
-        title: 'Diff view',
-        description:
-          "How document version comparisons are rendered: 'inline' (unified), 'sideBySide' (two panes), 'gutter' (change bars), or 'suggest' (accept/reject each change over the parent).",
-      }),
-    ),
-    folding: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Folding',
-        description: 'Allow collapsing and expanding sections by heading.',
-      }),
-    ),
-    experimental: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Enable experimental features',
-        description: 'Turn on features that are still in development.',
-      }),
-    ),
-    debug: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Enable debugging features',
-        description: 'Show developer tools and diagnostics for the editor.',
-      }),
-    ),
-    snippets: Schema.optional(
-      Schema.String.annotate({
-        title: 'Snippets',
-        description: 'Input snippets to replay for testing purposes.',
-      }),
-    ),
+export const Settings = Schema.Struct({
+  defaultViewMode: EditorViewMode.annotate({
+    title: 'Default view mode',
+    description: 'Set whether documents open in editing or read-only mode.',
   }),
-);
+  commentAgentMode: Schema.optional(
+    CommentAgentMode.annotate({
+      title: 'Comment agent mode',
+      description:
+        "How new comment threads on markdown documents are processed: 'off' (no AI), 'auto' (AI responds to every user message), or 'mention' (AI responds only on @mention).",
+    }),
+  ),
+  editorInputMode: Schema.optional(
+    EditorInputMode.annotate({
+      title: 'Editor input mode',
+      description: 'Choose keyboard bindings for the editor.',
+    }),
+  ),
+  toolbar: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Show toolbar',
+      description: 'Display a formatting toolbar above the editor.',
+    }),
+  ),
+  numberedHeadings: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Numbered headings',
+      description: 'Automatically number heading levels in the document.',
+    }),
+  ),
+  diffView: Schema.optional(
+    DiffViewMode.annotate({
+      title: 'Diff view',
+      description:
+        "How document version comparisons are rendered: 'inline' (unified), 'sideBySide' (two panes), 'gutter' (change bars), or 'suggest' (accept/reject each change over the parent).",
+    }),
+  ),
+  folding: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Folding',
+      description: 'Allow collapsing and expanding sections by heading.',
+    }),
+  ),
+  experimental: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Enable experimental features',
+      description: 'Turn on features that are still in development.',
+    }),
+  ),
+  debug: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Enable debugging features',
+      description: 'Show developer tools and diagnostics for the editor.',
+    }),
+  ),
+  snippets: Schema.optional(
+    Schema.String.annotate({
+      title: 'Snippets',
+      description: 'Input snippets to replay for testing purposes.',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

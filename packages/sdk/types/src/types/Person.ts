@@ -102,12 +102,10 @@ const PersonSchema = Schema.Struct({
 });
 
 const _PersonSchema = PersonSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      // TODO(wittjosiah): Reconcile with addresses.
-      location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
-    }),
-  ),
+  Schema.fieldsAssign({
+    // TODO(wittjosiah): Reconcile with addresses.
+    location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
+  }),
   Schema.annotate({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'neutral' }),

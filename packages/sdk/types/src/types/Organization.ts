@@ -68,11 +68,9 @@ const OrganizationSchema = Schema.Struct({
 });
 
 const _OrganizationSchema = OrganizationSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
-    }),
-  ),
+  Schema.fieldsAssign({
+    location: Format.GeoPoint.pipe(Schema.annotate({ title: 'Location' }), Schema.optional),
+  }),
   Schema.annotate({ title: 'Organization', description: 'An organization.' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--building-office--regular', hue: 'neutral' }),

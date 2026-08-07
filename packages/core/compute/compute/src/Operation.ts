@@ -12,6 +12,7 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Schema$ from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 
 import { Annotation, DXN, JsonSchema, type Key, Migration, Obj, Ref, Type } from '@dxos/echo';
@@ -484,13 +485,11 @@ export const Label = Schema.Union([
   Schema.mutable(
     Schema.Tuple([
       Schema.String,
-      Schema.mutable(
-        Schema.Struct({
-          ns: Schema.String,
-          count: Schema.optional(Schema.Number),
-          defaultValue: Schema.optional(Schema.String),
-        }),
-      ),
+      Schema.Struct({
+        ns: Schema.String,
+        count: Schema.optional(Schema.Number),
+        defaultValue: Schema.optional(Schema.String),
+      }).mapFields(Struct.map(Schema.mutableKey)),
     ]),
   ),
 ]);

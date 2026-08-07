@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { type Atom } from 'effect/unstable/reactivity';
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
@@ -20,12 +21,10 @@ export const Settings = Capability.makeSingleton<Atom.Writable<import('./Setting
   `${meta.profile.key}.capability.settings`,
 );
 
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    group: Schema.optional(Schema.String),
-    notified: Schema.optional(Schema.Boolean),
-  }),
-);
+export const StateSchema = Schema.Struct({
+  group: Schema.optional(Schema.String),
+  notified: Schema.optional(Schema.Boolean),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 

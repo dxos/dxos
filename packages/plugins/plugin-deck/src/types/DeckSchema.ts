@@ -41,7 +41,7 @@ export const DeckState = Schema.Struct({
    * like a browser tab: opening under a name that is already taken replaces its occupant in place.
    * Entries are pruned as their plank closes.
    */
-  plankNames: Schema.mutable(Schema.Record(Schema.String, Schema.String)),
+  plankNames: Schema.mutableKey(Schema.Record(Schema.String, Schema.String)),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
 
@@ -82,7 +82,7 @@ export const StoredDeckState = Schema.Struct({
   complementarySidebarPanel: Schema.optional(Schema.String),
   activeDeck: Schema.String,
   previousDeck: Schema.String,
-  decks: Schema.mutable(Schema.Record(Schema.String, Schema.mutable(DeckState))),
+  decks: Schema.mutableKey(Schema.Record(Schema.String, Schema.mutable(DeckState))),
 }).mapFields(Struct.map(Schema.mutableKey));
 export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
@@ -141,7 +141,9 @@ export namespace DeckAction {
     Schema.Literal('increment-end').annotate({ description: 'Move the plank towards the end of the deck.' }),
   ]);
   export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
-  export const Adjustment = Schema.mutable(Schema.Struct({ id: Schema.String, type: PartAdjustmentSchema }));
+  export const Adjustment = Schema.Struct({ id: Schema.String, type: PartAdjustmentSchema }).mapFields(
+    Struct.map(Schema.mutableKey),
+  );
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.

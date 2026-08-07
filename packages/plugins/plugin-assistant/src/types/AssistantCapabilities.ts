@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { type Atom } from 'effect/unstable/reactivity';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -21,14 +22,12 @@ export const Settings = Capability.makeSingleton<Atom.Writable<Assistant.Setting
 
 export const OllamaManager = Capability.makeSingleton<Ollama.Manager>()(`${meta.profile.key}.capability.ollamaManager`);
 
-export const StateSchema = Schema.mutable(
-  Schema.Struct({
-    /** Map of primary object dxn to current chat dxn. */
-    currentChat: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
-    /** Map of chat object path to prompt text to auto-submit when the chat opens. */
-    pendingPrompts: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
-  }),
-);
+export const StateSchema = Schema.Struct({
+  /** Map of primary object dxn to current chat dxn. */
+  currentChat: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
+  /** Map of chat object path to prompt text to auto-submit when the chat opens. */
+  pendingPrompts: Schema.Record(Schema.String, Schema.UndefinedOr(Schema.String)),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export type AssistantState = Schema.Schema.Type<typeof StateSchema>;
 
@@ -39,7 +38,7 @@ export const CompanionChatCache = Capability.makeSingleton<Atom.Writable<Record<
   `${meta.profile.key}.capability.companionChatCache`,
 );
 
-export const HomeSuggestionsCacheSchema = Schema.mutable(
+export const HomeSuggestionsCacheSchema = Schema.mutableKey(
   Schema.Record(
     Schema.String,
     Schema.Struct({

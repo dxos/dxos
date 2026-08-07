@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 export const TreeNodeType = Schema.Struct({
   id: Key.EntityId,
   children: Schema.mutable(Schema.Array(Key.EntityId)),
-  data: Schema.mutable(Schema.Record(Schema.String, Schema.Any)),
+  data: Schema.mutableKey(Schema.Record(Schema.String, Schema.Any)),
   ref: Schema.optional(Ref.Ref(TestSchema.Expando)),
 }).mapFields(Struct.map(Schema.mutableKey));
 
@@ -23,7 +23,7 @@ export type TreeNodeType = Schema.Schema.Type<typeof TreeNodeType>;
 export class TreeType extends Type.makeObject<TreeType>(DXN.make('org.dxos.type.tree', '0.1.0'))(
   Schema.Struct({
     root: Key.EntityId,
-    nodes: Schema.mutable(Schema.Record(Key.EntityId, TreeNodeType)),
+    nodes: Schema.mutableKey(Schema.Record(Key.EntityId, TreeNodeType)),
   }),
 ) {}
 

@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 export const GridSchema = Schema.Union([
   Schema.Literal('mesh').annotate({ title: 'Mesh' }),
@@ -12,21 +13,19 @@ export const GridSchema = Schema.Union([
 ]);
 export type GridType = Schema.Schema.Type<typeof GridSchema>;
 
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    showGrid: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Show grid',
-        description: 'Display a background grid on the sketch canvas.',
-      }),
-    ),
-    gridType: Schema.optional(
-      GridSchema.annotate({
-        title: 'Grid type',
-        description: 'Choose between a mesh or dotted background grid.',
-      }),
-    ),
-  }),
-);
+export const Settings = Schema.Struct({
+  showGrid: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Show grid',
+      description: 'Display a background grid on the sketch canvas.',
+    }),
+  ),
+  gridType: Schema.optional(
+    GridSchema.annotate({
+      title: 'Grid type',
+      description: 'Choose between a mesh or dotted background grid.',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

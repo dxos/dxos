@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Annotation, Filter, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
@@ -152,23 +153,21 @@ export const Static: Story<ExcludeId<typeof PersonSchema>> = {
   },
 };
 
-const SettingsSchema = Schema.mutable(
-  Schema.Struct({
-    viewMode: Schema.Literals(['preview', 'readonly', 'source']).annotate({
-      title: 'Default view mode',
-      description: 'Set whether documents open in editing or read-only mode.',
-    }),
-    toolbar: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Show toolbar',
-        description: 'Display a formatting toolbar above the editor.',
-      }),
-    ),
-    fontSize: Schema.optional(
-      Schema.Number.annotate({ title: 'Font size', description: 'Editor font size, in pixels.' }),
-    ),
+const SettingsSchema = Schema.Struct({
+  viewMode: Schema.Literals(['preview', 'readonly', 'source']).annotate({
+    title: 'Default view mode',
+    description: 'Set whether documents open in editing or read-only mode.',
   }),
-);
+  toolbar: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Show toolbar',
+      description: 'Display a formatting toolbar above the editor.',
+    }),
+  ),
+  fontSize: Schema.optional(
+    Schema.Number.annotate({ title: 'Font size', description: 'Editor font size, in pixels.' }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export const Variants: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
   render: (args) => (
@@ -188,19 +187,17 @@ export const Variants: Story<Schema.Schema.Type<typeof SettingsSchema>> = {
   },
 };
 
-const InlineMarkdownTextSchema = Schema.mutable(
-  Schema.Struct({
-    text: Schema.String,
-    instructions: Ref.Ref(Text.Text).pipe(
-      Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-      Annotation.FormInlineAnnotation.set(true),
-      Schema.annotate({
-        title: 'Instructions',
-        description: 'Ref to a Text object with both markdown and inline-ref annotations.',
-      }),
-    ),
-  }),
-);
+const InlineMarkdownTextSchema = Schema.Struct({
+  text: Schema.String,
+  instructions: Ref.Ref(Text.Text).pipe(
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
+    Annotation.FormInlineAnnotation.set(true),
+    Schema.annotate({
+      title: 'Instructions',
+      description: 'Ref to a Text object with both markdown and inline-ref annotations.',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const InlineMarkdownTextStory = (args: StoryArgs<any>) => {
   const spaces = useSpaces();
@@ -257,55 +254,53 @@ type DynamicFieldsValues = Schema.Schema.Type<typeof DynamicFieldsBase>;
 
 const TAG_VOCABULARY = ['react', 'effect', 'schema', 'echo', 'composer'];
 
-const DynamicFieldsSchema = Schema.mutable(
-  Schema.Struct({
-    ...DynamicFieldsBase.fields,
-    choice: Schema.optional(
-      Schema.String.pipe(
-        OptionsLookupAnnotation.set(
-          optionsLookup<DynamicFieldsValues>()(['query'], ({ query }) =>
-            (query && query.length > 0
-              ? Effect.succeed(
-                  [1, 2, 3].map((index) => ({ value: `${query}-${index}`, label: `${query} choice ${index}` })),
-                )
-              : Effect.succeed([])
-            ).pipe(Effect.delay('600 millis')),
-          ),
+const DynamicFieldsSchema = Schema.Struct({
+  ...DynamicFieldsBase.fields,
+  choice: Schema.optional(
+    Schema.String.pipe(
+      OptionsLookupAnnotation.set(
+        optionsLookup<DynamicFieldsValues>()(['query'], ({ query }) =>
+          (query && query.length > 0
+            ? Effect.succeed(
+                [1, 2, 3].map((index) => ({ value: `${query}-${index}`, label: `${query} choice ${index}` })),
+              )
+            : Effect.succeed([])
+          ).pipe(Effect.delay('600 millis')),
         ),
-        Schema.annotate({ title: 'Choice', description: 'Options load from the query (after a delay).' }),
       ),
+      Schema.annotate({ title: 'Choice', description: 'Options load from the query (after a delay).' }),
     ),
-    // Combobox: the field's own value is the query; the typed text is the auto-selected first option.
-    tag: Schema.optional(
-      Schema.String.pipe(
-        OptionsLookupAnnotation.set(
-          optionsLookup<DynamicFieldsValues>()(
-            // No deps: the pool is fetched once; the combobox filters it by the typed text client-side.
-            [],
-            () =>
-              Effect.succeed(TAG_VOCABULARY.map((value) => ({ value, label: value }))).pipe(Effect.delay('400 millis')),
-            { combobox: true },
-          ),
+  ),
+  // Combobox: the field's own value is the query; the typed text is the auto-selected first option.
+  tag: Schema.optional(
+    Schema.String.pipe(
+      OptionsLookupAnnotation.set(
+        optionsLookup<DynamicFieldsValues>()(
+          // No deps: the pool is fetched once; the combobox filters it by the typed text client-side.
+          [],
+          () =>
+            Effect.succeed(TAG_VOCABULARY.map((value) => ({ value, label: value }))).pipe(Effect.delay('400 millis')),
+          { combobox: true },
         ),
-        Schema.annotate({ title: 'Tag', description: 'Combobox: type to filter; your text stays selectable.' }),
       ),
+      Schema.annotate({ title: 'Tag', description: 'Combobox: type to filter; your text stays selectable.' }),
     ),
-    name: Schema.optional(
-      Schema.String.pipe(
-        // Only derive a value once the URL is structurally valid, and only after the artificial wait —
-        // an incomplete/invalid URL produces nothing.
-        AutofillAnnotation.set(
-          autofill<DynamicFieldsValues>()(['url'], ({ url }) =>
-            isValidUrl(url)
-              ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('800 millis'))
-              : Effect.succeed(undefined),
-          ),
+  ),
+  name: Schema.optional(
+    Schema.String.pipe(
+      // Only derive a value once the URL is structurally valid, and only after the artificial wait —
+      // an incomplete/invalid URL produces nothing.
+      AutofillAnnotation.set(
+        autofill<DynamicFieldsValues>()(['url'], ({ url }) =>
+          isValidUrl(url)
+            ? Effect.succeed(`Feed for ${url}`).pipe(Effect.delay('800 millis'))
+            : Effect.succeed(undefined),
         ),
-        Schema.annotate({ title: 'Name', description: 'Auto-filled from a valid URL (editable).' }),
       ),
+      Schema.annotate({ title: 'Name', description: 'Auto-filled from a valid URL (editable).' }),
     ),
-  }),
-);
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 /**
  * Exercises the dynamic-field annotations: `OptionsLookupAnnotation` (select options loaded from a
@@ -399,18 +394,16 @@ export const DiscriminatedUnion: Story<Schema.Schema.Type<typeof CreateFeedSchem
 // Reactive-source + local-buffer pattern: `values` is a live source, and a parent that gates persistence on
 // validity (like the selected-objects `ObjectForm`). `counter` ticks once a second from outside the form to
 // stand in for an external mutation.
-const ReactiveSchema = Schema.mutable(
-  Schema.Struct({
-    name: Schema.NonEmptyString.annotate({
-      title: 'Name',
-      description: 'Required — clear it and the form holds the invalid draft instead of snapping back.',
-    }),
-    counter: Schema.Number.annotate({
-      title: 'Counter',
-      description: 'Ticks every second from an external source; updates live even while you edit Name.',
-    }),
+const ReactiveSchema = Schema.Struct({
+  name: Schema.NonEmptyString.annotate({
+    title: 'Name',
+    description: 'Required — clear it and the form holds the invalid draft instead of snapping back.',
   }),
-);
+  counter: Schema.Number.annotate({
+    title: 'Counter',
+    description: 'Ticks every second from an external source; updates live even while you edit Name.',
+  }),
+}).mapFields(Struct.map(Schema.mutableKey));
 type ReactiveValues = Schema.Schema.Type<typeof ReactiveSchema>;
 
 const ReactiveBufferedStory = () => {

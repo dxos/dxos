@@ -5,79 +5,78 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 /**
  * User preferences that govern how Composer coordinates with the composer-crx
  * browser extension — both the page-actions bridge and the render-proxy. All fields
  * are optional; defaults are applied by consumers when reading the atom.
  */
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    /**
-     * Master toggle. When false, the bridge plugin ignores incoming extension actions.
-     * Defaults to `true`.
-     */
-    enabled: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Accept extension actions',
-        description: 'When off, actions sent from the composer-crx browser extension are ignored.',
-      }),
-    ),
+export const Settings = Schema.Struct({
+  /**
+   * Master toggle. When false, the bridge plugin ignores incoming extension actions.
+   * Defaults to `true`.
+   */
+  enabled: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Accept extension actions',
+      description: 'When off, actions sent from the composer-crx browser extension are ignored.',
+    }),
+  ),
 
-    /**
-     * Navigate to the created object after the extension creates one. Defaults to
-     * `false` to avoid yanking focus during active work.
-     */
-    autoOpenAfterClip: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Open after action',
-        description: 'Navigate to the created object when the extension creates one.',
-      }),
-    ),
+  /**
+   * Navigate to the created object after the extension creates one. Defaults to
+   * `false` to avoid yanking focus during active work.
+   */
+  autoOpenAfterClip: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Open after action',
+      description: 'Navigate to the created object when the extension creates one.',
+    }),
+  ),
 
-    /**
-     * Master toggle. When false, plugins fall back to the edge HTTP proxy instead of asking the
-     * extension to render pages. Defaults to `true`.
-     */
-    renderProxyEnabled: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Use extension to render pages',
-        description: 'Let plugins render pages via the browser extension to scrape client-rendered sites.',
-      }),
-    ),
+  /**
+   * Master toggle. When false, plugins fall back to the edge HTTP proxy instead of asking the
+   * extension to render pages. Defaults to `true`.
+   */
+  renderProxyEnabled: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Use extension to render pages',
+      description: 'Let plugins render pages via the browser extension to scrape client-rendered sites.',
+    }),
+  ),
 
-    /**
-     * Maximum time (ms) to wait for a page to render before aborting. Defaults to `20000`.
-     */
-    renderTimeout: Schema.optional(
-      Schema.Number.annotate({
-        title: 'Render timeout (ms)',
-        description: 'Maximum time to wait for a page to finish rendering before giving up.',
-      }),
-    ),
+  /**
+   * Maximum time (ms) to wait for a page to render before aborting. Defaults to `20000`.
+   */
+  renderTimeout: Schema.optional(
+    Schema.Number.annotate({
+      title: 'Render timeout (ms)',
+      description: 'Maximum time to wait for a page to finish rendering before giving up.',
+    }),
+  ),
 
-    /**
-     * Render pages in a focused (foreground) tab. Helps sites that defer loading when backgrounded,
-     * at the cost of stealing focus. Defaults to `false`.
-     */
-    renderActiveTab: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Render in focused tab',
-        description: 'Render pages in a focused tab; helps sites that defer loading when backgrounded.',
-      }),
-    ),
+  /**
+   * Render pages in a focused (foreground) tab. Helps sites that defer loading when backgrounded,
+   * at the cost of stealing focus. Defaults to `false`.
+   */
+  renderActiveTab: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Render in focused tab',
+      description: 'Render pages in a focused tab; helps sites that defer loading when backgrounded.',
+    }),
+  ),
 
-    /**
-     * Enable verbose logging and debug previews in the extension. Defaults to `false`.
-     */
-    developerMode: Schema.optional(
-      Schema.Boolean.annotate({
-        title: 'Developer mode',
-        description: 'Enable verbose logging and debug previews in the browser extension.',
-      }),
-    ),
-  }),
-);
+  /**
+   * Enable verbose logging and debug previews in the extension. Defaults to `false`.
+   */
+  developerMode: Schema.optional(
+    Schema.Boolean.annotate({
+      title: 'Developer mode',
+      description: 'Enable verbose logging and debug previews in the browser extension.',
+    }),
+  ),
+}).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
 
