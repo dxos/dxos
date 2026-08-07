@@ -1,0 +1,29 @@
+[
+  {
+    "label": "app-ready +5s",
+    "target": "page: http://localhost:4173/w/BORAED6N5YRBKF5HC7U47G4377LTEMYC4/home",
+    "id": "F1D1292F304D8E48C995E4DE552B9FCE",
+    "usedMB": 91.3,
+    "totalMB": 96.1,
+    "embedderMB": 10.8,
+    "backingMB": 28.8
+  },
+  {
+    "label": "app-ready +5s",
+    "target": "shared_worker: http://localhost:4173/assets/coordinator-worker-d7mh4rsC.js",
+    "id": "010A09539ACC44A1A15734EE5BFF7A42",
+    "usedMB": 0.6,
+    "totalMB": 1.5,
+    "embedderMB": 0,
+    "backingMB": 0.2
+  },
+  {
+    "label": "app-ready +5s",
+    "target": "worker: http://localhost:4173/assets/dedicated-worker-BT6kXxmj.js",
+    "id": "DAAE4152DD4B897EAEA77E42FD2BFFB6",
+    "usedMB": 23.6,
+    "totalMB": 25.8,
+    "embedderMB": 0.5,
+    "backingMB": 30.3
+  }
+]

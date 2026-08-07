@@ -18,8 +18,9 @@ RESEARCH.md.
       the floor is core, not plugin count.
 - [x] Ledgers for the reported tab, from user-captured traces and snapshots:
       1,444 MB (DevTools open), 1,887 MB (mailbox open), fully attributed.
-- [ ] Harness into the repo as a maintained tool with a README (currently
-      session-scoped, copy at /tmp/composer-memory-harness).
+- [x] Harness landed at `packages/apps/composer-app/scripts/memory/` with a
+      README covering which quantity each tool measures and what must be held
+      constant between runs.
 
 ## Phase 2: Data-proportional retention
 
