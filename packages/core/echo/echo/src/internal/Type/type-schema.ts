@@ -56,5 +56,5 @@ export type TypeSchema = Schema.Schema.Type<typeof TypeSchemaStruct> & {
   /** Kind of schema described by this meta-instance — always `EntityKind.Type` for `Type.Type` itself. */
   readonly [SchemaKindId]: EntityKind.Type;
   /** Effect Schema rebuilt lazily from `jsonSchema`; satisfies `Type.getSchema(...)` without an extra cast. */
-  readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [StaticTypeSchemaSlot]: Schema.Top;
 };

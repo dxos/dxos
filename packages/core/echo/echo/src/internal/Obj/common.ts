@@ -39,11 +39,7 @@ export type TypedObjectFields<
     ? Schema.SimplifyMutable<Schema.IndexSignature.Type<Schema.IndexSignature.Records>>
     : {});
 
-export const makeTypedEntityClass = (
-  typename: string,
-  version: string,
-  baseSchema: Schema.Schema.AnyNoContext,
-): Schema.Codec<any> => {
+export const makeTypedEntityClass = (typename: string, version: string, baseSchema: Schema.Top): Schema.Codec<any> => {
   return class {
     // Implement TypedObject properties.
     static readonly typename = typename;

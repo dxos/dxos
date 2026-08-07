@@ -10,8 +10,8 @@ import { findHandlebarVariables } from './text';
 
 // TODO(dmaretskyi): https://www.npmjs.com/package/json-templates.
 
-export const getObjectTemplateInputSchema = (template: unknown): Schema.Schema.AnyNoContext => {
-  const inputs: Record<string, Schema.Schema.AnyNoContext> = {};
+export const getObjectTemplateInputSchema = (template: unknown): Schema.Top => {
+  const inputs: Record<string, Schema.Top> = {};
 
   const go = (value: unknown) => {
     switch (typeof value) {

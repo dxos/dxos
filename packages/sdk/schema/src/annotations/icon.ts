@@ -11,7 +11,7 @@ export const IconAnnotationId: unique symbol = Symbol.for('@dxos/schema/IconAnno
 
 export const IconAnnotation = createAnnotationHelper<string>(IconAnnotationId);
 
-export const getIconAnnotation = (schema: Schema.Schema.AnyNoContext): string | undefined =>
+export const getIconAnnotation = (schema: Schema.Top): string | undefined =>
   IconAnnotation.get(schema).pipe(Option.getOrUndefined) as string | undefined;
 
 /**
@@ -22,7 +22,7 @@ export const getIconAnnotation = (schema: Schema.Schema.AnyNoContext): string | 
 // TODO(burdon): Probably best not to include in type system? Instead incl. in plugin metadata.
 export const withIcon =
   (icon: string) =>
-  <Self extends Schema.Schema.All>(schema: Self) =>
+  <Self extends Schema.Top>(schema: Self) =>
     schema.annotate({
       [IconAnnotationId]: icon,
     });

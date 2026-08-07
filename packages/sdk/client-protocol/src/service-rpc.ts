@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
@@ -341,7 +342,7 @@ export const makeHandlersFromRpc = (rpc: ClientServicesRpc): Partial<ClientServi
  */
 export const makeServicesFromRpc = (
   rpc: ClientServicesRpc,
-  runtime: Runtime.Runtime<never>,
+  runtime: Context.Context<never>,
 ): Partial<ClientServices> => {
   // The rpc client is nested by service; methods are addressed dynamically from the rpc groups,
   // so the per-method types cannot be expressed statically.
@@ -420,7 +421,7 @@ export const pbStreamToStream = <T>(open: () => PbStream<T>): Stream.Stream<T, E
  * Adapts an effect stream to a protobuf service stream.
  * Consumer close interrupts the underlying rpc subscription.
  */
-export const streamToPbStream = <T>(runtime: Runtime.Runtime<never>, stream: Stream.Stream<T, unknown>): PbStream<T> =>
+export const streamToPbStream = <T>(runtime: Context.Context<never>, stream: Stream.Stream<T, unknown>): PbStream<T> =>
   new PbStream<T>(({ ready, next, close }) => {
     const fiber = stream.pipe(
       Stream.onStart(Effect.sync(ready)),

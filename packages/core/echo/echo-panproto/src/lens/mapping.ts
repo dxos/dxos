@@ -14,7 +14,7 @@ import { type Codec, type Converted, type Derived, type Mapping, type Plan, type
 /** `id` is identity, never lensed, so it never participates in a mapping. */
 const RESERVED = new Set(['id']);
 
-const properties = (entity: Type.AnyObj | Schema.Schema.Any): SchemaEx.SchemaProperty[] => {
+const properties = (entity: Type.AnyObj | Schema.Top): SchemaEx.SchemaProperty[] => {
   const schema = Type.isType(entity) ? Type.getSchema(entity) : entity;
   return SchemaEx.getProperties(schema.ast).filter((property) => !RESERVED.has(String(property.name)));
 };
@@ -166,7 +166,7 @@ type MappingEntryLike = string | Converted | Derived | { kind: 'readOnly'; prope
  * else overlay. A name match with an incompatible type resolves to neither — it is reported as
  * suspicious and left unmapped, because overlaying it would duplicate a fact the source already holds.
  */
-export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Schema.Any, mapping: Mapping): Plan => {
+export const plan = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, mapping: Mapping): Plan => {
   const sourceProperties = new Map(properties(source).map((property) => [property.name as string, property]));
   const targetProperties = properties(target);
 

@@ -58,7 +58,7 @@ export const mergeJsonSchemas = (schemas: (JsonSchemaInput | undefined)[]): Json
  * boundary that converts the loose provider-supplied plain object into the
  * authoritative `JsonSchemaType`.
  */
-export const buildUnionFormSchema = (schemas: (JsonSchemaInput | undefined)[]): Schema.Schema.AnyNoContext => {
+export const buildUnionFormSchema = (schemas: (JsonSchemaInput | undefined)[]): Schema.Top => {
   const merged = mergeJsonSchemas(schemas);
   const typed = Schema.decodeUnknownSync(JsonSchema.JsonSchema)(merged);
   return JsonSchema.toEffectSchema(typed);

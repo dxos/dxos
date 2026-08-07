@@ -87,7 +87,7 @@ export class RepoProxy extends Resource {
 
   constructor(
     private _dataService: DataService.Client,
-    private readonly _runtime: Runtime.Runtime<never>,
+    private readonly _runtime: Context.Context<never>,
     private readonly _spaceId: SpaceId,
   ) {
     super();

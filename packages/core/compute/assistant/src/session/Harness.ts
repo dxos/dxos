@@ -145,7 +145,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
 interface MakeOptions {
   conversation: URI.URI;
   processManager: Context.Tag.Service<ProcessManager.Service>;
-  runtime: Runtime.Runtime<Database.Service>;
+  runtime: Context.Context<Database.Service>;
 }
 
 /**
@@ -175,7 +175,7 @@ export const make = ({
 
 interface FromBinderOptions {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
+  runtime: Context.Context<Database.Service>;
   binder: AiContext.Binder;
 }
 
@@ -189,7 +189,7 @@ export const fromBinder = ({ feed, runtime, binder }: FromBinderOptions): Servic
 
 interface MakeServiceOptions {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
+  runtime: Context.Context<Database.Service>;
   binder: AiContext.Binder;
   owningHost: Effect.Effect<RpcClient.RpcClient<HarnessControlRpcs>, NotSupportedError>;
 }

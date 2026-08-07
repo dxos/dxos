@@ -17,7 +17,7 @@ import type * as Type from '../Type';
  * `Type.Type` entity to its underlying source schema first.
  */
 // TODO(dmaretskyi): Should be replaced by registration of typed object.
-export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '0.1.0'): Type.Type => {
+export const createEchoSchema = (schema: Schema.Top, version = '0.1.0'): Type.Type => {
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');

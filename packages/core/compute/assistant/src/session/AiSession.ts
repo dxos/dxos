@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Array from 'effect/Array';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
@@ -58,7 +59,7 @@ export type RunProps<R = never> = {
 
 export type Options = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
+  runtime: Context.Context<Database.Service>;
   /** @effect/atom-react Registry for reactive state. */
   registry?: AtomRegistry.AtomRegistry;
   /**
@@ -80,7 +81,7 @@ const SUMMARY_THRESHOLD = 80_000;
  */
 export class Session extends Resource {
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  private readonly _runtime: Context.Context<Database.Service>;
   readonly #instructions: readonly Instructions.Instructions[];
 
   /**

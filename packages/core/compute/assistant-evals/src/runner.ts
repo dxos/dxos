@@ -299,7 +299,7 @@ export function createEvalRunner<I, O, D>(
 
     const timeoutMillis = options.timeout ?? DEFAULT_EVAL_TIMEOUT_MILLIS;
     const timedRun = run.pipe(
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: timeoutMillis,
         onTimeout: () => new EvalTimeoutError({ millis: timeoutMillis }),
       }),

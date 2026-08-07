@@ -49,7 +49,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
-    private readonly _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime,
+    private readonly _runtime: Context.Context<never> = Runtime.defaultRuntime,
   ) {
     const spacesStream = new PushStream<Space[]>();
     super(spacesStream.observable, []);

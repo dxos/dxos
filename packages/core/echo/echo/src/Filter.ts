@@ -122,7 +122,7 @@ export const type: {
     schema: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
-  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
+  <S extends Schema.Union<readonly Schema.Top[]>>(
     union: S,
     props?: Props<Schema.Schema.Type<S>>,
   ): Filter<Schema.Schema.Type<S>>;
@@ -131,7 +131,7 @@ export const type: {
   // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
   // typed overloads above still win for monomorphic inputs.
   (input: Type$.AnyEntity | URI.URI, props?: Props<unknown>): Filter<unknown>;
-} = (input: Type$.AnyEntity | Schema.Schema.AnyNoContext | URI.URI, props?: Props<unknown>): any => {
+} = (input: Type$.AnyEntity | Schema.Top | URI.URI, props?: Props<unknown>): any => {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
     const typenames = input.ast.types.map((t) => internal.getTypeURIFromSpecifier(Schema.make(t)));
     return new FilterClass({

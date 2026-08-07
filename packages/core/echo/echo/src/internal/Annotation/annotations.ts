@@ -41,7 +41,7 @@ export const FieldPath = (path: string) => PropertyMeta(FIELD_PATH_ANNOTATION, p
  */
 export const TypeIdentifierAnnotationId = Symbol.for('@dxos/schema/annotation/TypeIdentifier');
 
-export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
+export const getTypeIdentifierAnnotation = (schema: Schema.Top) =>
   Function.flow(
     SchemaAST.getAnnotation<string>(TypeIdentifierAnnotationId),
     Option.getOrElse(() => undefined),
@@ -58,7 +58,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  * type also use it (see `Filter.type` / `getTypeURIFromSpecifier`), so both sides
  * stay symmetric without per-schema branching.
  */
-export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => {
+export const getSchemaURI = (schema: Schema.Top): URI.URI | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {
@@ -139,7 +139,7 @@ export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation
  * @returns {@link TypeAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
-export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | undefined => {
+export const getTypeAnnotation = (schema: Schema.Top): TypeAnnotation | undefined => {
   assertArgument(schema != null && schema.ast != null, 'schema', 'invalid schema');
   return Function.flow(
     SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
@@ -150,19 +150,19 @@ export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | u
 /**
  * @returns {@link EntityKind} from a schema.
  */
-export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
+export const getEntityKind = (schema: Schema.Top): EntityKind | undefined => getTypeAnnotation(schema)?.kind;
 
 /**
  * @internal
  * @returns Schema typename (without dxn: prefix or version number).
  */
-export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
+export const getSchemaTypename = (schema: Schema.Top): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
  * @internal
  * @returns Schema version in semver format.
  */
-export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
+export const getSchemaVersion = (schema: Schema.Top): string | undefined => getTypeAnnotation(schema)?.version;
 
 /**
  * Gets the typename of the object without the version.
@@ -243,7 +243,7 @@ export type PropertyMetaAnnotation = {
 // TODO(wittjosiah): Why is this separate from FormatAnnotation?
 /**
  * Apply property-level metadata to an Effect schema. Only accepts
- * `Schema.Schema.Any` — apply BEFORE wrapping the schema with
+ * `Schema.Top` — apply BEFORE wrapping the schema with
  * `Type.makeObject` / `Type.makeRelation`. To read property meta off a
  * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
  */
@@ -302,7 +302,7 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
 // TODO(burdon): Convert to SchemaEx.JsonPath?
-export const getLabelWithSchema = <S extends Schema.Schema.Any>(
+export const getLabelWithSchema = <S extends Schema.Top>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
@@ -341,11 +341,7 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
  * Sets the label for a given object based on {@link LabelAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-export const setLabelWithSchema = <S extends Schema.Schema.Any>(
-  schema: S,
-  object: Schema.Schema.Type<S>,
-  label: string,
-) => {
+export const setLabelWithSchema = <S extends Schema.Top>(schema: S, object: Schema.Schema.Type<S>, label: string) => {
   const annotation = LabelAnnotation.get(schema).pipe(
     Option.map((field) => field[0]),
     Option.getOrElse(() => 'name'),
@@ -365,7 +361,7 @@ export const DescriptionAnnotation = createAnnotationHelper<string>(DescriptionA
  * Lower-level version that requires explicit schema parameter.
  */
 // TODO(burdon): Convert to SchemaEx.JsonPath?
-export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
+export const getDescriptionWithSchema = <S extends Schema.Top>(
   schema: S,
   object: Schema.Schema.Type<S>,
 ): string | undefined => {
@@ -391,7 +387,7 @@ export const getDescriptionWithSchema = <S extends Schema.Schema.Any>(
  * Sets the description for a given object based on {@link DescriptionAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
  */
-export const setDescriptionWithSchema = <S extends Schema.Schema.Any>(
+export const setDescriptionWithSchema = <S extends Schema.Top>(
   schema: S,
   object: Schema.Schema.Type<S>,
   description: string,
@@ -512,7 +508,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
     get: (schema) => getFromAst(schema.ast, annotation),
     getFromAst: (ast) => getFromAst(ast, annotation),
     set: (value) =>
-      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
+      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Top>(schema: S) => S,
   };
 
   return annotation;

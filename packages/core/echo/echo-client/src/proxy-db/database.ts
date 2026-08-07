@@ -179,7 +179,7 @@ export type EchoDatabaseProps = {
   dataService: DataService.Client;
   queryService: QueryService.Client;
   feedService?: FeedService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: Context.Context<never>;
   spaceId: SpaceId;
 
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -271,7 +271,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   #feedService: FeedService.Client | undefined;
 
   /** Runtime used to run effect-rpc feed calls at Promise boundaries. */
-  readonly #runtime: Runtime.Runtime<never>;
+  readonly #runtime: Context.Context<never>;
 
   /**
    * Feed handles keyed by feed URI. A feed is a regular ECHO object whose items live in an
@@ -402,8 +402,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return schema;
   }
 
-  private _addPersistentSchema(schemaInput: Schema.Schema.AnyNoContext | Type.AnyEntity): Type.AnyEntity {
-    let schema: Schema.Schema.AnyNoContext;
+  private _addPersistentSchema(schemaInput: Schema.Top | Type.AnyEntity): Type.AnyEntity {
+    let schema: Schema.Top;
     let meta: TypeAnnotation | undefined;
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;

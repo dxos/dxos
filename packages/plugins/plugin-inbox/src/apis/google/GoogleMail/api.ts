@@ -23,7 +23,7 @@ import {
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
 const decodeAndHandleErrors =
-  <S extends Schema.Schema.Any>(schema: S) =>
+  <S extends Schema.Top>(schema: S) =>
   (
     data: unknown,
   ): Effect.Effect<Schema.Schema.Type<S>, GoogleError | ParseResult.ParseError, Schema.Schema.Context<S>> =>

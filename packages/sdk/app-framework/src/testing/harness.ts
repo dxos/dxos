@@ -191,7 +191,7 @@ class TestHarnessImpl implements TestHarness {
     const timeout = opts?.timeout ?? DEFAULT_TIMEOUT_MS;
     return EffectEx.runAndForwardErrors(
       this.manager.capabilities.waitFor(iface).pipe(
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: Duration.millis(timeout),
           onTimeout: () => timeoutError(iface.identifier),
         }),
@@ -218,7 +218,7 @@ class TestHarnessImpl implements TestHarness {
       }
     }).pipe(
       Effect.scoped,
-      Effect.timeoutFail({
+      Effect.timeoutOrElse({
         duration: Duration.millis(timeout),
         onTimeout: () => timeoutError(key),
       }),

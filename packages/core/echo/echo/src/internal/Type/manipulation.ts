@@ -9,20 +9,12 @@ import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
-export const addFieldsToSchema = (
-  schema: Schema.Schema.AnyNoContext,
-  fields: Schema.Struct.Fields,
-): Schema.Schema.AnyNoContext => {
+export const addFieldsToSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
   const schemaExtension = Schema.partial(Schema.Struct(fields));
-  return schema
-    .mapFields(Struct.assign(schemaExtension.fields))
-    .annotate(schema.ast.annotations) as any as Schema.Schema.AnyNoContext;
+  return schema.mapFields(Struct.assign(schemaExtension.fields)).annotate(schema.ast.annotations) as any as Schema.Top;
 };
 
-export const updateFieldsInSchema = (
-  schema: Schema.Schema.AnyNoContext,
-  fields: Schema.Struct.Fields,
-): Schema.Schema.AnyNoContext => {
+export const updateFieldsInSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
   const ast = schema.ast as SchemaAST.TypeLiteral;
   invariant(SchemaAST.isTypeLiteral(ast));
 
@@ -40,17 +32,14 @@ export const updateFieldsInSchema = (
   return Schema.make(new SchemaAST.TypeLiteral(updatedProperties, ast.indexSignatures, ast.annotations));
 };
 
-export const removeFieldsFromSchema = (
-  schema: Schema.Schema.AnyNoContext,
-  fieldNames: string[],
-): Schema.Schema.AnyNoContext => {
+export const removeFieldsFromSchema = (schema: Schema.Top, fieldNames: string[]): Schema.Top => {
   return Schema.make(SchemaAST.omit(schema.ast, fieldNames)).annotate(schema.ast.annotations);
 };
 
 export const updateFieldNameInSchema = (
-  schema: Schema.Schema.AnyNoContext,
+  schema: Schema.Top,
   { before, after }: { before: PropertyKey; after: PropertyKey },
-): Schema.Schema.AnyNoContext => {
+): Schema.Top => {
   const ast = schema.ast as SchemaAST.TypeLiteral;
   invariant(SchemaAST.isTypeLiteral(ast));
 

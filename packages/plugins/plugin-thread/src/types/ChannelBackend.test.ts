@@ -38,7 +38,7 @@ describe('channel-backend helpers', () => {
   });
 });
 
-const fakeProvider = (kind: string, fields: Schema.Schema.AnyNoContext): ThreadCapabilities.ChannelBackendProvider => ({
+const fakeProvider = (kind: string, fields: Schema.Top): ThreadCapabilities.ChannelBackendProvider => ({
   kind,
   label: kind,
   createFields: fields,

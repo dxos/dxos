@@ -58,7 +58,7 @@ export class Bindings {
 
 export type BinderOptions = {
   feed: Feed.Feed;
-  runtime: Runtime.Runtime<Database.Service>;
+  runtime: Context.Context<Database.Service>;
   /** @effect/atom-react Registry for reactive state management. */
   registry?: AtomRegistry.AtomRegistry;
 };
@@ -72,7 +72,7 @@ export class Binder extends Resource {
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
   private readonly _registry: AtomRegistry.AtomRegistry;
   private readonly _feed: Feed.Feed;
-  private readonly _runtime: Runtime.Runtime<Database.Service>;
+  private readonly _runtime: Context.Context<Database.Service>;
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 

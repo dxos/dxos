@@ -597,7 +597,7 @@ export const make = (model: string) =>
           const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
           const response = yield* httpRequest.pipe(
             Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
-            Effect.timeoutFail({
+            Effect.timeoutOrElse({
               duration: requestTimeout,
               onTimeout: () =>
                 new AiError.HttpRequestError({
@@ -685,7 +685,7 @@ export const make = (model: string) =>
             const httpRequest = HttpClientRequest.post(endpoint).pipe(HttpClientRequest.bodyJson(requestBody));
             const response = yield* httpRequest.pipe(
               Effect.flatMap((req) => httpClient.execute(req)),
-              Effect.timeoutFail({
+              Effect.timeoutOrElse({
                 duration: requestTimeout,
                 onTimeout: () =>
                   new AiError.HttpRequestError({
@@ -950,7 +950,7 @@ const withIdleTimeout =
       Effect.gen(function* () {
         const pull = yield* Stream.toPull(stream);
         const timedPull: Effect.Effect<Chunk.Chunk<A>, Option.Option<E | E2>, R> = pull.pipe(
-          Effect.timeoutFail({
+          Effect.timeoutOrElse({
             duration: timeout,
             onTimeout: (): Option.Option<E | E2> => Option.some(onTimeout()),
           }),

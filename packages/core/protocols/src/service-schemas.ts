@@ -38,4 +38,4 @@ export const protoTimestamp: Schema.Codec<Date, Date> = Schema.Date;
  * use mutable arrays to stay structurally compatible at the RPC boundary. The wire
  * encoding is identical — only the TypeScript element mutability differs.
  */
-export const mutableArray = <Value extends Schema.Schema.Any>(value: Value) => Schema.mutable(Schema.Array(value));
+export const mutableArray = <Value extends Schema.Top>(value: Value) => Schema.mutable(Schema.Array(value));

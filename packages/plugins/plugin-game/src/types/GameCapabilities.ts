@@ -39,7 +39,7 @@ export type GameVariant = {
    * Optional Effect Schema rendered as a form after the user picks the variant.
    * To use a `Type.Type` entity, extract its schema first via `Type.getSchema(...)`.
    */
-  inputSchema?: Schema.Schema.AnyNoContext;
+  inputSchema?: Schema.Top;
   /** Roles a player may take in this variant (e.g. ['white', 'black']). */
   roles: readonly string[];
   /**

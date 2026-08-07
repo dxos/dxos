@@ -261,8 +261,8 @@ export interface MakeProcessOpts {
    */
   readonly key: string;
 
-  readonly input: Schema.Schema.AnyNoContext;
-  readonly output: Schema.Schema.AnyNoContext;
+  readonly input: Schema.Top;
+  readonly output: Schema.Top;
   readonly services: readonly Context.Key<any, any>[];
   readonly rpcs?: RpcGroup.RpcGroup<any>;
 }

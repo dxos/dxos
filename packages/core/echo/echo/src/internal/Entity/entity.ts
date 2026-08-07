@@ -57,7 +57,7 @@ export type EchoTypeOptions = {
  */
 // TODO(burdon): Rename EchoEntitySchema.
 export interface EchoTypeSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   ExtraFields = {},
   K extends EntityKind = EntityKind,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
@@ -82,7 +82,7 @@ export interface EchoTypeSchema<
   readonly id: EntityId;
 
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
-  readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [StaticTypeSchemaSlot]: Schema.Top;
 
   // NOTE: `typename` / `version` are intentionally NOT fields. They live in
   // `EntityMeta` (`key` / `version`); read via `Type.getTypename(self)` /
@@ -113,7 +113,7 @@ export interface EchoTypeSchema<
   } & (K extends EntityKind.Type
       ? {
           readonly [SchemaKindId]: EntityKind.Type;
-          readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+          readonly [StaticTypeSchemaSlot]: Schema.Top;
         }
       : {});
 }
@@ -174,7 +174,7 @@ export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
  */
 // TODO(wittjosiah): Reconcile with `TypeSchema` (`Type/type-schema.ts`).
 //   Both describe the same `org.dxos.type.schema` shape.
-const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
+const persistentEntitySchema: Schema.Top = (() => {
   const typename = DXN.getName(TypeMetaSchemaDXN);
   const version = DXN.getVersion(TypeMetaSchemaDXN)!;
   const struct = Schema.Struct({
@@ -205,7 +205,7 @@ const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
  * `jsonSchema` is mutated (see `typed-handler.ts`).
  */
 export const makeEchoTypeSchema = <
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   K extends EntityKind = EntityKind,
   // TODO(wittjosiah): Can this be inferred from the schema?
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,

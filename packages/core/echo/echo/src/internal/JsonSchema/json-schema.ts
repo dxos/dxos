@@ -84,7 +84,7 @@ export type JsonSchemaOptions = {
 //  We add additional propertyOrder (but the object properties ARE ordered); and type "string" for literals.
 // TODO(wittjosiah): This is mutable because its a pojo, perhaps should be left as readonly at type level though?
 export const toJsonSchema = (
-  schema: Schema.Schema.All | Type.AnyEntity,
+  schema: Schema.Top | Type.AnyEntity,
   options: JsonSchemaOptions = {},
 ): Types.DeepMutable<JsonSchemaType> => {
   // Allow passing a `Type.Type` entity — use its hidden source schema (or its
@@ -99,7 +99,7 @@ export const toJsonSchema = (
     }
   }
   assertArgument(Schema.isSchema(schema), 'schema');
-  let jsonSchema = _toJsonSchemaAST((schema as Schema.Schema.All).ast);
+  let jsonSchema = _toJsonSchemaAST((schema as Schema.Top).ast);
   if (options.strict) {
     // TOOD(burdon): Workaround to ensure JSON schema is valid (for agv parsing).
     jsonSchema = removeProperties(jsonSchema, (key, value) => {
@@ -216,13 +216,13 @@ const withEchoRefinements = (
  * @param root
  * @param definitions
  */
-export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Schema.AnyNoContext => {
+export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$defs']): Schema.Top => {
   const defs = root.$defs ? { ..._defs, ...root.$defs } : (_defs ?? {});
   if ('type' in root && root.type === 'object') {
     return objectToEffectSchema(root, defs);
   }
 
-  let result: Schema.Schema.AnyNoContext = Schema.Unknown;
+  let result: Schema.Top = Schema.Unknown;
   if ('$ref' in root) {
     switch (root.$ref) {
       case '/schemas/echo/ref': {
@@ -324,7 +324,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   return result;
 };
 
-const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): Schema.Schema.AnyNoContext => {
+const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs']): Schema.Top => {
   invariant('type' in root && root.type === 'object', `not an object: ${root}`);
 
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
@@ -333,7 +333,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
 
   let fields: Schema.Struct.Fields = {};
   const propertyList = Object.entries(root.properties ?? {});
-  let immutableIdField: Schema.Schema.AnyNoContext | undefined;
+  let immutableIdField: Schema.Top | undefined;
   for (const [key, value] of propertyList) {
     if (isEchoObject && key === 'id') {
       immutableIdField = toEffectSchema(value, defs);
@@ -377,7 +377,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   return schema.annotate(annotations) as any;
 };
 
-const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNoContext => {
+const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Top => {
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
@@ -393,7 +393,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNo
 };
 
 // TODO(dmaretskyi): Types.
-const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
+const refToEffectSchema = (root: any): Schema.Top => {
   if (!('reference' in root)) {
     // Fallback to generic object ref when no reference info is provided.
     return createEchoReferenceSchema(undefined, ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION);

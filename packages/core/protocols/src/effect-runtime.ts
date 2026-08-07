@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Runtime from 'effect/Runtime';
@@ -22,13 +23,13 @@ import { RpcClosedError, TimeoutError } from './errors/index.ts';
  * callers can suppress shutdown races; other failures rethrow with their original identity.
  */
 export const runServiceCall = <A>(
-  runtime: Runtime.Runtime<never>,
+  runtime: Context.Context<never>,
   effect: Effect.Effect<A, any, never>,
   options?: { timeout?: number; label?: string },
 ): Promise<A> => {
   const call = options?.timeout
     ? effect.pipe(
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: options.timeout,
           onTimeout: () =>
             new TimeoutError({
@@ -61,7 +62,7 @@ export type StreamSubscription<A> = {
  * so it survives being forked from a short-lived effect, and cleanup is the sole owner.
  */
 export const subscribeStream = <A>(
-  runtime: Runtime.Runtime<never>,
+  runtime: Context.Context<never>,
   stream: Stream.Stream<A, any, never>,
   { onData, onError, onClose }: StreamSubscription<A>,
 ): (() => void) => {

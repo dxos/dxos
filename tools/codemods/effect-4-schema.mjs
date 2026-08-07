@@ -28,6 +28,10 @@ const RENAMES = {
 
 /** Type-level renames. `Schema.Schema<A, I>` takes one parameter in v4; the codec is `Codec`. */
 const TYPE_RENAMES = [
+  // v4's Schema namespace keeps only Type/Encoded; the broad aliases collapse into `Top`.
+  [/\bSchema\.Schema\.AnyNoContext\b/g, 'Schema.Top'],
+  [/\bSchema\.Schema\.Any\b/g, 'Schema.Top'],
+  [/\bSchema\.Schema\.All\b/g, 'Schema.Top'],
   [/\bSchema\.SchemaClass</g, 'Schema.Codec<'],
   // Only the two-argument form; `Schema.Schema<A>` is still valid.
   [/\bSchema\.Schema<([^<>,]+),\s*([^<>]+?)>/g, 'Schema.Codec<$1, $2>'],
@@ -240,6 +244,18 @@ for (const file of files) {
       return replacement.replace(/\$(\d)/g, (_m, n) => groups[Number(n)]);
     });
   }
+
+  // `minItems`/`maxItems` are length checks on the element count.
+  source = mapCalls(
+    source,
+    'minItems',
+    (inner) => (bump('Schema.minItems'), `Schema.check(Schema.isMinLength(${inner}))`),
+  );
+  source = mapCalls(
+    source,
+    'maxItems',
+    (inner) => (bump('Schema.maxItems'), `Schema.check(Schema.isMaxLength(${inner}))`),
+  );
 
   for (const [from, to] of Object.entries(FILTERS)) {
     source = mapCalls(source, from, (inner) => (bump(`Schema.${from}`), `Schema.check(Schema.${to}(${inner}))`));

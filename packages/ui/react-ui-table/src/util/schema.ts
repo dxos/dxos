@@ -15,7 +15,7 @@ import { SchemaAST } from '@dxos/effect';
  * @param paths Array of field paths to extract
  * @returns A narrowed Schema instance containing only the properties at the specified paths
  */
-export const narrowSchema = <S extends Schema.Schema.AnyNoContext>(
+export const narrowSchema = <S extends Schema.Top>(
   schema: S,
   paths: string[],
 ): Schema.Codec<unknown, unknown> | undefined => {

@@ -161,7 +161,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     private _clientServices: ClientServicesProvider,
     private _data: SpaceData,
     echoClient: EchoClient,
-    private readonly _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime,
+    private readonly _runtime: Context.Context<never> = Runtime.defaultRuntime,
   ) {
     log('construct', { key: _data.spaceKey, state: SpaceState[_data.state] });
     invariant(this._clientServices.services.InvitationsService, 'InvitationsService not available');

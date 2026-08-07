@@ -34,9 +34,7 @@ export const assertUniqueKinds = (providers: readonly ThreadCapabilities.Channel
  * it becomes `{ name?, backend: Union(<{ kind: Literal(p.kind) } & p.createFields>) }`,
  * which react-ui-form renders as a `kind` Select plus the selected branch's fields.
  */
-export const buildChannelFormSchema = (
-  providers: readonly ThreadCapabilities.ChannelBackendProvider[],
-): Schema.Schema.AnyNoContext => {
+export const buildChannelFormSchema = (providers: readonly ThreadCapabilities.ChannelBackendProvider[]): Schema.Top => {
   assertUniqueKinds(providers);
   const needsSelector = providers.length > 1 || providers.some((provider) => fieldCount(provider.createFields) > 0);
   if (!needsSelector) {
@@ -53,4 +51,4 @@ export const buildChannelFormSchema = (
   });
 };
 
-const fieldCount = (schema: Schema.Schema.AnyNoContext): number => SchemaAST.getPropertySignatures(schema.ast).length;
+const fieldCount = (schema: Schema.Top): number => SchemaAST.getPropertySignatures(schema.ast).length;

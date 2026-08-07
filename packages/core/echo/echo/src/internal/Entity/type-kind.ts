@@ -22,7 +22,7 @@ import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from '.
  * built-in `Type.Type` TypeSchema) from object and relation types.
  */
 export type EchoTypeKindSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > = EchoTypeSchema<Self, {}, EntityKind.Type, Fields>;
 
@@ -37,7 +37,7 @@ export const EchoTypeKindSchema: {
   (
     dxn: DXN.DXN,
     options?: EchoTypeOptions,
-  ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  ): <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoTypeKindSchema<Self, Fields>;
 } = (dxn, options) => {
@@ -45,7 +45,7 @@ export const EchoTypeKindSchema: {
   const version = DXN.getVersion(dxn);
   invariant(version, `Type-kind schemas require a versioned DXN: ${dxn}`);
 
-  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoTypeKindSchema<Self, Fields> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');

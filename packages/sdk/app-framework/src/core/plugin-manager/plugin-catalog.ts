@@ -387,7 +387,7 @@ export class PluginCatalog {
           // sit on a pending dynamic `import()` indefinitely if the plugin's
           // server is unreachable, which stalls every caller awaiting
           // `enable(id)` and (transitively) the manager's initialization.
-          Effect.timeoutFail({
+          Effect.timeoutOrElse({
             duration: this.#options.loadTimeout,
             onTimeout: () =>
               new Plugin.LazyPluginError({

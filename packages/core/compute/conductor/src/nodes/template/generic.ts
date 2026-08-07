@@ -29,7 +29,7 @@ export const computeTemplate = (node: ComputeNode, props: Record<string, any>): 
   }
 };
 
-export const getTemplateInputSchema = (node: ComputeNode): Schema.Schema.AnyNoContext => {
+export const getTemplateInputSchema = (node: ComputeNode): Schema.Top => {
   switch (node.valueType) {
     case 'string':
       return getTextTemplateInputSchema(node.value ?? '');

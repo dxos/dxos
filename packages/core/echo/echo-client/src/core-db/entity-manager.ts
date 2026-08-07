@@ -4,6 +4,7 @@
 
 import { next as A, type Heads, getHeads } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
@@ -82,7 +83,7 @@ export type EntityManagerProps = {
   graph: HypergraphImpl;
   dataService: DataService.Client;
   queryService: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: Context.Context<never>;
   spaceId: SpaceId;
   spaceKey: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
@@ -101,7 +102,7 @@ export class EntityManager implements IDatabaseBinding {
   private readonly _hypergraph: HypergraphImpl;
   private _dataService: DataService.Client;
   private _queryService: QueryService.Client;
-  private readonly _runtime: Runtime.Runtime<never>;
+  private readonly _runtime: Context.Context<never>;
   readonly _repoProxy: RepoProxy;
 
   // ── Object storage ──────────────────────────────────────────────────────

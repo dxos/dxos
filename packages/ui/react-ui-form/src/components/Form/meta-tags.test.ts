@@ -17,7 +17,7 @@ const TagIndexHost = Schema.Struct({
   tags: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(Schema.optional),
 });
 
-const propertyNames = (schema: Schema.Schema.AnyNoContext): string[] =>
+const propertyNames = (schema: Schema.Top): string[] =>
   SchemaAST.getPropertySignatures(schema.ast).map((property) => property.name.toString());
 
 describe('withMetaTags', () => {

@@ -70,7 +70,7 @@ describe('Skill binding resolution (registry refs)', () => {
         // in-memory cache, so the persisted binding ref must resolve on its own.
         const reader = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => reader.open()).pipe(
-          Effect.timeoutFail({
+          Effect.timeoutOrElse({
             duration: Duration.seconds(3),
             onTimeout: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
           }),
@@ -119,7 +119,7 @@ describe('Skill binding resolution (registry refs)', () => {
 
         const reader = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => reader.open()).pipe(
-          Effect.timeoutFail({
+          Effect.timeoutOrElse({
             duration: Duration.seconds(3),
             onTimeout: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
           }),

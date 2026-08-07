@@ -78,6 +78,7 @@ const MEMBERS = {
     catchSomeCause: 'catchCauseIf',
     tapErrorCause: 'tapCause',
     ignoreLogged: 'ignore',
+    timeoutFail: 'timeoutOrElse',
     // v4 split forking by lifetime: a child of the current fiber vs. one detached from it.
     fork: 'forkChild',
     forkDaemon: 'forkDetach',
@@ -197,6 +198,17 @@ for (const file of files) {
 
   // `Context.Tag<Id, Shape>` is the service-key TYPE; v4 calls it `Context.Key`.
   source = source.replace(/\bContext\.Tag</g, () => (bump('Context.Tag<'), 'Context.Key<'));
+
+  // v4 deleted the Runtime<R> value; the service context takes its place (D9).
+  if (/\bRuntime\.Runtime</.test(source)) {
+    source = source.replace(/\bRuntime\.Runtime</g, () => (bump('Runtime.Runtime<'), 'Context.Context<'));
+    if (!/^import \* as Context from 'effect\/Context';$/m.test(source)) {
+      source = source.replace(
+        /^(import \* as Effect from 'effect\/Effect';)$/m,
+        "import * as Context from 'effect/Context';\n$1",
+      );
+    }
+  }
 
   for (const [namespace, renames] of Object.entries(MEMBERS)) {
     for (const [from, to] of Object.entries(renames)) {

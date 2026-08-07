@@ -1005,7 +1005,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
   return obj;
 };
 
-const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
+const validateSchema = (schema: Schema.Top) => {
   const dxn = getSchemaURI(schema);
   invariant(dxn, 'Schema must be defined via TypedObject.');
   const entityKind = getEntityKind(schema);
@@ -1013,7 +1013,7 @@ const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
   SchemaValidator.validateSchema(schema);
 };
 
-const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Schema.AnyNoContext | undefined) => {
+const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Top | undefined) => {
   if (schema != null) {
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema must be defined via TypedObject.');
@@ -1025,11 +1025,7 @@ const setSchemaPropertiesOnObjectCore = (core: ObjectCore, schema: Schema.Schema
   }
 };
 
-const setRelationSourceAndTarget = (
-  target: ProxyTarget,
-  core: ObjectCore,
-  schema: Schema.Schema.AnyNoContext | undefined,
-) => {
+const setRelationSourceAndTarget = (target: ProxyTarget, core: ObjectCore, schema: Schema.Top | undefined) => {
   const kind = schema && getEntityKind(schema);
   if (kind === EntityKind.Relation) {
     // `getSource` and `getTarget` don't work here since they assert entity kind.

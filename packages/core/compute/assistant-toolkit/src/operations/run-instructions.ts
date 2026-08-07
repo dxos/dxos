@@ -33,7 +33,7 @@ import { RunInstructions } from './definitions';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-4-8.default');
 
-const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Schema.All => {
+const routineOutputSchema = (output: JsonSchema.JsonSchema): Schema.Top => {
   // Routines default to Void output; completeJob still needs to accept arbitrary success payloads.
   if ('$id' in output && output.$id === '/schemas/unknown') {
     return Schema.Any;
@@ -174,7 +174,7 @@ export default RunInstructions.pipe(
 );
 
 const makePromptAgentToolkit = (options: {
-  output: Schema.Schema.All;
+  output: Schema.Top;
   resultSink: Deferred.Deferred<unknown, PromptError>;
 }) => {
   class PromptAgentToolkit extends Toolkit.make(

@@ -18,7 +18,7 @@ export const setIdentityTags = ({
 }: {
   identityService: IdentityService.Client;
   devicesService: DevicesService.Client;
-  runtime?: Runtime.Runtime<never>;
+  runtime?: Context.Context<never>;
   setTag: (k: string, v: string) => void;
 }) => {
   subscribeStream(runtime, identityService.IdentityService.queryIdentity(undefined), {

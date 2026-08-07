@@ -91,7 +91,7 @@ export interface GenerationService {
    */
   readonly connectorId?: string;
   /** Effect Schema of the kind-specific request config; drives the schema-driven request form. */
-  readonly requestSchema: Schema.Schema.AnyNoContext;
+  readonly requestSchema: Schema.Top;
   /** Default config values seeded into a new artifact / the form. */
   readonly defaultRequest?: Record<string, unknown>;
   /** Per-field renderers (keyed by JSON path) for the schema-driven form — customizes specific

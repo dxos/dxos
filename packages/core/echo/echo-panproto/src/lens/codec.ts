@@ -79,7 +79,7 @@ const invert = (view: Record<string, unknown>, obj: Obj.Unknown, id: string, pla
  * itself, and one with no counterpart stores itself in the object's annotation dictionary. Neither
  * convenience is silent — `Lens.coverage` reports what was decided.
  */
-export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schema.Any>(
+export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
   id: string,
   source: S,
   target: T,
@@ -100,7 +100,7 @@ export const make = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schem
  * Define a lens whose transform is opaque — parsing, tree construction, serialization: anything no
  * per-property mapping can express. Indistinguishable from `make` to every consumer.
  */
-export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Schema.Any>(
+export const coded = <S extends Type.AnyObj, T extends Type.AnyObj | Schema.Top>(
   id: string,
   source: S,
   target: T,

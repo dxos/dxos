@@ -3,6 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
@@ -26,7 +27,7 @@ import { isTruthy } from '@dxos/util';
 import { type AiChatServices, skillRegistry } from '../../util';
 
 export type ChatProcessorOptions = {
-  runtime: Runtime.Runtime<AiChatServices>;
+  runtime: Context.Context<AiChatServices>;
   toolkit: OpaqueToolkit.OpaqueToolkit;
   functions: OperationHandlerSet.OperationHandlerSet;
   metadata?: AiService.ServiceMetadata;
@@ -35,7 +36,7 @@ export type ChatProcessorOptions = {
 
 // TODO(burdon): Factor out common guts from AiChatProcessor.
 export class ChatProcessor {
-  private readonly _runtime: Runtime.Runtime<AiChatServices>;
+  private readonly _runtime: Context.Context<AiChatServices>;
   private readonly _toolkit: OpaqueToolkit.OpaqueToolkit;
   private readonly _functions: OperationHandlerSet.OperationHandlerSet;
   private readonly _metadata?: AiService.ServiceMetadata;

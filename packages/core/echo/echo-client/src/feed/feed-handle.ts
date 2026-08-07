@@ -146,7 +146,7 @@ export class FeedHandle {
 
   constructor(
     private readonly _service: FeedService.Client,
-    private readonly _runtime: Runtime.Runtime<never>,
+    private readonly _runtime: Context.Context<never>,
     private readonly _refResolver: Ref.Resolver,
     private readonly _echoUri: EID.EID,
     private readonly _database: DatabaseImpl,

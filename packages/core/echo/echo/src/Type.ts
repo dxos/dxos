@@ -85,7 +85,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
   readonly [internal.SchemaKindId]: internal.EntityKind.Object;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Top;
 
   /**
    * The fields defined in the original struct schema.
@@ -138,7 +138,7 @@ export const makeObject: {
   <Self>(
     dxn: DXN.DXN,
     options?: { id?: EntityId },
-  ): <_Schema extends Schema.Schema.Any>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  ): <_Schema extends Schema.Top>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
   // Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
   // so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
 } = (dxn, options) => (schema) => internal.makeObjectType(dxn, schema, options) as any;
@@ -260,7 +260,7 @@ export interface Relation<
   readonly [internal.SchemaKindId]: internal.EntityKind.Relation;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Top;
 
   /**
    * The fields defined in the original struct schema.
@@ -309,7 +309,7 @@ export const makeRelation: {
      * see `Type.makeObject` for the workerd motivation.
      */
     id?: EntityId;
-  }) => <_Schema extends Schema.Schema.Any>(
+  }) => <_Schema extends Schema.Top>(
     schema: _Schema,
   ) => RelationClass<
     Self,
@@ -626,7 +626,7 @@ export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKin
   readonly [internal.SchemaKindId]: internal.EntityKind.Type;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
-  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Top;
 }
 
 /**
@@ -663,7 +663,7 @@ export type InstanceType<T extends AnyEntity> =
  *   read from a hidden slot — these overloads preserve the instance type.
  * - For `Type.Type` entities (the meta-schema kind) the schema is rebuilt from
  *   `type.jsonSchema`; the instance type isn't statically knowable so the wide
- *   `AnyEntity` overload widens to `Schema.Schema.AnyNoContext`.
+ *   `AnyEntity` overload widens to `Schema.Top`.
  *
  * Always call this when you need to interact with the Effect Schema API
  * (e.g. before passing to Effect.Schema functions). For ECHO-side APIs
@@ -674,8 +674,8 @@ export type InstanceType<T extends AnyEntity> =
  */
 export function getSchema<T extends AnyObj>(type: T): Schema.Schema<InstanceType<T>>;
 export function getSchema<T extends AnyRelation>(type: T): Schema.Schema<InstanceType<T>>;
-export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext;
-export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
+export function getSchema(type: AnyEntity): Schema.Top;
+export function getSchema(type: AnyEntity): Schema.Top {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
   const staticSchema = internal.getStaticTypeSchema(type);

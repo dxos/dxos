@@ -134,7 +134,7 @@ export class Workflow {
     return this._graph;
   }
 
-  private _requireResolved(nodeId: string): Executable<Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext> {
+  private _requireResolved(nodeId: string): Executable<Schema.Top, Schema.Top> {
     const resolved = this._resolvedNodeById.get(nodeId);
     if (!resolved) {
       throw new Error(`Node ${nodeId} was not resolved in ${this._uri}.`);

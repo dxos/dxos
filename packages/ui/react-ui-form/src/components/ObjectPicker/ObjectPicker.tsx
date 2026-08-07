@@ -18,7 +18,7 @@ export type ObjectPickerContentProps = ThemedClassName<
   CreateOptions & {
     options: RefOption[];
     selectedIds?: string[];
-    createSchema?: Schema.Schema.AnyNoContext;
+    createSchema?: Schema.Top;
     /**
      * Persist a newly-created object given the form values. May be async (e.g.
      * to write to a database). The Promise is awaited before the inline create

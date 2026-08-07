@@ -20,7 +20,7 @@ import { type EchoTypeOptions, type EchoTypeSchema, makeEchoTypeSchema } from '.
  * Object schema type with kind marker.
  */
 export type EchoObjectSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > = EchoTypeSchema<Self, {}, EntityKind.Object, Fields>;
 
@@ -32,7 +32,7 @@ export const EchoObjectSchema: {
   (
     dxn: DXN.DXN,
     options?: EchoTypeOptions,
-  ): <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  ): <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ) => EchoObjectSchema<Self, Fields>;
 } = (dxn, options) => {
@@ -40,7 +40,7 @@ export const EchoObjectSchema: {
   const version = DXN.getVersion(dxn);
   invariant(version, `Type.makeObject requires a versioned DXN: ${dxn}`);
 
-  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoObjectSchema<Self, Fields> => {
     invariant(typeof TypeAnnotationId === 'symbol', 'Sanity.');
@@ -74,7 +74,7 @@ export const EchoObjectSchema: {
   };
 };
 
-export const makeObjectType = <Self, _Schema extends Schema.Schema.Any>(
+export const makeObjectType = <Self, _Schema extends Schema.Top>(
   dxn: DXN.DXN,
   schema: _Schema,
   options?: { id?: EntityId },

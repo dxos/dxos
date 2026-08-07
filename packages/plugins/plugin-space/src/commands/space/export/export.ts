@@ -51,7 +51,7 @@ export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportA
 
   // Export reads the epoch root, and a closed space never becomes ready — so cap the wait.
   yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
-    Effect.timeoutFail({
+    Effect.timeoutOrElse({
       duration: SPACE_READY_TIMEOUT,
       onTimeout: () => new SpaceNotReadyError({ context: { spaceId: resolvedSpaceId } }),
     }),

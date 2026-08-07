@@ -25,7 +25,7 @@ export type ConnectToServiceProps = {
   feedService?: FeedService.Client;
 
   /** Runtime used to run effect-rpc service calls at Promise/callback boundaries. */
-  runtime?: Runtime.Runtime<never>;
+  runtime?: Context.Context<never>;
 };
 
 export type ConstructDatabaseProps = {
@@ -70,7 +70,7 @@ export class EchoClient extends Resource {
   private _dataService: DataService.Client | undefined = undefined;
   private _queryService: QueryService.Client | undefined = undefined;
   private _feedService: FeedService.Client | undefined = undefined;
-  private _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime;
+  private _runtime: Context.Context<never> = Runtime.defaultRuntime;
 
   private _indexQuerySourceProvider: IndexQuerySourceProvider | undefined = undefined;
 

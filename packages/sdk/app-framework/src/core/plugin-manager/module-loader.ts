@@ -263,7 +263,7 @@ export class ModuleLoader {
           existing !== undefined
             ? existing
             : yield* this.#capabilities.waitFor(capability).pipe(
-                Effect.timeoutFail({
+                Effect.timeoutOrElse({
                   duration: this.#activationTimeout,
                   onTimeout: () =>
                     new CapabilityNotFoundError({
@@ -351,7 +351,7 @@ export class ModuleLoader {
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against
         // the plugin and surfaced as `PluginTimeoutError`.
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: this.#activationTimeout,
           onTimeout: () =>
             new PluginTimeoutError({

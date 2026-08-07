@@ -97,7 +97,7 @@ export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget 
  * are the resolved endpoint instance types (see {@link RelationEndpointInstance}).
  */
 export type EchoRelationSchema<
-  Self extends Schema.Schema.Any,
+  Self extends Schema.Top,
   SourceInstance extends Obj.Unknown,
   TargetInstance extends Obj.Unknown,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
@@ -131,7 +131,7 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
     raise(new Error('Target schema must be an echo object schema.'));
   }
 
-  return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
+  return <Self extends Schema.Top, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
   ): EchoRelationSchema<Self, RelationEndpointInstance<Source>, RelationEndpointInstance<Target>, Fields> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
@@ -173,7 +173,7 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
   };
 };
 
-export const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
+export const getDXNForRelationSchemaRef = (schema: Schema.Top): DXN.DXN => {
   assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {
@@ -192,7 +192,7 @@ export const makeRelationType = (options: {
   dxn: DXN.DXN;
   source: RelationEndpoint;
   target: RelationEndpoint;
-  schema: Schema.Schema.Any;
+  schema: Schema.Top;
   id?: EntityId;
 }): Type.RelationClass<unknown, unknown, unknown, unknown, {}> => {
   const type = EchoRelationSchema({

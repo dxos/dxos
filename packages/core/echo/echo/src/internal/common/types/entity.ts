@@ -54,11 +54,11 @@ const isBrandCarrier = (value: unknown): boolean =>
  * Returns `undefined` for raw schemas (no slot) and inputs that cannot carry a brand.
  * Single point-of-cast for the slot lookup.
  */
-export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext | undefined => {
+export const getStaticTypeSchema = (value: unknown): Schema.Top | undefined => {
   if (!isBrandCarrier(value)) {
     return undefined;
   }
-  return (value as { [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext })[StaticTypeSchemaSlot];
+  return (value as { [StaticTypeSchemaSlot]?: Schema.Top })[StaticTypeSchemaSlot];
 };
 
 /**

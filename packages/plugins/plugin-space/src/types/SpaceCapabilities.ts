@@ -101,7 +101,7 @@ export type CreateObjectEntry = Readonly<{
    * Effect Schema describing the create form inputs. To use a `Type.Type`
    * entity as the form schema, extract its schema first via `Type.getSchema(...)`.
    */
-  inputSchema?: Schema.Schema.AnyNoContext;
+  inputSchema?: Schema.Top;
   /**
    * Optional custom React panel rendered in place of the default `inputSchema` form.
    * Lets a plugin own the entire post-typename-selection flow (e.g. multi-stage forms).

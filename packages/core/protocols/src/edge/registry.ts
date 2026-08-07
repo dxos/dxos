@@ -39,7 +39,7 @@ export const PluginManifestSchema = Schema.Struct({
    * Relative paths of every file the plugin needs at runtime, including the entry.
    * Must include {@link PLUGIN_ENTRY_FILENAME}; consumers verify on parse.
    */
-  assets: Schema.Array(Schema.String).pipe(Schema.minItems(1)),
+  assets: Schema.Array(Schema.String).pipe(Schema.check(Schema.isMinLength(1))),
   /** Declared dependencies resolved to installed versions at build time (SDK-compat source). */
   dependencies: Schema.optional(DependencyMapSchema),
 });

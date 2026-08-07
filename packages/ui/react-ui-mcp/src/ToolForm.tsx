@@ -14,7 +14,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
-export type ToolFormProps<S extends Schema.Schema.AnyNoContext> = ThemedClassName<{
+export type ToolFormProps<S extends Schema.Top> = ThemedClassName<{
   /** Effect Schema struct describing the tool's input. */
   schema: S;
   /** Initial form values (passes through as `defaultValues` to react-ui-form). */
@@ -31,7 +31,7 @@ export type ToolFormProps<S extends Schema.Schema.AnyNoContext> = ThemedClassNam
  * Prop name `onSave` matches react-ui-form's terminology — submitting the
  * form fires onSave with the validated values.
  */
-export const ToolForm = <S extends Schema.Schema.AnyNoContext>({
+export const ToolForm = <S extends Schema.Top>({
   classNames,
   schema,
   defaultValues,

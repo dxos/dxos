@@ -27,7 +27,7 @@ export class MeshProxy {
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime,
+    private readonly _runtime: Context.Context<never> = Runtime.defaultRuntime,
   ) {}
 
   toJSON(): { networkStatus: NetworkStatus } {

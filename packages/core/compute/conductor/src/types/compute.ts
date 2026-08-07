@@ -129,7 +129,7 @@ export type ComputeFunction<Input extends ValueRecord, Output extends ValueRecor
  * @internal
  */
 // TODO(burdon): Reconcile with @effect/ai/Tool and handler.
-export type NodeDef<Input extends Schema.Schema.AnyNoContext, Ouput extends Schema.Schema.AnyNoContext> = {
+export type NodeDef<Input extends Schema.Top, Ouput extends Schema.Top> = {
   input: Input;
   output: Ouput;
   exec?: ComputeFunction<Schema.Schema.Type<Input>, Schema.Schema.Type<Ouput>>;
@@ -139,10 +139,7 @@ export type NodeDef<Input extends Schema.Schema.AnyNoContext, Ouput extends Sche
  * Executable node.
  */
 // TODO(burdon): Handler.
-export type Executable<
-  Input extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
-  Output extends Schema.Schema.AnyNoContext = Schema.Schema.AnyNoContext,
-> = {
+export type Executable<Input extends Schema.Top = Schema.Top, Output extends Schema.Top = Schema.Top> = {
   meta: ComputeNodeMeta;
 
   /** Undefined for meta nodes like input/output. */
@@ -153,7 +150,7 @@ export type Executable<
  * Type-safe constructor for function definition.
  */
 // TODO(burdon): make
-export const defineComputeNode = <Input extends Schema.Schema.AnyNoContext, Output extends Schema.Schema.AnyNoContext>({
+export const defineComputeNode = <Input extends Schema.Top, Output extends Schema.Top>({
   input,
   output,
   exec,

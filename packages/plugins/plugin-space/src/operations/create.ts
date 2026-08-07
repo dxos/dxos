@@ -43,7 +43,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       yield* Effect.tryPromise({
         try: () => space.waitUntilReady(),
         catch: SpaceNotReadyError.wrap(),
-      }).pipe(Effect.timeoutFail({ duration: SPACE_READY_TIMEOUT, onTimeout: () => new SpaceNotReadyError() }));
+      }).pipe(Effect.timeoutOrElse({ duration: SPACE_READY_TIMEOUT, onTimeout: () => new SpaceNotReadyError() }));
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
       Obj.update(space.properties, (properties) => {

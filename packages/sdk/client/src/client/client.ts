@@ -55,7 +55,7 @@ export type ClientOptions = {
   services?: MaybePromise<ClientServicesProvider>;
 
   /** Effect runtime used by client components to run service-rpc effects. Defaults to the default runtime. */
-  runtime?: Runtime.Runtime<never>;
+  runtime?: Context.Context<never>;
 
   /** ECHO schema. */
   types?: Type.AnyEntity[];
@@ -88,7 +88,7 @@ export class Client {
   private readonly _options: ClientOptions;
 
   /** Effect runtime threaded to client components for running service-rpc effects. */
-  private readonly _effectRuntime: Runtime.Runtime<never>;
+  private readonly _effectRuntime: Context.Context<never>;
 
   /**
    * Unique id of the Client, local to the current peer.

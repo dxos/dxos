@@ -53,7 +53,7 @@ type ProxyTarget = {
   /**
    * Schema for the root.
    */
-  [SchemaId]: Schema.Schema.AnyNoContext;
+  [SchemaId]: Schema.Top;
   [ParentId]?: any;
 
   /**
@@ -613,7 +613,7 @@ const toJSON = (target: ProxyTarget): any => {
  *   - In-memory pre-persist (`Type.makeObjectFromJsonSchema`) — slot exposed
  *     via the `case StaticTypeSchemaSlot:` arm in this file's `get` trap.
  */
-export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext };
+export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Top };
 
 /**
  * Recursively set AST on all potential proxy targets.
@@ -623,12 +623,7 @@ export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNo
  *   `SchemaId` are already set by `setTypename`/`setSchema` as `configurable: false` — redefining
  *   them here (with `configurable: true`) would throw.
  */
-const setSchemaProperties = (
-  obj: any,
-  schema: Schema.Schema.AnyNoContext,
-  typeSource?: TypeSource,
-  skipOwnStamp = false,
-) => {
+const setSchemaProperties = (obj: any, schema: Schema.Top, typeSource?: TypeSource, skipOwnStamp = false) => {
   if (!skipOwnStamp) {
     const schemaType = getSchemaURI(schema);
     if (schemaType != null) {

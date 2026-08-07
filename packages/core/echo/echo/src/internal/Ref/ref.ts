@@ -462,7 +462,7 @@ export interface RefResolver {
   /**
    * @deprecated Use {@link resolve} + `Type.getSchema`. Removed in Task 11.
    */
-  resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
+  resolveSchema(uri: URI.URI): Promise<Schema.Top | undefined>;
 
   /**
    * Resolve the source `Type.AnyEntity` entity for a type URI. Used by
@@ -689,7 +689,7 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 
 export class StaticRefResolver implements RefResolver {
   public objects = new Map<EntityId, AnyProperties>();
-  public schemas = new Map<URI.URI, Schema.Schema.AnyNoContext>();
+  public schemas = new Map<URI.URI, Schema.Top>();
 
   addObject(obj: AnyProperties): this {
     this.objects.set(obj.id, obj);
@@ -718,7 +718,7 @@ export class StaticRefResolver implements RefResolver {
     return this.#lookup(uri);
   }
 
-  async resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
+  async resolveSchema(uri: URI.URI): Promise<Schema.Top | undefined> {
     return this.schemas.get(uri);
   }
 

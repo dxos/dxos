@@ -54,7 +54,7 @@ export interface ObjectLoader {
 
 export type IndexQueryProviderProps = {
   service: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: Context.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };
@@ -81,7 +81,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
 
 export type IndexQuerySourceProps = {
   service: QueryService.Client;
-  runtime: Runtime.Runtime<never>;
+  runtime: Context.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
 };

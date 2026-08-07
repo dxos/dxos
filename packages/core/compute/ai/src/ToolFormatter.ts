@@ -27,8 +27,8 @@ type AnyTool = Tool.Tool<
   string,
   {
     readonly parameters: Tool.AnyStructSchema;
-    readonly success: Schema.Schema.Any;
-    readonly failure: Schema.Schema.All;
+    readonly success: Schema.Top;
+    readonly failure: Schema.Top;
     readonly failureMode: Tool.FailureMode;
   },
   any

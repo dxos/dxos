@@ -52,7 +52,7 @@ export class HaloProxy implements Halo {
 
   constructor(
     private readonly _serviceProvider: ClientServicesProvider,
-    private readonly _runtime: Runtime.Runtime<never> = Runtime.defaultRuntime,
+    private readonly _runtime: Context.Context<never> = Runtime.defaultRuntime,
   ) {}
 
   [inspect.custom](): string {

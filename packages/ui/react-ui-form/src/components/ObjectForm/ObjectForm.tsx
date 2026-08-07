@@ -25,7 +25,7 @@ export type ObjectFormProps = {
    * (`Type.getSchema(T).pipe(Schema.pick(...))`). Values are still read from and written back to
    * `object` by path, so the picked fields must be paths on `object`. Defaults to `type`'s schema.
    */
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Schema.Top;
   /** Render the meta-tags field. Defaults to `true`. */
   showTags?: boolean;
 };

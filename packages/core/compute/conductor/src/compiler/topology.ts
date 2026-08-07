@@ -39,7 +39,7 @@ export enum InputKind {
 
 export type TopologyNodeInput = {
   name: string;
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Top;
 
   /**
    * Defines the kind of input.
@@ -63,7 +63,7 @@ export type TopologyNodeConnector = {
 
 type TopologyNodeOutput = {
   name: string;
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Top;
   /**
    * Nodes that this output is bound to.
    */

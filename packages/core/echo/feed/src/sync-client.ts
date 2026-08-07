@@ -132,7 +132,7 @@ export class SyncClient {
     const timeoutMs = self.#rpcTimeoutMs;
     return Effect.ensuring(
       Deferred.await(deferred).pipe(
-        Effect.timeoutFail({
+        Effect.timeoutOrElse({
           duration: timeoutMs,
           onTimeout: () =>
             new SyncRpcTimeoutError({

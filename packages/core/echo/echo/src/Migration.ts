@@ -22,7 +22,7 @@ type MigrationSchemaInput = Type.AnyEntity;
 
 type MigrationInstanceType<S> = S extends Type.AnyEntity
   ? Type.InstanceType<S>
-  : S extends Schema.Schema.AnyNoContext
+  : S extends Schema.Top
     ? Schema.Schema.Type<S>
     : never;
 
@@ -70,8 +70,8 @@ type OnMigrateProps<From, To> = {
 export type ObjectMigration = {
   fromType: URI.URI;
   toType: URI.URI;
-  fromSchema: Schema.Schema.AnyNoContext;
-  toSchema: Schema.Schema.AnyNoContext;
+  fromSchema: Schema.Top;
+  toSchema: Schema.Top;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
   onMigration?: (params: OnMigrateProps<any, any>) => Promise<void>;
 };

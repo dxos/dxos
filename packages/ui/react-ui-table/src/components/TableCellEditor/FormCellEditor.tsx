@@ -58,7 +58,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
     }
   }, [contextEditing]);
 
-  const narrowedSchema = useMemo<Schema.Schema.AnyNoContext | undefined>(() => {
+  const narrowedSchema = useMemo<Schema.Top | undefined>(() => {
     if (!schema) {
       return undefined;
     }

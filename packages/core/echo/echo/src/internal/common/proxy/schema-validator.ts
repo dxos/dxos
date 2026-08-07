@@ -16,7 +16,7 @@ export class SchemaValidator {
    * Recursively check that schema specifies constructions we can handle.
    * Validates there are no ambiguous discriminated union types.
    */
-  public static validateSchema(schema: Schema.Schema.AnyNoContext): void {
+  public static validateSchema(schema: Schema.Top): void {
     const visitAll = (nodes: SchemaAST.AST[]) => nodes.forEach((node) => this.validateSchema(Schema.make(node)));
     if (SchemaAST.isUnion(schema.ast)) {
       const typeAstList = schema.ast.types.filter((type) => SchemaAST.isTypeLiteral(type)) as SchemaAST.TypeLiteral[];
@@ -34,11 +34,7 @@ export class SchemaValidator {
     }
   }
 
-  public static hasTypeAnnotation(
-    rootObjectSchema: Schema.Schema.AnyNoContext,
-    property: string,
-    annotation: symbol,
-  ): boolean {
+  public static hasTypeAnnotation(rootObjectSchema: Schema.Top, property: string, annotation: symbol): boolean {
     try {
       let type = this.getPropertySchema(rootObjectSchema, [property]);
       if (SchemaAST.isTupleType(type.ast)) {
@@ -52,11 +48,11 @@ export class SchemaValidator {
   }
 
   public static getPropertySchema(
-    rootObjectSchema: Schema.Schema.AnyNoContext,
+    rootObjectSchema: Schema.Top,
     propertyPath: KeyPath,
     getProperty: (path: KeyPath) => any = () => null,
-  ): Schema.Schema.AnyNoContext {
-    let schema: Schema.Schema.AnyNoContext = rootObjectSchema;
+  ): Schema.Top {
+    let schema: Schema.Top = rootObjectSchema;
     for (let i = 0; i < propertyPath.length; i++) {
       const propertyName = propertyPath[i];
       const tupleAst = unwrapArray(schema.ast);
@@ -87,7 +83,7 @@ export class SchemaValidator {
    * Rejects properties not declared on the schema. Types with index signatures allow extra keys.
    */
   public static assertExactProperties(
-    schema: Schema.Schema.AnyNoContext,
+    schema: Schema.Top,
     value: unknown,
     getProperty: (path: KeyPath) => unknown = () => undefined,
     path: KeyPath = [],
@@ -124,10 +120,7 @@ export class SchemaValidator {
     }
   }
 
-  public static getIndexedElementSchema(
-    schema: Schema.Schema.AnyNoContext,
-    index: number | string,
-  ): Schema.Schema.AnyNoContext | null {
+  public static getIndexedElementSchema(schema: Schema.Top, index: number | string): Schema.Top | null {
     const arrayAst = unwrapArray(schema.ast);
     if (arrayAst != null) {
       return getArrayElementSchema(arrayAst, index);
@@ -149,8 +142,8 @@ export class SchemaValidator {
     return null;
   }
 
-  public static getTargetPropertySchema(target: any, prop: string | symbol): Schema.Schema.AnyNoContext {
-    const schema: Schema.Schema.AnyNoContext | undefined = (target as any)[SchemaId];
+  public static getTargetPropertySchema(target: any, prop: string | symbol): Schema.Top {
+    const schema: Schema.Top | undefined = (target as any)[SchemaId];
     invariant(schema, 'target has no schema');
 
     if (Array.isArray(target)) {
@@ -202,10 +195,7 @@ export class SchemaValidator {
  * fixed-length tuples ([string, number]) in which case AST will be { elements: [Schema.String, Schema.Number] }
  * variable-length arrays (Array<string | number>) in which case AST will be { rest: [Schema.Union([Schema.String, Schema.Number])] }
  */
-const getArrayElementSchema = (
-  tupleAst: SchemaAST.TupleType,
-  property: string | symbol | number,
-): Schema.Schema.AnyNoContext => {
+const getArrayElementSchema = (tupleAst: SchemaAST.TupleType, property: string | symbol | number): Schema.Top => {
   const elementIndex =
     typeof property === 'number' ? property : typeof property === 'string' ? parseInt(property, 10) : Number.NaN;
   if (Number.isNaN(elementIndex)) {

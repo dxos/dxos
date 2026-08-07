@@ -57,8 +57,8 @@ export class Instructions extends Type.makeObject<Instructions>(DXN.make('org.dx
 export type MakeProps = {
   name?: string;
   description?: string;
-  input?: Schema.Schema.AnyNoContext;
-  output?: Schema.Schema.AnyNoContext;
+  input?: Schema.Top;
+  output?: Schema.Top;
   text?: string;
   skills?: Ref.Ref<Skill.Skill>[];
   objects?: Ref.Ref<Obj.Unknown>[];
