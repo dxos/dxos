@@ -30,7 +30,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read # Builds + publishes to CrabNebula / App Store Connect via secrets; no git writes.
+  # Write only for the build-counter tags `draft_tauri` pushes; the builds themselves make no git writes.
+  contents: write
 
 env:
   CN_APPLICATION: dxos/composer
@@ -70,6 +71,8 @@ jobs:
 
       - name: Compute Tauri version
         id: bump-version
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
           # job for a production release, current otherwise. Production ships the clean version to the `main`
@@ -77,18 +80,45 @@ jobs:
           # channel) and a build number — the same shape as an iOS build number under a fixed version.
           #
           # The build number must be numeric and increasing because the updater compares semver, where a
-          # prerelease identifier sorts ASCII-lexically unless it is all digits: a commit SHA there would
-          # sort at random and roughly half of all nightlies would not read as newer than the build they
-          # replace. `github.run_number` is monotonic across the workflow, so it orders. The run's commit is
-          # recorded by the deploy's `composer/<env>` pointer tag, not by the version string.
+          # prerelease identifier sorts ASCII-lexically unless it is all digits (a commit SHA there would
+          # sort at random, and roughly half of all nightlies would not read as newer than the build they
+          # replace). It is counted per channel per base version by an immutable
+          # `composer-<env>-<base>-<n>` tag per build: `ls-remote` filters to that channel's builds of this
+          # base version by name, and the next build is the numeric max plus one. Counting from the tags
+          # rather than from `github.run_number` keeps each channel's numbering contiguous; the base version
+          # is compared before the prerelease, so restarting at 1 on a version bump still orders correctly.
           BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
-          if [ "${{ inputs.environment }}" = "production" ]; then
+          if [ "$ENVIRONMENT" = production ]; then
             NEW_VERSION="$BASE"
           else
-            NEW_VERSION="${BASE}-${{ inputs.environment }}.${{ github.run_number }}"
+            PREFIX="composer-${ENVIRONMENT}-${BASE}-"
+            # Claim the number by pushing its tag: the loser of a race is rejected (the tag already exists)
+            # and recounts, so two runs can never ship the same build number. `concurrency` already
+            # serializes per environment, making this the belt to that braces.
+            attempt=1
+            while :; do
+              last=0
+              while read -r _sha ref; do
+                n="${ref#refs/tags/${PREFIX}}"
+                case "$n" in '' | *[!0-9]*) continue ;; esac
+                if [ "$n" -gt "$last" ]; then last="$n"; fi
+              done < <(git ls-remote --tags origin "refs/tags/${PREFIX}*")
+
+              BUILD=$((last + 1))
+              if git tag "${PREFIX}${BUILD}" && git push origin "refs/tags/${PREFIX}${BUILD}"; then
+                break
+              fi
+              git tag -d "${PREFIX}${BUILD}" || true
+              if [ "$attempt" -ge 3 ]; then
+                echo "::error::could not claim a build number for ${ENVIRONMENT} after 3 attempts"
+                exit 1
+              fi
+              attempt=$((attempt + 1))
+            done
+            NEW_VERSION="${BASE}-${ENVIRONMENT}.${BUILD}"
           fi
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Tauri version: $NEW_VERSION (env=${{ inputs.environment }})"
+          echo "Tauri version: $NEW_VERSION (env=$ENVIRONMENT)"
           # CFBundleVersion (Apple's build number) must be plain digits separated by dots — our prerelease
           # suffix (e.g. "-dev.412") fails that even after Tauri's own semver-prerelease stripping, so
           # override it separately with the always-numeric, always-increasing run number.

@@ -52,7 +52,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read # Only `deploy` writes (its pointer tags); the version bump to main uses dxos-bot's PAT.
+  contents: read # `deploy` (pointer tags) and `tauri` (build-counter tags) opt in; the bump uses a PAT.
 
 jobs:
   # Resolve the run into named booleans so downstream `if:` conditions stay readable. Outputs:
@@ -362,6 +362,8 @@ jobs:
   tauri:
     needs: [plan, release, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}
+    permissions:
+      contents: write # `draft_tauri` pushes the build-counter tag it claims.
     uses: ./.github/workflows/deploy-tauri.yaml
     with:
       environment: ${{ needs.plan.outputs.env }}
