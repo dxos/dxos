@@ -8,14 +8,6 @@ import { e2ePreset } from '@dxos/test-utils/playwright';
 
 export default defineConfig({
   ...e2ePreset(import.meta.dirname),
-  // Serialized, unlike the shared preset's 2, for the same reason as lit-grid and todomvc: every test
-  // waits on the story in `waitUntilReady()` (board-manager.ts:9), so two workers race the same
-  // first-paint. In run 31140179355 that timed out `create new item` on webkit at 30s waiting for
-  // `board-column`, and `rearrange columns` was deferred earlier for a 28.5s failure of the same
-  // shape. Deferring one of five would have moved the failure, not removed it. The suite runs
-  // 28-58s at two workers and shares a cell with composer, so the added wall time is real but small
-  // against that cell's ~230s.
-  workers: 1,
   // TODO(wittjosiah): Stories are slow to start up.
   timeout: 60_000,
   // TODO(wittjosiah): Avoid hard-coding ports.
