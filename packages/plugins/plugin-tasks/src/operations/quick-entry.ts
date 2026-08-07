@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof OutlineOperation.QuickJournalEntry> 
 
         const client = yield* Capability.get(ClientCapabilities.Client);
         yield* Effect.tryPromise(async () => {
-          const space = AppSpace.getPersonalSpace(client);
+          const space = AppSpace.getDefaultSpace(client);
           if (!space) {
             return;
           }

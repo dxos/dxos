@@ -21,14 +21,11 @@ import {
   probeEmailExists,
   redeemAccountInvitation,
   validateInvitationCode,
-} from '../credentials';
-import { useForceDarkTheme } from '../hooks';
-import { meta } from '../meta';
-import { OnboardingOperation } from '../operations';
-import { translations } from '../translations';
+} from '../../credentials';
+import { useForceDarkTheme } from '../../hooks';
+import { OnboardingOperation } from '../../operations';
+import { translations } from '../../translations';
 import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
-
-export const WELCOME_SCREEN = `${meta.profile.key}.component.welcome-screen`;
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();

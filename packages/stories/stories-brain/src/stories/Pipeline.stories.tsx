@@ -515,7 +515,7 @@ const meta = {
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization, Thread],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
               // Seed a couple of entities so the transcription pipeline has something to link against
               // and the Objects tab is populated before the email pipeline runs.
               // TODO(burdon): From const.

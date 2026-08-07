@@ -18,8 +18,8 @@ import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { WELCOME_SCREEN } from './components';
-import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/Welcome';
+import hero from '../assets/hero.webp?url';
+import { WELCOME_SCREEN } from './constants';
 import { probeEmailExists } from './credentials';
 import { meta } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from './util';
@@ -367,8 +367,11 @@ export class OnboardingManager {
     await this._invokePromise(LayoutOperation.UpdateDialog, {
       subject: WELCOME_SCREEN,
       type: 'alert',
-      overlayClasses: OVERLAY_CLASSES,
-      overlayStyle: OVERLAY_STYLE,
+      // Styled here rather than in the welcome screen: this manager runs in every tab to decide
+      // whether onboarding is needed, and importing the screen for its styling would put the whole
+      // onboarding UI in the resident set.
+      overlayClasses: 'dark bg-neutral-950! bg-no-repeat bg-center',
+      overlayStyle: { backgroundImage: `url(${hero})` },
     });
   }
 

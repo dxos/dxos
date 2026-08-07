@@ -1,0 +1,41 @@
+[
+  {
+    "t": 0,
+    "page.used": 136.8,
+    "page.backing": 31.3,
+    "coordinator-worker-d7mh4rsC.js.used": 0.9,
+    "coordinator-worker-d7mh4rsC.js.backing": 0.2,
+    "dedicated-worker-BT6kXxmj.js.used": 35.3,
+    "dedicated-worker-BT6kXxmj.js.backing": 30.5,
+    "rss.main": 108.7,
+    "rss.gpu": 84.7,
+    "rss.utility": 68.5,
+    "rss.renderer.26222": 762.9
+  },
+  {
+    "t": 30,
+    "page.used": 127.7,
+    "page.backing": 57.2,
+    "coordinator-worker-d7mh4rsC.js.used": 0.9,
+    "coordinator-worker-d7mh4rsC.js.backing": 0.2,
+    "dedicated-worker-BT6kXxmj.js.used": 33.3,
+    "dedicated-worker-BT6kXxmj.js.backing": 30.5,
+    "rss.main": 126.8,
+    "rss.gpu": 75.1,
+    "rss.utility": 168.2,
+    "rss.renderer.26222": 963.4
+  },
+  {
+    "t": 60,
+    "page.used": 113.6,
+    "page.backing": 46,
+    "coordinator-worker-d7mh4rsC.js.used": 0.9,
+    "coordinator-worker-d7mh4rsC.js.backing": 0.2,
+    "dedicated-worker-BT6kXxmj.js.used": 25.1,
+    "dedicated-worker-BT6kXxmj.js.backing": 53.4,
+    "rss.main": 129.2,
+    "rss.gpu": 75.2,
+    "rss.utility": 168.5,
+    "rss.renderer.26222": 988.7
+  }
+]

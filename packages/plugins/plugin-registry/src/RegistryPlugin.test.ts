@@ -18,7 +18,7 @@ describe('RegistryPlugin', () => {
       plugins: [RegistryPlugin()],
     });
 
-    // CLI commands activate on startup.
+    // CLI commands activate on demand; the harness fires that wave on the app's behalf.
     expect(harness.manager.getActive()).toContain(moduleId('cli-commands'));
   });
 });

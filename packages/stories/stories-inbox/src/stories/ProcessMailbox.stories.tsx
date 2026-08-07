@@ -148,8 +148,8 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => seed(personalSpace));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => seed(defaultSpace));
             }),
         }),
         StorybookPlugin({}),

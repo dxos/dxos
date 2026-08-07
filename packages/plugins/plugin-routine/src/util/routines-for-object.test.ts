@@ -39,11 +39,11 @@ const types = [
 ];
 
 const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
-  const { personalSpace } = await EffectEx.runAndForwardErrors(
+  const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
   await harness.waitForEvent(ClientEvents.SpacesReady);
-  return personalSpace.db;
+  return defaultSpace.db;
 };
 
 const connectedIds = (db: Database.Database, object: Obj.Unknown) =>

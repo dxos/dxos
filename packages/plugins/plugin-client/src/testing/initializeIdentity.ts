@@ -11,8 +11,9 @@ import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 export type InitializeIdentityResult = {
   identity: Identity;
-  // TODO(burdon): Rename to space.
-  personalSpace: Space;
+  /** The space designated as the default target for unscoped content. */
+  defaultSpace: Space;
+  settingsSpace: Space;
 };
 
 export type InitializeIdentityOptions = {
@@ -21,8 +22,8 @@ export type InitializeIdentityOptions = {
 };
 
 /**
- * Create an identity and a personal space.
- * Returns the identity and space for further setup.
+ * Create an identity and the two spaces every profile starts with, matching what the app does on
+ * first run. Returns the identity and spaces for further setup.
  */
 export const initializeIdentity = (
   client: Client,
@@ -33,12 +34,7 @@ export const initializeIdentity = (
     // unreadable until it completes.
     yield* Effect.promise(() => client.waitUntilInitialized());
     const identity = yield* Effect.promise(() => client.halo.createIdentity(displayName ? { displayName } : {}));
-    const personalSpace = yield* Effect.promise(() =>
-      client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
-    );
-    yield* Effect.promise(() => personalSpace.waitUntilReady());
-    return {
-      identity,
-      personalSpace,
-    };
+    const { settingsSpace, defaultSpace } = yield* AppSpace.setupIdentitySpaces(client);
+
+    return { identity, defaultSpace, settingsSpace };
   });

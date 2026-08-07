@@ -83,10 +83,10 @@ const meta = {
           ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(async () => {
-                seedProject(personalSpace);
-                await personalSpace.db.flush({ indexes: true });
+                seedProject(defaultSpace);
+                await defaultSpace.db.flush({ indexes: true });
               });
             }),
         }),

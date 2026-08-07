@@ -65,7 +65,7 @@ const HostStory = () => {
   const [recoveryCode, setRecoveryCode] = useState<string>();
 
   const identity = client.halo.identity.get();
-  const space = AppSpace.getPersonalSpace(client);
+  const space = AppSpace.getDefaultSpace(client);
 
   // Recovery code (seed phrase) — the path a bun CLI can actually use to join this identity:
   // `dx account login --method recovery-code` recovers over EDGE (HTTP), whereas device-invitation
@@ -210,7 +210,7 @@ const meta = {
                 return;
               }
 
-              const { personalSpace: space } = yield* initializeIdentity(client);
+              const { defaultSpace: space } = yield* initializeIdentity(client);
               const mailbox = space.db.add(Mailbox.make({ name: 'Inbox' }));
               const feed = yield* Effect.promise(() => mailbox.feed.load());
               const messages = SEED_SENDERS.map((sender, index) =>
