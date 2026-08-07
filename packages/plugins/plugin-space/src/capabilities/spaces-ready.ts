@@ -41,33 +41,45 @@ const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 const isEchoRef = (id: string) => id.startsWith('echo:/');
 
 /**
- * Resolve the designated default space, waiting for the designation if it has not landed yet.
+ * Resolve the designated default space, migrating a legacy profile into the settings space until
+ * one exists.
  *
- * `setupIdentitySpaces` writes it onto the settings space only after `client.spaces.create` has
- * already published that space to the space list, so a cold boot can observe the settings space
- * before it carries a designation.
+ * Both inputs land late: `setupIdentitySpaces` writes the designation only after the settings space
+ * is already published to the space list, and a legacy space is only readable once it opens, which
+ * can be after the settings space resolves. Migration is idempotent, so retrying on each change is
+ * what recovers the ordering that would otherwise be lost.
  */
-const awaitDefaultSpace = (client: Client, settingsSpace: Space): Effect.Effect<Space> =>
-  Effect.async<Space>((resume) => {
-    const resolve = () => {
-      const defaultSpace = AppSpace.getDefaultSpace(client);
-      if (defaultSpace) {
-        resume(Effect.succeed(defaultSpace));
-        return true;
-      }
-      return false;
-    };
-
-    if (resolve()) {
-      return;
+const resolveDefaultSpace = Effect.fnUntraced(function* (client: Client, settingsSpace: Space) {
+  while (true) {
+    yield* migrateToSettingsSpace({ settingsSpace, legacySpace: AppSpace.resolveLegacyDefaultSpace(client) });
+    const defaultSpace = AppSpace.getDefaultSpace(client);
+    if (defaultSpace) {
+      return defaultSpace;
     }
 
-    const unsubscribe = Obj.subscribe(settingsSpace.properties, () => {
-      if (resolve()) {
-        unsubscribe();
+    yield* awaitChange(client, settingsSpace);
+  }
+});
+
+/**
+ * The next space-list change or settings-space property write, the two events that can supply a
+ * default space. The space list replays on subscribe, which would resolve this before anything has
+ * changed, so the replay is skipped.
+ */
+const awaitChange = (client: Client, settingsSpace: Space): Effect.Effect<void> =>
+  Effect.async<void>((resume) => {
+    let replayed = false;
+    const spacesSub = client.spaces.subscribe(() => {
+      if (replayed) {
+        resume(Effect.void);
       }
+      replayed = true;
     });
-    return Effect.sync(unsubscribe);
+    const unsubscribe = Obj.subscribe(settingsSpace.properties, () => resume(Effect.void));
+    return Effect.sync(() => {
+      spacesSub.unsubscribe();
+      unsubscribe();
+    });
   });
 
 export default Capability.makeModule(
@@ -94,47 +106,21 @@ export default Capability.makeModule(
 
     const initSettingsSpace = Effect.gen(function* () {
       const settingsSpace = yield* ensureSettingsSpace(client);
-      yield* migrateToSettingsSpace({ settingsSpace, legacySpace: AppSpace.resolveLegacyDefaultSpace(client) });
+      const defaultSpace = yield* resolveDefaultSpace(client, settingsSpace);
 
       // Only relevant on a cold boot with no workspace in the deck state.
       if (registry.get(layoutAtom).workspace === 'default') {
-        const defaultSpace = yield* awaitDefaultSpace(client, settingsSpace);
         yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(defaultSpace.id) });
       }
     });
 
-    // The settings space enters the space list before `setupIdentitySpaces` designates the default
-    // space on it, so a cold boot can reach here with no designation yet — wait for the write.
-    const start = () => {
-      if (initFiber || (!AppSpace.getSettingsSpace(client) && !AppSpace.resolveLegacyDefaultSpace(client))) {
+    // Deferred until a space exists to bootstrap from, so a client with no identity does not get a
+    // settings space created for it. `subscribe` replays, so this covers the initial pass too.
+    const spacesSub = client.spaces.subscribe(() => {
+      if (initFiber || client.spaces.get().length === 0) {
         return;
       }
       initFiber = Effect.runFork(initSettingsSpace);
-    };
-
-    // A profile that already has a settings space can reach the init before its legacy space
-    // resolves — the space list fills incrementally, and the `__DEFAULT__` marker is only readable
-    // once the space opens. Migration is idempotent, so re-running it until a designation exists is
-    // what recovers the ordering that would otherwise be lost.
-    const migrateLateLegacySpace = () => {
-      const settingsSpace = AppSpace.getSettingsSpace(client);
-      const legacySpace = AppSpace.resolveLegacyDefaultSpace(client);
-      if (
-        !settingsSpace ||
-        !legacySpace ||
-        settingsSpace.state.get() !== SpaceState.SPACE_READY ||
-        AppSpace.getDefaultSpaceId(settingsSpace)
-      ) {
-        return;
-      }
-
-      Effect.runFork(migrateToSettingsSpace({ settingsSpace, legacySpace }));
-    };
-
-    // `subscribe` replays the current space list, so this covers the initial pass too.
-    const spacesSub = client.spaces.subscribe(() => {
-      start();
-      migrateLateLegacySpace();
     });
     subscriptions.add(() => spacesSub.unsubscribe());
 
