@@ -43,7 +43,7 @@ export default Capability.makeModule(
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invoke, invokePromise } = yield* Capabilities.OperationInvoker;
+    const { invokePromise } = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
@@ -62,6 +62,34 @@ export default Capability.makeModule(
     let settingsSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
     let settingsSpaceInitialized = false;
 
+    // Guards against a second switch while the first invocation is still in flight, since the
+    // layout atom does not reflect it until then.
+    let switchedToPersonalSpace = false;
+
+    /**
+     * Land on the personal space when the app booted without a workspace.
+     * Returns false only while the designation has yet to resolve, so the caller knows to retry.
+     */
+    const switchToPersonalSpaceIfDefault = (): boolean => {
+      if (switchedToPersonalSpace) {
+        return true;
+      }
+
+      const layout = registry.get(layoutAtom);
+      if (layout.workspace !== 'default') {
+        return true;
+      }
+
+      const personalSpace = AppSpace.getPersonalSpace(client);
+      if (!personalSpace) {
+        return false;
+      }
+
+      switchedToPersonalSpace = true;
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
+      return true;
+    };
+
     const settingsSpaceInitEffect = (legacySpace: Space | undefined, { fromCredential }: { fromCredential: boolean }) =>
       Effect.gen(function* () {
         if (legacySpace) {
@@ -74,11 +102,16 @@ export default Capability.makeModule(
         const settingsSpace = yield* ensureSettingsSpace(client);
         yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
 
-        // Check if deck state indicates we should switch to the personal space.
-        const personalSpace = AppSpace.getPersonalSpace(client);
-        const layout = registry.get(layoutAtom);
-        if (layout.workspace === 'default' && personalSpace) {
-          yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
+        // On a fresh profile this init is triggered by the settings space appearing in the space
+        // list, which happens before `identity-created` writes the personal-space designation onto
+        // its properties — so resolve now if we can, and otherwise wait for that write.
+        if (!switchToPersonalSpaceIfDefault()) {
+          const unsubscribe = Obj.subscribe(settingsSpace.properties, () => {
+            if (switchToPersonalSpaceIfDefault()) {
+              unsubscribe();
+            }
+          });
+          subscriptions.add(unsubscribe);
         }
       });
 
