@@ -24,7 +24,7 @@ describe('format', () => {
     const prop: Partial<PropertyType> = { property: 'test' as SchemaEx.JsonProp };
     const schema = getFormatSchema(prop.format);
     expect(schema).to.eq(formatToSchema[Format.TypeFormat.None]);
-    const validate = Schema.validate(PropertySchema);
+    const validate = Schema.decodeUnknownSync(Schema.toType(PropertySchema));
     expect(() => validate(prop)).to.throw;
   });
 
@@ -73,7 +73,7 @@ describe('format', () => {
   });
 
   test('ref format', async ({ expect }) => {
-    const validate = Schema.decodeSync(Schema.toType(PropertySchema));
+    const validate = Schema.decodeUnknownSync(Schema.toType(PropertySchema));
     const prop: Partial<PropertyType> = {
       property: 'organization' as SchemaEx.JsonProp,
       type: TypeEnum.Ref,

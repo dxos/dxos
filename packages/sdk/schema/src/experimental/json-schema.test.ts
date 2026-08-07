@@ -35,12 +35,13 @@ describe('json-schema', () => {
    */
   test('AST equivalence', ({ expect }) => {
     {
-      const schema1 = Schema.mutable(
-        Schema.Struct({
-          x: Schema.Number,
-          y: Schema.String,
-        }).mapFields(Struct.map(Schema.optional)),
-      );
+      // v4's `Schema.mutable` narrowed to arrays/tuples; struct mutability is a per-field modifier.
+      const schema1 = Schema.Struct({
+        x: Schema.Number,
+        y: Schema.String,
+      })
+        .mapFields(Struct.map(Schema.optional))
+        .mapFields(Struct.map(Schema.mutableKey));
 
       const schema2 = Schema.Struct({
         x: Schema.optional(Schema.Number),
@@ -52,16 +53,11 @@ describe('json-schema', () => {
         y: Schema.String,
       })
         .mapFields(Struct.map(Schema.optional))
-        .pipe(Schema.mutable);
+        .mapFields(Struct.map(Schema.mutableKey));
 
-      const schema4 = Schema.extend(
-        schema1.pipe(Schema.omit('y')),
-        Schema.mutable(
-          Schema.Struct({
-            y: Schema.optional(Schema.String),
-          }),
-        ),
-      );
+      const schema4 = schema1
+        .mapFields(Struct.omit(['y']))
+        .pipe(Schema.fieldsAssign({ y: Schema.mutableKey(Schema.optional(Schema.String)) }));
 
       expect(schema2.ast).toEqual(schema1.ast);
       expect(schema3.ast).toEqual(schema1.ast);

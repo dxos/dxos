@@ -158,9 +158,10 @@ const createValue = <S extends Type.AnyObj>(
   property: SchemaEx.SchemaProperty,
   force = false,
 ): any | undefined => {
+  // v4 annotations are a plain record; the accessor returns the value or `undefined`.
   const defaultValue = SchemaAST.getDefaultAnnotation(property.type);
-  if (Option.isSome(defaultValue)) {
-    return structuredClone(defaultValue.value);
+  if (defaultValue !== undefined) {
+    return structuredClone(defaultValue);
   }
 
   // Generator value from annotation.

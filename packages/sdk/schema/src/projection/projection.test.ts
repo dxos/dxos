@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { Registry as AtomRegistry } from 'effect/unstable/reactivity';
+import { AtomRegistry } from 'effect/unstable/reactivity';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
@@ -470,10 +470,14 @@ describe('ProjectionModel', () => {
     });
 
     const effectSchema = Type.getSchema(mutable);
-    expect(() => Schema.decodeSync(Schema.toType(effectSchema))({ id: '1', status: 'draft' })).not.to.throw();
-    expect(() => Schema.decodeSync(Schema.toType(effectSchema))({ id: '2', status: 'published' })).not.to.throw();
-    expect(() => Schema.decodeSync(Schema.toType(effectSchema))({ id: '3', status: 'archived' })).not.to.throw();
-    expect(() => Schema.decodeSync(Schema.toType(effectSchema))({ id: '4', status: 'invalid-status' })).to.throw();
+    expect(() => Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '1', status: 'draft' })).not.to.throw();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '2', status: 'published' }),
+    ).not.to.throw();
+    expect(() => Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '3', status: 'archived' })).not.to.throw();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '4', status: 'invalid-status' }),
+    ).to.throw();
 
     const properties = SchemaAST.getPropertySignatures(effectSchema.ast);
     const statusProperty = properties.find((p) => p.name === 'status');
@@ -599,8 +603,10 @@ describe('ProjectionModel', () => {
 
     const effectSchema = Type.getSchema(mutable);
     expect(effectSchema).not.toBeUndefined;
-    expect(() => Schema.decodeSync(Schema.toType(effectSchema))({ id: '1', tags: ['draft'] })).not.to.throw();
-    expect(() => Schema.decodeSync(Schema.toType(effectSchema))({ id: '2', tags: ['published'] })).not.to.throw();
+    expect(() => Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '1', tags: ['draft'] })).not.to.throw();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(effectSchema))({ id: '2', tags: ['published'] }),
+    ).not.to.throw();
 
     // TODO(ZaymonFC): Get validation working.
     // expect(() => Schema.validateSync(effectSchema)({ tags: ['archived', 'NOT'] })).to.throw();
@@ -1035,10 +1041,10 @@ describe('ProjectionModel', () => {
 
     // Check with the primary schema (id is added by Type.makeObject)
     expect(() =>
-      Schema.decodeSync(Schema.toType(Type.getSchema(schema)))({ id: '1', email: 'valid@example.com' }),
+      Schema.decodeUnknownSync(Schema.toType(Type.getSchema(schema)))({ id: '1', email: 'valid@example.com' }),
     ).not.toThrow();
     expect(() =>
-      Schema.decodeSync(Schema.toType(Type.getSchema(schema)))({ id: '2', email: 'invalid-email' }),
+      Schema.decodeUnknownSync(Schema.toType(Type.getSchema(schema)))({ id: '2', email: 'invalid-email' }),
     ).toThrow();
 
     const registeredSchema = await db.addType(schema);
@@ -1055,8 +1061,10 @@ describe('ProjectionModel', () => {
     const reconstructedSchema = Type.getSchema(registeredSchema);
 
     expect(() =>
-      Schema.decodeSync(Schema.toType(reconstructedSchema))({ id: '1', email: 'valid@example.com' }),
+      Schema.decodeUnknownSync(Schema.toType(reconstructedSchema))({ id: '1', email: 'valid@example.com' }),
     ).not.toThrow();
-    expect(() => Schema.decodeSync(Schema.toType(reconstructedSchema))({ id: '2', email: 'invalid-email' })).toThrow();
+    expect(() =>
+      Schema.decodeUnknownSync(Schema.toType(reconstructedSchema))({ id: '2', email: 'invalid-email' }),
+    ).toThrow();
   });
 });

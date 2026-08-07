@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -43,7 +44,7 @@ namespace Proposition {
   const Fields = Schema.Struct({
     text: Schema.String,
     children: Schema.optional(Schema.mutable(Schema.Array(Schema.suspend((): Schema.Schema<Fields> => Fields)))).pipe(
-      Schema.withConstructorDefault(() => []),
+      Schema.withConstructorDefault(Effect.succeed([])),
     ),
   });
 

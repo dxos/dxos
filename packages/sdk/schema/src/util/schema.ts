@@ -70,7 +70,7 @@ export const getSchemaFromPropertyDefinitions = (
   properties: SchemaPropertyDefinition[],
 ): Type.Type => {
   // TODO(burdon): Move to echo-schema.
-  const typeToSchema: Record<TypeEnum, Schema.Any> = {
+  const typeToSchema: Record<TypeEnum, Schema.Top> = {
     [TypeEnum.String]: Schema.String.pipe(Schema.optional),
     [TypeEnum.Number]: Schema.Number.pipe(Schema.optional),
     [TypeEnum.Boolean]: Schema.Boolean.pipe(Schema.optional),

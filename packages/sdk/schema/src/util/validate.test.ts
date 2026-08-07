@@ -2,19 +2,33 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Number from 'effect/Number';
 import * as Option from 'effect/Option';
-import * as ParseResult from 'effect/ParseResult';
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
+import * as SchemaGetter from 'effect/SchemaGetter';
+import * as SchemaIssue from 'effect/SchemaIssue';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { type PropertyKey } from '@dxos/echo/internal';
 import { SchemaAST } from '@dxos/effect';
 
+const formatIssue = SchemaIssue.makeFormatterStandardSchemaV1();
+
 describe('validate', () => {
   test('clamp', ({ expect }) => {
-    const TestSchema = Schema.Number.pipe(Schema.clamp(-180, 180));
+    // v4 removed `Schema.clamp`; clamping is an explicit reversible transformation.
+    const TestSchema = Schema.Number.pipe(
+      Schema.decodeTo(
+        Schema.Number,
+        SchemaTransformation.make({
+          decode: SchemaGetter.transform(Number.clamp({ minimum: -180, maximum: 180 })),
+          encode: SchemaGetter.passthrough(),
+        }),
+      ),
+    );
     const decoder = Schema.decodeUnknownOption(TestSchema);
     expect(decoder(200).pipe(Option.getOrUndefined)).to.eq(180);
     expect(decoder(-300).pipe(Option.getOrUndefined)).to.eq(-180);
@@ -22,19 +36,19 @@ describe('validate', () => {
 
   test('error', ({ expect }) => {
     const TestSchema = Schema.Number.pipe(Schema.check(Schema.isMultipleOf(0.01)));
-    const decoder = Schema.validateEither(TestSchema, { errors: 'first' });
+    // v4 dropped validation as a separate pass; decoding through the type side is the equivalent.
+    const decoder = Schema.decodeUnknownResult(Schema.toType(TestSchema), { errors: 'first' });
 
     {
       const value = decoder(0.01);
       expect(Result.isFailure(value)).to.be.false;
     }
 
-    // https://effect.website/docs/schema/error-formatters/#customizing-the-output
     {
       const value = decoder(0.001);
       expect(Result.isFailure(value)).to.be.true;
       if (Result.isFailure(value)) {
-        const [{ message }] = ParseResult.ArrayFormatter.formatErrorSync(value.left);
+        const [{ message }] = formatIssue(value.failure.issue).issues;
         expect(message).to.eq('Expected a number divisible by 0.01, actual 0.001');
       }
     }
@@ -51,7 +65,8 @@ describe('validate', () => {
     const s1: Schema.Codec<TestType> = TestSchema;
     expect(SchemaAST.isTypeLiteral(s1.ast)).to.be.true;
     const s2 = Schema.make(s1.ast);
-    expect(s1.ast.toJSON()).to.deep.eq(s2.ast.toJSON());
+    // v4's AST nodes have no `toJSON`; `toString` is the stable rendering.
+    expect(s1.ast.toString()).to.eq(s2.ast.toString());
 
     const obj: TestType = {
       name: 'DXOS',
@@ -61,7 +76,7 @@ describe('validate', () => {
     for (const prop of SchemaAST.getPropertySignatures(TestSchema.ast)) {
       const name = prop.name.toString() as PropertyKey<TestType>;
       const schema = Schema.make(prop.type);
-      const decoder = Schema.validateEither(schema, { errors: 'first' });
+      const decoder = Schema.decodeUnknownResult(Schema.toType(schema), { errors: 'first' });
       const value = obj[name];
       const result = decoder(value);
       expect(Result.isFailure(result)).to.be.false;

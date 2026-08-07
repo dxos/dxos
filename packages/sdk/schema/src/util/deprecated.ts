@@ -90,20 +90,16 @@ const toFieldValueType = (type: SchemaAST.AST): { format?: Format.TypeFormat; ty
     return { type: TypeEnum.String };
   }
 
-  if (SchemaAST.isRefinement(type)) {
-    return toFieldValueType(type.from);
-  }
+  // v4 has no `Refinement` wrapper: a refined node IS its base node with checks attached, so the
+  // keyword branches above already matched it and there is nothing left to unwrap.
 
   // TODO(zan): How should we be thinking about transformations?
   //  See https://effect.website/docs/guides/schema/projections
   //  - Which of these are we storing in the database?
   //  - For types that aren't the 'DateFromString' transformation, should we be using the 'from' or 'to' type?
   if (SchemaAST.isTransformation(type)) {
-    const identifier = SchemaAST.getIdentifierAnnotation(type);
-    if (identifier._tag === 'Some') {
-      if (identifier.value === 'DateFromString') {
-        return { type: TypeEnum.String, format: Format.TypeFormat.Date };
-      }
+    if (SchemaAST.getAnnotation<string>(type, SchemaAST.IdentifierAnnotationId) === 'DateFromString') {
+      return { type: TypeEnum.String, format: Format.TypeFormat.Date };
     }
   }
 

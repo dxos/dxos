@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
+import type * as Types from 'effect/Types';
 
 import { Format } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
@@ -62,11 +63,11 @@ interface FormatSchemaCommon extends BaseProperty {
  * Map of schema definitions.
  */
 // TODO(burdon): Translations?
-export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchemaCommon>> = {
+export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchemaCommon, any>> = {
   [Format.TypeFormat.None]: BaseProperty.mapFields(
     Struct.assign({
       type: Schema.Enum(TypeEnum),
-      format: Schema.Literal(Format.TypeFormat.None) as Schema.Schema<Format.TypeFormat>,
+      format: Schema.Literal(Format.TypeFormat.None) as Schema.Codec<Format.TypeFormat, any>,
     }),
   ).mapFields(Struct.map(Schema.mutableKey)),
 
@@ -221,7 +222,7 @@ export const PropertySchema = Schema.Union([
   formatToSchema[Format.TypeFormat.GeoPoint],
 ]);
 
-export interface PropertyType extends Schema.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
+export interface PropertyType extends Types.Simplify<Schema.Schema.Type<typeof PropertySchema>> {}
 
 export const formatToAdditionalPropertyAttributes: Record<Format.TypeFormat, Partial<JsonSchemaType>> = {
   [Format.TypeFormat.None]: {},

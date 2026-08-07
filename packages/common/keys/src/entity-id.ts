@@ -19,20 +19,26 @@ const EntityIdSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^[0-7][
 export type EntityId = typeof EntityIdSchema.Type;
 
 export interface EntityIdClass extends Schema.Codec<EntityId, string> {
+  // `Codec` only pins the decoded and encoded types; it widens the constructor and iso views to
+  // `unknown`, which structural APIs read -- `Schema.Record` rejects a key whose `~type.make` is
+  // not a `PropertyKey`. Pin them back to the id itself.
+  readonly '~type.make': EntityId;
+  readonly 'Iso': EntityId;
+
   /**
    * @returns true if the string is a valid EntityId.
    */
-  isValid(id: string): id is EntityId;
+  'isValid'(id: string): id is EntityId;
 
   /**
    * Creates an EntityId from a string validating the format.
    */
-  make(id: string): EntityId;
+  'make'(id: string): EntityId;
 
   /**
    * Generates a random EntityId.
    */
-  random(): EntityId;
+  'random'(): EntityId;
 
   /**
    * Derives a deterministic ULID-format EntityId from arbitrary seed values.
@@ -55,7 +61,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
    * EntityId.deterministic('org.dxos.type.person', '0.1.0'); // stable across runs
    * ```
    */
-  deterministic(...seed: (string | number)[]): EntityId;
+  'deterministic'(...seed: (string | number)[]): EntityId;
 
   /**
    * WARNING: To be used only within tests.
@@ -74,7 +80,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
    *
    * NOTE: The generated IDs depend on the order of EntityId.random() calls, which might be affected by test order, scheduling, etc.
    */
-  dangerouslyDisableRandomness(): void;
+  'dangerouslyDisableRandomness'(): void;
 
   /**
    * WARNING: To be used only within tests.
@@ -92,7 +98,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
    *
    * NOTE: The generated IDs depend on the order of EntityId.random() calls, which might be affected by test order, scheduling, etc.
    */
-  dangerouslySetSeed(time: number, seed: number): void;
+  'dangerouslySetSeed'(time: number, seed: number): void;
 }
 
 /**
@@ -105,7 +111,7 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
 let factory: ULIDFactory = monotonicFactory();
 let seedTime: number | undefined;
 
-export const EntityId: EntityIdClass = Object.assign(EntityIdSchema as unknown as Schema.Codec<EntityId, string>, {
+export const EntityId: EntityIdClass = Object.assign(EntityIdSchema, {
   isValid: (id: string): id is EntityId => {
     try {
       Schema.decodeSync(EntityIdSchema)(id);
