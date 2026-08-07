@@ -74,9 +74,7 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  // TODO(wittjosiah): Flaky in CI on every browser — chromium failed then passed on retry in run
-  //   31052131651, and retries are now off. Re-enable once the underlying flake is fixed.
-  test.fixme('delete message', async () => {
+  test('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -108,9 +106,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  // TODO(wittjosiah): Failed on firefox in run 31056219946, the first run without retries.
-  //   Re-enable once fixed.
-  test.fixme('delete thread', async () => {
+  test('delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -131,8 +127,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  // TODO(wittjosiah): Failed on firefox in run 31046879125. Re-enable once fixed.
-  test.fixme('undo delete thread', async () => {
+  test('undo delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -158,7 +153,10 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  // TODO(wittjosiah): Failed on webkit in run 31052131651 (quarantined in Trunk). Re-enable once fixed.
+  // TODO(wittjosiah): Not a flake — reproduces locally on chromium. Selecting a *comment* marks the
+  //   comment current (`data-current='1'` passes) but leaves the corresponding thread's `aria-current`
+  //   empty rather than `location`, so only the thread -> comment direction works. The assertion this
+  //   fails on is the comment -> thread one; fixing it is a product change, not a test change.
   test.fixme('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
