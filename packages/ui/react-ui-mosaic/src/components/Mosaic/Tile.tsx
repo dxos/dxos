@@ -17,10 +17,17 @@ import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/elemen
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { type DropTargetRecord } from '@atlaskit/pragmatic-drag-and-drop/types';
 import { composeRefs } from '@radix-ui/react-compose-refs';
-import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -34,34 +41,12 @@ import {
   sizeStyle,
 } from '@dxos/react-ui-dnd';
 
-import { useMosaicContainerContext } from './Container';
+import { useMosaicContainerContext } from './MosaicContainerContext';
+import { MOSAIC_TILE_NAME, MosaicTileContextProvider, type MosaicTileState } from './MosaicTileContext';
 
 //
 // Tile
 //
-
-const MOSAIC_TILE_NAME = 'Mosaic.Tile';
-
-type MosaicTileState =
-  | { type: 'idle' }
-  | { type: 'preview'; container: HTMLElement; rect: DOMRect }
-  | { type: 'dragging' }
-  | { type: 'target'; closestEdge: Edge | null };
-
-type MosaicTileContextValue = {
-  state: MosaicTileState;
-  /** Register the element that initiates dragging; set by a child `Mosaic.DragHandle`. */
-  setDragHandle: (element: HTMLElement | null) => void;
-  /** Current extent (rem) during/after resize; undefined when the tile is not sized. */
-  size?: Size;
-  /** Update the tile extent. A `commit` (drop) propagates to the consumer's `onSizeChange`. */
-  setSize: (size: Size, commit?: boolean) => void;
-  /** Resize bounds (rem) declared by the tile; consumed by `Mosaic.ResizeHandle`. */
-  minSize?: number;
-  maxSize?: number;
-};
-
-const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTileContextValue>('MosaicTile');
 
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
@@ -147,6 +132,15 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       },
       [onSizeChange],
     );
+    // The `size` prop is the source of truth; internal state exists only to reflect the live extent
+    // during a drag (which commits back through `onSizeChange`). Re-sync when the prop changes so a
+    // tile that first rendered without a size — e.g. before the breakpoint settled, or a
+    // mobile/fullbleed → sliding branch switch that swaps `size` in — applies it once it arrives,
+    // instead of staying stuck at its initial (often `undefined`) extent. A live drag never changes
+    // the prop (only the committed drop does), so this does not fight the drag.
+    useEffect(() => {
+      setInternalSize(sizeProp);
+    }, [sizeProp]);
 
     const allowedEdges = useMemo<Edge[]>(
       () => allowedEdgesProp || (orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
@@ -335,6 +329,6 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
 
 MosaicTile.displayName = MOSAIC_TILE_NAME;
 
-export { MosaicTile, useMosaicTileContext };
+export { MosaicTile };
 
-export type { MosaicTileProps, MosaicTileState };
+export type { MosaicTileProps };

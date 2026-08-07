@@ -2,17 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import { CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { ChessComAccount } from '#types';
+
+import * as ChessComAccount from './types/ChessComAccount';
 
 export const ChessComPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [ChessComAccount.Account] }),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([ChessComAccount.Account])),
   Plugin.make,
 );
 

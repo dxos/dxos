@@ -5,9 +5,9 @@
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { JsonView, PanelContainer } from '../../../components';
+import { JsonView } from '../../../components';
 import { EdgeSelector, SubductionSelector, VaultSelector } from '../../../containers';
 
 type ConfigPanelProps = {
@@ -24,16 +24,17 @@ export const ConfigPanel = ({
   const config = useConfig();
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           {vaultSelector && <VaultSelector />}
           {edgeSelector && <EdgeSelector />}
           {subductionSelector && <SubductionSelector />}
         </Toolbar.Root>
-      }
-    >
-      <JsonView data={config.values} />
-    </PanelContainer>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <JsonView data={config.values} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

@@ -5,34 +5,19 @@
 import * as Schema from 'effect/Schema';
 import React, { useRef } from 'react';
 
-import { ComputeValueType, TemplateOutput, VoidInput, getTemplateInputSchema } from '@dxos/conductor';
+import { ComputeValueType, getTemplateInputSchema } from '@dxos/conductor';
 import { toJsonSchema } from '@dxos/echo/JsonSchema';
 import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,
-  type ShapeDef,
   TextBox,
   type TextBoxControl,
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks';
-import { Box, TypeSelect, createFunctionAnchors } from './common';
-import { ComputeShape, type CreateShapeProps, createShape } from './defs';
-
-//
-// Data
-//
-
-export const TemplateShape = Schema.extend(
-  ComputeShape,
-  Schema.Struct({
-    type: Schema.Literal('template'),
-    valueType: Schema.optional(ComputeValueType),
-  }),
-);
-
-export type TemplateShape = Schema.Schema.Type<typeof TemplateShape>;
+import { Box, TypeSelect } from './common';
+import { type TemplateShape } from './template-def';
 
 //
 // Component
@@ -79,21 +64,6 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
   );
 };
 
-//
-// Defs
-//
-
-export type CreateTemplateProps = CreateShapeProps<TemplateShape> & { text?: string };
-
-export const createTemplate = (props: CreateTemplateProps) =>
-  createShape<TemplateShape>({ type: 'template', size: { width: 256, height: 384 }, ...props });
-
-export const templateShape: ShapeDef<TemplateShape> = {
-  type: 'template',
-  name: 'Template',
-  icon: 'ph--article--regular',
-  component: (props) => <TextInputComponent {...props} placeholder={'Prompt'} />,
-  createShape: createTemplate,
-  getAnchors: (shape) => createFunctionAnchors(shape, VoidInput, TemplateOutput),
-  resizable: true,
-};
+export const TemplateComponent = (props: ShapeComponentProps<TemplateShape>) => (
+  <TextInputComponent {...props} placeholder={'Prompt'} />
+);

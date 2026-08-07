@@ -5,11 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, AppSpace } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as Operation from '@dxos/compute/Operation';
 import { Graph, Node } from '@dxos/plugin-graph';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
 
 // Raw import keeps the welcome copy in a standalone Markdown file that renders in editors and diffs cleanly.
 import README_CONTENT from '../content/readme.md?raw';
@@ -28,17 +32,13 @@ export default Capability.makeModule(
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
     const {
       AppAnnotation: { RootCollectionAnnotation },
-      AppSpace: { getPersonalSpace },
     } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
 
-    const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
-    const client = yield* Capability.get(ClientCapabilities.Client);
+    const operationInvoker = yield* Capabilities.OperationInvoker;
+    const { graph } = yield* AppCapabilities.AppGraph;
+    const client = yield* ClientCapabilities.Client;
+    const personalSpace = yield* SpaceCapabilities.PersonalSpace;
 
-    const personalSpace = getPersonalSpace(client);
-    if (!personalSpace) {
-      return Capability.contributes(Capabilities.Null, null);
-    }
     Obj.update(personalSpace.properties, (obj) => {
       obj.icon = PERSONAL_SPACE_ICON;
       obj.iconHue = PERSONAL_SPACE_ICON_HUE;
@@ -82,5 +82,7 @@ export default Capability.makeModule(
     } else {
       graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(personalSpace.id, 'child'));
     }
+
+    return [];
   }),
 );

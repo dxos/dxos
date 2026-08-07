@@ -1,0 +1,43 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as Operation from '@dxos/compute/Operation';
+import { Filter } from '@dxos/echo';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+
+import * as Journal from '../types/Journal';
+import * as OutlineOperation from '../types/OutlineOperation';
+
+const handler: Operation.WithHandler<typeof OutlineOperation.QuickJournalEntry> =
+  OutlineOperation.QuickJournalEntry.pipe(
+    Operation.withHandler(({ text }) =>
+      Effect.gen(function* () {
+        const cleaned = text?.trim();
+        if (!cleaned) {
+          return;
+        }
+
+        const client = yield* Capability.get(ClientCapabilities.Client);
+        yield* Effect.tryPromise(async () => {
+          const space = AppSpace.getPersonalSpace(client);
+          if (!space) {
+            return;
+          }
+          await space.waitUntilReady();
+
+          const journals = await space.db.query(Filter.type(Journal.Journal)).run();
+          const journal = journals.length > 0 ? (journals[0] as Journal.Journal) : space.db.add(Journal.make());
+
+          const entry = await Journal.getOrCreateEntry(journal, space.db);
+          await Journal.addBullet(entry, cleaned);
+        });
+      }),
+    ),
+  );
+
+export default handler;

@@ -4,11 +4,16 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
+import { File } from '@dxos/types';
 
-import { File, FileCapabilities, FileOperation, Settings, isAcceptedMimeType } from '../types';
+import * as FileCapabilities from '../types/FileCapabilities';
+import * as FileLimits from '../types/FileLimits';
+import * as FileOperation from '../types/FileOperation';
+import * as Settings from '../types/Settings';
 
 export class UnsupportedFileTypeError extends Error {
   constructor(public readonly type: string) {
@@ -79,7 +84,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
   Operation.withHandler(
     Effect.fnUntraced(function* ({ file, db }) {
       // Validate before hitting the backend so the contract is consistent regardless of backend.
-      if (!isAcceptedMimeType(file.type)) {
+      if (!FileLimits.isAcceptedMimeType(file.type)) {
         return yield* Effect.fail(new UnsupportedFileTypeError(file.type));
       }
       const storage = yield* resolveActiveStorage;

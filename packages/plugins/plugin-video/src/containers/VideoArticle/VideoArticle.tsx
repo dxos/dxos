@@ -7,13 +7,15 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Tabs } from '@dxos/react-ui-tabs';
 
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+
+import * as Video from '../../types/Video';
+import * as VideoOperation from '../../types/VideoOperation';
 
 export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
 
@@ -97,7 +99,9 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
         <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
           <Surface.Surface
@@ -162,8 +166,8 @@ const TranscriptTabs = ({
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
-              <Tabs.Tab value='transcript'>{t('transcript.tab.label')}</Tabs.Tab>
-              <Tabs.Tab value='summary'>{t('summary.tab.label')}</Tabs.Tab>
+              <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
+              <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>
             </Tabs.Tablist>
             {tab === 'summary' && (
               <IconButton
@@ -179,7 +183,7 @@ const TranscriptTabs = ({
             )}
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <Tabs.Viewport classNames='dx-container grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
               <Surface.Surface

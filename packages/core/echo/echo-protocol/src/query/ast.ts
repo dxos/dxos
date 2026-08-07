@@ -81,6 +81,23 @@ export interface FilterIn extends Schema.Schema.Type<typeof FilterIn_> {}
 export const FilterIn: Schema.Schema<FilterIn> = FilterIn_;
 
 /**
+ * In (subquery form) — membership against a value projected from a subquery's results,
+ * e.g. `threadId IN (SELECT threadId FROM feed WHERE tag = 'inbox')`.
+ *
+ * Nested-only (like {@link FilterIn}): valid inside an `object` filter's `props`, not at
+ * the query root — the planner has no selector for a standalone membership predicate.
+ * The subquery may target a different scope than the parent query; it is resolved once at
+ * execution time by projecting `property` from its results into a set.
+ */
+const FilterInQuery_ = Schema.Struct({
+  type: Schema.Literal('in-query'),
+  subquery: Schema.suspend(() => Query),
+  property: Schema.String,
+});
+export interface FilterInQuery extends Schema.Schema.Type<typeof FilterInQuery_> {}
+export const FilterInQuery: Schema.Schema<FilterInQuery> = FilterInQuery_;
+
+/**
  * Contains.
  */
 const FilterContains_ = Schema.Struct({
@@ -200,6 +217,7 @@ export const Filter = Schema.Union(
   FilterObject,
   FilterCompare,
   FilterIn,
+  FilterInQuery,
   FilterContains,
   FilterTag,
   FilterRange,
@@ -422,14 +440,16 @@ export const QuerySkipClause: Schema.Schema<QuerySkipClause> = QuerySkipClause_;
 /**
  * A named aggregate computed per group over its members, exposed as a top-level field on the flat
  * result record (`row[name]`) and orderable via a following `orderBy(Order.property(name))`. A
- * tagged union per kind — `property`/`limit` are present exactly when the kind uses them, so
- * read sites narrow by `kind` instead of guarding an unused optional field.
+ * tagged union per kind — `property`/`limit`/`order` are present exactly when the kind uses them,
+ * so read sites narrow by `kind` instead of guarding an unused optional field.
  * - `group` partitions members by a scalar `property`; its coerced key value is the field's value.
  *   Composite keys are formed from multiple `group` entries. A query with no `group` entries
  *   aggregates its entire input into a single row.
  * - `max`/`min` reduce a scalar member `property`.
- * - `items` collects the group's members, optionally capped to `limit`. Opt-in — a row carries no
- *   members otherwise.
+ * - `items` collects the group's members, optionally ordered by `order` and capped to `limit`.
+ *   Opt-in — a row carries no members otherwise. `order` is this aggregate's own per-group
+ *   ordering, independent of any `orderBy` clause elsewhere in the query (which orders the whole
+ *   input stream / the resulting groups, not this aggregate's member selection).
  * - `count` yields the member count. Opt-in — a row carries no count otherwise.
  */
 const GroupAggregateGroup_ = Schema.Struct({
@@ -443,6 +463,7 @@ const GroupAggregateItems_ = Schema.Struct({
   name: Schema.String,
   kind: Schema.Literal('items'),
   limit: Schema.optional(Schema.Number),
+  order: Schema.optional(Schema.Array(Order)),
 });
 const GroupAggregateCount_ = Schema.Struct({ name: Schema.String, kind: Schema.Literal('count') });
 

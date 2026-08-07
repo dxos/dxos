@@ -4,12 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Place, Routing, RoutingOperation, Segment, Trip, TripCapabilities } from '#types';
+import type * as Place from '../types/Place';
+import * as Routing from '../types/Routing';
+import * as RoutingOperation from '../types/RoutingOperation';
+import * as Segment from '../types/Segment';
+import * as Trip from '../types/Trip';
+import * as TripCapabilities from '../types/TripCapabilities';
 
 const EMPTY = { legs: 0, distanceMeters: 0, durationSeconds: 0 } as const;
 
@@ -93,7 +98,7 @@ const writeRoute = (
   segment: Segment.Segment,
   waypoints: readonly Place.Place[],
   routes: readonly Routing.Route[],
-): void =>
+): void => {
   Obj.update(segment, (segment) => {
     if (segment.details._tag !== 'road') {
       return;
@@ -111,6 +116,7 @@ const writeRoute = (
     // Deep-copy to plain mutable arrays (the live segment's GeoPoint fields are mutable number[][]).
     segment.details.routes = routes.map(cloneRoute);
   });
+};
 
 // Return type is inferred (plain mutable arrays) so it assigns to the live segment's GeoPoint fields.
 // Distance (meters) and duration (seconds) are floored to whole units; sub-unit precision is noise.

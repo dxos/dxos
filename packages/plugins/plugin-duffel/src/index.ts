@@ -3,4 +3,6 @@
 //
 
 export * from './meta';
-export * from './types';
+export * as DuffelCapabilities from './types/DuffelCapabilities';
+export * as DuffelEvents from './types/DuffelEvents';
+export * as Settings from './types/Settings';

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/client-services",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "DXOS client services implementation",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -19,8 +19,8 @@
         "default": "./src/packlets/locks/node.ts"
       },
       "types": "./dist/types/src/packlets/locks/node.d.ts",
-      "browser": "./dist/lib/browser/packlets/locks/browser.mjs",
-      "default": "./dist/lib/node-esm/packlets/locks/node.mjs"
+      "browser": "./dist/lib/packlets/locks/browser.mjs",
+      "default": "./dist/lib/packlets/locks/node.mjs"
     },
     "#diagnostics-broadcast": {
       "source": {
@@ -28,22 +28,18 @@
         "default": "./src/packlets/diagnostics/diagnostics-broadcast.ts"
       },
       "types": "./dist/types/src/packlets/diagnostics/diagnostics-broadcast.d.ts",
-      "browser": "./dist/lib/browser/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
-      "default": "./dist/lib/node-esm/packlets/diagnostics/diagnostics-broadcast.mjs"
+      "browser": "./dist/lib/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
+      "default": "./dist/lib/packlets/diagnostics/diagnostics-broadcast.mjs"
     }
   },
   "exports": {
     ".": {
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
-      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -74,7 +70,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/keyring": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
     "@dxos/lock-file": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
@@ -82,7 +77,6 @@
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/random-access-storage": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/teleport-extension-gossip": "workspace:*",
@@ -102,14 +96,12 @@
     "platform": "catalog:"
   },
   "devDependencies": {
-    "@dxos/signal": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "@effect/platform-browser": "catalog:",
-    "@effect/vitest": "catalog:",
     "@types/platform": "catalog:",
-    "@types/readable-stream": "catalog:",
     "fast-check": "catalog:",
-    "get-port-please": "catalog:"
+    "get-port-please": "catalog:",
+    "random-access-storage": "catalog:"
   },
   "publishConfig": {
     "access": "public"

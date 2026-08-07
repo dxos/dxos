@@ -5,19 +5,30 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import { AppAnnotation, AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import { DeckSpec } from '@dxos/app-toolkit';
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { isSpace } from '@dxos/client/echo';
-import { Operation } from '@dxos/compute';
-import { Annotation, Collection, Obj, Type } from '@dxos/echo';
+import * as Operation from '@dxos/compute/Operation';
+import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities } from '#types';
 
+import { resolveCollectionObjectPath } from '../../../collection-path';
+import * as SpaceCapabilities from '../../../types/SpaceCapabilities';
 import {
   COLLECTIONS_SECTION_TYPE,
   COPY_LINK_LABEL,
@@ -30,24 +41,36 @@ import {
 //
 
 /** Creates collection-related extensions: collections section, collections, objects, and object actions. */
+
+/**
+ * A collection is always a navigation target; what differs is what navigating to it shows. When a
+ * plugin renders collections as their own article (stack, simple-layout) that article wins, otherwise
+ * the deck opens the collection's contents. Returning `undefined` leaves the ordinary open in place.
+ */
+const collectionDeck = (object: Obj.Unknown, hasCollectionArticle: boolean): DeckSpec.DeckSpec | undefined =>
+  !hasCollectionArticle && Obj.instanceOf(Collection.Collection, object) ? { initial: 'children' } : undefined;
+
 export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin,
 }: {
   shareableLinkOrigin: string;
 }) {
   const capabilities = yield* Capability.Service;
+  // Hoisted so connector/action bodies read reactively via `get(...)` instead of a sync
+  // `Capability.get`, establishing a dependency that heals once the capability lands.
+  const ephemeralCapAtom = yield* Capability.atom(SpaceCapabilities.EphemeralState);
 
   return yield* Effect.all([
     // Content section group — created alongside collections so the group always
     // appears when the space plugin is active and hides when there are no children.
     GraphBuilder.createExtension({
-      id: Paths.GroupSegments.content,
+      id: GraphPath.GroupSegments.content,
       match: AppNodeMatcher.whenSpace,
       connector: (space) =>
         Effect.succeed([
           AppNode.makeGroup({
-            id: Paths.GroupSegments.content,
-            type: Paths.GroupTypes.content,
+            id: GraphPath.GroupSegments.content,
+            type: GraphPath.GroupTypes.content,
             label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
             space,
             position: 200,
@@ -58,7 +81,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Collections section virtual node under the content group.
     GraphBuilder.createExtension({
       id: 'collectionsSection',
-      match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.content),
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.content),
       connector: (space, get) => {
         get(Obj.atom(space.properties));
         const collectionRef = Annotation.get(space.properties, AppAnnotation.RootCollectionAnnotation).pipe(
@@ -74,7 +97,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 
         return Effect.succeed([
           Node.make({
-            id: Paths.Segments.collections,
+            id: GraphPath.Segments.collections,
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
@@ -93,15 +116,22 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       },
     }),
 
-    // Root collection objects under the Collections virtual node.
+    // Root collection objects under the Collections virtual node. Shares the `object` urlKey with the
+    // nested-collection `objects` connector below so an object is addressed the same way wherever it
+    // sits in the collection tree (the key names the *collection subgraph*, not the container's type;
+    // the database subgraph addresses the same object under `db`).
     GraphBuilder.createExtension({
       id: 'collections',
+      url: { key: 'object', kind: 'item', path: [GraphPath.GroupSegments.content, GraphPath.Segments.collections] },
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
         return node.type === COLLECTIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const ephemeralState = get(ephemeralAtom);
 
         get(Obj.atom(space.properties));
@@ -129,7 +159,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 get,
                 db: space.db,
                 object,
-                navigable: ephemeralState.navigableCollections,
+                navigable: true,
+                deck: collectionDeck(object, ephemeralState.navigableCollections),
                 canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
                 onRearrange: collectionRef?.target
                   ? AppNode.makeCollectionRearrangeCallback(collectionRef.target)
@@ -144,9 +175,37 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     // Children of Collection.Collection nodes.
     GraphBuilder.createExtension({
       id: 'objects',
+      // Recursive over nested collections at any depth, so `object/<id>` addresses any object reachable
+      // through a space's collection tree, not just the root collection's direct children. The shape is
+      // data-dependent (the object's collection ancestry), so instead of a static `path` it resolves
+      // dynamically — see `resolveCollectionObjectPath`.
+      url: {
+        key: 'object',
+        kind: 'item',
+        path: ({ id, workspace }) =>
+          Effect.gen(function* () {
+            if (!SpaceId.isValid(workspace)) {
+              return null;
+            }
+            // Look the Client up lazily (at resolve time) rather than at graph-setup time — it is not yet
+            // available when the AppGraphBuilder activates, and forward resolution only runs much later.
+            const client = capabilities.get(ClientCapabilities.Client);
+            const space = client.spaces.get(workspace);
+            if (!space) {
+              return null;
+            }
+            const path = yield* resolveCollectionObjectPath({ objectId: id }).pipe(
+              Effect.provide(Database.layer(space.db)),
+            );
+            return path ?? null;
+          }),
+      },
       match: (node) => (Obj.instanceOf(Collection.Collection, node.data) ? Option.some(node.data) : Option.none()),
       connector: (collection, get) => {
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
+        if (!ephemeralAtom) {
+          return Effect.succeed([]);
+        }
         const ephemeralState = get(ephemeralAtom);
         const db = Obj.getDatabase(collection);
 
@@ -169,7 +228,8 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   get,
                   object,
                   db,
-                  navigable: ephemeralState.navigableCollections,
+                  navigable: true,
+                  deck: collectionDeck(object, ephemeralState.navigableCollections),
                   canDrop: AppNode.CAN_DROP_COLLECTION_ITEM,
                   onRearrange: AppNode.makeCollectionRearrangeCallback(collection),
                 }),
@@ -177,8 +237,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             .filter(isNonNullable),
         );
       },
-      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
-      // resolver: (id, get) => { ... },
     }),
 
     // Object actions.
@@ -196,12 +254,12 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         const deletable = !Type.isType(object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
-        const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
-        const ephemeralState = get(ephemeralAtom);
+        const [ephemeralAtom] = get(ephemeralCapAtom);
 
-        if (!appGraph) {
+        if (!appGraph || !ephemeralAtom) {
           return Effect.succeed([]);
         }
+        const ephemeralState = get(ephemeralAtom);
 
         const parentId = nodeId.substring(0, nodeId.lastIndexOf('/'));
         const parentNode = Option.getOrUndefined(Graph.getNode(appGraph.graph, parentId));
@@ -243,7 +301,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                   // Qualified id of the collections section node (root/<spaceId>/collections), so the new
                   // object's navigation path resolves under the section — the bare segment would not.
                   target: rootCollection ?? space.db,
-                  targetNodeId: Paths.getCollectionsPath(space.id),
+                  targetNodeId: GraphPath.getCollectionsPath(space.id),
                 });
               }),
             properties: {
@@ -257,10 +315,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     }),
   ]);
 });
-
-//
-// Helpers
-//
 
 /** Builds the action list for an ECHO object node. */
 const constructObjectActions = ({
@@ -329,9 +383,15 @@ const constructObjectActions = ({
           Node.makeAction({
             id: 'copyLink',
             data: () =>
-              Effect.promise(async () => {
-                const url = new URL(Paths.toUrlPath(nodeId), shareableLinkOrigin);
-                await navigator.clipboard.writeText(url.toString());
+              Effect.gen(function* () {
+                const builder = yield* Capability.get(AppCapabilities.AppGraph);
+                const path = UrlResolution.getShareableLinkPath(builder, nodeId);
+                if (Option.isNone(path)) {
+                  log.warn('object has no URL representation; cannot copy link', { nodeId });
+                  return;
+                }
+                const url = new URL(path.value, shareableLinkOrigin);
+                yield* Effect.promise(() => navigator.clipboard.writeText(url.toString()));
               }),
             properties: {
               label: COPY_LINK_LABEL,
@@ -344,7 +404,7 @@ const constructObjectActions = ({
       : []),
     Node.makeAction({
       id: LayoutOperation.Expose.meta.key,
-      data: () => Operation.invoke(LayoutOperation.Expose, { subject: Paths.getObjectPathFromObject(object) }),
+      data: () => Operation.invoke(LayoutOperation.Expose, { subject: GraphPath.getObjectPathFromObject(object) }),
       properties: {
         label: EXPOSE_OBJECT_LABEL,
         icon: 'ph--eye--regular',

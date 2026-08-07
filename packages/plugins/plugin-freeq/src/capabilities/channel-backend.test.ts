@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
 import { type IncomingMessage } from '../services';
 import { makeFreeqChannel } from '../types';

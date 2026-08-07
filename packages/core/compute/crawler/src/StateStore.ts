@@ -8,6 +8,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { type SqlTransaction } from '@dxos/sql-sqlite';
+
 import { type StateError } from './errors';
 import { makeSql, migrate } from './internal/state-store-sql';
 import type * as Type from './types';
@@ -42,12 +44,12 @@ export class StateStore extends Context.Tag('@dxos/crawler/StateStore')<StateSto
   static layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
 
   /** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
-  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient> = Layer.scoped(
+  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
     StateStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
       // Schema creation is a fatal store-construction failure, not a recoverable per-op error.
-      yield* migrate(sql).pipe(Effect.orDie);
+      yield* migrate().pipe(Effect.orDie);
       return makeSql(sql);
     }),
   );

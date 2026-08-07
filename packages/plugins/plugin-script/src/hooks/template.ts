@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Script } from '@dxos/compute';
 import { FUNCTIONS_PRESET_META_KEY } from '@dxos/compute-runtime';
+import * as Script from '@dxos/compute/Script';
 import { Obj } from '@dxos/echo';
-import { createMenuAction } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 
 import { templates } from '../templates';
 
@@ -42,7 +42,7 @@ const createTemplateSelectActions = (script: Script.Script) => {
   });
 };
 
-export const createTemplateSelect = (script: Script.Script) => {
+export const createTemplateSelect = (script: Script.Script): ActionGraphProps => {
   const templateSelectActions = createTemplateSelectActions(script);
   return {
     nodes: [...templateSelectActions],

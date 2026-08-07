@@ -1,0 +1,55 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { Database, Type } from '@dxos/echo';
+import { DXN, EID } from '@dxos/keys';
+import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
+
+import { meta } from '#meta';
+
+import { getMailboxPath } from '../paths';
+import * as Mailbox from '../types/Mailbox';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    const resolver: AppCapabilities.NavigationTargetResolver = (query) =>
+      Effect.gen(function* () {
+        if (!query?.uri) {
+          return [
+            {
+              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
+              label: 'Inbox settings',
+              type: 'settings',
+            },
+          ];
+        }
+
+        const targetUri = EID.tryParse(query.uri) ?? DXN.tryMake(query.uri);
+        if (!targetUri) {
+          return [];
+        }
+
+        const { db } = yield* Database.Service;
+        const ref = db.makeRef(targetUri);
+        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        if (!object || !Mailbox.instanceOf(object)) {
+          return [];
+        }
+
+        return [
+          {
+            path: getMailboxPath(db.spaceId, object.id),
+            label: (object as Mailbox.Mailbox).name ?? '',
+            type: Type.getTypename(Mailbox.Mailbox),
+          },
+        ];
+      });
+
+    return Capability.contribute(AppCapabilities.NavigationTargetResolver, resolver);
+  }),
+);

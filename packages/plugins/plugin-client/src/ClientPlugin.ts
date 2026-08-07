@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 
 import {
   AccountCache,
@@ -13,79 +13,42 @@ import {
   LayerSpecs,
   Migrations,
   NavigationHandler,
+  NavigationTargetLoader,
   OperationHandler,
   ReactContext,
   ReactSurface,
+  RemoteTraceMonitor,
   SchemaDefs,
   SpaceReplicationProgress,
+  TraceProgress,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ClientEvents } from '#types';
-import { type ClientPluginOptions } from '#types';
 
-export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
-    activate: () => NavigationHandler({ invitationProp }),
-  })),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addReactContextModule({ activate: ReactContext }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule((options) => {
-    return {
-      id: Capability.getModuleTag(Client),
-      activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, AppActivationEvents.SetupAppGraph),
-      firesAfterActivation: [ClientEvents.ClientReady],
-      activate: () => Client(options),
-    };
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    activate: AccountCache,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    activate: HubHttpClient,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [AppActivationEvents.SetupSchema],
-    activate: SchemaDefs,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ClientEvents.SetupMigration],
-    activate: Migrations,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.SpacesReady, AppActivationEvents.ProgressRegistryReady),
-    activate: SpaceReplicationProgress,
-  }),
-  Plugin.addModule({
-    activatesOn: ActivationEvents.SetupProcessManager,
-    activate: LayerSpecs,
-  }),
-  Plugin.addModule(
-    ({
-      shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
-      invitationPath = '/',
-      invitationProp = 'deviceInvitationCode',
-      onReset,
-    }) => {
-      const createInvitationUrl = (invitationCode: string) => {
-        const baseUrl = new URL(invitationPath || '/', shareableLinkOrigin);
-        baseUrl.searchParams.set(invitationProp, invitationCode);
-        return baseUrl.toString();
-      };
+import * as ClientOptions from './types/ClientOptions';
 
-      return {
-        id: Capability.getModuleTag(ReactSurface),
-        activatesOn: ActivationEvents.SetupReactSurface,
-        activate: () => ReactSurface({ createInvitationUrl, onReset }),
-      };
-    },
-  ),
+export const ClientPlugin = Plugin.define<ClientOptions.ClientPluginOptions>(meta).pipe(
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(NavigationHandler),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(ReactContext),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(Client),
+  Plugin.addModule(AccountCache),
+  Plugin.addModule(NavigationTargetLoader),
+  Plugin.addModule(HubHttpClient),
+  Plugin.addModule(SchemaDefs),
+  Plugin.addModule(Migrations),
+  // Runtime event: spaces become ready when the client observes them, not at startup — see the
+  // SpaceReplicationProgress module definition.
+  Plugin.addModule(SpaceReplicationProgress),
+  // Project remote (edge) trace progress into the registry (DX-1125) — see the TraceProgress
+  // module definition for its activation gating.
+  Plugin.addModule(TraceProgress),
+  Plugin.addModule(LayerSpecs),
+  // Swarm-backed remote trace source (DX-1125). Collected when the process-manager runtime is built.
+  Plugin.addModule(RemoteTraceMonitor),
+  Plugin.addModule(ReactSurface),
   Plugin.make,
 );
 

@@ -324,6 +324,43 @@ describe('QueryExecutor.matchesHint — non-simple queries always match', () => 
 });
 
 // ---------------------------------------------------------------------------
+// QueryExecutor.matchesHint — nested Filter.in(projection) (subquery semi-join)
+//
+// The subquery's result depends on its own scope/typenames, which may differ entirely from the
+// parent query's — a hint scoped to the parent's dimensions could miss a change that alters the
+// subquery's result set. `extractScopes` marks such a query non-simple (like `child-of`,
+// `text-search`, unions) so it conservatively re-runs on every invalidation, regardless of
+// whether the parent and subquery target the same or different types/spaces.
+// ---------------------------------------------------------------------------
+
+describe('QueryExecutor.matchesHint — nested Filter.in(projection)', () => {
+  test('a query with a nested subquery semi-join always matches (isSimple=false)', ({ expect }) => {
+    const subquery = Query.select(Filter.type(TestSchema.Organization));
+    const executor = makeExecutor(
+      withSpace(Query.select(Filter.type(TestSchema.Person, { name: Filter.in(subquery.project('name')) }))),
+    );
+    // Even a fully disjoint hint (different type, different space) must re-run this query.
+    const hint = makeHint({
+      spaceIds: makeSpaceSet(SpaceId.random()),
+      typenames: makeTypeSet('com.example.unrelated'),
+    });
+    expect(executor.matchesHint(hint)).toBe(true);
+  });
+
+  test('negative control: the same query without the subquery predicate stays simple (hint-selective)', ({
+    expect,
+  }) => {
+    const executor = makeExecutor(withSpace(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' }))));
+    const disjointHint = makeHint({
+      spaceIds: makeSpaceSet(SpaceId.random()),
+      typenames: makeTypeSet(ORG_TYPENAME),
+    });
+    expect(executor.matchesHint(disjointHint)).toBe(false);
+    expect(executor.matchesHint(makeHint({ typenames: makeTypeSet(PERSON_TYPENAME) }))).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // QueryExecutor.matchesHint — id-rooted relation traversal (companion chat history)
 //
 // The companion chat-history toolbar queries:

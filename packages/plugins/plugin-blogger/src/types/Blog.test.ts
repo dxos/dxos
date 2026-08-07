@@ -6,10 +6,10 @@ import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
-import { Blog } from './index';
+import * as Blog from './Blog';
 
 describe('Blog schema', () => {
   test('makePost creates outline + a body document, both owned by it, and defaults to draft status', () => {

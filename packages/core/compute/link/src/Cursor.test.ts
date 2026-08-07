@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Expando } from '@dxos/schema';
 
+import * as AccessToken from './AccessToken';
 import * as Cursor from './Cursor';
 
 describe('Cursor.layer', () => {
@@ -295,6 +296,219 @@ describe('Cursor.layer', () => {
       expect(await dropUnder(true, 0)).toBe(false);
     },
   );
+});
+
+describe('token accessors', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const makeExternalCursor = async () => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, AccessToken.AccessToken, Expando.Expando] });
+    const token = db.add(AccessToken.make({ source: 'gmail.com', token: 'secret' }));
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(
+      Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) }),
+    ) as Cursor.ExternalCursor;
+    return cursor;
+  };
+
+  test('round-trips the delta token, independently of max/min', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    expect(Cursor.readToken(cursor)).toBeUndefined();
+
+    Cursor.writeToken(cursor, 'history-123');
+    expect(Cursor.readToken(cursor)).toBe('history-123');
+    // The token lives on the spec, not the range watermarks.
+    expect(cursor.max).toBeUndefined();
+    expect(cursor.min).toBeUndefined();
+
+    Cursor.writeToken(cursor, 'history-456');
+    expect(Cursor.readToken(cursor)).toBe('history-456');
+
+    Cursor.clearToken(cursor);
+    expect(Cursor.readToken(cursor)).toBeUndefined();
+  });
+
+  test('the token is preserved alongside snapshots (both are opaque spec fields)', async ({ expect }) => {
+    const cursor = await makeExternalCursor();
+    Cursor.writeToken(cursor, 'state-abc');
+    Cursor.writeSnapshot(cursor, 'msg-1', { flagged: true });
+    expect(Cursor.readToken(cursor)).toBe('state-abc');
+    expect(Cursor.readSnapshot(cursor, 'msg-1')).toEqual({ flagged: true });
+
+    Cursor.clearToken(cursor);
+    expect(Cursor.readToken(cursor)).toBeUndefined();
+    expect(Cursor.readSnapshot(cursor, 'msg-1')).toEqual({ flagged: true });
+  });
+});
+
+describe('foreignIndex (reconcileFilter)', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('maps the reconcile filter’s foreignIds to their EntityIds', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target) }));
+
+    const items = [10, 20, 30].map((key) =>
+      Expando.make({ [Obj.Meta]: { keys: [{ id: `id-${key}`, source: 'test' }] }, key }),
+    );
+    await EffectEx.runPromise(Feed.append(feed, items).pipe(Effect.provide(Database.layer(db))));
+
+    const state = await Effect.gen(function* () {
+      return yield* Cursor.Service;
+    }).pipe(
+      Effect.provide(
+        Cursor.layer({
+          cursor,
+          feed,
+          foreignKeySource: 'test',
+          maxKey: 0,
+          // Resolve only the two messages the reconcile targets, not the whole feed.
+          reconcileFilter: Filter.foreignKeys(Expando.Expando, [
+            { source: 'test', id: 'id-10' },
+            { source: 'test', id: 'id-30' },
+          ]),
+          stats: { newMessages: 0 },
+        }),
+      ),
+      Effect.provide(Database.layer(db)),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect(state.foreignIndex).toBeDefined();
+    expect([...state.foreignIndex!.keys()].sort()).toEqual(['id-10', 'id-30']);
+    // The mapped EntityId is the feed message's own id.
+    expect(state.foreignIndex!.get('id-10')).toBe(items[0].id);
+    expect(state.foreignIndex!.get('id-30')).toBe(items[2].id);
+  });
+
+  test('is absent when no reconcileFilter is set — the add-only path pays nothing', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target) }));
+
+    const state = await Effect.gen(function* () {
+      return yield* Cursor.Service;
+    }).pipe(
+      Effect.provide(Cursor.layer({ cursor, feed, foreignKeySource: 'test', maxKey: 0, stats: { newMessages: 0 } })),
+      Effect.provide(Database.layer(db)),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect(state.foreignIndex).toBeUndefined();
+  });
+});
+
+describe('commit with objectless units', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('an objectless unit runs its commit effect without appending to the feed or moving max/min', async ({
+    expect,
+  }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100' }));
+
+    let effectRan = false;
+    const retagUnit: Cursor.CommitUnit = {
+      foreignId: 'id-existing',
+      key: 0,
+      commitEffects: [() => Effect.sync(() => (effectRan = true))],
+    };
+
+    await EffectEx.runPromise(
+      Cursor.commit(Chunk.fromIterable([retagUnit])).pipe(
+        Effect.provide(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: 100,
+            minKey: 0,
+            trackRange: true,
+            stats: { newMessages: 0 },
+          }),
+        ),
+        Effect.provide(Database.layer(db)),
+      ),
+    );
+
+    expect(effectRan).toBe(true);
+    // No feed append, so the feed is still empty.
+    const feedItems = await EffectEx.runPromise(
+      Feed.query(feed, Filter.everything()).run.pipe(Effect.provide(Database.layer(db))),
+    );
+    expect(feedItems.length).toBe(0);
+    // key: 0 must not disturb the range watermarks.
+    expect(cursor.max).toBe('100');
+    expect(cursor.min).toBeUndefined();
+  });
+
+  test('a mixed page appends only the object-bearing unit and folds only its key', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target) }));
+
+    const appendUnit: Cursor.CommitUnit = {
+      object: Expando.make({ [Obj.Meta]: { keys: [{ id: 'id-200', source: 'test' }] }, key: 200 }),
+      foreignId: 'id-200',
+      key: 200,
+    };
+    const retagUnit: Cursor.CommitUnit = { foreignId: 'id-existing', key: 0 };
+
+    await EffectEx.runPromise(
+      Cursor.commit(Chunk.fromIterable([appendUnit, retagUnit])).pipe(
+        Effect.provide(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: 0,
+            minKey: 0,
+            trackRange: true,
+            stats: { newMessages: 0 },
+          }),
+        ),
+        Effect.provide(Database.layer(db)),
+      ),
+    );
+
+    const feedItems = await EffectEx.runPromise(
+      Feed.query(feed, Filter.everything()).run.pipe(Effect.provide(Database.layer(db))),
+    );
+    expect(feedItems.length).toBe(1);
+    // Only the real key (200) folded; the objectless key: 0 did not lower min to 0.
+    expect(cursor.max).toBe('200');
+    expect(cursor.min).toBe('200');
+  });
 });
 
 describe('resolveHorizon', () => {

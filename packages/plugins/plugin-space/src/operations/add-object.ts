@@ -3,11 +3,13 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { AppNode, CollectionModel, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as CollectionModel from '@dxos/app-toolkit/CollectionModel';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Scope, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 
 import { SpaceOperation } from './definitions';
@@ -54,7 +56,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       // Graph type nodes are keyed by a slash-free slug (entity id for stored types, typename for
       // static); resolve the object's own type slug rather than filing it under its (human) typename.
       const objectType = Obj.getType(object);
-      const typeSlug = objectType ? Paths.getTypeSlug(objectType) : typename;
+      const typeSlug = objectType ? GraphPath.getTypeSlug(objectType) : typename;
       const subject = getSubjectPathForNewObject({
         spaceId: db.spaceId,
         objectId: object.id,
@@ -62,7 +64,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         object,
         typename,
         typeSlug,
-        viewTargetSlug: viewTargetUri ? Paths.getTypeSlugFromUri(viewTargetUri) : undefined,
+        viewTargetSlug: viewTargetUri ? GraphPath.getTypeSlugFromUri(viewTargetUri) : undefined,
       });
 
       return {
@@ -88,13 +90,13 @@ const getSubjectPathForNewObject = (props: {
 }): string => {
   const { nodeId, object, typeSlug, viewTargetSlug, spaceId, objectId } = props;
   if (typeof nodeId === 'string') {
-    return Paths.getCollectionObjectPath(nodeId, objectId);
+    return GraphPath.getCollectionObjectPath(nodeId, objectId);
   }
   if (AppNode.isCollectionItem(object)) {
-    return Paths.getCollectionsPath(spaceId, objectId);
+    return GraphPath.getCollectionsPath(spaceId, objectId);
   }
   if (viewTargetSlug) {
-    return Paths.getTypePath(spaceId, viewTargetSlug, objectId);
+    return GraphPath.getTypePath(spaceId, viewTargetSlug, objectId);
   }
-  return Paths.getObjectPath(spaceId, typeSlug, objectId);
+  return GraphPath.getObjectPath(spaceId, typeSlug, objectId);
 };

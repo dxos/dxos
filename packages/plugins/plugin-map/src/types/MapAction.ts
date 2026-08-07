@@ -4,16 +4,16 @@
 
 import * as Schema from 'effect/Schema';
 
-import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
+import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
 
-import { LocationAnnotationId } from './types';
+import * as MapCapabilities from './MapCapabilities';
 
 export const CreateMap = Schema.Struct({
   name: Schema.optional(Schema.String),
   // TODO(wittjosiah): This should be a query input instead.
   typename: Schema.String.pipe(
     Schema.annotations({ title: 'Select pin type' }),
-    TypeInputOptionsAnnotation.set({
+    SpaceForm.TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
     }),
@@ -21,7 +21,7 @@ export const CreateMap = Schema.Struct({
   ),
   locationFieldName: Schema.String.pipe(
     Schema.annotations({
-      [LocationAnnotationId]: true,
+      [MapCapabilities.LocationAnnotationId]: true,
       title: 'Location property',
     }),
     Schema.optional,

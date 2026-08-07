@@ -183,6 +183,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
                     $survey_id: survey.id,
                     $survey_questions: [{ id: question.id, question: question.question }],
                     [`$survey_response_${question.id}`]: form.message,
+                    // Survey destinations (Slack/webhook notifications) filter on `$survey_completed = true`, so responses without it are dropped.
+                    $survey_completed: true,
                     debug_log_dump_key: debugLogDumpKey,
                   });
                   resolve(result?.uuid);

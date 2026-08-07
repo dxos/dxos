@@ -2,45 +2,92 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, NotFound, Paths } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import { PathResolution } from '@dxos/app-graph';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NotFound from '@dxos/app-toolkit/NotFound';
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
+import * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Node } from '@dxos/plugin-graph';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import { Attention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { DeckCapabilities, type StoredDeckState, defaultDeck } from '#types';
-
-import { updateActiveDeck } from '../operations/helpers';
-import { deserializePlanks, serializePlanks, stripPlanks } from '../util';
+import * as DeckCapabilities from '../types/DeckCapabilities';
+import * as DeckSchema from '../types/DeckSchema';
+import {
+  COMPANION_VIEW_STATE_CONTEXT,
+  companionAspect,
+  getRenderedPlanks,
+  resolveCompanionAnchor,
+  serializeDeckToUrl,
+} from '../util';
 import { shouldDeferNavigationHandlers } from './check-app-scheme';
 
-/** Dispatch all NavigationHandler contributions with a given URL. */
-const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
-  const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-  yield* Effect.all(
-    handlers.map((handler) => handler(url)),
-    { concurrency: 'unbounded' },
-  );
-});
+/**
+ * Deadline for a cold restore's container chain to materialize. Not a poll interval: resolution
+ * waits on the candidate node and returns as soon as it lands, so this only bounds the wait for a
+ * node that never arrives. Generous because it costs nothing when the chain lands early.
+ */
+const RESOLVE_TIMEOUT = '10 seconds';
+
+/** Strip the `root/` prefix off a qualified workspace path, back to the bare `UrlPath` workspace token. */
+const bareWorkspace = (qualifiedWorkspace: string): string => {
+  const [, workspace] = qualifiedWorkspace.split('/');
+  return workspace ?? qualifiedWorkspace;
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
-    const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const stateAtom = yield* Capability.get(DeckCapabilities.State);
-    const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
+    const operationService = yield* Capabilities.OperationInvoker;
+    const navigationHandlers = yield* AppCapabilities.NavigationHandler;
+    const navigationTargetLoaders = yield* AppCapabilities.NavigationTargetLoader;
+    const registry = yield* Capabilities.AtomRegistry;
+    const stateAtom = yield* DeckCapabilities.State;
+    const settingsAtom = yield* DeckCapabilities.Settings;
+    const viewState = yield* AttentionCapabilities.ViewState;
+    const attention = yield* AttentionCapabilities.Attention;
+    // The graph builder is contributed once by plugin-graph and is stable for the app's lifetime,
+    // so both the inbound (URL -> state) resolution and the outbound sync below share this handle.
+    const builder = yield* AppCapabilities.AppGraph;
+    const manager = yield* Plugin.Service;
 
-    const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
-      effect.pipe(
-        Effect.provideService(Capability.Service, capabilities),
-        Effect.provideService(Operation.Service, operationService),
+    /**
+     * Dispatch all NavigationHandler contributions with a given URL.
+     *
+     * `catchAllCause`, not `catchAll`: a handler that invokes an operation fails as a DEFECT
+     * (`Process.fromOperation` uses `Effect.orDie`), which the Fail channel does not carry. On the
+     * `?token&type=login` boot the redeem races the forked client init, so the defect is the COMMON
+     * path — and left to escape it fails this module's activation, taking the popstate listener,
+     * the URL<->state sync and the leave-trap down for the whole session.
+     */
+    const dispatchNavigationHandlers = (url: URL) =>
+      Effect.all(
+        navigationHandlers
+          .get()
+          .map((handler) =>
+            handler(url).pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() => log.warn('navigation handler failed', { error: Cause.pretty(cause) })),
+              ),
+            ),
+          ),
+        { concurrency: 'unbounded' },
       );
+
+    const provideServices = <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
+      effect.pipe(Effect.provideService(Operation.Service, operationService));
 
     // Helper to get state.
     const getState = () => registry.get(stateAtom);
@@ -54,12 +101,38 @@ export default Capability.makeModule(
     };
 
     // Helper to update state.
-    const updateState = (fn: (current: StoredDeckState) => StoredDeckState) => {
+    const updateState = (fn: (current: DeckSchema.StoredDeckState) => DeckSchema.StoredDeckState) => {
       registry.set(stateAtom, fn(getState()));
     };
 
-    const handleNavigation = Effect.fn(function* (url?: URL) {
-      const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
+    /**
+     * Re-runs `parse` as builders register their keys, settling as soon as it succeeds — the deadline
+     * only bounds a URL whose keys never arrive.
+     *
+     * Keyed off the builder's OWN extensions, which is what `buildUrlKeyTable` reads. The
+     * `AppGraphBuilder` capability is a step removed: plugin-graph registers extensions from its own
+     * subscription to that capability, and two subscribers have no relative ordering — waking on the
+     * capability can therefore re-parse against extensions not yet added, miss, and then wait out the
+     * full deadline for a further contribution that never comes.
+     */
+    const parseWhenKeysArrive = <A>(parse: () => Option.Option<A>) =>
+      Effect.async<Option.Option<A>>((resume) => {
+        const cancel = registry.subscribe(builder.extensions, () => {
+          const parsed = parse();
+          if (Option.isSome(parsed)) {
+            resume(Effect.succeed(parsed));
+          }
+        });
+        return Effect.sync(cancel);
+      }).pipe(
+        Effect.timeoutTo({
+          duration: RESOLVE_TIMEOUT,
+          onTimeout: () => Option.none<A>(),
+          onSuccess: (parsed) => parsed,
+        }),
+      );
+
+    const handleNavigation = Effect.fn(function* (url?: URL, options?: { abortIf?: () => boolean }) {
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
@@ -70,55 +143,168 @@ export default Capability.makeModule(
       }
 
       const pathname = resolvedUrl.pathname;
-      const state = getState();
       if (pathname === '/reset') {
         updateState((s) => ({
           ...s,
-          activeDeck: 'default',
+          activeDeck: DeckSchema.DEFAULT_DECK_ID,
           decks: {
-            default: { ...defaultDeck },
+            [DeckSchema.DEFAULT_DECK_ID]: { ...DeckSchema.defaultDeck },
           },
         }));
         window.location.pathname = '/';
         return;
       }
 
-      const qualifiedId = Paths.fromUrlPath(pathname);
-      const workspace = Paths.getWorkspaceFromPath(qualifiedId);
-      if (workspace !== Node.RootId && workspace !== state.activeDeck) {
-        yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
+      if (pathname === '/') {
+        // Bare root with no `/w/...` info at all (a fresh visit, no bookmarked deep link): leave the
+        // persisted deck exactly as it is. The outbound sync below rewrites the URL to reflect it as
+        // soon as the deck state is next read, so this is not a dead end.
+        return;
       }
 
-      const deck = getDeck();
-      const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
-      if (activeId) {
-        // Ensure the object referenced by the URL is open in the deck.
-        // Open validates the target and may redirect to 404, returning the resolved IDs.
-        const resolvedIds = yield* Operation.invoke(LayoutOperation.Open, { subject: [activeId] });
-        // If not already in solo mode, switch to solo for the resolved target.
-        if (!deck.solo) {
-          yield* Operation.invoke(LayoutOperation.SetLayoutMode, {
-            subject: resolvedIds?.[0] ?? activeId,
-            mode: 'solo',
-          });
-        }
-      } else if (deck.solo && deck.solo !== NotFound.NOT_FOUND_PATH) {
-        // Stay in solo mode; redirect URL to reflect the current solo item.
-        // Do not switch to deck mode here — only explicit user action should change layout mode.
-        const path = Paths.toUrlPath(deck.solo);
-        if (window.location.pathname !== path) {
-          history.replaceState(null, '', `${path}${stripPlanks(window.location.search)}`);
-        }
-      } else if (!activeId && !deck.solo) {
-        // Multi-mode: restore planks from query params.
-        const plankIds = deserializePlanks(resolvedUrl);
-        if (plankIds.length > 0) {
-          for (const plankId of plankIds) {
-            NotFound.expandPath(graph, plankId);
-          }
-          updateState((state) => updateActiveDeck(state, { active: plankIds, initialized: true }));
-        }
+      const parseUrl = () => UrlPath.parse(pathname, PathResolution.buildUrlKeyTable(builder));
+      const parsed = yield* parseUrl().pipe(
+        Option.match({
+          onSome: Effect.succeedSome,
+          // URL keys come from graph builders that ride Idle, and a deep link can be restored
+          // before that wave lands. The URL is itself the demand signal, so pull the wave and
+          // re-parse — awaited, so this settles when the contributions are in, not on a timer.
+          //
+          // Failures are logged, not propagated, matching the scheduler's own idle daemon: the wave
+          // carries every plugin's registration contributions, so one broken plugin must not take
+          // URL handling down with it. Re-parsing then simply misses and falls through to the
+          // not-found sentinel below.
+          onNone: () =>
+            manager.activate(ActivationEvents.Idle).pipe(
+              Effect.catchAllCause((cause) =>
+                Effect.sync(() =>
+                  log.warn('idle activation failed during url restore', { error: Cause.pretty(cause) }),
+                ),
+              ),
+              Effect.map(parseUrl),
+              // Not every builder rides Idle: the one registering the space/workspace keys is gated
+              // on the client being initialized, which the forked initialization lands well after a
+              // reload's restore. Declaring not-found here would do so on a URL whose keys simply
+              // are not registered YET — and immediately, never reaching the per-pair node wait
+              // below. Re-parse as contributions arrive instead, bounded by the same deadline.
+              Effect.flatMap((afterIdle) =>
+                Option.isSome(afterIdle) ? Effect.succeed(afterIdle) : parseWhenKeysArrive(parseUrl),
+              ),
+            ),
+        }),
+      );
+      // An explicit navigation supersedes the URL restore. Checked HERE, before any write: the
+      // parse above can wait out its full deadline, and the not-found branch below writes and
+      // returns — so a check placed only before `Set` would let a timed-out restore knock the user
+      // out of whatever they had opened in the meantime.
+      if (options?.abortIf?.()) {
+        return;
       }
+
+      if (Option.isNone(parsed)) {
+        // Unknown/malformed path: same outcome as an unresolvable subject id always had — open the
+        // not-found sentinel. `immediate` skips validation, which is redundant for the sentinel anyway.
+        yield* Operation.invoke(LayoutOperation.Open, {
+          subject: [NotFound.NOT_FOUND_PATH],
+          navigation: 'immediate',
+        });
+        return;
+      }
+
+      const { workspace, pairs } = parsed.value;
+      // `/w/default` was written by builds that serialized the unresolved-workspace sentinel; map it back
+      // to the sentinel rather than to `root/default`, which resolves to no node and so can never heal.
+      const workspacePath =
+        workspace === DeckSchema.DEFAULT_DECK_ID ? DeckSchema.DEFAULT_DECK_ID : GraphPath.getSpacePath(workspace);
+      const state = getState();
+      if (workspacePath !== state.activeDeck) {
+        yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspacePath });
+      }
+
+      if (pairs.length === 0) {
+        // Workspace-only URL: SwitchWorkspace above already restored the workspace's persisted deck.
+        return;
+      }
+
+      // Preload the URL's plank objects so a cold restore materializes their graph nodes before
+      // resolution. `resolveUrl` walks the graph, which only surfaces objects ECHO has already loaded;
+      // without this the walk races async loading and falls to not-found on reload/deep-link. The
+      // NavigationTargetLoader (contributed by plugin-client) keeps this plugin free of a client
+      // dependency; absent (e.g. headless), resolution simply falls back to its guided search. The
+      // per-pair boolean records which planks the loader confirmed exist, gating the resolve retry
+      // below so a genuine 404 fails fast instead of waiting out the timeout.
+      const loaders = navigationTargetLoaders.get();
+      // Keyless pairs (singleton keys like the space home) carry no object id to confirm against;
+      // their nodes materialize with the workspace's graph subtree, so they wait rather than
+      // fail fast. Fail-fast stays reserved for object pairs a loader positively disconfirmed.
+      const confirmed = pairs.map((pair) => pair.id === undefined);
+      if (loaders.length > 0) {
+        yield* Effect.forEach(
+          pairs,
+          (pair, index) => {
+            if (pair.id === undefined) {
+              return Effect.void;
+            }
+            // A static-path pair id is `<...pathSegments>+<objectId>`; the loader wants the bare object
+            // id (the final tail segment), else `EntityId.isValid` rejects the compound form.
+            const entityId = pair.id.slice(pair.id.lastIndexOf(builder.urlGrammar.tailSeparator) + 1);
+            return Effect.forEach(loaders, (loader) =>
+              loader.load({ spaceId: pair.workspace, entityId }).pipe(Effect.catchAll(() => Effect.succeed(false))),
+            ).pipe(Effect.tap((results) => Effect.sync(() => (confirmed[index] = results.some(Boolean)))));
+          },
+          { concurrency: 'unbounded' },
+        );
+      }
+
+      // Loading an object does not load its container chain (e.g. the collection it lives in), which
+      // resolution expands but cannot synchronously observe. Resolution waits for the candidate node
+      // itself — the id is known before the lookup — so the restore completes the moment the chain
+      // lands. Only confirmed pairs wait: a pair a loader disconfirmed is absent, not late, and must
+      // fail fast rather than hold the restore for the full deadline.
+      const resolved = yield* PathResolution.resolveUrl(
+        builder,
+        { workspace, pairs },
+        { wait: (index) => (confirmed[index] ? RESOLVE_TIMEOUT : undefined) },
+      );
+
+      // Planks resolve in chain order; a `companion/<variant>` pair belongs to the plank before it rather
+      // than being a plank of its own, so it drives that plank's companion state and the selected variant.
+      const plankIds: string[] = [];
+      let companionNodeId: string | null = null;
+      let companionAnchorId: string | undefined;
+      pairs.forEach((pair, index) => {
+        const nodeId = resolved[index]?.nodeId;
+        if (pair.key === UrlPath.COMPANION_KEY) {
+          if (nodeId) {
+            companionNodeId = nodeId;
+            companionAnchorId = plankIds[plankIds.length - 1];
+          }
+        } else {
+          plankIds.push(nodeId ?? NotFound.NOT_FOUND_PATH);
+        }
+      });
+
+      // Re-checked after resolution, which is a second multi-second wait: `Set` overrides the deck
+      // wholesale, so applying it now would undo whatever the user opened while it ran.
+      if (options?.abortIf?.()) {
+        return;
+      }
+
+      // `Set` already means "override the deck's active list wholesale" — exactly a URL-driven
+      // restore, for one plank or many, with no separate disposition to invent.
+      yield* Operation.invoke(LayoutOperation.Set, { subject: plankIds });
+
+      // Attention is never serialized; on load it defaults to the last plank in the chain — except when
+      // the chain carries a companion, whose position *is* serialized and which only renders beside the
+      // plank it is anchored to, so attention has to land there for the URL to restore faithfully.
+      const attendId = companionAnchorId ?? plankIds[plankIds.length - 1];
+      if (attendId) {
+        yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: attendId });
+      }
+
+      // The companion is part of the URL-derived deck state too: explicitly close it when the chain
+      // carries no companion pair, rather than leaving a stale companion open from before navigation.
+      yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companionNodeId });
     });
 
     const onPopState = () => void EffectEx.runAndForwardErrors(provideServices(handleNavigation()));
@@ -147,7 +333,6 @@ export default Capability.makeModule(
       });
     };
 
-    yield* provideServices(handleNavigation());
     window.addEventListener('popstate', onPopState);
     if ('navigation' in window) {
       window.navigation.addEventListener('currententrychange', onCurrentEntryChange);
@@ -179,44 +364,118 @@ export default Capability.makeModule(
       );
     }
 
-    // Sync URL with layout state changes.
-    let lastSolo: string | undefined;
-    let lastActiveDeck: string | undefined;
-    let lastActiveKey: string | undefined;
-    const unsubscribe = registry.subscribe(stateAtom, () => {
+    // Sync URL with layout state changes: deck state (active planks, companion open/closed) and the
+    // companion's selected variant. Attention is deliberately absent — it is never serialized.
+    // `method: 'replace'` is used for the first write, to correct a stale/bare URL against the
+    // already-persisted deck without adding a spurious back-history entry; every later firing (a real
+    // state change) pushes. `replace` is deferred rather than fixed to the post-setup call because a
+    // fresh profile starts on the sentinel below, whose first real workspace arrives later.
+    let synced = false;
+    const syncUrl = (method: 'push' | 'replace' = 'push') => {
       const state = getState();
+      if (state.activeDeck === DeckSchema.DEFAULT_DECK_ID) {
+        // The sentinel is not a workspace: serializing it produces `/w/default`, which on the next load
+        // parses as a workspace that resolves to no node, leaving the app with an unavailable workspace.
+        // Leave the URL alone until a real workspace becomes active.
+        return;
+      }
+
+      const effectiveMethod = synced ? method : 'replace';
+      synced = true;
       const deck = getDeck();
-      const solo = deck.solo;
-      const activeDeck = state.activeDeck;
-      const activeKey = solo ? undefined : JSON.stringify(deck.active);
+      const workspace = bareWorkspace(state.activeDeck);
 
-      if (solo !== lastSolo || activeDeck !== lastActiveDeck || activeKey !== lastActiveKey) {
-        lastSolo = solo;
-        lastActiveDeck = activeDeck;
-        lastActiveKey = activeKey;
+      const representations = new Map<string, PathResolution.RepresentedNode>();
+      for (const id of deck.active) {
+        const represented = PathResolution.representNode(builder, id);
+        if (Option.isSome(represented)) {
+          representations.set(id, represented.value);
+        } else {
+          log.warn('plank has no URL representation; omitting from URL', { id });
+        }
+      }
 
-        const path = solo && solo !== NotFound.NOT_FOUND_PATH ? Paths.toUrlPath(solo) : Paths.toUrlPath(activeDeck);
-        const search = !solo
-          ? serializePlanks(deck.active, window.location.search)
-          : stripPlanks(window.location.search);
-        const newUrl = `${path}${search}`;
+      // The companion shares a container with the attended plank, and is serialized as
+      // `companion/<variant>` after that plank's own pair. Attention itself is still never serialized —
+      // it is read here only to place the companion, and a bare attention change does not resync the URL.
+      let companion: { plankId: string; node: PathResolution.RepresentedNode } | undefined;
+      if (deck.companionPlanks.length > 0 && deck.active.length > 0) {
+        // Resolved against the rendered planks, not `deck.active`: under `flatten` only the current plank
+        // is laid out, so anchoring to an earlier one would serialize a companion the deck cannot render.
+        const rendered = getRenderedPlanks(deck.active, registry.get(settingsAtom)?.flatten);
+        const anchorId = resolveCompanionAnchor(rendered, attention.getCurrent());
+        // Only the attended plank's companion is on screen, so only it belongs in the URL.
+        const plankId = anchorId && deck.companionPlanks.includes(anchorId) ? anchorId : undefined;
+        const selection = viewState.get(companionAspect, COMPANION_VIEW_STATE_CONTEXT);
+        if (plankId && selection.variant) {
+          const companionNodeId = `${plankId}/${Attention.linkedSegment(selection.variant)}`;
+          const represented = PathResolution.representNode(builder, companionNodeId);
+          if (Option.isSome(represented)) {
+            companion = { plankId, node: represented.value };
+          }
+        }
+      }
 
-        if (`${window.location.pathname}${window.location.search}` !== newUrl) {
+      const workspaceKey = UrlPath.WORKSPACE_KEY;
+      const path = serializeDeckToUrl({ workspace, workspaceKey, active: deck.active, representations, companion });
+      const newUrl = `${path}${window.location.search}`;
+
+      // Update only when the derived URL actually differs from the current one — the deck state and
+      // companion-variant atoms both funnel into this same recompute, so most firings are no-ops.
+      if (`${window.location.pathname}${window.location.search}` !== newUrl) {
+        if (effectiveMethod === 'replace') {
+          history.replaceState(null, '', newUrl);
+        } else {
           history.pushState(null, '', newUrl);
         }
       }
-    });
+    };
 
-    return Capability.contributes(Capabilities.Null, null, () =>
+    // Subscribed HERE, not from the restore fiber: the restore can now wait seconds for URL keys and
+    // for its nodes, and a navigation during that window would otherwise have no subscriber at all —
+    // the first navigation after a reload silently failed to update the URL. The writes are gated
+    // instead, so nothing overwrites the URL being restored from with the pre-restore deck.
+    // Subscribed at activation and NOT gated on the restore: these fire only on an actual write, and
+    // a write means someone — the user or the restore itself — changed the deck, so the URL should
+    // follow it. Gating them instead swallowed every navigation made while the restore was still
+    // waiting on its nodes, which is up to the full deadline.
+    let userNavigated = false;
+    const unsubscribeState = registry.subscribe(stateAtom, () => {
+      userNavigated = true;
+      syncUrl();
+    });
+    const unsubscribeCompanionVariant = viewState.subscribe(companionAspect, COMPANION_VIEW_STATE_CONTEXT, () =>
+      syncUrl(),
+    );
+    // Only the unconditional BASELINE write is deferred: it serializes the current deck whether or
+    // not anything changed, so at activation it would replace the URL being restored from with the
+    // empty pre-restore deck.
+    const startUrlSync = () => {
+      // Correct a bare/stale URL against the already-persisted deck on load (see the note above).
+      syncUrl('replace');
+    };
+
+    // Forked because this module sits on the startup pass: the restore can now wait for
+    // late-arriving URL keys (see `awaitUrlKeys`), and awaiting that here would hold the whole
+    // pass — and the boot loader with it — until the client is up.
+    yield* Effect.forkScoped(
+      provideServices(handleNavigation(undefined, { abortIf: () => userNavigated })).pipe(
+        Effect.andThen(Effect.sync(startUrlSync)),
+      ),
+    );
+
+    yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         window.removeEventListener('popstate', onPopState);
         if ('navigation' in window) {
           window.navigation.removeEventListener('currententrychange', onCurrentEntryChange);
         }
-        unsubscribe();
+        unsubscribeState();
+        unsubscribeCompanionVariant();
         unlistenDeepLink?.();
       }),
     );
+    return [];
   }),
 );
 

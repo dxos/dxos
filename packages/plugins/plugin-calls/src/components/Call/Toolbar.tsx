@@ -8,8 +8,9 @@ import React from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Node, useActionRunner } from '@dxos/plugin-graph';
-import { useActions, useNode } from '@dxos/plugin-graph';
+import { Node } from '@dxos/plugin-graph';
+import { useActions, useNode } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
   Icon,
   IconButton,
@@ -23,7 +24,8 @@ import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { CallsCapabilities } from '#types';
+
+import * as CallsCapabilities from '../../types/CallsCapabilities';
 
 export type ToolbarProps = ThemedClassName<{
   channel?: Channel.Channel;
@@ -68,7 +70,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NaturalToolbar.Root classNames={['p-2 bg-modal-surface rounded-md shadow-md', classNames]}>
+      <NaturalToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}
           state={{

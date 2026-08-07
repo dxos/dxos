@@ -36,7 +36,7 @@ Two fixed/lockstep groups plus deploy-only apps:
 - **`privatePackages: { version: true, tag: false }`** — version private group members (storybook, Composer) but never tag or publish them; deploy-only apps get no changeset, so never bump.
 - **`snapshot`** — the `@next` template (calculated base version + commit suffix, e.g. `0.10.0-next-<commit>`).
 - **`bumpVersionsWithWorkspaceProtocolOnly`** and **`onlyUpdatePeerDependentsWhenOutOfRange`** — part of the semver-cascade fix (below).
-- Otherwise standard: `@changesets/changelog-github`, `access: public`, `baseBranch: main`, `updateInternalDependencies: patch`.
+- Otherwise standard: `@changesets/changelog-git` (git-based, not GitHub API-based — `changelog-github` batches a GraphQL lookup across every unreleased changeset's commit in one query, which reliably timed out once the backlog grew past a few dozen changesets), `access: public`, `baseBranch: main`, `updateInternalDependencies: patch`.
 
 **Standard semver at every version.** At `0.x`, breaking rides the **minor** (`0.9.0 → 0.10.0`) and `major` is reserved for the deliberate `1.0.0` cut. A `minor` does **not** cascade the group to `1.0.0`. Bump-level rules live in the [authoring guide](../agents/instructions/changesets.md); the mechanism below is kept out of it.
 
@@ -67,7 +67,10 @@ All mechanics run in GitHub Actions; the human's only actions are **merging an a
 
 **Publishing lives in `publish-all.yml` for both channels** because npm's OIDC trusted publisher is bound to that workflow filename — so the **trigger selects the channel**:
 
-- **`@latest`** — push to `main` maintains the "Version Packages" PR (consuming `.changeset/*.md`, bumping versions, writing changelogs); **merging that PR** triggers the publish (npm OIDC + `--provenance`) and the `@latest` tags.
+- **`@latest`** — push to `main` maintains the "Version Packages" PR (consuming `.changeset/*.md`, bumping versions, writing changelogs); **merging that PR** triggers the publish (npm OIDC + `--provenance`) and the `@latest` group tags + releases.
+  - **One tag and one GitHub Release per version group, not per package.** `scripts/release-groups.mjs` tags `v<version>` (Group A, continuing the pre-Changesets `v0.10.0` series) and `plugins-v<version>` (Group B), pushes both refs in a **single** `git push`, and creates one release per group whose body is the members' `CHANGELOG.md` entries deduped by changeset. This is not cosmetic: `changesets/action` pushes every tag `changeset publish` prints as its own `git push`, and GitHub's ref backend rejected ~139 of ~275 such back-to-back pushes with `remote: fatal error in commit_refs`, failing the job after npm had already published. Because both groups are `fixed`/lockstep, every per-package tag named the identical commit — one tag per group is the same information at 2 refs instead of ~275. Hence `publish: pnpm changeset:publish --no-git-tag` + `createGithubReleases: false`: the fan-out is suppressed at the source rather than retried. Do not reintroduce per-package tags to "restore" traceability — `v<version>` resolves to the same commit every one of them did.
+  - **The tag/release step is gated on the commit subject, not the action's `published` output.** That output is scraped from `New tag:` lines in the publish log, so `--no-git-tag` pins it to `false` ([changesets/action#141](https://github.com/changesets/action/issues/141)); a `Version packages` commit on `main` is itself the release signal. `commitMode: github-api` is **not** an option here — it does not push tags for package names containing `/`, i.e. every `@dxos/*` package.
+  - **The Version PR is owned by `GH_DXOS_BOT_PAT`, not `GITHUB_TOKEN`.** A `pull_request` run whose `opened`/`synchronize`/`reopened` came from `GITHUB_TOKEN` is created but parked in `action_required` — GitHub's recursion guard holds it for manual approval, so it never executes, the PR reports **zero** check runs, and it stays `blocked` until a human approves every run by hand. A PAT-owned PR runs Check unattended instead. Because `changesets/action` authenticates its pushes via a `~/.netrc` it writes from `github-token`, the checkout must also set `persist-credentials: false`: a persisted `http.extraheader` credential outranks netrc and would put the pushes back on `GITHUB_TOKEN`.
 - **`@next`** — a `workflow_dispatch` runs `changeset version --snapshot next` + `sync-versions`, then `changeset publish --tag next --no-git-tag`. Versions are throwaway (`X.Y.Z-next-<commit>`); nothing is committed, no git tags, no-op when no changesets are pending. No `pre` mode anywhere — `publish-all.yml` fails fast if a stray `.changeset/pre.json` appears.
 
 Per-commit unreleased code is served by **pkg.pr.new** (§6 covers how a downstream repo consumes it), not npm.
@@ -123,13 +126,13 @@ Only after the cross-repo contract is proven on `edge`. The history extraction i
 
 The `sdk/app-*` packages + `shell` are the plugin-SDK layer (not storybook back-edges) — moving them collapses most of the cut. Genuine back-edges to clean first:
 
-| Back-edge                                                                                             | Fix                                                   |
-| ----------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `@dxos/schema`, `@dxos/types` — react-ui _devDep_ for demo stories                                    | Delete/inline the story; drop the devDep              |
-| `@dxos/react-client` — react-ui `ErrorBoundary` in a test decorator                                   | Swap to `@dxos/react-error-boundary` (Repo-A common)  |
-| `@dxos/keyboard` — story-only                                                                         | Move story to Repo B `stories-ui`                     |
-| `@dxos/storybook-utils` — react-ui _peerDep_                                                          | Move to Repo B                                        |
-| `assistant-e2e`/`assistant-evals` (private); `assistant-toolkit` (plugin imports in `*.test.ts` only) | Move e2e/evals + the toolkit's plugin tests to Repo B |
-| `@dxos/blade-runner` — `@dxos/plugin-script`                                                          | Default to Repo B (or sever the dep)                  |
+| Back-edge                                                                                                                  | Fix                                                               |
+| -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `@dxos/schema`, `@dxos/types` — react-ui _devDep_ for demo stories                                                         | Delete/inline the story; drop the devDep                          |
+| `@dxos/react-client` — react-ui `ErrorBoundary` in a test decorator                                                        | Swap to `@dxos/react-error-boundary` (Repo-A common)              |
+| `@dxos/keyboard` — story-only                                                                                              | Move story to Repo B `stories-ui`                                 |
+| `@dxos/storybook-utils` — react-ui _peerDep_                                                                               | Move to Repo B                                                    |
+| `assistant-e2e` (private, deprecated — legacy gated agent tests); `assistant-toolkit` (plugin imports in `*.test.ts` only) | Remove `assistant-e2e`; move the toolkit's plugin tests to Repo B |
+| `@dxos/blade-runner` — `@dxos/plugin-script`                                                                               | Default to Repo B (or sever the dep)                              |
 
 Sequence (CI green throughout): (1) cleanup PR in Repo A removing back-edges; (2) `check-cycles.mjs` + `check-package-cycles.mjs` confirm acyclic; (3) tag `pre-split`; (4) `git filter-repo` the Repo-B path set into the new repo + bootstrap its workspace / catalog subset / `.moon` / CI / Changesets / `link-packages.mjs`; (5) delete moved dirs from Repo A (globs, tsconfig paths, the `app-framework` `DEFAULT_PACKAGES` allowlist); (6) publish Repo A `0.10.0`; Repo B switches its catalog floor from a pkg.pr.new SHA to an npm range. No compat shims. Also resolve the duplicate `reflect/introspect*` vs `core/compute/introspect*`.

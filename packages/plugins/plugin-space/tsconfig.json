@@ -47,19 +47,31 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
     },
     {
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/extractor"
+    },
+    {
+      "path": "../../core/compute/extractor-lib"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/halo/halo-react"
     },
     {
       "path": "../../core/protocols"
@@ -93,9 +105,6 @@
     },
     {
       "path": "../../sdk/types"
-    },
-    {
-      "path": "../../ui/lit-ui"
     },
     {
       "path": "../../ui/react-ui"
@@ -135,6 +144,9 @@
     },
     {
       "path": "../../ui/react-ui-table"
+    },
+    {
+      "path": "../../ui/react-ui-tabs"
     },
     {
       "path": "../../ui/ui-theme"

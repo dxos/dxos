@@ -20,9 +20,7 @@ describe('GitHubPlugin', () => {
       plugins: [ClientPlugin({}), ConnectorPlugin(), GitHubPlugin()],
     });
 
-    // After autoStart: SetupAppGraph fires (cascading SetupConnectors via
-    // ConnectorPlugin's AppGraphBuilder), and SetupProcessManager fires from
-    // ProcessManagerPlugin — both reach the GitHubPlugin's modules.
+    // The harness fires every plugin's start event after startup, so both start-gated modules are active.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('GitHubConnector'), moduleId('OperationHandler')]),
     );

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Atom, type Registry } from '@effect-atom/atom-react';
+import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import localforage from 'localforage';
 
@@ -12,8 +12,8 @@ import { log } from '@dxos/log';
 import { type Text } from '@dxos/schema';
 
 import { meta } from '#meta';
-import type { FilesystemWorkspace, NativeFilesystemState } from '#types';
 
+import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 import { refreshWorkspace } from '../../util';
 import type { DirectoryWatcher } from './directory-watcher';
 import type { MarkdownDocuments } from './markdown-documents';
@@ -22,8 +22,8 @@ import type { MirrorSpaceManager } from './mirror-space-manager';
 const STORAGE_KEY = `${meta.profile.key}.workspaces`;
 
 /** Load workspace list from local storage, returning an empty array on failure. */
-export const loadPersistedWorkspaces = (): Effect.Effect<FilesystemWorkspace[]> =>
-  Effect.tryPromise(() => localforage.getItem<FilesystemWorkspace[]>(STORAGE_KEY)).pipe(
+export const loadPersistedWorkspaces = (): Effect.Effect<NativeFilesystemCapabilities.FilesystemWorkspace[]> =>
+  Effect.tryPromise(() => localforage.getItem<NativeFilesystemCapabilities.FilesystemWorkspace[]>(STORAGE_KEY)).pipe(
     Effect.map((stored) => stored ?? []),
     Effect.catchAll((error) =>
       Effect.sync(() => {
@@ -44,11 +44,11 @@ export interface FilesystemManager {
   /** Resolve disk write target from Echo DXN string. */
   getWriteTargetByDXN(dxn: string): { path: string; fileId: string } | undefined;
   /** Start directory watcher, ensure mirror space, and sync markdown for a workspace. */
-  activateWorkspace(workspace: FilesystemWorkspace): Effect.Effect<void>;
+  activateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void>;
   /** Stop directory watcher and evict all cached markdown documents for a workspace. */
-  deactivateWorkspace(workspace: FilesystemWorkspace): Effect.Effect<void>;
+  deactivateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void>;
   /** Evict docs, reload workspace from disk, update state, and resync markdown. */
-  refreshWorkspaceContent(workspace: FilesystemWorkspace): Effect.Effect<void>;
+  refreshWorkspaceContent(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void>;
   /** Persist the current workspace list to local storage. */
   persistState(): Effect.Effect<void>;
 }
@@ -56,7 +56,7 @@ export interface FilesystemManager {
 /** Create a new FilesystemManager instance. */
 export const make = (
   registry: Registry.Registry,
-  stateAtom: Atom.Writable<NativeFilesystemState>,
+  stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
   markdownDocuments: MarkdownDocuments,
   directoryWatcher: DirectoryWatcher,
   mirrorSpaceManager: MirrorSpaceManager,
@@ -66,7 +66,7 @@ export const make = (
 class FilesystemManagerImpl implements FilesystemManager {
   constructor(
     private readonly _registry: Registry.Registry,
-    private readonly _stateAtom: Atom.Writable<NativeFilesystemState>,
+    private readonly _stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
     private readonly _markdownDocuments: MarkdownDocuments,
     private readonly _directoryWatcher: DirectoryWatcher,
     private readonly _mirrorSpaceManager: MirrorSpaceManager,
@@ -84,7 +84,7 @@ class FilesystemManagerImpl implements FilesystemManager {
     return this._markdownDocuments.getWriteTargetByDXN(dxn);
   }
 
-  activateWorkspace(workspace: FilesystemWorkspace): Effect.Effect<void> {
+  activateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       yield* this._directoryWatcher.startWatching(workspace);
       yield* this._mirrorSpaceManager.getOrCreateSpace(workspace).pipe(Effect.asVoid);
@@ -92,21 +92,23 @@ class FilesystemManagerImpl implements FilesystemManager {
     });
   }
 
-  deactivateWorkspace(workspace: FilesystemWorkspace): Effect.Effect<void> {
+  deactivateWorkspace(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       yield* this._directoryWatcher.stopWatching(workspace.id);
       this._markdownDocuments.evictForWorkspace(workspace);
     });
   }
 
-  refreshWorkspaceContent(workspace: FilesystemWorkspace): Effect.Effect<void> {
+  refreshWorkspaceContent(workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       this._markdownDocuments.evictForWorkspace(workspace);
       const refreshed = yield* refreshWorkspace(workspace);
       if (refreshed) {
         this._registry.update(this._stateAtom, (state) => ({
           ...state,
-          workspaces: state.workspaces.map((ws: FilesystemWorkspace) => (ws.id === workspace.id ? refreshed : ws)),
+          workspaces: state.workspaces.map((ws: NativeFilesystemCapabilities.FilesystemWorkspace) =>
+            ws.id === workspace.id ? refreshed : ws,
+          ),
         }));
         yield* this._markdownDocuments.syncFromDisk(refreshed);
       }

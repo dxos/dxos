@@ -31,6 +31,8 @@ export type LayoutOptions = {
   gapPx: number;
   /** Optional cap on column width (px); leftover width centers the columns. */
   maxColumnWidthPx?: number;
+  /** Centre capped columns in the container. Off aligns them to the start, leaving the slack at the end. */
+  centered?: boolean;
 };
 
 /**
@@ -42,24 +44,39 @@ export type LayoutOptions = {
  * Columns are separated by a single gap. They stretch to fill `containerWidth`
  * unless `maxColumnWidthPx` caps them narrower, in which case the leftover width
  * is split evenly so the grid stays centred (the outer margin grows beyond the
- * gap). The base left/right perimeter is owned by the scroll container (via its
- * `--gutter`); the layout adds the centring offset plus the top/bottom perimeter.
+ * gap) — or, with `centered` off, left entirely at the end so the columns align to
+ * the start. The base left/right perimeter is owned by the scroll container (via
+ * its `--gutter`); the layout adds any centring offset plus the top/bottom perimeter.
  */
+/**
+ * Width every column gets, before any tile is placed. Independent of the tiles themselves — which is
+ * what lets a caller key cached tile heights by the width they were measured at.
+ */
+export const getColumnWidth = ({
+  columnCount,
+  containerWidth,
+  gapPx,
+  maxColumnWidthPx,
+}: Pick<LayoutOptions, 'columnCount' | 'containerWidth' | 'gapPx' | 'maxColumnWidthPx'>): number => {
+  const columns = Math.max(1, Math.floor(columnCount));
+  const fillColumnWidth = (containerWidth - (columns - 1) * gapPx) / columns;
+  return maxColumnWidthPx && maxColumnWidthPx > 0 ? Math.min(fillColumnWidth, maxColumnWidthPx) : fillColumnWidth;
+};
+
 export const layout = ({
   heights,
   columnCount,
   containerWidth,
   gapPx,
   maxColumnWidthPx,
+  centered = true,
 }: LayoutOptions): LayoutResult => {
   const columns = Math.max(1, Math.floor(columnCount));
-  const fillColumnWidth = (containerWidth - (columns - 1) * gapPx) / columns;
-  const columnWidth =
-    maxColumnWidthPx && maxColumnWidthPx > 0 ? Math.min(fillColumnWidth, maxColumnWidthPx) : fillColumnWidth;
+  const columnWidth = getColumnWidth({ columnCount, containerWidth, gapPx, maxColumnWidthPx });
 
-  // Centre the (possibly capped) columns within the container.
+  // Centre the (possibly capped) columns within the container, unless start-aligned.
   const usedWidth = columns * columnWidth + (columns - 1) * gapPx;
-  const sideInset = Math.max(0, (containerWidth - usedWidth) / 2);
+  const sideInset = centered ? Math.max(0, (containerWidth - usedWidth) / 2) : 0;
 
   // Seed each column with the top gap so the first row clears the perimeter.
   const columnHeights = new Array<number>(columns).fill(gapPx);

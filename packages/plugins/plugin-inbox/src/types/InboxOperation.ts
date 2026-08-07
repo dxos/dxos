@@ -7,18 +7,15 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Capability } from '@dxos/app-framework';
-import { Credential, Operation, Trace } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Collection, Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
-import { FactStore } from '@dxos/pipeline-rdf';
-import {
-  Connection,
-  GetSyncTargetsInput,
-  GetSyncTargetsOutput,
-  MaterializeTargetInput,
-  MaterializeTargetOutput,
-} from '@dxos/plugin-connector';
+import { FactStore } from '@dxos/pipeline-rdf/fact-store';
+import * as Connection from '@dxos/plugin-connector/Connection';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -40,8 +37,8 @@ export const GetGoogleCalendars = Operation.make({
     description: 'Discover Google Calendars reachable from a connection without materializing local Calendars.',
     icon: 'ph--calendar--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 export const AddMailbox = Operation.make({
@@ -104,6 +101,11 @@ export const DraftEmailAndOpen = Operation.make({
     body: Schema.optional(Schema.String),
     // TODO(wittjosiah): Should be Mailbox.Mailbox.
     mailbox: Schema.optional(Schema.Any),
+    /**
+     * Graph node id of the mailbox view the draft is composed from; a compose draft opens as a plank
+     * beside it. Defaults to the mailbox's own node when the caller has no view context.
+     */
+    contextId: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
@@ -179,8 +181,8 @@ export const MaterializeGmailTarget = Operation.make({
     description: 'Create the local Mailbox bound to a Gmail connection.',
     icon: 'ph--envelope--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 export const JmapSync = Operation.make({
@@ -216,8 +218,8 @@ export const MaterializeJmapTarget = Operation.make({
     description: 'Create the local Mailbox bound to a JMAP connection.',
     icon: 'ph--envelope--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 export const JmapSend = Operation.make({
@@ -275,8 +277,8 @@ export const MaterializeCalendarTarget = Operation.make({
     description: 'Create the local Calendar bound to a selected Google calendar.',
     icon: 'ph--calendar--regular',
   },
-  input: MaterializeTargetInput,
-  output: MaterializeTargetOutput,
+  input: ConnectorSpec.MaterializeTargetInput,
+  output: ConnectorSpec.MaterializeTargetOutput,
 });
 
 /**
@@ -303,31 +305,6 @@ export const CreateGoogleCalendarEvent = Operation.make({
   services: [Credential.CredentialsService],
 }).pipe(Operation.visible);
 
-/**
- * Push draft (locally-created, not-yet-synced) events for a calendar up to Google Calendar, then
- * reconcile: each created event is stamped with its Google foreign key and the local draft object
- * is removed (the canonical copy lands in the calendar feed on the next read-sync). Mirrors the
- * email draft → send flow. When `event` is given, only that draft event is synced.
- */
-export const SyncDraftEvents = Operation.make({
-  meta: {
-    key: makeKey('syncDraftEvents'),
-    name: 'Sync draft events',
-    description: 'Create locally-drafted calendar events on Google Calendar.',
-    icon: 'ph--calendar-check--regular',
-  },
-  // The Calendar (and optional Event) are passed as live ECHO objects (validated in the handler);
-  // services mirror GoogleCalendarSync since the handler creates events, then re-syncs the feed.
-  input: Schema.Struct({
-    calendar: Schema.Any,
-    event: Schema.optional(Schema.Any),
-  }),
-  output: Schema.Struct({
-    synced: Schema.Number,
-  }),
-  services: [Database.Service, Credential.CredentialsService],
-});
-
 export const RenameFilter = Operation.make({
   meta: {
     key: makeKey('renameFilter'),
@@ -342,44 +319,6 @@ export const RenameFilter = Operation.make({
   output: Schema.Void,
 });
 
-/**
- * Delete a calendar event. A draft (local) event is simply removed from the database; a synced
- * event is deleted on Google Calendar (by its foreign key) and removed from the calendar feed.
- */
-export const DeleteEvent = Operation.make({
-  meta: {
-    key: makeKey('deleteEvent'),
-    name: 'Delete event',
-    description: 'Delete a calendar event locally and on Google Calendar.',
-    icon: 'ph--trash--regular',
-  },
-  input: Schema.Struct({
-    calendar: Schema.Any,
-    event: Schema.Any,
-  }),
-  output: Schema.Struct({ deleted: Schema.Boolean }),
-  services: [Database.Service, Credential.CredentialsService],
-});
-
-/**
- * Delete an email. A draft (local) message is simply removed from the database; a synced message is
- * moved to the trash on Gmail (by its foreign key) and removed from the mailbox feed.
- */
-export const DeleteEmail = Operation.make({
-  meta: {
-    key: makeKey('deleteEmail'),
-    name: 'Delete email',
-    description: 'Delete an email locally and move it to the Gmail trash.',
-    icon: 'ph--trash--regular',
-  },
-  input: Schema.Struct({
-    mailbox: Schema.Any,
-    message: Schema.Any,
-  }),
-  output: Schema.Struct({ deleted: Schema.Boolean }),
-  services: [Database.Service, Credential.CredentialsService],
-});
-
 export const GetGoogleContactGroups = Operation.make({
   meta: {
     key: makeKey('getGoogleContactGroups'),
@@ -387,8 +326,8 @@ export const GetGoogleContactGroups = Operation.make({
     description: 'Discover Google Contact Groups reachable from a connection.',
     icon: 'ph--users--regular',
   },
-  input: GetSyncTargetsInput,
-  output: GetSyncTargetsOutput,
+  input: ConnectorSpec.GetSyncTargetsInput,
+  output: ConnectorSpec.GetSyncTargetsOutput,
 });
 
 export const GoogleContactsSync = Operation.make({
@@ -409,20 +348,6 @@ export const GoogleContactsSync = Operation.make({
   }),
   services: [Database.Service, Credential.CredentialsService],
 }).pipe(Operation.visible);
-
-export const SyncContacts = Operation.make({
-  meta: {
-    key: makeKey('syncContacts'),
-    name: 'Sync Contacts',
-    description: 'Runs Google Contacts sync and notifies of progress.',
-    icon: 'ph--arrows-clockwise--regular',
-  },
-  services: [Capability.Service],
-  input: Schema.Struct({
-    binding: Ref.Ref(Cursor.Cursor),
-  }),
-  output: Schema.Void,
-});
 
 export const ReadEmail = Operation.make({
   meta: {
@@ -480,6 +405,7 @@ export const ClassifyEmail = Operation.make({
   services: [AiService.AiService, Database.Service],
 });
 
+/** @deprecated Use {@link ExtractContactFromMessage} + the message extractor pipeline instead. */
 export const ExtractContact = Operation.make({
   meta: { key: makeKey('extractContact'), name: 'Extract Contact', icon: 'ph--user--regular' },
   services: [Capability.Service],
@@ -565,6 +491,7 @@ export const ExtractMessage = Operation.make({
 /** Default parallel extraction limit for {@link ExtractMailbox}. */
 export const DEFAULT_EXTRACT_MAILBOX_CONCURRENCY = 5;
 
+/** @deprecated Use batch dispatchers like on-arrival extractors or direct ExtractMessage invocations instead. */
 export const ExtractMailbox = Operation.make({
   meta: {
     key: makeKey('extractMailbox'),
@@ -632,49 +559,24 @@ export const AnalyzeMailbox = Operation.make({
   }),
 });
 
-export const AnalyzeTopics = Operation.make({
+export const CreateProjectFromMessage = Operation.make({
   meta: {
-    key: makeKey('analyzeTopics'),
-    name: 'Analyze Topics',
-    description: 'Tags every message and clusters the mailbox threads into suggested topics for review.',
-    icon: 'ph--stack--regular',
-  },
-  // Capability.Service: read the ProgressRegistry to publish a live monitor for the run.
-  services: [Capability.Service, AiService.AiService, Database.Service],
-  input: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Mailbox whose messages are tagged and whose threads are clustered into topics.',
-    }),
-    limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.int()).annotations({
-        description: 'Cap messages tagged this run (resumable-lite; re-invoke to continue).',
-      }),
-    ),
-  }),
-  output: Schema.Struct({
-    tagged: Schema.Number,
-    suggestions: Schema.Number,
-  }),
-});
-
-export const CreateTopicFromMessage = Operation.make({
-  meta: {
-    key: makeKey('createTopicFromMessage'),
-    name: 'Create Topic',
-    description: "Creates a Topic seeded from a message's thread, with an LLM summary.",
+    key: makeKey('createProjectFromMessage'),
+    name: 'Create Project',
+    description: "Creates a Project seeded from a message's thread, with an LLM summary.",
     icon: 'ph--stack--regular',
   },
   services: [AiService.AiService, Database.Service],
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Mailbox the message belongs to; the created topic is anchored to it.',
+      description: 'Mailbox the message belongs to; the created project is anchored to it.',
     }),
     message: Type.getSchema(Message.Message).annotations({
-      description: 'Message whose thread seeds the topic.',
+      description: 'Message whose thread seeds the project.',
     }),
   }),
   output: Schema.Struct({
-    topicId: Schema.String,
+    projectId: Schema.String,
   }),
 });
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import type * as Types from 'effect/Types';
 
 import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';

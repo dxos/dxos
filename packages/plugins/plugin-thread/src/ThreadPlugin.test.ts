@@ -19,9 +19,12 @@ describe('ThreadPlugin', () => {
       plugins: [ClientPlugin({}), ThreadPlugin()],
     });
 
-    // After autoStart: CreateObject, schema, OperationHandler all auto-cascade.
+    // After autoStart: schema and OperationHandler auto-cascade. `CreateObject` is browser-only —
+    // its `CreateObjectEntry` carries a `customPanel` React component — so the node variant this
+    // test resolves does not contribute it.
     expect(harness.manager.getActive()).toEqual(
-      expect.arrayContaining([moduleId('CreateObject'), moduleId('schema'), moduleId('OperationHandler')]),
+      expect.arrayContaining([moduleId('schema'), moduleId('OperationHandler')]),
     );
+    expect(harness.manager.getActive()).not.toContain(moduleId('CreateObject'));
   });
 });

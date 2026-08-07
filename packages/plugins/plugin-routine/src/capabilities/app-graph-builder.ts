@@ -4,17 +4,21 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, AppNodeMatcher, Paths, TypeSection } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
+import * as Operation from '@dxos/compute/Operation';
+import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { SETTINGS_SECTION_TYPE, SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { SpaceOperation } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { Routine } from '#types';
 
 import { getRoutinesPath } from '../paths';
 
@@ -22,7 +26,9 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       TypeSection.createTypeSectionExtension(Routine.Routine, {
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+        urlKey: 'routine',
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+        groupSegment: GraphPath.GroupSegments.ai,
         createObject: (space) =>
           Operation.invoke(SpaceOperation.OpenCreateObject, {
             target: space.db,
@@ -32,7 +38,8 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'spaceSettingsAutomation',
-        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
+        url: { key: 'routines', kind: 'singleton', path: [SpaceSchema.SETTINGS_SECTION_ID] },
+        match: NodeMatcher.whenNodeType(SpaceSchema.SETTINGS_SECTION_TYPE),
         connector: () => {
           return Effect.succeed([
             AppNode.makeSettingsPanel({
@@ -52,7 +59,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: linkedSegment('automation'),
+              variant: 'automation',
               label: ['automation-companion.label', { ns: meta.profile.key }],
               icon: 'ph--lightning--regular',
               data: 'automation',
@@ -66,7 +73,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'runs',
+              variant: 'runs',
               label: ['routine-runs.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'runs',
@@ -75,6 +82,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

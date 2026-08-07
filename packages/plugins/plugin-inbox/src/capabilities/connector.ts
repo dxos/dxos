@@ -10,19 +10,13 @@ import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { type Operation } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withAuthorization } from '@dxos/compute-runtime';
-import { Database, Obj } from '@dxos/echo';
-import {
-  ConnectionTestError,
-  Connector,
-  type OnCursorCreated,
-  type OnTokenCreated,
-  type SyncInput,
-  type SyncOutput,
-  type TestConnection,
-} from '@dxos/plugin-connector';
+import * as Credential from '@dxos/compute/Credential';
+import * as Trigger from '@dxos/compute/Trigger';
+import { Obj } from '@dxos/echo';
+import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { OAuthProvider } from '@dxos/protocols';
 
 import {
@@ -33,9 +27,26 @@ import {
   JMAP_DEFAULT_HOST,
   JMAP_MAIL_CONNECTOR_ID,
 } from '../constants';
-import { CalendarSyncOptions, InboxOperation, SyncOptions } from '../types';
-import { createSyncRoutine } from '../util';
+import * as InboxOperation from '../types/InboxOperation';
+import * as SyncOptions from '../types/SyncOptions';
 import { jmapCredentialForm } from './jmap-credential-form';
+
+/** How often a mailbox's sync Routine polls for new mail. */
+const MAIL_SYNC_CRON = '*/10 * * * *';
+
+/**
+ * Whether a newly bound mailbox syncs itself instead of waiting for the user to ask. Safe for mail
+ * because a first sync is bounded by the binding's sync horizon (`Cursor.resolveHorizon`, 30 days by
+ * default) and continues in capped batches through the dispatcher rather than in one unbounded run.
+ */
+const MAIL_AUTO_SYNC = true;
+
+/**
+ * Whether a mailbox's sync Routine runs on EDGE rather than on the client, so mail keeps arriving
+ * while Composer is closed. The mail sync operations are in the shared handler set the workerd plugin
+ * registers, so EDGE can run them.
+ */
+const MAIL_REMOTE_SYNC = true;
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -45,13 +56,13 @@ const GoogleUserInfo = Schema.Struct({
  * Google `/oauth2/v3/userinfo` email, or `undefined` if missing token, `account` already set, or no email.
  * Callers persist via e.g. `Obj.update`. Tracer disabled on the request (Effect + CORS: https://github.com/Effect-TS/effect/issues/4568).
  */
-const getAccountEmail = (accessToken: { token: string; account?: string }) =>
+const getAccountEmail = (token: string, account: string | undefined) =>
   Effect.gen(function* () {
-    if (!accessToken.token || accessToken.account) {
+    if (!token || account) {
       return undefined;
     }
 
-    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
 
     const userInfo = yield* HttpClientRequest.get('https://www.googleapis.com/oauth2/v3/userinfo').pipe(
@@ -77,9 +88,10 @@ const isGoogleAuthRejection = (error: unknown): boolean =>
  * an actual 401/403 (an expired or revoked grant) is surfaced as "reauthenticate"; any other failure
  * after retries exhausted is reported as a distinct, less alarming message.
  */
-const testGoogleConnection: TestConnection = ({ accessToken }) =>
+const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   Effect.gen(function* () {
-    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(accessToken.token, 'Bearer')));
+    const token = yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id });
+    const httpClient = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(token, 'Bearer')));
     const httpClientWithTracerDisabled = httpClient.pipe(
       HttpClient.withTracerDisabledWhen(() => true),
       HttpClient.filterStatusOk,
@@ -110,9 +122,12 @@ const testGoogleConnection: TestConnection = ({ accessToken }) =>
  * email so connections/mailboxes get a sensible default name. The sync target is
  * materialized separately (`materializeTarget`) when the binding is created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: ConnectorSpec.OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
-    const email = yield* getAccountEmail(accessToken);
+    const email = yield* getAccountEmail(
+      yield* Credential.getApiKeyValue({ accessTokenId: accessToken.id }),
+      accessToken.account,
+    );
     if (email) {
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = email;
@@ -120,20 +135,9 @@ const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
     }
   }).pipe(Effect.orDie);
 
-/**
- * Sets up recurring background sync for a newly-bound target: a Routine wrapping an every-10-minute
- * local timer Trigger wired to `sync` — the same operation `ConnectorOperation.SyncConnection` invokes
- * directly — with `binding` bound to the newly-created cursor (see `createSyncRoutine`). No-op if a
- * sync routine is already connected to the target.
- */
-const onCursorCreated =
-  (sync: Operation.Definition<SyncInput, SyncOutput>): OnCursorCreated =>
-  ({ target, cursor, db }) =>
-    createSyncRoutine({ target, cursor, sync }).pipe(Effect.provide(Database.layer(db)), Effect.asVoid);
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Connector, [
+    return Capability.contribute(ConnectorSpec.Connector, [
       {
         id: GMAIL_CONNECTOR_ID,
         source: GOOGLE_INTEGRATION_SOURCE,
@@ -148,13 +152,17 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
-        optionsSchema: SyncOptions,
-        // Single-target connector: no `getSyncTargets`. The coordinator calls
-        // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
-        materializeTarget: InboxOperation.MaterializeGmailTarget,
-        sync: InboxOperation.GoogleMailSync,
+        sync: {
+          operation: InboxOperation.GoogleMailSync,
+          // Single-target connector: no `getTargets`. The coordinator calls `materializeTarget`
+          // (no remoteTarget) to create the Mailbox, then binds.
+          materializeTarget: InboxOperation.MaterializeGmailTarget,
+          optionsSchema: SyncOptions.SyncOptions,
+          auto: MAIL_AUTO_SYNC,
+          trigger: Trigger.specTimer(MAIL_SYNC_CRON),
+          remote: MAIL_REMOTE_SYNC,
+        },
         onTokenCreated,
-        onCursorCreated: onCursorCreated(InboxOperation.GoogleMailSync),
         testConnection: testGoogleConnection,
       },
       {
@@ -164,12 +172,16 @@ export default Capability.makeModule(
         label: 'JMAP Mail',
         // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
         credentialForm: jmapCredentialForm,
-        optionsSchema: SyncOptions,
-        // Single-target connector (the account inbox): no `getSyncTargets`. The coordinator calls
-        // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
-        materializeTarget: InboxOperation.MaterializeJmapTarget,
-        sync: InboxOperation.JmapSync,
-        onCursorCreated: onCursorCreated(InboxOperation.JmapSync),
+        sync: {
+          operation: InboxOperation.JmapSync,
+          // Single-target connector (the account inbox): no `getTargets`. The coordinator calls
+          // `materializeTarget` (no remoteTarget) to create the Mailbox, then binds.
+          materializeTarget: InboxOperation.MaterializeJmapTarget,
+          optionsSchema: SyncOptions.SyncOptions,
+          auto: MAIL_AUTO_SYNC,
+          trigger: Trigger.specTimer(MAIL_SYNC_CRON),
+          remote: MAIL_REMOTE_SYNC,
+        },
       },
       {
         id: GOOGLE_CALENDAR_CONNECTOR_ID,
@@ -185,12 +197,13 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
-        optionsSchema: CalendarSyncOptions,
-        getSyncTargets: InboxOperation.GetGoogleCalendars,
-        materializeTarget: InboxOperation.MaterializeCalendarTarget,
-        sync: InboxOperation.GoogleCalendarSync,
+        sync: {
+          operation: InboxOperation.GoogleCalendarSync,
+          getTargets: InboxOperation.GetGoogleCalendars,
+          materializeTarget: InboxOperation.MaterializeCalendarTarget,
+          optionsSchema: SyncOptions.CalendarSyncOptions,
+        },
         onTokenCreated,
-        onCursorCreated: onCursorCreated(InboxOperation.GoogleCalendarSync),
         testConnection: testGoogleConnection,
       },
       {
@@ -204,11 +217,13 @@ export default Capability.makeModule(
             'https://www.googleapis.com/auth/userinfo.email',
           ],
         },
-        // Targetless connector: no dedicated local root type. `reconcileCursors`
-        // binds the connection itself; synced `Person` objects land directly in the
-        // space keyed by foreign id.
-        getSyncTargets: InboxOperation.GetGoogleContactGroups,
-        sync: InboxOperation.SyncContacts,
+        sync: {
+          operation: InboxOperation.GoogleContactsSync,
+          getTargets: InboxOperation.GetGoogleContactGroups,
+          // Targetless connector: no dedicated local root type, so no `materializeTarget`.
+          // `reconcileCursors` binds the connection itself; synced `Person` objects land directly in
+          // the space keyed by foreign id.
+        },
         onTokenCreated,
         testConnection: testGoogleConnection,
       },

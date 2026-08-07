@@ -1,0 +1,12 @@
+--
+-- Full-text index over object snapshots. A virtual table cannot be expressed in a schema DSL,
+-- which is one reason this DDL is hand-written.
+--
+-- Data structure: inverted index mapping trigrams to document IDs.
+-- "hello" -> trigrams ["hel", "ell", "llo"] -> B-tree entries: "hel"->[1], "ell"->[1], "llo"->[1].
+-- Query "ell" -> O(log n) B-tree lookup -> returns [1]. Posting lists are compressed, so index
+-- size scales well with document count.
+--
+-- Immutable: recorded in `fts_index_migrations` and never re-run.
+--
+CREATE VIRTUAL TABLE IF NOT EXISTS ftsIndex USING fts5(snapshot, tokenize = 'trigram');

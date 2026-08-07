@@ -58,12 +58,14 @@ function publishPackage(packageDir: string): boolean {
   const packageJson = require(`../${packageJsonPath}`);
   console.log(`[Publish] Publishing ${packageJson.name}@${packageJson.version}...`);
 
-  const publishArgs = ['publish', '--tag', tag, '--no-git-checks'];
+  // npm, not pnpm: `pnpm publish` normalizes every file in the tarball to 0644, which strips the
+  // executable bit off the platform binary and makes the installed CLI fail with EACCES.
+  const publishArgs = ['publish', '--tag', tag];
   if (dryRun) {
     publishArgs.push('--dry-run');
   }
 
-  const result = spawnSync('pnpm', publishArgs, {
+  const result = spawnSync('npm', publishArgs, {
     cwd: packagePath,
     stdio: 'inherit',
     env: process.env,

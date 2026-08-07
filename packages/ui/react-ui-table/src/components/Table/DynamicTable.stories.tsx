@@ -7,9 +7,9 @@ import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
 import { Filter, type JsonSchema, Obj, Type } from '@dxos/echo';
+import { useQuery, useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
 import { random } from '@dxos/random';
-import { useQuery, useType } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';

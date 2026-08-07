@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Registry } from '@effect-atom/atom-react';
+import type { Registry } from '@effect-atom/atom';
 
 import type { CellGridAtoms } from '../state/atoms';
 import type { Headers } from '../state/types';

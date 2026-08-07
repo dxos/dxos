@@ -9,13 +9,20 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { Operation, RunAgainError, Trace } from '@dxos/compute';
+import { PROGRESS_STATUS_CANCELLED } from '@dxos/app-toolkit';
+import { RunAgainError } from '@dxos/compute';
+import * as Cancellation from '@dxos/compute/Cancellation';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
+import { Cursor } from '@dxos/link';
+import { TagIndex } from '@dxos/schema';
 import { Message, Person } from '@dxos/types';
 
 import { GMAIL_SOURCE } from '../../../../constants';
+import { GoogleApiError } from '../../../../errors';
 import { type GmailDataset, GoogleMailApi } from '../../../../services';
 import { generateGmailDataset } from '../../../../testing/gmail-fixtures';
 import {
@@ -23,9 +30,14 @@ import {
   inboxSyncTestServices,
   runGoogleSync,
   seedMailboxBinding,
+  seedSenderOrganizations,
 } from '../../../../testing/sync-fixture';
-import { InboxOperation, Mailbox } from '../../../../types';
+import * as InboxOperation from '../../../../types/InboxOperation';
+import * as Mailbox from '../../../../types/Mailbox';
+import * as SystemTags from '../../../../types/SystemTags';
 import { createSyncProgressKey } from '../../mail-sync';
+import { GMAIL_TAG_SOURCE } from '../tags';
+import { GMAIL_SYSTEM_TAGS } from './system-tags';
 
 /** Reads all synced messages from a seeded mailbox's feed. */
 const queryFeedMessages = (db: Database.Database, mailbox: Mailbox.Mailbox) =>
@@ -77,6 +89,27 @@ const withFaultAfterMessages = (n: number, dataset: GmailDataset): Layer.Layer<G
     }),
   ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
 
+/**
+ * Wraps a mock {@link GoogleMailApi} so `getMessage` fails with Gmail's 404 for the given ids — the
+ * response for a message deleted between the id being listed (or logged in `history.list`) and the full
+ * fetch, which no retry can resolve.
+ */
+const withDeletedMessages = (ids: readonly string[], dataset: GmailDataset): Layer.Layer<GoogleMailApi> =>
+  Layer.effect(
+    GoogleMailApi,
+    Effect.gen(function* () {
+      const inner = yield* GoogleMailApi;
+      const deleted = new Set(ids);
+      return GoogleMailApi.of({
+        ...inner,
+        getMessage: (userId, messageId) =>
+          deleted.has(messageId)
+            ? Effect.fail(new GoogleApiError(404, 'Requested entity was not found.'))
+            : inner.getMessage(userId, messageId),
+      });
+    }),
+  ).pipe(Layer.provide(GoogleMailApi.mock(dataset)));
+
 /** Wraps a mock {@link GoogleMailApi} recording every `getMessage` id, so a test can assert which
  *  messages were downloaded (vs skipped as already-synced before fetch). */
 const countingGmailApi = (dataset: GmailDataset): { layer: Layer.Layer<GoogleMailApi>; fetched: string[] } => {
@@ -120,6 +153,12 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
     const { db, mailbox, binding } = await seedMailboxBinding(builder);
 
+    // Contact extraction is now an allow-list: an unknown individual is not materialised. These
+    // fixtures generate random senders, so give each domain an Organization — the assertions below
+    // are about the pipeline wiring contacts through, not about the extraction policy (which has its
+    // own tests in `@dxos/extractor-lib`).
+    await seedSenderOrganizations(db, dataset);
+
     const { result, feedMessages } = await EffectEx.runPromise(
       Effect.gen(function* () {
         const result = yield* runGoogleSync({ binding: Ref.make(binding) });
@@ -143,9 +182,17 @@ describe('runGoogleSync against a mock Gmail API', () => {
     const people = await db.query(Filter.type(Person.Person)).run();
     expect(people.length).toBe(senderEmails.size);
 
-    // Labels: `syncLabels` materializes one Tag per Gmail label (independent of the date-walk).
+    // Labels: system labels (INBOX/SENT/IMPORTANT) map onto shared canonical tags — UNREAD and other
+    // unmapped system labels are dropped — and custom user labels become provider-scoped tags.
     const tags = await db.query(Filter.type(Tag.Tag)).run();
-    expect(tags.length).toBe(dataset.labels.length);
+    const canonical = new Set(
+      dataset.labels.flatMap((label) => {
+        const id = GMAIL_SYSTEM_TAGS[label.id];
+        return id ? [id] : [];
+      }),
+    );
+    const customCount = dataset.labels.filter((label) => label.type === 'user').length;
+    expect(tags.length).toBe(canonical.size + customCount);
 
     // Cursor advanced to the last synced key; backfill completed within the run (small dataset).
     expect(binding.max).toBeDefined();
@@ -186,6 +233,25 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(fetched).toEqual([]);
   });
 
+  test('a window-scan id deleted between the list and the fetch is dropped, not fatal', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const dataset = generateGmailDataset({ count: 4, seed: 89, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+    const deletedId = dataset.messages[1].id;
+
+    const result = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(ambientSyncServices(db)),
+        Effect.provide(withDeletedMessages([deletedId], dataset)),
+      ),
+    );
+
+    expect(result.newMessages).toBe(dataset.messages.length - 1);
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).not.toContain(deletedId);
+    expect(ids.length).toBe(dataset.messages.length - 1);
+  });
+
   test('emits trace status updates with advancing progress during sync', async ({ expect }) => {
     const end = subDays(new Date(), 3);
     const start = subDays(new Date(), 12);
@@ -224,6 +290,49 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
     expect(statusUpdates.every((update) => update.progress?.key === createSyncProgressKey(mailbox))).toBe(true);
     expect(statusUpdates.some((update) => update.message === mailbox.name)).toBe(true);
+  });
+
+  // `Pipeline.abortWith` interrupts, so nothing after the pipeline runs — the terminal status has to
+  // come from the interrupt finalizer. The progress sink suppresses a cancelled run's key until its
+  // terminal arrives, so a missing one silently hides every later run's meter.
+  test('emits a terminal cancelled status when the run is cancelled mid-sync', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = generateGmailDataset({ count: 20, seed: 17, start, end });
+
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    const controller = new AbortController();
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+                // Cancel as soon as the run reports progress, i.e. mid-stream.
+                if (event.data.progress?.current !== undefined) {
+                  controller.abort();
+                }
+              }
+            }
+          },
+        }),
+      ),
+    );
+
+    const exit = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding) }).pipe(
+        Effect.provideService(Cancellation.Service, { signal: controller.signal }),
+        Effect.provide(inboxSyncTestServices(db, dataset, { traceLayer })),
+        Effect.exit,
+      ),
+    );
+
+    expect(Exit.isFailure(exit) && Cause.isInterruptedOnly(exit.cause)).toBe(true);
+    expect(statusUpdates.at(-1)?.message).toBe(PROGRESS_STATUS_CANCELLED);
+    expect(statusUpdates.at(-1)?.progress?.key).toBe(createSyncProgressKey(mailbox));
   });
 
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
@@ -570,5 +679,321 @@ describe('runGoogleSync against a mock Gmail API', () => {
 
   test('GoogleMailSync is marked idempotent for durable-execution retry', ({ expect }) => {
     expect(Operation.isIdempotent(InboxOperation.GoogleMailSync)).toBe(true);
+  });
+
+  //
+  // Incremental (history.list) sync.
+  //
+
+  const tokenOf = (binding: Cursor.Cursor): string | undefined =>
+    binding.spec.kind === 'external' ? binding.spec.token : undefined;
+
+  test('the first tick captures the mailbox historyId (before backfill)', async ({ expect }) => {
+    const end = subDays(new Date(), 3);
+    const start = subDays(new Date(), 12);
+    const dataset = { ...generateGmailDataset({ count: 6, seed: 81, start, end }), historyId: '1000' };
+    const { db, mailbox, binding } = await seedMailboxBinding(builder);
+
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding) }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+    );
+
+    expect(tokenOf(binding)).toBe('1000');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(dataset.messages.length);
+  });
+
+  test('an incremental run syncs only the delta added messages and advances the token', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 82, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: window backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
+
+    // A new message arrives; the history log advances 1000 → 1001 with it added.
+    const arrival = generateGmailDataset({ count: 1, seed: 83, start: subDays(now, 1), end: now, idPrefix: 'new' })
+      .messages[0];
+    const run2 = {
+      ...base,
+      messages: [...base.messages, arrival],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: [arrival.id] }],
+    };
+    const r2 = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2))),
+    );
+
+    expect(r2.newMessages).toBe(1);
+    expect(tokenOf(binding)).toBe('1001');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).toContain(arrival.id);
+    expect(ids.length).toBe(base.messages.length + 1);
+  });
+
+  test('a label-change delta larger than the per-run budget reconciles across bounded runs', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: window backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+
+    // Four label-change steps — the 'Work' label (Label_1) added to four already-synced messages —
+    // chained 1000 → 1004. With a per-run budget of 2 records, the reconcile drains across bounded runs
+    // (`hasMoreDelta` → runAgain), advancing the token to each chunk's last record id; no single run holds
+    // the whole delta, and each run resolves only its chunk's messages (targeted foreign-key lookup).
+    const targets = base.messages.slice(0, 4).map((message) => message.id);
+    const dataset = {
+      ...base,
+      historyId: '1004',
+      historyLog: targets.map((id, index) => ({
+        startHistoryId: String(1000 + index),
+        historyId: String(1001 + index),
+        labelsAdded: [{ id, labelIds: ['Label_1'] }],
+      })),
+    };
+
+    let runs = 0;
+    let exit: Exit.Exit<unknown, unknown>;
+    do {
+      exit = await EffectEx.runPromise(
+        Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: 2, now })).pipe(
+          Effect.provide(inboxSyncTestServices(db, dataset)),
+        ),
+      );
+      runs += 1;
+      if (Exit.isFailure(exit)) {
+        expect(RunAgainError.is(Cause.squash(exit.cause))).toBe(true);
+      }
+    } while (Exit.isFailure(exit) && runs < 10);
+
+    // Bounded: the 4-record delta took more than one run, and the token reached the mailbox's current id.
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(runs).toBeGreaterThan(1);
+    expect(tokenOf(binding)).toBe('1004');
+
+    // Reconcile-only: no new feed messages, and every target gained the Label_1 tag.
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const label1Uri = Obj.getURI(
+      tags.find((tag) => Obj.getMeta(tag).keys.some((key) => key.id === 'Label_1'))!,
+    ).toString();
+    for (const id of targets) {
+      const target = feedMessages.find((message) =>
+        Obj.getMeta(message).keys.some((key) => key.id === id && key.source === GMAIL_SOURCE),
+      )!;
+      expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(label1Uri);
+    }
+  });
+
+  test('a stale historyId clears it, falls back to the window scan, and recaptures', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 84, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // A prior run left a historyId the server can no longer resolve (evicted past retention → 404).
+    Obj.update(binding, (binding) => {
+      if (binding.spec.kind === 'external') {
+        binding.spec.token = '1';
+      }
+    });
+
+    const dataset = { ...base, historyId: '9999', historyLog: [] };
+    const result = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+    );
+
+    expect(result.newMessages).toBe(base.messages.length);
+    expect(tokenOf(binding)).toBe('9999');
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(base.messages.length);
+  });
+
+  test('a crash mid-incremental leaves the token unadvanced and recovers with no duplicate', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+
+    // A large delta arrives; fault after the first commit page (10) lands.
+    const arrivals = generateGmailDataset({
+      count: 15,
+      seed: 86,
+      start: subDays(now, 1),
+      end: now,
+      idPrefix: 'new',
+    }).messages;
+    const run2Dataset = {
+      ...base,
+      messages: [...base.messages, ...arrivals],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: arrivals.map((message) => message.id) }],
+    };
+    const exit = await EffectEx.runPromise(
+      Effect.exit(runGoogleSync({ binding: Ref.make(binding), now })).pipe(
+        Effect.provide(ambientSyncServices(db)),
+        Effect.provide(withFaultAfterMessages(10, run2Dataset)),
+      ),
+    );
+    expect(Exit.isFailure(exit)).toBe(true);
+    // Token NOT advanced — a crash before the delta fully drained keeps it at '1000'.
+    expect(tokenOf(binding)).toBe('1000');
+
+    // Recovery: the next run re-fetches the whole delta, dedups the committed prefix, finishes clean.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2Dataset))),
+    );
+    expect(tokenOf(binding)).toBe('1001');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.length).toBe(base.messages.length + arrivals.length);
+  });
+
+  test('a delta naming a deleted message drops it, syncs the rest, and advances the token', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 3, seed: 87, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+
+    // First tick: backfill + capture '1000'.
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+    expect(tokenOf(binding)).toBe('1000');
+
+    // Unlike the transient crash above, this 404 is permanent: failing the run would strand the token at
+    // '1000', leaving every following run to re-read the same history page and die on the same id.
+    const arrival = generateGmailDataset({ count: 1, seed: 88, start: subDays(now, 1), end: now, idPrefix: 'new' })
+      .messages[0];
+    const deletedId = 'deleted-1';
+    const dataset = {
+      ...base,
+      messages: [...base.messages, arrival],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: [deletedId, arrival.id] }],
+    };
+
+    const result = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(ambientSyncServices(db)),
+        Effect.provide(withDeletedMessages([deletedId], dataset)),
+      ),
+    );
+
+    expect(result.newMessages).toBe(1);
+    expect(tokenOf(binding)).toBe('1001');
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).toContain(arrival.id);
+    expect(ids).not.toContain(deletedId);
+    expect(ids.length).toBe(base.messages.length + 1);
+  });
+
+  test('an incremental label add retags an existing message with no new feed append', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 3, seed: 90, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(inboxSyncTestServices(db, { ...base, historyId: '2000' })),
+      ),
+    );
+    const before = (await syncedIdsOf(db, mailbox)).length;
+    const targetId = base.messages[0].id;
+
+    // Delta: the 'Work' label (Label_1) was added to the target message on the server.
+    const run2 = {
+      ...base,
+      historyId: '2001',
+      historyLog: [
+        { startHistoryId: '2000', historyId: '2001', labelsAdded: [{ id: targetId, labelIds: ['Label_1'] }] },
+      ],
+    };
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, run2))),
+    );
+
+    // No new feed message — the retag is an objectless commit unit — and the token advanced.
+    expect((await syncedIdsOf(db, mailbox)).length).toBe(before);
+    expect(tokenOf(binding)).toBe('2001');
+
+    // The target message's EntityId gained the Label_1 Tag in the mailbox tag index.
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const target = feedMessages.find((message) =>
+      Obj.getMeta(message).keys.some((key) => key.id === targetId && key.source === GMAIL_SOURCE),
+    )!;
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const label1 = tags.find((tag) => Obj.getMeta(tag).keys.some((key) => key.id === 'Label_1'))!;
+    expect(TagIndex.bind(tagIndex).tags(target.id)).toContain(Obj.getURI(label1).toString());
+  });
+
+  test('system labels resolve to canonical DXOS tags, not provider-scoped ones', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 3, seed: 92, start: subDays(now, 6), end: subDays(now, 2) });
+    const targetId = base.messages[0].id;
+    // Star + Promotions on the target, and add both system labels to the dictionary.
+    const dataset: GmailDataset = {
+      ...base,
+      labels: [
+        ...base.labels,
+        { id: 'STARRED', type: 'system', name: 'STARRED' },
+        { id: 'CATEGORY_PROMOTIONS', type: 'system', name: 'CATEGORY_PROMOTIONS' },
+      ],
+      messages: base.messages.map((message) =>
+        message.id === targetId
+          ? { ...message, labelIds: [...(message.labelIds ?? []), 'STARRED', 'CATEGORY_PROMOTIONS'] }
+          : message,
+      ),
+    };
+    const { db, mailbox, binding } = await seedMailboxBinding(builder, { options: { syncBackDays: 14 } });
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(inboxSyncTestServices(db, dataset))),
+    );
+
+    const tagIndex = await EffectEx.runPromise(Database.load(mailbox.tags).pipe(Effect.provide(Database.layer(db))));
+    const feedMessages = await queryFeedMessages(db, mailbox);
+    const target = feedMessages.find((message) =>
+      Obj.getMeta(message).keys.some((key) => key.id === targetId && key.source === GMAIL_SOURCE),
+    )!;
+    const tags = await db.query(Filter.type(Tag.Tag)).run();
+    const canonicalUri = (id: string) =>
+      Obj.getURI(
+        tags.find((tag) =>
+          Obj.getMeta(tag).keys.some((key) => key.source === SystemTags.SYSTEM_TAG_SOURCE && key.id === id),
+        )!,
+      ).toString();
+
+    // STARRED and CATEGORY_PROMOTIONS land on the canonical `org.dxos.tag` tags.
+    const localTags = TagIndex.bind(tagIndex).tags(target.id);
+    expect(localTags).toContain(canonicalUri('starred'));
+    expect(localTags).toContain(canonicalUri('promotions'));
+    // No provider-scoped tag was minted for the system labels.
+    expect(
+      tags.some((tag) =>
+        Obj.getMeta(tag).keys.some(
+          (key) => key.source === GMAIL_TAG_SOURCE && (key.id === 'STARRED' || key.id === 'CATEGORY_PROMOTIONS'),
+        ),
+      ),
+    ).toBe(false);
   });
 });

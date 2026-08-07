@@ -4,13 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { createKvsStore } from '@dxos/effect';
-import { AttentionCapabilities } from '@dxos/plugin-attention';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 
-import { meta } from '#meta';
-import { MarkdownCapabilities } from '#types';
-
+import * as MarkdownCapabilities from '../types/MarkdownCapabilities';
 import { createEditorViewStateStore } from './editor-view-state';
 
 const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => {
@@ -23,29 +20,29 @@ const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => 
       views.delete(attendableId);
     },
     get: (attendableId) => views.get(attendableId),
+    getByDocumentId: (documentId) => {
+      for (const entry of views.values()) {
+        if (entry.documentId === documentId) {
+          return entry;
+        }
+      }
+      return undefined;
+    },
   };
 };
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Persisted state using KVS store.
-    const stateAtom = createKvsStore({
-      key: `${meta.profile.key}.state`,
-      schema: MarkdownCapabilities.StateSchema,
-      defaultValue: () => ({ viewMode: {} }),
-    });
-
-    // Resolve ViewStateManager contributed by plugin-attention (guaranteed available because this
-    // module activates only after AttentionEvents.AttentionReady fires — see MarkdownPlugin.tsx).
-    const viewState = yield* Capability.get(AttentionCapabilities.ViewState);
+    // Resolve the view-state Manager contributed by plugin-attention (declared in `requires` so
+    // this module activates only once it lands — see MarkdownPlugin.tsx).
+    const viewState = yield* AttentionCapabilities.ViewState;
     const editorState = createEditorViewStateStore(viewState);
 
     const editorViews = createEditorViewRegistry();
 
     return [
-      Capability.contributes(MarkdownCapabilities.State, stateAtom),
-      Capability.contributes(MarkdownCapabilities.EditorState, editorState),
-      Capability.contributes(MarkdownCapabilities.EditorViews, editorViews),
+      Capability.contribute(MarkdownCapabilities.EditorState, editorState),
+      Capability.contribute(MarkdownCapabilities.EditorViews, editorViews),
     ];
   }),
 );

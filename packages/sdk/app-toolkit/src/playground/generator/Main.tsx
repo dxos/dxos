@@ -6,7 +6,8 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { IconButton } from '@dxos/react-ui';
@@ -70,7 +71,7 @@ export const Main = () => {
 
 export default Capability.makeModule(() =>
   Effect.succeed(
-    Capability.contributes(
+    Capability.contribute(
       Capabilities.ReactSurface,
       Surface.create({
         id: 'org.dxos.test.generator.main',

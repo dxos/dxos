@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Type } from '@dxos/echo';
 import { Card, Icon, IconButton, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -14,7 +14,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { useRelatedObjects } from '#hooks';
 import { meta } from '#meta';
-import { Prompts } from '#types';
+
+import * as SpaceSurface from '../../types/SpaceSurface';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
@@ -46,7 +47,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Card.Root classNames='dx-card-max-width'>
+            <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
                   <Icon icon={icon} />
@@ -63,7 +64,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>
-              <Surface.Surface type={Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
+              <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </div>
 
             {related.length > 0 && (
@@ -91,11 +92,13 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const { t } = useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
-  const menuItems = useObjectMenuItems(subject);
+  // The card menu renders in a portal; resolve the origin plank from the card element instead.
+  const [cardRef, pivotId] = useCardPivot();
+  const menuItems = useObjectMenuItems(subject, pivotId);
 
   return (
     <Menu.Root>
-      <Card.Root classNames={classNames}>
+      <Card.Root ref={cardRef} classNames={classNames}>
         <Card.Header>
           <Card.Block>
             <Icon icon={icon} />

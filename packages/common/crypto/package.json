@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crypto",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Basic cross-platform crypto utils.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -23,11 +23,28 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
+    },
+    "./random": {
+      "source": "./src/random.ts",
+      "types": "./dist/types/src/random.d.ts",
+      "import": "./dist/lib/random.mjs"
+    },
+    "./package.json": "./package.json",
+    "./subtle": {
+      "types": "./vendor/subtle.d.ts",
+      "node": "./vendor/subtle-node.mjs",
+      "browser": "./vendor/subtle-browser.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "random": [
+        "dist/types/src/random.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "src",

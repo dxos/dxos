@@ -314,7 +314,7 @@ The corollary: there is no need for a transactional edit log between EDGE servic
 
 1. **Sandbox SDK vs. own coordinator** — does Cloudflare's Sandbox SDK obviate the per-project DO+Container coordinator? Worth a spike before Phase 1 lands.
 2. **npm strategy** — proxy through R2 cache, or rely on upstream registry? Cold-start latency matters and a cache buys a lot.
-3. **ECHO state in tests** — plugins that depend on ECHO state need a test substrate. Synthetic spaces in the sandbox? A thin "ECHO emulator" worker? This intersects with `agent-e2e-tests` / `testing-assistant-conversations` work.
+3. **ECHO state in tests** — plugins that depend on ECHO state need a test substrate. Synthetic spaces in the sandbox? A thin "ECHO emulator" worker? This intersects with `agent-eval-tests` / `testing-assistant-conversations` work.
 4. **Introspect versioning** — do introspect indices need to be sharded per Composer release? Plugin authors targeting an older Composer should get matching APIs, not HEAD.
 5. **Dispatcher isolation model** — per-user dispatcher namespaces (stronger isolation, more bindings to manage) or one shared namespace with per-plugin bindings (cheaper)? Default to shared; per-user as an enterprise tier.
 6. **Streaming operation results** — current operation framework returns single values. Streaming compile/test output cleanly may need an extension to operations or a sidecar pubsub channel surfaced through the chat UI.

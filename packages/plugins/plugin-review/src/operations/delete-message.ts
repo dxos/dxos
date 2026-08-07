@@ -1,0 +1,53 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Operation from '@dxos/compute/Operation';
+import { Obj, Relation } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
+import { Thread } from '@dxos/types';
+
+import * as CommentOperation from '../types/CommentOperation';
+
+const handler: Operation.WithHandler<typeof CommentOperation.DeleteMessage> = CommentOperation.DeleteMessage.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ subject, anchor, messageId }) {
+      const thread = Relation.getSource(anchor) as Thread.Thread;
+      const db = Obj.getDatabase(subject);
+      invariant(db, 'Database not found');
+
+      const msgIndex = thread.messages.findIndex((ref) => ref.target?.id === messageId);
+      const msg = thread.messages[msgIndex]?.target;
+      if (!msg) {
+        return { messageIndex: -1 };
+      }
+
+      if (msgIndex === 0 && thread.messages.length === 1) {
+        // TODO(wittjosiah): This doesn't support restoring the thread.
+        yield* Operation.invoke(CommentOperation.Delete, { subject, anchor });
+        return { messageIndex: -1 };
+      }
+
+      Obj.update(thread, (thread) => {
+        thread.messages.splice(msgIndex, 1);
+      });
+
+      yield* Operation.schedule(ObservabilityOperation.SendEvent, {
+        name: 'comments.message.delete',
+        properties: {
+          spaceId: db.spaceId,
+          threadId: thread.id,
+          threadLength: thread.messages.length,
+          messageId,
+        },
+      });
+
+      return { message: msg, messageIndex: msgIndex };
+    }),
+  ),
+);
+
+export default handler;

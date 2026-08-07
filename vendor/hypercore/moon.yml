@@ -10,7 +10,7 @@ workspace:
       - lint
 
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/hypercore.js'
       - '--entryPoint=src/hypercore-crypto.js'

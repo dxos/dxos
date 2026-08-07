@@ -6,12 +6,14 @@ import React, { useEffect, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';
 
 import { Pending, Summary } from '#components';
 import { meta } from '#meta';
-import { Video, VideoOperation } from '#types';
+
+import * as Video from '../../types/Video';
+import * as VideoOperation from '../../types/VideoOperation';
 
 // TODO(burdon): Use AppSurface.Section.
 export type SummarySectionProps = {

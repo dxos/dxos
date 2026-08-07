@@ -1,14 +1,16 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 // @import-as-namespace
 
-import { type ActivationEvent } from '@dxos/app-framework';
-import { AppActivationEvents } from '@dxos/app-toolkit';
+import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
 import { meta } from '#meta';
 
-export const SetupExtensions: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
-  `${meta.profile.key}.event.setup-extensions`,
-);
+/**
+ * The markdown feature's start event. Cross-plugin markdown contributions (editor extensions,
+ * comment/anchor integrations) activate here — a feature integrating WITH markdown loads when
+ * markdown starts, not when its own plugin does. Fired on demand and by the host's idle trickle.
+ */
+export const Start = ActivationEvent.pluginStart(meta.profile.key);

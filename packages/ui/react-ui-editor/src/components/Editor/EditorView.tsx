@@ -11,7 +11,7 @@ import { initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks';
-import { type EditorController, createEditorController, noopController } from './controller';
+import { type EditorController, createEditorController } from './controller';
 
 export type EditorViewProps = ThemedClassName<
   {
@@ -90,14 +90,13 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
       });
     }, [view, value, selectionEnd]);
 
+    // Focus chrome (border/ring) is the caller's responsibility (e.g. `dx-input`).
     return (
       <div
-        className={mx('w-full outline-hidden focus:border-accent-bg focus-within:border-focus-ring-subtle', classNames)}
+        className={mx('w-full outline-hidden', classNames)}
         {...(focusable ? focusAttributes : {})}
         ref={parentRef}
       />
     );
   },
 );
-
-export { type EditorController, createEditorController, noopController };

@@ -9,7 +9,7 @@ import { TOOL_METADATA } from './metadata';
 // Top-level field key each tool's outputSchema must expose. MCP requires
 // `structuredContent` to be a JSON object, so every tool wraps its
 // result(s) under a stable key — this is the contract downstream
-// consumers (e.g. dxos/edge introspect-service) bind to.
+// consumers (e.g. dxos/edge mcp-introspect-service) bind to.
 const EXPECTED_OUTPUT_KEYS: Record<string, string> = {
   list_packages: 'packages',
   get_package: 'package',

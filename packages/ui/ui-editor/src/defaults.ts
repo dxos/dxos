@@ -30,7 +30,7 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
       'dx-inline-size-container',
       // Wider margin for web (vs. mobile).
       'pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
-      'mx-auto! w-full pt-3!',
+      'mx-auto! w-full py-3!',
     ),
   },
 };

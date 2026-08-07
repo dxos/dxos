@@ -14,6 +14,9 @@ import { agentTest, agentTestTimeout } from '../harness';
 // Must stay at module scope: primes the test PRNG; agentTest pins a per-test seed from the test name.
 Obj.ID.dangerouslyDisableRandomness();
 
+// TODO(wittjosiah): Migrate to an eval (see .agents/skills/agent-eval-tests). createEvalRunner has
+// no `inferenceProvider` option yet (always AiServiceTestingPreset('direct')) — would need one
+// added, mirroring harness.ts's AgentTestOptions.inferenceProvider, to select 'ollama' here.
 describe('Local AI', () => {
   it.effect(
     'create and query database objects',

@@ -7,13 +7,14 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface, useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
+import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { useObject, useQuery, useType } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
@@ -33,7 +34,8 @@ import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { TableOperation } from '#types';
+
+import * as TableOperation from '../../types/TableOperation';
 
 export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 
@@ -100,7 +102,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
           Match.when('open', () =>
-            invokePromise(LayoutOperation.Open, { subject: [Paths.getObjectPathFromObject(data)] }),
+            invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(data)] }),
           ),
           Match.orElseAbsurd,
         ),

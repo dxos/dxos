@@ -9,10 +9,11 @@ import React from 'react';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
@@ -20,8 +21,8 @@ import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '#translations';
-import { Markdown } from '#types';
 
+import * as Markdown from '../../types/Markdown';
 import { EditableMarkdownCard, type EditableMarkdownCardProps } from './EditableMarkdownCard';
 
 random.seed(1234);

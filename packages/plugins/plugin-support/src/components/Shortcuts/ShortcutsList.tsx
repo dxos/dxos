@@ -20,7 +20,7 @@ export const ShortcutsList = () => {
   });
 
   return (
-    <dl className={mx('w-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 my-4 text-subdued select-none')}>
+    <dl className={mx('w-fit grid grid-cols-[min-content_minmax(12rem,1fr)] gap-2 my-3 text-subdued select-none')}>
       {bindings.map((binding, i) => (
         <Fragment key={i}>
           <Key binding={binding.shortcut} />

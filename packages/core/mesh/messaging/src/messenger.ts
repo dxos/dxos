@@ -72,12 +72,6 @@ export class Messenger {
     this._ctx = new Context({
       onError: (err) => log.catch(err),
     });
-    this._ctx.onDispose(
-      this._signalManager.onMessage.on(async (message) => {
-        log('received message', { from: message.author });
-        await this._handleMessage(message);
-      }),
-    );
 
     // Clear the map periodically.
     scheduleTaskInterval(
@@ -97,11 +91,18 @@ export class Messenger {
       return;
     }
     this._closed = true;
+    // Disposing the context tears down every still-active subscription — each `listen` registers its
+    // transport unsubscribe via `onDispose`, and a handle unsubscribed manually has already cleared
+    // its registration. The offline/online cycle keeps the messenger open (only signaling toggles),
+    // so subscriptions are torn down only on a real close.
     await this._ctx.dispose();
   }
 
-  async sendMessage(ctx: Context, { author, recipient, payload }: Message): Promise<void> {
+  async sendMessage(ctx: Context, message: Message): Promise<void> {
     invariant(!this._closed, 'Closed');
+    const { author, recipient, payload } = message;
+    // Messenger provides reliable point-to-point delivery; broadcasts are not routed here.
+    invariant(recipient, 'Recipient is required');
     const messageContext = this._ctx.derive();
 
     const reliablePayload: ReliablePayload = {
@@ -175,22 +176,39 @@ export class Messenger {
     onMessage: OnMessage;
   }): Promise<ListeningHandle> {
     invariant(!this._closed, 'Closed');
-
-    await this._signalManager.subscribeMessages(peer);
-    let listeners: Set<OnMessage> | undefined;
     invariant(peer.peerKey, 'Peer key is required');
+    const peerKey = peer.peerKey;
 
+    // Multiplexing is owned by the signal manager. The messenger keeps only reliable delivery
+    // (ACK/dedup) and payloadType routing, and passes the transport unsubscribe back through the
+    // handle. The unsubscribe is also registered on the messenger context so `close` tears every
+    // subscription down; a handle unsubscribed manually clears that registration first.
+    const unsubscribe = await this._signalManager.subscribeMessages({
+      peer,
+      onMessage: (message) => {
+        // Subscriptions can outlive a close (they are torn down on dispose, and survive offline/online
+        // cycles), so ignore late deliveries and never let a handler rejection escape as unhandled.
+        if (this._closed) {
+          return;
+        }
+        log('received message', { from: message.author });
+        void this._handleMessage(message).catch((err) => log.catch(err));
+      },
+    });
+    const clearDispose = this._ctx.onDispose(unsubscribe);
+
+    let listeners: Set<OnMessage> | undefined;
     if (!payloadType) {
-      listeners = this._defaultListeners.get(peer.peerKey);
+      listeners = this._defaultListeners.get(peerKey);
       if (!listeners) {
         listeners = new Set();
-        this._defaultListeners.set(peer.peerKey, listeners);
+        this._defaultListeners.set(peerKey, listeners);
       }
     } else {
-      listeners = this._listeners.get({ peerId: peer.peerKey, payloadType });
+      listeners = this._listeners.get({ peerId: peerKey, payloadType });
       if (!listeners) {
         listeners = new Set();
-        this._listeners.set({ peerId: peer.peerKey, payloadType }, listeners);
+        this._listeners.set({ peerId: peerKey, payloadType }, listeners);
       }
     }
 
@@ -198,7 +216,9 @@ export class Messenger {
 
     return {
       unsubscribe: async () => {
+        clearDispose();
         listeners!.delete(onMessage);
+        await unsubscribe();
       },
     };
   }
@@ -238,8 +258,10 @@ export class Messenger {
     }
   }
 
-  private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
+  private async _handleReliablePayload(message: Message): Promise<void> {
+    const { author, recipient, payload } = message;
     invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
+    invariant(recipient, 'Recipient is required');
     const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
@@ -299,9 +321,11 @@ export class Messenger {
   }
 
   private async _callListeners(message: Message): Promise<void> {
+    const { recipient } = message;
+    invariant(recipient?.peerKey, 'Peer key is required');
+    const peerKey = recipient.peerKey;
     {
-      invariant(message.recipient.peerKey, 'Peer key is required');
-      const defaultListenerMap = this._defaultListeners.get(message.recipient.peerKey);
+      const defaultListenerMap = this._defaultListeners.get(peerKey);
       if (defaultListenerMap) {
         for (const listener of defaultListenerMap) {
           await listener(message);
@@ -311,7 +335,7 @@ export class Messenger {
 
     {
       const listenerMap = this._listeners.get({
-        peerId: message.recipient.peerKey,
+        peerId: peerKey,
         payloadType: message.payload.type_url,
       });
       if (listenerMap) {

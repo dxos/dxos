@@ -4,9 +4,9 @@
 
 import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { type TypedObjectSerializer } from '@dxos/plugin-space';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { Markdown } from '#types';
+import * as Markdown from './types/Markdown';
 
 /**
  * Checks if an object conforms to the interface needed to render an editor.
@@ -104,13 +104,9 @@ export const getFallbackName = (content = ''): string => {
 };
 
 // TODO(burdon): Option to strip Markdown.
-export const getContentSnippet = (content = '', maxLines = 3) => {
-  const abstract = content
-    .split('\n')
-    .filter((line) => !line.startsWith('!'))
-    .filter((line) => line.trim() !== '');
-
-  return abstract.slice(0, maxLines).join('\n') ?? '';
+export const getContentSnippet = (content = '', maxLines = 3): string => {
+  const abstract = content.split('\n').filter((line) => !line.startsWith('!'));
+  return abstract.slice(0, maxLines).join('\n');
 };
 
 export const setFallbackName = debounce((doc: Markdown.Document, content = '') => {
@@ -122,7 +118,7 @@ export const setFallbackName = debounce((doc: Markdown.Document, content = '') =
   }
 }, 200);
 
-export const serializer: TypedObjectSerializer<Markdown.Document> = {
+export const serializer: SpaceSchema.TypedObjectSerializer<Markdown.Document> = {
   serialize: async ({ object }): Promise<string> => {
     const { content } = await object.content.load();
     return JSON.stringify({ name: object.name, fallbackName: object.fallbackName, content });

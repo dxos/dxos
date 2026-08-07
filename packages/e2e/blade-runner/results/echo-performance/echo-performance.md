@@ -32,11 +32,12 @@ The biggest space we created inside Composer for collaboration has such stats:
 
 ![distribution](distribution.png)
 _Approximate distribution of mutations inside large production space_
-| metric | value |
+
+| metric                       | value |
 | ---------------------------- | ----- |
-| amount of objects | 649 |
-| maximum amount of mutations | 6827 |
-| mean amount of mutations | 46.3 |
+| amount of objects            | 649   |
+| maximum amount of mutations  | 6827  |
+| mean amount of mutations     | 46.3  |
 | variance of mutations amount | 429.9 |
 
 So we are aiming in our tests to simulate queries with amount of objects beyond 700 and measure performance for them.
@@ -59,4 +60,4 @@ _Measured query time against the number of mutations per object with fixed amoun
 
 > memory ~= numberOjObjects _ numberOfMutations _ mutationSize\
 > numberOjObjects = 4 GB / 1000 / 100 = 5K\
->  Around this amount ECHO will crash with WASM memory overflow error.
+> Around this amount ECHO will crash with WASM memory overflow error.

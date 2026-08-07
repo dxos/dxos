@@ -5,16 +5,17 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { loadGame } from '@dxos/plugin-game';
+import * as GameUtil from '@dxos/plugin-game/GameUtil';
 
-import { Chess, ChessOperation } from '../types';
+import * as Chess from '../types/Chess';
+import * as ChessOperation from '../types/ChessOperation';
 
 const handler: Operation.WithHandler<typeof ChessOperation.Move> = ChessOperation.Move.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, move }) {
-      const { variant } = yield* loadGame(game, Chess.State);
+      const { variant } = yield* GameUtil.loadGame(game, Chess.State);
       const chess = new ChessJS();
       if (variant.pgn) {
         chess.loadPgn(variant.pgn);
@@ -25,8 +26,7 @@ const handler: Operation.WithHandler<typeof ChessOperation.Move> = ChessOperatio
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
       Obj.update(variant, (variant) => {
-        const mutable = variant as Obj.Mutable<typeof variant>;
-        mutable.pgn = pgn;
+        variant.pgn = pgn;
       });
       return { pgn };
     }),

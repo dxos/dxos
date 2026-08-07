@@ -1,18 +1,17 @@
 layer: library
 language: typescript
 tags:
-  - ts-build
+  - ts-vite-build
   - ts-test
   - ts-test-storybook
   - pack
   - storybook
 tasks:
-  compile:
-    args:
-      - '--entryPoint=src/index.ts'
+  build:
     deps:
-      - gen-pieces
-  gen-pieces:
+      - prebuild
+  # Named `prebuild` so storybook's `#storybook:prebuild` reaches it; `src/gen` does not exist until it runs.
+  prebuild:
     command: pnpm run --silent gen:pieces
     inputs:
       - assets/*.*

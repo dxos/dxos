@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-meeting",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "Meeting hub plugin for DXOS Composer",
   "homepage": "https://dxos.org",
@@ -16,68 +16,103 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
+      "default": "./dist/lib/containers.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": "./src/MeetingPlugin.ts",
       "types": "./dist/types/src/MeetingPlugin.d.ts",
-      "default": "./dist/lib/neutral/MeetingPlugin.mjs"
+      "default": "./dist/lib/MeetingPlugin.mjs"
     },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
-    },
-    "#types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/translations.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
-    }
+    "./Meeting": {
+      "source": "./src/types/Meeting.ts",
+      "types": "./dist/types/src/types/Meeting.d.ts",
+      "import": "./dist/lib/Meeting.mjs"
+    },
+    "./MeetingCapabilities": {
+      "source": "./src/types/MeetingCapabilities.ts",
+      "types": "./dist/types/src/types/MeetingCapabilities.d.ts",
+      "import": "./dist/lib/MeetingCapabilities.mjs"
+    },
+    "./MeetingEvents": {
+      "source": "./src/types/MeetingEvents.ts",
+      "types": "./dist/types/src/types/MeetingEvents.d.ts",
+      "import": "./dist/lib/MeetingEvents.mjs"
+    },
+    "./MeetingOperation": {
+      "source": "./src/types/MeetingOperation.ts",
+      "types": "./dist/types/src/types/MeetingOperation.d.ts",
+      "import": "./dist/lib/MeetingOperation.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "Meeting": [
+        "dist/types/src/types/Meeting.d.ts"
+      ],
+      "MeetingCapabilities": [
+        "dist/types/src/types/MeetingCapabilities.d.ts"
+      ],
+      "MeetingEvents": [
+        "dist/types/src/types/MeetingEvents.d.ts"
+      ],
+      "MeetingOperation": [
+        "dist/types/src/types/MeetingOperation.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ]
+    }
+  },
   "files": [
     "dist",
     "dx.config.ts",
@@ -85,13 +120,11 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
-    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
-    "@dxos/assistant": "workspace:*",
-    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
@@ -110,21 +143,16 @@
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/ai": "catalog:",
+    "@effect-atom/atom": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
-    "@dxos/plugin-theme": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
-    "@dxos/test-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

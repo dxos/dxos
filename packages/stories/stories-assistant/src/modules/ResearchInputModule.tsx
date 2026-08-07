@@ -4,15 +4,24 @@
 
 import React from 'react';
 
+import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Entity, Filter, Query } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { type ModuleProps } from '@dxos/story-modules';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing/schema';
 
-export const ResearchInputModule = ({ space }: ModuleProps) => {
+export const ResearchInputModule = () => {
+  const space = useActiveSpace();
+  if (!space) {
+    return null;
+  }
+
+  return <ResearchInputModuleContainer space={space} />;
+};
+
+const ResearchInputModuleContainer = ({ space }: { space: Space }) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const feed = researchInput?.feed.target;
   const objects = useQuery(
@@ -46,7 +55,7 @@ type DebugCardProps = {
 
 const DebugCard = ({ object }: DebugCardProps) => {
   return (
-    <div className='border border-separator rounded-lg p-4 bg-surface'>
+    <div className='border border-separator rounded-lg p-4 dx-base-surface'>
       <div className='flex items-center justify-between mb-2'>
         <h3 className='font-medium text-lg'>{Entity.getLabel(object)}</h3>
         <p className='flex gap-2 items-center'>

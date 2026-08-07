@@ -4,15 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as Plugin$ from '@dxos/app-framework/Plugin';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, Paths, SettingsOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/compute';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
+import * as Operation from '@dxos/compute/Operation';
 import { Position, isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
+import * as SettingsPath from '../types/SettingsPath';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -48,7 +52,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             Node.make({
-              id: SETTINGS_ID,
+              id: SettingsPath.SETTINGS_ID,
               type: meta.profile.key,
               properties: {
                 label: ['plugin-settings.label', { ns: meta.profile.key }],
@@ -62,7 +66,8 @@ export default Capability.makeModule(
       }),
       GraphBuilder.createExtension({
         id: 'plugins',
-        match: NodeMatcher.whenId(Paths.getSpacePath(SETTINGS_ID)),
+        url: { key: 'plugin', kind: 'item', path: [] },
+        match: NodeMatcher.whenId(GraphPath.getSpacePath(SettingsPath.SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);
@@ -85,7 +90,7 @@ export default Capability.makeModule(
               )
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
                 Node.make({
-                  id: `${SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
+                  id: `${SettingsPath.SETTINGS_KEY}:${meta.profile.key.replaceAll('/', ':')}`,
                   type: 'category',
                   data: settings,
                   properties: {
@@ -100,6 +105,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

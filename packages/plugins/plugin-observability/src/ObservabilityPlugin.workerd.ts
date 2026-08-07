@@ -4,28 +4,27 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#types';
+
+import * as ObservabilityOperation from './types/ObservabilityOperation';
 
 export const ObservabilityPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: Capability.lazy('OperationHandler', () =>
-      Promise.resolve({
-        default: Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
-          Effect.fnUntraced(function* () {
-            return Capability.contributes(
-              Capabilities.OperationHandler,
-              OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
-            );
-          }),
+  Plugin.addModule(
+    Capability.inlineModule('OperationHandler', { provides: [Capabilities.OperationHandler] }, () =>
+      Effect.succeed([
+        Capability.contribute(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
         ),
-      }),
+      ]),
     ),
-  }),
+  ),
   Plugin.make,
 );
 

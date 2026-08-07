@@ -12,6 +12,7 @@ import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
 
+import { type BranchStore } from '../core-db';
 import { HypergraphImpl } from '../hypergraph';
 import { DatabaseImpl } from '../proxy-db';
 import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } from './index-query-source-provider';
@@ -50,6 +51,9 @@ export type ConstructDatabaseProps = {
    */
   // TODO(dmaretskyi): Remove.
   owningObject?: unknown;
+
+  /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
+  branchStore?: BranchStore;
 };
 
 /**
@@ -143,6 +147,7 @@ export class EchoClient extends Resource {
     reactiveSchemaQuery,
     preloadSchemaOnOpen,
     spaceKey,
+    branchStore,
   }: ConstructDatabaseProps): DatabaseImpl {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(!this._databases.has(spaceId), 'Database already exists.');
@@ -156,6 +161,7 @@ export class EchoClient extends Resource {
       reactiveSchemaQuery,
       preloadSchemaOnOpen,
       spaceKey,
+      branchStore,
     });
     this._graph._registerDatabase(spaceId, db, owningObject);
     this._databases.set(spaceId, db);

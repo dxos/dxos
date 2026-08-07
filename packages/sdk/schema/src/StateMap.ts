@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
 

@@ -9,8 +9,8 @@ import { type DID } from 'iso-did/types';
 
 import { type Client } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { Operation } from '@dxos/compute';
 import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';

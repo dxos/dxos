@@ -14,18 +14,19 @@ import { log } from '@dxos/log';
 import { EmailStage } from '@dxos/pipeline-email';
 
 import { GoogleMail } from '../../../../apis';
+import { GoogleApiError } from '../../../../errors';
 import { GoogleMailApi, type GoogleMailApiError, type GoogleMailApiService } from '../../../../services';
-import { type SyncStreamConfig } from '../../../../types';
+import * as SyncStreamConfig from '../../../../types/SyncStreamConfig';
 import { type AttachmentMetadata } from '../mapper';
 
-/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig}. */
+/** Gmail's streaming-pipeline tuning; see {@link SyncStreamConfig.SyncStreamConfig}. */
 export const GOOGLE_SYNC_CONFIG = {
   listPageSize: 500,
   fetchConcurrency: 5,
   commitPageSize: 10,
   maxItemsPerRun: 500,
   dateChunkDays: 7,
-} as const satisfies SyncStreamConfig;
+} as const satisfies SyncStreamConfig.SyncStreamConfig;
 
 //
 // Fetch messages
@@ -45,6 +46,8 @@ export type FetchMessagesProps = {
   readonly onEnumerated?: (count: number) => void;
   /** Called once per message retrieved (full fetch), to advance progress. */
   readonly onRetrieved?: () => void;
+  /** Incremental delta's created message ids; when set, replaces the forward window (backward still runs). */
+  readonly forwardIds?: readonly string[];
 };
 
 /**
@@ -74,7 +77,9 @@ export const fetchMessages = (
         })
       : Stream.empty;
 
-  return Stream.concat(idsFor(config.windows.forward), idsFor(config.windows.backward)).pipe(
+  const forward = config.forwardIds ? Stream.fromIterable(config.forwardIds) : idsFor(config.windows.forward);
+
+  return Stream.concat(forward, idsFor(config.windows.backward)).pipe(
     Cursor.skipCommitted('skip-committed', (messageId) => messageId),
     Stream.mapEffect(
       (messageId) =>
@@ -84,10 +89,22 @@ export const fetchMessages = (
             .getMessage(config.userId, messageId)
             .pipe(Effect.withSpan('google-sync.fetch.message'));
           config.onRetrieved?.();
-          return message;
-        }),
+          return Option.some(message);
+        }).pipe(
+          // A message deleted before this fetch 404s forever and the token only advances on a clean run,
+          // so failing here wedges the mailbox on that one id. Any other error must still fail, so the
+          // durable retry re-fetches it rather than stranding it once the cursor advances.
+          Effect.catchIf(
+            (error) => error instanceof GoogleApiError && error.code === 404,
+            (error) => {
+              log.warn('gmail sync: message not found, skipping', { messageId, error });
+              return Effect.succeed(Option.none<GoogleMail.Message>());
+            },
+          ),
+        ),
       { concurrency: GOOGLE_SYNC_CONFIG.fetchConcurrency },
     ),
+    Stream.filterMap(Function.identity),
   );
 };
 

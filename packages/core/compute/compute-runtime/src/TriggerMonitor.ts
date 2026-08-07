@@ -8,7 +8,8 @@ import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Trigger, TriggerEvent } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
+import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import { Database, Filter, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
@@ -88,8 +89,16 @@ export const layer: Layer.Layer<
     // Perform initial derivation.
     yield* deriveState;
 
-    // Aggregate local + remote trigger views.
-    const triggersAtom = Atom.make((get) => [...get(localTriggersAtom), ...get(remote.triggers)]);
+    // Aggregate local + remote trigger views. Edge triggers are ECHO objects replicated into the
+    // local database, so they surface in both the database-derived `localTriggersAtom` (as bare
+    // `environment: 'edge'` entries) and in `remote.triggers` (enriched with edge dispatcher runtime
+    // status). Dedupe by trigger ref URI, letting the remote entry supersede the bare local one.
+    const triggersAtom = Atom.make((get) => {
+      const local = get(localTriggersAtom);
+      const remoteStates = get(remote.triggers);
+      const remoteKeys = new Set(remoteStates.map((state) => state.trigger.uri));
+      return [...local.filter((state) => !remoteKeys.has(state.trigger.uri)), ...remoteStates];
+    });
     registry.mount(triggersAtom);
 
     const monitor: Trigger.Monitor = {

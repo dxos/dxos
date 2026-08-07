@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { type SupportOperation } from '@dxos/plugin-support';
 import { FeedbackForm } from '@dxos/plugin-support/components';
+import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -185,8 +185,14 @@ export const ResetDialog = ({
                   </div>
                 </div>
                 {showStack && (
-                  <Message.Root key={error.message} classNames='overflow-auto' data-testid='resetDialog.stackTrace'>
-                    <pre className='text-xs max-h-[136px]'>{error.stack}</pre>
+                  <Message.Root key={error.message}>
+                    <Message.Content classNames='overflow-auto'>
+                      <Message.Body asChild>
+                        <pre className='text-xs max-h-[136px]' data-testid='resetDialog.stackTrace'>
+                          {error.stack}
+                        </pre>
+                      </Message.Body>
+                    </Message.Content>
                   </Message.Root>
                 )}
               </>

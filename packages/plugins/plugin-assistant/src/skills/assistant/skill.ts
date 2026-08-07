@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { templates } from '@dxos/assistant';
-import { Skill } from '@dxos/compute';
-
-import { AssistantOperation } from '#types';
+import * as Skill from '@dxos/compute/Skill';
 
 const SKILL_KEY = 'org.dxos.skill.assistant';
 
@@ -17,8 +16,8 @@ const make = () =>
     tools: Skill.toolDefinitions({
       // TODO(wittjosiah): LayoutOperation.Open requires Capability.Service which is only available
       //   via the compute-runtime layer (plugin-routine). Once Capability.Service is propagated
-      //   through LocalFunctionExecutionService, this will work without the compute-runtime dependency.
-      operations: [LayoutOperation.Open, AssistantOperation.ResolveNavigationTargets],
+      //   through the process operation runtime, this will work without the compute-runtime dependency.
+      operations: [LayoutOperation.Open, NavigationOperation.ResolveNavigationTargets],
     }),
     instructions: templates.system,
   });

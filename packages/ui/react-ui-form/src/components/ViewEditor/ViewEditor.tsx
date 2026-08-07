@@ -23,9 +23,9 @@ import {
   Type,
   View,
 } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Input, Message, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
@@ -218,8 +218,10 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
             <Form.Content>
               {/* If readonly is set, then the callout is not needed. */}
               {schemaReadonly && !readonly && (
-                <Message.Root valence='info' classNames='my-form-padding'>
-                  <Message.Title>{t('system-schema.description')}</Message.Title>
+                <Message.Root valence='info'>
+                  <Message.Content classNames='my-form-padding'>
+                    <Message.Title>{t('system-schema.description')}</Message.Title>
+                  </Message.Content>
                 </Message.Root>
               )}
               <Form.FieldSet />

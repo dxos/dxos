@@ -5,14 +5,16 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';
 
-import { type Plugin, type PluginManager, UrlLoader } from '@dxos/app-framework';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
-import { useNode } from '@dxos/plugin-graph';
+import { useNode } from '@dxos/plugin-graph/hooks';
 
-import { getPluginSpecPath } from '#meta';
+import { getPluginPath, getPluginSpecPath } from '#meta';
 
 import { useDisableConfirmation } from './useDisableConfirmation';
 
@@ -74,8 +76,12 @@ export const usePluginActions = ({
   const specPath = getPluginSpecPath(pluginId);
   const hasSpecNode = !!useNode(graph, specPath);
   const handleOpenSpec = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, { subject: [specPath] });
-  }, [invokePromise, specPath]);
+    void invokePromise(LayoutOperation.Open, {
+      subject: [specPath],
+      pivotId: getPluginPath(pluginId),
+      disposition: 'add',
+    });
+  }, [invokePromise, specPath, pluginId]);
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {

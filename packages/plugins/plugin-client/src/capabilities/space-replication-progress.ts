@@ -4,18 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { ServiceResolver } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { type Space, SpaceState } from '@dxos/client/echo';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
-
-import { ClientCapabilities } from '#types';
 
 import { createSpaceFeedReplicationProgressKey, createSpaceReplicationProgressKey } from '../progress';
+import * as ClientCapabilities from '../types/ClientCapabilities';
 
 type MonitorUpdate = {
   readonly label: string;
@@ -31,9 +32,16 @@ type MonitorUpdate = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const registry = yield* Capability.get(AppCapabilities.ProgressRegistry);
-    const processManagerRuntime = yield* Capability.get(Capabilities.ProcessManagerRuntime);
+    const client = yield* ClientCapabilities.Client;
+    const processManagerRuntime = yield* Capabilities.ProcessManagerRuntime;
+
+    // Optional: a host without a progress registry (e.g. a storybook or an embedding app that omits
+    // plugin-progress) loses the meter, not the plugin.
+    const registryOption = yield* Capability.getOption(AppCapabilities.ProgressRegistry);
+    if (Option.isNone(registryOption)) {
+      return [];
+    }
+    const registry = registryOption.value;
 
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
 
@@ -65,18 +73,25 @@ export default Capability.makeModule(
       }
     };
 
+    // A space that has not finished initializing throws from its `properties` getter, and the
+    // spaces subscription fires before initialization completes (startup, space creation) — so
+    // the name is read lazily per sync-state update, and only once the space is SPACE_READY.
+    const getSpaceName = (space: Space): string | undefined =>
+      space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
+
     const runtime = yield* Effect.runtime<Scope.Scope>();
-    const subscribeSpace = (spaceId: SpaceId, name?: string): void =>
+    const subscribeSpace = (space: Space): void =>
       void Effect.gen(function* () {
         const fiber = processManagerRuntime.runFork(
           Database.subscribeToSyncState().pipe(
             Stream.runForEach(
               Effect.fnUntraced(function* (state) {
-                applyMonitor(createSpaceReplicationProgressKey(spaceId), toDocumentUpdate(name, state));
-                applyMonitor(createSpaceFeedReplicationProgressKey(spaceId), toFeedUpdate(name, state));
+                const name = getSpaceName(space);
+                applyMonitor(createSpaceReplicationProgressKey(space.id), toDocumentUpdate(name, state));
+                applyMonitor(createSpaceFeedReplicationProgressKey(space.id), toFeedUpdate(name, state));
               }),
             ),
-            Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
+            Effect.provide(ServiceResolver.provide({ space: space.id }, Database.Service)),
           ),
         );
 
@@ -85,13 +100,15 @@ export default Capability.makeModule(
 
     const spacesSubscription = client.spaces.subscribe((spaces) => {
       for (const space of spaces) {
-        subscribeSpace(space.id, space.properties.name);
+        subscribeSpace(space);
       }
     });
     yield* Effect.addFinalizer(() => Effect.sync(() => spacesSubscription.unsubscribe()));
     for (const space of client.spaces.get()) {
-      subscribeSpace(space.id, space.properties.name);
+      subscribeSpace(space);
     }
+
+    return [];
   }),
 );
 

@@ -21,6 +21,6 @@ export default Config2.make({
     `,
     icon: { key: 'ph--mailbox--regular', hue: 'rose' },
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
-    tags: ['integration'],
+    tags: ['alpha', 'connector'],
   },
 });

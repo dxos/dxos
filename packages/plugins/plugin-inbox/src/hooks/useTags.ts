@@ -7,10 +7,10 @@ import { useMemo } from 'react';
 import { Obj, Tag } from '@dxos/echo';
 import { getHashStyles } from '@dxos/ui-theme';
 
-import { type MessageStackTag } from '#components';
-import { Mailbox } from '#types';
+import { type InboxStackTag } from '#components';
 
 import { GoogleMail } from '../apis';
+import * as Mailbox from '../types/Mailbox';
 
 /**
  * Resolve the message's tag uris (from the Mailbox tag index) to Tag objects for label/hue.
@@ -33,7 +33,7 @@ export const useMessageTags = (
 /**
  * Map onto Gmail labels.
  */
-export const useGmailTags = (tags?: MessageStackTag[]) => {
+export const useGmailTags = (tags?: InboxStackTag[]) => {
   return useMemo(
     () =>
       (tags ?? [])

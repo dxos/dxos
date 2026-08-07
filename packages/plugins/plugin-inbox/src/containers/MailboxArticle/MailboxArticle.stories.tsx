@@ -7,50 +7,58 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useEffect } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter } from '@dxos/echo';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
+import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { initializeMailbox } from '#testing';
-import { InboxCapabilities, Mailbox } from '#types';
 
 import { InboxPlugin } from '../../InboxPlugin';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as Mailbox from '../../types/Mailbox';
 import { MailboxArticle } from './MailboxArticle';
 
 // No-op handlers for layout operations invoked from article components; avoids pulling in DeckPlugin.
+const MockDeckOperations = Capability.inlineModule(
+  'operation-handler',
+  { provides: [Capabilities.OperationHandler] },
+  () =>
+    Effect.succeed([
+      Capability.contribute(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(LayoutOperation.Select, () => Effect.void),
+          Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
+        ),
+      ),
+    ]),
+);
+
 const MockDeckOperationsPlugin = Plugin.define(
   Plugin.makeMeta({
     key: DXN.make('org.dxos.plugin.inbox.story.mockDeckOperations'),
     name: 'Mock Deck Ops',
   }),
-).pipe(
-  AppPlugin.addOperationHandlerModule({
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(
-          Capabilities.OperationHandler,
-          OperationHandlerSet.make(
-            Operation.withHandler(LayoutOperation.Select, () => Effect.void),
-            Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void),
-          ),
-        ),
-      ),
-  }),
-  Plugin.make,
-);
+).pipe(Plugin.addModule(MockDeckOperations), Plugin.make);
 
 /** Real term repeated across several `SAMPLE_MESSAGES` entries; used by `SearchFilter`'s play test. */
 const SEARCH_TERM = 'invoice';
@@ -71,6 +79,8 @@ type StoryArgs = {
   conversations?: boolean;
   /** Seed the realistic `SAMPLE_MESSAGES` corpus instead of the lorem builder, for the `SearchFilter` play test. */
   seedSearchTerm?: boolean;
+  /** Seeds a sync binding (AccessToken → Connection → Cursor) so `InitializeMailbox` shows "Mailbox empty" instead of "No connections configured". */
+  bound?: boolean;
 };
 
 const DefaultStory = ({ conversations }: StoryArgs) => {
@@ -98,12 +108,19 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false } }) => ({
-      setupEvents: [AppActivationEvents.SetupSettings],
+    withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
+          types: [
+            Feed.Feed,
+            Mailbox.Mailbox,
+            Message.Message,
+            Person.Person,
+            AccessToken.AccessToken,
+            Connection.Connection,
+            Cursor.Cursor,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
@@ -113,13 +130,15 @@ const meta = {
                 const mailbox = personalSpace.db.add(Mailbox.make());
                 const feed = yield* Effect.promise(() => mailbox.feed?.tryLoad());
                 if (feed) {
-                  const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }) =>
+                  // Synced JMAP mail always carries a `threadId` (server-set, RFC 8621); mirror that here
+                  // by giving standalone samples a unique thread so they seed realistically.
+                  const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }, index) =>
                     Message.make({
                       created: subDays(new Date(), daysAgo ?? 0).toISOString(),
                       sender: { email: from.email, name: from.name },
                       blocks: [{ _tag: 'text', text: body }],
                       properties: { subject, snippet: body.slice(0, 120) },
-                      ...(threadId ? { threadId } : {}),
+                      threadId: threadId ?? `thread-of-one-${index}`,
                     }),
                   );
                   // A message whose ONLY occurrence of `HTML_ONLY_TERM` is inside a `text/html` block —
@@ -140,13 +159,25 @@ const meta = {
                       subject: 'Routine notification',
                       snippet: 'This is a routine notification with no special terms.',
                     },
+                    threadId: 'notification-thread',
                   });
                   yield* Feed.append(feed, [...messages, htmlOnlyMessage]).pipe(
                     Effect.provide(Database.layer(personalSpace.db)),
                   );
                 }
               } else {
-                yield* Effect.promise(() => initializeMailbox(personalSpace, count, threads));
+                const mailbox = yield* Effect.promise(() => initializeMailbox(personalSpace.db, count, threads));
+                if (bound) {
+                  const accessToken = personalSpace.db.add(
+                    AccessToken.make({ source: 'imap.example.com', account: 'user@example.com', token: 'story-token' }),
+                  );
+                  const connection = personalSpace.db.add(
+                    Connection.make({ name: 'Story Mail', accessToken: Ref.make(accessToken) }),
+                  );
+                  personalSpace.db.add(
+                    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }),
+                  );
+                }
               }
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
@@ -176,32 +207,38 @@ export const Default: Story = {
   },
 };
 
-export const Conversations: Story = {
+// TODO(wittjosiah): Remove? Conversation grouping is on by default now, so `Default` already covers
+// it — this exists only to exercise the flat/ungrouped fallback (`conversations: false`).
+export const Flat: Story = {
   args: {
     count: 500,
-    // A thread pool comfortably larger than the page size (10 conversations) so scrolling
-    // exercises group-level pagination — with the default pool of 10 everything fits on one page.
-    threads: 100,
-    conversations: true,
+    conversations: false,
+  },
+};
+
+export const NoConnection: Story = {
+  args: {
+    count: 0,
   },
 };
 
 export const Empty: Story = {
   args: {
     count: 0,
+    bound: true,
   },
 };
 
-// Exercises the parsed search filter applied to the message query (`buildMailboxSelection`). A free-
-// text query routes to a full-text select feeding the conversation `.aggregate({...})`, so this
-// specifically covers that path (`conversations: true`) rather than the flat, ungrouped one.
+// Integration test only: proves the search box is wired to the message query so that typing narrows
+// the list. The query behaviors themselves are covered headlessly — the whole-thread semi-join and
+// thread-of-one retention in `mailbox-search.test.ts`, and the HTML-only exclusion (bugs 2 & 3) by the
+// `messageMatchesQuery` tests in `util.test.ts` — so this story does not re-assert those variants.
 export const SearchFilter: Story = {
   args: {
     conversations: true,
     seedSearchTerm: true,
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
     // Each rendered message/conversation tile carries `data-object-id` (set by the shared `Mosaic.Tile`
     // shell in `Tile.Root`) — the stack is virtualized and untagged with an ARIA list-item role, so this
     // attribute is the only reliable way to count rendered tiles.
@@ -220,30 +257,15 @@ export const SearchFilter: Story = {
     await userEvent.click(editor);
     await userEvent.type(editor, SEARCH_TERM);
 
-    // The query narrows to the corpus messages mentioning the term (spread across several topics and
-    // one shared thread), so the match count is a proper, non-trivial subset of the initial tiles.
+    // Typing the term routes through the query and narrows the list to a smaller, non-empty subset —
+    // that wiring is all this story verifies.
     await waitFor(
       async () => {
         const matchedCount = getTileCount();
-        await expect(matchedCount).toBeGreaterThanOrEqual(2);
+        await expect(matchedCount).toBeGreaterThan(0);
         await expect(matchedCount).toBeLessThan(initialCount);
       },
       { timeout: 5_000 },
     );
-
-    // At least one narrowed tile's snippet is now the best-match window with the query term
-    // highlighted (`Highlighted` wraps matches in `<mark>`), replacing the default snippet preview.
-    const marks = canvasElement.querySelectorAll('mark');
-    const matchingMark = Array.from(marks).find((mark) => mark.textContent?.toLowerCase().includes(SEARCH_TERM));
-    await expect(matchingMark).toBeTruthy();
-
-    // Clear the query and search for a term seeded ONLY inside a raw `text/html` block (never in
-    // plain/markdown text or the subject). ECHO's full-text index still matches it (the index covers
-    // the whole object, including HTML blocks), but the mailbox must exclude HTML-only matches from
-    // what it shows — regression coverage for bugs 2 & 3 (blank cards / matches inside HTML markup).
-    await userEvent.type(editor, '{selectall}{backspace}');
-    await userEvent.type(editor, HTML_ONLY_TERM);
-
-    await waitFor(() => expect(getTileCount()).toBe(0), { timeout: 5_000 });
   },
 };

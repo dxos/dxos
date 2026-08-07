@@ -2,13 +2,26 @@
 // Copyright 2024 DXOS.org
 //
 
-import { format, formatDistance, isThisWeek, isThisYear, isToday } from 'date-fns';
+import {
+  differenceInDays,
+  differenceInHours,
+  differenceInMinutes,
+  differenceInMonths,
+  differenceInWeeks,
+  differenceInYears,
+  format,
+  formatDistance,
+  isThisWeek,
+  isThisYear,
+  isToday,
+} from 'date-fns';
 
 import { Obj } from '@dxos/echo';
-import { type ContentBlock, type Message } from '@dxos/types';
-import { toHue } from '@dxos/util';
+import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 
-import { type Mailbox } from '#types';
+import { meta } from '#meta';
+
+import type * as Mailbox from '../types/Mailbox';
 
 export const REPLY_DELIMITER = '\n\n---';
 export const REPLY_REGEXP = /^---\s*$/m;
@@ -104,6 +117,9 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
     // Top-level `threadId` (not just `properties.threadId`) is what the thread-grouping query and the
     // mailbox conversation aggregate key on; without it a reply draft never joins its thread.
     ...(message?.threadId && mode !== 'compose' ? { threadId: message.threadId } : {}),
+    // Record the specific message being answered so the thread can render the draft directly after it
+    // (see `orderThreadItems`) rather than always at the bottom.
+    ...(message && mode !== 'compose' ? { parentMessage: message.id } : {}),
     blocks: [{ _tag: 'text' as const, text: draftBody }],
     properties: {
       to,
@@ -115,14 +131,69 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
 };
 
 /**
- * Hashes a string into a number
- * @param str String to hash
- * @returns A non-negative number hash
+ * Orders a conversation for display so a reply draft renders immediately after the message it answers
+ * (matched via the draft's `parentMessage`), while every other message keeps its chronological order.
+ * Drafts without a resolvable non-draft parent in the thread (e.g. a bare compose) stay where they are.
  */
-// TODO(burdon): Factor out.
-export const hashString = (str?: string): number => {
-  return str ? Math.abs(str.split('').reduce((hash, char) => (hash << 5) + hash + char.charCodeAt(0), 0)) : 0;
+export const orderThreadItems = (messages: Message.Message[]): Message.Message[] => {
+  const byId = new Map(messages.map((message) => [message.id, message]));
+  const childDrafts = new Map<string, Message.Message[]>();
+  const standalone: Message.Message[] = [];
+  for (const message of messages) {
+    const parentId = DraftMessage.instanceOf(message) ? message.parentMessage : undefined;
+    const parent = parentId ? byId.get(parentId) : undefined;
+    if (parentId && parent && !DraftMessage.instanceOf(parent)) {
+      const drafts = childDrafts.get(parentId) ?? [];
+      drafts.push(message);
+      childDrafts.set(parentId, drafts);
+    } else {
+      standalone.push(message);
+    }
+  }
+
+  if (childDrafts.size === 0) {
+    return messages;
+  }
+
+  return standalone.flatMap((message) => {
+    const drafts = childDrafts.get(message.id);
+    return drafts ? [message, ...drafts] : [message];
+  });
 };
+
+/**
+ * Drops a draft superseded by its already-synced sent copy (`properties.sentMessageId` matched against
+ * the synced messages' foreign-key ids). Synced messages and this mailbox's still-unsent drafts always
+ * pass; a draft from a different mailbox is dropped. Used by the `mailboxMessage` companion connector,
+ * which can briefly see both a draft and its just-synced copy in the same thread.
+ */
+export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: string): Message.Message[] => {
+  const syncedIds = new Set(
+    messages
+      .filter((message) => !DraftMessage.instanceOf(message))
+      .flatMap((message) => Obj.getMeta(message).keys.map((key) => key.id)),
+  );
+  return messages.filter((message) => {
+    if (!DraftMessage.instanceOf(message)) {
+      return true;
+    }
+    if (!DraftMessage.belongsTo(message, mailboxUri)) {
+      return false;
+    }
+    return !(message.properties?.sentMessageId && syncedIds.has(message.properties.sentMessageId));
+  });
+};
+
+/**
+ * Display label for a message's graph node (the plank heading, and its breadcrumb tail in flat mode).
+ * A compose draft's subject is an empty string rather than absent, so falling back only on `undefined`
+ * would leave the heading blank until the user types one.
+ */
+export const getMessageLabel = (message: Message.Message) =>
+  message.properties?.subject ||
+  (DraftMessage.instanceOf(message)
+    ? (['draft.label', { ns: meta.profile.key }] as const)
+    : (['message.label', { ns: meta.profile.key }] as const));
 
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =
@@ -141,6 +212,37 @@ export const formatDateTime = (date: Date, now: Date, options?: FormatDateTimeOp
         ? formatShortDate(date)
         : formatDistance(date, now, { addSuffix: true });
 
+/**
+ * Age of a timestamp in the shortest form that still reads unambiguously — `now`, `12m`, `4h`, `3d`,
+ * `2w`, `5mo`, `2y`. Sized for a card row, where a full date would crowd out the subject.
+ */
+export const formatAge = (date: Date, now: Date): string => {
+  const minutes = differenceInMinutes(now, date);
+  if (minutes < 1) {
+    return 'now';
+  }
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  const hours = differenceInHours(now, date);
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  const days = differenceInDays(now, date);
+  if (days < 7) {
+    return `${days}d`;
+  }
+  const weeks = differenceInWeeks(now, date);
+  if (weeks < 5) {
+    return `${weeks}w`;
+  }
+  const months = differenceInMonths(now, date);
+  if (months < 12) {
+    return `${Math.max(months, 1)}mo`;
+  }
+  return `${differenceInYears(now, date)}y`;
+};
+
 export const formatShortDate = (date: Date) =>
   isToday(date)
     ? format(date, 'hh:mm aaa')
@@ -155,10 +257,10 @@ type MessageProps = {
   text: string;
   date: string;
   from?: string;
+  to?: string;
   email?: string;
   subject: string;
   snippet: string;
-  hue: string;
 };
 
 /**
@@ -210,11 +312,11 @@ export const getMessageProps = (
   const text = getMessageBodyText(message);
   const date = formatDateTime(message.created ? new Date(message.created) : new Date(), now, options);
   const from = message.sender?.contact?.target?.fullName ?? message.sender?.name;
+  const to = message.properties?.to; // TODO(burdon): Ref?
   const email = message.sender?.email;
   const subject = message.properties?.subject;
   const snippet = message.properties?.snippet ?? getMessageBodyText(message);
-  const hue = toHue(hashString(from));
-  return { id, text, date, from, email, subject, snippet, hue };
+  return { id, text, date, from, to, email, subject, snippet };
 };
 
 /**

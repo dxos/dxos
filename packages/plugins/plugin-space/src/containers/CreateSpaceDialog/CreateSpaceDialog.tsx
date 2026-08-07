@@ -7,7 +7,8 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { Column, Dialog, useTranslation } from '@dxos/react-ui';
@@ -16,11 +17,12 @@ import { Form } from '@dxos/react-ui-form';
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceForm } from '#types';
+
+import * as SpaceSchema from '../../types/SpaceSchema';
 
 export const CREATE_SPACE_DIALOG = `${meta.profile.key}.CreateSpaceDialog`;
 
-type FormValues = Schema.Schema.Type<typeof SpaceForm>;
+type FormValues = Schema.Schema.Type<typeof SpaceSchema.SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
@@ -37,8 +39,8 @@ export const CreateSpaceDialog = () => {
       return Effect.gen(function* () {
         const { space } = yield* invoke(SpaceOperation.Create, data);
         yield* invoke(LayoutOperation.Open, {
-          subject: [Paths.getSpaceHomePath(space.id)],
-          workspace: Paths.getSpacePath(space.id),
+          subject: [GraphPath.getSpaceHomePath(space.id)],
+          workspace: GraphPath.getSpacePath(space.id),
           navigation: 'immediate',
         });
         yield* invoke(LayoutOperation.UpdateDialog, { state: false });
@@ -67,7 +69,7 @@ export const CreateSpaceDialog = () => {
         <Form.Root
           testId='create-space-form'
           autoFocus
-          schema={SpaceForm}
+          schema={SpaceSchema.SpaceForm}
           defaultValues={initialValues}
           fieldProvider={inputSurfaceLookup}
           onSave={handleCreateSpace}

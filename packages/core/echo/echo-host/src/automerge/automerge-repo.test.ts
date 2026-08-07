@@ -35,15 +35,12 @@ import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
 import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
-import { openAndClose } from '@dxos/test-utils';
 import { isNonNullable, range } from '@dxos/util';
 
-import { TestAdapter, type TestConnectionStateProvider } from '../testing';
+import { TestAdapter, type TestConnectionStateProvider, createTestSqliteStorageAdapter } from '../testing';
 import { EchoNetworkAdapter } from './echo-network-adapter';
 import { type HandleQueryState } from './handle-state';
-import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
 import { MeshEchoReplicator } from './mesh-echo-replicator';
 
 const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
@@ -121,7 +118,7 @@ describe('AutomergeRepo', () => {
   });
 
   test('flush', async () => {
-    const storage = await createLevelAdapter();
+    const storage = await createSqliteAdapter();
 
     const repo = new Repo({
       network: [],
@@ -180,7 +177,7 @@ describe('AutomergeRepo', () => {
   });
 
   test('documents on disk go to ready state', async () => {
-    const storage = await createLevelAdapter();
+    const storage = await createSqliteAdapter();
 
     let url: AutomergeUrl | undefined;
     {
@@ -391,7 +388,7 @@ describe('AutomergeRepo', () => {
     });
 
     test('documents loaded from disk get replicated', async () => {
-      const storage = await createLevelAdapter();
+      const storage = await createSqliteAdapter();
 
       let url: AutomergeUrl | undefined;
       {
@@ -488,7 +485,7 @@ describe('AutomergeRepo', () => {
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
-      const storage = await createLevelAdapter();
+      const storage = await createSqliteAdapter();
 
       const repo = new Repo({ network: [], storage });
       const receiveByServer = async (blob: Uint8Array, docId: DocumentId) => {
@@ -639,8 +636,7 @@ describe('AutomergeRepo', () => {
       let url: AutomergeUrl;
 
       {
-        const level = createTestLevel(path);
-        const storage = await createLevelAdapter(level);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
@@ -648,17 +644,16 @@ describe('AutomergeRepo', () => {
           doc.text = text;
         });
         await repo.flush([handle.documentId]);
-        await level.close();
+        await close();
       }
 
       {
-        const level = createTestLevel(path);
-        const storage = await createLevelAdapter(level);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
         await handle.whenReady();
         expect(handle.doc()?.text).to.equal(text);
-        await level.close();
+        await close();
       }
     });
 
@@ -668,8 +663,7 @@ describe('AutomergeRepo', () => {
       let url: AutomergeUrl;
 
       {
-        const level = createTestLevel(path);
-        const storage = await createLevelAdapter(level);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.create2<{ text: string }>();
         url = handle.url;
@@ -678,16 +672,16 @@ describe('AutomergeRepo', () => {
         });
         // No explicit flush - rely on auto-save.
         await sleep(200);
-        await level.close();
+        await close();
       }
 
       {
-        const level = createTestLevel(path);
-        const storage = await createLevelAdapter(level);
+        const { adapter: storage, dispose: close } = await createTestSqliteStorageAdapter(path);
         const repo = new Repo({ network: [], storage });
         const handle = await repo.find<{ text: string }>(url);
         await handle.whenReady();
         expect(handle.doc()?.text).to.equal(text);
+        await close();
       }
     });
   });
@@ -931,10 +925,10 @@ describe('AutomergeRepo', () => {
     });
   });
 
-  const createLevelAdapter = async (level = createTestLevel()) => {
-    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-    await openAndClose(level, storage);
-    return storage;
+  const createSqliteAdapter = async (filename = ':memory:') => {
+    const { adapter, dispose } = await createTestSqliteStorageAdapter(filename);
+    onTestFinished(dispose);
+    return adapter;
   };
 
   const createTeleportPeerWithStoredDocs = async (
@@ -943,7 +937,7 @@ describe('AutomergeRepo', () => {
     createDocCallback: (repo: Repo) => Promise<A.Doc<any>[]>,
   ) => {
     const peerId = 'A';
-    const storage = await createLevelAdapter();
+    const storage = await createSqliteAdapter();
     const peer = await createTeleportTestPeer(teleportBuilder, spaceKey, { storage, peerId });
     const documents = await createDocCallback(peer.repo);
     await peer.repo.flush();

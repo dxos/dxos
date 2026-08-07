@@ -4,8 +4,11 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { Obj } from '@dxos/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Message as MessageType } from '@dxos/types';
 
 import { translations } from '#translations';
 
@@ -54,5 +57,54 @@ export const Editable: Story = {
 export const NonEditable: Story = {
   args: {
     editable: false,
+  },
+};
+
+/**
+ * A message carrying a `change` content-block — the reusable tile for a document suggestion (struck
+ * original → proposed text) with Accept/Reject controls, driven by `onAcceptChange`/`onRejectChange`.
+ */
+const onAcceptChange = fn();
+const onRejectChange = fn();
+
+const ChangeStory = (_args: StoryArgs) => {
+  const message = useMemo(
+    () =>
+      Obj.make(MessageType.Message, {
+        created: new Date().toISOString(),
+        sender: { role: 'user', identityDid: 'did:key:alice', name: 'Alice' },
+        blocks: [{ _tag: 'change', before: 'quick brown fox', after: 'nimble auburn fox' }],
+      }),
+    [],
+  );
+  return (
+    <Thread.Root
+      getMetadata={getStoryMetadata}
+      identityDid='did:key:alice'
+      onAcceptChange={onAcceptChange}
+      onRejectChange={onRejectChange}
+    >
+      <Message.Tile message={message} />
+    </Thread.Root>
+  );
+};
+
+export const WithChange: Story = {
+  args: { editable: false },
+  render: ChangeStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    onAcceptChange.mockClear();
+    onRejectChange.mockClear();
+
+    // The change block shows both the struck original and the proposed replacement.
+    await canvas.findByText('quick brown fox');
+    await canvas.findByText('nimble auburn fox');
+
+    // Accept then reject fire the respective callbacks.
+    await userEvent.click(await canvas.findByTestId('thread.message.accept-change'));
+    await waitFor(() => expect(onAcceptChange).toHaveBeenCalledTimes(1));
+    await userEvent.click(await canvas.findByTestId('thread.message.reject-change'));
+    await waitFor(() => expect(onRejectChange).toHaveBeenCalledTimes(1));
   },
 };

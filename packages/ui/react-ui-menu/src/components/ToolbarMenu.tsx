@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 
 import {
   Input,
@@ -21,9 +21,10 @@ import { translationKey } from '#translations';
 
 import { type MenuAction, type MenuItem, type MenuItemGroup, isMenuGroup, isSeparator } from '../types';
 import { executeMenuAction } from '../util';
-import { ActionLabel, actionLabel } from './ActionLabel';
+import { actionLabel } from './action-label';
+import { ActionLabel } from './ActionLabel';
 import { DropdownMenu } from './DropdownMenu';
-import { type MenuScopedProps, useMenuItems, useMenuScoped } from './Menu';
+import { type MenuScopedProps, useMenuItems, useMenuScoped } from './MenuContext';
 
 export type ToolbarMenuDropdownMenuActionGroup = DropdownMenuItemGroupProperties;
 
@@ -56,21 +57,32 @@ export type ToolbarMenuActionProps = {
 const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
+  const [pending, setPending] = useState(false);
+  const pendingRef = useRef(false);
 
   const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
   const buttonVariant = action.properties.variant === 'primary' ? ('primary' as const) : ('ghost' as const);
 
   const handleClick = useCallback(() => {
+    if (pendingRef.current) {
+      return;
+    }
+    pendingRef.current = true;
+    setPending(true);
+    const done = () => {
+      pendingRef.current = false;
+      setPending(false);
+    };
     if (onAction) {
-      onAction(action, {});
+      Promise.resolve(onAction(action, {})).then(done, done);
     } else {
-      void executeMenuAction(action);
+      executeMenuAction(action).then(done, done);
     }
   }, [action, onAction]);
 
   const commonProps = {
     variant: buttonVariant,
-    disabled,
+    disabled: disabled || pending,
     classNames,
     onClick: handleClick,
     ...(testId && { 'data-testid': testId }),
@@ -264,9 +276,12 @@ const ToggleGroupToolbarItem = ({
   }
 };
 
+/**
+ * Attention-gated toolbar container with no graph items of its own — render {@link ToolbarMenuItems}
+ * among its children, whose JSX order controls where the graph items sit.
+ */
 export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
   ({ __menuScope, children, ...props }, forwardedRef) => {
-    const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
     const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
     const { hasAttention } = useAttention(attendableId);
 
@@ -276,14 +291,24 @@ export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMen
         disabled={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
-        {items?.map((item: MenuItem) => (
-          <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
-        ))}
         {children}
       </NaturalToolbar.Root>
     );
   },
 );
+
+/** The menu graph's toolbar items, container-free, so JSX order controls their placement. */
+export const ToolbarMenuItems = ({ __menuScope }: MenuScopedProps<{}>) => {
+  const items = useMenuItems(undefined, undefined, 'ToolbarMenuItems', __menuScope);
+
+  return (
+    <>
+      {items?.map((item: MenuItem) => (
+        <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
+      ))}
+    </>
+  );
+};
 
 const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {

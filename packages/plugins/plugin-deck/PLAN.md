@@ -42,8 +42,21 @@ then `Deck.Content` would access these as needed via the context.
 
 ## Phase 3 (Matrix)
 
-- We will create a new 'multi' plank layout based on the AppGraph and attention.
-- The stack contains objects that represent a hierarchy of objects from the root.
-- The right-most plank will be the companion plank for the last object in the stack.
-- Planks may contain vertical stacks that support navigation to a child object, which is then added to the stack.
-- The layout supports a 'back' button that unwinds the right-most plank.
+`Matrix` (`src/components/Matrix/*`) shipped as a low-level, headless multi-tile primitive
+(`Matrix.Root`/`Matrix.Content`/`Matrix.Viewport`, backed by `Mosaic.Stack`), but the deck's own
+multi-plank rendering did not end up built on top of it — `DeckViewport.tsx`'s `DeckPlanks`/`DeckPlankTile`
+build the sliding/fullbleed presentation directly on `Mosaic.Container`/`ScrollArea`/`Mosaic.Stack`,
+mirroring `Matrix`'s pipeline without depending on it. `Matrix` remains available for other multi-tile
+UIs (see its stories) but is not on the deck's critical path.
+
+The single-mode deck redesign (see `.agents/projects/url-deck-redesign/DESIGN.md`) superseded the
+original plan below: there is one stored deck mode, with presentation (`fullbleed` for one plank,
+`tiling` for two, `sliding` for three or more) derived from plank count rather than user-toggled; the
+companion is itself a plank, attached to the deck's trailing plank; the vertical-stack child-navigation
+and 'back'-button ideas below were never implemented.
+
+- ~~We will create a new 'multi' plank layout based on the AppGraph and attention.~~
+- ~~The stack contains objects that represent a hierarchy of objects from the root.~~
+- ~~The right-most plank will be the companion plank for the last object in the stack.~~
+- ~~Planks may contain vertical stacks that support navigation to a child object, which is then added to the stack.~~
+- ~~The layout supports a 'back' button that unwinds the right-most plank.~~

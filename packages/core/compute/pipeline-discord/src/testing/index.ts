@@ -6,7 +6,8 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Layer from 'effect/Layer';
 
 import { AgentRegistry, StateStore } from '@dxos/crawler';
-import { FactStore } from '@dxos/pipeline-rdf';
+import { FactStore, FactStoreLive } from '@dxos/pipeline-rdf';
+import { SqlTransaction } from '@dxos/sql-sqlite';
 
 import { ExtractedQuestionStore, MessageStore, QuestionStore } from '../stores';
 
@@ -19,8 +20,12 @@ export const storesLayer = <E>(
   Layer.mergeAll(
     StateStore.layerSql,
     AgentRegistry.layerSql,
-    FactStore.layer,
+    FactStoreLive.layer,
     MessageStore.layerSql,
     QuestionStore.layerSql,
     ExtractedQuestionStore.layerSql,
-  ).pipe(Layer.provideMerge(client));
+  ).pipe(
+    // Store migrations run inside the SqlTransaction service; derive it from the same client.
+    Layer.provide(SqlTransaction.layer),
+    Layer.provideMerge(client),
+  );

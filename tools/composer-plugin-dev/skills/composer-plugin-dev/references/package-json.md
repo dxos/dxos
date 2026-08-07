@@ -53,9 +53,7 @@ Multiple `exports` subpaths so other in-repo plugins, the assistant, and the CLI
   "name": "@dxos/plugin-foo",
   "private": true,
   "type": "module",
-  "imports": {
-    /* same #aliases as community */
-  },
+  "imports": {/* same #aliases as community */},
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -99,7 +97,7 @@ The `./cli` subpath is the **headless** entrypoint, intended to run under Node (
 - The browser variants of capability modules (e.g. the surface-rendering plugin).
 - `@dxos/plugin-client` main entrypoint — use `@dxos/plugin-client/cli` instead.
 
-A typical CLI plugin file is a stripped-down twin of the main plugin, omitting `addSurfaceModule` and `addSkillDefinitionModule` if the latter pulls UI:
+A typical CLI plugin file is a stripped-down twin of the main plugin, omitting the surface module and the skill-definition module if the latter pulls UI:
 
 ```ts
 // src/cli/plugin.ts
@@ -113,9 +111,7 @@ export const FooPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
       id: Foo.Thing.typename,
-      metadata: {
-        /* createObject only */
-      },
+      metadata: {/* createObject only */},
     },
   }),
   AppPlugin.addSchemaModule({ schema: [Foo.Thing] }),

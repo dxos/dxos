@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-transcription",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Browser audio capture, transcription hooks, and UI for the transcription pipeline.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,8 +15,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -34,15 +33,11 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/pipeline-transcription": "workspace:*",
-    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
-    "@dxos/tracing": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "date-fns": "catalog:",
     "extendable-media-recorder": "catalog:",
     "extendable-media-recorder-wav-encoder": "catalog:",

@@ -215,8 +215,10 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
           <Form.Section title={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
               <Message.Root valence={message.valence}>
-                <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
-                <Message.Content>{t(message.description)}</Message.Content>
+                <Message.Content>
+                  <Message.Title icon={message.icon}>{t(message.title)}</Message.Title>
+                  <Message.Body>{t(message.description)}</Message.Body>
+                </Message.Content>
               </Message.Root>
             ) : (
               <Form.FieldSet fieldProvider={meterFieldProvider} />

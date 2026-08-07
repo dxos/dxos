@@ -2,23 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useMemo } from 'react';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, AppNode, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import { invariant } from '@dxos/invariant';
-import { GraphBuilder, Node, NodeMatcher, useConnections } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Panel } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -27,16 +31,10 @@ import { Position } from '@dxos/util';
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
-import {
-  DeckCapabilities,
-  type EphemeralDeckState,
-  PLANK_COMPANION_TYPE,
-  type Settings,
-  type StoredDeckState,
-  defaultDeck,
-  getMode,
-} from '#types';
 
+import * as DeckCapabilities from '../../types/DeckCapabilities';
+import * as DeckSchema from '../../types/DeckSchema';
+import type * as Settings from '../../types/Settings';
 import { DeckLayout } from './DeckLayout';
 
 random.seed(1234);
@@ -49,33 +47,31 @@ const storyDeckSettings = Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
-      enableDeck: true,
       enableNativeRedirect: false,
-      encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
 
-    return [Capability.contributes(DeckCapabilities.Settings, settingsAtom)];
+    return Capability.contribute(DeckCapabilities.Settings, settingsAtom);
   }),
 );
 
 // TODO(burdon): Factor out.
 const storyDeckState = Capability.makeModule(() =>
   Effect.sync(() => {
-    const defaultStoredDeckState: StoredDeckState = {
+    const defaultStoredDeckState: DeckSchema.StoredDeckState = {
       sidebarState: 'expanded',
       complementarySidebarState: 'collapsed',
       complementarySidebarPanel: undefined,
       activeDeck: 'default',
       previousDeck: 'default',
-      previousMode: {},
       decks: {
-        default: { ...defaultDeck },
+        default: { ...DeckSchema.defaultDeck },
       },
     };
 
-    const stateAtom = Atom.make<StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
+    const stateAtom = Atom.make<DeckSchema.StoredDeckState>({ ...defaultStoredDeckState }).pipe(Atom.keepAlive);
 
-    const defaultEphemeralDeckState: EphemeralDeckState = {
+    const defaultEphemeralDeckState: DeckSchema.EphemeralDeckState = {
+      fullscreen: undefined,
       dialogContent: null,
       dialogOpen: false,
       dialogBlockAlign: undefined,
@@ -89,7 +85,9 @@ const storyDeckState = Capability.makeModule(() =>
       scrollIntoView: undefined,
     };
 
-    const ephemeralAtom = Atom.make<EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(Atom.keepAlive);
+    const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({ ...defaultEphemeralDeckState }).pipe(
+      Atom.keepAlive,
+    );
 
     const layoutAtom = Atom.make((get) => {
       const state = get(stateAtom);
@@ -97,21 +95,21 @@ const storyDeckState = Capability.makeModule(() =>
       const deck = state.decks[state.activeDeck];
       invariant(deck, `Deck not found: ${state.activeDeck}`);
       return {
-        mode: getMode(deck),
+        mode: DeckSchema.getMode(deck, !!ephemeral.fullscreen),
         dialogOpen: ephemeral.dialogOpen,
         sidebarOpen: state.sidebarState === 'expanded',
         complementarySidebarOpen: state.complementarySidebarState === 'expanded',
         workspace: state.activeDeck,
-        active: deck.solo ? [deck.solo] : deck.active,
+        active: deck.active,
         inactive: deck.inactive,
         scrollIntoView: ephemeral.scrollIntoView,
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
     return [
-      Capability.contributes(DeckCapabilities.State, stateAtom),
-      Capability.contributes(DeckCapabilities.EphemeralState, ephemeralAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
+      Capability.contribute(DeckCapabilities.State, stateAtom),
+      Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
+      Capability.contribute(AppCapabilities.Layout, layoutAtom),
     ];
   }),
 );
@@ -148,119 +146,118 @@ const toStoryItemNode = (item: Item, index: number, depth: number): Node.NodeArg
     nodes: (item.children ?? []).map((child, childIndex) => toStoryItemNode(child, childIndex, depth + 1)),
   });
 
-const TestPlugin = Plugin.define(pluginMeta).pipe(
-  Plugin.addModule({
-    id: 'story-deck-settings',
-    activatesOn: AppActivationEvents.SetupSettings,
-    activate: storyDeckSettings,
-  }),
-  Plugin.addModule({
-    id: 'story-deck-state',
-    activatesOn: AppActivationEvents.AppGraphReady,
-    activate: storyDeckState,
-  }),
-  AppPlugin.addOperationHandlerModule({
-    activate: OperationHandler,
-  }),
-  AppPlugin.addSurfaceModule({
-    id: 'story-surfaces',
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(Capabilities.ReactSurface, [
-          Surface.create({
-            id: 'storyNavigation',
-            filter: Surface.makeFilter(AppSurface.Navigation),
-            component: ({ data, ref }) => (
-              <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />
-            ),
-          }),
-          Surface.create({
-            id: 'storyArticle',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
-            component: ({ data }) => {
-              const subject = (data as any)?.subject;
-              const attendableId = (data as any)?.attendableId as string | undefined;
-              if (subject == null) {
-                return <Loading />;
-              }
+const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
+  Effect.succeed([
+    Capability.contribute(Capabilities.ReactSurface, [
+      Surface.create({
+        id: 'storyNavigation',
+        filter: Surface.makeFilter(AppSurface.Navigation),
+        component: ({ data, ref }) => <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />,
+      }),
+      Surface.create({
+        id: 'storyArticle',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
+        component: ({ data }) => {
+          const subject = (data as any)?.subject;
+          const attendableId = (data as any)?.attendableId as string | undefined;
+          if (subject == null) {
+            return <Loading />;
+          }
 
-              return (
-                <Panel.Root>
-                  <Panel.Content className='grid grid-rows-[min-content_1fr]'>
-                    {attendableId && <ItemComponent id={attendableId} />}
-                    <Syntax.Root data={subject}>
-                      <Syntax.Content>
-                        <Syntax.Filter />
-                        <Syntax.Viewport>
-                          <Syntax.Code />
-                        </Syntax.Viewport>
-                      </Syntax.Content>
-                    </Syntax.Root>
-                  </Panel.Content>
-                </Panel.Root>
-              );
-            },
-          }),
-          Surface.create({
-            id: 'storyArticleCompanion',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
-            component: ({ data: { subject, companionTo, properties, variant } }) => {
-              if (companionTo == null) {
-                return <Loading />;
-              }
-
-              return (
-                <Syntax.Root
-                  data={{
-                    primaryItem: companionTo,
-                    companion: { data: subject, properties, variant },
-                  }}
-                >
+          return (
+            <Panel.Root>
+              <Panel.Content classNames='grid grid-rows-[min-content_1fr]'>
+                {attendableId && <ItemComponent id={attendableId} />}
+                <Syntax.Root data={subject}>
                   <Syntax.Content>
+                    <Syntax.Filter />
                     <Syntax.Viewport>
                       <Syntax.Code />
                     </Syntax.Viewport>
                   </Syntax.Content>
                 </Syntax.Root>
-              );
-            },
-          }),
-        ]),
-      ),
+              </Panel.Content>
+            </Panel.Root>
+          );
+        },
+      }),
+      Surface.create({
+        id: 'storyArticleCompanion',
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+        component: ({ data: { subject, companionTo, properties, variant } }) => {
+          if (companionTo == null) {
+            return <Loading />;
+          }
+
+          return (
+            <Syntax.Root
+              data={{
+                primaryItem: companionTo,
+                companion: { data: subject, properties, variant },
+              }}
+            >
+              <Syntax.Content>
+                <Syntax.Viewport>
+                  <Syntax.Code />
+                </Syntax.Viewport>
+              </Syntax.Content>
+            </Syntax.Root>
+          );
+        },
+      }),
+    ]),
+  ]),
+);
+
+const storyGraphBuilder = Capability.inlineModule(
+  'story-graph',
+  { provides: [AppCapabilities.AppGraphBuilder] },
+  Effect.fnUntraced(function* () {
+    const extensions = yield* Effect.all([
+      GraphBuilder.createExtension({
+        id: 'storyItems',
+        match: NodeMatcher.whenRoot,
+        connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
+      }),
+      GraphBuilder.createExtension({
+        id: 'storyItemCompanions',
+        match: NodeMatcher.whenNodeType('story-item'),
+        connector: (node) =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: 'alpha',
+              label: 'Companion Alpha',
+              icon: 'ph--sidebar--regular',
+              data: { variant: 'alpha', parentId: node.id },
+              position: Position.first,
+            }),
+            AppNode.makeCompanion({
+              variant: 'beta',
+              label: 'Companion Beta',
+              icon: 'ph--chat-circle--regular',
+              data: { variant: 'beta', parentId: node.id },
+            }),
+          ]),
+      }),
+    ]);
+    return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())];
   }),
-  AppPlugin.addAppGraphModule({
-    id: 'story-graph',
-    activate: Effect.fnUntraced(function* () {
-      const extensions = yield* Effect.all([
-        GraphBuilder.createExtension({
-          id: 'storyItems',
-          match: NodeMatcher.whenRoot,
-          connector: () => Effect.succeed(STORY_ITEMS.map((item, index) => toStoryItemNode(item, index, 0))),
-        }),
-        GraphBuilder.createExtension({
-          id: 'storyItemCompanions',
-          match: NodeMatcher.whenNodeType('story-item'),
-          connector: (node) =>
-            Effect.succeed([
-              AppNode.makeCompanion({
-                id: linkedSegment('alpha'),
-                label: 'Companion Alpha',
-                icon: 'ph--sidebar--regular',
-                data: { variant: 'alpha', parentId: node.id },
-                position: Position.first,
-              }),
-              AppNode.makeCompanion({
-                id: linkedSegment('beta'),
-                label: 'Companion Beta',
-                icon: 'ph--chat-circle--regular',
-                data: { variant: 'beta', parentId: node.id },
-              }),
-            ]),
-        }),
-      ]);
-      return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
-    }),
+);
+
+const TestPlugin = Plugin.define(pluginMeta).pipe(
+  Plugin.addModule({
+    id: 'story-deck-settings',
+    provides: [DeckCapabilities.Settings],
+    activate: storyDeckSettings,
   }),
+  Plugin.addModule({
+    id: 'story-deck-state',
+    provides: [DeckCapabilities.State, DeckCapabilities.EphemeralState, AppCapabilities.Layout],
+    activate: storyDeckState,
+  }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(storySurfaces),
+  Plugin.addModule(storyGraphBuilder),
   Plugin.make,
 );
 
@@ -308,7 +305,7 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const { invokePromise } = useOperationInvoker();
   const connections = useConnections(graph, id, 'child');
   const items = useMemo(
-    () => connections.filter((node) => !Node.isActionLike(node) && node.type !== PLANK_COMPANION_TYPE),
+    () => connections.filter((node) => !Node.isActionLike(node) && node.type !== DeckSchema.PLANK_COMPANION_TYPE),
     [connections],
   );
 
@@ -339,7 +336,6 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {
@@ -354,24 +350,28 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Solo: Story = {
+export const OnePlank: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
+      // A singleton `active` list renders fullbleed; opening into a fresh deck yields that directly.
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: STORY_ITEMS[0].id });
     });
 
     return <DeckLayout />;
   },
 };
 
-export const Multi: Story = {
+export const ManyPlanks: Story = {
   render: () => {
     const { invokePromise } = useOperationInvoker();
     useAsyncEffect(async () => {
       await invokePromise(LayoutOperation.Open, { subject: [STORY_ITEMS[0].id], navigation: 'immediate' });
-      await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'multi' });
+      await invokePromise(LayoutOperation.Open, {
+        subject: [STORY_ITEMS[1].id],
+        disposition: 'add',
+        navigation: 'immediate',
+      });
     });
 
     return <DeckLayout />;

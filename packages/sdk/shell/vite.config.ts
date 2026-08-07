@@ -92,7 +92,7 @@ export default defineConfig({
 
         const outDir = path.join(dirname, 'dist/bundle');
         if (!existsSync(outDir)) {
-          mkdirSync(outDir);
+          mkdirSync(outDir, { recursive: true });
         }
         writeFileSync(path.join(outDir, 'graph.json'), JSON.stringify(deps, null, 2));
       },

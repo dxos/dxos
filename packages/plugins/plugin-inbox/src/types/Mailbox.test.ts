@@ -58,6 +58,46 @@ describe('Mailbox tags', () => {
   });
 });
 
+describe('Mailbox extraction provenance', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('recordExtraction persists the first entry on a fresh mailbox and merges idempotently', async ({ expect }) => {
+    const { db } = await builder.createDatabase({
+      types: [Feed.Feed, Mailbox.Mailbox, TagIndex.TagIndex],
+    });
+    const mailbox = db.add(Mailbox.make());
+    await db.flush();
+
+    // Regression: the map is created lazily on first use, and the first recorded entry must not be
+    // lost to a detached-record write.
+    Mailbox.recordExtraction(mailbox, 'message-1', ['object-a']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-1')).toEqual(['object-a']);
+
+    Mailbox.recordExtraction(mailbox, 'message-2', ['object-b']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-1')).toEqual(['object-a']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-2')).toEqual(['object-b']);
+
+    // Idempotent merge: duplicate ids are not appended; new ids for the same message are.
+    Mailbox.recordExtraction(mailbox, 'message-1', ['object-a', 'object-c']);
+    expect(Mailbox.getExtractedObjectIds(mailbox, 'message-1')).toEqual(['object-a', 'object-c']);
+
+    // Durability is the property the fix restores: read back through a fresh query rather than the
+    // live object, so a write that never reached the document would fail here.
+    await db.flush({ indexes: true });
+    const [reloaded] = await db.query(Filter.type(Mailbox.Mailbox)).run();
+    expect(Mailbox.getExtractedObjectIds(reloaded, 'message-1')).toEqual(['object-a', 'object-c']);
+    expect(Mailbox.getExtractedObjectIds(reloaded, 'message-2')).toEqual(['object-b']);
+  });
+});
+
 describe('replyability (person-only)', () => {
   const msg = (sender: { email?: string; name?: string }, properties: Record<string, unknown> = {}) =>
     Message.make({
@@ -123,7 +163,7 @@ describe('message filters', () => {
 });
 
 describe('subscriptions', () => {
-  const msg = (email: string, name: string, listUnsubscribe?: string) =>
+  const msg = (email: string, name: string | undefined, listUnsubscribe?: string) =>
     Message.make({
       created: '2026-01-01T00:00:00.000Z',
       sender: { email, name },
@@ -150,5 +190,14 @@ describe('subscriptions', () => {
     expect(subs.map((sub) => sub.email)).toEqual(['news@a.io', 'digest@b.io']);
     expect(subs[0]).toMatchObject({ email: 'news@a.io', name: 'A News', count: 2 });
     expect(subs.some((sub) => sub.email === 'alice@x.com')).toBe(false);
+  });
+
+  test('deriveSubscriptions breaks count ties alphabetically', ({ expect }) => {
+    const subs = Mailbox.deriveSubscriptions([
+      msg('zeta@z.io', 'Zeta', '<https://z.io/u>'),
+      msg('alpha@a.io', 'alpha', '<https://a.io/u>'),
+      msg('mid@m.io', undefined, '<https://m.io/u>'),
+    ]);
+    expect(subs.map((sub) => sub.email)).toEqual(['alpha@a.io', 'mid@m.io', 'zeta@z.io']);
   });
 });

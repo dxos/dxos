@@ -21,7 +21,7 @@ type TestItem = {
   image?: string;
 };
 
-const titles = ['Sales', 'Revenue', 'Users', 'Latency', 'Errors'];
+const titles = ['A', 'B', 'C', 'D', 'X'];
 
 const testItems: TestItem[] = titles.map((title, index) => ({ id: String(index), title }));
 
@@ -119,6 +119,9 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
                 label='Center board'
                 onClick={() => controller.current?.center()}
               />
+              <Toolbar.Button onClick={() => setZoom(1)} disabled={zoom === 1}>
+                100%
+              </Toolbar.Button>
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
@@ -247,6 +250,18 @@ export const Overscroll: Story = {
     mode: 'float' satisfies GridMode,
     selectionMode: 'single',
     overscroll: true,
+  },
+};
+
+/** `margin: 1` — one cell of perimeter breathing room around the grid so tiles aren't flush to the
+ * board edges (the margin scales with the board when zooming). */
+export const Margin: Story = {
+  args: {
+    items: testItems,
+    layout: defaultLayout,
+    mode: 'float' satisfies GridMode,
+    margin: 1,
+    debug: true,
   },
 };
 

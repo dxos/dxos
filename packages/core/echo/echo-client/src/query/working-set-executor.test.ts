@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Aggregate, Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
+import { Aggregate, Filter, Obj, Order, Query, Ref, Relation, Scope } from '@dxos/echo';
 import { QueryPlanner } from '@dxos/echo-host/query';
 import { TestSchema } from '@dxos/echo/testing';
 
@@ -219,6 +219,23 @@ describe('WorkingSetQueryExecutor', () => {
     expect(results).toBeNull();
   });
 
+  test('nested Filter.in(projection) (subquery semi-join) causes executor to return null', async ({ expect }) => {
+    const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
+    db.add(alice);
+    await db.flush();
+
+    const planner = makeNoIndexPlanner();
+    const executor = makeExecutor(db);
+    // Feed-scoped subquery: `_execSelectStep` would return an *empty* (not null) working set for
+    // a scope outside this space, so the executor must bail rather than silently resolve an empty
+    // membership set — this is the regression the semi-join relies on `null` to prevent.
+    const subquery = Query.select(Filter.type(TestSchema.Person)).from([Scope.feed('dxn:queue:example:01')]);
+    const query = Query.select(Filter.type(TestSchema.Person, { name: Filter.in(subquery.project('name')) })).from(db);
+    const plan = planner.createPlan(query.ast);
+    const results = executor.tryExecute(plan);
+    expect(results).toBeNull();
+  });
+
   test('relation source-to-relation traversal', async ({ expect }) => {
     const alice = Obj.make(TestSchema.Person, { name: 'Alice' });
     const bob = Obj.make(TestSchema.Person, { name: 'Bob' });
@@ -325,6 +342,45 @@ describe('WorkingSetQueryExecutor', () => {
     const byId = new Map(results.map((item) => [item.objectId, item.groupKey]));
     expect(byId.get(alice.id)).toEqual({ age: 30 });
     expect(byId.get(bob.id)).toEqual({ age: 40 });
+  });
+
+  test("items order re-sorts each group's members, independent of a differently-ordered orderBy", async ({
+    expect,
+  }) => {
+    const objects = [0, 1, 2, 3, 4].map((rank) => db.add(Obj.make(TestSchema.Expando, { category: 'a', rank })));
+    await db.flush();
+
+    // The outer orderBy sorts ascending; `items.order` asks for descending — a different order.
+    const results = planAndExecute(
+      db,
+      Query.select(Filter.type(TestSchema.Expando))
+        .orderBy(Order.property('rank', 'asc'))
+        .aggregate({
+          category: Aggregate.group('category'),
+          items: Aggregate.items({ order: [Order.property('rank', 'desc')] }),
+        }),
+    );
+
+    expect(results).toHaveLength(5);
+    expect(results.map((item) => item.objectId)).toEqual([...objects].reverse().map((obj) => obj.id));
+  });
+
+  test('two items aggregates requesting different orders throw rather than silently sharing one order', async ({
+    expect,
+  }) => {
+    db.add(Obj.make(TestSchema.Expando, { category: 'a', rank: 0 }));
+    await db.flush();
+
+    expect(() =>
+      planAndExecute(
+        db,
+        Query.select(Filter.type(TestSchema.Expando)).aggregate({
+          category: Aggregate.group('category'),
+          ascending: Aggregate.items({ order: [Order.property('rank', 'asc')] }),
+          descending: Aggregate.items({ order: [Order.property('rank', 'desc')] }),
+        }),
+      ),
+    ).toThrow();
   });
 
   test('limit after aggregate pages over whole groups (not flat items)', async ({ expect }) => {

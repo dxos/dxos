@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
@@ -15,8 +15,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
-import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from '#types';
-
+import * as NativeFilesystemCapabilities from '../../types/NativeFilesystemCapabilities';
 import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 import {
   type FileMapEntry,
@@ -77,9 +76,9 @@ export type MarkdownDocuments = {
   /** Resolve disk write target from Echo DXN string. */
   getWriteTargetByDXN: (uri: string) => { path: string; fileId: string } | undefined;
   /** Restore existing objects then create Text for any unmapped markdown files. */
-  syncFromDisk: (workspace: FilesystemWorkspace) => Effect.Effect<void>;
+  syncFromDisk: (workspace: NativeFilesystemCapabilities.FilesystemWorkspace) => Effect.Effect<void>;
   /** Evict all cached documents and file watchers for a workspace. */
-  evictForWorkspace: (workspace: FilesystemWorkspace) => void;
+  evictForWorkspace: (workspace: NativeFilesystemCapabilities.FilesystemWorkspace) => void;
 };
 
 /**
@@ -106,7 +105,7 @@ export type MarkdownDocuments = {
  */
 export const createMarkdownDocuments = (
   registry: Registry.Registry,
-  stateAtom: Atom.Writable<NativeFilesystemState>,
+  stateAtom: Atom.Writable<NativeFilesystemCapabilities.NativeFilesystemState>,
   getSpaceForWorkspace: (workspaceId: string) => Option.Option<Space>,
   client: Client,
 ): MarkdownDocuments => {
@@ -171,7 +170,7 @@ export const createMarkdownDocuments = (
         return;
       }
 
-      registry.update(stateAtom, (currentState: NativeFilesystemState) => {
+      registry.update(stateAtom, (currentState: NativeFilesystemCapabilities.NativeFilesystemState) => {
         const result = findFileById(currentState.workspaces, fileId);
         if (!result) {
           return currentState;
@@ -179,7 +178,7 @@ export const createMarkdownDocuments = (
         const { workspace } = result;
         return {
           ...currentState,
-          workspaces: currentState.workspaces.map((ws: FilesystemWorkspace) =>
+          workspaces: currentState.workspaces.map((ws: NativeFilesystemCapabilities.FilesystemWorkspace) =>
             ws.id === workspace.id ? updateFileInWorkspace(ws, fileId, { text: diskText, modified: false }) : ws,
           ),
         };
@@ -193,7 +192,7 @@ export const createMarkdownDocuments = (
    * was evicted before the async setup completes, the watcher is torn down
    * immediately.
    */
-  const startFileWatcher = (file: FilesystemFile): Effect.Effect<void> =>
+  const startFileWatcher = (file: NativeFilesystemCapabilities.FilesystemFile): Effect.Effect<void> =>
     Effect.gen(function* () {
       const unwatch = yield* watchMarkdownFile(file.path, () => applyExternalDiskText(file.id, file.path));
       if (!unwatch) {
@@ -214,7 +213,7 @@ export const createMarkdownDocuments = (
     );
 
   /** Idempotent: starts a watcher only if one isn't already running or pending. */
-  const ensureFileWatcher = (file: FilesystemFile): void => {
+  const ensureFileWatcher = (file: NativeFilesystemCapabilities.FilesystemFile): void => {
     if (unwatchByFileId.has(file.id) || watchStartPending.has(file.id)) {
       return;
     }
@@ -233,7 +232,11 @@ export const createMarkdownDocuments = (
    *  2. `.composer/filemap.json` in the workspace root (portable fallback for
    *     filesystems that don't support xattr, or after file moves).
    */
-  const persistFileIdentity = (file: FilesystemFile, workspaceId: string, uri: string): void => {
+  const persistFileIdentity = (
+    file: NativeFilesystemCapabilities.FilesystemFile,
+    workspaceId: string,
+    uri: string,
+  ): void => {
     const state = registry.get(stateAtom);
     const workspace = state.workspaces.find((ws) => ws.id === workspaceId);
     if (!workspace) {
@@ -268,7 +271,7 @@ export const createMarkdownDocuments = (
    * watcher is running. Otherwise, create a new Text in the mirror space, index
    * it, and persist the DXN identity.
    */
-  const ensureDocumentForFile = (file: FilesystemFile, workspaceId: string): Text.Text => {
+  const ensureDocumentForFile = (file: NativeFilesystemCapabilities.FilesystemFile, workspaceId: string): Text.Text => {
     const existing = documentsByFileId.get(file.id);
     if (existing) {
       if (existing.name !== file.name) {
@@ -305,7 +308,9 @@ export const createMarkdownDocuments = (
    * Files without a stored DXN are skipped here and handled later by
    * `ensureDocumentForFile` in `syncFromDisk`.
    */
-  const restoreWorkspaceDocuments = (workspace: FilesystemWorkspace): Effect.Effect<void> =>
+  const restoreWorkspaceDocuments = (
+    workspace: NativeFilesystemCapabilities.FilesystemWorkspace,
+  ): Effect.Effect<void> =>
     Effect.gen(function* () {
       const files = collectMarkdownFiles(workspace.children);
       if (files.length === 0) {
@@ -419,7 +424,7 @@ export const createMarkdownDocuments = (
      * have a persisted DXN, then create new Text objects for any remaining
      * unmapped files.
      */
-    syncFromDisk: (workspace: FilesystemWorkspace): Effect.Effect<void> =>
+    syncFromDisk: (workspace: NativeFilesystemCapabilities.FilesystemWorkspace): Effect.Effect<void> =>
       Effect.gen(function* () {
         const space = getSpaceForWorkspace(workspace.id);
         if (Option.isNone(space)) {
@@ -447,7 +452,7 @@ export const createMarkdownDocuments = (
       }),
 
     /** Tear down watchers and clear all maps for files belonging to this workspace. */
-    evictForWorkspace: (workspace: FilesystemWorkspace): void => {
+    evictForWorkspace: (workspace: NativeFilesystemCapabilities.FilesystemWorkspace): void => {
       const fileIds = collectMarkdownFileIds(workspace.children);
       for (const fileId of fileIds) {
         watchStartPending.delete(fileId);

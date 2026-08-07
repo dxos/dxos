@@ -239,7 +239,7 @@ lint:
 
 # Extended task - v2 merges deeply
 lint:
-  args: ['--fix']  # Results in ['--cache', '--fix']
+  args: ['--fix'] # Results in ['--cache', '--fix']
 ```
 
 ## Migration Checklist

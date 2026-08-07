@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 
-import { CodeCapabilities } from '#types';
+import * as CodeCapabilities from '../types/CodeCapabilities';
 
 /**
  * Contributes the transient build/run state atom. Keyed by `CodeProject.id`;
@@ -19,6 +19,6 @@ import { CodeCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const atom = Atom.make<CodeCapabilities.BuildRunState>({}).pipe(Atom.keepAlive);
-    return Capability.contributes(CodeCapabilities.BuildRun, atom);
+    return Capability.contribute(CodeCapabilities.BuildRun, atom);
   }),
 );

@@ -17,12 +17,15 @@ import {
   type Identity as ClientIdentity,
   DeviceKind,
 } from '@dxos/protocols/proto/dxos/client/services';
+import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 
-import { makeFlow, streamFromObservable, toShareOptions } from './util';
+import { makeFlow, streamFromClientObservable, toShareOptions } from './util';
 
 const toInfo = (identity: ClientIdentity): HaloIdentity.Info => ({
   did: IdentityDid.make(identity.did),
+  identityKey: identity.identityKey?.toHex(),
   displayName: identity.profile?.displayName,
+  data: identity.profile?.data,
 });
 
 const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
@@ -31,13 +34,50 @@ const toDeviceInfo = (device: ClientDevice): HaloIdentity.DeviceInfo => ({
   current: device.kind === DeviceKind.CURRENT,
 });
 
+const toCredential = (credential: Credential): HaloIdentity.Credential => ({
+  id: credential.id?.toHex(),
+  type: credential.subject.assertion['@type'],
+  issuanceDate: credential.issuanceDate,
+});
+
 /**
  * Builds the {@link HaloIdentity.Service} implementation over a client's `halo` proxy.
  */
 export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIdentity.Service> => ({
-  identity: streamFromObservable(client.halo.identity).pipe(
+  identity: streamFromClientObservable(client, () => client.halo.identity).pipe(
     Stream.map((identity) => (identity ? Option.some(toInfo(identity)) : Option.none())),
   ),
+
+  getSnapshot: () => {
+    // Pre-initialization there is no trustworthy reading; none here means "unknown", and
+    // identity-gated flows must use the stream (silent until initialization) or suspend —
+    // acting on a pre-init none would misread an existing identity as absent.
+    if (!client.initialized) {
+      return Option.none();
+    }
+    const identity = client.halo.identity.get();
+    return identity ? Option.some(toInfo(identity)) : Option.none();
+  },
+
+  subscribe: (callback) => {
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+    // Register once initialization completes; the subscription fires with the current value,
+    // so a late registration still delivers the first reading.
+    void client.waitUntilInitialized().then(() => {
+      if (cancelled) {
+        return;
+      }
+      const subscription = client.halo.identity.subscribe((identity) =>
+        callback(identity ? Option.some(toInfo(identity)) : Option.none()),
+      );
+      unsubscribe = () => subscription.unsubscribe();
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+  },
 
   create: (options) =>
     Effect.tryPromise({
@@ -63,7 +103,44 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
       catch: (error) => new IdentityError({ context: { error } }),
     }),
 
-  devices: streamFromObservable(client.halo.devices).pipe(Stream.map((devices) => devices.map(toDeviceInfo))),
+  devices: streamFromClientObservable(client, () => client.halo.devices).pipe(
+    Stream.map((devices) => devices.map(toDeviceInfo)),
+  ),
+
+  // Empty pre-initialization for the same reason `getSnapshot` is `none`: `client.halo` throws
+  // before `initialize()`, and the contract for a pre-init read on this surface is silence.
+  getDevicesSnapshot: () => (client.initialized ? client.halo.devices.get().map(toDeviceInfo) : []),
+
+  credentials: streamFromClientObservable(client, () => client.halo.credentials).pipe(
+    Stream.map((credentials) => credentials.map(toCredential)),
+  ),
+
+  grantServiceAccess: (options) =>
+    Effect.tryPromise({
+      try: async () => {
+        const identityKey = client.halo.identity.get()?.identityKey;
+        if (!identityKey) {
+          throw new Error('No identity.');
+        }
+        await client.halo.writeCredentials([
+          {
+            issuer: identityKey,
+            issuanceDate: new Date(),
+            subject: {
+              id: identityKey,
+              assertion: {
+                '@type': 'dxos.halo.credentials.ServiceAccess',
+                'serverName': options.serverName,
+                'serverKey': identityKey,
+                identityKey,
+                'capabilities': [...options.capabilities],
+              },
+            },
+          },
+        ]);
+      },
+      catch: (error) => new IdentityError({ context: { error } }),
+    }),
 
   share: (options) =>
     Effect.try({
@@ -77,7 +154,7 @@ export const makeIdentityService = (client: Client): Context.Tag.Service<HaloIde
       catch: (error) => new IdentityError({ context: { error } }),
     }),
 
-  invitations: streamFromObservable(client.halo.invitations).pipe(
+  invitations: streamFromClientObservable(client, () => client.halo.invitations).pipe(
     Stream.map((invitations) => invitations.map((invitation) => makeFlow(invitation, 'device'))),
   ),
 });

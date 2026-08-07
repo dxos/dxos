@@ -14,8 +14,8 @@ import { resolve } from 'node:path';
 
 import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { Operation } from '@dxos/compute';
 import { FUNCTIONS_META_KEY } from '@dxos/compute-runtime';
+import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/edge-compute';

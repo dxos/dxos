@@ -5,15 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability, Plugin, type Plugin as PluginNS } from '@dxos/app-framework';
-import { AppActivationEvents, AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import type * as PluginNS from '@dxos/app-framework/Plugin';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import { isSpace } from '@dxos/client/echo';
 import { Filter, Type } from '@dxos/echo';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Position } from '@dxos/util';
 
 import { meta } from '#meta';
-import { CodeProject } from '#types';
 
 import {
   CODE_PROJECT_BUILD_TYPE,
@@ -23,12 +25,12 @@ import {
 } from '../constants';
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';
 import { makePluginSpecSubject } from '../plugin-spec';
+import * as CodeProject from '../types/CodeProject';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // Fire the asset-contribution event so each plugin's `addPluginAssetModule`
-    // has activated by the time the graph queries the registry.
-    yield* Plugin.activate(AppActivationEvents.SetupPluginAssets);
+    // `addPluginAssetModule` is dependency-mode (declared in `requires`), so every plugin's
+    // asset module is already contributed by the time this module runs.
     // Subscribe to the reactive asset atom so the connector re-runs when a
     // plugin enabled later in the session contributes (or removes) its spec.
     const pluginAssetsAtom = yield* Capability.atom(AppCapabilities.PluginAsset);
@@ -45,6 +47,7 @@ export default Capability.makeModule(
       // the node is absent and the button stays hidden.
       GraphBuilder.createExtension({
         id: 'pluginSpec',
+        url: { key: 'spec', kind: 'item', path: [] },
         match: NodeMatcher.whenNodeType('org.dxos.plugin'),
         connector: (node, get) => {
           const plugin = node.data as PluginNS.Plugin;
@@ -100,6 +103,7 @@ export default Capability.makeModule(
       // Listing of CodeProjects under the section, each with Spec + Build sub-nodes.
       GraphBuilder.createExtension({
         id: 'codeProjectListing',
+        url: { key: 'code', kind: 'item', path: [getCodeProjectsSectionId()] },
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === CODE_PROJECTS_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -150,6 +154,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

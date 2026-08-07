@@ -5,23 +5,24 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { Connection } from '@dxos/plugin-connector';
-import { useActionRunner } from '@dxos/plugin-graph';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import * as Connection from '@dxos/plugin-connector/Connection';
+import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import { useAtomState } from '@dxos/react-hooks';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { linkedSegment, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
+import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { IBKR_CONNECTOR_ID } from '../../constants';
 import { meta } from '../../meta';
 import { parseCash, parsePositions, parseTrades } from '../../services';
-import { Ibkr, IbkrOperation } from '../../types';
+import * as Ibkr from '../../types/Ibkr';
+import * as IbkrOperation from '../../types/IbkrOperation';
 import { PortfolioImportAction } from './PortfolioImportAction';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;
@@ -136,8 +137,8 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
       void showItem({
         contextId: id,
         selectionId: reportId,
-        companion: linkedSegment('report'),
-        path: Paths.getObjectPathFromObject(subject),
+        companion: Attention.linkedSegment('report'),
+        path: GraphPath.getObjectPathFromObject(subject),
       });
     },
     [id, showItem, subject],
@@ -149,7 +150,9 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>

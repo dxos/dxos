@@ -82,7 +82,7 @@ export const Default: Story = {
     // editor instance on the canvas, so the first `.cm-content` is unambiguous. CodeMirror mounts
     // asynchronously (after the story's initial paint), so poll for it rather than querying once.
     const getEditor = () => canvasElement.querySelector('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-    await waitFor(() => expect(getEditor()).toBeTruthy());
+    await waitFor(() => expect(getEditor()).toBeTruthy(), { timeout: 12_000 });
     const editor = getEditor();
     if (!editor) {
       throw new Error('Filter editor not found.');

@@ -4,23 +4,26 @@
 
 import React from 'react';
 
+import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Input } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps, FormRow } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Markdown } from '#types';
 
-export type MarkdownSettingsProps = AppSurface.SettingsProps<Markdown.Settings>;
+import * as Markdown from '../../types/Markdown';
 
-export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSettingsProps) => {
+export type MarkdownSettingsProps = AppSurface.SettingsData;
+
+export const MarkdownSettings = ({ subject }: MarkdownSettingsProps) => {
+  const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
+
   return (
     <Form.Root
       variant='settings'
       schema={Markdown.Settings}
-      readonly={!onSettingsChange}
       values={settings}
-      onValuesChanged={(values) => onSettingsChange?.((current) => ({ ...current, ...values }))}
+      onValuesChanged={(values) => updateSettings((current) => ({ ...current, ...values }))}
     >
       <Form.Viewport scroll>
         <Form.Content>

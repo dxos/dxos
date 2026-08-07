@@ -82,7 +82,7 @@ Reference: `packages/plugins/plugin-script/src/skills/functions/deploy.ts`
 
 ### Pattern 1: Deployable handlers (one file per handler)
 
-Use this when handlers may be deployed to EDGE. Each handler file default-exports the definition piped through `Operation.withHandler`. The barrel `index.ts` uses `OperationHandlerSet.lazy(...)` to load them on demand.
+Use this when handlers may be deployed to EDGE. Each handler file default-exports the definition piped through `Operation.withHandler`. The barrel `index.ts` uses `OperationHandlerSet.keyed(...)`, which pairs each (lightweight) definition with its handler module so the framework loads exactly the invoked operation's module.
 
 ```ts
 // handler-a.ts
@@ -105,13 +105,14 @@ When the handler needs helpers, keep the `export default` **at the top** (after 
 
 ```ts
 // index.ts
-import { OperationHandlerSet } from '@dxos/compute';
-export * from './definitions';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export const MyHandlers = OperationHandlerSet.lazy(
-  () => import('./handler-a'),
-  () => import('./handler-b'),
-);
+import * as MyOperation from '../types/MyOperation';
+
+export const MyHandlers = OperationHandlerSet.keyed([
+  [MyOperation.A, () => import('./handler-a')],
+  [MyOperation.B, () => import('./handler-b')],
+]);
 ```
 
 ### Pattern 2: Inline handler set (tests, local-only code)
@@ -242,17 +243,17 @@ const formatResult = (n: number) => String(n);
 
 ### `index.ts` — Barrel with lazy handler set
 
-Export definitions and create a lazy handler set. See `packages/plugins/plugin-markdown/src/skills/functions/` for reference.
+Export definitions and create a keyed handler set. See `packages/plugins/plugin-markdown/src/skills/functions/` for reference.
 
 ```ts
-import { OperationHandlerSet } from '@dxos/compute';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-export * from './definitions';
+import * as MyOperation from '../types/MyOperation';
 
-export const MyHandlers = OperationHandlerSet.lazy(
-  () => import('./handler-a'),
-  () => import('./handler-b'),
-);
+export const MyHandlers = OperationHandlerSet.keyed([
+  [MyOperation.A, () => import('./handler-a')],
+  [MyOperation.B, () => import('./handler-b')],
+]);
 ```
 
 For skills: pass the definitions to `Skill.toolDefinitions({ operations: [Create, Open, Update] })`, and pass `MyHandlers` to the skill definition's `operations` field.
@@ -263,11 +264,11 @@ Groups handlers for registration with the runtime. The type for a handler set is
 
 Whenever you need to pass around a collection of handlers (test layers, registration, etc.), use `OperationHandlerSet.OperationHandlerSet` as the type — never `Operation.WithHandler<...>[]`.
 
-| Factory                          | Use case                                      |
-| -------------------------------- | --------------------------------------------- |
-| `OperationHandlerSet.lazy(...)`  | Lazy-load handler modules via dynamic import. |
-| `OperationHandlerSet.make(...)`  | Wrap already-resolved handlers.               |
-| `OperationHandlerSet.merge(...)` | Combine multiple sets into one.               |
+| Factory                          | Use case                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| `OperationHandlerSet.keyed(...)` | Pair each definition with its handler module; loads per invoked operation. |
+| `OperationHandlerSet.make(...)`  | Wrap already-resolved handlers.                                            |
+| `OperationHandlerSet.merge(...)` | Combine multiple sets into one.                                            |
 
 ```ts
 import { OperationHandlerSet } from '@dxos/compute';
@@ -384,4 +385,4 @@ Operation.withHandler(
 | File structure       | Single file with definition + handler                    | Split: `definitions.ts` + per-handler files                                       |
 | Type                 | `FunctionDefinition<I, O>`                               | `Operation.Definition<I, O>` or `Operation.WithHandler<Operation.Definition.Any>` |
 | Persistent ECHO type | `Operation.PersistentOperation` (from `@dxos/functions`) | `Operation.PersistentOperation` (from `@dxos/operation`)                          |
-| Handler set          | N/A                                                      | `OperationHandlerSet.lazy(...)`                                                   |
+| Handler set          | N/A                                                      | `OperationHandlerSet.keyed(...)`                                                  |

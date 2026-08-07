@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry as AtomRegistry } from '@effect-atom/atom-react';
+import { Atom, Registry as AtomRegistry } from '@effect-atom/atom';
 import * as AiError from '@effect/ai/AiError';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
-import { Capabilities } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import {
   AiContext,
   AiSession,
@@ -25,17 +25,22 @@ import {
   formatSystemPrompt,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { AgentService, type Credential, Operation, type ServiceNotAvailableError, Trace } from '@dxos/compute';
-import { type Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
+import { type ServiceNotAvailableError } from '@dxos/compute';
+import * as AgentService from '@dxos/compute/AgentService';
+import type * as Credential from '@dxos/compute/Credential';
+import type * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
+import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { AssistantOperation } from '#types';
-
+import * as AssistantOperation from '../types/AssistantOperation';
 import { findInCause } from '../util/error-cause';
+import { type ProcessorRequestContext, createPromptContent } from './prompt';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -83,6 +88,8 @@ export type ProcessorRequestOptions = {};
 
 export type ProcessorRequest = {
   message: string;
+  /** Ephemeral context (e.g. companion-document selection) captured at submit time. */
+  context?: ProcessorRequestContext;
   options?: ProcessorRequestOptions;
 };
 
@@ -246,10 +253,11 @@ export class AiChatProcessor {
       Effect.gen(this, function* () {
         const skills = this.context.getSkills();
         const objects = this.context.getObjects();
+        const instructions = yield* this.#getInstructions();
         // Tier A only: system-prompt formatting runs operations that read the conversation context;
         // the live-host Tier B control surface is not reachable from this fiber.
         const runtime = yield* Effect.runtime<Database.Service>();
-        return yield* formatSystemPrompt({ system: this._options.system, skills, objects }).pipe(
+        return yield* formatSystemPrompt({ system: this._options.system, skills, objects, instructions }).pipe(
           Effect.provideService(
             Harness.HarnessService,
             Harness.fromBinder({ feed: this._feed, runtime, binder: this.context }),
@@ -257,6 +265,22 @@ export class AiChatProcessor {
         );
       }).pipe(Effect.provide(this._spaceLayer), Effect.orDie),
     );
+  }
+
+  /**
+   * Resolves the chat's steering instructions, if any. The session is feed-centric and cannot reach
+   * its chat, so the ref is resolved here and handed down.
+   */
+  #getInstructions(): Effect.Effect<Instructions.Instructions[], never, Database.Service> {
+    return Effect.gen(this, function* () {
+      const instructionsRef = this._options.chat?.target?.instructions;
+      if (!instructionsRef) {
+        return [];
+      }
+
+      const instructions = yield* Database.load(instructionsRef).pipe(Effect.orElseSucceed(() => undefined));
+      return instructions ? [instructions] : [];
+    });
   }
 
   /**
@@ -283,6 +307,7 @@ export class AiChatProcessor {
         const session = yield* AgentService.getSession(this._feed, {
           model: this._options.model,
           provider: this._options.provider,
+          instructions: this._options.chat?.target?.instructions,
         });
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
@@ -301,7 +326,7 @@ export class AiChatProcessor {
         );
 
         log('chat processor submitting prompt', { length: requestProp.message.length });
-        yield* session.submitPrompt(requestProp.message);
+        yield* session.submitPrompt(createPromptContent(requestProp));
         log('chat processor submitPrompt returned, waiting for agent', {});
 
         // On the first message (no name yet), schedule rename immediately so it

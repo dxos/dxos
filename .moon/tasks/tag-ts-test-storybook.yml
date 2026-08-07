@@ -3,13 +3,13 @@ tasks:
   test-storybook:
     command: pnpm exec dx-killorphans vitest run --passWithNoTests --project=storybook
     deps:
-      - esbuild-plugins:compile
-      - node-std:compile
-      - storybook-addon-logger:compile
-      - vite-plugin-icons:compile
-      - vite-plugin-import-source:compile
-      - vite-plugin-log:compile
-      - ^:compile
+      - esbuild-plugins:build
+      - node-std:build
+      - storybook-addon-logger:build
+      - vite-plugin-icons:build
+      - vite-plugin-import-source:build
+      - vite-plugin-log:build
+      - ^:build
     inputs:
       - '@group(sources)'
       - /tools/storybook-react/.storybook/main.ts

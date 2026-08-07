@@ -4,12 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Trigger } from '@dxos/compute';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Routine, type RoutineCapabilities } from '@dxos/plugin-routine/types';
+import { makeRoutine } from '@dxos/plugin-routine';
+import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { FeedOperation, Magazine } from '#types';
+import * as FeedOperation from '../types/FeedOperation';
+import * as Magazine from '../types/Magazine';
 
 /** Default cron for a magazine curation routine: daily at 9 AM. The user edits the schedule from the trigger. */
 const DEFAULT_CRON = '0 9 * * *';
@@ -33,7 +35,7 @@ export const magazineCuration: RoutineCapabilities.Template = {
       const magazine = subject;
 
       // Pre-populate the trigger's input so the magazine binding is preserved through the save flow.
-      return Routine.make({
+      return makeRoutine({
         name: name ?? magazine.name ?? 'Curate Magazine',
         // Bind the CurateMagazine operation directly as the action (an operation action, not instructions-based).
         spec: { kind: 'runnable', runnable: Ref.fromURI(FeedOperation.CurateMagazine.meta.key) },

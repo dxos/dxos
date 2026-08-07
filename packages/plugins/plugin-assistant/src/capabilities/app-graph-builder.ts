@@ -6,35 +6,53 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  AppNode,
-  AppNodeMatcher,
-  AppSpace,
-  LayoutOperation,
-  Paths,
-  TypeSection,
-} from '@dxos/app-toolkit';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import { Chat, RunInstructions } from '@dxos/assistant-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Instructions, Operation } from '@dxos/compute';
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Sequence } from '@dxos/conductor';
 import { Database, DXN, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { linkedSegment } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
-import { AssistantCapabilities, AssistantOperation } from '#types';
 
 import { getChatsPath } from '../paths';
+import * as AssistantCapabilities from '../types/AssistantCapabilities';
+import * as AssistantOperation from '../types/AssistantOperation';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [RunInstructions] as const;
+
+/**
+ * Chats belonging to the top-level Chats section: every chat minus the two kinds that already appear
+ * elsewhere in the tree. A chat sourcing a `CompanionTo` relation belongs to its primary object's
+ * companion panel; a chat parented to a `Project` is that project's navtree child (plugin-projects
+ * `projectChats`). Without the second exclusion a project chat appears twice.
+ *
+ * The project exclusion subtracts every project child rather than just chats — `children()` takes no
+ * type filter, and subtracting a non-chat from a chat-typed source is a no-op.
+ */
+export const standaloneChatsQuery = Query.without(
+  Query.without(
+    Query.select(Filter.type(Chat.Chat)),
+    Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
+  ),
+  Query.select(Filter.type(Project.Project)).children(),
+);
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(
@@ -44,18 +62,22 @@ const whenNonChatObject = NodeMatcher.whenAll(
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
+    // Read through their atoms so the "companionChat" extension establishes a reactive dependency
+    // and re-evaluates once these capabilities land (dependency modules contribute individually,
+    // not batched per wave) or their values change.
+    const stateCapabilityAtom = yield* Capability.atom(AssistantCapabilities.State);
+    const cacheCapabilityAtom = yield* Capability.atom(AssistantCapabilities.CompanionChatCache);
 
     const extensions = yield* Effect.all([
       // AI section group — created here so it shows only when the assistant plugin is active.
       GraphBuilder.createExtension({
-        id: Paths.GroupSegments.ai,
+        id: GraphPath.GroupSegments.ai,
         match: AppNodeMatcher.whenSpace,
         connector: (space) =>
           Effect.succeed([
             AppNode.makeGroup({
-              id: Paths.GroupSegments.ai,
-              type: Paths.GroupTypes.ai,
+              id: GraphPath.GroupSegments.ai,
+              type: GraphPath.GroupTypes.ai,
               label: ['nav-tree-group-ai.label', { ns: meta.profile.key }],
               space,
               position: 300,
@@ -138,8 +160,13 @@ export default Capability.makeModule(
         match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
-            const state = get(yield* Capability.get(AssistantCapabilities.State));
-            const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
+            const [stateAtom] = get(stateCapabilityAtom);
+            const [cacheAtom] = get(cacheCapabilityAtom);
+            if (!stateAtom || !cacheAtom) {
+              return [];
+            }
+            const state = get(stateAtom);
+            const cache = get(cacheAtom);
             const objectUri = Obj.getURI(object);
 
             // Resolve chat from persisted state or transient cache.
@@ -155,7 +182,7 @@ export default Capability.makeModule(
 
             return [
               AppNode.makeCompanion({
-                id: linkedSegment(ASSISTANT_COMPANION_VARIANT),
+                variant: ASSISTANT_COMPANION_VARIANT,
                 label: ['assistant-chat.label', { ns: meta.profile.key }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
@@ -174,7 +201,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'invocations',
+              variant: 'invocations',
               label: ['invocations.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'invocations',
@@ -188,7 +215,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeDeckCompanion({
-              id: linkedSegment('trace'),
+              id: Attention.linkedSegment('trace'),
               label: ['trace.label', { ns: meta.profile.key }],
               icon: 'ph--line-segments--regular',
               data: 'trace',
@@ -197,15 +224,12 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Section node: standalone Chat.Chat objects per AI group (companions are excluded).
+      // Section node: standalone Chat.Chat objects per AI group (companions and project chats excluded).
       TypeSection.createTypeSectionExtension(Chat.Chat, {
-        // Exclude chats that are the source of a CompanionTo relation; those belong to
-        // their primary object's companion panel and should not appear in the top-level list.
-        query: Query.without(
-          Query.select(Filter.type(Chat.Chat)),
-          Query.select(Filter.type(Chat.Chat)).sourceOf(Chat.CompanionTo).source(),
-        ),
-        match: AppNodeMatcher.whenNavTreeGroup(Paths.GroupTypes.ai),
+        query: standaloneChatsQuery,
+        match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+        groupSegment: GraphPath.GroupSegments.ai,
+        urlKey: 'chat',
       }),
 
       // Create-chat action on the Chats section header.
@@ -247,6 +271,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-theme",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "A set of design system tokens to use with DXOS UI.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -20,6 +20,10 @@
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/browser/index.mjs"
     },
+    "./tokens.css": {
+      "style": "./src/tokens.css",
+      "default": "./src/tokens.css"
+    },
     "./plugin": {
       "source": "./src/plugins/ThemePlugin.ts",
       "types": "./dist/types/src/plugins/ThemePlugin.d.ts",
@@ -36,21 +40,16 @@
     "tailwind-check": "tailwindcss -i ./dist/plugin/node-esm/theme.css --config ./src/tailwind.ts --content \"./src/**/*.{js,ts,jsx,tsx,vue}\" --check"
   },
   "dependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
-    "@dxos/util": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@fontsource-variable/inter": "catalog:",
     "@fontsource-variable/jetbrains-mono": "catalog:",
     "@fontsource-variable/nunito": "catalog:",
     "@fontsource/poiret-one": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
     "@tailwindcss/forms": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@tailwindcss/vite": "catalog:",
     "autoprefixer": "catalog:",
-    "esbuild-style-plugin": "catalog:",
-    "globby": "catalog:",
-    "lodash.merge": "catalog:",
     "postcss": "catalog:",
     "postcss-import": "catalog:",
     "postcss-nesting": "catalog:",
@@ -61,8 +60,7 @@
     "tailwindcss-radix": "catalog:"
   },
   "devDependencies": {
-    "@dxos/ui-types": "workspace:*",
-    "@types/lodash.merge": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/postcss-import": "catalog:",
     "esbuild": "catalog:",
     "vite": "catalog:"

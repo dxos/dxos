@@ -5,16 +5,20 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation, Trigger } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/echo-react';
 import { IconButton, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { FeedOperation, Subscription } from '#types';
+
+import * as FeedOperation from '../../types/FeedOperation';
+import * as Subscription from '../../types/Subscription';
 
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
@@ -68,8 +72,8 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [Paths.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
-      workspace: Paths.getSpacePath(db.spaceId),
+      subject: [GraphPath.getSpacePath(db.spaceId, 'settings', 'org.dxos.plugin.routine.routines')],
+      workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 

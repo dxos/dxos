@@ -9,22 +9,12 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import { writeFileSync } from 'node:fs';
 
-import { CommandConfig } from '@dxos/cli-util';
+import { CommandConfig, formatBytes } from '@dxos/cli-util';
 import { type SpaceExportResult } from '@dxos/protocols';
 
 import { adminDownload, adminRequest, formatAdminError } from '../util';
 
 type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
-
-const formatBytes = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 
 export const exportSpace = Command.make(
   'export',

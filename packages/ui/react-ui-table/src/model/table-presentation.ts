@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom-react';
+import { type Registry } from '@effect-atom/atom';
 import * as Predicate from 'effect/Predicate';
 
 import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
 import { SchemaEx } from '@dxos/effect';
-import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
+import { cellClassesForFieldType } from '@dxos/react-ui-form';
 import {
   type DxGridCellValue,
   type DxGridPlane,
@@ -16,6 +16,7 @@ import {
   type DxGridPlaneRange,
   toPlaneCellIndex,
 } from '@dxos/react-ui-grid';
+import { formatForDisplay } from '@dxos/schema';
 import { VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 

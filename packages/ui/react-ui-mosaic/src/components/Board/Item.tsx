@@ -14,8 +14,8 @@ import { translationKey } from '#translations';
 
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicTileProps } from '../Mosaic';
-import { useBoard } from './Board';
-import { useBoardColumn } from './Column';
+import { useBoardColumn } from './BoardColumnContext';
+import { useBoard } from './BoardContext';
 
 const BOARD_ITEM_NAME = 'Board.Item';
 

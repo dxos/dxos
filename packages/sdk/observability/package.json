@@ -1,6 +1,6 @@
 {
   "name": "@dxos/observability",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "Provides a common interface for app and platform observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -15,8 +15,7 @@
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     }
   },
   "browser": {
@@ -31,13 +30,11 @@
   "dependencies": {
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/log-store-idb": "workspace:*",
-    "@dxos/network-manager": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
@@ -63,10 +60,10 @@
     "zone.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/client-services": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/messaging": "workspace:*",
+    "@dxos/network-manager": "workspace:*",
     "@effect/platform": "catalog:",
-    "@types/debug": "catalog:",
     "@types/js-yaml": "catalog:"
   },
   "peerDependencies": {

@@ -7,12 +7,12 @@ import React from 'react';
 
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Card } from '@dxos/react-ui';
+import { Row } from '@dxos/react-ui-card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { Row } from '../Row';
 import { Header } from './Header';
 
 const SENDER: Actor.Actor = { name: 'Alice Avery', email: 'alice@example.com' };

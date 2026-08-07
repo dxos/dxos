@@ -31,7 +31,7 @@ import { rectContains } from '../../layout';
 import { type TestId } from '../defs';
 import { eventsNone, styles } from '../styles';
 import { Frame } from './Frame';
-import { getShapeBounds } from './Shape';
+import { getShapeBounds } from './shape-defs';
 import { Shapes } from './Shapes';
 
 /**

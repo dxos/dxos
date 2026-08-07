@@ -16,10 +16,11 @@ const runTransform = (
   filename: string,
   code: string,
   specs: LogMetaTransformSpec[] = DEFAULT_LOG_META_TRANSFORM_SPEC,
+  registerFiles?: boolean,
 ): string => {
   const program = parseAst(code, { astType: 'ts', lang: 'ts' });
   const magicString = new RolldownMagicString(code);
-  transform(magicString, program, filename, { specs });
+  transform(magicString, program, filename, { specs, registerFiles });
   return magicString.toString();
 };
 
@@ -59,6 +60,26 @@ describe('transform', () => {
       log("hello",void 0,{"~LogMeta":"~LogMeta",F:__dxlog_file,L:2,S:this});
       "
     `);
+  });
+
+  test('registerFiles injects a guarded registration line after the preamble', ({ expect }) => {
+    const code = sourceCode`
+    import { log } from '@dxos/log';
+    log("hello");
+    `;
+    const result = runTransform('src/module.ts', code, DEFAULT_LOG_META_TRANSFORM_SPEC, true);
+    expect(result).toContain('var __dxlog_file="src/module.ts";');
+    expect(result).toContain('globalThis.DX_LOG_FILES&&globalThis.DX_LOG_FILES.register(__dxlog_file);');
+  });
+
+  test('registerFiles defaults off — no registration line', ({ expect }) => {
+    const code = sourceCode`
+    import { log } from '@dxos/log';
+    log("hello");
+    `;
+    const result = runTransform('src/module.ts', code);
+    expect(result).toContain('var __dxlog_file="src/module.ts";');
+    expect(result).not.toContain('DX_LOG_FILES');
   });
 
   test('no matching imports', ({ expect }) => {

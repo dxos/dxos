@@ -15,7 +15,7 @@ import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging
 import { MemoryTransportFactory } from '@dxos/network-manager';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 
-import { LocalClientServices } from '../../src/services';
+import { LocalClientServices } from '../../src/services/local';
 
 const LOCAL = false;
 const EDGE_URL = LOCAL ? 'http://localhost:8787' : 'https://edge.dxos.workers.dev';

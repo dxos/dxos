@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom-react';
+import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
@@ -16,7 +16,7 @@ import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import { type TranscriptionCapabilities } from '#types';
+import type * as TranscriptionCapabilities from './types/TranscriptionCapabilities';
 
 /**
  * Length of the chunk in ms.

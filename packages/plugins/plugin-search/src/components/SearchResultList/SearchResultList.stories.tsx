@@ -7,14 +7,15 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Capability } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SAMPLE_MESSAGES, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { type SearchResult, buildSnippet } from '@dxos/react-ui-search';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
@@ -66,7 +67,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <div role='none' className='flex flex-col gap-2 p-2 max-w-[32rem]'>
+    <div className='flex flex-col gap-2 p-2 max-w-[32rem]'>
       <input
         type='text'
         placeholder='Search…'
@@ -85,7 +86,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({
-      capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
+      capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),

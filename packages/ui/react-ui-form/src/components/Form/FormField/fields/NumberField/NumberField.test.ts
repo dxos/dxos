@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { getNumericConstraints } from './NumberField';
+import { getNumericConstraints } from './numeric-constraints';
 
 describe('getNumericConstraints', () => {
   test('reads min/max from Schema.between (bounds live on separate nested refinements)', ({ expect }) => {

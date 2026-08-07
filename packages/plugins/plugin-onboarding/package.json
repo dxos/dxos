@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-onboarding",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "description": "DXOS Composer onboarding plugin — identity setup, exemplar space, and auth flows.",
   "homepage": "https://dxos.org",
@@ -17,24 +17,24 @@
     "#plugin": {
       "source": "./src/OnboardingPlugin.ts",
       "types": "./dist/types/src/OnboardingPlugin.d.ts",
-      "default": "./dist/lib/neutral/OnboardingPlugin.mjs"
+      "default": "./dist/lib/OnboardingPlugin.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "default": "./dist/lib/neutral/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -74,22 +74,25 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
-    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "catalog:",
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
-    "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@tldraw/store": "catalog:",
     "@tldraw/tlschema": "catalog:",
     "@tldraw/utils": "catalog:",

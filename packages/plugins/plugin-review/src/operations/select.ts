@@ -1,0 +1,35 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import { Attention } from '@dxos/react-ui-attention/types';
+
+import * as CommentCapabilities from '../types/CommentCapabilities';
+import * as CommentOperation from '../types/CommentOperation';
+
+const handler: Operation.WithHandler<typeof CommentOperation.Select> = CommentOperation.Select.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* (input) {
+      const registry = yield* Capability.get(Capabilities.AtomRegistry);
+      const stateAtom = yield* Capability.get(CommentCapabilities.State);
+      const current = registry.get(stateAtom);
+      registry.set(stateAtom, { ...current, current: input.current });
+
+      // A deliberate click reveals the thread in the comments companion (open + switch to it). Nested
+      // here — running in an operation context — so it opens reliably (see the `reveal` note on Select).
+      if (input.reveal) {
+        yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
+          subject: Attention.linkedSegment('comments'),
+        });
+      }
+    }),
+  ),
+);
+
+export default handler;

@@ -26,6 +26,7 @@ import { scrollAreaTheme } from '../components/ScrollArea/ScrollArea.theme';
 import { selectTheme } from '../components/Select/Select.theme';
 import { separatorTheme } from '../components/Separator/Separator.theme';
 import { skeletonTheme } from '../components/Skeleton/Skeleton.theme';
+import { sliderTheme } from '../components/Slider/Slider.theme';
 import { splitterTheme } from '../components/Splitter/Splitter.theme';
 import { statusTheme } from '../components/Status/Status.theme';
 import { tagTheme } from '../components/Tag/Tag.theme';
@@ -68,6 +69,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   select: selectTheme,
   separator: separatorTheme,
   skeleton: skeletonTheme,
+  slider: sliderTheme,
   splitter: splitterTheme,
   status: statusTheme,
   tag: tagTheme,

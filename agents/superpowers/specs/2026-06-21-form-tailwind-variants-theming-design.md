@@ -58,13 +58,9 @@ export const twMergeConfig = {
   extend: {
     classGroups: {
       'font-family': ['font-body', 'font-mono'],
-      'font-weight': [
-        /* …existing… */
-      ],
+      'font-weight': [/* …existing… */],
       'density': ['dx-density-sm', 'dx-density-md', 'dx-density-lg'],
-      'dx-focus-ring': [
-        /* …existing… */
-      ],
+      'dx-focus-ring': [/* …existing… */],
     },
   },
 } as const;
@@ -95,15 +91,11 @@ type FormBehavior = { showDescription: boolean };
 
 export const formTheme = {
   styles: tv({
-    slots: {
-      /* … */
-    },
+    slots: {/* … */},
     variants: {
       variant: {
         default: {},
-        settings: {
-          /* … */
-        },
+        settings: {/* … */},
       },
     },
     defaultVariants: { variant: 'default' },

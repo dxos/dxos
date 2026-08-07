@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
@@ -46,7 +47,7 @@ const DefaultStory = () => {
     return <Loading data={{ identity: !!identity, space: !!space, thread: !!thread }} />;
   }
 
-  return <ThreadArticle space={space} thread={thread} />;
+  return <ThreadArticle thread={thread} />;
 };
 
 const meta = {
@@ -61,7 +62,7 @@ const meta = {
     withPluginManager({
       plugins: corePlugins(),
       capabilities: [
-        Capability.contributes(
+        Capability.contribute(
           Capabilities.ReactSurface,
           Surface.create({
             id: 'test',

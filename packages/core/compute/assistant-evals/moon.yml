@@ -1,7 +1,8 @@
-layer: library
+layer: automation
 language: typescript
 tags:
   - evalite
+  - typecheck
 tasks:
   evals:
     command: evalite

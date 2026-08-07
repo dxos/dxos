@@ -698,6 +698,82 @@ describe('query api', () => {
     });
   });
 
+  describe('Filter.in (subquery projection)', () => {
+    test('Query.project builds a Projection carrying the query ast and property', () => {
+      const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+      const projection = subquery.project('title');
+
+      expect(projection.property).toBe('title');
+      expect(projection.query).toEqual(subquery.ast);
+    });
+
+    test('standalone Query.project is equivalent to the instance method', () => {
+      const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+      expect(Query.project(subquery, 'title')).toEqual(subquery.project('title'));
+    });
+
+    test('Filter.in(projection) builds an in-query AST node', () => {
+      const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+      const filter = Filter.in(subquery.project('title'));
+
+      expect(filter.ast).toMatchObject({
+        type: 'in-query',
+        subquery: subquery.ast,
+        property: 'title',
+      });
+      Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+
+    test('Filter.in(...) with literal values still builds a plain in node', () => {
+      const filter = Filter.in('1', '2', '3');
+      expect(filter.ast).toEqual({ type: 'in', values: ['1', '2', '3'] });
+      Schema.validateSync(QueryAST.Filter)(filter.ast);
+    });
+
+    test('nested Filter.in(projection) composes inside Filter.type', () => {
+      const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }));
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchObject({
+        type: 'select',
+        filter: {
+          type: 'object',
+          props: {
+            title: {
+              type: 'in-query',
+              property: 'title',
+              subquery: subquery.ast,
+            },
+          },
+        },
+      });
+    });
+
+    test('Query.pretty renders the subquery form', () => {
+      const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+      const query = Query.select(Filter.type(TestSchema.Task, { title: Filter.in(subquery.project('title')) }));
+      const pretty = Query.pretty(query);
+
+      expect(pretty).toContain('Filter.in(');
+      expect(pretty).toContain('.project("title")');
+      expect(pretty).toContain('Query.select(Filter.type(');
+    });
+
+    test('project is strictly typed to the query type properties', () => {
+      const subquery = Query.select(Filter.type(TestSchema.Task, { completed: true }));
+
+      // `title` is `Schema.optional(Schema.String)` on Task — the projection and the filter it
+      // feeds both carry that exact value type, not `unknown`, through Query.project -> Filter.in.
+      expectTypeOf(subquery.project('title')).toEqualTypeOf<Query.Projection<string | undefined>>();
+      expectTypeOf(Query.project(subquery, 'title')).toEqualTypeOf<Query.Projection<string | undefined>>();
+      expectTypeOf(Filter.in(subquery.project('title'))).toEqualTypeOf<Filter.Filter<string | undefined>>();
+
+      // @ts-expect-error - 'nope' is not a property of Task.
+      subquery.project('nope');
+    });
+  });
+
   describe('Filter.childOf', () => {
     test('childOf with Ref', () => {
       const parentDxn = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
@@ -874,6 +950,27 @@ describe('query api', () => {
           aggregates: [
             { name: 'email', kind: 'group', property: 'email' },
             { name: 'items', kind: 'items', limit: 20 },
+          ],
+        });
+        Schema.validateSync(QueryAST.Query)(query.ast);
+      });
+
+      test('items carries its own per-group order, independent of the query-level orderBy', () => {
+        const query = Query.select(Filter.type(TestSchema.Person)).aggregate({
+          email: Aggregate.group('email'),
+          items: Aggregate.items({ limit: 20, order: [Order.property('name', 'asc')] }),
+        });
+
+        expect(query.ast).toMatchObject({
+          type: 'aggregate',
+          aggregates: [
+            { name: 'email', kind: 'group', property: 'email' },
+            {
+              name: 'items',
+              kind: 'items',
+              limit: 20,
+              order: [{ kind: 'property', property: 'name', direction: 'asc' }],
+            },
           ],
         });
         Schema.validateSync(QueryAST.Query)(query.ast);

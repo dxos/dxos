@@ -10,9 +10,19 @@
     any, otherwise holds the current viewport centre fixed. (Selection state now
     exists — added with the single/multi-select feature.)
 
-- [ ] **`Board.Map` renders empty**
-  - The overview map shows no tiles in use. Storybook render had 5 tile children
-    with `bg-accentSurface`, so likely the tile fill is invisible (contrast/token)
-    and/or it's empty in `plugin-board` (the map isn't wired there yet).
-  - Investigate the tile color token and add the map to `plugin-board`; consider
-    showing the current viewport rectangle too.
+- [x] **`Board.Map` overview** — done.
+  - Tiles render with `bg-separator` (visible); the viewport rectangle is drawn
+    from live board/viewport geometry. Wired into `plugin-board`'s `BoardArticle`
+    as a corner overlay.
+
+- [ ] **Overscroll mount-centering shift** (CodeRabbit PR #12321)
+  - With `overscroll`, `overscrollPad` is populated by a passive effect that runs
+    _after_ the mount `useLayoutEffect` centre, so the board shifts by half the
+    viewport on first paint. Fix: commit the padding (measure viewport) before the
+    one-shot instant centre, or re-centre once after padding initialises — keeping
+    it mount-only. Overscroll-story only.
+
+- [ ] **Margin button to add a row/column**
+  - Add a control (edge affordance / toolbar button) to grow the board by a
+    row or column, extending the grid extent (relates to the `margin` prop and
+    `bounds`).

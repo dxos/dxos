@@ -2,73 +2,59 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
-import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Topic } from '@dxos/pipeline-email';
-import { AttentionEvents } from '@dxos/plugin-attention';
-import { ClientEvents } from '@dxos/plugin-client';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as Project from '@dxos/compute/Project';
+import { AccessToken, Cursor } from '@dxos/link';
 import { TagIndex } from '@dxos/schema';
 import { Event, Message } from '@dxos/types';
 
 import {
   AppGraphBuilder,
   Connector,
+  ContactExtractor,
   CreateObject,
+  IdentitySpecs,
   InboxSettings,
-  NavigationResolver,
+  NavigationTargetResolver,
   OperationHandler,
   ReactSurface,
   SkillDefinition,
+  SummarizeExtractor,
 } from '#capabilities';
 import { meta } from '#meta';
-import { ContactMessageExtractor, SummarizeMessageExtractor } from '#operations';
 import { translations } from '#translations';
-import { Calendar, ExtractedFrom, InboxCapabilities, InboxEvents, Mailbox } from '#types';
+
+import * as Calendar from './types/Calendar';
+import * as ExtractedFrom from './types/ExtractedFrom';
+import * as Mailbox from './types/Mailbox';
 
 export const InboxPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addAppGraphModule({
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
-    activate: AppGraphBuilder,
-  }),
-  AppPlugin.addSkillDefinitionModule({ activate: SkillDefinition }),
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addNavigationResolverModule({ activatesOn: ClientEvents.ClientReady, activate: NavigationResolver }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({
-    schema: [
+  Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(SkillDefinition),
+  Plugin.addModule(CreateObject),
+  Plugin.addModule(NavigationTargetResolver),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(
+    AppCapability.schema([
       Event.Event,
       Mailbox.Mailbox,
       Calendar.Calendar,
       Message.Message,
       ExtractedFrom.ExtractedFrom,
       TagIndex.TagIndex,
-      Topic,
-    ],
-  }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupSettings,
-    firesAfterActivation: [InboxEvents.SettingsReady],
-    activate: InboxSettings,
-  }),
-  Plugin.addModule({
-    activatesOn: AppActivationEvents.SetupConnectors,
-    activate: Connector,
-  }),
-  Plugin.addModule({
-    id: 'contact-extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () => Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, ContactMessageExtractor)),
-  }),
-  Plugin.addModule({
-    id: 'summarize-extractor',
-    activatesOn: ActivationEvents.Startup,
-    activate: () =>
-      Effect.succeed(Capability.contributes(InboxCapabilities.ObjectExtractor, SummarizeMessageExtractor)),
-  }),
+      Project.Project,
+      AccessToken.AccessToken,
+      Cursor.Cursor,
+    ]),
+  ),
+  Plugin.addModule(IdentitySpecs),
+  Plugin.addModule(ReactSurface),
+  Plugin.addModule(AppCapability.translations(translations)),
+  Plugin.addModule(InboxSettings),
+  Plugin.addModule(Connector),
+  Plugin.addModule(ContactExtractor),
+  Plugin.addModule(SummarizeExtractor),
   Plugin.make,
 );
 

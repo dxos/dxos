@@ -36,7 +36,7 @@ export type Digest = {
   readonly awaitingMine: readonly string[];
   /** Commitments carrying a deadline, soonest first. */
   readonly dueCommitments: readonly Commitment[];
-  readonly topTopics: readonly { readonly label: string; readonly threadCount: number }[];
+  // readonly topTopics: readonly { readonly label: string; readonly threadCount: number }[];
   /** LLM briefing text; empty when narration is off or degraded. */
   readonly narrative: string;
 };
@@ -51,10 +51,10 @@ export const buildDigest = (input: DigestInput, options: DigestOptions): Digest 
   dueCommitments: input.commitments
     .filter((commitment) => commitment.dueBy !== undefined)
     .sort((a, b) => (a.dueBy ?? '').localeCompare(b.dueBy ?? '')),
-  topTopics: [...input.topics]
-    .sort((a, b) => b.threadIds.length - a.threadIds.length || a.label.localeCompare(b.label))
-    .slice(0, options.maxTopTopics ?? 5)
-    .map((topic) => ({ label: topic.label, threadCount: topic.threadIds.length })),
+  // topTopics: [...input.topics]
+  //   .sort((a, b) => b.threadIds.length - a.threadIds.length || a.label.localeCompare(b.label))
+  //   .slice(0, options.maxTopTopics ?? 5)
+  //   .map((topic) => ({ label: topic.label, threadCount: topic.threadIds.length })),
   narrative: '',
 });
 
@@ -70,7 +70,7 @@ export const renderDigest = (digest: Digest): string =>
         .map((commitment) => `${commitment.who} → ${commitment.what} (${commitment.dueBy})`)
         .join('; ') || 'none'
     }`,
-    `Top topics: ${digest.topTopics.map((topic) => `${topic.label} (${topic.threadCount})`).join('; ') || 'none'}`,
+    // `Top topics: ${digest.topTopics.map((topic) => `${topic.label} (${topic.threadCount})`).join('; ') || 'none'}`,
   ].join('\n');
 
 /**

@@ -6,7 +6,9 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSpace, LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -19,9 +21,11 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
-import { SpaceCapabilities, SpaceForm } from '#types';
 
-const SpaceFormSchema = SpaceForm;
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceSchema from '../../types/SpaceSchema';
+
+const SpaceFormSchema = SpaceSchema.SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
@@ -163,7 +167,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       setDeleteConfirmOpen(false);
       const personalSpace = AppSpace.getPersonalSpace(client);
       if (personalSpace) {
-        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: Paths.getSpacePath(personalSpace.id) });
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
       }
     } catch (err) {
       log.catch(err, { stage: 'delete: invocation rejected', spaceId: space.id });

@@ -5,15 +5,22 @@
 import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { Capability } from '@dxos/app-framework';
-import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Capability from '@dxos/app-framework/Capability';
+import {
+  Surface,
+  useActivationSignal,
+  useCapabilities,
+  useOperationInvoker,
+  usePluginManager,
+} from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Operation } from '@dxos/compute';
+import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { type CreateEntryOverride, ObjectProperties } from '@dxos/react-ui-form';
 
-import { SpaceCapabilities } from '#types';
+import * as SpaceCapabilities from '../../types/SpaceCapabilities';
+import * as SpaceEvents from '../../types/SpaceEvents';
 
 export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknown>;
 
@@ -26,6 +33,8 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
   ({ role, subject: object }, forwardedRef) => {
     const manager = usePluginManager();
     const operationInvoker = useOperationInvoker();
+    // Demand signal: this companion can create related objects, so pull parked entry providers.
+    useActivationSignal(SpaceEvents.CreateObjectRequested);
     const createEntries = useCapabilities(SpaceCapabilities.CreateObjectEntry);
     const data = useMemo<AppSurface.ObjectPropertiesData>(() => ({ subject: object }), [object]);
 
@@ -55,9 +64,9 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
     return (
       <Panel.Root role={role} ref={forwardedRef}>
         <Panel.Toolbar>
-          <Toolbar.Root className='dx-document' />
+          <Toolbar.Root classNames='dx-document' />
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
             <Surface.Surface type={AppSurface.ObjectProperties} data={data} />

@@ -4,23 +4,30 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, Paths } from '@dxos/app-toolkit';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { type Operation } from '@dxos/compute';
+import * as Credential from '@dxos/compute/Credential';
+import type * as Operation from '@dxos/compute/Operation';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
-
-import { Connection, Connector, ConnectorCoordinator, type ConnectorEntry } from '#types';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG, connectionDeckSubject } from '../../constants';
 import { ConnectionNotReauthenticatableError, ConnectorNotFoundError, SpaceUnavailableError } from '../../errors';
+import * as Connection from '../../types/Connection';
+import * as ConnectorCoordination from '../../types/ConnectorCoordination';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
+import { autoSyncConnection } from './auto-sync';
 import { createSingleCursor } from './create-single-cursor';
 import { decodeOAuthMessageData, initiateOAuthFlow, openOAuthPopupWindow, openOAuthRedirectWindow } from './oauth';
 import { deletePendingSnapshot, readPendingSnapshot, writePendingSnapshot } from './pending-snapshot';
@@ -38,14 +45,14 @@ type Pending = {
   token: AccessToken.AccessToken;
   connection: Connection.Connection;
   db: Database.Database;
-  connector: ConnectorEntry;
+  connector: ConnectorSpec.ConnectorEntry;
   existingTarget?: Ref.Ref<Obj.Any>;
 };
 
 const resolveConnector = (
-  getEntries: () => ConnectorEntry[],
+  getEntries: () => ConnectorSpec.ConnectorEntry[],
   connectorId: string,
-): Effect.Effect<ConnectorEntry, ConnectorNotFoundError> =>
+): Effect.Effect<ConnectorSpec.ConnectorEntry, ConnectorNotFoundError> =>
   Effect.gen(function* () {
     const connector = getEntries().find((entry) => entry.id === connectorId);
     if (!connector) {
@@ -59,7 +66,7 @@ const openConnectorFormDialog = (
   input: {
     db: Database.Database;
     spaceId: Key.SpaceId;
-    connector: ConnectorEntry;
+    connector: ConnectorSpec.ConnectorEntry;
     existingTarget?: Ref.Ref<Obj.Any>;
   },
 ) =>
@@ -79,18 +86,28 @@ const openConnectorFormDialog = (
   });
 
 const runOnTokenCreated = (
-  connector: ConnectorEntry,
+  connector: ConnectorSpec.ConnectorEntry,
+  serviceResolver: ServiceResolver.ServiceResolver,
+  db: Database.Database,
   input: {
     accessToken: AccessToken.AccessToken;
     connection: Connection.Connection;
     existingTarget?: Ref.Ref<Obj.Any>;
   },
 ): Effect.Effect<void, never> => {
-  if (!connector.onTokenCreated) {
+  const onTokenCreated = connector.onTokenCreated;
+  if (!onTokenCreated) {
     return Effect.void;
   }
-  return connector.onTokenCreated(input).pipe(
+  return onTokenCreated(input).pipe(
     Effect.provide(FetchHttpClient.layer),
+    // Resolved through the process manager so the connector reads its credential from the same
+    // space-scoped `CredentialsService` operations use.
+    Effect.provide(
+      ServiceResolver.provide({ space: db.spaceId }, Credential.CredentialsService).pipe(
+        Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
+      ),
+    ),
     Effect.catchAll((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
@@ -107,19 +124,19 @@ const navigateToNewConnection = (
 ): Effect.Effect<void, never> =>
   invoker
     .invoke(LayoutOperation.Open, {
-      subject: [connectionDeckSubject(Paths.getSpacePath(db.spaceId), connectionId)],
+      subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
     })
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
-  getSyncTargets: NonNullable<ConnectorEntry['getSyncTargets']>,
+  getTargets: NonNullable<NonNullable<ConnectorSpec.ConnectorEntry['sync']>['getTargets']>,
   persistedConnection: Connection.Connection,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { targets } = yield* invoker.invoke(getSyncTargets, {
+    const { targets } = yield* invoker.invoke(getTargets, {
       connection: Ref.make(persistedConnection),
     });
     yield* invoker.invoke(LayoutOperation.UpdateDialog, {
@@ -135,20 +152,24 @@ const openSyncTargetsDialogAfterConnectionCreated = (
     Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
-const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
+const finalizePendingEntry = (
+  invoker: Operation.OperationService,
+  serviceResolver: ServiceResolver.ServiceResolver,
+  entry: Pending,
+): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, connection, db, connector, existingTarget } = entry;
     const persistedToken = db.add(token);
     const persistedConnection = db.add(connection);
     Obj.setParent(persistedToken, persistedConnection);
 
-    yield* runOnTokenCreated(connector, {
+    yield* runOnTokenCreated(connector, serviceResolver, db, {
       accessToken: persistedToken,
       connection: persistedConnection,
       existingTarget,
     });
 
-    if (connector.getSyncTargets) {
+    if (connector.sync?.getTargets) {
       // Multi-target: let the user pick which remote targets to bind.
       yield* Effect.all(
         [
@@ -157,7 +178,7 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
           existingTarget ? Effect.void : navigateToNewConnection(invoker, db, persistedConnection.id),
           openSyncTargetsDialogAfterConnectionCreated(
             invoker,
-            connector.getSyncTargets,
+            connector.sync.getTargets,
             persistedConnection,
             existingTarget,
           ),
@@ -170,13 +191,16 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
       if (!existingTarget) {
         yield* navigateToNewConnection(invoker, db, persistedConnection.id);
       }
+      // Ordered after navigation so the user lands on the target while the first sync fills it in.
+      yield* autoSyncConnection(invoker, db, connector, persistedConnection);
     }
   });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    const invoker = yield* Capability.get(Capabilities.OperationInvoker);
+    const client = yield* ClientCapabilities.Client;
+    const invoker = yield* Capabilities.OperationInvoker;
+    const serviceResolver = yield* Capabilities.ServiceResolver;
     const pluginContext = yield* Capability.Service;
 
     let cachedEdgeClient: EdgeHttpClient | undefined;
@@ -195,7 +219,8 @@ export default Capability.makeModule(
 
     let edgeOrigin: string | undefined;
 
-    const getConnectorEntries = (): ConnectorEntry[] => pluginContext.getAll(Connector).flat();
+    const getConnectorEntries = (): ConnectorSpec.ConnectorEntry[] =>
+      pluginContext.getAll(ConnectorSpec.Connector).flat();
 
     const takePendingEntry = (accessTokenId: string): Pending | undefined => {
       const entry = pending.get(accessTokenId);
@@ -235,7 +260,7 @@ export default Capability.makeModule(
         if (entry.mode === 'reauth') {
           return;
         }
-        yield* finalizePendingEntry(invoker, entry);
+        yield* finalizePendingEntry(invoker, serviceResolver, entry);
       });
 
     const handleMessage = (event: MessageEvent): void => {
@@ -246,7 +271,7 @@ export default Capability.makeModule(
 
     const mapCoordinatorError = (error: unknown): Error => (error instanceof Error ? error : new Error(String(error)));
 
-    const createConnection: ConnectorCoordinator['createConnection'] = ({
+    const createConnection: ConnectorCoordination.ConnectorCoordinator['createConnection'] = ({
       db,
       spaceId,
       connectorId,
@@ -256,7 +281,7 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
 
-        // Connector has a pre-flight form (atproto handle, IMAP creds, custom
+        // ConnectorSpec.Connector has a pre-flight form (atproto handle, IMAP creds, custom
         // token, …) — show it and let the form's submit re-enter via
         // `submitCredentialForm`. OAuth connectors re-enter here with
         // `loginHint`; non-OAuth connectors complete directly in the form.
@@ -328,7 +353,10 @@ export default Capability.makeModule(
         return { kind: 'oauth-started', draftConnectionId: connection.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const reauthenticate: ConnectorCoordinator['reauthenticate'] = ({ db, connection: connectionRef }) =>
+    const reauthenticate: ConnectorCoordination.ConnectorCoordinator['reauthenticate'] = ({
+      db,
+      connection: connectionRef,
+    }) =>
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const connector = yield* resolveConnector(getConnectorEntries, connection.connectorId ?? '');
@@ -378,7 +406,7 @@ export default Capability.makeModule(
         }
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
-    const finalizeRedirectFlow: ConnectorCoordinator['finalizeRedirectFlow'] = ({
+    const finalizeRedirectFlow: ConnectorCoordination.ConnectorCoordinator['finalizeRedirectFlow'] = ({
       accessTokenId,
       accessToken: accessTokenValue,
     }) =>
@@ -394,7 +422,7 @@ export default Capability.makeModule(
           if (inMemory.mode === 'reauth') {
             return;
           }
-          yield* finalizePendingEntry(invoker, inMemory);
+          yield* finalizePendingEntry(invoker, serviceResolver, inMemory);
           return;
         }
 
@@ -455,7 +483,7 @@ export default Capability.makeModule(
           ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
           : undefined;
 
-        yield* finalizePendingEntry(invoker, {
+        yield* finalizePendingEntry(invoker, serviceResolver, {
           mode: 'create',
           token,
           connection,
@@ -465,7 +493,7 @@ export default Capability.makeModule(
         });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const createCustomConnection: ConnectorCoordinator['createCustomConnection'] = ({
+    const createCustomConnection: ConnectorCoordination.ConnectorCoordinator['createCustomConnection'] = ({
       db,
       connectorId,
       source,
@@ -487,7 +515,7 @@ export default Capability.makeModule(
           accessToken: Ref.make(accessToken),
         });
 
-        yield* finalizePendingEntry(invoker, {
+        yield* finalizePendingEntry(invoker, serviceResolver, {
           mode: 'create',
           token: accessToken,
           connection,
@@ -498,7 +526,7 @@ export default Capability.makeModule(
         return { kind: 'connection-created', connectionId: connection.id } as const;
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const submitCredentialForm: ConnectorCoordinator['submitCredentialForm'] = ({
+    const submitCredentialForm: ConnectorCoordination.ConnectorCoordinator['submitCredentialForm'] = ({
       db,
       spaceId,
       connectorId,
@@ -508,13 +536,13 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connector = yield* resolveConnector(getConnectorEntries, connectorId);
         if (!connector.credentialForm) {
-          return yield* Effect.fail(new Error(`Connector ${connectorId} has no credentialForm.`));
+          return yield* Effect.fail(new Error(`ConnectorSpec.Connector ${connectorId} has no credentialForm.`));
         }
 
         const result = yield* connector.credentialForm.onSubmit({ values, connector, db });
 
         if (result.kind === 'complete') {
-          yield* finalizePendingEntry(invoker, {
+          yield* finalizePendingEntry(invoker, serviceResolver, {
             mode: 'create',
             token: result.accessToken,
             connection: result.connection,
@@ -530,12 +558,14 @@ export default Capability.makeModule(
         // the credential-form dialog and we'd loop.
         const loginHint = result.loginHint?.trim();
         if (!loginHint) {
-          return yield* Effect.fail(new Error(`Connector ${connectorId} credentialForm produced an empty loginHint.`));
+          return yield* Effect.fail(
+            new Error(`ConnectorSpec.Connector ${connectorId} credentialForm produced an empty loginHint.`),
+          );
         }
         return yield* createConnection({ db, spaceId, connectorId, loginHint, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
-    const setCursors: ConnectorCoordinator['setCursors'] = ({
+    const setCursors: ConnectorCoordination.ConnectorCoordinator['setCursors'] = ({
       db,
       connection: connectionRef,
       selected,
@@ -544,24 +574,35 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
         const connector = yield* resolveConnector(getConnectorEntries, connection.connectorId ?? '');
-        return yield* reconcileCursors({ invoker, db, connection, connector, selected, existingTarget });
+        const { added, removed, existing } = yield* reconcileCursors({
+          invoker,
+          db,
+          connection,
+          connector,
+          selected,
+          existingTarget,
+        });
+        // Initial setup of a multi-target connector: the connection had no bindings until this
+        // submit, so this is the first-sync moment. A later change of targets is left to the user.
+        if (existing === 0 && added > 0) {
+          yield* autoSyncConnection(invoker, db, connector, connection);
+        }
+        return { added, removed };
       }).pipe(Effect.provide(Database.layer(db)), Effect.mapError(mapCoordinatorError));
 
-    return Capability.contributes(
-      ConnectorCoordinator,
-      {
-        createConnection,
-        reauthenticate,
-        createCustomConnection,
-        finalizeRedirectFlow,
-        submitCredentialForm,
-        setCursors,
-      },
-      () =>
-        Effect.sync(() => {
-          window.removeEventListener('message', handleMessage);
-          pending.clear();
-        }),
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        window.removeEventListener('message', handleMessage);
+        pending.clear();
+      }),
     );
+    return Capability.contribute(ConnectorCoordination.ConnectorCoordinator, {
+      createConnection,
+      reauthenticate,
+      createCustomConnection,
+      finalizeRedirectFlow,
+      submitCredentialForm,
+      setCursors,
+    });
   }),
 );

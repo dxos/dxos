@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -14,7 +14,9 @@ import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { Connector, ConnectorCoordinator } from '#types';
+
+import * as ConnectorCoordination from '../../types/ConnectorCoordination';
+import * as ConnectorSpec from '../../types/ConnectorSpec';
 
 export type CustomTokenDialogProps = {
   db: Database.Database;
@@ -45,8 +47,8 @@ export const CustomTokenDialog = ({
 }: CustomTokenDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invoke } = useOperationInvoker();
-  const coordinator = useCapability(ConnectorCoordinator);
-  const connectors = useCapabilities(Connector).flat();
+  const coordinator = useCapability(ConnectorCoordination.ConnectorCoordinator);
+  const connectors = useCapabilities(ConnectorSpec.Connector).flat();
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
   const [error, setError] = useState<string>();

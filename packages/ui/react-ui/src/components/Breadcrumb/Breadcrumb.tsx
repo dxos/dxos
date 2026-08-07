@@ -75,7 +75,7 @@ BreadcrumbCurrent.displayName = 'Breadcrumb.Current';
 
 type BreadcrumbSeparatorProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.span>>;
 
-function BreadcrumbSeparator({ children, classNames, ...props }: BreadcrumbSeparatorProps) {
+function BreadcrumbSeparator({ classNames, children, ...props }: BreadcrumbSeparatorProps) {
   const { tx } = useThemeContext();
   return (
     <Primitive.span
@@ -84,7 +84,7 @@ function BreadcrumbSeparator({ children, classNames, ...props }: BreadcrumbSepar
       {...props}
       className={tx('breadcrumb.separator', {}, classNames)}
     >
-      {children ?? <Icon icon='ph--dot--bold' />}
+      {children ?? <Icon icon='ph--caret-double-right--regular' />}
     </Primitive.span>
   );
 }

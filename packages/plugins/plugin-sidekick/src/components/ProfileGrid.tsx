@@ -36,12 +36,12 @@ export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
               key={profile.id}
               type='button'
               onClick={() => onSelect?.(profile.id)}
-              className='p-3 rounded-md border border-separator text-left hover:bg-hoverSurface transition-colors'
+              className='p-3 rounded-md border border-separator text-left hover:bg-hover-surface transition-colors'
             >
               <p className='text-sm font-medium truncate'>{profile.name}</p>
               {profile.tag && <p className='text-xs text-description'>{profile.tag}</p>}
               {(profile.updatedCount ?? 0) > 0 && (
-                <p className='text-xs text-accentText mt-1'>★ {profile.updatedCount} new</p>
+                <p className='text-xs text-accent-text mt-1'>★ {profile.updatedCount} new</p>
               )}
             </button>
           ))}

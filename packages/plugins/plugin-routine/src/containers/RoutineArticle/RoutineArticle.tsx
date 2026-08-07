@@ -5,16 +5,19 @@
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useActivationSignal, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';
-import { Routine, RoutineOperation } from '#types';
+
+import * as RoutineOperation from '../../types/RoutineOperation';
 
 export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>;
 
@@ -28,6 +31,9 @@ export type RoutineArticleProps = AppSurface.ObjectArticleProps<Routine.Routine>
  */
 export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticleProps) => {
   const { invokePromise } = useOperationInvoker();
+  // The form's pickers list registry-synced skills, so pull the assistant-start-gated skill
+  // modules; operation definitions are complete at boot (handler sets register eagerly).
+  useActivationSignal(AppActivationEvents.AssistantStart);
   const registry = useContext(RegistryContext);
   // Subscribe so the run affordance tracks the routine's action (`spec`).
   const [routine] = useObject(subject);
@@ -70,9 +76,11 @@ export const RoutineArticle = ({ role, attendableId, subject }: RoutineArticlePr
     <Menu.Root {...menuActions} attendableId={attendableId}>
       <Panel.Root role={role}>
         <Panel.Toolbar>
-          <Menu.Toolbar className='dx-document' />
+          <Menu.Toolbar classNames='dx-document'>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
-        <Panel.Content>
+        <Panel.Content asChild>
           <RoutineForm db={db} routine={subject} />
         </Panel.Content>
       </Panel.Root>

@@ -1,0 +1,29 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { defineConfig } from '../../../vite.base.config.ts';
+
+export default defineConfig({
+  entry: {
+    'index': 'src/index.ts',
+    'ThreadPlugin': 'src/ThreadPlugin.tsx',
+    'ThreadPlugin.node': 'src/ThreadPlugin.node.ts',
+    'ThreadPlugin.workerd': 'src/ThreadPlugin.workerd.ts',
+    'capabilities': 'src/capabilities/index.ts',
+    'capabilities/node': 'src/capabilities/node.ts',
+    'components': 'src/components/index.ts',
+    'containers': 'src/containers/index.ts',
+    'hooks': 'src/hooks/index.ts',
+    'meta': 'src/meta.ts',
+    'operations': 'src/operations/index.ts',
+    'plugin': 'src/plugin.ts',
+    'translations': 'src/translations.ts',
+    'ThreadCapabilities': 'src/types/ThreadCapabilities.ts',
+    'ChannelBackend': 'src/types/ChannelBackend.ts',
+    'ThreadEvents': 'src/types/ThreadEvents.ts',
+    'ThreadOperation': 'src/types/ThreadOperation.ts',
+  },
+  jsx: 'react',
+  test: { node: true, storybook: true },
+});

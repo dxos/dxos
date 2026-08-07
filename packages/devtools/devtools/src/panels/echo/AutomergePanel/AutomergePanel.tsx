@@ -8,9 +8,9 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
-import { MasterDetailTable, PanelContainer, Searchbar } from '../../../components';
+import { MasterDetailTable, Searchbar } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState } from '../../../hooks';
 
@@ -96,16 +96,17 @@ export const AutomergePanel = (props: { space?: Space }) => {
   }, [handles, filter]);
 
   return (
-    <PanelContainer
-      toolbar={
+    <Panel.Root>
+      <Panel.Toolbar asChild>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar onChange={setFilter} />
         </Toolbar.Root>
-      }
-    >
-      <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
-    </PanelContainer>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <MasterDetailTable properties={properties} data={data} detailsTransform={({ accessor }) => accessor()} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

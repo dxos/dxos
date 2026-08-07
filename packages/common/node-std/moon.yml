@@ -7,7 +7,7 @@ workspace:
     exclude:
       - lint
 tasks:
-  compile:
+  build:
     args:
       - '--entryPoint=src/_/config.js'
       - '--entryPoint=src/assert.js'

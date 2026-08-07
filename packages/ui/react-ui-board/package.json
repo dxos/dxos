@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-board",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "description": "A list component.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -18,14 +18,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
+      "import": "./dist/lib/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -35,32 +33,18 @@
   ],
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "catalog:",
-    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "catalog:",
-    "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
-    "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/invariant": "workspace:*",
-    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-dnd": "workspace:*",
-    "@dxos/react-ui-mosaic": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "@xyflow/react": "catalog:",
-    "effect": "catalog:",
-    "react-resize-detector": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "@dxos/app-framework": "workspace:*",
-    "@dxos/plugin-preview": "workspace:*",
-    "@dxos/random": "workspace:*",
-    "@dxos/react-ui-syntax-highlighter": "workspace:*",
-    "@dxos/schema": "workspace:*",
-    "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

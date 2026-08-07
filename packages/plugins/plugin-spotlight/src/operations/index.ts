@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { log } from '@dxos/log';
 
-import { SpotlightCapabilities } from '../types';
+import * as SpotlightCapabilities from '../types/SpotlightCapabilities';
 
 const DISMISS_DEBOUNCE_MS = 100;
 
@@ -117,7 +118,6 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
   ),
 
   // No-ops.
-  LayoutOperation.SetLayoutMode.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.UpdateSidebar.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.UpdateComplementary.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.UpdatePopover.pipe(Operation.withHandler(() => Effect.void)),

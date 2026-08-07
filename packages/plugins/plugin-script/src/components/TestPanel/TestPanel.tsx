@@ -146,7 +146,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
       <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
-            <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
+            <div key={i} className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
               <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
               <div className='overflow-auto'>
                 <MessageItem message={message} />
@@ -155,7 +155,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
           ))}
 
           {state === 'pending' && (
-            <div className='grid grid-cols-[2rem_1fr_2rem]'>
+            <div className='grid grid-cols-[var(--dx-rail-item)_1fr_var(--dx-rail-item)]'>
               <div className='p-1'>
                 <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />
               </div>

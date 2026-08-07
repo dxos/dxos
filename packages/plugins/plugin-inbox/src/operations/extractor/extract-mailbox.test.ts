@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Operation } from '@dxos/compute';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -21,7 +22,9 @@ import {
 } from '@dxos/extractor';
 import { Message } from '@dxos/types';
 
-import { InboxCapabilities, InboxOperation, Mailbox } from '../../types';
+import * as InboxCapabilities from '../../types/InboxCapabilities';
+import * as InboxOperation from '../../types/InboxOperation';
+import * as Mailbox from '../../types/Mailbox';
 import extractMailboxHandler from './extract-mailbox';
 import extractMessageHandler from './extract-message';
 

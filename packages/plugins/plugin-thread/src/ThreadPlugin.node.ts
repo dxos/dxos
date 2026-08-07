@@ -2,24 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { ChannelBackendFeed, CreateObject, OperationHandler } from '#capabilities';
+import { ChannelBackendFeed, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 
 export const ThreadPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({
-    schema: [Channel.Channel, Message.Message, Thread.Thread],
-  }),
-  Plugin.addModule({
-    id: 'channel-backend-feed',
-    activatesOn: ActivationEvents.Startup,
-    activate: ChannelBackendFeed,
-  }),
+  Plugin.addModule(OperationHandler),
+  Plugin.addModule(AppCapability.schema([Channel.Channel, Message.Message, Thread.Thread])),
+  Plugin.addModule(ChannelBackendFeed),
   Plugin.make,
 );
 

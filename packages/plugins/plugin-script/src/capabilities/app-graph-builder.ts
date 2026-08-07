@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Script } from '@dxos/compute';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as Script from '@dxos/compute/Script';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -20,7 +21,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'execute',
+              variant: 'execute',
               label: ['script-test.label', { ns: meta.profile.key }],
               icon: 'ph--terminal--regular',
               data: 'execute',
@@ -33,7 +34,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'logs',
+              variant: 'logs',
               label: ['script-logs.label', { ns: meta.profile.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'logs',
@@ -42,6 +43,6 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

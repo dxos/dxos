@@ -37,7 +37,7 @@ type Story = StoryObj;
 
 export const Image: Story = {
   render: () => (
-    <div className='is-96'>
+    <div className='w-96'>
       <ImageVariant variant={imageVariant} />
     </div>
   ),
@@ -45,7 +45,7 @@ export const Image: Story = {
 
 export const Video: Story = {
   render: () => (
-    <div className='is-96'>
+    <div className='w-96'>
       <VideoVariant variant={videoVariant} />
     </div>
   ),

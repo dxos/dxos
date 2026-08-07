@@ -2,18 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Credential, Operation, Trace } from '@dxos/compute';
+import { CapabilityManager } from '@dxos/app-framework';
+import * as Capability from '@dxos/app-framework/Capability';
+import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Ref, Tag } from '@dxos/echo';
 import { type EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as InboxResolver from '@dxos/extractor-lib';
 import { AccessToken, Cursor } from '@dxos/link';
-import { Connection } from '@dxos/plugin-connector';
+import * as Connection from '@dxos/plugin-connector/Connection';
 import { TagIndex } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
@@ -22,7 +26,7 @@ import { googleMailSyncProvider } from '../operations/mail/google/sync/sync-prov
 import { jmapMailSyncProvider } from '../operations/mail/jmap/sync/sync-provider';
 import { type RunMailSyncOptions, runMailSync } from '../operations/mail/mail-sync';
 import { type GmailDataset, GoogleCredentials, GoogleMailApi, type JmapDataset, JmapMailApi } from '../services';
-import { Mailbox } from '../types';
+import * as Mailbox from '../types/Mailbox';
 
 // Shared harness for the mock-provider sync tests (unit + OTEL + benchmark): a real ECHO db seeded
 // with a mailbox binding, plus the ambient services `runGoogleSync`/`runJmapSync` require. Not exported
@@ -90,6 +94,37 @@ export const seedMailboxBinding = async (
 };
 
 /**
+ * Gives every sender in a generated dataset an Organization at its domain.
+ *
+ * Contact extraction is an allow-list — an unknown individual is not materialised (see
+ * `shouldExtractContact`) — and these fixtures generate senders at random domains. Tests about the
+ * sync pipeline wiring contacts through call this so they exercise that wiring rather than the
+ * extraction policy, which has its own tests in `@dxos/extractor-lib`.
+ */
+export const seedSenderOrganizations = async (
+  db: Database.Database,
+  dataset: GmailDataset | JmapDataset,
+): Promise<void> => {
+  const domains = new Set(senderDomainsOf(dataset));
+  for (const domain of domains) {
+    db.add(Organization.make({ name: domain, website: domain }));
+  }
+  await db.flush({ indexes: true });
+};
+
+/** Sender domains in a dataset — Gmail records the From header, JMAP a structured `from` list. */
+const senderDomainsOf = (dataset: GmailDataset | JmapDataset): string[] =>
+  [...(('messages' in dataset ? dataset.messages : dataset.emails) ?? [])]
+    .map((message) => {
+      const from =
+        'payload' in message
+          ? message.payload?.headers?.find((header) => header.name === 'From')?.value
+          : message.from?.[0]?.email;
+      return from?.match(/[\w.+-]+@([\w.-]+)/)?.[1];
+    })
+    .filter((domain): domain is string => !!domain);
+
+/**
  * The db + resolver + operation ambient services shared by both providers' mock-sync tests. The
  * seeded mailbox has no on-arrival extractors, so the `onArrivalExtractors` stage short-circuits and
  * never touches `Operation` — it is provided (unavailable invoker) only to satisfy the requirement
@@ -125,17 +160,16 @@ export const inboxSyncTestServices = (
  * (no EDGE / function deployment). The connection's access token must carry a valid Gmail OAuth token.
  */
 export const inboxSyncLiveServices = (db: Database.Database, connectionRef: Ref.Ref<Connection.Connection>) => {
-  // `GoogleCredentials.fromConnection` short-circuits with the connection's cached token, so the
-  // CredentialsService is never called — but it stays in the requirement channel, so a stub satisfies it.
-  const unusedCredentials = Layer.succeed(Credential.CredentialsService, {
-    queryCredentials: () => Promise.reject(new Error('unused: connection carries a cached token')),
-    getCredential: () => Promise.reject(new Error('unused: connection carries a cached token')),
-  });
+  // The fixture connection carries a real token on the object, so no credential resolves through EDGE.
+  const credentials = credentialsLayerFromDatabase().pipe(
+    Layer.provide(Database.layer(db)),
+    Layer.provide(Credential.AccessTokenResolver.notAvailable),
+  );
   return Layer.mergeAll(
     GoogleMailApi.Live.pipe(
       Layer.provide(FetchHttpClient.layer),
       Layer.provide(GoogleCredentials.fromConnection(connectionRef).pipe(Layer.provide(Database.layer(db)))),
-      Layer.provide(unusedCredentials),
+      Layer.provide(credentials),
     ),
     ambientSyncServices(db),
   );

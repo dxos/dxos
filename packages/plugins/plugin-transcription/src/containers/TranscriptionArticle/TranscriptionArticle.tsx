@@ -6,20 +6,23 @@ import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { useMembers, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/echo-react';
+import { useMembers } from '@dxos/halo-react';
 import { Panel } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { Transcription, renderByline, useFeedModelAdapter } from '@dxos/react-ui-transcription';
+import { Transcription, useFeedModelAdapter } from '@dxos/react-ui-transcription';
 import { Message, type Transcript } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
 import { meta } from '#meta';
 
+import { renderByline } from '../../util';
+
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
 
 export const TranscriptionArticle = ({ role, subject: transcript, attendableId }: TranscriptionArticleProps) => {
   const db = Obj.getDatabase(transcript);
-  const members = useMembers(db?.spaceId).map((member) => member.identity);
+  const members = useMembers(db?.spaceId);
   const feed = transcript.feed.target;
   const messages = useQuery(
     db,
@@ -50,7 +53,9 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
     <Panel.Root role={role}>
       <Menu.Root {...menuActions} attendableId={attendableId}>
         <Panel.Toolbar asChild>
-          <Menu.Toolbar />
+          <Menu.Toolbar>
+            <Menu.Items />
+          </Menu.Toolbar>
         </Panel.Toolbar>
       </Menu.Root>
       <Panel.Content asChild>

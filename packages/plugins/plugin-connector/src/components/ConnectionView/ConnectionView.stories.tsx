@@ -8,19 +8,19 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { AccessToken, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Expando } from '@dxos/schema';
 
 import { type TestConnectionStatus } from '#hooks';
 import { translations } from '#translations';
-import { Connection } from '#types';
 
+import * as Connection from '../../types/Connection';
 import { isCursorForConnection } from '../../util';
 import { ConnectionView } from './ConnectionView';
 
@@ -98,7 +98,6 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
-      setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
         ...corePlugins(),
         ClientPlugin({

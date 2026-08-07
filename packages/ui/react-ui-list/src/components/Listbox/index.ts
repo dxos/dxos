@@ -3,3 +3,4 @@
 //
 
 export * from './Listbox';
+export { useListboxSelection } from './ListboxContext';

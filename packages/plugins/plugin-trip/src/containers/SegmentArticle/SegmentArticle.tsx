@@ -12,7 +12,9 @@ import { Form, omitId } from '@dxos/react-ui-form';
 
 import { BookingSearch } from '#containers';
 import { meta } from '#meta';
-import { Segment, Trip } from '#types';
+
+import * as Segment from '../../types/Segment';
+import * as Trip from '../../types/Trip';
 
 type ViewMode = 'form' | 'search';
 
@@ -50,7 +52,7 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
   }
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <div className='grow' />

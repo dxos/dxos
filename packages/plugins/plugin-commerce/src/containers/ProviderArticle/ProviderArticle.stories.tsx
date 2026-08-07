@@ -9,16 +9,17 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { Filter } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { CommercePlugin } from '../../plugin';
 import { makeSampleProvider } from '../../testing';
 import { translations } from '../../translations';
-import { Provider } from '../../types';
+import * as Provider from '../../types/Provider';
 import { ProviderArticle } from './ProviderArticle';
 
 const DefaultStory = () => {
