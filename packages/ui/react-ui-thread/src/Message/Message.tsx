@@ -321,8 +321,15 @@ const MessageTextbox = forwardRef<MessageTextboxHandle, MessageTextboxProps>(
 
     return (
       <MessageRoot {...{ id, authorId, authorName, authorImgSrc, authorAvatarProps }} continues={false}>
+        {/*
+          The reply composer is the only textbox in a thread that is not a message body, but nothing
+          distinguished it in the DOM — e2e had to reach it as the *last* `role=textbox`, which is a
+          guess about editor order. When it was wrong, a reply was typed into an existing message
+          instead of creating one, which is how `delete message` failed at `addMessage`.
+        */}
         <div
           ref={parentRef}
+          data-testid='thread.reply'
           className={mx('py-0.5 me-1 rounded-xs dx-focus-ring', disabled && 'opacity-50')}
           {...focusAttributes}
         />

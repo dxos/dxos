@@ -79,6 +79,15 @@ test.describe('Comments tests', () => {
   //   the `toHaveCount(3)` after `addMessage` (got 2). Same signature as the webkit failure in run
   //   31147977323. The second message's ref does not always resolve into the rendered thread — a race
   //   in `add-message` rather than in deletion. Its two neighbours are now 10/10 and stay enabled.
+  // TODO(wittjosiah): Two layers. The first is fixed: `addMessage` reached the reply composer as the
+  //   *last* `role=textbox` (nothing identified it in the DOM), and when the ordering guess lost, the
+  //   reply was typed into an existing message body — count stayed 2 where 3 was expected. It now
+  //   targets `thread.reply`, and all three repeats get past that step. The remaining failure is at
+  //   the delete click itself: `thread.message.delete` resolves, then loops "element is not stable" /
+  //   "detached from the DOM" until timeout — the message row is being re-rendered continuously.
+  //   Likely the same family as `undo delete thread`'s cm-comment count flapping in run 31215927769.
+  //   Diagnose the re-render loop (comment-sync's updateListener writing thread.name back on each
+  //   doc change is a candidate) before re-enabling.
   test.fixme('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
