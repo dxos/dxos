@@ -1,17 +1,17 @@
 [
   {
     "label": "app-ready +5s",
-    "target": "page: http://localhost:4173/w/BYQ7WTL3QWSI4CZHG2OTZDHD7EK4RW33X/home",
-    "id": "C4A9E16595698D57A6678DC88D15D3C8",
-    "usedMB": 90.7,
-    "totalMB": 94.6,
-    "embedderMB": 10.7,
+    "target": "page: http://localhost:4173/w/BPVQL3K6RX6XXQ6KP5ROLC7TAMZS7F47A/home",
+    "id": "4C75E762B18742FC0FB9748935638CC0",
+    "usedMB": 93,
+    "totalMB": 96.8,
+    "embedderMB": 10.6,
     "backingMB": 28.8
   },
   {
     "label": "app-ready +5s",
     "target": "shared_worker: http://localhost:4173/assets/coordinator-worker-d7mh4rsC.js",
-    "id": "91E293540AC98B3BCB6478907ECD5A48",
+    "id": "EE4DC078DB4EAA246133BB2056FFB62B",
     "usedMB": 0.6,
     "totalMB": 1.5,
     "embedderMB": 0,
@@ -20,10 +20,10 @@
   {
     "label": "app-ready +5s",
     "target": "worker: http://localhost:4173/assets/dedicated-worker-BT6kXxmj.js",
-    "id": "3891001DF1C8AEE4923545EB0C2242D9",
-    "usedMB": 24,
-    "totalMB": 26.6,
-    "embedderMB": 0.3,
+    "id": "9163D4373FEA3F758FDAADA4092D69CF",
+    "usedMB": 23.6,
+    "totalMB": 26,
+    "embedderMB": 0.4,
     "backingMB": 30.3
   }
 ]

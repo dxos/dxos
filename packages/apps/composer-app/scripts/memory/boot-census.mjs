@@ -13,7 +13,7 @@
  */
 
 import { chromium } from '@playwright/test';
-import { readFileSync, existsSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const url = process.argv[2] ?? 'http://localhost:4173';
@@ -74,12 +74,16 @@ await context.close();
 // 3. Executed bytes per script URL (functions marked count>0; range 0 is the whole-script entry).
 const execByUrl = new Map();
 for (const script of coverage) {
-  if (!script.url.startsWith('http')) continue;
+  if (!script.url.startsWith('http')) {
+    continue;
+  }
   const name = script.url.split('/').pop().split('?')[0];
   let executed = 0;
   for (const fn of script.functions) {
     for (const range of fn.ranges) {
-      if (range.count > 0) executed += range.endOffset - range.startOffset;
+      if (range.count > 0) {
+        executed += range.endOffset - range.startOffset;
+      }
     }
   }
   // Ranges overlap (nesting); this overcounts slightly but consistently. Good enough for ranking.
@@ -90,7 +94,9 @@ for (const script of coverage) {
 // 4. Chunk size + package attribution from sourcemaps.
 const attributeChunk = (chunkName) => {
   const file = path.join(distDir, 'assets', chunkName);
-  if (!existsSync(file)) return null;
+  if (!existsSync(file)) {
+    return null;
+  }
   const size = statSync(file).size;
   const byPackage = new Map();
   const mapFile = `${file}.map`;
@@ -138,13 +144,17 @@ let totalExecuted = 0;
 const deadChunks = [];
 for (const chunk of pageFacts.chunks) {
   const info = attributeChunk(chunk);
-  if (!info) continue;
+  if (!info) {
+    continue;
+  }
   totalLoaded += info.size;
   const executed = execByUrl.get(chunk) ?? 0;
   totalExecuted += Math.min(executed, info.size);
   // Coverage ranges nest, so the summed bytes can exceed the chunk; the ratio is a share, not a sum.
   const ratio = info.size > 0 ? Math.min(1, executed / info.size) : 0;
-  if (info.size > 20_000 && ratio < 0.02) deadChunks.push({ chunk, size: info.size, ratio });
+  if (info.size > 20_000 && ratio < 0.02) {
+    deadChunks.push({ chunk, size: info.size, ratio });
+  }
   for (const [pkg, bytes] of info.byPackage) {
     const cur = packages.get(pkg) ?? { loaded: 0, executed: 0, chunks: 0 };
     cur.loaded += bytes;
@@ -159,7 +169,9 @@ const bootModules = [];
 const idleModules = [];
 for (const mark of pageFacts.marks) {
   const match = mark.name.match(/^module:(.+):start$/);
-  if (!match) continue;
+  if (!match) {
+    continue;
+  }
   (pageFacts.readyT != null && mark.t <= pageFacts.readyT ? bootModules : idleModules).push({
     id: match[1],
     t: mark.t,

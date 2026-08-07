@@ -43,7 +43,9 @@ class Cdp {
         c.#pending.delete(m.id);
         m.error ? reject(new Error(m.error.message)) : resolve(m.result);
       } else if (m.method && c.#listeners.has(m.method)) {
-        for (const fn of c.#listeners.get(m.method)) fn(m.params);
+        for (const fn of c.#listeners.get(m.method)) {
+          fn(m.params);
+        }
       }
     });
     return c;
@@ -56,7 +58,9 @@ class Cdp {
     });
   }
   on(method, fn) {
-    if (!this.#listeners.has(method)) this.#listeners.set(method, new Set());
+    if (!this.#listeners.has(method)) {
+      this.#listeners.set(method, new Set());
+    }
     this.#listeners.get(method).add(fn);
   }
   close() {
@@ -90,14 +94,20 @@ const takeDump = async (browserWs) => {
 
   const byPid = {};
   for (const ev of events) {
-    if (ev.ph !== 'v' || !ev.args?.dumps?.allocators) continue;
+    if (ev.ph !== 'v' || !ev.args?.dumps?.allocators) {
+      continue;
+    }
     const pid = ev.pid;
     byPid[pid] ??= {};
     for (const [name, node] of Object.entries(ev.args.dumps.allocators)) {
       const size = node.attrs?.effective_size ?? node.attrs?.size;
-      if (!size) continue;
+      if (!size) {
+        continue;
+      }
       const bytes = parseInt(size.value, 16);
-      if (!Number.isFinite(bytes)) continue;
+      if (!Number.isFinite(bytes)) {
+        continue;
+      }
       byPid[pid][name] = bytes;
     }
   }
@@ -111,7 +121,9 @@ const rollup = (allocators) => {
     const parts = pathName.split('/');
     // Effective sizes are hierarchical; take only top-level nodes to avoid double count,
     // but keep depth-2 for v8 + malloc + blink for detail.
-    if (parts.length === 1) out.set(parts[0], (out.get(parts[0]) ?? 0) + bytes);
+    if (parts.length === 1) {
+      out.set(parts[0], (out.get(parts[0]) ?? 0) + bytes);
+    }
   }
   return out;
 };
@@ -148,7 +160,9 @@ const evalAll = async (expr, label) => {
     }
   }
 };
-if (stubPerf) await evalAll(STUB, 'stub');
+if (stubPerf) {
+  await evalAll(STUB, 'stub');
+}
 
 await page.waitForTimeout(wait1 * 1000);
 console.log(`\n=== dump A at t=+${wait1}s ===`);
@@ -157,7 +171,9 @@ const dumpA = await takeDump(browserWs);
 await page.waitForTimeout((wait2 - wait1) * 1000);
 console.log(`\n=== dump B at t=+${wait2}s ===`);
 const dumpB = await takeDump(browserWs);
-if (stubPerf) await evalAll(COUNT, 'entries-at-B');
+if (stubPerf) {
+  await evalAll(COUNT, 'entries-at-B');
+}
 
 // Renderer = the pid with a v8 allocator and the largest total.
 const report = {};
@@ -171,7 +187,9 @@ for (const pid of Object.keys(dumpB)) {
   report[pid] = rows;
   console.log(`\n-- pid ${pid} (total ~${total.toFixed(0)}MB at B) --`);
   for (const r of rows) {
-    if (r.bMB < 1 && Math.abs(r.dMB) < 1) continue;
+    if (r.bMB < 1 && Math.abs(r.dMB) < 1) {
+      continue;
+    }
     console.log(
       `  ${r.name.padEnd(24)} A ${String(r.aMB).padStart(8)}MB  B ${String(r.bMB).padStart(8)}MB  Δ ${String(r.dMB).padStart(8)}MB`,
     );
@@ -199,8 +217,9 @@ if (worstPid && dumpB[worstPid]) {
     .map(([n, bytes]) => ({ n, bMB: MB(bytes), dMB: MB(bytes - (aAll[n] ?? 0)) }))
     .sort((x, y) => y.dMB - x.dMB)
     .slice(0, 20);
-  for (const r of rows)
+  for (const r of rows) {
     console.log(`  ${r.n.padEnd(48)} B ${String(r.bMB).padStart(8)}MB  Δ ${String(r.dMB).padStart(8)}MB`);
+  }
 }
 
 writeFileSync(

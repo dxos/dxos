@@ -68,7 +68,9 @@ for (let level = 0; level < depth && frontier.size > 0; level++) {
       const to = edges[base + E_TO];
       if (frontier.has(to) && !parentOf.has(to) && i !== to) {
         const eType = edgeTypes[edges[base + E_TYPE]];
-        if (eType === 'weak') continue;
+        if (eType === 'weak') {
+          continue;
+        }
         const rawName = edges[base + E_NAME];
         const label = eType === 'element' || eType === 'hidden' ? `[${rawName}]` : String(strings[rawName]);
         parentOf.set(to, { parentIdx: i, label: `${eType} '${label.slice(0, 50)}'` });
@@ -93,7 +95,9 @@ for (const t of sorted) {
   let cur = t;
   for (let d = 0; d < depth; d++) {
     const p = parentOf.get(cur);
-    if (!p) break;
+    if (!p) {
+      break;
+    }
     chain.push(`${describeNode(p.parentIdx)} --${p.label}-->`);
     cur = p.parentIdx;
   }
@@ -101,7 +105,9 @@ for (const t of sorted) {
   chains.set(key, (chains.get(key) ?? 0) + 1);
   if (printed < 8) {
     console.log(`\n### ${(info.get(t).size / 1048576).toFixed(2)}MB "${info.get(t).preview}"`);
-    for (const c of chain) console.log('   <- ' + c);
+    for (const c of chain) {
+      console.log('   <- ' + c);
+    }
     printed++;
   }
 }

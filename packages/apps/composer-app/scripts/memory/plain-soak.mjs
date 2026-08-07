@@ -11,7 +11,7 @@
  */
 
 import { chromium } from '@playwright/test';
-import { spawn, execSync } from 'node:child_process';
+import { execSync, spawn } from 'node:child_process';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -156,7 +156,9 @@ const sampleRss = (rootPid) => {
   const acc = {};
   for (const pid of tree) {
     const p = byPid.get(pid);
-    if (!p) continue;
+    if (!p) {
+      continue;
+    }
     const type = (p.cmd.match(/--type=(\w+)/) || [])[1] ?? 'main';
     const key = type === 'renderer' ? `renderer.${pid}` : type;
     acc[key] = (acc[key] ?? 0) + MB(p.rss * 1024);
@@ -169,7 +171,9 @@ const rounds = Math.ceil((minutes * 60) / intervalS);
 for (let round = 0; round <= rounds; round++) {
   const t = +((Date.now() - started) / 1000).toFixed(0);
   console.log(JSON.stringify({ t, ...sampleRss(child.pid) }));
-  if (round < rounds) await new Promise((r) => setTimeout(r, intervalS * 1000));
+  if (round < rounds) {
+    await new Promise((r) => setTimeout(r, intervalS * 1000));
+  }
 }
 
 cleanUp();

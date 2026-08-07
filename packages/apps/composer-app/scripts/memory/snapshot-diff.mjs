@@ -41,7 +41,9 @@ class Cdp {
         c.#pending.delete(m.id);
         m.error ? reject(new Error(m.error.message)) : resolve(m.result);
       } else if (m.method && c.#listeners.has(m.method)) {
-        for (const fn of c.#listeners.get(m.method)) fn(m.params);
+        for (const fn of c.#listeners.get(m.method)) {
+          fn(m.params);
+        }
       }
     });
     return c;
@@ -54,7 +56,9 @@ class Cdp {
     });
   }
   on(method, fn) {
-    if (!this.#listeners.has(method)) this.#listeners.set(method, new Set());
+    if (!this.#listeners.has(method)) {
+      this.#listeners.set(method, new Set());
+    }
     this.#listeners.get(method).add(fn);
   }
   off(method, fn) {
@@ -95,9 +99,13 @@ const snapshotAgg = async (t) => {
   for (let i = 0; i < nodes.length; i += stride) {
     const type = nt[nodes[i + TYPE]];
     let key;
-    if (type === 'object' || type === 'closure' || type === 'native') key = `${type}:${strings[nodes[i + NAME]]}`;
-    else if (type === 'string' || type === 'concatenated string' || type === 'sliced string') key = '(strings)';
-    else key = `(${type})`;
+    if (type === 'object' || type === 'closure' || type === 'native') {
+      key = `${type}:${strings[nodes[i + NAME]]}`;
+    } else if (type === 'string' || type === 'concatenated string' || type === 'sliced string') {
+      key = '(strings)';
+    } else {
+      key = `(${type})`;
+    }
     const cur = agg.get(key) ?? { count: 0, size: 0 };
     cur.count += 1;
     cur.size += nodes[i + SELF];
@@ -115,7 +123,9 @@ const diff = (a, b, label) => {
   rows.sort((x, y) => y.dSize - x.dSize);
   console.log(`\n== ${label}: top constructors by self-size growth ==`);
   for (const r of rows.slice(0, 25)) {
-    if (r.dSize < 50_000) continue;
+    if (r.dSize < 50_000) {
+      continue;
+    }
     console.log(`  +${String(MB(r.dSize)).padStart(7)}MB (+${r.dCount} → ${r.bCount})  ${r.key.slice(0, 90)}`);
   }
 };
@@ -140,7 +150,9 @@ for (const t of targetsB) {
   console.log(`snapshot B: ${t.type}`);
   const aggB = await snapshotAgg(t);
   const aggA = aggsA.get(t.id);
-  if (aggA) diff(aggA, aggB, `${t.type} t=${wait1}s → t=${wait2}s`);
+  if (aggA) {
+    diff(aggA, aggB, `${t.type} t=${wait1}s → t=${wait2}s`);
+  }
 }
 
 await browser.close();

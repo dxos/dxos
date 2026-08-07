@@ -93,7 +93,9 @@ const sampleRss = (rootPid) => {
   const procs = [];
   for (const pid of tree) {
     const p = byPid.get(pid);
-    if (!p) continue;
+    if (!p) {
+      continue;
+    }
     const type = (p.cmd.match(/--type=(\w+)/) || [])[1] ?? 'main';
     procs.push({ pid, type, rssMB: MB(p.rss * 1024) });
   }
@@ -162,7 +164,9 @@ for (let round = 0; round <= rounds; round++) {
   }
   samples.push(row);
   console.log(JSON.stringify(row));
-  if (round < rounds) await page.waitForTimeout(intervalS * 1000);
+  if (round < rounds) {
+    await page.waitForTimeout(intervalS * 1000);
+  }
 }
 
 writeFileSync(

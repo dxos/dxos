@@ -26,10 +26,18 @@ const dumps = new Map(); // pid -> { ts, allocators }
 
 const parseLine = (line) => {
   let s = line.trim();
-  if (s.startsWith('{"traceEvents":[')) s = s.slice('{"traceEvents":['.length);
-  if (s.endsWith(',')) s = s.slice(0, -1);
-  if (s.endsWith(']}')) s = s.slice(0, -2);
-  if (!s.startsWith('{')) return null;
+  if (s.startsWith('{"traceEvents":[')) {
+    s = s.slice('{"traceEvents":['.length);
+  }
+  if (s.endsWith(',')) {
+    s = s.slice(0, -1);
+  }
+  if (s.endsWith(']}')) {
+    s = s.slice(0, -2);
+  }
+  if (!s.startsWith('{')) {
+    return null;
+  }
   try {
     return JSON.parse(s);
   } catch {
@@ -38,20 +46,31 @@ const parseLine = (line) => {
 };
 
 for await (const line of rl) {
-  if (!line.includes('"ph":"v"') && !line.includes('"ph":"M"')) continue;
+  if (!line.includes('"ph":"v"') && !line.includes('"ph":"M"')) {
+    continue;
+  }
   const ev = parseLine(line);
-  if (!ev) continue;
+  if (!ev) {
+    continue;
+  }
   if (ev.ph === 'M') {
-    if (ev.name === 'process_name') names.set(ev.pid, ev.args?.name);
-    if (ev.name === 'process_labels')
+    if (ev.name === 'process_name') {
+      names.set(ev.pid, ev.args?.name);
+    }
+    if (ev.name === 'process_labels') {
       names.set(ev.pid, `${names.get(ev.pid) ?? ''} [${String(ev.args?.labels).slice(0, 60)}]`);
+    }
     if (ev.name === 'thread_name') {
-      if (!threads.has(ev.pid)) threads.set(ev.pid, new Set());
+      if (!threads.has(ev.pid)) {
+        threads.set(ev.pid, new Set());
+      }
       threads.get(ev.pid).add(ev.args?.name);
     }
   } else if (ev.ph === 'v' && ev.args?.dumps?.allocators) {
     const cur = dumps.get(ev.pid);
-    if (!cur || ev.ts > cur.ts) dumps.set(ev.pid, { ts: ev.ts, allocators: ev.args.dumps.allocators });
+    if (!cur || ev.ts > cur.ts) {
+      dumps.set(ev.pid, { ts: ev.ts, allocators: ev.args.dumps.allocators });
+    }
   }
 }
 
@@ -61,12 +80,20 @@ for (const [pid, { allocators }] of dumps) {
   const detail = [];
   for (const [pathName, node] of Object.entries(allocators)) {
     const size = node.attrs?.effective_size ?? node.attrs?.size;
-    if (!size) continue;
+    if (!size) {
+      continue;
+    }
     const bytes = parseInt(size.value, 16);
-    if (!Number.isFinite(bytes)) continue;
+    if (!Number.isFinite(bytes)) {
+      continue;
+    }
     const parts = pathName.split('/');
-    if (parts.length === 1) top.set(parts[0], bytes);
-    if (parts.length <= 4 && bytes > 10 * 1024 * 1024) detail.push([pathName, bytes]);
+    if (parts.length === 1) {
+      top.set(parts[0], bytes);
+    }
+    if (parts.length <= 4 && bytes > 10 * 1024 * 1024) {
+      detail.push([pathName, bytes]);
+    }
     if (/PerformanceMeasure|PerformanceMark/.test(pathName)) {
       const count = node.attrs?.object_count ? parseInt(node.attrs.object_count.value, 16) : null;
       detail.push([`${pathName} x${count}`, bytes]);
@@ -80,9 +107,13 @@ rows.sort((a, b) => b.attributed - a.attributed);
 for (const r of rows.slice(0, 8)) {
   const t = [...(threads.get(r.pid) ?? [])].filter((n) => /Worker|RendererMain/.test(n));
   console.log(`\n== pid ${r.pid} ${names.get(r.pid) ?? '?'}  attributed=${MB(r.attributed)}MB ==`);
-  if (t.length) console.log(`   threads: ${t.join(', ').slice(0, 140)}`);
+  if (t.length) {
+    console.log(`   threads: ${t.join(', ').slice(0, 140)}`);
+  }
   for (const [name, bytes] of [...r.top.entries()].sort((a, b) => b[1] - a[1])) {
-    if (bytes < 1024 * 1024) continue;
+    if (bytes < 1024 * 1024) {
+      continue;
+    }
     console.log(`  ${name.padEnd(22)} ${String(MB(bytes)).padStart(8)}MB`);
   }
   for (const [name, bytes] of r.detail.sort((a, b) => b[1] - a[1]).slice(0, 14)) {

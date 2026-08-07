@@ -13,7 +13,7 @@
  */
 
 import { chromium } from '@playwright/test';
-import { mkdirSync, writeFileSync, createWriteStream } from 'node:fs';
+import { createWriteStream, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 const url = process.argv[2] ?? 'http://localhost:5180';
@@ -55,7 +55,9 @@ class Cdp {
         client.#pending.delete(msg.id);
         msg.error ? reject(new Error(`${msg.error.message}`)) : resolve(msg.result);
       } else if (msg.method && client.#listeners.has(msg.method)) {
-        for (const fn of client.#listeners.get(msg.method)) fn(msg.params);
+        for (const fn of client.#listeners.get(msg.method)) {
+          fn(msg.params);
+        }
       }
     });
     return client;
@@ -70,7 +72,9 @@ class Cdp {
   }
 
   on(method, fn) {
-    if (!this.#listeners.has(method)) this.#listeners.set(method, new Set());
+    if (!this.#listeners.has(method)) {
+      this.#listeners.set(method, new Set());
+    }
     this.#listeners.get(method).add(fn);
   }
 
@@ -116,8 +120,9 @@ const measureAll = async (label) => {
   }
   console.log(`\n== ${label} ==`);
   for (const row of rows) {
-    if (row.error) console.log(`  ${row.target}  ERROR ${row.error}`);
-    else {
+    if (row.error) {
+      console.log(`  ${row.target}  ERROR ${row.error}`);
+    } else {
       const extra = [
         row.embedderMB != null ? `embedder ${row.embedderMB}MB` : null,
         row.backingMB != null ? `backing ${row.backingMB}MB` : null,
