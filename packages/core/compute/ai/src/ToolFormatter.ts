@@ -26,7 +26,7 @@ export const assign =
 type AnyTool = Tool.Tool<
   string,
   {
-    readonly parameters: Tool.AnyStructSchema;
+    readonly parameters: Schema.Top;
     readonly success: Schema.Top;
     readonly failure: Schema.Top;
     readonly failureMode: Tool.FailureMode;

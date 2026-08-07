@@ -29,7 +29,7 @@ export const summarize: (
 
     // Last turn must be a user message for summarization to work.
     // Repeating the instructions to ensure the model sees them, otherwise the model tends to forget them.
-    prompt = prompt.pipe(Prompt.merge(instructions));
+    prompt = prompt.pipe(Prompt.concat(instructions));
 
     const response = yield* LanguageModel.generateText({
       prompt,
