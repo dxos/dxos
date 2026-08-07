@@ -34,11 +34,7 @@ test.describe('Basic tests', () => {
     await expect(plank.locator.getByRole('heading', { name: 'Welcome to Composer' })).toBeVisible();
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31140999737 — `spacePlugin.space` stayed at 1 rather
-  //   than 2, so no space was created. Distinct from the earlier remount race here (fixed in
-  //   `createSpace()`): the click lands now, but the space does not always appear. Needs the trace
-  //   artifacts to tell whether the submit or the replication is at fault.
-  test.fixme('create space, which is displayed in tree', async () => {
+  test('create space, which is displayed in tree', async () => {
     await host.createSpace();
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
   });

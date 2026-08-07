@@ -192,6 +192,34 @@ export class AppManager {
   //
 
   async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
+    const initialCount = await this.getSpaceItems().count();
+
+    // A closed dialog does not prove a space was created, and `waitForSpaceReady()` cannot tell the
+    // difference: it only requires the selected workspace to match the URL, which the space the app
+    // is already in satisfies on entry. So a submit that silently did not take returned success here
+    // and surfaced much later as a bare count mismatch in whichever test called this — `reset device`
+    // in run 31143471056, `create space, which is displayed in tree` in 31140999737. The new rail item
+    // is the first condition that cannot be met by pre-existing state, which is also what makes
+    // re-submitting safe: an unchanged count is proof the previous attempt created nothing.
+    // TODO(wittjosiah): Re-submitting is a workaround — find why the first submit intermittently
+    //   does not take on chromium and drop the retry.
+    for (let attempt = 1; ; attempt++) {
+      await this.#submitCreateSpaceForm();
+      try {
+        await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
+        break;
+      } catch (err) {
+        if (attempt === 3) {
+          throw err;
+        }
+      }
+    }
+
+    await this.waitForSpaceReady(timeout);
+  }
+
+  /** Opens the add-space dialog, submits it, and waits for it to close. */
+  async #submitCreateSpaceForm(): Promise<void> {
     await this.page.getByTestId('spacePlugin.addSpace').click();
     await this.page.getByTestId('spacePlugin.createSpace').click();
 
@@ -204,9 +232,7 @@ export class AppManager {
 
     // Retry only a click that *threw*. `Form.Root`'s fields resolve through a Surface lookup, so the
     // button can detach mid-click ("element is not stable", then "element was detached from the DOM")
-    // — that took out `create space` in run 31130465200 and `create document` in 31131235658. A click
-    // that returns is never repeated: re-submitting a form that already accepted creates a second
-    // space, which is a wrong-state bug rather than a slow test.
+    // — that took out `create space` in run 31130465200 and `create document` in 31131235658.
     for (let attempt = 1; ; attempt++) {
       try {
         await save.click({ timeout: 10_000 });
@@ -221,7 +247,9 @@ export class AppManager {
       }
     }
 
-    await this.waitForSpaceReady(timeout);
+    // The caller may re-submit, and reopening the dialog while the old one is still up would target
+    // the wrong tree.
+    await form.waitFor({ state: 'detached', timeout: 10_000 });
   }
 
   async joinSpace(): Promise<void> {

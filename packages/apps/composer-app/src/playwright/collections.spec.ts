@@ -18,16 +18,14 @@ test.describe('Collection tests', () => {
     await host.closePage();
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31142577692 — not a timeout: the navtree's first
-  //   object was "Click to openREADME", so the assertion's `.first()` assumes the new collection
-  //   sorts ahead of the space's seeded README and it does not always. A test-correctness bug
-  //   (unwarranted ordering assumption), fixable by asserting on the collection rather than on
-  //   whichever object happens to be first.
-  test.fixme('create collection', async () => {
+  test('create collection', async () => {
     await host.createSpace();
     await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });
-    await expect(host.getObject()).toContainText('New collection');
+    // By name rather than `getObject()`: the space seeds a README, and asserting on whichever object
+    // sorts first assumed the new collection precedes it — it read "Click to openREADME" on chromium
+    // in run 31142577692. Placement is not what this test is about.
+    await expect(host.getObjectByName('New collection')).toHaveCount(1);
   });
 
   test('re-order collections', async ({ browserName }) => {
