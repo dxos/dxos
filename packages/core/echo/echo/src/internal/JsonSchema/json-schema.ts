@@ -125,9 +125,14 @@ const _toJsonSchemaAST = (
   inProgress: Set<SchemaAST.AST> = new Set(),
 ): Types.DeepMutable<JsonSchemaType> => {
   const withRefinements = withEchoRefinements(ast, '#', new Map(), inProgress);
-  const jsonSchema = JSONSchema.fromAST(withRefinements, {
-    definitions: {},
-  }) as Types.DeepMutable<JsonSchemaType>;
+  // Effect 4 replaced `fromAST` with a document generator that returns the root schema and its
+  // definitions separately; `withEchoRefinements` inlines suspends as `#`-refs, so `definitions` is
+  // normally empty -- carried over as `$defs` rather than dropped so nothing can vanish silently.
+  const { schema, definitions } = Schema.toJsonSchemaDocument(Schema.make(withRefinements));
+  const jsonSchema = {
+    ...schema,
+    ...(Object.keys(definitions).length > 0 ? { $defs: definitions } : {}),
+  } as Types.DeepMutable<JsonSchemaType>;
 
   return normalizeJsonSchema(jsonSchema);
 };
@@ -147,7 +152,7 @@ const withEchoRefinements = (
   let recursiveResult: SchemaAST.AST;
   if (SchemaAST.isSuspend(ast)) {
     // Precompute JSON schema for suspended AST since effect serializer does not support it.
-    const suspendedAst = ast.f();
+    const suspendedAst = ast.thunk();
     const cachedPath = suspendCache.get(suspendedAst);
     if (cachedPath) {
       recursiveResult = new SchemaAST.Suspend(() => withEchoRefinements(suspendedAst, path, suspendCache, inProgress), {
@@ -203,7 +208,7 @@ const withEchoRefinements = (
     );
   }
 
-  const annotationFields = annotations_toJsonSchemaFields(ast.annotations);
+  const annotationFields = annotations_toJsonSchemaFields(ast.annotations ?? {});
   if (Object.keys(annotationFields).length === 0) {
     return recursiveResult;
   } else {
@@ -233,7 +238,7 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   } else if ('$id' in root) {
     switch (decodeURIComponent(root.$id as string)) {
       case '/schemas/any': {
-        result = anyToEffectSchema(root as JSONSchema.JsonSchema7Any);
+        result = anyToEffectSchema(root as JSONSchema.JsonSchema);
         break;
       }
       case '/schemas/unknown': {
@@ -252,11 +257,11 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       }
     }
   } else if ('enum' in root) {
-    result = Schema.Union(...root.enum!.map((e) => Schema.Literal(e)));
+    result = Schema.Union(root.enum!.map((e) => Schema.Literal(e)));
   } else if ('oneOf' in root) {
-    result = Schema.Union(...root.oneOf!.map((v) => toEffectSchema(v, defs)));
+    result = Schema.Union(root.oneOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('anyOf' in root) {
-    result = Schema.Union(...root.anyOf!.map((v) => toEffectSchema(v, defs)));
+    result = Schema.Union(root.anyOf!.map((v) => toEffectSchema(v, defs)));
   } else if ('allOf' in root) {
     if (root.allOf!.length === 1) {
       result = toEffectSchema(root.allOf![0], defs);
@@ -267,10 +272,9 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
   } else if ('type' in root) {
     switch (root.type) {
       case 'string': {
-        result = Schema.String;
-        if (root.pattern) {
-          result = result.pipe(Schema.check(Schema.isPattern(new RegExp(root.pattern))));
-        }
+        // Applied on `Schema.String` rather than the widened `result`, since v4 types the check
+        // against the schema it constrains.
+        result = root.pattern ? Schema.String.check(Schema.isPattern(new RegExp(root.pattern))) : Schema.String;
         break;
       }
       case 'number': {
@@ -292,12 +296,12 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
             Array.map((v) => toEffectSchema(v as JsonSchemaType, defs)),
             Array.splitAt(root.minItems ?? root.items.length),
           );
-          result = Schema.Tuple([...required, ...optional.map(Schema.optionalElement)]);
+          result = Schema.Tuple([...required, ...optional.map(Schema.optionalKey)]);
         } else {
           invariant(root.items);
           const items = root.items;
           result = Array.isArray(items)
-            ? Schema.Tuple(...items.map((v) => toEffectSchema(v as JsonSchemaType, defs)))
+            ? Schema.Tuple(items.map((v) => toEffectSchema(v as JsonSchemaType, defs)))
             : Schema.Array(toEffectSchema(items as JsonSchemaType, defs));
         }
         break;
@@ -349,7 +353,11 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
     fields = orderKeys(fields, root.propertyOrder as any);
   }
 
-  let schema: Schema.Codec<any, any, unknown>;
+  // The id field is folded into the struct fields rather than assigned afterwards: `mapFields` is a
+  // struct operation, and the record branches below produce schemas that do not carry it.
+  const structFields: Schema.Struct.Fields = immutableIdField ? { id: immutableIdField, ...fields } : fields;
+
+  let schema: Schema.Top;
   if (root.patternProperties) {
     invariant(propertyList.length === 0, 'pattern properties mixed with regular properties are not supported');
     invariant(
@@ -358,30 +366,27 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
     );
 
     schema = Schema.Record(Schema.String, toEffectSchema(root.patternProperties[''], defs));
-  } else if (typeof root.additionalProperties !== 'object') {
-    schema = Schema.Struct(fields);
+  } else if (typeof root.additionalProperties !== 'object' || root.additionalProperties === null) {
+    schema = Schema.Struct(structFields);
   } else {
-    const indexValue = toEffectSchema(root.additionalProperties, defs);
+    const indexValue = toEffectSchema(root.additionalProperties as JsonSchemaType, defs);
     if (propertyList.length > 0) {
-      schema = Schema.Struct(fields, { key: Schema.String, value: indexValue });
+      // v4 spells "struct plus an index signature" as `StructWithRest`.
+      schema = Schema.StructWithRest(Schema.Struct(structFields), [Schema.Record(Schema.String, indexValue)]);
     } else {
       schema = Schema.Record(Schema.String, indexValue);
     }
-  }
-
-  if (immutableIdField) {
-    schema = schema.mapFields(Struct.assign({ id: immutableIdField }));
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
   return schema.annotate(annotations) as any;
 };
 
-const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Top => {
+const anyToEffectSchema = (root: JSONSchema.JsonSchema): Schema.Top => {
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
-    const echoUri = root.$id.startsWith('echo:') ? root.$id : undefined;
+    const echoUri = typeof root.$id === 'string' && root.$id.startsWith('echo:') ? root.$id : undefined;
     return createEchoReferenceSchema(
       echoUri,
       (echoRefinement as any).reference.typename,
@@ -492,7 +497,7 @@ const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefine
 };
 
 const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annotations => {
-  const annotations: Types.Mutable<Schema.Annotations.Schema<any>> = {};
+  const annotations: Types.Mutable<Schema.Annotations.Annotations> = {};
 
   const echoAnnotations: JsonSchemaEchoAnnotations = getNormalizedEchoAnnotations(schema) ?? {};
   if (echoAnnotations) {
@@ -530,12 +535,8 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   return clearUndefined(annotations);
 };
 
-const makeAnnotatedRefinement = (ast: SchemaAST.AST, annotations: SchemaAST.Annotations): SchemaAST.Refinement => {
-  return new SchemaAST.Refinement(ast, () => Option.none(), annotations);
-};
-
 const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): SchemaAST.AST =>
-  makeAnnotatedRefinement(ast, { [SchemaAST.JSONSchemaAnnotationId]: schema });
+  SchemaAST.annotations(ast, { [SchemaAST.JSONSchemaAnnotationId]: schema });
 
 /**
  * Fixes field order.
