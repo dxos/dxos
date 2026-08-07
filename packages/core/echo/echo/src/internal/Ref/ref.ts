@@ -10,12 +10,12 @@ import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type URI } from '@dxos/keys';
 

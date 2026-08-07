@@ -3,7 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 /**
  * Creates a narrowed schema from an original schema that only includes

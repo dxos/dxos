@@ -132,6 +132,7 @@
     "@dxos/compute": "workspace:*",
     "@dxos/display-name": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/halo": "workspace:*",
     "@dxos/halo-react": "workspace:*",
     "@dxos/invariant": "workspace:*",

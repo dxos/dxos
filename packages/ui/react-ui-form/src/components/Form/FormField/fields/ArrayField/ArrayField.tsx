@@ -3,12 +3,11 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ReactNode, useCallback, useRef } from 'react';
 
 import { Annotation, Ref } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';

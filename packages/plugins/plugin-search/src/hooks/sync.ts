@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
-
 import { Entity, Obj, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { type SearchResult } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 

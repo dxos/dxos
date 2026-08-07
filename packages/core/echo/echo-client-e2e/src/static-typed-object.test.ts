@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
+import type { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

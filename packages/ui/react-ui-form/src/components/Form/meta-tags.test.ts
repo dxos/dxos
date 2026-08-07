@@ -3,10 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 
 import { META_TAGS_KEY, withMetaTags } from './meta-tags';
 

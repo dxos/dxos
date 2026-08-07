@@ -7,11 +7,10 @@ import * as Function from 'effect/Function';
 import * as JSONSchema from 'effect/JSONSchema';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';

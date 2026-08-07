@@ -4,9 +4,8 @@
 
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { type Mutable } from '../common/proxy';

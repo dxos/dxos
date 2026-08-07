@@ -3,11 +3,11 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep, setDeep } from '@dxos/util';
 

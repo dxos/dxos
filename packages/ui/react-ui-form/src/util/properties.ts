@@ -3,11 +3,10 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
 const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {

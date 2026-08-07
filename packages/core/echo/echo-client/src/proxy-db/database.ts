@@ -5,7 +5,6 @@
 import { type Heads } from '@automerge/automerge';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
@@ -42,6 +41,7 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

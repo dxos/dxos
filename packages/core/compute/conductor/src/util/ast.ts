@@ -6,7 +6,8 @@ import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 /**
  * @param schema

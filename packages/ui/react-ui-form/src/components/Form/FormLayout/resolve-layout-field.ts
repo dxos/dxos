@@ -4,10 +4,9 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 // Kept out of `FormLayout.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

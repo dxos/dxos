@@ -4,9 +4,9 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 
 // TODO(burdon): Reconcile with @dxos/echo.
 // Distributive: applied per union member so `ExcludeId<A | B>` → `ExcludeId<A> | ExcludeId<B>` rather

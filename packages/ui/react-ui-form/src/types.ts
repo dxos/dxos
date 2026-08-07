@@ -3,10 +3,10 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import { type FC, type FocusEvent, type ReactElement } from 'react';
 
 import { type Database, type Entity, type Format, type Obj, type Type } from '@dxos/echo';
+import type { SchemaAST } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 import { type Palette } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';

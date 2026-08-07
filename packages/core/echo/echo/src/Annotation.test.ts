@@ -5,9 +5,9 @@
 import * as Registry from '@effect-atom/atom/Registry';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation';

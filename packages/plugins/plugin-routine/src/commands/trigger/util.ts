@@ -9,13 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Annotation, Database, Entity, Feed, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { FeedAnnotation } from '@dxos/schema';
 

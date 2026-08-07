@@ -7,10 +7,10 @@
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, EntityId, type URI } from '@dxos/keys';
 

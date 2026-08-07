@@ -3,7 +3,8 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 import { FormatAnnotation, TypeFormat } from './types';
 

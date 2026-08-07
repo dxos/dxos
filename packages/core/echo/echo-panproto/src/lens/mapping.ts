@@ -4,10 +4,9 @@
 
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 import { getCodec } from './codecs';
 import { type Codec, type Converted, type Derived, type Mapping, type Plan, type ResolvedEntry } from './types';

@@ -6,7 +6,6 @@ import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
@@ -19,7 +18,7 @@ import { LifecycleState, Resource } from '@dxos/context';
 import { Database, JsonSchema, Ref, Registry, type Type } from '@dxos/echo';
 import { type DatabaseImpl, EchoClient, makeRegistry } from '@dxos/echo-client';
 import { refFromEncodedReference } from '@dxos/echo/internal';
-import { EffectEx } from '@dxos/effect';
+import { EffectEx, SchemaAST } from '@dxos/effect';
 import { assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';

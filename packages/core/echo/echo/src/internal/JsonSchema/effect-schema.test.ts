@@ -5,9 +5,9 @@
 import * as JSONSchema from 'effect/JSONSchema';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { expect, test } from 'vitest';
 
+import { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 test('json-schema annotations for filter refinement get combined', () => {

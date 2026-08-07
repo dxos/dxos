@@ -5,12 +5,11 @@
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import React, { useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

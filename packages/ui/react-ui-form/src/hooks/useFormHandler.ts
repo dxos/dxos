@@ -4,13 +4,12 @@
 
 import * as Equal from 'effect/Equal';
 import type * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
 import * as Utils from 'effect/Utils';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';

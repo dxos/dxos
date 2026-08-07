@@ -9,11 +9,11 @@ import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';
 import { OptionsAnnotationId } from '@dxos/echo/Format';
+import { SchemaAST } from '@dxos/effect';
 
 import * as Runnable from '../Runnable';
 import type * as TriggerEvent from './TriggerEvent';

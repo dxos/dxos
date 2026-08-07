@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { raise } from '@dxos/debug';
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, type EntityId } from '@dxos/keys';
 

@@ -5,7 +5,8 @@
 import * as Function from 'effect/Function';
 import type * as JSONSchema from 'effect/JSONSchema';
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 import { createAnnotationHelper } from '../Annotation';
 import { type JsonSchemaType } from '../JsonSchema';

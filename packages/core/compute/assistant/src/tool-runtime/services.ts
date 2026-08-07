@@ -10,13 +10,13 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { todo } from '@dxos/debug';
 import { DXN, Filter, Ref, Registry } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { RefFromLLM } from '../util';

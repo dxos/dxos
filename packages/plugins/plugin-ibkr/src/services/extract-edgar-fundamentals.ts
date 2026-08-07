@@ -3,7 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 import {
   EdgarAdditionalFactsAnnotation,

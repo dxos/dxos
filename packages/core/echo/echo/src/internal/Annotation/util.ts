@@ -4,8 +4,8 @@
 
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
+import { SchemaAST } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 

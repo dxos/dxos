@@ -3,9 +3,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import type * as Types from 'effect/Types';
 
+import { SchemaAST } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 

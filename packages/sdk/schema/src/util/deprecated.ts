@@ -3,11 +3,10 @@
 //
 
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 
 /**

@@ -13,8 +13,8 @@
 //   - Required fields: `.annotations({ description })` on the primitive itself.
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
+import { SchemaAST } from '@dxos/effect';
 import { trim } from '@dxos/util';
 
 import { DEFAULT_LIST_LIMIT, MAX_LIST_LIMIT } from './limits';

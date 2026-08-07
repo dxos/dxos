@@ -4,9 +4,9 @@
 
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import {
   type AtprotoPolicy,
   AtprotoPolicyAnnotation,

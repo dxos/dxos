@@ -4,10 +4,9 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

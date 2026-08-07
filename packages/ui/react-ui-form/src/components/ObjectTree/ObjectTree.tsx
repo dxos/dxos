@@ -12,9 +12,9 @@
 // schema), but works for any Effect Struct schema.
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { type ReactElement, type ReactNode, type RefAttributes } from 'react';
 
+import { SchemaAST } from '@dxos/effect';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';

@@ -3,9 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 // Kept out of `ArrayField.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

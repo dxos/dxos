@@ -3,7 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
+
+import { SchemaAST } from '@dxos/effect';
 
 // Kept out of `NumberField.tsx`: react-refresh only fast-refreshes a module whose
 // exports are all components, so values exported beside them force a full page reload on every edit.

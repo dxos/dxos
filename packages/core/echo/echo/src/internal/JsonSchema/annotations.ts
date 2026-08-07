@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
+import { SchemaAST } from '@dxos/effect';
 
 import { GeneratorAnnotationId, LabelAnnotationId, PropertyMetaAnnotationId } from '../Annotation/annotations';
 import { CurrencyAnnotationId, FormatAnnotationId } from '../Format';

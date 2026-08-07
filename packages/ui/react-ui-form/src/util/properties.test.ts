@@ -4,12 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { Annotation, DXN, JsonSchema, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 import { AutofillAnnotation, OptionsLookupAnnotation, autofill, optionsLookup } from '../annotations';
 import { omitId } from './omit';

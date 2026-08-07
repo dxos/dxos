@@ -4,7 +4,6 @@
 
 import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';
@@ -15,7 +14,7 @@ import { TypeEnum } from '@dxos/echo/Format';
 import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
 import { toJsonSchema } from '@dxos/echo/JsonSchema';
 import { Ref } from '@dxos/echo/Ref';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing';

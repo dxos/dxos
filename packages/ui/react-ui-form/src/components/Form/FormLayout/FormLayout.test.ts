@@ -3,10 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { Annotation } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 
 import { resolveLayoutField } from './resolve-layout-field';
 

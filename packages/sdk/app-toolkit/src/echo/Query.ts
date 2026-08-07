@@ -9,11 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as EffectFunction from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue, getTypeAnnotation } from '@dxos/echo/Annotation';
-import { EffectEx, SchemaEx } from '@dxos/effect';
+import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';

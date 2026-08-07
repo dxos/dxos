@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
+
+import { SchemaAST } from '@dxos/effect';
 
 import { buildUnionFormSchema, mergeJsonSchemas } from './unionSchema';
 

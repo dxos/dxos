@@ -3,10 +3,10 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { Polygon } from '@dxos/react-ui-canvas-editor';
 import { type MakeOptional } from '@dxos/util';
 

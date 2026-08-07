@@ -3,10 +3,10 @@
 //
 
 import * as Option from 'effect/Option';
-import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DXN, Entity, Format, Type } from '@dxos/echo';
+import { SchemaAST } from '@dxos/effect';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';

@@ -4,7 +4,6 @@
 
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 
 // QueryAST is referenced indirectly through `Type.InstanceType<typeof TableSchema>`
 // (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
@@ -13,7 +12,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Annotation, DXN, JsonSchema, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { type JsonSchema as JsonSchemaType } from '@dxos/echo/JsonSchema';
-import { SchemaEx } from '@dxos/effect';
+import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { ViewAnnotation } from '@dxos/schema';
 
 // TODO(wittjosiah): Try to clean up this type inference.
