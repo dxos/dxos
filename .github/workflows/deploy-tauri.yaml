@@ -73,18 +73,24 @@ jobs:
         run: |
           # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
           # job for a production release, current otherwise. Production ships the clean version to the `main`
-          # CrabNebula channel; every other env gets a unique per-commit prerelease tagged with the env name
-          # (which selects its channel).
+          # CrabNebula channel; every other env gets a prerelease tagged with the env name (which selects its
+          # channel), then the run number, then the commit.
+          #
+          # The run number leads because the updater compares semver: a prerelease identifier is ordered
+          # ASCII-lexically unless it is all digits, so a bare commit SHA sorts at random and roughly half of
+          # all nightlies would not read as newer than the one they replace. `github.run_number` is numeric
+          # and strictly increasing, so it orders correctly; the SHA rides along for traceability and is only
+          # ever reached on a tie the run number cannot produce.
           BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
           if [ "${{ inputs.environment }}" = "production" ]; then
             NEW_VERSION="$BASE"
           else
-            NEW_VERSION="${BASE}-${{ inputs.environment }}.${GITHUB_SHA::7}"
+            NEW_VERSION="${BASE}-${{ inputs.environment }}.${{ github.run_number }}.${GITHUB_SHA::7}"
           fi
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "Tauri version: $NEW_VERSION (env=${{ inputs.environment }})"
           # CFBundleVersion (Apple's build number) must be plain digits separated by dots — our prerelease
-          # suffix (e.g. "-dev.abc1234") fails that even after Tauri's own semver-prerelease stripping, so
+          # suffix (e.g. "-dev.412.abc1234") fails that even after Tauri's own semver-prerelease stripping, so
           # override it separately with the always-numeric, always-increasing run number.
           echo "ios_bundle_version=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
@@ -449,10 +455,12 @@ jobs:
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
         run: |
+          # Tauri names the artifact after `productName`, which cn-config rewrites per environment.
+          product_name=$(jq -r '.productName' packages/apps/composer-app/src-tauri/tauri.conf.json)
           xcrun altool \
             --upload-app \
             --type ios \
-            --file "./packages/apps/composer-app/src-tauri/gen/apple/build/arm64/Composer.ipa" \
+            --file "./packages/apps/composer-app/src-tauri/gen/apple/build/arm64/${product_name}.ipa" \
             --apiKey $APPLE_API_KEY \
             --apiIssuer $APPLE_API_ISSUER
         env:
