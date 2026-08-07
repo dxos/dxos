@@ -79,7 +79,10 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
           });
           return handle;
         },
-        catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
+        catch: (cause) =>
+          new SqlError.SqlError({
+            reason: SqlError.classifySqliteError(cause, { message: 'Failed to open database' }),
+          }),
       }),
       (handle) =>
         Effect.sync(() => {

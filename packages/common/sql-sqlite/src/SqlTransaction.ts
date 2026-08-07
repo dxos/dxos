@@ -37,7 +37,7 @@ export const layer: Layer.Layer<SqlTransaction, never, SqlClient.SqlClient> = La
   SqlTransaction,
   Effect.map(
     SqlClient.SqlClient,
-    (sql: SqlClient.SqlClient): Context.Tag.Service<SqlTransaction> => ({
+    (sql: SqlClient.SqlClient): Service => ({
       withTransaction: (self) => sql.withTransaction(self),
     }),
   ),

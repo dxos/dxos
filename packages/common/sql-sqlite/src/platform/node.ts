@@ -7,11 +7,36 @@ import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import * as SqlError from 'effect/unstable/sql/SqlError';
+import { randomUUID } from 'node:crypto';
 import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 
 import * as SqlExport from '../SqlExport';
+
+// Effect 4's node client dropped `export`, and `node:sqlite` exposes no `serialize`, so SQLite's
+// online backup into a scratch file is the remaining way to take a consistent snapshot.
+const exportViaBackup = (sql: SqliteClient.SqliteClient): Effect.Effect<Uint8Array, SqlError.SqlError> =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const file = join(tmpdir(), `dxos-sql-export-${randomUUID()}.db`);
+      yield* Effect.acquireRelease(sql.backup(file), () => Effect.promise(() => rm(file, { force: true })));
+      const contents = yield* Effect.tryPromise({
+        try: () => readFile(file),
+        catch: (cause) =>
+          new SqlError.SqlError({
+            reason: new SqlError.UnknownError({
+              cause,
+              message: 'Failed to read exported database',
+              operation: 'export',
+            }),
+          }),
+      });
+      return new Uint8Array(contents);
+    }),
+  );
 
 export const sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError, SqliteClient.SqliteClient> =
   Layer.effect(
@@ -19,7 +44,7 @@ export const sqlExportLayer: Layer.Layer<SqlExport.SqlExport, SqlError.SqlError,
     Effect.gen(function* () {
       const sql = yield* SqliteClient.SqliteClient;
       return {
-        export: sql.export,
+        export: exportViaBackup(sql),
       } satisfies SqlExport.Service;
     }),
   );

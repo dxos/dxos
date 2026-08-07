@@ -3,11 +3,11 @@
 //
 
 import { describe, expect, it } from '@effect/vitest';
-import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
 import * as SqlClient from 'effect/unstable/sql/SqlClient';
@@ -83,7 +83,10 @@ export const makeIdb = (
       const db = yield* Effect.acquireRelease(
         Effect.try({
           try: () => sqlite3.open_v2(options.dbName, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, TEST_VFS_NAME),
-          catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to open database' }),
+          catch: (cause) =>
+            new SqlError.SqlError({
+              reason: SqlError.classifySqliteError(cause, { message: 'Failed to open database' }),
+            }),
         }),
         (db) => Effect.sync(() => sqlite3.close(db)),
       );
@@ -121,7 +124,10 @@ export const makeIdb = (
             }
             return results;
           },
-          catch: (cause) => new SqlError.SqlError({ cause, message: 'Failed to execute statement' }),
+          catch: (cause) =>
+            new SqlError.SqlError({
+              reason: SqlError.classifySqliteError(cause, { message: 'Failed to execute statement' }),
+            }),
         });
 
       return Function.identity<SqlConnection.Connection>({
@@ -131,6 +137,9 @@ export const makeIdb = (
         executeValues: (sql, params) => run(sql, params, 'array'),
         executeUnprepared(sql, params, transformRows) {
           return this.execute(sql, params, transformRows);
+        },
+        executeValuesUnprepared(sql, params) {
+          return this.executeValues(sql, params);
         },
         executeStream: (sql, params, transformRows) => {
           function* stream() {
@@ -150,9 +159,15 @@ export const makeIdb = (
           }
           return Stream.suspend(() => Stream.fromIteratorSucceed(stream()[Symbol.iterator]())).pipe(
             transformRows
-              ? Stream.mapChunks((chunk) => Chunk.fromArrayUnsafe(transformRows(Chunk.toReadonlyArray(chunk))))
+              ? (self: Stream.Stream<Record<string, unknown>>) =>
+                  Stream.flattenIterable(Stream.map(Stream.chunks(self), transformRows))
               : Function.identity,
-            Stream.mapError((cause) => new SqlError.SqlError({ cause, message: 'Failed to execute statement' })),
+            Stream.mapError(
+              (cause) =>
+                new SqlError.SqlError({
+                  reason: SqlError.classifySqliteError(cause, { message: 'Failed to execute statement' }),
+                }),
+            ),
           );
         },
         //  export: Effect.try({
@@ -167,7 +182,7 @@ export const makeIdb = (
       });
     });
 
-    const semaphore = yield* Effect.makeSemaphore(1);
+    const semaphore = yield* Semaphore.make(1);
     const connection = yield* makeConnection;
 
     const acquirer = semaphore.withPermits(1)(Effect.succeed(connection));
