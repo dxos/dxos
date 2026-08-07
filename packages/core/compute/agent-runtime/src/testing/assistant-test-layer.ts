@@ -221,7 +221,7 @@ export const AssistantTestServiceResolverLayer = (
             if (!processManager) {
               return yield* Effect.fail(new ServiceNotAvailableError(ProcessManager.Service.key));
             }
-            const runtime = yield* Effect.runtime<Database.Service>();
+            const runtime = yield* Effect.context<Database.Service>();
             return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
           }).pipe(Effect.provide(services)),
         ),

@@ -123,7 +123,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               Effect.orElseSucceed(() => undefined),
             )
           : undefined;
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(
           () => new AiSession.Session({ feed, runtime, instructions: instructions ? [instructions] : [] }),
         );

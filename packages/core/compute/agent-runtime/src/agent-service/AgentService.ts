@@ -58,7 +58,7 @@ export const createSession: (
   );
 
   const feed = yield* Database.add(Feed.make());
-  const runtime = yield* Effect.runtime<Database.Service>();
+  const runtime = yield* Effect.context<Database.Service>();
   const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
   yield* Effect.promise(() =>
@@ -246,13 +246,13 @@ const makeSession = (process: AgentHandle, feed: Feed.Feed, releaseSession: () =
   feed,
   getContext: () =>
     Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       return binder.getObjects().map((object) => Ref.make(object));
     }).pipe(Effect.scoped),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({

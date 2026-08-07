@@ -30,7 +30,7 @@ import { log } from '@dxos/log';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilityManager = yield* Capability.Service;
-    const runtime = yield* Effect.runtime<Capability.Service>();
+    const runtime = yield* Effect.context<Capability.Service>();
 
     // Local branch: terminate the emitting process on this runtime's ProcessManager (interrupting the
     // operation's fiber). Unchanged from the former pid-only path.

@@ -74,7 +74,7 @@ export class ChatProcessor {
         ),
       ),
       Effect.asVoid,
-      Runtime.runFork(this.runtime),
+      Effect.runForkWith(this.runtime),
     );
 
     const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
@@ -117,7 +117,7 @@ export class ChatProcessor {
     space.db.add(chat);
 
     const runtime = await EffectEx.runAndForwardErrors(
-      Effect.runtime<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
+      Effect.context<Database.Service>().pipe(Effect.provide(Database.layer(space.db))),
     );
     const session = new AiSession.Session({ feed, runtime, registry: this._registry });
     await session.open();

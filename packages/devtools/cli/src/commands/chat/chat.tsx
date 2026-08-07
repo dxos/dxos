@@ -80,7 +80,7 @@ export const chat = Command.make(
       log.info('starting...', { options });
 
       const client = yield* ClientService;
-      const runtime = yield* Effect.runtime<AiChatServices>();
+      const runtime = yield* Effect.context<AiChatServices>();
       const service = yield* AiService.AiService;
 
       const model = Option.getOrElse(options.model, () =>

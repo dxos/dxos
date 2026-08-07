@@ -106,7 +106,7 @@ describe('AiChatProcessor streaming', () => {
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         // The scripted stream: a growing partial for m1, its finalization, a late (stale) partial

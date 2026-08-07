@@ -136,7 +136,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
         }
         const conversation = context.conversation;
         const processManager = yield* ProcessManager.Service;
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         return yield* make({ conversation, processManager, runtime });
       }),
     ),

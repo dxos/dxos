@@ -143,7 +143,7 @@ export const makeInitialized = (
     );
     Obj.setParent(instructions, agent);
     const feed = yield* Database.add(Feed.make());
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     // TODO(dmaretskyi): Skill registry.
     const agentSkill = yield* Database.add(Obj.clone(skill, { deep: 'all' }));
@@ -189,7 +189,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EntityNotFou
     }
 
     const existingFeed = yield* Database.load(existingChat.feed);
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const existingContextBinder = yield* EffectEx.acquireReleaseResource(
       () =>
         new AiContext.Binder({

@@ -27,7 +27,7 @@ describe('AiSession.Session.getHistory', () => {
       const message = makeMessage('hello');
       yield* Feed.append(feed, [message]);
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -51,7 +51,7 @@ describe('AiSession.Session.getHistory', () => {
         forkMsg,
       ]);
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed: forkFeed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -76,7 +76,7 @@ describe('AiSession.Session.getHistory', () => {
         Obj.make(SessionLink.SessionLink, { feedRef: Ref.make(sourceFeed), messageId: msg2.id }),
       ]);
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed: forkFeed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -100,7 +100,7 @@ describe('AiSession.Session.getHistory', () => {
         forkMsg,
       ]);
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed: forkFeed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -126,7 +126,7 @@ describe('AiSession.Session.getHistory', () => {
       const retry = makeMessage('better question');
       yield* Feed.append(feed, [retry], { parent: answer1 });
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -143,7 +143,7 @@ describe('AiSession.Session.getHistory', () => {
       const messages = [makeMessage('one'), makeMessage('two', 'assistant'), makeMessage('three')];
       yield* Feed.append(feed, messages);
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
 
       const result = yield* Effect.promise(() => session.getHistory());
@@ -178,7 +178,7 @@ describe('AiSession.Session rewind', () => {
         feed.rewindFrom = abandoned.id;
       });
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
 
       // `rewindFrom` names the earliest discarded message, so the continuation parents to the one
@@ -201,7 +201,7 @@ describe('AiSession.Session rewind', () => {
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const feed = db.add(Feed.make());
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
 
       const message = makeMessage('plain');
@@ -223,7 +223,7 @@ describe('AiSession.Session rewind', () => {
         feed.rewindFrom = abandoned.id;
       });
 
-      const runtime = yield* Effect.runtime<Database.Service>();
+      const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
       const retry = makeMessage('retry');
       yield* Effect.promise(() => session.appendTurnMessage(retry));

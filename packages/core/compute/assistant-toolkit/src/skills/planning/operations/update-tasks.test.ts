@@ -65,7 +65,7 @@ describe('UpdateTasks', () => {
         const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
         expect(chat.outline).toBeUndefined();
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const binder = new AiContext.Binder({ feed, runtime });
         yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
 

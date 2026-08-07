@@ -113,7 +113,7 @@ export default RunInstructions.pipe(
           resultSink,
         });
 
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         yield* Effect.promise(() =>

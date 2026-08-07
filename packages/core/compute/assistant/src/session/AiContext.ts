@@ -13,6 +13,7 @@ import { Atom, Registry as AtomRegistry } from 'effect/unstable/reactivity';
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
 import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { RuntimeProvider } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -128,7 +129,9 @@ export class Binder extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    this.#bindingsQuery = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Query.type(Binding)));
+    this.#bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Feed.query(this._feed, Query.type(Binding)),
+    );
 
     // Process initial state before returning.
     const initialResults = await this.#bindingsQuery.run();
@@ -236,7 +239,7 @@ export class Binder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { skills: addedSkills.length, objects: addedObjects.length });
-    await Runtime.runPromise(this._runtime)(
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.append(this._feed, [
         Obj.make(Binding, {
           skills: {
@@ -276,7 +279,7 @@ export class Binder extends Resource {
     }
 
     log('unbind', { skills: skills?.length, objects: objects?.length });
-    await Runtime.runPromise(this._runtime)(
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Feed.append(this._feed, [
         Obj.make(Binding, {
           skills: {

@@ -39,7 +39,7 @@ const ConversationHarnessLayer = Layer.unwrap(
   Effect.gen(function* () {
     const feed = yield* Database.add(Feed.make());
     const conversation = Obj.getURI(feed);
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const runtime = yield* Effect.context<Database.Service>();
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     return Layer.mergeAll(
       Layer.succeed(TestConversation, { conversation }),

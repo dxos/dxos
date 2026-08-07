@@ -23,6 +23,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
+import { RuntimeProvider } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
@@ -123,7 +124,9 @@ export class Session extends Resource {
    */
   public async getHistory(): Promise<Message.Message[]> {
     const { items: reachable } = Feed.history(await this.#messagesInAppendOrder());
-    return Runtime.runPromise(this._runtime)(this._sessionLoader.reifyHistory(this._feed, reachable));
+    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      this._sessionLoader.reifyHistory(this._feed, reachable),
+    );
   }
 
   /**
@@ -131,7 +134,9 @@ export class Session extends Resource {
    * positionally rather than by `created`, a wall clock peers do not agree on.
    */
   async #messagesInAppendOrder(): Promise<Message.Message[]> {
-    const queryResult = await Runtime.runPromise(this._runtime)(Feed.query(this._feed, Filter.type(Message.Message)));
+    const queryResult = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Feed.query(this._feed, Filter.type(Message.Message)),
+    );
     const items = await queryResult.run();
     return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
   }
@@ -174,7 +179,7 @@ export class Session extends Resource {
     const rewindFrom = this._feed.rewindFrom;
     const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
 
-    return Runtime.runPromise(this._runtime)(
+    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
       Effect.gen({ self: this }, function* () {
         yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
         if (rewindFrom !== undefined) {

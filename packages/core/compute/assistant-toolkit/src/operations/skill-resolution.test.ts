@@ -59,7 +59,7 @@ describe('Skill binding resolution (registry refs)', () => {
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
 
         // Bind the instructions's own registry ref (the fix) and persist it to the feed.
         const writer = new AiContext.Binder({ feed, runtime });
@@ -104,7 +104,7 @@ describe('Skill binding resolution (registry refs)', () => {
 
         const feed = yield* Database.add(Feed.make());
         yield* Database.flush();
-        const runtime = yield* Effect.runtime<Database.Service>();
+        const runtime = yield* Effect.context<Database.Service>();
 
         // The pre-fix behaviour: re-wrap the resolved skill with `Ref.make`, minting an
         // EID ref that addresses a skill which only exists in the registry.
