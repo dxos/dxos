@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/memory-usage/TASKS.md
     design: .agents/projects/memory-usage/DESIGN.md
     prs: []
-    resume: 'Investigation DONE (DESIGN.md ledgers; RESEARCH.md). DX-1148 items 1+2 fixed+verified (e9871910d0); tier curve + barebones scaffold landed (bf273b4912). Target: 300-400MB resting. NEXT: Phase 3 perf-timeline gating, then Phases 5-7 (core boot-execution reduction / idle-churn elimination via push / wasm consolidation) per TASKS.md; open a PR for the branch.'
+    resume: 'Investigation DONE (DESIGN.md ledgers; RESEARCH.md). DX-1148 items 1+2 fixed+verified (e9871910d0); tier curve + barebones scaffold landed (bf273b4912). Target: 300-400MB resting. Perf-timeline gating + CI guard CUT by user decision. NEXT: Phases 5-7 (core boot-execution reduction / idle-churn elimination via push / wasm consolidation) per TASKS.md; open a PR for the branch.'
 
   - name: crm-pipeline-operations
     status: active

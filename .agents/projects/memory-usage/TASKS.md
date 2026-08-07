@@ -1,6 +1,6 @@
 # Composer Memory Usage — Tasks
 
-_Resume: Phase 3 remainder (perf-timeline gating, worker-side retention), then the reduction phases 5–7 toward the 300–400 MB resting target. Uncommitted: none. Last: tier curve + barebones profiling scaffold landed (bf273b4912)._
+_Resume: Phase 3 remainder (worker-side retention design pass), then the reduction phases 5–7 toward the 300–400 MB resting target. Uncommitted: none. Last: plan trimmed per user — no perf-timeline gating, no CI guard._
 
 **Target (agreed with user 2026-08-06): 300–500 MB resting footprint for an
 idle tab, aiming 300–400 (Figma range). Baseline today: ~615 MB harness-measured
@@ -53,9 +53,6 @@ Chrome's number is renderer process footprint, not JS heap.
 - [x] **Feed/mail data double-retention (client side)** — DX-1148 items 1+2,
       commit e9871910d0 + changeset; verified in user capture (zero retained
       message strings on Main).
-- [ ] **Gate performance.mark/measure emitters** behind a default-off debug
-      flag — sql-sqlite ×2, echo-host ×3, query-executor, effect
-      Performance.ts, tracing api.ts; bounded entry names (no SQL text).
 - [ ] **Worker-side result retention (DX-1148 item 3)** — `_lastResultSet`
       reuses `item.doc` across runs for diff/serialization; dropping it
       forces re-reads. Needs a design pass.
@@ -63,6 +60,11 @@ Chrome's number is renderer process footprint, not JS heap.
       ~250 MB+ and grows; Chrome's tab flag reports process footprint.
 - [ ] **Harness into repo** — promote memory-harness scripts into a tools
       package with a README.
+
+> Cut by user decision (2026-08-06): no perf-timeline gating and no CI
+> regression guard for now. The findings behind both remain in DESIGN.md
+> (unbounded performance.measure accumulation; guard design sketch in git
+> history) if either is ever revisited.
 
 ## Phase 5: Core boot-execution reduction (biggest lever, ~-150–250 MB)
 
@@ -113,14 +115,6 @@ the owning worker (industry pattern per RESEARCH.md).
       truly needs local doc ops, justify and bound it.
 - [ ] **Terminable-worker pattern** for growable wasm memories; instantiate
       occasional-use wasm on demand, tear down after.
-
-## Phase 4 (deferred): Regression guard (CI)
-
-Deferred by user decision 2026-08-06 ("we can barely run playwright stably in
-CI") — manual verification with the harness for now. Design kept for later:
-copy-census check (sentinel strings ≤ 2 copies), no-unbounded-accumulators
-idle check, per-context heap budgets (counts gate, bytes trend), per-fix unit
-locks.
 
 ### References
 
