@@ -81,8 +81,31 @@ export const JSONSchemaAnnotationId = 'toJsonSchema';
 export const resolveAnnotations = (ast: SchemaAST.AST): Annotations | undefined => SchemaAST.resolve(ast);
 
 /** `SchemaAST.annotate(ast, ...)` is internal in v4; the `Schema` wrapper is public. */
-export const annotations = (ast: SchemaAST.AST, annotations: Annotations): SchemaAST.AST =>
+export const annotate = (ast: SchemaAST.AST, annotations: Annotations): SchemaAST.AST =>
   Schema.make<Schema.Top>(ast).annotate(annotations).ast;
+
+/**
+ * Drops the named properties from an object node.
+ *
+ * v4 removed the AST-level `omit`; `Objects` is rebuilt directly because the `Schema`-level
+ * equivalent needs the key literals at the type level, which a runtime name list cannot supply.
+ */
+export const omit = (ast: SchemaAST.AST, names: ReadonlyArray<PropertyKey>): SchemaAST.AST => {
+  const node = unwrapSuspend(ast);
+  if (node._tag !== 'Objects') {
+    return ast;
+  }
+  const dropped = new Set(names);
+  return new SchemaAST.Objects(
+    node.propertySignatures.filter((property) => !dropped.has(property.name)),
+    node.indexSignatures,
+    node.annotations,
+    node.checks,
+    node.encoding,
+    node.context,
+    node.encodingChecks,
+  );
+};
 
 /** `SchemaAST.isMutable` is internal in v4. */
 export const isMutable = (ast: SchemaAST.AST): boolean => ast.context?.isMutable ?? false;

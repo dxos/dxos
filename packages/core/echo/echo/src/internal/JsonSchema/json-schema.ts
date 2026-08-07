@@ -536,7 +536,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
 };
 
 const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): SchemaAST.AST =>
-  SchemaAST.annotations(ast, { [SchemaAST.JSONSchemaAnnotationId]: schema });
+  SchemaAST.annotate(ast, { [SchemaAST.JSONSchemaAnnotationId]: schema });
 
 /**
  * Fixes field order.

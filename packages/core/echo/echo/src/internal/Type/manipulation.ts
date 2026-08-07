@@ -10,8 +10,17 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
 export const addFieldsToSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
-  const schemaExtension = Schema.Struct(fields).mapFields(Struct.map(Schema.optional));
-  return schema.mapFields(Struct.assign(schemaExtension.fields)).annotate(schema.ast.annotations) as any as Schema.Top;
+  const ast = schema.ast as SchemaAST.TypeLiteral;
+  invariant(SchemaAST.isTypeLiteral(ast));
+
+  // Rebuilt through the AST like its siblings below: `mapFields` is a `Struct` operation and this
+  // takes any `Schema.Top`.
+  const added = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.TypeLiteral)
+    .propertySignatures;
+
+  return Schema.make<Schema.Top>(
+    new SchemaAST.TypeLiteral([...ast.propertySignatures, ...added], ast.indexSignatures, ast.annotations),
+  );
 };
 
 export const updateFieldsInSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
@@ -30,11 +39,11 @@ export const updateFieldsInSchema = (schema: Schema.Top, fields: Schema.Struct.F
     }
   }
 
-  return Schema.make(new SchemaAST.TypeLiteral(updatedProperties, ast.indexSignatures, ast.annotations));
+  return Schema.make<Schema.Top>(new SchemaAST.TypeLiteral(updatedProperties, ast.indexSignatures, ast.annotations));
 };
 
 export const removeFieldsFromSchema = (schema: Schema.Top, fieldNames: string[]): Schema.Top => {
-  return Schema.make(SchemaAST.omit(schema.ast, fieldNames)).annotate(schema.ast.annotations);
+  return Schema.make<Schema.Top>(SchemaAST.omit(schema.ast, fieldNames));
 };
 
 export const updateFieldNameInSchema = (
@@ -44,13 +53,9 @@ export const updateFieldNameInSchema = (
   const ast = schema.ast as SchemaAST.TypeLiteral;
   invariant(SchemaAST.isTypeLiteral(ast));
 
-  return Schema.make(
+  return Schema.make<Schema.Top>(
     new SchemaAST.TypeLiteral(
-      ast.propertySignatures.map((p) =>
-        p.name === before
-          ? new SchemaAST.PropertySignature(after, p.type, p.isOptional, p.isReadonly, p.annotations)
-          : p,
-      ),
+      ast.propertySignatures.map((p) => (p.name === before ? new SchemaAST.PropertySignature(after, p.type) : p)),
       ast.indexSignatures,
       ast.annotations,
     ),

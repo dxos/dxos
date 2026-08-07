@@ -17,7 +17,7 @@ import * as Compat from './schema-ast';
 /** Annotation keys are strings in v4 (they were symbols in v3). */
 export type AnnotationKey = string;
 
-export const annotateAst = Compat.annotations;
+export const annotateAst = Compat.annotate;
 export const isMutable = Compat.isMutable;
 export const resolveAnnotations = Compat.resolveAnnotations;
 
