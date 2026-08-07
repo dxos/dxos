@@ -34,7 +34,7 @@ export const PLUGIN_ENTRY_FILENAME = 'index.mjs';
 export const PluginManifestSchema = Schema.Struct({
   ...Config2.Plugin.fields,
   /** Plugin version (semver). Sourced from the publishing project's `package.json`. */
-  version: Schema.String.pipe(Schema.nonEmptyString()),
+  version: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /**
    * Relative paths of every file the plugin needs at runtime, including the entry.
    * Must include {@link PLUGIN_ENTRY_FILENAME}; consumers verify on parse.
@@ -53,9 +53,9 @@ export type PluginManifest = Schema.Schema.Type<typeof PluginManifestSchema>;
  */
 export const PluginReleaseSchema = Schema.Struct({
   /** Semver version string, e.g. `0.8.3`. */
-  version: Schema.String.pipe(Schema.nonEmptyString()),
+  version: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /** URL the host dynamic-imports to install this specific version. */
-  moduleUrl: Schema.String.pipe(Schema.nonEmptyString()),
+  moduleUrl: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /**
    * Dependencies this release was built against, resolved to installed versions. The host derives
    * SDK compatibility from the `@dxos/*` subset to decide whether to offer this release.
@@ -77,9 +77,9 @@ export type PluginRelease = Schema.Schema.Type<typeof PluginReleaseSchema>;
  */
 export const PluginProfileSchema = Schema.Struct({
   /** Reverse-domain NSID — the plugin's globally-unique key and the `plugin.profile` rkey (e.g. `org.dxos.plugin.excalidraw`). */
-  key: Schema.String.pipe(Schema.nonEmptyString()),
+  key: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /** Plugin display name. */
-  name: Schema.String.pipe(Schema.nonEmptyString()),
+  name: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /** Short description of plugin functionality. */
   description: Schema.optional(Schema.String),
   /** Publisher's homepage or plugin documentation URL. */
@@ -124,9 +124,9 @@ export const PluginViewSchema = Schema.Struct({
    * `at://` URI of the source `plugin.profile` record.
    * Globally unique and stable — never changes after the record is published.
    */
-  uri: Schema.String.pipe(Schema.nonEmptyString()),
+  uri: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /** Publisher DID, e.g. `did:plc:abc…`. Cryptographic identity; never changes. */
-  did: Schema.String.pipe(Schema.nonEmptyString()),
+  did: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   /**
    * Publisher AT Protocol handle at index time, e.g. `alice.bsky.social`.
    * Display-only — handles can be reassigned; never use as a stable key.
@@ -153,7 +153,7 @@ export const PluginViewSchema = Schema.Struct({
    * The latest (recommended) release version. Always references an entry in `releases`.
    * Used by the host to determine whether an update is available.
    */
-  latestVersion: Schema.String.pipe(Schema.nonEmptyString()),
+  latestVersion: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
 });
 export type PluginView = Schema.Schema.Type<typeof PluginViewSchema>;
 
@@ -174,7 +174,7 @@ export type GetPluginsResponseBody = Schema.Schema.Type<typeof GetPluginsRespons
 
 /** Content of a `publisher.profile` ATProto record. Display metadata for a publisher DID. */
 export const PublisherProfileSchema = Schema.Struct({
-  displayName: Schema.String.pipe(Schema.nonEmptyString()),
+  displayName: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   bio: Schema.optional(Schema.String),
   homepageUrl: Schema.optional(Schema.String),
   contact: Schema.optional(Schema.String),
@@ -186,10 +186,10 @@ export type PublisherProfile = Schema.Schema.Type<typeof PublisherProfileSchema>
  * Links a publisher DID to a trusted AT Protocol handle.
  */
 export const PublisherVerificationSchema = Schema.Struct({
-  subject: Schema.String.pipe(Schema.nonEmptyString()),
-  handle: Schema.String.pipe(Schema.nonEmptyString()),
-  displayName: Schema.String.pipe(Schema.nonEmptyString()),
-  createdAt: Schema.String.pipe(Schema.nonEmptyString()),
+  subject: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  handle: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  displayName: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
+  createdAt: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
 });
 export type PublisherVerification = Schema.Schema.Type<typeof PublisherVerificationSchema>;
 

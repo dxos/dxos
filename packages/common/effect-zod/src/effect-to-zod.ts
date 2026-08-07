@@ -33,8 +33,9 @@
 import * as Schema from 'effect/Schema';
 import { z } from 'zod';
 
-const DescriptionAnnotationId = Symbol.for('effect/annotation/Description');
-const JSONSchemaAnnotationId = Symbol.for('effect/annotation/JSONSchema');
+// v4 annotation keys are plain strings rather than symbols.
+const DescriptionAnnotationId = 'description';
+const JSONSchemaAnnotationId = 'toJsonSchema';
 
 /**
  * Convert the fields of an Effect `Schema.Struct(...)` into the
@@ -47,7 +48,7 @@ export const effectFieldsToZod = <Fields extends Schema.Struct.Fields>(
   const out: Record<string, z.ZodTypeAny> = {};
   for (const [name, prop] of Object.entries(schema.fields)) {
     try {
-      out[name] = propToZod((prop as { ast: AnyAst }).ast);
+      out[name] = propToZod(prop.ast as unknown as AnyAst);
     } catch (err) {
       throw new Error(`effectFieldsToZod: failed to convert field "${name}": ${(err as Error).message}`);
     }
@@ -66,7 +67,7 @@ export const effectFieldsToZod = <Fields extends Schema.Struct.Fields>(
  * Treating `_tag` as a free string and downcasting selectively lets us handle
  * both without reaching for `as unknown as never` workarounds.
  */
-type AnyAst = { _tag: string; annotations?: Record<symbol, unknown> } & Record<string, unknown>;
+type AnyAst = { _tag: string; annotations?: Record<string, unknown> } & Record<string, unknown>;
 
 /**
  * Convert one struct field's AST. Property signatures wrap the actual schema
@@ -189,7 +190,7 @@ const astToZod = (ast: AnyAst): z.ZodTypeAny => {
 const collectRefinements = (ast: AnyAst): { base: AnyAst; jsonSchemas: Array<Record<string, unknown>> } => {
   const jsonSchemas: Array<Record<string, unknown>> = [];
   let cursor: AnyAst = ast;
-  while (cursor._tag === 'Refinement') {
+  while (Array.isArray(cursor.checks) && cursor.checks.length > 0) {
     const js = cursor.annotations?.[JSONSchemaAnnotationId];
     if (typeof js === 'object' && js !== null) {
       jsonSchemas.push(js as Record<string, unknown>);

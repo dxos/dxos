@@ -508,7 +508,7 @@ export const ExtractMailbox = Operation.make({
       description: 'Registered ObjectExtractor id to run on each message.',
     }),
     concurrency: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.check(Schema.isInt())).annotate({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum number of messages to extract in parallel.',
       }),
     ),
@@ -539,7 +539,7 @@ export const AnalyzeMailbox = Operation.make({
       description: 'Mailbox whose feed messages are analyzed.',
     }),
     pageSize: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.check(Schema.isInt())).annotate({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Number of messages processed per fact-store commit.',
       }),
     ),

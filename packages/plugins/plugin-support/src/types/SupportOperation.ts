@@ -51,7 +51,7 @@ export type Severity = Schema.Schema.Type<typeof Severity>;
  */
 export const SupportRequest = Schema.Struct({
   title: Schema.String.pipe(
-    Schema.nonEmptyString(),
+    Schema.check(Schema.isNonEmpty()),
     Schema.check(Schema.isMaxLength(256)),
     Schema.annotate({
       title: 'Title',
@@ -59,7 +59,7 @@ export const SupportRequest = Schema.Struct({
     }),
   ),
   body: Format.Text.pipe(
-    Schema.nonEmptyString(),
+    Schema.check(Schema.isNonEmpty()),
     Schema.check(Schema.isMaxLength(16_384)),
     Schema.annotate({
       title: 'Description',
@@ -181,7 +181,7 @@ export const SearchDocs = Operation.make({
       description: 'Search query.',
     }),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()).annotate({
+      Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
         description: 'Maximum number of results to return.',
       }),
     ),

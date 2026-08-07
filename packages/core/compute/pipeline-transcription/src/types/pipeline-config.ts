@@ -18,7 +18,7 @@ export const StageConfig = Schema.Struct({
   model: Schema.optional(DXN.NameSchema),
   /** Optional sliding-window override in blocks. Positive integer; bad values fail validation. */
   window: Schema.optional(
-    Schema.Struct({ blocks: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()) }),
+    Schema.Struct({ blocks: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))) }),
   ),
 });
 export type StageConfig = Schema.Schema.Type<typeof StageConfig>;

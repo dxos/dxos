@@ -80,7 +80,7 @@ export const JSONSchemaAnnotationId = 'toJsonSchema';
  */
 export const resolveAnnotations = (ast: SchemaAST.AST): Annotations | undefined => SchemaAST.resolve(ast);
 
-/** `SchemaAST.annotations(ast, ...)` is internal in v4; the `Schema` wrapper is public. */
+/** `SchemaAST.annotate(ast, ...)` is internal in v4; the `Schema` wrapper is public. */
 export const annotations = (ast: SchemaAST.AST, annotations: Annotations): SchemaAST.AST =>
   Schema.make<Schema.Top>(ast).annotate(annotations).ast;
 

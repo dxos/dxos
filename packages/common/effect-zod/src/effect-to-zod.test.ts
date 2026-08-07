@@ -50,7 +50,7 @@ describe('effectFieldsToZod', () => {
         limit: Schema.optional(
           Schema.Number.pipe(
             Schema.check(Schema.isInt()),
-            Schema.positive(),
+            Schema.check(Schema.isGreaterThan(0)),
             Schema.check(Schema.isLessThanOrEqualTo(200)),
           ),
         ).annotate({ description: 'limit' }),
@@ -67,7 +67,7 @@ describe('effectFieldsToZod', () => {
   test('Schema.Literal(...) string union → z.enum([...])', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
-        kind: Schema.Literal('function', 'class', 'interface'),
+        kind: Schema.Literals(['function', 'class', 'interface']),
       }),
     );
     expect(out.kind.parse('function')).toBe('function');
@@ -87,7 +87,7 @@ describe('effectFieldsToZod', () => {
   test('Schema.Array(Schema.Literal(...)) → z.array(z.enum([...]))', ({ expect }) => {
     const out = effectFieldsToZod(
       Schema.Struct({
-        include: Schema.optional(Schema.Array(Schema.Literal('source', 'jsdoc'))),
+        include: Schema.optional(Schema.Array(Schema.Literals(['source', 'jsdoc']))),
       }),
     );
     expect(out.include.parse(['source'])).toEqual(['source']);
@@ -115,7 +115,7 @@ describe('effectFieldsToZod', () => {
         limit: Schema.optional(
           Schema.Number.pipe(
             Schema.check(Schema.isInt()),
-            Schema.positive(),
+            Schema.check(Schema.isGreaterThan(0)),
             Schema.check(Schema.isLessThanOrEqualTo(200)),
           ),
         ).annotate({ description: 'cap' }),

@@ -48,7 +48,7 @@ export const ListOptionsInput = Schema.Struct({
   limit: Schema.optional(
     Schema.Number.pipe(
       Schema.check(Schema.isInt()),
-      Schema.positive(),
+      Schema.check(Schema.isGreaterThan(0)),
       Schema.check(Schema.isLessThanOrEqualTo(MAX_LIST_LIMIT)),
     ),
   ).annotate({

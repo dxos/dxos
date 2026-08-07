@@ -59,7 +59,7 @@ export const QueryFacts = Operation.make({
       }),
     ),
     limit: Schema.optional(
-      Schema.Number.pipe(Schema.positive(), Schema.check(Schema.isInt())).annotate({
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.check(Schema.isInt())).annotate({
         description: 'Maximum facts returned (default 50).',
       }),
     ),

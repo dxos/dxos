@@ -49,16 +49,24 @@ export const Progress = Schema.Struct({
     Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 100)).annotate({ title: 'Percent' }),
   ),
   currentPage: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()).annotate({ title: 'Current page' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Current page',
+    }),
   ),
   totalPages: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()).annotate({ title: 'Total pages' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Total pages',
+    }),
   ),
   currentChapter: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()).annotate({ title: 'Current chapter' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Current chapter',
+    }),
   ),
   totalChapters: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()).annotate({ title: 'Total chapters' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Total chapters',
+    }),
   ),
   updatedAt: Schema.optional(Format.DateTime.annotate({ title: 'Updated' })),
   // Exact reading position (a foliate CFI) for precise restore. Private — kept for posterity but never
@@ -89,7 +97,9 @@ export const Catalog = Schema.Struct({
   genres: Schema.optional(Schema.Array(Schema.String).annotate({ title: 'Genres' })),
   language: Schema.optional(Schema.String.annotate({ title: 'Language' })),
   numPages: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.positive()).annotate({ title: 'Pages' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
+      title: 'Pages',
+    }),
   ),
   publicationYear: Schema.optional(
     Schema.Number.pipe(Schema.check(Schema.isInt())).annotate({ title: 'Publication year' }),

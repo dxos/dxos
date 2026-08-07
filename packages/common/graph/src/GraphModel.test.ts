@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 
@@ -14,12 +15,7 @@ import * as GraphModel from './GraphModel';
 // Create a registry for tests.
 const createRegistry = () => Registry.make();
 
-const TestNode = Schema.extend(
-  Graph.Node,
-  Schema.Struct({
-    value: Schema.String,
-  }),
-);
+const TestNode = Graph.Node.mapFields(Struct.assign({ value: Schema.String }));
 
 type TestNode = Schema.Schema.Type<typeof TestNode>;
 

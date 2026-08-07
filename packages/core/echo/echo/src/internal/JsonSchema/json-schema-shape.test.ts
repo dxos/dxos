@@ -85,7 +85,7 @@ describe('toJsonSchema wire shape', () => {
     const Described = Type.makeObject(DXN.make('com.example.type.Described', '0.1.0'))(
       Schema.Struct({
         plain: Schema.String.annotate({ description: 'A plain string' }),
-        refined: Schema.String.pipe(Schema.nonEmptyString()).annotate({ description: 'A refined string' }),
+        refined: Schema.String.pipe(Schema.check(Schema.isNonEmpty())).annotate({ description: 'A refined string' }),
         numeric: Schema.Number.pipe(Schema.check(Schema.isInt())).annotate({ description: 'A refined number' }),
       }),
     );

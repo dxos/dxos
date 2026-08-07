@@ -39,6 +39,7 @@ const TYPE_RENAMES = [
  */
 const FILTERS = {
   int: 'isInt',
+  nonEmptyString: 'isNonEmpty',
   pattern: 'isPattern',
   minLength: 'isMinLength',
   maxLength: 'isMaxLength',
@@ -64,6 +65,17 @@ const FILTERS = {
  * errors rather than silent corruption.
  */
 const VARIADIC = {};
+
+/**
+ * Filters v4 removed outright, expressed with the comparison that replaces them. The v3 forms
+ * take no arguments, so the substitution is complete rather than a rename.
+ */
+const REMOVED_FILTERS = {
+  positive: 'isGreaterThan(0)',
+  nonNegative: 'isGreaterThanOrEqualTo(0)',
+  negative: 'isLessThan(0)',
+  nonPositive: 'isLessThanOrEqualTo(0)',
+};
 
 const args = process.argv.slice(2);
 const dry = args.includes('--dry');
@@ -226,6 +238,15 @@ for (const file of files) {
 
   for (const [from, to] of Object.entries(FILTERS)) {
     source = mapCalls(source, from, (inner) => (bump(`Schema.${from}`), `Schema.check(Schema.${to}(${inner}))`));
+  }
+
+  for (const [from, replacement] of Object.entries(REMOVED_FILTERS)) {
+    source = mapCalls(source, from, (inner) =>
+      // Only the argument-less v3 form maps cleanly; anything else is left visible.
+      inner.trim() === ''
+        ? (bump(`Schema.${from}`), `Schema.check(Schema.${replacement})`)
+        : `Schema.${from}(${inner})`,
+    );
   }
 
   for (const [from, to] of Object.entries(VARIADIC)) {

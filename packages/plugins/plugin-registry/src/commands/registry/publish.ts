@@ -25,7 +25,7 @@ import { AUTH_OPTION_DESCRIPTIONS, NSID, putRecord, resolveSession } from './uti
 /** Manifest emitted by the build (subset consumed here). Extends `Config2.Plugin` with build-time fields. */
 const ManifestSchema = Schema.Struct({
   ...Config2.Plugin.fields,
-  version: Schema.String.pipe(Schema.nonEmptyString()),
+  version: Schema.String.pipe(Schema.check(Schema.isNonEmpty())),
   dependencies: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
 });
 type Manifest = Schema.Schema.Type<typeof ManifestSchema>;
