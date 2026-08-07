@@ -61,13 +61,6 @@ export type IndexQueryProviderProps = {
 
 const QUERY_SERVICE_TIMEOUT = 20_000;
 
-/**
- * Wire record plus client-side hydration bookkeeping: once a queue item's payload is hydrated into
- * a feed-handle core, `documentJson` is dropped (the identity-tracked core supersedes it) and the
- * flag marks the record as re-resolvable by id.
- */
-type RetainedQueryResult = RemoteQueryResult & { documentJsonHydrated?: boolean };
-
 /** Per-index-hit object hydration budget (parallel across hits). */
 const INDEX_OBJECT_LOAD_TIMEOUT = 2_000;
 
@@ -109,7 +102,7 @@ export class IndexQuerySource implements QuerySource {
    * Raw records from the host's last reactive response. Retained so we can re-hydrate when the
    * objects they reference finish loading locally (see {@link _onObjectsUpdated}).
    */
-  private _lastRemoteResults?: readonly RetainedQueryResult[] = undefined;
+  private _lastRemoteResults?: readonly RemoteQueryResult[] = undefined;
 
   /** queryId of the active reactive stream, kept for log correlation on update-driven re-hydration. */
   private _reactiveQueryId?: number = undefined;
@@ -354,7 +347,7 @@ export class IndexQuerySource implements QuerySource {
     queryId: number,
     query: QueryAST.Query,
     start: number,
-    records: readonly RetainedQueryResult[],
+    records: readonly RemoteQueryResult[],
   ): Promise<SourceEntry[]> {
     log('queryIndex raw results', {
       queryId,
@@ -396,7 +389,7 @@ export class IndexQuerySource implements QuerySource {
   private async _filterMapResult(
     ctx: Context,
     queryStartTimestamp: number,
-    result: RetainedQueryResult,
+    result: RemoteQueryResult,
   ): Promise<SourceEntry | null> {
     recordObjectDiagnostic(result.id, () => ({
       objectId: result.id,
@@ -409,9 +402,13 @@ export class IndexQuerySource implements QuerySource {
     invariant(EntityId.isValid(result.id), 'Invalid id');
 
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
-    if (result.queueId && (result.documentJson || result.documentJsonHydrated)) {
+    if (result.queueId && result.documentJson) {
       invariant(EntityId.isValid(result.queueId), 'Invalid queueId');
+      const json = JSON.parse(result.documentJson);
       const queueEchoUri = EID.make({ spaceId: result.spaceId, entityId: result.queueId });
+      const refResolver = this._params.graph.createRefResolver({
+        context: { space: result.spaceId, feed: queueEchoUri },
+      });
       const database = this._params.graph.getDatabase(result.spaceId);
       // A feed item's parent is the Feed object (whose id equals the queue id). Setting it here mirrors
       // the client feed-handle read path so `Obj.getParent` resolves for index-hydrated feed items.
@@ -432,27 +429,6 @@ export class IndexQuerySource implements QuerySource {
           feedHandle = database._tryGetFeedHandle(queueEchoUri);
         }
       }
-
-      // A record whose payload was already hydrated into a feed-handle core re-resolves by identity —
-      // the JSON was dropped (see below), and re-decoding would be redundant anyway.
-      if (!result.documentJson) {
-        const object = feedHandle?.getCachedObjectById(EntityId.make(result.id));
-        if (!object) {
-          return null;
-        }
-        return {
-          id: result.id,
-          result: object,
-          match: { rank: result.rank },
-          resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
-          group: _groupFromRemoteResult(result),
-        };
-      }
-
-      const json = JSON.parse(result.documentJson);
-      const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId, feed: queueEchoUri },
-      });
       let object;
       try {
         object = feedHandle
@@ -475,13 +451,6 @@ export class IndexQuerySource implements QuerySource {
       }
       if (!object) {
         return null;
-      }
-      if (feedHandle) {
-        // The payload now lives in the handle's identity-tracked core. Drop the retained JSON string —
-        // reactive queries hold `_lastRemoteResults` for the subscription lifetime, and with a mailbox
-        // open the retained `documentJson` strings amounted to a full extra copy of every message.
-        result.documentJson = undefined;
-        result.documentJsonHydrated = true;
       }
       const queryResult: SourceEntry = {
         id: result.id,
