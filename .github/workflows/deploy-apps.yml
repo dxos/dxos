@@ -18,10 +18,10 @@ name: Deploy Apps
 # Environments.
 
 on:
-  # Nightly: `main`'s tip, once a day, rather than a deploy per commit. 08:00 UTC = 03:00 EST / 04:00 EDT
+  # Nightly: `main`'s tip, once a day, rather than a deploy per commit. 07:00 UTC = 03:00 EDT / 02:00 EST
   # (cron has no timezone, so the wall-clock hour shifts by one across US DST).
   schedule:
-    - cron: '0 8 * * *'
+    - cron: '0 7 * * *'
   workflow_dispatch:
     inputs:
       environment:

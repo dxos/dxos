@@ -222,7 +222,7 @@ check without touching local refs at all: `git ls-remote --tags origin 'composer
 | Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                             |
 | -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | --------------------------------- |
 | **dev**        | `composer-dev…`          | EDGE nightly | manual → `dev`                    | composer              | desktop + iOS → TestFlight        |
-| **nightly**    | `nightly.composer.space` | EDGE prod    | auto, 08:00 UTC daily from `main` | all `nightly`-enabled | dogfood build; desktop only       |
+| **nightly**    | `nightly.composer.space` | EDGE prod    | auto, 07:00 UTC daily from `main` | all `nightly`-enabled | dogfood build; desktop only       |
 | **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused         |
 | **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release |
 
