@@ -12,7 +12,7 @@
 
 import { chromium } from '@playwright/test';
 import { spawn, execSync } from 'node:child_process';
-import { mkdtempSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -75,6 +75,24 @@ const child = spawn(
 child.stderr.on('data', (d) => process.stderr.write(d));
 console.log(`bare chromium pid ${child.pid}`);
 
+// The profile dir and the browser outlive a crash or a ctrl-c otherwise, and each run leaves a
+// multi-hundred-MB directory behind.
+let cleanedUp = false;
+const cleanUp = () => {
+  if (cleanedUp) {
+    return;
+  }
+  cleanedUp = true;
+  child.kill();
+  rmSync(profile, { recursive: true, force: true });
+};
+for (const signal of ['SIGINT', 'SIGTERM']) {
+  process.on(signal, () => {
+    cleanUp();
+    process.exit(signal === 'SIGINT' ? 130 : 143);
+  });
+}
+
 // Wait for the debug port.
 for (let i = 0; i < 60; i++) {
   try {
@@ -93,6 +111,7 @@ await cdp.send('Page.enable');
 await cdp.send('Page.navigate', { url });
 
 // Wait for app-ready by polling the DOM (Runtime.evaluate only — no Network domain ever enabled).
+let ready = false;
 for (let i = 0; i < 240; i++) {
   const { result } = await cdp
     .send('Runtime.evaluate', {
@@ -100,8 +119,17 @@ for (let i = 0; i < 240; i++) {
       returnByValue: true,
     })
     .catch(() => ({ result: { value: false } }));
-  if (result?.value) break;
+  if (result?.value) {
+    ready = true;
+    break;
+  }
   await new Promise((r) => setTimeout(r, 1000));
+}
+if (!ready) {
+  // Soaking a page that never loaded would report a flat, meaningless baseline.
+  console.error(`app never reached ready at ${url}`);
+  cleanUp();
+  process.exit(1);
 }
 console.log('ready; soaking', minutes, 'min');
 cdp.close();
@@ -144,4 +172,4 @@ for (let round = 0; round <= rounds; round++) {
   if (round < rounds) await new Promise((r) => setTimeout(r, intervalS * 1000));
 }
 
-child.kill();
+cleanUp();

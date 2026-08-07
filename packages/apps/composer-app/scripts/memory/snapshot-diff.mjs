@@ -131,7 +131,7 @@ const targetsA = await listTargets();
 const aggsA = new Map();
 for (const t of targetsA) {
   console.log(`snapshot A: ${t.type}`);
-  aggsA.set(t.type, await snapshotAgg(t));
+  aggsA.set(t.id, await snapshotAgg(t));
 }
 
 await page.waitForTimeout((wait2 - wait1) * 1000);
@@ -139,7 +139,7 @@ const targetsB = await listTargets();
 for (const t of targetsB) {
   console.log(`snapshot B: ${t.type}`);
   const aggB = await snapshotAgg(t);
-  const aggA = aggsA.get(t.type);
+  const aggA = aggsA.get(t.id);
   if (aggA) diff(aggA, aggB, `${t.type} t=${wait1}s → t=${wait2}s`);
 }
 

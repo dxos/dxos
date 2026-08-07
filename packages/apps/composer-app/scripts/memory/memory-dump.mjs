@@ -68,7 +68,13 @@ class Cdp {
 const takeDump = async (browserWs) => {
   const events = [];
   const cdp = await Cdp.connect(browserWs);
-  cdp.on('Tracing.dataCollected', ({ value }) => events.push(...value));
+  cdp.on('Tracing.dataCollected', ({ value }) => {
+    // Pushed one at a time: a dump's batch runs to tens of thousands of events, past the
+    // argument limit a spread would hit.
+    for (const event of value) {
+      events.push(event);
+    }
+  });
   const done = new Promise((res) => cdp.on('Tracing.tracingComplete', res));
   await cdp.send('Tracing.start', {
     traceConfig: { includedCategories: ['disabled-by-default-memory-infra'], excludedCategories: ['*'] },

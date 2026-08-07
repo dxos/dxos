@@ -39,6 +39,15 @@ class Cdp {
       client.#ws.addEventListener('open', resolve, { once: true });
       client.#ws.addEventListener('error', reject, { once: true });
     });
+    const fail = (reason) => {
+      // Otherwise every in-flight request awaits a socket that will never answer.
+      for (const { reject } of client.#pending.values()) {
+        reject(new Error(reason));
+      }
+      client.#pending.clear();
+    };
+    client.#ws.addEventListener('close', () => fail('CDP socket closed'));
+    client.#ws.addEventListener('error', () => fail('CDP socket error'));
     client.#ws.addEventListener('message', ({ data }) => {
       const msg = JSON.parse(data);
       if (msg.id != null && client.#pending.has(msg.id)) {
@@ -176,10 +185,7 @@ if (snapshotDir) {
   }
 }
 
-writeFileSync(
-  path.join(path.dirname(new URL(import.meta.url).pathname), 'last-run.json'),
-  JSON.stringify(results.flat(), null, 2),
-);
+writeFileSync(path.join(import.meta.dirname, 'last-run.json'), JSON.stringify(results.flat(), null, 2));
 
 if (process.argv.includes('--keep-open')) {
   console.log('keeping browser open (ctrl-c to exit)');

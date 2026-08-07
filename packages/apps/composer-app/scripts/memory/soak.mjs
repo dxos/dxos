@@ -72,7 +72,7 @@ const shortName = (t) => {
 
 // RSS of every process in the launched chromium's tree, keyed by role.
 const sampleRss = (rootPid) => {
-  const out = execSync(`ps -ax -o pid,ppid,rss,command | awk '{print}'`, { maxBuffer: 32 * 1024 * 1024 }).toString();
+  const out = execSync('ps -ax -o pid,ppid,rss,command', { maxBuffer: 32 * 1024 * 1024 }).toString();
   const rows = out
     .split('\n')
     .slice(1)
@@ -113,12 +113,19 @@ await page.goto(url, { timeout: 180_000 });
 await page.getByTestId('treeView.userAccount').waitFor({ timeout: 180_000 });
 console.log('ready; soaking', minutes, 'min at', intervalS, 's intervals');
 
-// Root chromium pid: the process carrying our unique debug-port argument.
+// Found by command line rather than through Playwright: the `Browser` returned by
+// `@playwright/test`'s `chromium.launch()` exposes no `process()` handle. The debug port is unique
+// per run, so it identifies this browser and not a concurrent one.
 const rootPid = execSync(
   `ps -ax -o pid,command | grep -- "--remote-debugging-port=${DEBUG_PORT}" | grep -v grep | awk '{print $1}' | head -1`,
 )
   .toString()
   .trim();
+if (!rootPid) {
+  console.error('could not resolve the browser pid; the RSS columns would be empty');
+  await browser.close();
+  process.exit(1);
+}
 
 const samples = [];
 const started = Date.now();

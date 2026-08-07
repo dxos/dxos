@@ -18,6 +18,11 @@ import path from 'node:path';
 
 const url = process.argv[2] ?? 'http://localhost:4173';
 const distDir = process.argv[3];
+if (!distDir || !existsSync(path.join(distDir, 'assets'))) {
+  // Without the build's assets every chunk lookup misses and the census silently reports zeros.
+  console.error(`no build at ${distDir ?? '<missing>'} — pass the dist directory, e.g. out/composer`);
+  process.exit(1);
+}
 const settleIdx = process.argv.indexOf('--settle');
 const settleS = settleIdx > 0 ? parseInt(process.argv[settleIdx + 1], 10) : 150;
 const KB = (bytes) => +(bytes / 1024).toFixed(1);
@@ -29,7 +34,6 @@ const profileDir = profileIdx > 0 ? process.argv[profileIdx + 1] : null;
 const context = profileDir
   ? await chromium.launchPersistentContext(profileDir, { headless: true })
   : await (await chromium.launch({ headless: true })).newContext();
-const browser = context.browser() ?? { close: () => context.close() };
 const page = context.pages()[0] ?? (await context.newPage());
 const cdp = await page.context().newCDPSession(page);
 await cdp.send('Profiler.enable');
@@ -138,7 +142,8 @@ for (const chunk of pageFacts.chunks) {
   totalLoaded += info.size;
   const executed = execByUrl.get(chunk) ?? 0;
   totalExecuted += Math.min(executed, info.size);
-  const ratio = info.size > 0 ? executed / info.size : 0;
+  // Coverage ranges nest, so the summed bytes can exceed the chunk; the ratio is a share, not a sum.
+  const ratio = info.size > 0 ? Math.min(1, executed / info.size) : 0;
   if (info.size > 20_000 && ratio < 0.02) deadChunks.push({ chunk, size: info.size, ratio });
   for (const [pkg, bytes] of info.byPackage) {
     const cur = packages.get(pkg) ?? { loaded: 0, executed: 0, chunks: 0 };
