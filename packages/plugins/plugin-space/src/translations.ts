@@ -304,6 +304,8 @@ export const translations = [
         'danger-zone.description': 'Destructive actions that cannot be undone.',
 
         'delete-space.title': 'Delete Space',
+        'delete-default-space.description':
+          'This is your default space, so it cannot be deleted. Choose a different default space in Settings first.',
         'delete-space.description':
           'Remove this space from all of your devices. The space stops replicating and is hidden everywhere. This action cannot be undone.',
         'delete-space.label': 'Delete space',

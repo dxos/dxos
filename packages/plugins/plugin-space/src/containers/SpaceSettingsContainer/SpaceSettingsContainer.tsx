@@ -86,7 +86,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     [space.properties.name, space.properties.icon, space.properties.hue, isPrivate, edgeReplication],
   );
 
-  // The default space is the fallback target for unscoped content, so deleting it is not offered.
+  // The default space is the fallback target for unscoped content, so it cannot be deleted until
+  // another space is designated in its place.
   const isDefaultSpace = space.id === AppSpace.getDefaultSpace(client)?.id;
 
   const fieldMap = useMemo<FormFieldMap>(
@@ -249,43 +250,46 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             </Form.Row>
           </Form.Section>
 
-          {!isDefaultSpace && (
-            <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
-              <Form.Row label={t('delete-space.title')} description={t('delete-space.description')}>
-                <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                  <Dialog.Trigger asChild>
-                    <Button variant='destructive' data-testid='spaceSettings.deleteSpace'>
-                      {t('delete-space.label')}
-                    </Button>
-                  </Dialog.Trigger>
-                  <Dialog.Portal>
-                    <Dialog.Overlay>
-                      <Dialog.Content>
-                        <Dialog.Header>
-                          <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
-                        </Dialog.Header>
-                        <Dialog.Body>
-                          <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                          <div className='flex justify-end gap-2 mbs-4'>
-                            <Dialog.Close asChild>
-                              <Button>{t('cancel.label')}</Button>
-                            </Dialog.Close>
-                            <Button
-                              variant='destructive'
-                              onClick={handleDelete}
-                              data-testid='spaceSettings.deleteSpaceConfirm'
-                            >
-                              {t('delete-space.label')}
-                            </Button>
-                          </div>
-                        </Dialog.Body>
-                      </Dialog.Content>
-                    </Dialog.Overlay>
-                  </Dialog.Portal>
-                </Dialog.Root>
-              </Form.Row>
-            </Form.Section>
-          )}
+          <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
+            {/* Shown but disabled on the default space: hiding it reads as "this space cannot be
+                deleted" rather than "pick a different default space first". */}
+            <Form.Row
+              label={t('delete-space.title')}
+              description={isDefaultSpace ? t('delete-default-space.description') : t('delete-space.description')}
+            >
+              <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <Dialog.Trigger asChild>
+                  <Button variant='destructive' disabled={isDefaultSpace} data-testid='spaceSettings.deleteSpace'>
+                    {t('delete-space.label')}
+                  </Button>
+                </Dialog.Trigger>
+                <Dialog.Portal>
+                  <Dialog.Overlay>
+                    <Dialog.Content>
+                      <Dialog.Header>
+                        <Dialog.Title>{t('delete-space-confirm.title')}</Dialog.Title>
+                      </Dialog.Header>
+                      <Dialog.Body>
+                        <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
+                        <div className='flex justify-end gap-2 mbs-4'>
+                          <Dialog.Close asChild>
+                            <Button>{t('cancel.label')}</Button>
+                          </Dialog.Close>
+                          <Button
+                            variant='destructive'
+                            onClick={handleDelete}
+                            data-testid='spaceSettings.deleteSpaceConfirm'
+                          >
+                            {t('delete-space.label')}
+                          </Button>
+                        </div>
+                      </Dialog.Body>
+                    </Dialog.Content>
+                  </Dialog.Overlay>
+                </Dialog.Portal>
+              </Dialog.Root>
+            </Form.Row>
+          </Form.Section>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>
