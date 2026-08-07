@@ -15,6 +15,20 @@ const SEVERITY_ICONS = {
 };
 const HIDE_SEVERITIES = ['conventional'];
 
+// Export subpaths that ship a bundler plugin. These load inside a `vite.config.ts` under plain Node,
+// before any `source`-condition resolution is active, and their source reaches `node:*` plus
+// vite-only constructs (`?raw`, `?url`), so they are consumed from `dist` in every runtime.
+// The import-map plugin in `@dxos/app-framework/vite-plugin` drops the same shapes
+// (`BUILD_TOOL_SUBPATH`) from the browser import map.
+const BUILD_TOOL_EXPORT = /^\.\/(vite|esbuild|rollup)-plugin$/;
+
+// `./plugin` is overloaded: every `@dxos/plugin-*` package exports its Composer plugin there, which
+// is browser code and needs `source`. Only a package that also declares a bundler plugin — the
+// `vite-plugin` moon tag composer-app's `serve-min` fans out to — means build tooling by it.
+const isBuildToolExport = (exportPath, moonYml) =>
+  BUILD_TOOL_EXPORT.test(exportPath) ||
+  (exportPath === './plugin' && (moonYml?.tags?.includes('vite-plugin') ?? false));
+
 const packages = await $`pnpm -r ls --depth=-1 --json`.json();
 
 const repoRoot = await $`git rev-parse --show-toplevel`.text().then((text) => text.trim());
@@ -239,12 +253,19 @@ for (const { name, path: pkgPath } of packages) {
       addDiagnostic('warning', 'types-order', `export "${exportPath}": "types" should be first or after "source"`);
     }
 
-    // No source export - warning (expected for dist-runtime packages).
+    // No source export - warning (expected for dist-runtime and build-tool exports).
     if (!conditions.includes('source')) {
-      if (!isDistRuntime) {
+      if (!isDistRuntime && !isBuildToolExport(exportPath, moonYml)) {
         addDiagnostic('warning', 'no-source-export', `export "${exportPath}" has no "source" condition`);
       }
     } else {
+      if (isBuildToolExport(exportPath, moonYml)) {
+        addDiagnostic(
+          'error',
+          'build-tool-source-export',
+          `export "${exportPath}" is a build-tool entrypoint and must not publish a "source" condition — with one, an app's importSource resolver pulls its Node-only source into the browser bundle`,
+        );
+      }
       // Source may be a string or a nested condition object (e.g. { workerd: "...", default: "..." }).
       const sourceEntries =
         typeof exportValue.source === 'string'
