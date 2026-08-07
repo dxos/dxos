@@ -90,7 +90,7 @@ export const runOnArrivalExtractors = (mailbox: Mailbox.Mailbox, messages: reado
           { source: message, extractorId: best.extractor.id },
           { spaceId: db.spaceId },
         ).pipe(
-          Effect.catchAll((err) => {
+          Effect.catch((err) => {
             // The AI service can be momentarily absent from the process-manager LayerStack during
             // startup. Treat that as a deferrable skip — a later sync re-attempts.
             if (isAiServiceUnavailable(err)) {

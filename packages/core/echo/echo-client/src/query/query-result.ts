@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { Context } from '@dxos/context';

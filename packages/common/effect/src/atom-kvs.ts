@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import type * as Schema from 'effect/Schema';
+import { Atom } from 'effect/unstable/reactivity';
 
 // TODO(wittjosiah): This is currently provided for convenience but maybe should be removed.
 const defaultRuntime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);

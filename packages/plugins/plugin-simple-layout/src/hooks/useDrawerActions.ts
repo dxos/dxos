@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import { Atom } from 'effect/unstable/reactivity';
 import { useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';

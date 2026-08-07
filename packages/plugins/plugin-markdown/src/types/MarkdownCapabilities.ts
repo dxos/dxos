@@ -6,7 +6,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
-import { type Atom } from '@effect-atom/atom';
+import { type Atom } from 'effect/unstable/reactivity';
 import { type ReactNode } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';

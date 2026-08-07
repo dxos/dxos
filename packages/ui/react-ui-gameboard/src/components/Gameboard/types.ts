@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
+import { type Atom } from 'effect/unstable/reactivity';
 
 // TODO(burdon): Don't make this assumption.
 export type Player = 'black' | 'white';

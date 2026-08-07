@@ -28,7 +28,7 @@ export const del = Command.make(
     }
 
     const result = yield* adminRequest<DeleteSpaceResponse>('DELETE', `/admin/spaces/${spaceId}`).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {

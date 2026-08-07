@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, Registry } from '@effect-atom/atom';
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Deferred from 'effect/Deferred';
@@ -14,7 +13,8 @@ import * as Match from 'effect/Match';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
+import { type Atom, Registry } from 'effect/unstable/reactivity';
 
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -516,7 +516,7 @@ describe('PluginManager', () => {
         Effect.runFork,
       );
 
-      yield* manager.activate(FailEvent).pipe(Effect.catchAll(() => Effect.succeed(false)));
+      yield* manager.activate(FailEvent).pipe(Effect.catch(() => Effect.succeed(false)));
       yield* activating2.await;
       yield* error.await;
       yield* Fiber.interrupt(activationFiber);
@@ -1785,11 +1785,11 @@ describe('PluginManager', () => {
   describe('timeouts and failure tracking', () => {
     // Atom subscriptions fire synchronously when the registry's `_set` runs,
     // even from a forked fiber on the default runtime. Wrapping in
-    // `Effect.async` lets a TestClock-driven test wait for state produced by
+    // `Effect.callback` lets a TestClock-driven test wait for state produced by
     // a background `_runForkedFiber` (e.g. the auto-disable triggered when a
     // module activation times out) without relying on real-time `sleep`.
     const waitFor = <T>(registry: Registry.Registry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
-      Effect.async<void>((resume) => {
+      Effect.callback<void>((resume) => {
         if (predicate(registry.get(atom))) {
           resume(Effect.void);
           return;

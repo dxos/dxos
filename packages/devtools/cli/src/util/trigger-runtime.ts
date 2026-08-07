@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as BunKeyValueStore from '@effect/platform-bun/BunKeyValueStore';
 import type * as PlatformError from '@effect/platform/Error';
 import * as FileSystem from '@effect/platform/FileSystem';
@@ -12,6 +11,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
+import { Registry } from 'effect/unstable/reactivity';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { OpaqueToolkit } from '@dxos/ai';

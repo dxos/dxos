@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
@@ -11,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import { Registry } from 'effect/unstable/reactivity';
 
 import { AiService } from '@dxos/ai';
 import { ServiceNotAvailableError } from '@dxos/compute';

@@ -286,7 +286,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         runtime.runPromise(
           Effect.scoped(LanguageModel.generateText({ prompt: [SUMMARIZE_PROMPT, text].join('\n\n') })).pipe(
             Effect.map((response) => parseSummary(response.text)),
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               Effect.sync(() => {
                 log.warn('summarize failed; using empty summary', { model: MODEL, cause: Cause.pretty(cause) });
                 return { summary: '', isSpam: false, keywords: [] } satisfies Summary;
@@ -408,7 +408,7 @@ describe.skipIf(!HAS_DATASET)('Enron email pipeline (ROOT_DIR + Ollama gated)', 
         runtime.runPromise(
           Effect.scoped(LanguageModel.generateText({ prompt })).pipe(
             Effect.map((response) => response.text),
-            Effect.catchAllCause(() => Effect.succeed('')),
+            Effect.catchCause(() => Effect.succeed('')),
           ),
         );
       const drafts = await summarizeTopics(clusterThreads(threads), narrate);

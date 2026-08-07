@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
 import { useCapability, useOptionalCapability } from '@dxos/app-framework/ui';

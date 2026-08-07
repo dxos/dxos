@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import { Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
@@ -719,7 +719,7 @@ export const waitFor = (graph: BaseGraph, id: string): Effect.Effect<Node.Node> 
       return Effect.succeed(current.value);
     }
 
-    return Effect.async<Node.Node>((resume) => {
+    return Effect.callback<Node.Node>((resume) => {
       const unsubscribe = graph.onNodeChanged.on(({ id: changed, node }) => {
         if (changed === id && Option.isSome(node)) {
           unsubscribe();

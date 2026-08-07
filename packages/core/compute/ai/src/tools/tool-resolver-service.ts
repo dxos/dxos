@@ -7,8 +7,8 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 
 import { log } from '@dxos/log';
 
@@ -44,9 +44,9 @@ export class ToolResolverService extends Context.Tag('@dxos/ai/ToolResolverServi
               return Effect.void;
             }),
           ),
-          Effect.either,
+          Effect.result,
         ),
-      ).pipe(Effect.map(Array.filterMap(Either.getRight)));
+      ).pipe(Effect.map(Array.filterMap(Result.getRight)));
 
       return Toolkit.make(...tools);
     });

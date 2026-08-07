@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as FiberRef from 'effect/FiberRef';
@@ -10,6 +9,7 @@ import * as GlobalValue from 'effect/GlobalValue';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Scope from 'effect/Scope';
+import { type Atom } from 'effect/unstable/reactivity';
 
 import type { DXN } from '@dxos/keys';
 

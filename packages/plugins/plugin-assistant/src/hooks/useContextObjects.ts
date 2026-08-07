@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect/atom-react';
 import { useCallback, useMemo } from 'react';
 
 import { type AiContext } from '@dxos/assistant';

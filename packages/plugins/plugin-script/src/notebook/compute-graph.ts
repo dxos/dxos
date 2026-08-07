@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { log } from '@dxos/log';
 

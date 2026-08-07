@@ -77,7 +77,7 @@ describe('Database Skill', { tags: ['model-fixture'] }, () => {
       const fromObject = yield* decode({ ...base, jsonSchema: PROJECT_JSON_SCHEMA });
       expect(fromObject.jsonSchema).toEqual(PROJECT_JSON_SCHEMA);
 
-      const fromString = yield* Effect.either(decode({ ...base, jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA) }));
+      const fromString = yield* Effect.result(decode({ ...base, jsonSchema: JSON.stringify(PROJECT_JSON_SCHEMA) }));
       expect(fromString._tag).toBe('Left');
     }),
   );

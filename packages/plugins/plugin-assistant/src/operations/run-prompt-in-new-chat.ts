@@ -83,7 +83,7 @@ const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat>
               },
               { spaceId: db.spaceId },
             ).pipe(
-              Effect.catchAll((error) => {
+              Effect.catch((error) => {
                 log.catch(error);
                 return Effect.void;
               }),

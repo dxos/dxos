@@ -16,7 +16,7 @@ import { Client } from './client';
 export class ClientService extends Context.Tag('ClientService')<ClientService, Client>() {
   static fromClient = (client: Client) => Layer.succeed(ClientService, client);
 
-  static layer = Layer.scoped(
+  static layer = Layer.effect(
     ClientService,
     Effect.gen(function* () {
       // TODO(wittjosiah): Use effect config instead?

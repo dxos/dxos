@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext } from '@effect/atom-react';
 import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 

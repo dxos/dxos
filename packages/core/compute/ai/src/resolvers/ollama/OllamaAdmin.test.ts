@@ -5,8 +5,8 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import type * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Stream from 'effect/Stream';
 import { describe, test } from 'vitest';
 
@@ -64,8 +64,8 @@ describe('OllamaAdmin', () => {
           throw new TypeError('fetch failed: ECONNREFUSED');
         }),
       );
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
+      expect(Result.isLeft(result)).toBe(true);
+      if (Result.isLeft(result)) {
         expect(result.left._tag).toBe('OllamaError');
         expect(result.left.message).toContain('ECONNREFUSED');
       }
@@ -142,8 +142,8 @@ describe('OllamaAdmin', () => {
           streamResponse(['{"status":"pulling manifest"}\n', '{"error":"pull model manifest: file does not exist"}\n']),
         ),
       );
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
+      expect(Result.isLeft(result)).toBe(true);
+      if (Result.isLeft(result)) {
         expect(result.left.message).toBe('pull model manifest: file does not exist');
       }
     });
@@ -178,7 +178,7 @@ describe('OllamaAdmin', () => {
         admin.remove('llama3.2:1b'),
         mockFetch(() => new Response('', { status: 200 })),
       );
-      expect(Either.isRight(result)).toBe(true);
+      expect(Result.isRight(result)).toBe(true);
     });
 
     test('fails on 404', async ({ expect }) => {
@@ -187,7 +187,7 @@ describe('OllamaAdmin', () => {
         admin.remove('missing-model'),
         mockFetch(() => new Response('model not found', { status: 404 })),
       );
-      expect(Either.isLeft(result)).toBe(true);
+      expect(Result.isLeft(result)).toBe(true);
     });
   });
 });
@@ -208,7 +208,7 @@ const run = <A, E>(effect: Effect.Effect<A, E, HttpClient.HttpClient>, fetch: ty
 const runExit = <A, E>(
   effect: Effect.Effect<A, E, HttpClient.HttpClient>,
   fetch: typeof globalThis.fetch,
-): Promise<Either.Either<A, E>> => EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch)), Effect.either));
+): Promise<Result.Either<A, E>> => EffectEx.runPromise(effect.pipe(Effect.provide(layerFor(fetch)), Effect.result));
 
 /** Build a stub `fetch` that ignores its arguments and yields the response from `handler`. */
 const mockFetch =

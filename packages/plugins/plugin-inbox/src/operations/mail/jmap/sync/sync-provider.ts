@@ -328,7 +328,7 @@ const fetchAttachments = (
               contentId: attachment.contentId,
             }),
           ),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error, { blobId: attachment.blobId, name: attachment.name });
             return Effect.succeed(undefined);
           }),

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
+import { type Atom } from 'effect/unstable/reactivity';
 
 import * as Capability from '@dxos/app-framework/Capability';
 // Aliased: unwrapping the enclosing `namespace` put these in the same scope as the

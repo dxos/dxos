@@ -188,7 +188,7 @@ export const extractChunk = (
     const [strictDuration, strict] = yield* Effect.timed(
       LanguageModel.generateObject({ schema: ExtractPayload, prompt }).pipe(
         Effect.map((response) => Option.some(response.value)),
-        Effect.catchAll(() => Effect.succeed(Option.none<ExtractPayload>())),
+        Effect.catch(() => Effect.succeed(Option.none<ExtractPayload>())),
       ),
     );
     const strictMs = Math.round(Duration.toMillis(strictDuration));

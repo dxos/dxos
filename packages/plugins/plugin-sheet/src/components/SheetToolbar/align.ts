@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { type Registry, RegistryContext } from '@effect/atom-react';
 import { useContext, useEffect } from 'react';
 
 import { type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';

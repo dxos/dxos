@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Deferred from 'effect/Deferred';
@@ -10,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Stream from 'effect/Stream';
+import { Registry as AtomRegistry } from 'effect/unstable/reactivity';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiService, OpaqueToolkit } from '@dxos/ai';

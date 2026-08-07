@@ -69,7 +69,7 @@ const isDiscordError = (value: unknown): value is { message: string; code: numbe
 await EffectEx.runPromise(
   program.pipe(
     Effect.provide(makeDiscordLayerFromToken(token)),
-    Effect.catchAll((err) => {
+    Effect.catch((err) => {
       // dfx surfaces the Discord API body as a `[cause]` property on the wrapper error.
       const cause =
         typeof err === 'object' && err !== null && '[cause]' in err ? err['[cause]' as keyof typeof err] : err;

@@ -609,7 +609,7 @@ export const make = (model: string) =>
                   cause: new Error('request timeout'),
                 }),
             }),
-            Effect.catchAll((err) => {
+            Effect.catch((err) => {
               if (err instanceof AiError.HttpRequestError) {
                 return Effect.fail(err) as Effect.Effect<never, any, never>;
               }
@@ -697,7 +697,7 @@ export const make = (model: string) =>
                     cause: new Error('request timeout'),
                   }),
               }),
-              Effect.catchAll((err) => {
+              Effect.catch((err) => {
                 if (err instanceof AiError.HttpRequestError) {
                   return Effect.fail(err) as Effect.Effect<never, any, never>;
                 }
@@ -923,7 +923,7 @@ export const make = (model: string) =>
                   return parts;
                 }),
               ),
-              Stream.catchAll((err): Stream.Stream<never, AiError.HttpRequestError | AiError.UnknownError, never> => {
+              Stream.catch((err): Stream.Stream<never, AiError.HttpRequestError | AiError.UnknownError, never> => {
                 if (err instanceof AiError.HttpRequestError || err instanceof AiError.UnknownError) {
                   return Stream.fail(err);
                 }

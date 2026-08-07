@@ -2,13 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Runtime from 'effect/Runtime';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
@@ -588,7 +588,7 @@ describe('Database', () => {
   describe('ref atom deletion reactivity', () => {
     test('ref.atom fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -608,7 +608,7 @@ describe('Database', () => {
 
     test('Obj.atom(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);
@@ -629,7 +629,7 @@ describe('Database', () => {
 
     test('Obj.atomReactive(ref) fires and resolves to undefined when target is removed', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [TestSchema.Person] });
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
 
       const obj = db.add(Obj.make(TestSchema.Person, { name: 'Test' }));
       const ref = Ref.make(obj);

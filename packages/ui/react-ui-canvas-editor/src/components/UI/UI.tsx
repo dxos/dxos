@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import React from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';

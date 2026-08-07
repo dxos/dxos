@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { Atom, RegistryContext } from '@effect/atom-react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 

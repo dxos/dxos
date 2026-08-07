@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 
 import { Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
@@ -21,9 +21,9 @@ export default EnableSkills.pipe(
       for (const key of keys) {
         const result = yield* Skill.resolve(key).pipe(
           Effect.mapError(() => ({ key, reason: 'Skill not found in registry.' })),
-          Effect.either,
+          Effect.result,
         );
-        if (Either.isLeft(result)) {
+        if (Result.isLeft(result)) {
           rejected.push(result.left);
           continue;
         }

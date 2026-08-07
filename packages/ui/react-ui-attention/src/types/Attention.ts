@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 export type Attention = {
   hasAttention: boolean;

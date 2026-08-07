@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { Ref } from './ref';
 
@@ -12,7 +12,7 @@ import type { Ref } from './ref';
  */
 export const loadRefTarget = <T, R>(
   ref: Ref<T>,
-  get: Atom.Context,
+  get: Atom.AtomContext,
   onTargetAvailable: (target: T) => R,
 ): R | undefined => {
   // Accessing `ref.target` registers a resolution callback when the target is

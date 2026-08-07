@@ -32,7 +32,7 @@ import { createMockCredential, createServiceHost } from '../testing';
 const makeProxyServices = async (host: ReturnType<typeof createServiceHost>): Promise<Partial<ClientServices>> => {
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  const rpc = await EffectEx.runPromise(makeInProcessClientServicesRpc(() => host.services).pipe(Scope.extend(scope)));
+  const rpc = await EffectEx.runPromise(makeInProcessClientServicesRpc(() => host.services).pipe(Scope.provide(scope)));
   return makeServicesFromRpc(rpc, Runtime.defaultRuntime);
 };
 

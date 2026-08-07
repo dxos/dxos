@@ -3,9 +3,9 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
@@ -280,7 +280,7 @@ export class ComputeGraphController extends Resource {
           // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
           const effect = (computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId)).pipe(
             Effect.withSpan('runGraph'),
-            Scope.extend(scope),
+            Scope.provide(scope),
             Effect.provide(
               Layer.mergeAll(
                 Layer.succeed(Trace.TraceService, this._createTraceWriter()),
@@ -347,7 +347,7 @@ export class ComputeGraphController extends Resource {
             // TODO(dmaretskyi): Check if the node has a compute function and run computeOutputs if it does.
             const effect = (computingOutputs ? executor.computeOutputs(node) : executor.computeInputs(node)).pipe(
               Effect.withSpan('runGraph'),
-              Scope.extend(scope),
+              Scope.provide(scope),
               Effect.flatMap(computeValueBag),
               Effect.provide(
                 Layer.mergeAll(
@@ -447,9 +447,9 @@ const traceEventToComputeEvent = (key: string, payload: unknown): ComputeEvent |
 const computeValueBag = (bag: ValueBag<any>): Effect.Effect<Record<string, RuntimeValue>, never, never> => {
   return Effect.all(
     Object.entries(bag.values).map(([key, eff]) =>
-      Effect.either(eff).pipe(
+      Effect.result(eff).pipe(
         Effect.map((value) => {
-          if (Either.isLeft(value)) {
+          if (Result.isLeft(value)) {
             if (isNotExecuted(value.left)) {
               return [key, { type: 'not-executed' }] as const;
             } else {

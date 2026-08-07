@@ -42,7 +42,7 @@ export const activateDemandGatedModules = (
       manager
         .activate(event)
         .pipe(
-          Effect.catchAll((error) =>
+          Effect.catch((error) =>
             Effect.sync(() => log.warn('activation event failed', { event: event.id, error: String(error) })),
           ),
         ),

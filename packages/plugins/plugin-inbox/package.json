@@ -267,10 +267,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/ai": "catalog:",
-    "@effect/experimental": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "date-fns": "catalog:"
   },
@@ -286,7 +283,6 @@
     "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/opentelemetry": "catalog:",
-    "@effect/platform": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-node": "catalog:",
@@ -305,9 +301,7 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom": "catalog:",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/platform": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

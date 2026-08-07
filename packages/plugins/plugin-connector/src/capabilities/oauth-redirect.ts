@@ -56,7 +56,7 @@ export default Capability.makeModule(
       yield* Effect.forkDaemon(
         coordinator
           .finalizeRedirectFlow(tokens)
-          .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error })))),
+          .pipe(Effect.catch((error) => Effect.sync(() => log.warn('redirect-flow finalize failed', { error })))),
       );
     }
     return [];

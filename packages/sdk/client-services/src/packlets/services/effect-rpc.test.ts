@@ -102,7 +102,7 @@ const setupRpc = async (
 
   const scope = Effect.runSync(Scope.make());
   onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
-  return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.extend(scope)));
+  return EffectEx.runPromise(makeClientServicesRpc(proxyPort).pipe(Scope.provide(scope)));
 };
 
 const setup = async (

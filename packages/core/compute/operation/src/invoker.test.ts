@@ -12,7 +12,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError } from '@dxos/compute';
@@ -133,7 +133,7 @@ describe('OperationInvoker', () => {
   it.effect('throws error if no handler found', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([]), testRuntime);
-      const result = yield* invoker.invoke(Compute, { value: 1 }).pipe(Effect.either);
+      const result = yield* invoker.invoke(Compute, { value: 1 }).pipe(Effect.result);
 
       expect(result._tag).toBe('Left');
       if (result._tag === 'Left') {
@@ -157,7 +157,7 @@ describe('OperationInvoker', () => {
       const invoker = OperationInvoker.make(() => Effect.succeed(handlers), testRuntime);
 
       // No handler registered.
-      const error1 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.either);
+      const error1 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.result);
       expect(error1._tag).toBe('Left');
 
       // Add handler.
@@ -167,7 +167,7 @@ describe('OperationInvoker', () => {
 
       // Remove handler.
       handlers.splice(handlers.indexOf(toStringHandler), 1);
-      const error2 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.either);
+      const error2 = yield* invoker.invoke(ToString, { value: 1 }).pipe(Effect.result);
       expect(error2._tag).toBe('Left');
     }),
   );
@@ -252,7 +252,7 @@ describe('OperationInvoker', () => {
       const collector = yield* createEventCollector(invoker);
       yield* Effect.yieldNow();
 
-      const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.either);
+      const result = yield* invoker.invoke(Fail, { value: 1 }).pipe(Effect.result);
       expect(result._tag).toBe('Left');
 
       // Give any (unexpected) event a chance to arrive, then assert none was published.

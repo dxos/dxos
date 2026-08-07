@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 

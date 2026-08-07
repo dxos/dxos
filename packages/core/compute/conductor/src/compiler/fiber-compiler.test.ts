@@ -4,8 +4,8 @@
 
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe } from 'vitest';
 
@@ -139,8 +139,8 @@ describe('Graph as a fiber runtime', () => {
 
         const result = yield* runtime.runGraph(URI.make('dxn:test:g4'), ValueBag.make({ condition: true, value: 1 }));
 
-        expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
-        expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
+        expect(yield* Effect.result(result.values.true)).toEqual(Result.right(1));
+        expect(yield* Effect.result(result.values.false)).toEqual(Result.left(NotExecuted));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

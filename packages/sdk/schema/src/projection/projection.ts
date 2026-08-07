@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import { Format, Obj, Type, View } from '@dxos/echo';
 import { TypeEnum, formatToType, typeToFormat } from '@dxos/echo/Format';

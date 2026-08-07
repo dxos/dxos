@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
@@ -11,16 +9,18 @@ import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
+import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
+import { Atom } from 'effect/unstable/reactivity';
+import { Registry } from 'effect/unstable/reactivity';
 
 import { RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
@@ -375,7 +375,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       // Start natural time processing if enabled
       if (this.timeControl === 'natural') {
         this._timerFiber = yield* this._startNaturalTimeProcessing().pipe(
-          Effect.tapErrorCause((cause) => {
+          Effect.tapCause((cause) => {
             const error = EffectEx.causeToError(cause);
             log.error('trigger dispatcher error', { error });
             this._running = false;
@@ -868,7 +868,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           // Parse cron expression using Effect's Cron module
           const cronEither = Cron.parse(timerSpec.cron);
 
-          if (Either.isRight(cronEither)) {
+          if (Result.isRight(cronEither)) {
             const cron = cronEither.right;
             const now = this.getCurrentTime();
             const nextExecution = entry.nextExecution ?? Cron.next(cron, now);

@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
+import { type Registry } from 'effect/unstable/reactivity';
 
 import type * as Operation from '@dxos/compute/Operation';
 import { EffectEx } from '@dxos/effect';

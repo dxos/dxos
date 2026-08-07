@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, RegistryContext, useAtomValue } from '@effect/atom-react';
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { ElevationProvider } from '@dxos/react-ui';

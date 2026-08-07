@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from '@effect-atom/atom/Registry';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { SchemaAST } from '@dxos/effect';
@@ -455,7 +455,7 @@ describe('Annotation', () => {
       });
 
     test('atomProperty reads the typed slice for a key', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       setOrder(obj, { typeA: ['x', 'y'], typeB: ['m'] });
 
@@ -464,7 +464,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty returns undefined for a missing key or annotation', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
 
       const missingAnnotation = Annotation.atomProperty(obj, OrderAnnotation, 'typeA');
@@ -476,7 +476,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty updates when its own key changes', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       setOrder(obj, { typeA: ['x', 'y'] });
 
@@ -493,7 +493,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty reflects only its own key', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       setOrder(obj, { typeA: ['x', 'y'], typeB: ['m'] });
 
@@ -506,7 +506,7 @@ describe('Annotation', () => {
     });
 
     test('atom exposes the whole annotation value as an Option', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
 
       const wholeAtom = Annotation.atom(obj, OrderAnnotation);
@@ -534,7 +534,7 @@ describe('Annotation', () => {
     );
 
     test('push to an annotation array in place without Annotation.set', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y'] }));
 
@@ -549,7 +549,7 @@ describe('Annotation', () => {
     });
 
     test('splice an annotation array in place reorders the value', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y', 'z'] }));
 
@@ -588,7 +588,7 @@ describe('Annotation', () => {
     });
 
     test('atomProperty notifies subscribers when a Ref array is reordered in place', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       const a = Obj.make(Item, { name: 'a' });
       const b = Obj.make(Item, { name: 'b' });
@@ -614,7 +614,7 @@ describe('Annotation', () => {
     });
 
     test('reorder snapshot does not touch ref targets (tolerates cyclic targets)', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       const a = Obj.make(Item, { name: 'a' });
       // The annotation on `obj` holds a ref back to `obj`, so a loaded target forms a cycle —
@@ -636,7 +636,7 @@ describe('Annotation', () => {
     });
 
     test('Annotation.update mutates in place (wraps its own change)', ({ expect }) => {
-      const registry = Registry.make();
+      const registry = AtomRegistry.make();
       const obj = Obj.make(Container, { name: 'A' });
       Obj.update(obj, (obj) => Annotation.set(obj, OrderAnnotation, { typeA: ['x', 'y'] }));
 

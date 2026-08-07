@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, RegistryContext, useAtomValue } from '@effect/atom-react';
 import * as String from 'effect/String';
 import React, { type MouseEvent, type WheelEvent, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 

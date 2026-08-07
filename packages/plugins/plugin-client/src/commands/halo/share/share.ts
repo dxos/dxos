@@ -47,7 +47,7 @@ export const handler = Effect.fn(function* ({
           const authCode = invitation.authCode!;
 
           // Copy auth code to clipboard
-          yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
+          yield* copyToClipboard(authCode).pipe(Effect.catch(() => Effect.void));
 
           const url = new URL(host);
           url.searchParams.set('deviceInvitationCode', invitationCode);
@@ -61,7 +61,7 @@ export const handler = Effect.fn(function* ({
 
           if (open) {
             yield* openBrowser(url.toString()).pipe(
-              Effect.catchAll(() => Console.error(`Failed to open browser: ${url.toString()}`)),
+              Effect.catch(() => Console.error(`Failed to open browser: ${url.toString()}`)),
             );
           }
         }),

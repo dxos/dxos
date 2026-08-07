@@ -55,7 +55,7 @@ describe('parquetSource', () => {
 
   test('fails with ParquetReadError for a missing file', async ({ expect }) => {
     const result = await EffectEx.runPromise(
-      parquetSource([join(dir, 'missing.parquet')]).pipe(Stream.runCollect, Effect.either),
+      parquetSource([join(dir, 'missing.parquet')]).pipe(Stream.runCollect, Effect.result),
     );
     expect(result._tag).toBe('Left');
     if (result._tag === 'Left') {

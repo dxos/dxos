@@ -262,7 +262,7 @@ export class LocalClientServices implements ClientServicesProvider {
     // the deprecated Promise/Stream shaped services from it for consumers not yet on the effect surface.
     this._serviceScope = Effect.runSync(Scope.make());
     this._rpc = await EffectEx.runPromise(
-      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.extend(this._serviceScope)),
+      makeInProcessClientServicesRpc(() => this._host!.services).pipe(Scope.provide(this._serviceScope)),
     );
     this._services = makeServicesFromRpc(this._rpc, EffectRuntime.defaultRuntime);
 

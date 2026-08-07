@@ -62,7 +62,7 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
           providerExecuted: false,
         } satisfies ContentBlock.ToolResult;
       }),
-      Effect.catchAllCause((cause) =>
+      Effect.catchCause((cause) =>
         Effect.sync(() => {
           const errors = Cause.prettyErrors(cause);
           log.warn('tool failed', { err: errors[0] });

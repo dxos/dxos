@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import { Registry } from 'effect/unstable/reactivity';
 
 import * as Graph from '../graph';
 import * as GraphBuilder from '../graph-builder';

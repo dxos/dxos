@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry, RegistryContext } from '@effect-atom/atom-react';
+import { Registry, RegistryContext } from '@effect/atom-react';
 import { act, renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, test } from 'vitest';

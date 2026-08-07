@@ -359,7 +359,7 @@ export default Capability.makeModule(
           });
         }),
       ),
-      Effect.catchAll((err) => Effect.sync(() => log.catch(err))),
+      Effect.catch((err) => Effect.sync(() => log.catch(err))),
     );
     registry.update(stateAtom, (current) => ({ ...current, enabledEdgeReplication: true }));
 

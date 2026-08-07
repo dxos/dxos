@@ -202,7 +202,7 @@ export class SyncClient {
         limit: opts.limit,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
       );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,
@@ -285,7 +285,7 @@ export class SyncClient {
         limit: opts.limit,
       };
       yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
       );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,
@@ -345,7 +345,7 @@ export class SyncClient {
         blockCount: unpositioned.blocks.length,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
-        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+        Effect.tapCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
       );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,

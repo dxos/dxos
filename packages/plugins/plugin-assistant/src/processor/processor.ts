@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry as AtomRegistry } from '@effect-atom/atom';
 import * as AiError from '@effect/ai/AiError';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
@@ -11,6 +10,7 @@ import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
+import { Atom, Registry as AtomRegistry } from 'effect/unstable/reactivity';
 
 import { type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';

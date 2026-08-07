@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
-import type * as Result from '@effect-atom/atom/Result';
+import type * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 import { createResource, onCleanup } from 'solid-js';
 
 import { useRegistry } from '../registry';
@@ -11,7 +11,7 @@ import { useRegistry } from '../registry';
 /**
  * Hook to read an atom value with Suspense support
  */
-export function useAtomSuspense<A, E>(atom: Atom.Atom<Result.Result<A, E>>): () => A {
+export function useAtomSuspense<A, E>(atom: Atom.Atom<AsyncResult.Result<A, E>>): () => A {
   const registry = useRegistry();
 
   const [data, { mutate, refetch }] = createResource(async () => {

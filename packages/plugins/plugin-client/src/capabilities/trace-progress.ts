@@ -47,7 +47,7 @@ export default Capability.makeModule(
         resolver.resolve(RemoteProcessManager.Service, {}).pipe(
           Effect.flatMap((manager) => manager.cancel?.({ space, trigger, pid }) ?? Effect.void),
           Effect.scoped,
-          Effect.catchAllCause((cause) =>
+          Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
           ),
         ),

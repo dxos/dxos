@@ -48,7 +48,7 @@ export const handler = Effect.fn(function* ({
         return Prompt.text({ message: 'Enter the authentication code' })
           .pipe(Prompt.run)
           .pipe(Effect.mapError(() => undefined as never))
-          .pipe(Effect.catchAll(() => Effect.succeed(undefined))) as Effect.Effect<string | void, never, never>;
+          .pipe(Effect.catch(() => Effect.succeed(undefined))) as Effect.Effect<string | void, never, never>;
       },
     },
   });

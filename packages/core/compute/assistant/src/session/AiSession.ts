@@ -4,15 +4,15 @@
 
 // @import-as-namespace
 
-import { type Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
+import * as Result from 'effect/Result';
 import * as Runtime from 'effect/Runtime';
+import { type Registry as AtomRegistry } from 'effect/unstable/reactivity';
 
 import { type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';
@@ -59,7 +59,7 @@ export type RunProps<R = never> = {
 export type Options = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Database.Service>;
-  /** @effect-atom/atom-react Registry for reactive state. */
+  /** @effect/atom-react Registry for reactive state. */
   registry?: AtomRegistry.Registry;
   /**
    * Instructions steering the conversation (typically the owning `Chat`'s), rendered into the system
@@ -331,7 +331,7 @@ const connectMcpServers = (
         ),
         // Catch unexpected defects too (e.g. malformed tool schemas) so a single broken
         // server can never abort the whole turn — surface them through the same channel.
-        Effect.catchAllDefect((defect) =>
+        Effect.catchDefect((defect) =>
           Effect.gen(function* () {
             const message = defect instanceof Error ? defect.message : String(defect);
             log.warn('Unexpected MCP defect', { url: options.url, message });
@@ -349,10 +349,10 @@ const connectMcpServers = (
             );
           }),
         ),
-        Effect.either,
+        Effect.result,
       ),
     ),
-    Effect.map(Array.filterMap((_) => Either.getRight(_))),
+    Effect.map(Array.filterMap((_) => Result.getRight(_))),
   );
 };
 

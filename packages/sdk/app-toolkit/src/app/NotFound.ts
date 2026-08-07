@@ -92,7 +92,7 @@ export const validateNavigationTarget = (params: {
     const exists = (checker?: ExistenceChecker) =>
       checker
         ? checker(id.value).pipe(
-            Effect.catchAll((error) => {
+            Effect.catch((error) => {
               log.warn('existence check failed', { subjectId, error });
               return Effect.succeed(false);
             }),
@@ -136,7 +136,7 @@ export const createEdgeExistenceChecker = (
       }),
     ).pipe(
       Effect.map((response) => (response.results?.length ?? 0) > 0),
-      Effect.catchAll(() => Effect.succeed(false)),
+      Effect.catch(() => Effect.succeed(false)),
     );
   };
 };

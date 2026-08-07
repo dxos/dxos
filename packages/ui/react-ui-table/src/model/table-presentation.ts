@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Registry } from '@effect-atom/atom';
 import * as Predicate from 'effect/Predicate';
+import { type Registry } from 'effect/unstable/reactivity';
 
 import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';

@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryContext, type StoryObj } from '@storybook/react-vite';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';

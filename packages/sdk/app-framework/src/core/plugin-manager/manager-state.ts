@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { log } from '@dxos/log';
 

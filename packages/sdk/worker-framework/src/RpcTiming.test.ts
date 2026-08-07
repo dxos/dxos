@@ -49,7 +49,7 @@ describe('rpc timing middleware', () => {
     onTestFinished(() => EffectEx.runPromise(Scope.close(scope, Exit.void)));
 
     const client = (await EffectEx.runPromise(
-      Rpc.makeClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.extend(scope)),
+      Rpc.makeClient(channel.port2, TimingRpcs, { timing: true }).pipe(Scope.provide(scope)),
     )) as {
       reportTiming: (payload: Record<string, never>) => Effect.Effect<{ queueWaitMs: number }>;
     };

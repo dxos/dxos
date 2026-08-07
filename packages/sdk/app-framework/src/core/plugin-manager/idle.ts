@@ -26,7 +26,7 @@ const afterPaint: Effect.Effect<void> = Effect.suspend(() => {
   if (typeof requestAnimationFrame !== 'function') {
     return Effect.void;
   }
-  return Effect.async<void>((resume) => {
+  return Effect.callback<void>((resume) => {
     let inner: number | undefined;
     const outer = requestAnimationFrame(() => {
       inner = requestAnimationFrame(() => resume(Effect.void));
@@ -55,7 +55,7 @@ export const whenIdle: Effect.Effect<void> = Effect.suspend(() => {
   }
   return afterPaint.pipe(
     Effect.andThen(
-      Effect.async<void>((resume) => {
+      Effect.callback<void>((resume) => {
         const handle = requestIdleCallback(() => resume(Effect.void), { timeout: IDLE_TIMEOUT });
         return Effect.sync(() => cancelIdleCallback(handle));
       }),

@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension } from '@codemirror/state';
-import { Atom } from '@effect-atom/atom';
+import { Atom } from 'effect/unstable/reactivity';
 import React, {
   type PropsWithChildren,
   forwardRef,

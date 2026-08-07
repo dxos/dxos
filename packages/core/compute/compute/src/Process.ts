@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import type { Atom } from '@effect-atom/atom';
 import * as Rpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
@@ -15,6 +14,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
+import type { Atom } from 'effect/unstable/reactivity';
 
 import { Annotation } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
@@ -413,7 +413,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                 outcome: 'success',
               });
             }).pipe(
-              Effect.catchAllDefect((defect) =>
+              Effect.catchDefect((defect) =>
                 Effect.gen(function* () {
                   // Emit operation end event with failure. Carry the error's stable name as `errorCode`
                   // so consumers can match on the failure kind (e.g. a run-again yield) without parsing

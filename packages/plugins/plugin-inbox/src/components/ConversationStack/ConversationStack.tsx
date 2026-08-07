@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomSet, useAtomValue } from '@effect/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';

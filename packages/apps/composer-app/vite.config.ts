@@ -270,8 +270,7 @@ export default defineConfig((env) => ({
       '@effect/platform',
       '@effect/platform-browser',
       // Effect Atom (reactive state; always loaded, triggered a mid-session reload before being listed).
-      '@effect-atom/atom',
-      '@effect-atom/atom/Registry',
+      '@effect/atom-react',
       // Effect AI (with submodule exports).
       '@effect/ai',
       '@effect/ai/AiError',

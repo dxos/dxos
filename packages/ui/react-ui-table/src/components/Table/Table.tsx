@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { type PropsWithChildren, forwardRef, useImperativeHandle, useRef } from 'react';
 
 import { type DxGridAxisMeta, type DxGridPosition } from '@dxos/react-ui-grid';

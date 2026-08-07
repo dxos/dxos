@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type FC, type PropsWithChildren } from 'react';
 

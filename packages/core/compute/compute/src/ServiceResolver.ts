@@ -6,9 +6,9 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Result from 'effect/Result';
 import * as Scope from 'effect/Scope';
 
 import type { SpaceId, URI } from '@dxos/keys';
@@ -182,8 +182,8 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
   make((tag, context) =>
     Effect.gen(function* () {
       for (const resolver of resolvers) {
-        const single = yield* resolver.resolve(tag, context).pipe(Effect.either);
-        if (Either.isRight(single)) {
+        const single = yield* resolver.resolve(tag, context).pipe(Effect.result);
+        if (Result.isRight(single)) {
           return single.right;
         }
       }

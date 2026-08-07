@@ -97,7 +97,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   ): Effect.Effect<void> => {
     const effect = this._invoke(op, args[0] as I, args[1] as Operation.InvokeOptions | undefined).pipe(
       Effect.tap(() => Effect.sync(() => log('followup completed', { key: op.meta.key }))),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.sync(() => {
           log.error('followup failed', { key: op.meta.key, error });
         }),
@@ -118,7 +118,7 @@ class FollowupSchedulerImpl implements FollowupScheduler {
   scheduleEffect = <A, E>(effect: Effect.Effect<A, E, never>): Effect.Effect<void> => {
     const wrappedEffect = effect.pipe(
       Effect.tap(() => Effect.sync(() => log('followup effect completed'))),
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.sync(() => {
           log.error('followup effect failed', { error });
         }),

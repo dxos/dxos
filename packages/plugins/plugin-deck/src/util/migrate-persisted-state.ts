@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
 import { log } from '@dxos/log';
@@ -103,7 +103,7 @@ export const migratePersistedState = (
   }
 
   const decoded = decodeLegacyState(parsed);
-  if (Either.isLeft(decoded)) {
+  if (Result.isLeft(decoded)) {
     log.warn('failed to decode persisted deck state; removing', { key, error: decoded.left.message });
     storage.removeItem(key);
     return;

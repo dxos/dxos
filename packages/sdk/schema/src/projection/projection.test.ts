@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry as AtomRegistry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import { Registry as AtomRegistry } from 'effect/unstable/reactivity';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Filter, Query, Type, View } from '@dxos/echo';

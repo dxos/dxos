@@ -46,7 +46,7 @@ export const generateText = (
       // `catchAllCause`, not `orElse`: a malformed remote error response makes @effect/ai throw a
       // ParseError while *constructing* its own AiError — a DEFECT, which orElse does not catch. That
       // defect would otherwise escape and abort the whole run mid-way. Degrade any cause to empty.
-      Effect.catchAllCause(() => Effect.succeed('')),
+      Effect.catchCause(() => Effect.succeed('')),
     );
   });
 

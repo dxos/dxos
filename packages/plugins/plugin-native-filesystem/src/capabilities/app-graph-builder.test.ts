@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';

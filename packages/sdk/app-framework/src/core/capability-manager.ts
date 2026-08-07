@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';

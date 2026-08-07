@@ -356,7 +356,7 @@ export type GitHubPushResult = {
  * sent so the next pass sees no divergence even before the next pull.
  *
  * The push callbacks' error type is generic. The reconciler doesn't inspect
- * or recover from those errors — it propagates so the outer `Effect.either`
+ * or recover from those errors — it propagates so the outer `Effect.result`
  * at the call site can record the binding's `lastError`. Generic-`E` keeps
  * this module decoupled from the HTTP error hierarchy of `GitHubApi`.
  */
@@ -525,7 +525,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
 
         const bindingId = binding.id;
 
-        const outcome = yield* Effect.either(
+        const outcome = yield* Effect.result(
           Effect.gen(function* () {
             if (externalId === undefined) {
               return yield* Effect.dieMessage('Cursor has no externalId and the target has no GitHub foreign key.');
@@ -575,7 +575,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             // continue — the Project just won't have a parent organization.
             let pulledOrganizations = 0;
             const owner = remoteRepo.owner.login;
-            const orgResult = yield* Effect.either(GitHubApi.fetchOrg(owner));
+            const orgResult = yield* Effect.result(GitHubApi.fetchOrg(owner));
             if (orgResult._tag === 'Right') {
               const organization = yield* upsertOrganization(orgResult.right);
               pulledOrganizations++;

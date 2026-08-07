@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Rpc from '@effect/rpc/Rpc';
 import * as RpcGroup from '@effect/rpc/RpcGroup';
@@ -21,7 +20,8 @@ import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
+import { Registry } from 'effect/unstable/reactivity';
 
 import { RUN_AGAIN_ERROR_CODE, RunAgainError, ServiceNotAvailableError } from '@dxos/compute';
 import * as Cancellation from '@dxos/compute/Cancellation';

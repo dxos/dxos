@@ -30,7 +30,7 @@ export const getStatus = () =>
     }
   }).pipe(
     // TODO(wittjosiah): Tagged error.
-    Effect.catchSome((error) => {
+    Effect.catchIf((error) => {
       if (error instanceof Error && error.message === 'Identity not available') {
         // TODO(wittjosiah): Error coloring for logs.
         return Option.some(Console.error(error.message));

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
 import { type CapabilityManager } from '@dxos/app-framework';
@@ -37,11 +37,11 @@ export type InvokeDeps = {
  */
 export const handleListEvent = (detail: unknown, getActions: () => PageAction.PageAction[]): PageAction.ListAck => {
   const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)(detail);
-  if (Either.isLeft(decoded)) {
+  if (Result.isLeft(decoded)) {
     log.info('rejected invalid page-actions list request');
     // Best-effort id echo so the extension can correlate the failure ack.
     const envelope = Schema.decodeUnknownEither(PageAction.Envelope)(detail);
-    const id = Either.isRight(envelope) ? (envelope.right.id ?? '') : '';
+    const id = Result.isRight(envelope) ? (envelope.right.id ?? '') : '';
     return { version: 1, id, ok: false, error: 'invalidPayload' };
   }
   return {
@@ -59,7 +59,7 @@ export const handleListEvent = (detail: unknown, getActions: () => PageAction.Pa
  */
 export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Promise<PageAction.InvokeAck> => {
   const envelope = Schema.decodeUnknownEither(PageAction.Envelope)(detail);
-  if (Either.isLeft(envelope)) {
+  if (Result.isLeft(envelope)) {
     log.info('rejected invalid page-action envelope');
     return { version: 1, id: '', ok: false, error: 'invalidPayload' };
   }
@@ -79,7 +79,7 @@ export const handleInvokeEvent = async (detail: unknown, deps: InvokeDeps): Prom
   }
 
   const decoded = Schema.decodeUnknownEither(PageAction.InvokeRequest)(detail);
-  if (Either.isLeft(decoded)) {
+  if (Result.isLeft(decoded)) {
     log.info('rejected invalid page-action payload');
     return { version: 1, id: envelopeId, ok: false, error: 'invalidPayload' };
   }

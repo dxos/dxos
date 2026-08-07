@@ -5,7 +5,7 @@
 import * as Prompt from '@effect/ai/Prompt';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 
 import { Obj } from '@dxos/echo';
 import { ContentBlock, Message } from '@dxos/types';
@@ -339,9 +339,9 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
+      expect(Result.isLeft(result)).toBe(true);
+      if (Result.isLeft(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
@@ -435,9 +435,9 @@ describe('AiPreprocessor.preprocessPrompt', () => {
     Effect.fn(function* ({ expect }) {
       const messages = [makeMessage('user', [{ _tag: 'summary', content: 'Bad summary' }])];
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
+      expect(Result.isLeft(result)).toBe(true);
+      if (Result.isLeft(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
@@ -576,9 +576,9 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         ]),
       ];
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt(messages));
+      expect(Result.isLeft(result)).toBe(true);
+      if (Result.isLeft(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),
@@ -591,9 +591,9 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         { _tag: 'toolCall', toolCallId: 'call_1', name: 'calculator', input: '{not valid', providerExecuted: false },
       ]);
 
-      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
-      expect(Either.isLeft(result)).toBe(true);
-      if (Either.isLeft(result)) {
+      const result = yield* Effect.result(AiPreprocessor.preprocessPrompt([message]));
+      expect(Result.isLeft(result)).toBe(true);
+      if (Result.isLeft(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
       }
     }),

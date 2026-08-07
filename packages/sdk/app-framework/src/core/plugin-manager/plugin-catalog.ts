@@ -214,7 +214,7 @@ export class PluginCatalog {
         if (installed.has(next) || this.#state.getPlugin(next)) {
           continue;
         }
-        const installResult = yield* this.add(next).pipe(Effect.either);
+        const installResult = yield* this.add(next).pipe(Effect.result);
         if (installResult._tag === 'Left') {
           this.#state.recordFailure(
             id,
@@ -319,7 +319,7 @@ export class PluginCatalog {
             candidateModules: plugin.modules.filter((module) => this.#scheduler.isEligible(module)),
           })
           .pipe(
-            Effect.either,
+            Effect.result,
             Effect.map((result) => {
               if (result._tag === 'Left') {
                 this.#state.recordFailure(id, 'activation', result.left);
@@ -336,7 +336,7 @@ export class PluginCatalog {
           // plugin's start-gated modules would never activate.
           yield* this.#scheduler
             .activate(ActivationEvent.pluginStart(id))
-            .pipe(Effect.catchAll((error) => Effect.sync(() => this.#state.recordFailure(id, 'activation', error))));
+            .pipe(Effect.catch((error) => Effect.sync(() => this.#state.recordFailure(id, 'activation', error))));
         } else {
           // Tracked so `shutdown()` interrupts an incremental pass still running from the
           // bootstrap enable chain.
@@ -410,7 +410,7 @@ export class PluginCatalog {
           }),
         ),
         Effect.tap((value) => Deferred.succeed(deferred, value)),
-        Effect.tapErrorCause((cause) => Deferred.failCause(deferred, cause)),
+        Effect.tapCause((cause) => Deferred.failCause(deferred, cause)),
         Effect.ensuring(Effect.sync(() => this.#resolving.delete(id))),
       );
     });

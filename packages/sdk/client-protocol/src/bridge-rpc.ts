@@ -72,7 +72,7 @@ export const serveBridgeService = (port: MessagePort, service: BridgeServiceRpc)
 export const makeBridgeServiceClient = async (
   port: MessagePort,
 ): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> =>
-  bridgeServiceClientFromEffect((scope) => Rpc.makeClient(port, BridgeService.Rpcs).pipe(Scope.extend(scope)));
+  bridgeServiceClientFromEffect((scope) => Rpc.makeClient(port, BridgeService.Rpcs).pipe(Scope.provide(scope)));
 
 /**
  * Builds a proto-shaped {@link BridgeServiceRpc} over a pre-built {@link RpcClient.Protocol} (the
@@ -84,7 +84,7 @@ export const makeBridgeServiceClientOverProtocol = async (
 ): Promise<{ bridgeService: BridgeServiceRpc; close: () => Promise<void> }> =>
   bridgeServiceClientFromEffect((scope) =>
     Rpc.makeClientOverProtocol(Layer.succeed(RpcClient.Protocol, protocol), BridgeService.Rpcs).pipe(
-      Scope.extend(scope),
+      Scope.provide(scope),
     ),
   );
 

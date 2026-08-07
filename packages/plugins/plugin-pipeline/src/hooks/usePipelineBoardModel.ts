@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 import { useMemo } from 'react';
 
 import { getQueryTarget } from '@dxos/app-toolkit/query';

@@ -51,7 +51,7 @@ export const makeClientOverProtocol = <G, ProtocolError, ProtocolRequirements>(
     const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
     const protocolLayer = timingEnabled ? protocol.pipe(Layer.provideMerge(RpcTiming.clientLayer())) : protocol;
 
-    // Build the transport into the caller's scope (extended via `Scope.extend`) rather than
+    // Build the transport into the caller's scope (extended via `Scope.provide`) rather than
     // `Effect.provide`-ing the layer directly: that would bind the transport's lifetime to this
     // construction effect, tearing the worker connection down the instant the client is returned
     // (the client is used later by the caller). `Layer.build` keeps it alive for the caller's scope.

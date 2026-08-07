@@ -63,7 +63,7 @@ export const handler = Effect.fn(function* ({ credential }: { credential: Option
       yield* Console.log('Credential added successfully.');
     }
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.gen(function* () {
         if (json) {
           yield* Console.log(

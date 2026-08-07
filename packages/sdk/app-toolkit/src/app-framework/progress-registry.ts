@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { Progress } from '@dxos/progress';
 

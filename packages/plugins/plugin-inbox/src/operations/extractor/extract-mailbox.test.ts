@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import { Registry } from 'effect/unstable/reactivity';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';

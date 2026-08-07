@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as JSONSchema from 'effect/JSONSchema';
+import * as JSONSchema from 'effect/JsonSchema';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import { expect, test } from 'vitest';

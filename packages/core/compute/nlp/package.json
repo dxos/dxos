@@ -30,8 +30,7 @@
     "src"
   ],
   "dependencies": {
-    "@dxos/ai": "workspace:*",
-    "@effect/ai": "catalog:"
+    "@dxos/ai": "workspace:*"
   },
   "devDependencies": {
     "effect": "catalog:"

@@ -78,7 +78,7 @@ export const spaceLayer = (
       throw new Error('Space not found');
     },
   };
-  const db = Layer.scoped(
+  const db = Layer.effect(
     Database.Service,
     Effect.acquireRelease(
       Effect.gen(function* () {

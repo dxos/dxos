@@ -49,7 +49,7 @@ export const records = Command.make(
               // Empty collections come back as a 200 with `records: []`; if the
               // PDS responds 400 because we've never written that collection we
               // still want the others to render.
-              Effect.catchAll(() => Effect.succeed({ collection, records: [] as readonly ListRecordsEntry[] })),
+              Effect.catch(() => Effect.succeed({ collection, records: [] as readonly ListRecordsEntry[] })),
             ),
           ),
           { concurrency: 'unbounded' },

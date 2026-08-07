@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import { Atom } from '@effect-atom/atom';
 import * as Data from 'effect/Data';
 import * as Schema from 'effect/Schema';
+import { Atom } from 'effect/unstable/reactivity';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/Annotation';

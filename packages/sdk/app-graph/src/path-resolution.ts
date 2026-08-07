@@ -211,7 +211,7 @@ const resolveKeyId = async (
   for (const extension of extensions) {
     if (typeof extension.path === 'function') {
       const candidateId = await EffectEx.runPromise(
-        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchAllDefect(() => Effect.succeed(null))),
+        extension.path({ id, workspace, workspaceBaseId }).pipe(Effect.catchDefect(() => Effect.succeed(null))),
       );
       if (candidateId) {
         candidateIds.push(candidateId);

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect/atom-react';
 
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { TagIndex } from '@dxos/schema';

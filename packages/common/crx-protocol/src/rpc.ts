@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
 import { type Channel } from './channel';
@@ -13,7 +13,7 @@ const decode = Schema.decodeUnknownEither(Message.Union);
 /** Decode an inbound value to a `Message`, or `undefined` if it is not one. */
 export const decodeMessage = (value: unknown): Message.Type | undefined => {
   const result = decode(value);
-  return Either.isRight(result) ? result.right : undefined;
+  return Result.isRight(result) ? result.right : undefined;
 };
 
 /** Send a request and resolve the reply correlated by `id`; reject on timeout. */

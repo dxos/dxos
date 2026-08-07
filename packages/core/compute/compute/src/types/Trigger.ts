@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
-import type { Atom } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
+import type { Atom } from 'effect/unstable/reactivity';
 
 import { Annotation, DXN, Feed, Obj, type Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { HiddenAnnotation } from '@dxos/echo/Annotation';

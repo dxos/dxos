@@ -108,7 +108,7 @@ const generateSuggestions = (items: { label: string; typename: string }[]) =>
     }),
   ).pipe(
     Effect.map(({ value }) => [...value.prompts.slice(0, MAX_PROMPTS)]),
-    Effect.catchAll((err) => {
+    Effect.catch((err) => {
       log.warn('generate-home-suggestions: LLM call failed', { err });
       return Effect.succeed<string[]>([]);
     }),

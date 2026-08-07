@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
-import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import { type Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { EffectEx } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
@@ -100,7 +100,7 @@ export const reactive = (
       Effect.map((groups) => groups.flat()),
       // Reset cached on failure so a transient error doesn't permanently
       // poison subsequent calls.
-      Effect.tapErrorCause(() =>
+      Effect.tapCause(() =>
         Effect.sync(() => {
           cached = null;
         }),

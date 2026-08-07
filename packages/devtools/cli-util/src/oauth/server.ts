@@ -124,7 +124,7 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
     const app = router.pipe(HttpServer.serve());
     const serverLayer = app.pipe(Layer.provide(BunHttpServer.layer({ port })));
     const scope = yield* Scope.make();
-    yield* Layer.build(serverLayer).pipe(Scope.extend(scope));
+    yield* Layer.build(serverLayer).pipe(Scope.provide(scope));
 
     const waitForResult = (timeoutMs: number = OAUTH_TIMEOUT_MS) =>
       Effect.race(
@@ -152,6 +152,6 @@ export const startOAuthCallbackServer = (callbackPath: `/${string}`): Effect.Eff
       origin,
       open: (authUrl: string) => openBrowser(`${origin}/oauth-relay?authUrl=${encodeURIComponent(authUrl)}`),
       waitForResult,
-      stop: () => Scope.close(scope, Exit.void).pipe(Effect.catchAll(() => Effect.void)),
+      stop: () => Scope.close(scope, Exit.void).pipe(Effect.catch(() => Effect.void)),
     } satisfies OAuthCallbackServer;
   });

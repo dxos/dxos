@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, RegistryContext, useAtomValue } from '@effect/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo, useRef, useState } from 'react';
 import { expect, userEvent, waitFor } from 'storybook/test';

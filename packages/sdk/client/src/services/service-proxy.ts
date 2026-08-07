@@ -58,7 +58,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
     try {
       this._rpc = await EffectEx.runPromise(
         makeClientServicesRpc(this._port).pipe(
-          Scope.extend(scope),
+          Scope.provide(scope),
           Effect.timeoutFail({
             duration: this._timeout,
             onTimeout: () =>

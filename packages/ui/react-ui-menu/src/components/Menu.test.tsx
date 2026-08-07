@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { cleanup, render, renderHook, screen } from '@testing-library/react';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { type PropsWithChildren, useEffect } from 'react';
 import { afterEach, describe, test } from 'vitest';
 

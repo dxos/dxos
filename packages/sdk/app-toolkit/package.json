@@ -190,15 +190,13 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
-    "@effect/cli": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",
@@ -206,7 +204,7 @@
     "react-dom": "catalog:"
   },
   "peerDependencies": {
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"
   },

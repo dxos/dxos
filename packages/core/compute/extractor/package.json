@@ -35,8 +35,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/log": "workspace:*",
-    "@effect/ai": "catalog:"
+    "@dxos/log": "workspace:*"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",

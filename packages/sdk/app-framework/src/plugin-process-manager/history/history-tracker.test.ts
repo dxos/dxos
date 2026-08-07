@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
-import * as TestClock from 'effect/TestClock';
+import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -199,7 +199,7 @@ describe('HistoryTracker', () => {
         UndoRegistry.make(() => []),
       );
 
-      const result = yield* tracker.undo().pipe(Effect.either);
+      const result = yield* tracker.undo().pipe(Effect.result);
       expect(result._tag).toBe('Left');
       if (result._tag === 'Left') {
         expect(result.left.message).toContain('empty');

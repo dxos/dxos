@@ -144,7 +144,7 @@ export const layer = (opts?: AgentServiceOptions): Layer.Layer<AgentService, nev
           yield* agent
             .hydrate(executable)
             .pipe(
-              Effect.catchAllCause((cause) =>
+              Effect.catchCause((cause) =>
                 Effect.sync(() => log.warn('agent hydrate skipped', { pid: agent.pid, cause: Cause.pretty(cause) })),
               ),
             );

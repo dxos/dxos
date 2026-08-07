@@ -389,7 +389,7 @@ export const selectFeed = Effect.fn(function* () {
           description,
         });
       }
-    }).pipe(Effect.catchAll(() => Effect.void));
+    }).pipe(Effect.catch(() => Effect.void));
   }
 
   if (feedChoices.length === 0) {

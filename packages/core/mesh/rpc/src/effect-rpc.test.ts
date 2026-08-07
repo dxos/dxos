@@ -65,7 +65,7 @@ describe('effect-rpc over RpcPort', () => {
         return yield* RpcClient.make(TestRpcs, { disableTracing: true }).pipe(
           Effect.provideService(RpcClient.Protocol, protocol),
         );
-      }).pipe(Scope.extend(scope)),
+      }).pipe(Scope.provide(scope)),
     );
 
     const [client] = await Promise.all([clientPromise, startServer()]);

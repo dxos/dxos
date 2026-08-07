@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';

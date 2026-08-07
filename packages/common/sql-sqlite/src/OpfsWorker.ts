@@ -90,7 +90,7 @@ export const run = (options: OpfsWorkerConfig): Effect.Effect<void, SqlError.Sql
         }),
     );
 
-    return yield* Effect.async<void>((resume) => {
+    return yield* Effect.callback<void>((resume) => {
       const onMessage = (event: any) => {
         let messageId: number;
         let lastSql: string | undefined;

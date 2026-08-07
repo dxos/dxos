@@ -10,8 +10,8 @@ import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Mailbox from 'effect/Mailbox';
 import * as Option from 'effect/Option';
+import * as Mailbox from 'effect/Queue';
 import type * as Scope from 'effect/Scope';
 
 import { log } from '@dxos/log';
@@ -127,7 +127,7 @@ export const makeProtocolRpcPortClient = (
   );
 
 export const layerProtocolRpcPortClient = (port: RpcPort): Layer.Layer<RpcClient.Protocol> =>
-  Layer.scoped(RpcClient.Protocol, makeProtocolRpcPortClient(port));
+  Layer.effect(RpcClient.Protocol, makeProtocolRpcPortClient(port));
 
 /**
  * Server-side effect-rpc protocol over an {@link RpcPort}.
@@ -176,4 +176,4 @@ export const makeProtocolRpcPortServer = (
   );
 
 export const layerProtocolRpcPortServer = (port: RpcPort): Layer.Layer<RpcServer.Protocol> =>
-  Layer.scoped(RpcServer.Protocol, makeProtocolRpcPortServer(port));
+  Layer.effect(RpcServer.Protocol, makeProtocolRpcPortServer(port));

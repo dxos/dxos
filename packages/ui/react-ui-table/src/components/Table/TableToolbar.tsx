@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { Atom, RegistryContext } from '@effect/atom-react';
 import React, { useContext, useEffect, useMemo } from 'react';
 
 import { composable, composableProps } from '@dxos/react-ui';

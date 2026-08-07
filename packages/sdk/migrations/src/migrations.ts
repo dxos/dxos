@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import * as Registry from '@effect-atom/atom/Registry';
 import * as Option from 'effect/Option';
+import { Atom } from 'effect/unstable/reactivity';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Annotation, Obj } from '@dxos/echo';
@@ -27,7 +27,7 @@ export type Migration = {
 export class Migrations {
   static namespace?: string;
   static migrations: Migration[] = [];
-  private static _registry = Registry.make();
+  private static _registry = AtomRegistry.make();
   private static _stateAtom = Atom.make<{ running: string[] }>({ running: [] }).pipe(Atom.keepAlive);
 
   /**

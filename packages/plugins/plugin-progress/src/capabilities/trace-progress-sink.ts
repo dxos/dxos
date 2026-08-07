@@ -43,7 +43,7 @@ export default Capability.makeModule(
             const manager = yield* ProcessManager.ProcessManagerService;
             const handle = yield* manager
               .attach(Process.ID.make(pid))
-              .pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+              .pipe(Effect.catch(() => Effect.succeed(undefined)));
             if (handle) {
               yield* handle.terminate();
             }
@@ -60,7 +60,7 @@ export default Capability.makeModule(
           Effect.scoped,
           // Soft-fail (the meter has already cleared locally) but never silently: an unresolvable
           // manager or a rejected request means the run may still be going on the edge.
-          Effect.catchAllCause((cause) =>
+          Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('edge progress cancel failed', { space, trigger, pid, cause })),
           ),
         ),

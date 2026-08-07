@@ -75,7 +75,7 @@ export const handler = Effect.fn(function* ({
 
     yield* latch.await.pipe(
       Effect.timeout(Duration.millis(timeout)),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
       Effect.ensuring(
         Effect.sync(() => {
           subscription.unsubscribe();

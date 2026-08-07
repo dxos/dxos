@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import { Atom } from 'effect/unstable/reactivity';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';

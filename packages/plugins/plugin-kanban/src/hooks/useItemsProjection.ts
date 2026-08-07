@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
+import { Atom } from 'effect/unstable/reactivity';
 import { useMemo } from 'react';
 
 import type { ProjectionModel } from '@dxos/schema';

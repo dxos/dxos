@@ -84,7 +84,7 @@ export const repl = Command.make(
           // Dispatch in-process. Command failures are caught so the REPL
           // stays alive for the next prompt.
           yield* dispatch([...argvPrefix, ...tokens]).pipe(
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               Cause.isInterruptedOnly(cause) ? Effect.void : Console.error(Cause.pretty(cause)),
             ),
           );

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import { Atom } from 'effect/unstable/reactivity';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -51,7 +51,7 @@ export default Capability.makeModule(
       (workspace) =>
         mirrorSpaceManager.getOrCreateSpace(workspace).pipe(
           Effect.asVoid,
-          Effect.catchAllCause((cause) => {
+          Effect.catchCause((cause) => {
             log.warn('Failed to restore mirror space for workspace', { workspaceId: workspace.id, cause });
             return Effect.void;
           }),
@@ -107,7 +107,7 @@ export default Capability.makeModule(
           }
           yield* markdownDocuments.syncFromDisk(workspace);
         }).pipe(
-          Effect.catchAllCause((cause) => {
+          Effect.catchCause((cause) => {
             log.warn('Failed to restore markdown documents for workspace', { workspaceId: workspace.id, cause });
             return Effect.void;
           }),

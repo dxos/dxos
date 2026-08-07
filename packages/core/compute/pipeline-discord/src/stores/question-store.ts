@@ -98,7 +98,7 @@ export class QuestionStore extends Context.Tag('@dxos/pipeline-discord/QuestionS
   QuestionStoreApi
 >() {
   static layerSql: Layer.Layer<QuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-    Layer.scoped(
+    Layer.effect(
       QuestionStore,
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;

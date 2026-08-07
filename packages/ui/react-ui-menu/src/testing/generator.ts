@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
+import { Atom, Registry, RegistryContext } from '@effect/atom-react';
 import { useContext, useEffect } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';

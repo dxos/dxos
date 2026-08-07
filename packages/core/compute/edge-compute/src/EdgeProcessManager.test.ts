@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { Registry } from 'effect/unstable/reactivity';
 import { describe, expect, test, vi } from 'vitest';
 
 import { RemoteProcessManager } from '@dxos/compute-runtime';

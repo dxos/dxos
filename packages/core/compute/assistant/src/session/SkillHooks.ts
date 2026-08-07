@@ -63,7 +63,7 @@ export const runHooks = <R>({
           // through verbatim — the hook's operation reads any conversation state it needs itself.
           yield* invoke(operation, { ...hook.input });
         }).pipe(
-          Effect.catchAllCause((cause) =>
+          Effect.catchCause((cause) =>
             Effect.sync(() => log.warn('skill hook failed', { phase, skill: Skill.getKey(skill), cause })),
           ),
         );

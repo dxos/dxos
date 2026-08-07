@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
@@ -30,7 +30,7 @@ export const layer: Layer.Layer<
   Trigger.TriggerMonitorService,
   never,
   TriggerDispatcher | Database.Service | Registry.AtomRegistry | RemoteTriggerManager.Service
-> = Layer.scoped(
+> = Layer.effect(
   Trigger.TriggerMonitorService,
   Effect.gen(function* () {
     const dispatcher = yield* TriggerDispatcher;

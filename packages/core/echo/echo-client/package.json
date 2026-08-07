@@ -53,15 +53,12 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/tracing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom": "catalog:",
-    "@effect/experimental": "catalog:",
     "effect": "catalog:",
     "eventemitter3": "catalog:"
   },
   "devDependencies": {
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/test-utils": "workspace:*",
-    "@effect/sql": "catalog:",
     "fast-deep-equal": "catalog:"
   },
   "publishConfig": {

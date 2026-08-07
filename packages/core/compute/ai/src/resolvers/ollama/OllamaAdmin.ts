@@ -8,7 +8,7 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as HttpClientResponse from '@effect/platform/HttpClientResponse';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -251,7 +251,7 @@ const pullFrame = (frame: string): Stream.Stream<PullProgress, OllamaError> => {
     return Stream.empty;
   }
   const decoded = decodePullFrame(line);
-  if (Either.isLeft(decoded)) {
+  if (Result.isLeft(decoded)) {
     // Partial/garbage frame: skip rather than fail the whole pull.
     return Stream.empty;
   }
@@ -268,7 +268,7 @@ const readErrorBody = (response: HttpClientResponse.HttpClientResponse): Effect.
     Effect.orElse(() => Effect.succeed('')),
     Effect.map((body) => {
       const decoded = decodeErrorBody(body);
-      if (Either.isRight(decoded) && decoded.right.error !== undefined && decoded.right.error.length > 0) {
+      if (Result.isRight(decoded) && decoded.right.error !== undefined && decoded.right.error.length > 0) {
         return decoded.right.error;
       }
       return body.trim().length > 0 ? `HTTP ${response.status}: ${body.slice(0, 300)}` : `HTTP ${response.status}`;

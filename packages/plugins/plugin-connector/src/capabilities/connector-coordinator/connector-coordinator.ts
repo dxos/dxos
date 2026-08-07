@@ -108,10 +108,10 @@ const runOnTokenCreated = (
         Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)),
       ),
     ),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
     ),
-    Effect.catchAllDefect((defect) =>
+    Effect.catchDefect((defect) =>
       Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessToken.source, defect })),
     ),
   );
@@ -127,7 +127,7 @@ const navigateToNewConnection = (
       subject: [connectionDeckSubject(GraphPath.getSpacePath(db.spaceId), connectionId)],
       navigation: 'immediate',
     })
-    .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
+    .pipe(Effect.catch((error) => Effect.sync(() => log.warn('navigate to new connection failed', { error }))));
 
 const openSyncTargetsDialogAfterConnectionCreated = (
   invoker: Operation.OperationService,
@@ -149,7 +149,7 @@ const openSyncTargetsDialogAfterConnectionCreated = (
       },
     });
   }).pipe(
-    Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
+    Effect.catch((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
 const finalizePendingEntry = (

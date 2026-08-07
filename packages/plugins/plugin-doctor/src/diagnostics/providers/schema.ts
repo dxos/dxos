@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
@@ -47,7 +47,7 @@ export const schemaDiagnostic: DiagnosticProvider = {
           continue;
         }
         const result = Schema.validateEither(Type.getSchema(type))(obj);
-        if (Either.isLeft(result)) {
+        if (Result.isLeft(result)) {
           issues.push({
             id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:schema-mismatch`,
             severity: 'error',

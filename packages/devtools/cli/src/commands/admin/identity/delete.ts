@@ -30,7 +30,7 @@ export const del = Command.make(
     const result = yield* adminRequest<DeleteIdentityResponse | LegacyDeleteIdentityResponse>(
       'DELETE',
       `/admin/identities/${identityKey}`,
-    ).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))));
+    ).pipe(Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))));
 
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(result, null, 2));

@@ -58,7 +58,7 @@ const getIPData = Effect.fn(function* (config: Config) {
     Effect.flatMap((res) => res.json),
     Effect.flatMap(Schema.decodeUnknown(IPData)),
     // On failure fall back to stale cache rather than emitting no tags.
-    Effect.catchAll((err) =>
+    Effect.catch((err) =>
       Effect.sync(() => {
         log.warn('ipdata fetch failed; IP geolocation tags will be absent or stale', { err });
         return cachedData?.data;
@@ -92,7 +92,7 @@ export const provider =
       });
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      Effect.catchAll((err) =>
+      Effect.catch((err) =>
         Effect.sync(() => {
           log.warn('ipdata provider failed', { err });
         }),

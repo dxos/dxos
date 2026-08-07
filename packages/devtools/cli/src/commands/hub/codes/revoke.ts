@@ -16,7 +16,7 @@ export const revoke = Command.make(
   },
   Effect.fn(function* ({ code }) {
     yield* hubApiRequest<{ revoked: boolean }>('DELETE', `/api/code/${code}`).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))),
+      Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))),
     );
     yield* Console.log(`Revoked code ${code}.`);
   }),

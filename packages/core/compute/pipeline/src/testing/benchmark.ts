@@ -73,7 +73,7 @@ export const runBenchmark = <Config, Output, E, R>(
         } satisfies MetricsSnapshot;
       }).pipe(
         Effect.provide(layer),
-        Effect.catchAllCause((cause) =>
+        Effect.catchCause((cause) =>
           // A cancelled benchmark must abort, not be recorded as an `error` row and iterated past;
           // only genuine failures/defects degrade to a metrics row.
           Cause.isInterruptedOnly(cause)

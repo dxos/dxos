@@ -103,9 +103,7 @@ export class ActivationScheduler {
       // Early pass over already-registered modules. Failures here are re-evaluated by the
       // complete pass below, so they log rather than fail start.
       yield* this.runDependencyPass().pipe(
-        Effect.catchAll((error) =>
-          Effect.sync(() => log.warn('streaming startup pass failed', { error: String(error) })),
-        ),
+        Effect.catch((error) => Effect.sync(() => log.warn('streaming startup pass failed', { error: String(error) }))),
       );
 
       // The complete pass and the Startup event wait for the enable chain: the ready signal
@@ -142,7 +140,7 @@ export class ActivationScheduler {
       for (;;) {
         const settledAny = yield* this.#loader.awaitAllSettled();
         const ranAny = yield* this.runDependencyPass().pipe(
-          Effect.catchAll((error) =>
+          Effect.catch((error) =>
             Effect.sync(() => {
               log.warn('startup mop-up pass failed', { error: String(error) });
               return false;
@@ -181,7 +179,7 @@ export class ActivationScheduler {
     return Effect.gen(this, function* () {
       yield* this.#whenIdle;
       yield* this.activate(ActivationEvents.Idle).pipe(
-        Effect.catchAll((error) => Effect.sync(() => log.warn('idle activation failed', { error: String(error) }))),
+        Effect.catch((error) => Effect.sync(() => log.warn('idle activation failed', { error: String(error) }))),
       );
     });
   }
@@ -849,7 +847,7 @@ export class ActivationScheduler {
                 allSucceeded = false;
                 return;
               }
-              const result = yield* this.#activateModule(module, key).pipe(Effect.either);
+              const result = yield* this.#activateModule(module, key).pipe(Effect.result);
               if (result._tag === 'Left') {
                 failed.add(module.id);
                 allSucceeded = false;

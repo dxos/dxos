@@ -4,10 +4,10 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import * as Process from '@dxos/compute/Process';
 import type * as Trace from '@dxos/compute/Trace';

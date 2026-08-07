@@ -4,11 +4,11 @@
 
 // @import-as-namespace
 
-import { Atom, Registry as AtomRegistry } from '@effect-atom/atom';
 import * as EArray from 'effect/Array';
 import * as Function from 'effect/Function';
 import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
+import { Atom, Registry as AtomRegistry } from 'effect/unstable/reactivity';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
@@ -59,7 +59,7 @@ export class Bindings {
 export type BinderOptions = {
   feed: Feed.Feed;
   runtime: Runtime.Runtime<Database.Service>;
-  /** @effect-atom/atom-react Registry for reactive state management. */
+  /** @effect/atom-react Registry for reactive state management. */
   registry?: AtomRegistry.Registry;
 };
 

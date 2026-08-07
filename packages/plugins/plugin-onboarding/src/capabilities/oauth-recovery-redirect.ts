@@ -128,7 +128,7 @@ export default Capability.makeModule(
           // `halo` reads below need it complete.
           yield* Effect.promise(() => client.waitUntilInitialized());
           yield* finalizeRedirect(client, invoker, params).pipe(
-            Effect.catchAll((error) =>
+            Effect.catch((error) =>
               Effect.gen(function* () {
                 log.error('oauth recovery finalize failed', { error: describeError(error) });
                 yield* invoker

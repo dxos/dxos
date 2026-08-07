@@ -54,7 +54,7 @@ export class TestNetwork extends Context.Tag('@dxos/halo-e2e/TestNetwork')<
   }
 >() {}
 
-export const TestNetworkLive = Layer.scoped(
+export const TestNetworkLive = Layer.effect(
   TestNetwork,
   Effect.gen(function* () {
     const testBuilder = new TestBuilder();

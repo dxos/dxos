@@ -3,10 +3,10 @@
 //
 
 import * as Array from 'effect/Array';
-import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
@@ -204,7 +204,7 @@ type AgentRequestEndData = Schema.Schema.Type<typeof AgentRequestEnd.schema>;
  */
 const parseAgentRequestEnd = (data: unknown): AgentRequestEndData | undefined => {
   const validated = Schema.validateEither(AgentRequestEnd.schema)(data);
-  if (Either.isRight(validated)) {
+  if (Result.isRight(validated)) {
     return validated.right;
   }
   // Traces emitted before `status` was added wrote an empty object.
@@ -240,7 +240,7 @@ const presentAgentRequestEnd = (data: AgentRequestEndData): EventPresentation =>
 
 const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): EventPresentation | undefined => {
   if (Trace.isOfType(AgentRequestBegin, event)) {
-    if (Either.isLeft(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
+    if (Result.isLeft(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -258,7 +258,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     return presentAgentRequestEnd(endData);
   }
   if (Trace.isOfType(CompleteBlock, event)) {
-    if (Either.isLeft(Schema.validateEither(CompleteBlock.schema)(event.data))) {
+    if (Result.isLeft(Schema.validateEither(CompleteBlock.schema)(event.data))) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -318,7 +318,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     }
   }
   if (Trace.isOfType(Trace.OperationStart, event)) {
-    if (Either.isLeft(Schema.validateEither(Trace.OperationStart.schema)(event.data))) {
+    if (Result.isLeft(Schema.validateEither(Trace.OperationStart.schema)(event.data))) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }
@@ -330,7 +330,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     };
   }
   if (Trace.isOfType(Trace.OperationEnd, event)) {
-    if (Either.isLeft(Schema.validateEither(Trace.OperationEnd.schema)(event.data))) {
+    if (Result.isLeft(Schema.validateEither(Trace.OperationEnd.schema)(event.data))) {
       log('invalid trace event', { type: event.type });
       return undefined;
     }

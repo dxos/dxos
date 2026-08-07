@@ -27,7 +27,7 @@ const TERMINAL_FAILURE_STATES = new Set([
 
 /** Await an authenticating invitation reaching the given state. */
 export const waitForState = (invitation: AuthenticatingInvitationObservable, state: Invitation.State) =>
-  Effect.async<void, Error>((resume) => {
+  Effect.callback<void, Error>((resume) => {
     const subscription = invitation.subscribe((inv) => {
       if (inv.state === state) {
         resume(Effect.void);

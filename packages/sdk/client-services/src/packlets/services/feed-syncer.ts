@@ -285,7 +285,7 @@ export class FeedSyncer extends Resource {
                     limit: this.#messageBlocksLimit,
                   })
                   .pipe(
-                    Effect.catchAll((cause) =>
+                    Effect.catch((cause) =>
                       Effect.gen(this, function* () {
                         this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
                         return { blocksToPull: 0 };
@@ -470,7 +470,7 @@ export class FeedSyncer extends Resource {
                   limit: this.#messageBlocksLimit,
                 })
                 .pipe(
-                  Effect.catchAll((cause) =>
+                  Effect.catch((cause) =>
                     Effect.gen(this, function* () {
                       this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
                       return { done: false };
@@ -528,7 +528,7 @@ export class FeedSyncer extends Resource {
                       this.#pushFailureBackoffMs = DEFAULT_PUSH_FAILURE_BACKOFF_MS;
                     }),
                   ),
-                  Effect.catchAll((cause) =>
+                  Effect.catch((cause) =>
                     Effect.gen(this, function* () {
                       this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
                       hadPushFailure = true;

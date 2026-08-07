@@ -30,7 +30,7 @@ import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
  * multi-second long task that blocks paint and input (measured: 2 s max task, ~4.7 s TBT at boot).
  *
  * Prefers `scheduler.yield()` (input-priority aware); falls back to a MessageChannel hop, which is
- * a real macrotask boundary without `setTimeout`'s clamp. The fallback is `Effect.async` rather
+ * a real macrotask boundary without `setTimeout`'s clamp. The fallback is `Effect.callback` rather
  * than a hand-built promise so an interrupt closes the ports instead of leaking a channel per
  * yield — this runs between every module activation, so a few hundred times at boot.
  */
@@ -43,7 +43,7 @@ export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
   if (typeof MessageChannel === 'undefined') {
     return Effect.void;
   }
-  return Effect.async<void>((resume) => {
+  return Effect.callback<void>((resume) => {
     const { port1, port2 } = new MessageChannel();
     const close = () => {
       port1.close();
@@ -128,7 +128,7 @@ export class ModuleLoader {
         const fiber = yield* Effect.forkDaemon(
           this.#runActivation(module, parentEvent, scope).pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
-            Effect.catchAllCause((cause) =>
+            Effect.catchCause((cause) =>
               this.#recordActivationFailure(module, parentEvent, cause).pipe(
                 Effect.flatMap((error) => Deferred.fail(deferred, error)),
               ),
@@ -314,7 +314,7 @@ export class ModuleLoader {
     return Effect.gen(function* () {
       const manager = yield* Plugin.Service;
       yield* manager.activate(ActivationEvent.pluginStart(pluginId)).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => log.warn('plugin start event failed', { pluginId, error: String(error) })),
         ),
         Effect.forkDaemon,
@@ -347,7 +347,7 @@ export class ModuleLoader {
         Effect.locally(Capability.CurrentModuleId, module.id),
         Effect.locallyWith(Capability.ActivatingModuleIds, (ids) => new Set([...ids, module.id])),
 
-        Scope.extend(scope),
+        Scope.provide(scope),
         // Cap activation so a single misbehaving module can't hold the
         // event chain open. On timeout the failure is recorded against
         // the plugin and surfaced as `PluginTimeoutError`.
@@ -380,7 +380,7 @@ export class ModuleLoader {
       yield* this.#fireOwnStartForSurface(expanded, pluginId);
       return expanded;
     }).pipe(
-      Effect.tapErrorCause(() => Scope.close(scope, Exit.void)),
+      Effect.tapCause(() => Scope.close(scope, Exit.void)),
       Effect.withSpan('ModuleLoader.load'),
       together(
         Effect.sleep(Duration.seconds(10)).pipe(
@@ -455,7 +455,7 @@ export class ModuleLoader {
         { concurrency: 'unbounded', discard: true },
       ).pipe(
         Effect.timeout(this.#activationTimeout),
-        Effect.catchAll(() =>
+        Effect.catch(() =>
           Effect.sync(() =>
             log.warn('proceeding without in-flight multi providers', {
               module: module.id,

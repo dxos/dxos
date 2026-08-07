@@ -72,7 +72,7 @@ describe('Pipeline.run overflow', () => {
   test('suspend (default) delivers every item to a slow sink — no loss', async ({ expect }) => {
     const items: number[] = [];
     // A sink that yields between commits; back pressure must still deliver all items.
-    const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.zipLeft(Effect.yieldNow()));
+    const sink = (out: number) => Effect.sync(() => items.push(out)).pipe(Effect.tap(Effect.yieldNow()));
     await EffectEx.runPromise(
       Stream.fromIterable(Array.from({ length: 50 }, (_unused, index) => index)).pipe(
         Stage.map('id', (n) => Effect.succeed(n)),
@@ -111,7 +111,7 @@ describe('Pipeline.run overflow', () => {
     // the input-side sliding buffer (capacity 1) keeps only the latest, so intermediate items drop.
     const slow = Stage.map(
       'slow',
-      (n: number) => Effect.sync(() => runs.push(n)).pipe(Effect.zipRight(Effect.sleep('40 millis')), Effect.as(n)),
+      (n: number) => Effect.sync(() => runs.push(n)).pipe(Effect.andThen(Effect.sleep('40 millis')), Effect.as(n)),
       { overflow: 'sliding', bufferSize: 1 },
     );
     const { sink } = captureSink<number>();

@@ -140,7 +140,7 @@ const runStage = (
         onTelemetry?.({ stageId: stage.id, model, trigger, durationMs, outcome: 'committed' });
         return { write, window: slice };
       }).pipe(
-        Effect.catchAllCause((cause) =>
+        Effect.catchCause((cause) =>
           Effect.sync(() => {
             log.catch(Cause.squash(cause));
             onTelemetry?.({ stageId: stage.id, model, trigger, durationMs: 0, outcome: 'error' });
@@ -171,7 +171,7 @@ const run = (options: RunOptions): Effect.Effect<void> =>
       // Isolate commit failures per write: a failed commit must not fail its branch (which, under the
       // unbounded `Effect.forEach`, would interrupt the sibling branches). Log and drop instead.
       const sink: Pipeline.Sink<Enriched> = ({ write, window }) =>
-        commit(write, window).pipe(Effect.catchAllCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
+        commit(write, window).pipe(Effect.catchCause((cause) => Effect.sync(() => log.catch(Cause.squash(cause)))));
       const branches = yield* source.pipe(Stream.broadcast(enabled.length, BROADCAST_BUFFER));
 
       yield* Effect.forEach(

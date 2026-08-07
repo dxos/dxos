@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Registry } from '@effect-atom/atom';
+import type { Registry } from 'effect/unstable/reactivity';
 
 import type { CellGridAtoms } from '../state/atoms';
 import type { Cell, CellCoord, Headers, SelectionRange, Tool } from '../state/types';

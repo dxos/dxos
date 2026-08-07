@@ -151,7 +151,7 @@ describe('Template', () => {
       const result = await Template.processTemplate(template).pipe(
         Effect.provide(registryLayer()),
         stubInvoker,
-        Effect.either,
+        Effect.result,
         Effect.runPromise,
       );
 

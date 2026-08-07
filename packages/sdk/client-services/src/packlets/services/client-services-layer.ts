@@ -60,7 +60,7 @@ export type ClientServicesRpcContext =
 // Identity creation is a lifecycle sequence and profile broadcast iterates live spaces, so both
 // remain orchestrator responsibilities resolved from {@link ClientServicesHostService}.
 // The impl is a {@link Resource}; its open/close lifecycle is bound to the layer scope.
-const identityServiceLayer = Layer.scoped(
+const identityServiceLayer = Layer.effect(
   IdentityService.Tag,
   Effect.gen(function* () {
     const identityManager = yield* IdentityManagerService;

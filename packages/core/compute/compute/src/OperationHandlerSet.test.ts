@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

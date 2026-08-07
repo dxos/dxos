@@ -137,8 +137,8 @@ export const makeTemplateExtractor = <Payload, PayloadEncoded extends Record<str
       // Wrap genuine failures + defects (e.g. AiService unavailable) as ExtractError, but leave
       // fiber interruption untouched so cancellation propagates (neither catchAll nor
       // catchAllDefect catches interruption).
-      Effect.catchAll((error) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, error))),
-      Effect.catchAllDefect((defect) =>
+      Effect.catch((error) => Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, error))),
+      Effect.catchDefect((defect) =>
         Effect.fail(new ExtractError(`Template extraction failed: ${template.id}`, defect)),
       ),
     );

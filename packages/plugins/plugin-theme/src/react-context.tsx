@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, type Registry, useAtomValue } from '@effect/atom-react';
 import * as Effect from 'effect/Effect';
 import React, { ReactNode } from 'react';
 

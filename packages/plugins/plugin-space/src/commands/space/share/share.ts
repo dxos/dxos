@@ -55,7 +55,7 @@ export const handler = Effect.fn(function* ({
           const authCode = invitation.authCode!;
 
           // Copy auth code to clipboard
-          yield* copyToClipboard(authCode).pipe(Effect.catchAll(() => Effect.void));
+          yield* copyToClipboard(authCode).pipe(Effect.catch(() => Effect.void));
 
           if (!json) {
             yield* Console.log(`\nSecret: ${authCode} (copied to clipboard)\n`);
@@ -64,7 +64,7 @@ export const handler = Effect.fn(function* ({
           if (open) {
             const url = new URL(host);
             url.searchParams.append('spaceInvitationCode', invitationCode);
-            yield* openBrowser(url.toString()).pipe(Effect.catchAll(() => Effect.void));
+            yield* openBrowser(url.toString()).pipe(Effect.catch(() => Effect.void));
           } else if (!json) {
             yield* Console.log(`\nInvitation: ${invitationCode}\n`);
           }

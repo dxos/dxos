@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom, RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { type Atom, RegistryContext, useAtomValue } from '@effect/atom-react';
 import { useCallback, useContext } from 'react';
 
 /**

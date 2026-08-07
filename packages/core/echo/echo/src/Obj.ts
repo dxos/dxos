@@ -286,7 +286,7 @@ export const getReactive = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Ef
 export const getReactiveOption = <T extends Unknown>(snapshot: Snapshot<T>): Effect.Effect<Option.Option<T>, never> =>
   getReactive(snapshot).pipe(
     Effect.map(Option.some),
-    Effect.catchAll(() => Effect.succeed(Option.none())),
+    Effect.catch(() => Effect.succeed(Option.none())),
   );
 
 /**

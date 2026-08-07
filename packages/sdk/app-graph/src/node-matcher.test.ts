@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Option from 'effect/Option';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 import { describe, expect, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
@@ -303,5 +303,5 @@ describe('NodeMatcher', () => {
 
 // Real reactive context for matchers that take `get`. The matchers under test
 // inspect only the node, so the context is never read — it satisfies the arity.
-const captureContext = (): Atom.Context => Registry.make().get(Atom.make((context): Atom.Context => context));
+const captureContext = (): Atom.AtomContext => Registry.make().get(Atom.make((context): Atom.AtomContext => context));
 const get = captureContext();

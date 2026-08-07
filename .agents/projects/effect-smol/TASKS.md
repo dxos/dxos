@@ -1,12 +1,11 @@
 # effect-smol — Tasks
 
-_Resume: Phase 2 — blocked on `effect` GA. Uncommitted: none. Last: Phase 1 complete (d79d6bad routes 77 files through the `@dxos/effect` SchemaAST facade; corpus + migration + shape-pin tests green)._
+_Resume: Stage 2b — port `@dxos/keys` (30 Schema-rename errors), then re-census; the frontier moves package by package. Uncommitted: none. Last: stage 2a — v4 dependency graph resolves under strict peers, Tier 1 codemod applied (1,143 rewrites)._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
 
-Blocked on `effect` GA: v4 is at `4.0.0-beta.105` with no stable release. Phases 0–1 are
-deliberately doable on v3 today.
+Migrating on the beta (`4.0.0-beta.105`) — **not** gated on GA (D8).
 
 ## Phase 0: Audit and spike — DONE
 
@@ -93,9 +92,36 @@ Work that pays off whether or not v4 ever lands, and shrinks Phase 3 materially.
 
 ## Phase 2: Migrate dxos/dxos
 
-Gated on `effect` GA (or an explicit decision to ride the beta).
+Against `effect@4.0.0-beta.105`. The branch stays red until the port completes — that is expected,
+not a regression to chase.
 
-### Tasks
+### Stage 2a: bump and measure
+
+- [x] **Bump the catalog to the v4 train** — `effect@4.0.0-beta.105` plus the 10 `@effect/*`
+      packages that ship a v4 beta. `strict-peer-dependencies=true` makes this all-or-nothing:
+      the 11 absorbed packages had to leave all 142 manifests in the same change, the
+      `@effect-atom/atom@0.5.3` patch had to go with the package (it only widened peer ranges),
+      and `ioredis` needed `^5.9.0` for `@effect/platform-node@4`.
+      **`pnpm install` resolves cleanly under strict peers** — the first hard gate of Phase 2.
+- [x] **Take a compiler-derived error census** — `moon exec --on-failure continue :build`.
+      NOTE: a failing package skips everything downstream, so a census only ever measures the
+      current *frontier*, never the whole repo. First frontier: 150 errors / 56 files across
+      5 packages (`keys`, `effect-atom-solid`, `effect-zod`, `crx-protocol`,
+      `vendor-kbn-handlebars`). `@dxos/keys` is the deep one — 30 errors, all Schema renames.
+- [x] **Build the Tier 1 codemod** — `tools/codemods/effect-4-tier1.mjs`, applied:
+      **1,143 rewrites across ~530 files** in two passes (782 effect renames, then 361 more once
+      the file selector was widened to catch files importing only from `@effect-atom`).
+      Covers module paths (`effect/Either`→`Result`, `JSONSchema`→`JsonSchema`,
+      `TestClock`/`FastCheck`→`effect/testing/*`, `T*`→`Tx*`, `Mailbox`→`Queue`, all
+      `@effect-atom/*`→`effect/unstable/reactivity/*`), flat member renames
+      (`Effect.catchAll`→`catch` ×153, `either`→`result` ×44, `catchAllCause`→`catchCause` ×26,
+      `Layer.scoped`→`effect` ×22, `Scope.extend`→`provide` ×17, `Effect.async`→`callback` ×16,
+      …) and the binding renames those imply (`Either`→`Result`, `Registry`→`AtomRegistry`,
+      `Result`→`AsyncResult`).
+      Deliberately excluded: anything needing judgement (Schema variadic→array, `Context.Tag`→
+      `ServiceMap.Service`, layer memoization). Zero `@effect-atom` references left in source.
+
+### Stage 2b: the port
 
 - [ ] **Tier 1 — mechanical rewrites** (~2–3 wks): module paths, API renames, the 433 atom files.
 - [ ] **Tier 2 — services and runtime** (~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126 class

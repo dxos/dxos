@@ -40,7 +40,7 @@
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -60,7 +60,6 @@
     "@dxos/plugin-trip": "workspace:*",
     "@dxos/storybook-testing": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/ai": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

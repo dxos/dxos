@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -10,6 +9,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Type } from '@dxos/echo';
@@ -922,19 +922,19 @@ export const createExtensionRaw = (extension: CreateExtensionRawOptions): Builde
  */
 export type CreateExtensionOptions<TMatched = Node.Node, R = never> = {
   id: string;
-  match: (node: Node.Node, get: Atom.Context) => Option.Option<TMatched>;
+  match: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TMatched>;
   actions?: (
     matched: TMatched,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>, any>, 'type'>[], never, R>;
   /** Contribute dropdown action groups (each with nested `actions`) to the matched node; the group's
    * `type`/`data` are set automatically, so returning `Node.makeActionGroup(...)` output is fine. */
   actionGroups?: (
     matched: TMatched,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
-  resolver?: (id: string, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
-  connector?: (matched: TMatched, get: Atom.Context) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
+  resolver?: (id: string, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any, any> | null, never, R>;
+  connector?: (matched: TMatched, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any, any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
   /** URL binding for the nodes this extension produces (key + resolution); see {@link UrlBinding}. */
@@ -955,7 +955,7 @@ const runEffectSyncWithFallback = <T, R>(
   return Effect.runSync(
     effect.pipe(
       Effect.provide(context),
-      Effect.catchAllDefect((defect) => {
+      Effect.catchDefect((defect) => {
         log.warn('Extension failed', { extension: extensionId, defect });
         return Effect.succeed(fallback);
       }),
@@ -1034,8 +1034,8 @@ export const createExtension = <TMatched = Node.Node, R = never>(
  * The factory's data type is inferred from the matcher's return type.
  */
 export const createConnector = <TData>(
-  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Node.NodeArg<any>[],
+  matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.AtomContext) => Node.NodeArg<any>[],
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
     Atom.make((get) =>
@@ -1055,8 +1055,8 @@ export const createConnector = <TData>(
  */
 const createConnectorWithRuntime = <TData, R>(
   extensionId: string,
-  matcher: (node: Node.Node, get: Atom.Context) => Option.Option<TData>,
-  factory: (data: TData, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>,
+  matcher: (node: Node.Node, get: Atom.AtomContext) => Option.Option<TData>,
+  factory: (data: TData, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any>[], never, R>,
   context: Context.Context<R>,
 ): ConnectorExtension => {
   return (node: Atom.Atom<Option.Option<Node.Node>>) =>
@@ -1080,13 +1080,13 @@ export type CreateTypeExtensionOptions<T extends Type.AnyEntity = Type.AnyEntity
   type: T;
   actions?: (
     object: Type.InstanceType<T>,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], never, R>;
   actionGroups?: (
     object: Type.InstanceType<T>,
-    get: Atom.Context,
+    get: Atom.AtomContext,
   ) => Effect.Effect<Omit<Node.NodeArg<typeof Node.actionGroupSymbol>, 'type' | 'data'>[], never, R>;
-  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], never, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.AtomContext) => Effect.Effect<Node.NodeArg<any>[], never, R>;
   relation?: Node.RelationInput;
   position?: Position.Position;
 };

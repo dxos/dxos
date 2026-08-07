@@ -121,7 +121,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@excalidraw/excalidraw": "catalog:",
     "effect": "catalog:"
   },
@@ -133,7 +133,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

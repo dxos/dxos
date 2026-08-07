@@ -70,11 +70,11 @@ export class WorkerSession {
       // Close on the next tick (forked) so the RPC response is delivered before the transport tears down.
       Effect.forkDaemon(
         Effect.gen(this, function* () {
-          yield* Effect.async<void>((resume) => {
+          yield* Effect.callback<void>((resume) => {
             setTimeout(() => resume(Effect.void));
           });
           yield* this.close();
-        }).pipe(Effect.tapErrorCause((cause) => Effect.sync(() => log.catch(cause)))),
+        }).pipe(Effect.tapCause((cause) => Effect.sync(() => log.catch(cause)))),
       ).pipe(Effect.asVoid),
   };
 

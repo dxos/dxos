@@ -45,7 +45,7 @@ export const CreateSpaceDialog = () => {
         });
         yield* invoke(LayoutOperation.UpdateDialog, { state: false });
       }).pipe(
-        Effect.catchAll((failure) =>
+        Effect.catch((failure) =>
           Effect.sync(() => {
             log.catch(failure);
             setError(t('create-space-dialog.error.message'));

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomSet } from '@effect-atom/atom-react';
+import { useAtomSet } from '@effect/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';

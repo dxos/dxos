@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom';
+import { type Atom } from 'effect/unstable/reactivity';
 
 import * as Capability from '@dxos/app-framework/Capability';
 

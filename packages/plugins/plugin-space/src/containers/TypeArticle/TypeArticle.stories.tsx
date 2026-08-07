@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import { Atom } from 'effect/unstable/reactivity';
 import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';

@@ -191,7 +191,7 @@ const resolveUsers = (
       (id) =>
         SlackApi.fetchUser(id).pipe(
           Effect.tap((user) => Effect.sync(() => user && out.set(id, user))),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error);
             return Effect.void;
           }),
@@ -228,7 +228,7 @@ const resolveBots = (
       (id) =>
         SlackApi.fetchBot(id).pipe(
           Effect.tap((bot) => Effect.sync(() => bot && out.set(id, bot))),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error);
             return Effect.void;
           }),
@@ -283,7 +283,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
 
       const bindingId = EID.getEntityId(EID.tryParse(bindingRef.uri)!) ?? 'unknown';
 
-      const outcome = yield* Effect.either(
+      const outcome = yield* Effect.result(
         Effect.gen(function* () {
           const binding = yield* Database.load(bindingRef);
           if (!Cursor.isExternal(binding)) {
@@ -298,7 +298,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
 
           // Captured on the success path so the cursor's value + run status advance in one atomic update.
           let newestTs: string | undefined;
-          const syncResult = yield* Effect.either(
+          const syncResult = yield* Effect.result(
             Effect.gen(function* () {
               if (externalId === undefined) {
                 return { added: 0 } satisfies PullResult;

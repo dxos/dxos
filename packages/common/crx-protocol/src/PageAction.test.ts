@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -11,12 +11,12 @@ import { PageAction } from './index';
 describe('PageAction schema', () => {
   test('decodes a valid list request', ({ expect }) => {
     const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)({ version: 1, id: 'req-1' });
-    expect(Either.isRight(decoded)).toBe(true);
+    expect(Result.isRight(decoded)).toBe(true);
   });
 
   test('rejects a list request with a wrong version', ({ expect }) => {
     const decoded = Schema.decodeUnknownEither(PageAction.ListRequest)({ version: 2, id: 'req-1' });
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isLeft(decoded)).toBe(true);
   });
 
   test('round-trips an invoke ack', ({ expect }) => {

@@ -31,7 +31,7 @@ export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: s
 
   const raw = Yaml.parse(content);
   const parsed = yield* Schema.decodeUnknown(PluginsSchema)(raw ?? []).pipe(
-    Effect.catchAll(() => Effect.succeed([] as string[])),
+    Effect.catch(() => Effect.succeed([] as string[])),
   );
 
   return parsed;

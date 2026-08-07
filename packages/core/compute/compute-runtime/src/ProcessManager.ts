@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Rpc from '@effect/rpc/Rpc';
 import * as RpcClient from '@effect/rpc/RpcClient';
@@ -20,6 +19,7 @@ import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -385,7 +385,7 @@ export class ProcessManagerImpl implements Manager {
                 if (index !== -1) {
                   this.#traceSubscribers.splice(index, 1);
                 }
-              }).pipe(Effect.zipRight(Queue.shutdown(queue))),
+              }).pipe(Effect.andThen(Queue.shutdown(queue))),
             );
             this.#traceSubscribers.push(queue);
             return Stream.fromQueue(queue).pipe(

@@ -80,13 +80,13 @@ class ObservabilityImpl implements Observability {
       this._subscriptions.add(...cleanups.filter((cleanup) => cleanup !== undefined));
       this._initialized = true;
     }).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.gen(this, function* () {
           log.catch(error);
           // Roll back already-initialized extensions.
           for (const extension of initializedExtensions) {
             if (extension.close) {
-              yield* extension.close().pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+              yield* extension.close().pipe(Effect.catch(() => Effect.succeed(undefined)));
             }
           }
           this._subscriptions.clear();

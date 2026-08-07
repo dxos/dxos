@@ -123,7 +123,7 @@ export const createFetchOAuthInitiator = (): OAuthInitiator => ({
       return body.data.authUrl;
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      Effect.catchAll((error) => Effect.fail(new Error(`OAuth initiation failed: ${error}`))),
+      Effect.catch((error) => Effect.fail(new Error(`OAuth initiation failed: ${error}`))),
     ),
 });
 
@@ -182,7 +182,7 @@ export const performOAuthFlow = Effect.fn(function* (
     Obj.update(accessToken, (accessToken) => {
       accessToken.token = oauthResult.accessToken;
     });
-  }).pipe(Effect.ensuring(server.stop().pipe(Effect.catchAll(() => Effect.void))));
+  }).pipe(Effect.ensuring(server.stop().pipe(Effect.catch(() => Effect.void))));
 });
 
 /**

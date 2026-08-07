@@ -44,7 +44,7 @@ export class StateStore extends Context.Tag('@dxos/crawler/StateStore')<StateSto
   static layerMemory: Layer.Layer<StateStore> = Layer.sync(StateStore, () => makeMemory());
 
   /** SQLite-backed frontier over a shared SqlClient (browser wasm / node / DO SQLite). */
-  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
+  static layerSql: Layer.Layer<StateStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
     StateStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;

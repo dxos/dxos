@@ -4,7 +4,7 @@
 
 /* eslint-disable no-console */
 
-import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomSet, useAtomValue } from '@effect/atom-react';
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
 import * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';

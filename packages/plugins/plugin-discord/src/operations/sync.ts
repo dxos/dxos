@@ -168,7 +168,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
 
         // Captured on the success path so the cursor's value + run status advance in one atomic update.
         let newestId: string | undefined;
-        const outcome = yield* Effect.either(
+        const outcome = yield* Effect.result(
           Effect.gen(function* () {
             const rest = yield* DiscordREST;
 

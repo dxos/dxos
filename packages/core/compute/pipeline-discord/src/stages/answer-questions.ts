@@ -91,7 +91,7 @@ export const answerOpenQuestions = (
         return true;
       });
       const ok = yield* attempt.pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.logWarning(`answer-questions: ${question.id} left open — ${error}`).pipe(Effect.as(false)),
         ),
       );

@@ -139,7 +139,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //             prompt: 'What is the meaning of life?',
   //           }),
   //         )
-  //         .pipe(Scope.extend(scope));
+  //         .pipe(Scope.provide(scope));
   //
   //       const text: ValueEffect<string> = computeResult.values.text;
   //       const llmTextOutput = yield* text;
@@ -164,7 +164,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('GPT pipelines', () => {
   //             prompt: 'What is the meaning of life?',
   //           }),
   //         )
-  //         .pipe(Scope.extend(scope));
+  //         .pipe(Scope.provide(scope));
   //
   //       // log.info('text in test', { text: getDebugName(text) });
   //

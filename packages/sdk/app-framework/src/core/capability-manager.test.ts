@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom';
 import { describe, expect, it, onTestFinished } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { Registry } from 'effect/unstable/reactivity';
 
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
@@ -34,7 +34,7 @@ describe('CapabilityManager', () => {
 
       const result = yield* Capability.get(interfaceDef).pipe(
         Effect.provideService(Capability.Service, capabilityManager),
-        Effect.either,
+        Effect.result,
       );
 
       expect(result._tag).toEqual('Left');

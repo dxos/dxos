@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
-import { useAtomSet, useAtomValue } from '@effect-atom/atom-react';
+import { useAtomSet, useAtomValue } from '@effect/atom-react';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
+import { Atom } from 'effect/unstable/reactivity';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 

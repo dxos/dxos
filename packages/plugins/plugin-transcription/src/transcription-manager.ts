@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { synchronized } from '@dxos/async';
 import { type Space } from '@dxos/client/echo';

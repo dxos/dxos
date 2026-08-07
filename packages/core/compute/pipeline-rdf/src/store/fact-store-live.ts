@@ -41,7 +41,7 @@ const makeSelect = (source: Parameters<typeof selectTriples>[1]): FactStoreApi['
   return (sparql) => selectTriples(getEngine(), source, sparql).pipe(Effect.flatMap(reassemble));
 };
 
-export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
+export const layer: Layer.Layer<FactStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
   FactStore,
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;

@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as RpcClient from '@effect/rpc/RpcClient';
 import * as Cause from 'effect/Cause';
 import type * as Clock from 'effect/Clock';
@@ -20,6 +19,7 @@ import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
@@ -655,7 +655,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           // calls are no-ops when the record has already been deleted (terminal state).
           Effect.tap(() => this.#persistence.setAlarm(this.#alarmDueAt)),
           Effect.tap(() => this.#persistence.setState(this.#currentStatus.state)),
-          Effect.catchAllCause((cause) =>
+          Effect.catchCause((cause) =>
             Effect.gen(this, function* () {
               recordWall();
               // Do NOT remove the event on a pure interruption — the scope was closed for

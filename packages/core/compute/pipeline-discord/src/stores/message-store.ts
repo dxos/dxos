@@ -85,7 +85,7 @@ const toMessage = (row: Row): StoredMessage => ({
 });
 
 export class MessageStore extends Context.Tag('@dxos/pipeline-discord/MessageStore')<MessageStore, MessageStoreApi>() {
-  static layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.scoped(
+  static layerSql: Layer.Layer<MessageStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> = Layer.effect(
     MessageStore,
     Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;

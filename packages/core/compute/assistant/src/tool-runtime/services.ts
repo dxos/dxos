@@ -84,7 +84,7 @@ export const makeToolExecutionService = <E, R>(opts: {
                 return result;
               }
 
-              return yield* opts.invoke(tool, input).pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
+              return yield* opts.invoke(tool, input).pipe(Effect.catchDefect((defect) => Effect.fail(defect)));
             });
           };
 

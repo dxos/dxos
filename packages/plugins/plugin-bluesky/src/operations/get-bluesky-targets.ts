@@ -43,7 +43,7 @@ const handler: Operation.WithHandler<typeof GetBlueskyTargets> = GetBlueskyTarge
       const savedFeeds = yield* BlueskyApi.getSavedFeeds().pipe(
         Effect.provide(BlueskyApi.Credentials.fromConnection(connectionRef, client)),
         Effect.provide(FetchHttpClient.layer),
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.sync(() => {
             log.warn('failed to load Bluesky saved feeds', { error });
             return [] as ReadonlyArray<BlueskyApi.SavedFeed>;

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, useAtomValue } from '@effect/atom-react';
 import { type Scope, createContextScope } from '@radix-ui/react-context';
 import { createContext, useMemo } from 'react';
 

@@ -144,7 +144,7 @@
     "@dxos/react-ui-thread": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect-atom/atom-react": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-react": "workspace:*",
@@ -168,7 +168,7 @@
     "@dxos/react-ui-form": "workspace:^",
     "@dxos/react-ui-menu": "workspace:^",
     "@dxos/ui-theme": "workspace:^",
-    "@effect-atom/atom-react": "catalog:",
+    "@effect/atom-react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"

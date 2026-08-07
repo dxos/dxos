@@ -289,7 +289,7 @@ export const fetchAttachments = (
               }),
             ),
           ),
-          Effect.catchAll((error) => {
+          Effect.catch((error) => {
             log.catch(error, { messageId, attachmentId: attachment.attachmentId });
             return Effect.succeed(undefined);
           }),

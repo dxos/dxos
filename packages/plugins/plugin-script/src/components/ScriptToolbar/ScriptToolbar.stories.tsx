@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 import React, { useMemo } from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';

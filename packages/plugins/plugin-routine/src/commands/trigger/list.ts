@@ -32,7 +32,7 @@ export const list = Command.make(
       const client = yield* ClientService;
       const spaceId = yield* spaceIdWithDefault(spaceIdOption);
       const result = yield* Effect.promise(() => client.edge.http.getCronTriggers(Context.default(), spaceId)).pipe(
-        Effect.catchAll(() => Effect.succeed({ cronIds: [] })),
+        Effect.catch(() => Effect.succeed({ cronIds: [] })),
       );
       return result.cronIds;
     });

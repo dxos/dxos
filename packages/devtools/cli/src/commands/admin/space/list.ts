@@ -38,7 +38,7 @@ export const list = Command.make(
     }
 
     const result = yield* adminRequest<ListSpacesResponse>('GET', '/admin/spaces', { query }).pipe(
-      Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
+      Effect.catch((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {

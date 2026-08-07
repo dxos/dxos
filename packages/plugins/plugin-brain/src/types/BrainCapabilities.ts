@@ -18,5 +18,5 @@ export const FactStoreRegistry = Capability.makeSingleton<import('../capabilitie
 
 /** Writable atom holding the fact-analysis {@link BrainSettings.Settings} (model/provider/strict). */
 export const Settings = Capability.makeSingleton<
-  import('@effect-atom/atom-react').Atom.Writable<import('./BrainSettings').Settings>
+  import('@effect/atom-react').Atom.Writable<import('./BrainSettings').Settings>
 >()(`${meta.profile.key}.capability.settings`);

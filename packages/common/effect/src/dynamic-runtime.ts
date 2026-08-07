@@ -183,7 +183,7 @@ export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
       cachedRuntime = runtime;
       return runtime;
     }).pipe(
-      Effect.catchAll(() =>
+      Effect.catch(() =>
         // This should never happen since validateTags uses Effect.die
         Effect.die(new Error('Unexpected error in runtimeEffect validation')),
       ),

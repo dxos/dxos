@@ -39,4 +39,4 @@ export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError>
       });
     }
     return err;
-  }).pipe(Effect.catchAll(() => Effect.succeed(err)));
+  }).pipe(Effect.catch(() => Effect.succeed(err)));

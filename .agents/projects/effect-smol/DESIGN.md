@@ -6,7 +6,12 @@ Migrate `dxos/dxos` from Effect 3 to Effect 4 (`effect-smol`), then `dxos/edge`.
 
 `effect@4.0.0-beta.105` (2026-08-07); first beta 2026-02-18, no GA. Breaking changes are still
 permitted during beta, and most of what DXOS uses lands under `effect/unstable/*`, which carries
-no semver guarantee even after GA. The repo pins `effect: 3.21.4` in the catalog.
+no semver guarantee even after GA.
+
+**D8 — Migrate on the beta; do not wait for GA.** User, 2026-08-07. `effect/unstable/*` never
+gets a semver guarantee anyway, so waiting buys less than it costs; the migration proceeds against
+`4.0.0-beta.105` and tracks subsequent betas. Practical consequence: the migration branch is red
+until the port completes, and a beta bump mid-flight can reintroduce errors.
 
 ## Scope
 

@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
+import { type Atom, type Registry } from 'effect/unstable/reactivity';
 import localforage from 'localforage';
 
 import { log } from '@dxos/log';
@@ -25,7 +25,7 @@ const STORAGE_KEY = `${meta.profile.key}.workspaces`;
 export const loadPersistedWorkspaces = (): Effect.Effect<NativeFilesystemCapabilities.FilesystemWorkspace[]> =>
   Effect.tryPromise(() => localforage.getItem<NativeFilesystemCapabilities.FilesystemWorkspace[]>(STORAGE_KEY)).pipe(
     Effect.map((stored) => stored ?? []),
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to load persisted workspaces', { error });
         return [];
@@ -119,7 +119,7 @@ class FilesystemManagerImpl implements FilesystemManager {
     return Effect.gen(this, function* () {
       const state = this._registry.get(this._stateAtom);
       yield* Effect.tryPromise(() => localforage.setItem(STORAGE_KEY, state.workspaces)).pipe(
-        Effect.catchAll((error) => {
+        Effect.catch((error) => {
           log.warn('Failed to persist workspace state', { error });
           return Effect.void;
         }),

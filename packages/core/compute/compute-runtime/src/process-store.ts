@@ -110,7 +110,7 @@ export class ProcessStore {
       if (Option.isNone(raw)) {
         return undefined;
       }
-      const decoded = yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.either);
+      const decoded = yield* Schema.decode(RecordSchema)(raw.value).pipe(Effect.result);
       if (decoded._tag === 'Left') {
         yield* this.#purgeProcess(id);
         return undefined;

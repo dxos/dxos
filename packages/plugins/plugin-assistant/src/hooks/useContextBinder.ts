@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Registry, RegistryContext } from '@effect-atom/atom-react';
+import { type Registry, RegistryContext } from '@effect/atom-react';
 import * as Effect from 'effect/Effect';
 import { useContext, useState } from 'react';
 

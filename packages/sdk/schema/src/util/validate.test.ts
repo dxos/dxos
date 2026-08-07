@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Either from 'effect/Either';
 import * as Option from 'effect/Option';
 import * as ParseResult from 'effect/ParseResult';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -25,14 +25,14 @@ describe('validate', () => {
 
     {
       const value = decoder(0.01);
-      expect(Either.isLeft(value)).to.be.false;
+      expect(Result.isLeft(value)).to.be.false;
     }
 
     // https://effect.website/docs/schema/error-formatters/#customizing-the-output
     {
       const value = decoder(0.001);
-      expect(Either.isLeft(value)).to.be.true;
-      if (Either.isLeft(value)) {
+      expect(Result.isLeft(value)).to.be.true;
+      if (Result.isLeft(value)) {
         const [{ message }] = ParseResult.ArrayFormatter.formatErrorSync(value.left);
         expect(message).to.eq('Expected a number divisible by 0.01, actual 0.001');
       }
@@ -63,7 +63,7 @@ describe('validate', () => {
       const decoder = Schema.validateEither(schema, { errors: 'first' });
       const value = obj[name];
       const result = decoder(value);
-      expect(Either.isLeft(result)).to.be.false;
+      expect(Result.isLeft(result)).to.be.false;
     }
   });
 });

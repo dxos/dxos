@@ -120,7 +120,7 @@ export class LayerStack {
           ? this.#resolveServices(resolveAffinity, context, newSlice.requires)
           : Context.empty();
         yield* newSlice.init(requirements as Context.Context<unknown>).pipe(
-          Effect.tapErrorCause((cause) =>
+          Effect.tapCause((cause) =>
             Effect.sync(() => {
               const failure = Cause.failureOption(cause);
               const missingKey =

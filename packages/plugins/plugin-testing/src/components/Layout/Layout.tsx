@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { RegistryContext, useAtomValue } from '@effect/atom-react';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';

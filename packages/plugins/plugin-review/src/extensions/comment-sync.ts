@@ -4,7 +4,7 @@
 
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { type Atom, type Registry } from '@effect-atom/atom';
+import { type Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { getTextInRange } from '@dxos/echo-client';

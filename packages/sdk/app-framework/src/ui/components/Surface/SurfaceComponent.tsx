@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
+import { RegistryContext, useAtomValue } from '@effect/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import React, {

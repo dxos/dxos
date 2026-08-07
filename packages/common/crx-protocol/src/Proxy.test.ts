@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Either from 'effect/Either';
+import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
@@ -17,12 +17,12 @@ describe('Proxy schema', () => {
       waitForSelector: '#root',
       active: true,
     });
-    expect(Either.isRight(decoded)).toBe(true);
+    expect(Result.isRight(decoded)).toBe(true);
   });
 
   test('rejects a render request with a wrong version', ({ expect }) => {
     const decoded = Schema.decodeUnknownEither(Proxy.RenderRequest)({ version: 2, id: 'r1', url: 'https://x' });
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isLeft(decoded)).toBe(true);
   });
 
   test('round-trips a render ack (ok)', ({ expect }) => {
@@ -32,7 +32,7 @@ describe('Proxy schema', () => {
 
   test('rejects a render ack with an unknown error code', ({ expect }) => {
     const decoded = Schema.decodeUnknownEither(Proxy.RenderAck)({ version: 1, id: 'r1', ok: false, error: 'nope' });
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isLeft(decoded)).toBe(true);
   });
 
   test('round-trips a ping ack (ok)', ({ expect }) => {

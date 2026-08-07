@@ -78,7 +78,7 @@ export const openDirectoryPicker = (): Effect.Effect<string | null> => {
     });
     return selected as string | null;
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to open directory picker', { error });
         return null;
@@ -97,7 +97,7 @@ export const readFileContent = (path: string): Effect.Effect<string | undefined>
     const { readTextFile } = await import('@tauri-apps/plugin-fs');
     return await readTextFile(path);
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to read file', { path, error });
         return undefined;
@@ -120,7 +120,7 @@ export const writeFileContent = (path: string, content: string): Effect.Effect<b
     await writeTextFile(path, content);
     return true;
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to write file', { path, error });
         return false;
@@ -171,7 +171,7 @@ const ensureComposerDir = (workspacePath: string): Effect.Effect<boolean> => {
     await mkdir(dirPath, { recursive: true });
     return true;
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to create .composer directory', { workspacePath, error });
         return false;
@@ -202,7 +202,7 @@ const readDir = (path: string): Effect.Effect<DirEntry[]> => {
     const fs = await import('@tauri-apps/plugin-fs');
     return (await fs.readDir(path)) as DirEntry[];
   }).pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.sync(() => {
         log.warn('Failed to read directory', { path, error });
         return [];
@@ -298,7 +298,7 @@ export const loadWorkspace = (path: string): Effect.Effect<NativeFilesystemCapab
       spaceId: config.spaceId,
     };
   }).pipe(
-    Effect.catchAllCause((cause) =>
+    Effect.catchCause((cause) =>
       Effect.sync(() => {
         log.warn('Failed to load workspace', { path, cause });
         return null;

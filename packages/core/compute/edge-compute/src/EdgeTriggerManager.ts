@@ -4,13 +4,13 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import type * as Scope from 'effect/Scope';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import { type Client, ClientService } from '@dxos/client';
 import { RemoteTriggerManager } from '@dxos/compute-runtime';
@@ -74,7 +74,7 @@ const make = (
     const refresh = Effect.tryPromise(() => getEdgeClient().getSpaceTriggers(DxosContext.default(), spaceId)).pipe(
       Effect.tap((response) => Effect.sync(() => registry.update(triggers, () => response.triggers.map(toState)))),
       // The endpoint may be unimplemented or unreachable; a failed poll must not tear down the layer.
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
     );
 
     // Poll the EDGE dispatcher on an interval; the fiber is scoped to the layer's lifetime.
@@ -102,7 +102,7 @@ export const fromEdgeClient = (
   edgeClient: EdgeClient,
   spaceId: SpaceId,
 ): Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry> =>
-  Layer.scoped(
+  Layer.effect(
     RemoteTriggerManager.Service,
     Effect.gen(function* () {
       const registry = yield* Registry.AtomRegistry;
@@ -118,7 +118,7 @@ export const fromClient = (
   client: Client,
   spaceId: SpaceId,
 ): Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry> =>
-  Layer.scoped(
+  Layer.effect(
     RemoteTriggerManager.Service,
     Effect.gen(function* () {
       const registry = yield* Registry.AtomRegistry;
@@ -133,7 +133,7 @@ export const fromClient = (
 export const layer = (
   spaceId: SpaceId,
 ): Layer.Layer<RemoteTriggerManager.Service, never, Registry.AtomRegistry | ClientService> =>
-  Layer.scoped(
+  Layer.effect(
     RemoteTriggerManager.Service,
     Effect.gen(function* () {
       const client = yield* ClientService;

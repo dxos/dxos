@@ -39,7 +39,7 @@ const handler: Operation.WithHandler<typeof Relay> = Relay.pipe(
           // forwards the event rather than silently dropping it.
           const relevant = yield* qualifyEvent(chat, event).pipe(
             Effect.retry({ times: 1 }),
-            Effect.catchAll((error) =>
+            Effect.catch((error) =>
               Effect.sync(() => {
                 log.warn('relay qualification failed; forwarding event', { error });
                 return true;

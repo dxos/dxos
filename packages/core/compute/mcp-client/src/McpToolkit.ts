@@ -129,12 +129,12 @@ const connectWithFallback = (
 ): Effect.Effect<{ client: Client; protocol: McpToolkitOptions['protocol'] }, McpConnectionError> =>
   Effect.gen(function* () {
     const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
-    const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.either);
+    const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.result);
     if (primary._tag === 'Right') {
       return { client: primary.right, protocol: options.protocol };
     }
     if (is405(primary.left)) {
-      const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.either);
+      const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.result);
       if (fallback._tag === 'Right') {
         return { client: fallback.right, protocol: fallbackProtocol };
       }

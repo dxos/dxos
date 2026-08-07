@@ -698,7 +698,7 @@ const createInvitationsApi = async (
   invitationsApiScopes.push(scope);
   const rpc = await EffectEx.runPromise(
     makeInProcessClientServicesRpc(() => ({ InvitationsService: new InvitationsServiceImpl(manager) })).pipe(
-      Scope.extend(scope),
+      Scope.provide(scope),
     ),
   );
   const service = makeServicesFromRpc(rpc, Runtime.defaultRuntime).InvitationsService!;

@@ -307,7 +307,7 @@ export type LinearPushResult = {
  * the whole pass over an unrecognised workflow).
  *
  * The push callbacks' error type is generic. The reconciler doesn't inspect
- * or recover from those errors — it propagates so the outer `Effect.either`
+ * or recover from those errors — it propagates so the outer `Effect.result`
  * at the call site can record the binding's `lastError`. Generic-`E` keeps
  * this module decoupled from the GraphQL error hierarchy of `LinearApi`.
  */
@@ -474,7 +474,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
         };
       }
 
-      const outcome = yield* Effect.either(
+      const outcome = yield* Effect.result(
         Effect.gen(function* () {
           const externalId = binding.spec.externalId;
           if (!externalId) {
@@ -484,7 +484,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
           // shared contract; this connector owns and validates its shape.
           const options = binding.spec.options as LinearOperation.SyncOptions | undefined;
 
-          const syncResult = yield* Effect.either(
+          const syncResult = yield* Effect.result(
             Effect.gen(function* () {
               // Resolve the remote `Team` for this binding's `externalId`.
               const allTeams = yield* LinearApi.fetchTeams();

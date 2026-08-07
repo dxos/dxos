@@ -87,7 +87,7 @@ export class SyncServer {
           });
           yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'QueryResponse', ...response }));
         }).pipe(
-          Effect.catchAll((err: unknown) => {
+          Effect.catch((err: unknown) => {
             log('feed sync server query failed', {
               peerId: self.#peerId,
               recipientPeerId,
@@ -121,7 +121,7 @@ export class SyncServer {
           });
           yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'AppendResponse', ...response }));
         }).pipe(
-          Effect.catchAll((err: unknown) => {
+          Effect.catch((err: unknown) => {
             log('feed sync server append failed', {
               peerId: self.#peerId,
               recipientPeerId,

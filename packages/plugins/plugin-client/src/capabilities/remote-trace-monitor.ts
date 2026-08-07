@@ -52,7 +52,7 @@ export default Capability.makeModule(
                       : Option.none(),
                   ),
                   // Never fail the aggregate monitor stream on a transient network error.
-                  Stream.catchAll(() => Stream.empty),
+                  Stream.catch(() => Stream.empty),
                 );
               }),
             ),

@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as HttpClient from '@effect/platform/HttpClient';
 import { Command } from '@tauri-apps/plugin-shell';
@@ -10,13 +9,14 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Result from 'effect/Result';
 import * as Schedule from 'effect/Schedule';
 import * as Stream from 'effect/Stream';
+import { Atom } from 'effect/unstable/reactivity';
 
 import { type AiModelResolver, Provider } from '@dxos/ai';
 import { OllamaAdmin, OllamaResolver } from '@dxos/ai/resolvers';
@@ -97,8 +97,8 @@ export default Capability.makeModule(
     // callers branch on the result without a typed error channel.
     const runAdmin = <A, E extends { readonly message: string }>(
       effect: Effect.Effect<A, E, HttpClient.HttpClient>,
-    ): Effect.Effect<Either.Either<A, string>> =>
-      effect.pipe(Effect.provide(clientLayer), Effect.either, Effect.map(Either.mapLeft((error) => error.message)));
+    ): Effect.Effect<Result.Either<A, string>> =>
+      effect.pipe(Effect.provide(clientLayer), Effect.result, Effect.map(Result.mapLeft((error) => error.message)));
 
     // In-flight pull fibers, so a pull can be cancelled via interruption.
     const pullFibers = new Map<string, Fiber.RuntimeFiber<void>>();
@@ -107,7 +107,7 @@ export default Capability.makeModule(
     // console reflects which model is resident when a chat request triggers a load.
     const refreshLoaded: Effect.Effect<void> = Effect.gen(function* () {
       const result = yield* runAdmin(admin.ps);
-      if (Either.isLeft(result)) {
+      if (Result.isLeft(result)) {
         return;
       }
       const before = (yield* getState).loaded.map((model) => model.name);
@@ -129,7 +129,7 @@ export default Capability.makeModule(
       const result = yield* runAdmin(
         admin.list.pipe(Effect.retry({ schedule: Schedule.spaced(Duration.millis(300)), times: 29 })),
       );
-      if (Either.isLeft(result)) {
+      if (Result.isLeft(result)) {
         return yield* fail(result.left);
       }
       yield* updateState((state) => ({ ...state, kind: 'ready', models: result.right, error: undefined }));
@@ -213,7 +213,7 @@ export default Capability.makeModule(
         }
         yield* Effect.sync(() => log.info('ollama load', { name }));
         const result = yield* runAdmin(admin.load(name));
-        if (Either.isLeft(result)) {
+        if (Result.isLeft(result)) {
           yield* Effect.sync(() => log.warn('ollama load failed', { name, error: result.left }));
           return yield* setError(name, result.left);
         }
@@ -229,7 +229,7 @@ export default Capability.makeModule(
         }
         yield* Effect.sync(() => log.info('ollama unload', { name }));
         const result = yield* runAdmin(admin.unload(name));
-        if (Either.isLeft(result)) {
+        if (Result.isLeft(result)) {
           return yield* setError(name, result.left);
         }
         yield* refreshLoaded;
@@ -243,7 +243,7 @@ export default Capability.makeModule(
           return yield* setError(name, formatError(Cause.squash(started.cause)));
         }
         const result = yield* runAdmin(admin.remove(name));
-        if (Either.isLeft(result)) {
+        if (Result.isLeft(result)) {
           return yield* setError(name, result.left);
         }
         yield* refresh;
@@ -264,7 +264,7 @@ export default Capability.makeModule(
     // One disposal path: the resolver and the manager close over the same runtime.
     yield* Effect.addFinalizer(() =>
       Effect.tryPromise(() => runtime.dispose()).pipe(
-        Effect.catchAll((error) => Effect.sync(() => log.warn('ollama runtime dispose failed', { error }))),
+        Effect.catch((error) => Effect.sync(() => log.warn('ollama runtime dispose failed', { error }))),
       ),
     );
     return [
@@ -283,7 +283,7 @@ class OllamaSidecar extends Context.Tag('@dxos/plugin-native/OllamaSidecar')<
     endpoint: string;
   }
 >() {
-  static layerLive = Layer.scoped(
+  static layerLive = Layer.effect(
     OllamaSidecar,
     Effect.gen(function* () {
       // The `ollama` launcher discovers `llama-server` + its libraries relative to its own

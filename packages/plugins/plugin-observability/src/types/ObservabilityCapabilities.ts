@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import { type Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
+import { type Atom } from 'effect/unstable/reactivity';
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 import * as Capability from '@dxos/app-framework/Capability';

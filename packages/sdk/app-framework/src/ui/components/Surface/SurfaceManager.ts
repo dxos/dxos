@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom';
 import * as Data from 'effect/Data';
+import { Atom } from 'effect/unstable/reactivity';
 
 import { log } from '@dxos/log';
 import { Position } from '@dxos/util';

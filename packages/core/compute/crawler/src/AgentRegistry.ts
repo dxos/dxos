@@ -68,7 +68,7 @@ export class AgentRegistry extends Context.Tag('@dxos/crawler/AgentRegistry')<Ag
 
   /** SQLite-backed registry over a shared SqlClient. */
   static layerSql: Layer.Layer<AgentRegistry, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-    Layer.scoped(
+    Layer.effect(
       AgentRegistry,
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;

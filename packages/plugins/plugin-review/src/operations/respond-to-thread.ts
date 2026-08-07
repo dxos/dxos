@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.RespondToThread> = 
         // Runner errors are caught here so the user's message remains in the
         // thread (no assistant message is appended) and an observability event
         // is emitted for diagnostics.
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.gen(function* () {
             log.warn('comment-thread agent failed', { threadId: thread.id, error });
             const db = Obj.getDatabase(thread);

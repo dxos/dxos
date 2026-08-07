@@ -4,9 +4,9 @@
 
 // @import-as-namespace
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import { type Client } from '@dxos/client';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
@@ -54,7 +54,7 @@ const makeManager = (
                 Effect.asVoid,
                 // A missing/unreachable endpoint (e.g. an older edge deploy) must not surface as a defect
                 // from this fire-and-forget cancel — log and move on.
-                Effect.catchAll((error) => Effect.sync(() => log.warn('remote trigger cancel failed', { error }))),
+                Effect.catch((error) => Effect.sync(() => log.warn('remote trigger cancel failed', { error }))),
               );
             }),
         }

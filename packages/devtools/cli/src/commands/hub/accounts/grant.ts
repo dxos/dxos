@@ -24,7 +24,7 @@ export const grant = Command.make(
   Effect.fn(function* ({ identityDid, count }) {
     const result = yield* hubApiRequest<GetAccountResponse>('POST', `/api/account/${identityDid}/invitations/grant`, {
       body: { count },
-    }).pipe(Effect.catchAll((error) => Effect.fail(new Error(formatHubError(error)))));
+    }).pipe(Effect.catch((error) => Effect.fail(new Error(formatHubError(error)))));
 
     yield* Console.log(`Granted ${count} invitations. Account now has ${result.invitationsRemaining} remaining.`);
   }),

@@ -41,7 +41,7 @@ const tryWithFallback = <T>(label: string, run: () => Promise<T>, fallback: T) =
       duration: Duration.seconds(READ_TIMEOUT_SECONDS),
       onTimeout: () => new Error(`${label} timed out`),
     }),
-    Effect.catchAll(() => Effect.succeed(fallback)),
+    Effect.catch(() => Effect.succeed(fallback)),
   );
 
 const tryWithFallbackSync = <T>(read: () => T, fallback: T): T => {
@@ -64,7 +64,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
         duration: Duration.seconds(waitSeconds),
         onTimeout: () => new Error('waitUntilReady timed out'),
       }),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
     );
   }
 

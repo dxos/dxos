@@ -72,7 +72,7 @@ export class ExtractedQuestionStore extends Context.Tag('@dxos/pipeline-discord/
   ExtractedQuestionStoreApi
 >() {
   static layerSql: Layer.Layer<ExtractedQuestionStore, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =
-    Layer.scoped(
+    Layer.effect(
       ExtractedQuestionStore,
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;

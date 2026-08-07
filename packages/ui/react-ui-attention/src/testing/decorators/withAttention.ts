@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry, RegistryContext } from '@effect-atom/atom-react';
+import { Registry, RegistryContext } from '@effect/atom-react';
 import { type Decorator } from '@storybook/react-vite';
 import { createElement, useMemo } from 'react';
 

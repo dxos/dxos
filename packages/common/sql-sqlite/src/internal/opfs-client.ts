@@ -267,7 +267,7 @@ export const makeOpfs = (
     const acquirer = semaphore.withPermits(1)(Effect.succeed(connection));
     const transactionAcquirer = Effect.uninterruptibleMask((restore) =>
       Effect.as(
-        Effect.zipRight(
+        Effect.andThen(
           restore(semaphore.take(1)),
           Effect.tap(Effect.scope, (scope) => Scope.addFinalizer(scope, semaphore.release(1))),
         ),

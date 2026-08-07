@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Result, useAtomValue } from '@effect-atom/atom-react';
+import { Atom, Result, useAtomValue } from '@effect/atom-react';
 import * as Stream from 'effect/Stream';
 import { useMemo } from 'react';
 

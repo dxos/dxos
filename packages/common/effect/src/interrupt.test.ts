@@ -26,7 +26,7 @@ it.effect.skip(
       const result = yield* resultFiber;
       console.log({ result });
     },
-    Effect.catchAllCause((cause) => {
+    Effect.catchCause((cause) => {
       // console.log(inspect(cause, { depth: null, colors: true }));
       console.log(Cause.pretty(cause));
       return Effect.failCause(cause);

@@ -193,7 +193,7 @@ export type CredentialForm<Values = any> = {
    * Build the next step of the connection flow from form values.
    *
    * Failures (`Effect.fail`) propagate to the coordinator and surface in the dialog's
-   * `Effect.catchAll` — use these for user-visible validation messages. Do NOT `Effect.orDie`
+   * `Effect.catch` — use these for user-visible validation messages. Do NOT `Effect.orDie`
    * validation errors; defects bypass the dialog's failure handler and crash the request.
    */
   onSubmit: (input: {

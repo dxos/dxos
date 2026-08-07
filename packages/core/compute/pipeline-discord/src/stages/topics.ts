@@ -73,7 +73,7 @@ export const summarizeSegment = (
   LanguageModel.generateObject({ schema: TopicShape, prompt: topicPrompt(segment, messages) }).pipe(
     Effect.provide(AiService.model(DEFAULT_MODEL).pipe(Layer.orDie)),
     Effect.map(({ value }) => value),
-    Effect.catchAll(() => Effect.succeed({} as { name?: string; summary?: string })),
+    Effect.catch(() => Effect.succeed({} as { name?: string; summary?: string })),
     Effect.map(({ name, summary }) => ({
       name: name?.trim() || fallbackName(messages),
       summary:

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
+import { useAtomValue } from '@effect/atom-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Provider } from '@dxos/ai';

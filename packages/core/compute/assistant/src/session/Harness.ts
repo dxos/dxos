@@ -121,7 +121,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
     provides: [HarnessService],
   },
   (context) =>
-    Layer.scoped(
+    Layer.effect(
       HarnessService,
       Effect.gen(function* () {
         if (!context.conversation) {

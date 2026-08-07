@@ -38,7 +38,6 @@
 // status channel (the loader publishes module errors; the catalog owns disabling).
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import * as Deferred from 'effect/Deferred';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -46,6 +45,7 @@ import * as Fiber from 'effect/Fiber';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
@@ -53,7 +53,7 @@ import { log } from '@dxos/log';
 import type * as ActivationEvent from '../activation-event';
 import * as CapabilityManager from '../capability-manager';
 import * as Plugin from '../plugin';
-// Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
+// Imported with a `PluginRegistry` alias because the unrelated `@effect/atom-react`
 // `Registry` is already imported above; from outside this file the namespace is
 // re-exported as `Registry` via `./index.ts`.
 import * as PluginRegistry from '../registry';
@@ -346,7 +346,7 @@ class ManagerImpl implements PluginManager {
       .pipe(
         Effect.mapError((cause) => new PluginInitializationError({ cause })),
         Effect.tap(() => Deferred.succeed(this._state.initialized, undefined)),
-        Effect.tapErrorCause((cause) => Deferred.failCause(this._state.initialized, cause)),
+        Effect.tapCause((cause) => Deferred.failCause(this._state.initialized, cause)),
       )
       .pipe(EffectEx.runAndForwardErrors);
   }

@@ -84,7 +84,7 @@ const LONG_BODY =
 // resolves to a deterministic value without hitting any real provider.
 const mockAiServiceLayer = Layer.succeed(AiService.AiService, {
   model: () =>
-    Layer.scoped(
+    Layer.effect(
       LanguageModel.LanguageModel,
       LanguageModel.make({
         generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,

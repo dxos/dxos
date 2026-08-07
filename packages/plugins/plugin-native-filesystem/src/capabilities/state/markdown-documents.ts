@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, type Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import { Atom, type Registry } from 'effect/unstable/reactivity';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -432,7 +432,7 @@ export const createMarkdownDocuments = (
         }
         yield* Effect.promise(() => space.value.waitUntilReady());
         yield* restoreWorkspaceDocuments(workspace).pipe(
-          Effect.catchAll((error) =>
+          Effect.catch((error) =>
             Effect.sync(() => {
               log.error('restoreWorkspaceDocuments failed', { workspaceId: workspace.id, error });
             }),

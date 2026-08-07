@@ -238,7 +238,7 @@ const storageLayer = Layer.empty.pipe(
  * runtime is disposed. Identity-, network-, and storage-bound lifecycle stays in `ClientServicesHost`.
  */
 const echoHostLayer = (options: { useSubduction?: boolean }) =>
-  Layer.scopedDiscard(
+  Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
       yield* Effect.acquireRelease(

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
 import * as Data from 'effect/Data';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 

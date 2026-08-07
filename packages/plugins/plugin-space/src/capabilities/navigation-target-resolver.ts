@@ -40,7 +40,7 @@ export default Capability.makeModule(
 
         const { db } = yield* Database.Service;
         const ref = db.makeRef(eid);
-        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        const object = yield* Database.load(ref).pipe(Effect.catch(() => Effect.succeed(null)));
         if (!object) {
           return [];
         }

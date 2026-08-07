@@ -4,7 +4,7 @@
 
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
-import * as JSONSchema from 'effect/JSONSchema';
+import * as JSONSchema from 'effect/JsonSchema';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';

@@ -144,7 +144,7 @@ export const generateReply = (options: {
       Effect.provide(AiService.model(GENERATE_MODEL).pipe(Layer.orDie)),
       Effect.timeout('30 seconds'),
       Effect.map((response) => response.text),
-      Effect.catchAll((cause) => Effect.fail(new GenerateReplyError({ cause }))),
+      Effect.catch((cause) => Effect.fail(new GenerateReplyError({ cause }))),
     );
 
     return { subject: replySubject(message.properties?.subject), body };

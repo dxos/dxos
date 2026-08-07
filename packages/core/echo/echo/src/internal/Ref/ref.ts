@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
 import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
@@ -11,6 +10,7 @@ import * as ParseResult from 'effect/ParseResult';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';

@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
-import * as Registry from '@effect-atom/atom/Registry';
+import { RegistryContext } from '@effect/atom-react';
 import { renderHook, waitFor } from '@testing-library/react';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -14,7 +14,7 @@ import { TestSchema } from '@dxos/echo/testing';
 
 import { useObject } from './useObject';
 
-const createWrapper = (registry: Registry.Registry) => {
+const createWrapper = (registry: AtomRegistry.Registry) => {
   return ({ children }: PropsWithChildren) => (
     <RegistryContext.Provider value={registry}>{children}</RegistryContext.Provider>
   );
@@ -25,7 +25,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
@@ -42,7 +42,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
@@ -54,7 +54,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
@@ -75,7 +75,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
@@ -96,7 +96,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
@@ -120,7 +120,7 @@ describe('useObject', () => {
     console.error = () => {};
 
     // The hook should throw when registry is undefined
-    // Note: RegistryContext from @effect-atom/atom-react may have a default value,
+    // Note: RegistryContext from @effect/atom-react may have a default value,
     // so we test that our hook properly checks for undefined registry
     // Since we can't easily mock useContext in this test environment,
     // and RegistryContext might have a default, we'll skip this test
@@ -134,7 +134,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj), { wrapper });
@@ -156,7 +156,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
@@ -176,7 +176,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(obj, 'name'), { wrapper });
@@ -196,7 +196,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result, rerender } = renderHook(() => useObject(obj, 'name'), { wrapper });
@@ -211,7 +211,7 @@ describe('useObject', () => {
   });
 
   test('returns undefined when object is undefined', () => {
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined), { wrapper });
@@ -221,7 +221,7 @@ describe('useObject', () => {
   });
 
   test('returns undefined for property when object is undefined', () => {
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined, 'name'), { wrapper });
@@ -230,7 +230,7 @@ describe('useObject', () => {
   });
 
   test('update callback is no-op when object is undefined', () => {
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result } = renderHook(() => useObject(undefined as TestSchema.Person | undefined), { wrapper });
@@ -248,7 +248,7 @@ describe('useObject', () => {
     const obj: TestSchema.Person = createObject(
       Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result, rerender } = renderHook(() => useObject(obj), { wrapper });
@@ -271,7 +271,7 @@ describe('useObject', () => {
         employer: Ref.make(org),
       }),
     );
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result, rerender } = renderHook(() => useObject(person.employer!), { wrapper });
@@ -285,7 +285,7 @@ describe('useObject', () => {
   });
 
   test('transitions from undefined to defined object', async () => {
-    const registry = Registry.make();
+    const registry = AtomRegistry.make();
     const wrapper = createWrapper(registry);
 
     const { result, rerender } = renderHook(({ obj }) => useObject(obj), {

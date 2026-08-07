@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import { act, renderHook } from '@testing-library/react';
 import * as Schema from 'effect/Schema';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 import { beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';

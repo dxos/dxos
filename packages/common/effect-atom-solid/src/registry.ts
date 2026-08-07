@@ -2,28 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from '@effect-atom/atom/Atom';
-import * as Registry from '@effect-atom/atom/Registry';
 import * as GlobalValue from 'effect/GlobalValue';
+import type * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { type Context, createContext, onCleanup, useContext } from 'solid-js';
 
 /**
  * Default registry instance
  */
-export const defaultRegistry: Registry.Registry = GlobalValue.globalValue(
-  '@effect-atom/atom-solid/defaultRegistry',
-  () => Registry.make(),
+export const defaultRegistry: AtomRegistry.Registry = GlobalValue.globalValue(
+  '@dxos/effect-atom-solid/defaultRegistry',
+  () => AtomRegistry.make(),
 );
 
 /**
  * Solid context for the atom registry
  */
-export const RegistryContext: Context<Registry.Registry> = createContext<Registry.Registry>(defaultRegistry);
+export const RegistryContext: Context<AtomRegistry.Registry> = createContext<AtomRegistry.Registry>(defaultRegistry);
 
 /**
  * Get the current registry from context
  */
-export const useRegistry = (): Registry.Registry => {
+export const useRegistry = (): AtomRegistry.Registry => {
   return useContext(RegistryContext);
 };
 
@@ -32,7 +32,7 @@ export const useRegistry = (): Registry.Registry => {
  */
 export interface RegistryProviderProps {
   children: any;
-  registry?: Registry.Registry;
+  registry?: AtomRegistry.Registry;
   initialValues?: Iterable<readonly [Atom.Atom<any>, any]>;
   scheduleTask?: (f: () => void) => void;
   timeoutResolution?: number;
@@ -42,7 +42,7 @@ export interface RegistryProviderProps {
 export function RegistryProvider(props: RegistryProviderProps) {
   const registry =
     props.registry ??
-    Registry.make({
+    AtomRegistry.make({
       scheduleTask: props.scheduleTask,
       initialValues: props.initialValues,
       timeoutResolution: props.timeoutResolution,

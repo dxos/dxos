@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom, Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import { Atom, Registry } from 'effect/unstable/reactivity';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { CapabilityManager } from '@dxos/app-framework';

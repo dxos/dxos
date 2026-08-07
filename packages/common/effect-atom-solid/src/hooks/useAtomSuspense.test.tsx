@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from '@effect-atom/atom/Atom';
-import * as Result from '@effect-atom/atom/Result';
 import { render, waitFor } from '@solidjs/testing-library';
+import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { Suspense } from 'solid-js';
 import { beforeEach, describe, expect, test } from 'vitest';
 
@@ -17,7 +17,7 @@ describe('useAtomSuspense', () => {
   });
 
   test('suspends while waiting for value', async () => {
-    const atom = Atom.make<Result.Result<string, never>>(Result.initial());
+    const atom = Atom.make<AsyncResult.Result<string, never>>(AsyncResult.initial());
 
     function Child() {
       const value = useAtomSuspense(atom);
@@ -36,7 +36,7 @@ describe('useAtomSuspense', () => {
     expect(getByTestId('loading')).toBeTruthy();
 
     // Update atom
-    defaultRegistry.set(atom, Result.success('ready'));
+    defaultRegistry.set(atom, AsyncResult.success('ready'));
 
     await waitFor(() => {
       expect(getByTestId('value').textContent).toBe('ready');
