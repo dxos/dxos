@@ -26,28 +26,7 @@ test.describe('Kanban MutableSchema', () => {
     await page.close();
   });
 
-  // TODO(wittjosiah): Deferred on webkit only — the column lands one position too far. Measured
-  //   by dumping every column's title before and after the drag: dragging column 1 onto column 2
-  //   yields `["<none>","Qualified","Prospect","Active",…]` when it passes and
-  //   `["<none>","Qualified","Active","Prospect",…]` when it fails, so the drop resolves to the
-  //   column *after* the intended one (location 3 rather than 2). The column count is stable at 6
-  //   throughout, so this is not the source being filtered out of `useVisibleItems`. Rate is
-  //   3-4 in 12 locally on webkit at either worker count, and it took out `e2e (webkit, 0)` in run
-  //   31205230911. Three harness fixes were tried and reverted for lack of evidence: capturing the
-  //   target as an `ElementHandle` before the drag (4/12), waiting for the source column to detach
-  //   instead of sleeping 200ms (3/12), and aiming at an adjacent placeholder and confirming
-  //   `data-mosaic-placeholder-state="active"` the way `ItemManager.dragTo` does (2/12) — the trend
-  //   is the right shape but none of it is significant at these sample sizes. The index-space
-  //   suspicion in `useKanbanColumnEventHandler` (full-list `sourceIndex` vs visible-items
-  //   `target.location`) is arithmetically REFUTED: `arrayMove` splices the source out before
-  //   inserting, so its target index is already post-removal — the same space as visible-item
-  //   locations, for tiles and placeholders alike. The pass/fail delta (`arrayMove(1,2)` vs
-  //   `arrayMove(1,3)`) therefore means the *resolved drop target* was one column right of the
-  //   aim, and the remaining candidate is the board sliding under a stationary cursor between aim
-  //   and release (placeholder expansion or horizontal auto-scroll). Instrument `Root.onDrop`'s
-  //   resolved target on a failing run before changing anything else — that is what found the
-  //   mosaic bugs.
-  test.fixme('rearrange columns', async () => {
+  test('rearrange columns', async () => {
     const col1Label = await board.column(1).title().textContent();
     const col2Label = await board.column(2).title().textContent();
     expect(col1Label).not.toBeNull();
