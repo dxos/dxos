@@ -3,7 +3,7 @@
 Ported ECHO's critical-path Effect-Schema code to `effect@4.0.0-beta.105` and proved that JSON
 Schema documents written by Effect 3 can be read back into Effect 4.
 
-**Result: both work.** 23 tests pass, `tsc --noEmit` is clean. Reproduce with
+**Result: both work.** 28 tests pass, `tsc --noEmit` is clean. Reproduce with
 `npm install && npm test` (this directory is deliberately outside the pnpm workspace so it can
 pin effect 4 without touching the monorepo lockfile).
 
@@ -92,7 +92,31 @@ All 20 tests in `test/compat.test.ts` pass against the real fixture, including:
 Both ECHO annotation namespaces (`echo` and `annotations`) are handled, matching the merge
 behaviour already in `json-schema-type.ts:387` from the previous format migration.
 
-## Write path (v4 → the stored format): must be hand-written
+## Compatibility is only needed in one direction
+
+DXOS has few enough deployed clients that cross-version reads are not a concern: **v4 must read
+v3-written data, but v3 never has to read v4-written data.** That constraint removes the entire
+"emit a v3-shaped document" problem below — it matters only if old clients must keep reading.
+
+What it does introduce is a permanently **mixed** space: existing `Type` entities keep their v3
+`jsonSchema` payload until rewritten, new ones are written v4-native. `src/dispatch.ts` handles
+this, and `test/dispatch.test.ts` proves it (5 tests):
+
+- The formats are structurally distinguishable — a representation document has
+  `{representation, references}`, which a v3 JSON Schema document never has. No version field
+  needs to be added to already-written data (though adding one going forward is cheaper than
+  relying on shape).
+- v4 reads a v3-written document, and reads its own v4-written document, through one entry point.
+- The v3 → v4 rewrite is lossless for type identity, per-property optionality, and validation
+  behaviour (`age` still rejects `999`, `kind` still rejects `intern`, `email` still rejects `nope`).
+- The ECHO `Ref` declaration survives the rewrite with its target DXN intact.
+
+The remaining section is retained because the emitted _shape_ still has a within-version
+consumer: `assistant-toolkit/src/skills/database/operations/schema-list.ts:33` returns
+`toJsonSchema(schema)` to the LLM. That output shape is what a model sees when it inspects the
+database, so changing it changes model behaviour — a same-version concern, not a cross-version one.
+
+## Write path (v4 → the _v3_ stored format): not needed, but here is the gap
 
 `SchemaRepresentation.toJsonSchemaDocument` is **not** a drop-in for `JSONSchema.fromAST`.
 Emitting the ported `Person` schema and comparing to what v3 stored:
