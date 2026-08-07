@@ -74,13 +74,27 @@ never settles toward its live size.
 
 ### Tasks
 
-- [ ] **Census the idle work** — which queries/loops fire per tick and why
-      (dispatcher, sync, indexing); measure allocation rate per source.
-- [ ] **Push over poll** — coordinate with feed-live-objects stage 4 (EDGE
-      push replacing 1 s polling); interim: batch/dedupe per-tick queries,
-      lengthen intervals when tab hidden (Chrome freezing-compatible).
-- [ ] **Verify decommit** — soak after: renderer RSS should trend toward live
-      size at idle instead of plateauing at the high-water mark.
+- [x] **Census the idle loops (code-level)** — four sources: 1. `TriggerDispatcher` (compute-runtime, started by CORE plugin-routine):
+      `Schedule.fixed(1s)` runs `invokeScheduledTriggers` + ECHO
+      `Filter.type(Trigger)` query EVERY SECOND even with zero triggers
+      (trigger-dispatcher.ts:300,921). 2. `FeedHandle.beginPolling`: 1 s `refresh` per subscribed feed
+      (feed-handle.ts:38,557) — the mail-open amplifier. 3. `DatabaseImpl` feed-sync-state poll: 2 s per open space
+      (database.ts:214,797). 4. `QueryService._executeQueries`: re-runs dirty reactive queries per
+      invalidation hint — the above ticks generate hints → the ~51 SQL/s
+      fan-out in the worker.
+- [ ] **Interim fixes (client-only)** — (a) TriggerDispatcher: idle the loop
+      when no local triggers exist; schedule to next-due-time instead of 1 Hz.
+      (b) Visibility gating: pause/stretch all polls when `document.hidden`.
+      (c) Coordinated tick: multiplex per-feed polls into one batched refresh
+      with no-change backoff (1s → 5s → 30s). (d) Verify `matchesHint`
+      actually narrows query re-execution.
+- [ ] **Allocation-rate measurement per source** — sample-allocs with each
+      loop disabled in turn to attribute the churn.
+- [ ] **Push over poll (full fix)** — feed-live-objects stage 4: EDGE holds a
+      persistent connection and notifies on change; idle tab does zero
+      requests/SQL. Memory win rides that roadmap item.
+- [ ] **Verify decommit** — soak after each step: renderer RSS should trend
+      toward live size at idle instead of plateauing at the high-water mark.
 
 ## Phase 6: Core code reduction — REFRAMED by census (2026-08-06)
 
