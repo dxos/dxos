@@ -112,7 +112,10 @@ originate on this branch; a green Check elsewhere is likely green the same way.
 dxn:org.dxos.plugin.projects.operation.create, cause: "Error: Process produced no output"}`.
       2 of 3 in CI, 3 of 3 locally. These are the CI-runnable stories — the model-dependent variants
       are tagged `!test` — so this is a regression in the operation stack, not a missing service.
-      Owned by plugin-projects, not by this work.
+      Narrowed to `ProcessOperationInvoker.ts:88`: the handle's output stream completes without
+      emitting while the process is neither `FAILED` nor `TERMINATED`, which is the `default` branch
+      that raises this message. So the process ends without ever writing an output rather than
+      erroring. Further than that is compute-runtime and plugin-projects territory, not this work.
 - [ ] **Decide whether the cache should be able to hide this.** A task whose inputs have not changed
       is not re-run, which is the point; but it means a deterministic failure can sit green for as
       long as nothing upstream of it moves. Worth a periodic uncached run of `:test-storybook` on
