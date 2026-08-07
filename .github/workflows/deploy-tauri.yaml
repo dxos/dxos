@@ -80,11 +80,14 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
-          # Reject anything that is not a plain semver (with an optional dot-separated prerelease)
-          # before it reaches a file the rest of the run trusts.
-          case "$VERSION" in
-            *[!0-9A-Za-z.-]* | '' | *' '*)
-              echo "::error::refusing a version with unexpected characters: $VERSION" && exit 1 ;;
+          # Both values reach files the rest of the run trusts (GITHUB_OUTPUT, GITHUB_ENV), so check the
+          # shape rather than just the character set — `1`, `1..2` and `1.2.3-` are all rejected.
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "::error::not a semver version: $VERSION" && exit 1
+          fi
+          case "$ENVIRONMENT" in
+            dev | nightly | staging | production) ;;
+            *) echo "::error::unknown environment: $ENVIRONMENT" && exit 1 ;;
           esac
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Tauri version: $VERSION (env=$ENVIRONMENT)"
@@ -227,8 +230,9 @@ jobs:
           fi
 
       - name: Set environment variables from secrets and env files
-        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
+        run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
@@ -389,8 +393,9 @@ jobs:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
 
       - name: Set environment variables from secrets and env files
-        run: .github/workflows/scripts/populate-env.sh "${{ inputs.environment }}" >> $GITHUB_ENV
+        run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
