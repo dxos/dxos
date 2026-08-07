@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as JSONSchema from 'effect/JsonSchema';
 import * as Schema from 'effect/Schema';
 import { expect, test } from 'vitest';
 
@@ -10,135 +9,89 @@ import { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
 
 /**
- * Effect 4 returns a `Document` -- root schema plus a shared definitions pool -- instead of one flat
- * object, and targets draft 2020-12. These tests characterise the upstream serializer that DXOS's
- * own encoder builds on, so they assert the document rather than a flattened view of it.
+ * Characterises the upstream Effect serializer that ECHO's own encoder builds on.
+ *
+ * Effect 4 changed three things these tests depend on:
+ * - generation returns a `Document` (root schema plus a shared definitions pool) targeting draft
+ *   2020-12, rather than one flat draft-07 object;
+ * - custom annotations are no longer merged from a `jsonSchema` annotation -- the keys are annotated
+ *   directly and opted in per key at generation time;
+ * - a check's keywords are nested under `allOf` instead of being merged into the node.
  */
-const toJsonSchema = (schema: Schema.Top) => Schema.toJsonSchemaDocument(schema);
+const toJsonSchema = (schema: Schema.Top, keys: ReadonlyArray<string> = []) =>
+  Schema.toJsonSchemaDocument(schema, { includeAnnotationKey: (key) => keys.includes(key) }).schema;
 
-test('json-schema annotations for filter refinement get combined', () => {
-  const type = Schema.Number.annotate({
-    jsonSchema: { foo: 'foo' },
-  }).pipe(Schema.check(Schema.makeFilter(() => true, { jsonSchema: { bar: 'bar' } })));
+test('custom annotation keys are emitted when opted in', () => {
+  const type = Schema.String.annotate({ foo: 'foo' });
 
-  const jsonSchema = toJsonSchema(type);
-  expect(jsonSchema).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    foo: 'foo',
-    bar: 'bar',
-    type: 'number',
-  });
+  expect(toJsonSchema(type, ['foo'])).toEqual({ type: 'string', foo: 'foo' });
+  // Not opted in: upstream keeps its own annotations on the same record, so keys are excluded by
+  // default rather than leaked into the output.
+  expect(toJsonSchema(type)).toEqual({ type: 'string' });
 });
 
-test('json-schema annotations on types do not override the default serialization', () => {
-  const type = Schema.Number.annotate({
-    jsonSchema: { foo: 'foo' },
-  });
-
-  const jsonSchema = toJsonSchema(type);
-  expect(jsonSchema).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    foo: 'foo',
-    type: 'number',
-  });
-});
-
-// pass
-test('number with title and description annotations', () => {
-  const number = Schema.Number.annotate({
-    title: 'My Title',
-    description: 'My Description',
-  });
-
-  expect(toJsonSchema(number)).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    type: 'number',
-    title: 'My Title',
-    description: 'My Description',
-  });
-});
-
-// pass
-test('date with title and description annotations', () => {
-  const date = Schema.Date.annotate({
-    title: 'My Title',
-    description: 'My Description',
-  });
-
-  expect(toJsonSchema(date)).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    $defs: {
-      DateFromString: {
-        description: 'a string to be decoded into a Date',
-        type: 'string',
-      },
-    },
-    $ref: '#/$defs/DateFromString',
-  });
-});
-
-// fail
-test('declare', () => {
-  class MyType {}
-  const type = Schema.declare<MyType>((x) => x instanceof MyType, {
-    jsonSchema: {
-      type: 'my-type',
-    },
-  });
+test('a check contributes its keywords under allOf', () => {
+  const type = Schema.String.check(Schema.isMinLength(3));
 
   expect(toJsonSchema(type)).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    type: 'my-type',
+    type: 'string',
+    allOf: [{ minLength: 3 }],
   });
+});
+
+test('string with title and description annotations', () => {
+  const value = Schema.String.annotate({
+    title: 'My Title',
+    description: 'My Description',
+  });
+
+  // Standard JSON Schema keys are always included, with no opt-in needed.
+  expect(toJsonSchema(value)).toEqual({
+    type: 'string',
+    title: 'My Title',
+    description: 'My Description',
+  });
+});
+
+test('a transformed schema serializes its encoded side', () => {
+  const document = Schema.toJsonSchemaDocument(Schema.Date);
+
+  // `Schema.Date` decodes from a string, and generation describes the wire form.
+  expect(document.schema).toMatchObject({ type: 'string' });
+  expect(document.dialect).toEqual('draft-2020-12');
+});
+
+test('declare', () => {
+  class MyType {}
+  const type = Schema.declare<MyType>((x) => x instanceof MyType);
 
   expect(Schema.is(type)(new MyType())).toBe(true);
   expect(Schema.is(type)({})).toBe(false);
 
-  const withAnnotations = type.annotate({
-    title: 'My Title',
-    description: 'My Description',
-  });
-
-  expect(toJsonSchema(withAnnotations)).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    type: 'my-type',
-    title: 'My Title',
-    description: 'My Description',
-  });
+  // Declarations carry no JSON Schema representation in v4; generation emits nothing for them,
+  // which is why ECHO's reference schema puts its keys on a structural encoded side instead.
+  expect(toJsonSchema(type)).toEqual({});
 });
 
-// pass
-test('declare with refinement', () => {
+test('annotations on a declaration do not reach the generated schema', () => {
   class MyType {}
-  const type = Schema.declare<MyType>((x) => x instanceof MyType, {
-    jsonSchema: {
-      type: 'my-type',
-    },
-  }).pipe(Schema.check(Schema.makeFilter(() => true, { jsonSchema: {} })));
-
-  const named = type.annotate({
+  const type = Schema.declare<MyType>((x) => x instanceof MyType).annotate({
     title: 'My Title',
     description: 'My Description',
   });
 
-  expect(toJsonSchema(named)).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    type: 'my-type',
-    title: 'My Title',
-    description: 'My Description',
-  });
+  expect(toJsonSchema(type)).toEqual({});
 });
 
-test("default title annotations don't get serialized", () => {
+test('primitives carry no default title or description', () => {
   const schema = Schema.String;
 
-  expect(SchemaAST.getTitleAnnotation(schema.ast)).toEqual('string');
-  expect(SchemaAST.getDescriptionAnnotation(schema.ast)).toEqual('a string');
+  // v3 attached `'string'` / `'a string'` defaults that had to be filtered before serializing.
+  // v4 attaches none, so nothing needs excluding.
+  expect(SchemaAST.getTitleAnnotation(schema.ast)).toBeUndefined();
+  expect(SchemaAST.getDescriptionAnnotation(schema.ast)).toBeUndefined();
 
-  expect(toJsonSchema(schema)).toEqual({
-    $schema: 'http://json-schema.org/draft-07/schema#',
-    type: 'string',
-  });
+  expect(toJsonSchema(schema)).toEqual({ type: 'string' });
 });
 
 test.skip('ast comparison', () => {
