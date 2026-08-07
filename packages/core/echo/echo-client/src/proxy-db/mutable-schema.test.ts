@@ -63,7 +63,7 @@ describe('EchoSchema', () => {
     const storedSchema = instanceWithSchemaRef.schema?.target && Type.getSchema(instanceWithSchemaRef.schema.target);
     expect(storedSchema?.ast).to.deep.eq(schemaWithId.ast);
 
-    const validator = Schema.validateSync(Type.getSchema(instanceWithSchemaRef.schema!.target!));
+    const validator = Schema.decodeSync(Schema.toType(Type.getSchema(instanceWithSchemaRef.schema!.target!)));
     expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
   });

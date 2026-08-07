@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 export const Size = Schema.Struct({
   width: Schema.Number,
@@ -18,7 +19,7 @@ export const Position = Schema.Struct({
 
 export type Position = Schema.Schema.Type<typeof Position>;
 
-export const CellLayout = Schema.extend(Position, Schema.partial(Size));
+export const CellLayout = Schema.extend(Position, Size.mapFields(Struct.map(Schema.optional)));
 export type CellLayout = Schema.Schema.Type<typeof CellLayout>;
 
 export const BoardLayout = Schema.Struct({

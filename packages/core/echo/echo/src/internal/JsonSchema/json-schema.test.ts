@@ -4,6 +4,7 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import { describe, expect, test } from 'vitest';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
@@ -491,7 +492,7 @@ describe('json-to-effect', () => {
       } as const;
 
       const Test = Type.makeObject(DXN.make('com.example.type.test', '0.1.0'))(
-        partial ? Schema.partial(Schema.Struct(fields)) : Schema.Struct(fields),
+        partial ? Schema.Struct(fields).mapFields(Struct.map(Schema.optional)) : Schema.Struct(fields),
       );
 
       const jsonSchema = toJsonSchema(Test);

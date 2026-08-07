@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
@@ -35,7 +36,7 @@ export const Create = Operation.make({
 export const DeleteOutput = Schema.Struct({
   thread: Type.getSchema(Thread.Thread).annotate({ description: 'The deleted comment thread.' }),
   anchor: Type.getSchema(AnchoredTo.AnchoredTo).annotate({ description: 'The deleted anchor.' }),
-}).pipe(Schema.partial);
+}).mapFields(Struct.map(Schema.optional));
 
 export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
 
@@ -89,12 +90,10 @@ export const AddMessage = Operation.make({
   output: Schema.Void,
 });
 
-export const DeleteMessageOutput = Schema.partial(
-  Schema.Struct({
-    message: Type.getSchema(Message.Message).annotate({ description: 'The deleted comment message.' }),
-    messageIndex: Schema.Number.annotate({ description: 'The index the message was at.' }),
-  }),
-);
+export const DeleteMessageOutput = Schema.Struct({
+  message: Type.getSchema(Message.Message).annotate({ description: 'The deleted comment message.' }),
+  messageIndex: Schema.Number.annotate({ description: 'The index the message was at.' }),
+}).mapFields(Struct.map(Schema.optional));
 
 export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 

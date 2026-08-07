@@ -47,7 +47,7 @@ export const set = <T>(target: Mutable<Entity.Unknown>, annotation: Annotation.A
   if (isEntity(target)) {
     // The dictionary slot is untyped, so the proxy can't validate against the annotation schema;
     // validate here (without encoding — the proxy encodes nested refs and links targets on assignment).
-    Schema.validateSync(annotation.schema)(value);
+    Schema.decodeSync(Schema.toType(annotation.schema))(value);
     getMetaChecked(target).annotations[annotation.key] = value;
   } else {
     throw new TypeError('Target is not an annotation target.');
@@ -71,7 +71,7 @@ export const update = <T>(
       mutator(value);
       // Validate against the annotation's own schema — the dictionary slot is untyped, so the proxy
       // can't. Schema validation checks ref structure only (not targets), so it is cycle-safe.
-      Schema.validateSync(annotation.schema)(value);
+      Schema.decodeSync(Schema.toType(annotation.schema))(value);
     }
   });
 };

@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 
 // TODO(ZaymonFC): Do this one at a time. This might be dangerous.
 export const addFieldsToSchema = (schema: Schema.Top, fields: Schema.Struct.Fields): Schema.Top => {
-  const schemaExtension = Schema.partial(Schema.Struct(fields));
+  const schemaExtension = Schema.Struct(fields).mapFields(Struct.map(Schema.optional));
   return schema.mapFields(Struct.assign(schemaExtension.fields)).annotate(schema.ast.annotations) as any as Schema.Top;
 };
 
@@ -19,7 +19,8 @@ export const updateFieldsInSchema = (schema: Schema.Top, fields: Schema.Struct.F
   invariant(SchemaAST.isTypeLiteral(ast));
 
   const updatedProperties = [...ast.propertySignatures];
-  const propertiesToUpdate = (Schema.partial(Schema.Struct(fields)).ast as SchemaAST.TypeLiteral).propertySignatures;
+  const propertiesToUpdate = (Schema.Struct(fields).mapFields(Struct.map(Schema.optional)).ast as SchemaAST.TypeLiteral)
+    .propertySignatures;
   for (const property of propertiesToUpdate) {
     const index = updatedProperties.findIndex((p) => p.name === property.name);
     if (index !== -1) {

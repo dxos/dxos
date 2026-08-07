@@ -30,7 +30,7 @@ class Sample extends Type.makeObject<Sample>(DXN.make('org.dxos.test.publishFlag
     title: Schema.String.pipe(AtprotoVisibilityAnnotation.set('publish')),
     rating: Schema.Number.pipe(
       Schema.check(Schema.isInt()),
-      Schema.between(1, 10),
+      Schema.check(Schema.isBetween(1, 10)),
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,
     ),

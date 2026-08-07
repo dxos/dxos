@@ -88,7 +88,7 @@ export const wrapFunctionHandler = (
       try {
         if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.validateSync(func.input, { onExcessProperty: 'error' })(data);
+            Schema.decodeSync(Schema.toType(func.input, { onExcessProperty: 'error' }))(data);
           } catch (error: any) {
             throw new InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
@@ -135,7 +135,7 @@ export const wrapFunctionHandler = (
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
-            Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
+            Schema.decodeSync(Schema.toType(func.output, { onExcessProperty: 'error' }))(result);
           } catch (error: any) {
             throw new InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,

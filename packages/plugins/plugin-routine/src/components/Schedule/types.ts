@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 export const MinutelySpec = Schema.Struct({
   frequency: Schema.Literal('minutely').annotate({ title: 'Frequency' }),
-  interval: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(1, 59)).annotate({
+  interval: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(1, 59))).annotate({
     title: 'Every (minutes)',
     description: '1–59',
   }),
@@ -14,11 +14,11 @@ export const MinutelySpec = Schema.Struct({
 
 export const HourlySpec = Schema.Struct({
   frequency: Schema.Literal('hourly').annotate({ title: 'Frequency' }),
-  interval: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(1, 23)).annotate({
+  interval: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(1, 23))).annotate({
     title: 'Every (hours)',
     description: '1–23',
   }),
-  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 59))).annotate({
     title: 'At minute',
     description: '0–59',
   }),
@@ -26,11 +26,11 @@ export const HourlySpec = Schema.Struct({
 
 export const DailySpec = Schema.Struct({
   frequency: Schema.Literal('daily').annotate({ title: 'Frequency' }),
-  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 23)).annotate({
+  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 23))).annotate({
     title: 'Hour',
     description: '0–23',
   }),
-  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 59))).annotate({
     title: 'Minute',
     description: '0–59',
   }),
@@ -43,11 +43,11 @@ export type DayOfWeek = Schema.Schema.Type<typeof DayOfWeek>;
 export const WeeklySpec = Schema.Struct({
   frequency: Schema.Literal('weekly').annotate({ title: 'Frequency' }),
   daysOfWeek: Schema.Array(DayOfWeek.annotate({ title: 'Day' })).annotate({ title: 'Days of week' }),
-  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 23)).annotate({
+  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 23))).annotate({
     title: 'Hour',
     description: '0–23',
   }),
-  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 59))).annotate({
     title: 'Minute',
     description: '0–59',
   }),
@@ -56,15 +56,15 @@ export const WeeklySpec = Schema.Struct({
 export const MonthlySpec = Schema.Struct({
   frequency: Schema.Literal('monthly').annotate({ title: 'Frequency' }),
   daysOfMonth: Schema.Array(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(1, 31)).annotate({ title: 'Day' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(1, 31))).annotate({ title: 'Day' }),
   ).annotate({
     title: 'Days of month',
   }),
-  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 23)).annotate({
+  hour: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 23))).annotate({
     title: 'Hour',
     description: '0–23',
   }),
-  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 59)).annotate({
+  minute: Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 59))).annotate({
     title: 'Minute',
     description: '0–59',
   }),

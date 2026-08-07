@@ -18,6 +18,7 @@ export {
 export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
 
 import * as Schema from 'effect/Schema';
+import * as Tuple from 'effect/Tuple';
 
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -275,37 +276,35 @@ export const AppendResponse = Schema.Struct({
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
 
 /**
- * Routing envelope carried by every protocol message.
- *
- * Spread into each union member rather than applied with a combinator: Effect 4 dropped the
- * union-distributing `Schema.extend`, and spreading keeps each member a plain `TaggedStruct`.
- */
-const envelopeFields = {
-  senderPeerId: Schema.UndefinedOr(Schema.String),
-  /**
-   * Could be undefined if the recipient could be assumed from the context.
-   */
-  recipientPeerId: Schema.UndefinedOr(Schema.String),
-};
-
-/**
  * Tagged transport message union for queue protocol RPC traffic.
+ *
+ * The routing envelope is distributed over the members with `mapMembers`, which is what Effect 4
+ * replaced the union-distributing `Schema.extend` with.
  */
 export const ProtocolMessage = Schema.Union([
-  Schema.TaggedStruct('QueryRequest', { ...QueryRequest.fields, ...envelopeFields }),
-  Schema.TaggedStruct('QueryResponse', { ...QueryResponse.fields, ...envelopeFields }),
-  Schema.TaggedStruct('SubscribeRequest', { ...SubscribeRequest.fields, ...envelopeFields }),
-  Schema.TaggedStruct('SubscribeResponse', { ...SubscribeResponse.fields, ...envelopeFields }),
-  Schema.TaggedStruct('AppendRequest', { ...AppendRequest.fields, ...envelopeFields }),
-  Schema.TaggedStruct('AppendResponse', { ...AppendResponse.fields, ...envelopeFields }),
+  Schema.TaggedStruct('QueryRequest', QueryRequest.fields),
+  Schema.TaggedStruct('QueryResponse', QueryResponse.fields),
+  Schema.TaggedStruct('SubscribeRequest', SubscribeRequest.fields),
+  Schema.TaggedStruct('SubscribeResponse', SubscribeResponse.fields),
+  Schema.TaggedStruct('AppendRequest', AppendRequest.fields),
+  Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
   Schema.TaggedStruct('Error', {
     /**
      * Human-readable error message.
      */
     message: Schema.String,
-    ...envelopeFields,
   }),
-]);
+]).mapMembers(
+  Tuple.map(
+    Schema.fieldsAssign({
+      senderPeerId: Schema.UndefinedOr(Schema.String),
+      /**
+       * Could be undefined if the recipient could be assumed from the context.
+       */
+      recipientPeerId: Schema.UndefinedOr(Schema.String),
+    }),
+  ),
+);
 export type ProtocolMessage = Schema.Schema.Type<typeof ProtocolMessage>;
 
 /**

@@ -30,9 +30,9 @@ import { FormatAnnotation, TypeFormat } from './types';
  * Simple date compatible with HF.
  */
 export const SimpleDate = Schema.Struct({
-  year: Schema.Number.pipe(Schema.between(1900, 9999)),
-  month: Schema.Number.pipe(Schema.between(1, 12)),
-  day: Schema.Number.pipe(Schema.between(1, 31)),
+  year: Schema.Number.pipe(Schema.check(Schema.isBetween(1900, 9999))),
+  month: Schema.Number.pipe(Schema.check(Schema.isBetween(1, 12))),
+  day: Schema.Number.pipe(Schema.check(Schema.isBetween(1, 31))),
 });
 
 export type SimpleDate = Schema.Schema.Type<typeof SimpleDate>;
@@ -47,9 +47,9 @@ export const toSimpleDate = (date: Date): SimpleDate => ({
  * Simple time compatible with HF.
  */
 export const SimpleTime = Schema.Struct({
-  hours: Schema.Number.pipe(Schema.between(0, 23)),
-  minutes: Schema.Number.pipe(Schema.between(0, 59)),
-  seconds: Schema.Number.pipe(Schema.between(0, 59)),
+  hours: Schema.Number.pipe(Schema.check(Schema.isBetween(0, 23))),
+  minutes: Schema.Number.pipe(Schema.check(Schema.isBetween(0, 59))),
+  seconds: Schema.Number.pipe(Schema.check(Schema.isBetween(0, 59))),
 });
 
 export type SimpleTime = Schema.Schema.Type<typeof SimpleTime>;

@@ -46,7 +46,9 @@ export type Identifiers = Schema.Schema.Type<typeof Identifiers>;
  */
 export const Progress = Schema.Struct({
   percent: Schema.optional(
-    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 100)).annotate({ title: 'Percent' }),
+    Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 100))).annotate({
+      title: 'Percent',
+    }),
   ),
   currentPage: Schema.optional(
     Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isGreaterThan(0))).annotate({
@@ -127,7 +129,7 @@ export class Book extends Type.makeObject<Book>(DXN.make('org.dxos.type.book', '
     status: Status.annotate({ title: 'Status' }).pipe(AtprotoVisibilityAnnotation.set('publish'), Schema.optional),
     stars: Schema.Number.pipe(
       Schema.check(Schema.isInt()),
-      Schema.between(1, 10),
+      Schema.check(Schema.isBetween(1, 10)),
       Schema.annotate({ title: 'Rating', description: 'Rating from 1 to 10.' }),
       AtprotoVisibilityAnnotation.set('publish'),
       Schema.optional,

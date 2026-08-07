@@ -33,7 +33,7 @@ describe('complex schema validations', () => {
   });
 
   test('object', () => {
-    const schema = Schema.Struct({ field: Schema.optional(Schema.Object) });
+    const schema = Schema.Struct({ field: Schema.optional(Schema.ObjectKeyword) });
     const object = makeObject(schema, { field: { nested: { value: 100 } } });
     change(object, (o) => {
       expect(() => (o.field = { any: 'value' })).not.to.throw();

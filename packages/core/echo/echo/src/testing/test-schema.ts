@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { DXN } from '@dxos/keys';
 
@@ -54,7 +55,7 @@ export namespace TestSchema {
     referenceArray: Schema.Array(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))),
     classInstance: Schema.instanceOf(TestClass),
     other: Schema.Any,
-  }).pipe(Schema.partial);
+  }).mapFields(Struct.map(Schema.optional));
 
   /** @deprecated Use another test schema or create a specific local test schema. */
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
@@ -114,7 +115,7 @@ export namespace TestSchema {
         label: Schema.String,
         value: Schema.String,
       }).pipe(Schema.Array, Schema.optional),
-    }).pipe(Schema.partial),
+    }).mapFields(Struct.map(Schema.optional)),
   ) {}
 
   //
@@ -130,7 +131,7 @@ export namespace TestSchema {
       previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
       subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
       description: Schema.optional(Schema.String),
-    }).pipe(Schema.partial),
+    }).mapFields(Struct.map(Schema.optional)),
   ) {}
 
   //
@@ -170,15 +171,13 @@ export namespace TestSchema {
     Schema.Struct({
       objects: Schema.Array(Ref.Ref(Obj.Unknown)),
       records: Schema.Array(
-        Schema.partial(
-          Schema.Struct({
-            title: Schema.String,
-            description: Schema.String,
-            contacts: Schema.Array(Ref.Ref(Person)),
-            type: Schema.Enum(RecordType),
-          }),
-        ),
+        Schema.Struct({
+          title: Schema.String,
+          description: Schema.String,
+          contacts: Schema.Array(Ref.Ref(Person)),
+          type: Schema.Enum(RecordType),
+        }).mapFields(Struct.map(Schema.optional)),
       ),
-    }).pipe(Schema.partial),
+    }).mapFields(Struct.map(Schema.optional)),
   ) {}
 }

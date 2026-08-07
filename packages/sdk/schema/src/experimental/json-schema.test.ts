@@ -36,12 +36,10 @@ describe('json-schema', () => {
   test('AST equivalence', ({ expect }) => {
     {
       const schema1 = Schema.mutable(
-        Schema.partial(
-          Schema.Struct({
-            x: Schema.Number,
-            y: Schema.String,
-          }),
-        ),
+        Schema.Struct({
+          x: Schema.Number,
+          y: Schema.String,
+        }).mapFields(Struct.map(Schema.optional)),
       );
 
       const schema2 = Schema.Struct({
@@ -52,7 +50,9 @@ describe('json-schema', () => {
       const schema3 = Schema.Struct({
         x: Schema.Number,
         y: Schema.String,
-      }).pipe(Schema.partial, Schema.mutable);
+      })
+        .mapFields(Struct.map(Schema.optional))
+        .pipe(Schema.mutable);
 
       const schema4 = Schema.extend(
         schema1.pipe(Schema.omit('y')),

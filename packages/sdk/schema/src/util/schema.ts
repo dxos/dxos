@@ -77,7 +77,7 @@ export const getSchemaFromPropertyDefinitions = (
     [TypeEnum.String]: Schema.String.pipe(Schema.optional),
     [TypeEnum.Number]: Schema.Number.pipe(Schema.optional),
     [TypeEnum.Boolean]: Schema.Boolean.pipe(Schema.optional),
-    [TypeEnum.Object]: Schema.Object.pipe(Schema.optional),
+    [TypeEnum.Object]: Schema.ObjectKeyword.pipe(Schema.optional),
     // TODO(ZaymonFC): Arrays are undercooked, we should specify the item type / format as well.
     [TypeEnum.Array]: Schema.Array(Schema.Any),
     [TypeEnum.Ref]: Schema.String.pipe(Schema.optional), // TODO(burdon): Is this correct for refs?

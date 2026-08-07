@@ -62,7 +62,7 @@ export const URL = Schema.String.pipe(
  * UUID (RFC 4122)
  * https://datatracker.ietf.org/doc/html/rfc4122
  */
-export const UUID = Schema.UUID.pipe(
+export const UUID = Schema.String.check(Schema.isUUID()).pipe(
   FormatAnnotation.set(TypeFormat.UUID),
   Schema.annotate({
     [SchemaAST.ExamplesAnnotationId]: ['3e4666bf-d5e5-4aa7-b8ce-cefe41c7568a'],

@@ -73,7 +73,7 @@ describe('format', () => {
   });
 
   test('ref format', async ({ expect }) => {
-    const validate = Schema.validateSync(PropertySchema);
+    const validate = Schema.decodeSync(Schema.toType(PropertySchema));
     const prop: Partial<PropertyType> = {
       property: 'organization' as SchemaEx.JsonProp,
       type: TypeEnum.Ref,

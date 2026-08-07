@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import type * as Types from 'effect/Types';
 import { describe, expect, test } from 'vitest';
 
@@ -29,7 +30,9 @@ const Contact = Schema.Struct(
     key: Schema.String,
     value: Schema.Any,
   },
-).pipe(Schema.partial, EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
+)
+  .mapFields(Struct.map(Schema.optional))
+  .pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
 type Contact = Type.InstanceType<typeof Contact>;
 

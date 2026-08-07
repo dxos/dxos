@@ -31,7 +31,7 @@ describe('toJsonSchema wire shape', () => {
     Schema.Struct({
       name: Schema.String.annotate({ title: 'Full name', description: 'The contact name' }),
       email: Schema.optional(Format.Email),
-      age: Schema.optional(Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.between(0, 150))),
+      age: Schema.optional(Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 150)))),
       active: Schema.Boolean,
       kind: Schema.Literals(['personal', 'work']),
     }),

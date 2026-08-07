@@ -59,7 +59,7 @@ describe('schema-validator', () => {
         const nestedSchema = SchemaValidator.getPropertySchema(args.schema, args.path, (path) => {
           return getDeep(args.target, path);
         });
-        Schema.validateSync(nestedSchema)(args.valueToAssign);
+        Schema.decodeSync(Schema.toType(nestedSchema))(args.valueToAssign);
       });
       if (args.expectToThrow) {
         expectation.to.throw();

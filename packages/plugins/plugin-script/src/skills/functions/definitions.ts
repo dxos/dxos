@@ -242,10 +242,10 @@ const InvocationSpanSchema = Schema.Struct({
   outcome: Schema.String.annotate({
     description: 'Invocation outcome: success, failure, or pending.',
   }),
-  input: Schema.Object.annotate({
+  input: Schema.ObjectKeyword.annotate({
     description: 'The input payload passed to the function.',
   }),
-  error: Schema.optional(Schema.Object).annotate({
+  error: Schema.optional(Schema.ObjectKeyword).annotate({
     description: 'Error details if the invocation failed.',
   }),
 });

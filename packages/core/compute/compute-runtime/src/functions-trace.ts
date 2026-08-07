@@ -144,7 +144,7 @@ export const TraceEventLog = Schema.Struct({
   timestamp: Schema.Number,
   level: Schema.String,
   message: Schema.String,
-  context: Schema.optional(Schema.Object),
+  context: Schema.optional(Schema.ObjectKeyword),
 });
 
 export class TraceEvent extends Type.makeObject<TraceEvent>(DXN.make('org.dxos.type.traceEvent', '0.1.0'))(
