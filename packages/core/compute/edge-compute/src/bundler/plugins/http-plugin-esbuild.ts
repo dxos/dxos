@@ -63,11 +63,10 @@ export const httpPlugin: Plugin = {
         return { contents, loader };
       }).pipe(
         Effect.retry(
-          Function.pipe(
-            Schedule.exponential(Duration.millis(INITIAL_DELAY)),
-            Schedule.jittered,
-            Schedule.intersect(Schedule.recurs(MAX_RETRIES - 1)),
-          ),
+          Schedule.max([
+            Schedule.exponential(Duration.millis(INITIAL_DELAY)).pipe(Schedule.jittered),
+            Schedule.recurs(MAX_RETRIES - 1),
+          ]),
         ),
         Effect.provide(FetchHttpClient.layer),
         EffectEx.runAndForwardErrors,
