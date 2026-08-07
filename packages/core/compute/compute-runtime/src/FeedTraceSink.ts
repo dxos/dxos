@@ -48,7 +48,7 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
   Effect.gen(function* () {
     const feed = yield* getOrCreateTraceFeed();
 
-    const runtime = yield* Effect.runtime<Database.Service>();
+    const context = yield* Effect.context<Database.Service>();
     let buffer: Trace.Message[] = [];
     let flushMore = false;
     let flushFiber: Fiber.Fiber<void> | undefined;
@@ -80,7 +80,7 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
             flushFiber = undefined;
           }),
         ),
-        Effect.provide(runtime),
+        Effect.provideContext(context),
         Effect.runFork,
       );
     };
@@ -96,7 +96,7 @@ export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = La
           log('trace feed append batch (flush now)', { count: messages.length, feedId: feed.id });
           yield* Feed.append(feed, messages);
         }
-      }).pipe(Effect.provide(runtime));
+      }).pipe(Effect.provideContext(context));
 
     yield* Effect.addFinalizer(() => flushNow());
 

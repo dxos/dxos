@@ -16,11 +16,11 @@ export const TriggerState = Schema.Struct({
   version: Schema.Literal('1'),
   triggerId: Schema.String,
   state: Schema.optional(
-    Schema.Union(
+    Schema.Union([
       Schema.TaggedStruct('subscription', {
         processedVersions: Schema.Record(EntityId, Schema.String),
       }),
-    ),
+    ]),
   ),
 });
 export interface TriggerState extends Schema.Schema.Type<typeof TriggerState> {}
@@ -41,7 +41,7 @@ export class TriggerStateStore extends Context.Service<
     TriggerStateStore,
     Effect.gen(function* () {
       const kv = yield* KeyValueStore.KeyValueStore;
-      const schemaStore = kv.forSchema(Schema.fromJsonString(TriggerState));
+      const schemaStore = KeyValueStore.toSchemaStore(kv, Schema.fromJsonString(TriggerState));
       const store: Context.Service.Shape<typeof TriggerStateStore> = {
         getState: Effect.fn('TriggerStateStore.getState')(function* (triggerId: EntityId) {
           const valueOption = yield* schemaStore.get(triggerId).pipe(Effect.orDie);

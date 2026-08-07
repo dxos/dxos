@@ -88,7 +88,7 @@ export const wrapFunctionHandler = (
       try {
         if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.decodeSync(Schema.toType(func.input, { onExcessProperty: 'error' }))(data);
+            Schema.decodeUnknownSync(Schema.toType(func.input), { onExcessProperty: 'error' })(data);
           } catch (error: any) {
             throw new InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
@@ -135,7 +135,7 @@ export const wrapFunctionHandler = (
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
-            Schema.decodeSync(Schema.toType(func.output, { onExcessProperty: 'error' }))(result);
+            Schema.decodeUnknownSync(Schema.toType(func.output), { onExcessProperty: 'error' })(result);
           } catch (error: any) {
             throw new InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
@@ -357,7 +357,7 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
   }
 
   switch (encoded._tag) {
-    case 'TypeLiteral': {
+    case 'Objects': {
       if (typeof value !== 'object' || value === null || Array.isArray(value)) {
         return value;
       }
@@ -371,14 +371,14 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
       return result;
     }
 
-    case 'TupleType': {
+    case 'Arrays': {
       if (!Array.isArray(value)) {
         return value;
       }
 
-      // For arrays, effect uses TupleType with empty elements and a single rest element.
+      // For arrays, effect uses an `Arrays` node with empty elements and a single rest element.
       if (encoded.elements.length === 0 && encoded.rest.length === 1) {
-        const elementType = encoded.rest[0].type;
+        const elementType = encoded.rest[0];
         return (value as unknown[]).map((item) => decodeRefsFromSchema(elementType, item, db));
       }
 
@@ -397,12 +397,11 @@ const decodeRefsFromSchema = (ast: SchemaAST.AST, value: unknown, db: DatabaseIm
     }
 
     case 'Suspend': {
-      return decodeRefsFromSchema(encoded.f(), value, db);
+      return decodeRefsFromSchema(encoded.thunk(), value, db);
     }
 
-    case 'Refinement': {
-      return decodeRefsFromSchema(encoded.from, value, db);
-    }
+    // v4 has no `Refinement` node: a refined node IS its base node with checks attached, so the
+    // cases above already match it.
 
     default: {
       return value;
