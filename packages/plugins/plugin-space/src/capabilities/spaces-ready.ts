@@ -131,7 +131,7 @@ export default Capability.makeModule(
       Effect.runFork(migrateToSettingsSpace({ settingsSpace, legacySpace }));
     };
 
-    start();
+    // `subscribe` replays the current space list, so this covers the initial pass too.
     const spacesSub = client.spaces.subscribe(() => {
       start();
       migrateLateLegacySpace();

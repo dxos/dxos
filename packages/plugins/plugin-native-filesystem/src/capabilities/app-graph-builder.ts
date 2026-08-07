@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { CreateAtom } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -179,7 +180,10 @@ export default Capability.makeModule(
 
           const state: NativeFilesystemCapabilities.NativeFilesystemState = get(stateAtom);
           const [client] = get(clientCapabilitiesAtom);
-          const settingsSpace = client && AppSpace.getSettingsSpace(client);
+          // The space list fills incrementally, so subscribe to it rather than reading once: the
+          // settings space holding the ordering can land after the client capability does.
+          const spaces = client && get(CreateAtom.fromObservable(client.spaces));
+          const settingsSpace = spaces && AppSpace.getSettingsSpace(client);
 
           if (!state.workspaces.length || !settingsSpace) {
             return Effect.succeed([]);

@@ -29,14 +29,6 @@ import * as AppAnnotation from './AppAnnotation';
  */
 export const SETTINGS_SPACE_TAG = 'org.dxos.space.settings';
 
-/**
- * Space tag for the personal space.
- * @deprecated The default space is now an ordinary space designated by the
- * {@link AppAnnotation.DefaultSpaceAnnotation} setting on the settings space. This tag survives
- * only to resolve profiles created before the settings space existed.
- */
-export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
-
 /** Space tag for the bundled exemplar/sample space. */
 export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
 
@@ -147,6 +139,14 @@ export const setupIdentitySpaces = Effect.fnUntraced(function* (client: Client) 
 //
 // Legacy resolution — profiles created before the settings space existed.
 //
+
+/**
+ * Space tag for the personal space.
+ * @deprecated The default space is now an ordinary space designated by the
+ * {@link AppAnnotation.DefaultSpaceAnnotation} setting on the settings space. This tag survives
+ * only to resolve profiles created before the settings space existed.
+ */
+export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
 
 // TODO(wittjosiah): Remove once all profiles have migrated to the settings space.
 const DEFAULT_SPACE_KEY = '__DEFAULT__';

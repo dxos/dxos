@@ -12,8 +12,8 @@ import { Obj } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
 
 import * as SpaceSchema from '../types/SpaceSchema';
-import { ensureSettingsSpace, readSpacesOrder } from '../util/settings-space';
-import { migrateToSettingsSpace } from './settings-space';
+import { ensureSettingsSpace } from '../util/settings-space';
+import { migrateToSettingsSpace, readSpacesOrder } from './settings-space';
 
 describe('settings space migration', () => {
   it.effect('designates the legacy space and carries its ordering across', () =>
@@ -39,6 +39,28 @@ describe('settings space migration', () => {
       expect(yield* readSpacesOrder(settingsSpace)).toEqual(order);
       expect(legacySpace.properties.name).toBe(AppSpace.DEFAULT_SPACE_NAME);
       expect(AppSpace.getDefaultSpace(client)?.id).toBe(legacySpace.id);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('carries the seeded icon hue onto the property the navtree reads', () =>
+    Effect.gen(function* () {
+      const client = yield* ClientService;
+      yield* Effect.tryPromise(() => client.halo.createIdentity());
+      yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
+
+      const legacySpace = yield* Effect.promise(() =>
+        client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
+      );
+      yield* Effect.promise(() => legacySpace.waitUntilReady());
+      // Onboarding used to write the hue here, where nothing renders it.
+      Obj.update(legacySpace.properties, (properties) => {
+        properties.iconHue = 'violet';
+      });
+
+      const settingsSpace = yield* ensureSettingsSpace(client);
+      yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
+
+      expect(legacySpace.properties.hue).toBe('violet');
     }).pipe(Effect.provide(TestLayer)),
   );
 

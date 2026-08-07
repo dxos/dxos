@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
+import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -169,8 +169,11 @@ export default Capability.makeModule(
         },
         actions: (space, get) => {
           const [client] = get(clientCapabilityAtom);
-          const settingsProperties = client && AppSpace.getSettingsSpace(client)?.properties;
-          const defaultSpace = client && AppSpace.getDefaultSpace(client);
+          // Both spaces are resolved from the space list, which fills incrementally — subscribe to
+          // it so the actions appear once the settings space lands rather than staying hidden.
+          const spaces = client && get(CreateAtom.fromObservable(client.spaces));
+          const settingsProperties = spaces && AppSpace.getSettingsSpace(client)?.properties;
+          const defaultSpace = spaces && AppSpace.getDefaultSpace(client);
           const properties = settingsProperties ? get(Obj.atom(settingsProperties)) : undefined;
           const isDismissed = properties
             ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
