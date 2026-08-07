@@ -4,7 +4,6 @@
 
 import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as Effect from 'effect/Effect';
-import * as Runtime from 'effect/Runtime';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
@@ -18,7 +17,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
-import { EffectEx, type RuntimeProvider } from '@dxos/effect';
+import { RuntimeProvider } from '@dxos/effect';
 import { type EntityMeta, EscapedPropPath, type IndexEngine, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
@@ -1695,8 +1694,7 @@ export class QueryExecutor extends Resource {
   private async _runInRuntime<T>(effect: Effect.Effect<T, unknown, SqlClient.SqlClient>): Promise<T> {
     const runtimeProvider = this._runtime;
     invariant(runtimeProvider, 'SQL runtime is required.');
-    const runtime = await EffectEx.runAndForwardErrors(runtimeProvider);
-    return await EffectEx.unwrapExit(await effect.pipe(Runtime.runPromiseExit(runtime)));
+    return await RuntimeProvider.runPromise(runtimeProvider)(effect);
   }
 
   private async _queryAllFromSqlIndex(

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Runtime from 'effect/Runtime';
+import * as Context from 'effect/Context';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -13,7 +13,7 @@ import { type DevicesService, type IdentityService } from '@dxos/protocols/rpc';
 export const setIdentityTags = ({
   identityService,
   devicesService,
-  runtime = Runtime.defaultRuntime,
+  runtime = Context.empty(),
   setTag,
 }: {
   identityService: IdentityService.Client;
@@ -21,7 +21,7 @@ export const setIdentityTags = ({
   runtime?: Context.Context<never>;
   setTag: (k: string, v: string) => void;
 }) => {
-  subscribeStream(runtime, identityService.IdentityService.queryIdentity(undefined), {
+  subscribeStream(runtime, identityService['IdentityService.queryIdentity'](undefined), {
     onData: (idqr) => {
       if (!idqr?.identity?.identityKey) {
         log('empty response from identity service', { idqr });
@@ -32,7 +32,7 @@ export const setIdentityTags = ({
     },
   });
 
-  subscribeStream(runtime, devicesService.DevicesService.queryDevices(undefined), {
+  subscribeStream(runtime, devicesService['DevicesService.queryDevices'](undefined), {
     onData: (dqr) => {
       if (!dqr || !dqr.devices || dqr.devices.length === 0) {
         log('empty response from device service', { device: dqr });

@@ -54,7 +54,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should delete items', () =>
     Effect.gen(function* () {
-      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       const service = new LocalFeedServiceImpl(runtime, feedStore);
       yield* feedStore.migrate();
@@ -87,7 +87,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should support pagination', () =>
     Effect.gen(function* () {
-      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
       const service = new LocalFeedServiceImpl(runtime, feedStore);
@@ -129,7 +129,7 @@ describe('LocalFeedServiceImpl', () => {
 
   it.effect('should pass tombstone blocks through paginated reads', () =>
     Effect.gen(function* () {
-      const runtime = Effect.succeed(yield* Effect.runtime<any>());
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
       const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: true });
       yield* feedStore.migrate();
       const service = new LocalFeedServiceImpl(runtime, feedStore);
