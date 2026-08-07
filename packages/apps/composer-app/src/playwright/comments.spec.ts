@@ -74,13 +74,7 @@ test.describe('Comments tests', () => {
     await expect(editedMessage).toContainText(editedText);
   });
 
-  // TODO(wittjosiah): Re-deferred. All three delete tests here were re-enabled on the strength of a
-  //   local chromium run, which was not enough: their original notes cited firefox and webkit, and
-  //   those are the browsers that took them out again in run 31147977323. Two distinct failures, both
-  //   on the delete path — `delete message` read 2 thread messages where 3 were expected on webkit,
-  //   and `delete thread` left the `cm-comment` decoration behind on firefox, the same signature as
-  //   `undo delete thread`. Clearing these needs a firefox/webkit run, not a chromium one.
-  test.fixme('delete message', async () => {
+  test('delete message', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -112,13 +106,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  // TODO(wittjosiah): Re-deferred. All three delete tests here were re-enabled on the strength of a
-  //   local chromium run, which was not enough: their original notes cited firefox and webkit, and
-  //   those are the browsers that took them out again in run 31147977323. Two distinct failures, both
-  //   on the delete path — `delete message` read 2 thread messages where 3 were expected on webkit,
-  //   and `delete thread` left the `cm-comment` decoration behind on firefox, the same signature as
-  //   `undo delete thread`. Clearing these needs a firefox/webkit run, not a chromium one.
-  test.fixme('delete thread', async () => {
+  test('delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -139,13 +127,7 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(0);
   });
 
-  // TODO(wittjosiah): Failed on chromium in runs 31146797167 and 31147369398, both on `cm-comment`
-  //   count 0 after `deleteThread` — the decoration is still there. Raising the budget from 10s to 30s
-  //   did not help, so the decoration is never dropped rather than dropped late. What is not explained:
-  //   `delete thread` is byte-identical up to that assertion and passes in the same runs, and neither
-  //   a full local run nor a local `--shard=2/2` (the exact CI grouping) reproduces it. Needs the trace
-  //   from a failing CI run to get further.
-  test.fixme('undo delete thread', async () => {
+  test('undo delete thread', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
 
@@ -171,10 +153,14 @@ test.describe('Comments tests', () => {
     await expect(Thread.getThreads(host.page)).toHaveCount(1);
   });
 
-  // TODO(wittjosiah): Not a flake — reproduces locally on chromium. Selecting a *comment* marks the
-  //   comment current (`data-current='1'` passes) but leaves the corresponding thread's `aria-current`
-  //   empty rather than `location`, so only the thread -> comment direction works. The assertion this
-  //   fails on is the comment -> thread one; fixing it is a product change, not a test change.
+  // TODO(wittjosiah): Not a flake, and not the decoration race the other three shared. The comments
+  //   article computes `currentId = isAttended ? state.current : undefined`
+  //   (CommentsArticle.tsx:229), so a thread is only marked current while the comments plank itself
+  //   has attention. Clicking a *comment* attends the editor plank, so no thread gets
+  //   `aria-current='location'` — while clicking a thread attends the comments plank, which is why
+  //   the other direction passes. Whether the marker should survive attention moving to the editor
+  //   is a product call about attention gating, so this stays deferred rather than being papered
+  //   over in the test.
   test.fixme('selecting comment highlights thread and vice versa', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Document' });
