@@ -99,8 +99,34 @@ logging pragmatic's drop targets through a failing firefox drag:
    is the "10 items become 9" — browser-independent, reachable by any user dropping a card on the
    empty area of its own column. Fixed by clamping the insert index.
 
-Measured after the fix: mosaic board suite 21/21 on firefox (`rearrange within column` was 0/5
-before), and both previously-deferred tests re-enabled.
+The first attempt at (1) kept every placeholder registered, which was too permissive the other
+way: an idle placeholder is ~8px of collapsed padding, and one of those could then accept a release
+that used to fall through to the container. webkit's kanban suite went 15/15 before that commit and
+14/15 on each of two runs after it, failing a different column drag each time. Suspension is now
+per-placeholder — only the one already aimed at stays droppable mid-scroll. Worth remembering: the
+regression was invisible without a baseline measurement, because the doc already carried a note
+calling this test webkit-flaky, and that note would have explained the failure away.
+
+Measured after the fix, `--repeat-each=3` on each browser:
+
+| suite                   | chromium | firefox | webkit |
+| :---------------------- | :------- | :------ | :----- |
+| `react-ui-mosaic` board | 21/21    | 21/21   | 21/21  |
+| `plugin-kanban` board   | 15/15    | 15/15   | 15/15  |
+
+`rearrange within column` was 0/5 on firefox before. Both previously-deferred mosaic tests are
+re-enabled, leaving no deferred test in that package.
+
+### 6b. `stories-projects` — 2 of 3 story files, another stale-cache unmasking
+
+Not e2e, but found the same way and worth recording with the others. `FactSummaries` and
+`SenderLedger` failed all three CI attempts, rendering blank Skills rows. Skill definitions come
+from modules gated on the assistant's start event; `RoutineArticle` signalled it, `ProjectArticle`
+embeds the same `InstructionsEditor` and did not. The signal now lives on the editor that reads the
+registry. Both failures predate this branch — nothing here touches plugin-table, plugin-projects,
+compute or stories-projects — so this is the same shape as `cli:test`, `plugin-assistant` and
+`plugin-tasks`: a task that had been replaying a stale cache entry until the lockfile change
+invalidated the graph. **main is green the same way.**
 
 ### 8. Collaboration and presence — awareness-channel races
 
