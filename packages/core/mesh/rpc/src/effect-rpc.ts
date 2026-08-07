@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as RpcClientError from '@effect/rpc/RpcClientError';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Mailbox from 'effect/Queue';
+import * as Queue from 'effect/Queue';
 import type * as Scope from 'effect/Scope';
 import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcClientError from 'effect/unstable/rpc/RpcClientError';
 import * as RpcMessage from 'effect/unstable/rpc/RpcMessage';
 import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 import * as RpcServer from 'effect/unstable/rpc/RpcServer';
@@ -31,21 +31,21 @@ const HANDSHAKE_RETRY_INTERVAL = Duration.millis(50);
 
 const subscribePort = (port: RpcPort) =>
   Effect.gen(function* () {
-    const mailbox = yield* Mailbox.make<Uint8Array>();
+    const queue = yield* Queue.make<Uint8Array>();
     const unsubscribe = port.subscribe((message) => {
-      mailbox.offerUnsafe(message);
+      Queue.offerUnsafe(queue, message);
     });
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
         unsubscribe?.();
       }),
     );
-    return mailbox;
+    return queue;
   });
 
 const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effect.Effect<void, Error> =>
   frame === undefined || typeof frame === 'string'
-    ? Effect.dieMessage('rpc-port protocol requires binary frames')
+    ? Effect.die(new Error('rpc-port protocol requires binary frames'))
     : // Copy the frame: msgpack encoders reuse their output buffer, but RpcPort.send may be
       // asynchronous (e.g. postMessage) and read the bytes after the encoder has overwritten them.
       Effect.tryPromise({
@@ -62,11 +62,12 @@ const sendFrame = (port: RpcPort, frame: Uint8Array | string | undefined): Effec
  */
 export const makeProtocolRpcPortClient = (
   port: RpcPort,
-): Effect.Effect<RpcClient.Protocol['Type'], never, Scope.Scope> =>
+): Effect.Effect<RpcClient.Protocol['Service'], never, Scope.Scope> =>
   RpcClient.Protocol.make(
     Effect.fnUntraced(function* (writeResponse) {
+      const clientId = 0;
       const parser = RpcSerialization.msgPack.makeUnsafe();
-      const mailbox = yield* subscribePort(port);
+      const queue = yield* subscribePort(port);
 
       const decodeFrame = (frame: Uint8Array) =>
         Effect.try({
@@ -75,16 +76,19 @@ export const makeProtocolRpcPortClient = (
             log.warn('rpc-port client: failed to decode frame', { cause });
             return [] as ReadonlyArray<RpcMessage.FromServerEncoded>;
           },
-        }).pipe(Effect.merge);
+        }).pipe(Effect.catch(Effect.succeed));
 
       const send = (request: RpcMessage.FromClientEncoded): Effect.Effect<void, RpcClientError.RpcClientError> =>
         Effect.suspend(() => sendFrame(port, parser.encode(request))).pipe(
           Effect.mapError(
             (cause) =>
+              // v4 types `reason` as a structured union rather than a string tag; a transport
+              // failure on a custom port is a client-side protocol defect.
               new RpcClientError.RpcClientError({
-                reason: 'Protocol',
-                message: 'Failed to send message over RpcPort',
-                cause,
+                reason: new RpcClientError.RpcClientDefect({
+                  message: 'Failed to send message over RpcPort',
+                  cause,
+                }),
               }),
           ),
         );
@@ -95,7 +99,7 @@ export const makeProtocolRpcPortClient = (
         let connected = false;
         while (!connected) {
           yield* send(RpcMessage.constPing);
-          const frame = yield* mailbox.take.pipe(Effect.timeoutOption(HANDSHAKE_RETRY_INTERVAL));
+          const frame = yield* Queue.take(queue).pipe(Effect.timeoutOption(HANDSHAKE_RETRY_INTERVAL));
           if (Option.isNone(frame)) {
             continue;
           }
@@ -103,15 +107,17 @@ export const makeProtocolRpcPortClient = (
             if (response._tag === 'Pong') {
               connected = true;
             } else {
-              yield* writeResponse(response);
+              yield* writeResponse(clientId, response);
             }
           }
         }
       }).pipe(Effect.orDie);
 
-      yield* mailbox.take.pipe(
+      yield* Queue.take(queue).pipe(
         Effect.flatMap(decodeFrame),
-        Effect.flatMap((responses) => Effect.forEach(responses, writeResponse, { discard: true })),
+        Effect.flatMap((responses) =>
+          Effect.forEach(responses, (response) => writeResponse(clientId, response), { discard: true }),
+        ),
         Effect.forever,
         Effect.orDie,
         Effect.interruptible,
@@ -119,7 +125,7 @@ export const makeProtocolRpcPortClient = (
       );
 
       return {
-        send,
+        send: (_clientId: number, request: RpcMessage.FromClientEncoded) => send(request),
         supportsAck: true,
         supportsTransferables: false,
       };
@@ -135,15 +141,15 @@ export const layerProtocolRpcPortClient = (port: RpcPort): Layer.Layer<RpcClient
  */
 export const makeProtocolRpcPortServer = (
   port: RpcPort,
-): Effect.Effect<RpcServer.Protocol['Type'], never, Scope.Scope> =>
+): Effect.Effect<RpcServer.Protocol['Service'], never, Scope.Scope> =>
   RpcServer.Protocol.make(
     Effect.fnUntraced(function* (writeRequest) {
       const parser = RpcSerialization.msgPack.makeUnsafe();
-      const mailbox = yield* subscribePort(port);
-      const disconnects = yield* Mailbox.make<number>();
+      const queue = yield* subscribePort(port);
+      const disconnects = yield* Queue.make<number>();
       const clientId = 0;
 
-      yield* mailbox.take.pipe(
+      yield* Queue.take(queue).pipe(
         Effect.flatMap((frame) =>
           Effect.try({
             try: () => parser.decode(frame) as ReadonlyArray<RpcMessage.FromClientEncoded>,
@@ -151,7 +157,7 @@ export const makeProtocolRpcPortServer = (
               log.warn('rpc-port server: failed to decode frame', { cause });
               return [] as ReadonlyArray<RpcMessage.FromClientEncoded>;
             },
-          }).pipe(Effect.merge),
+          }).pipe(Effect.catch(Effect.succeed)),
         ),
         Effect.flatMap((requests) =>
           Effect.forEach(requests, (request) => writeRequest(clientId, request), { discard: true }),
