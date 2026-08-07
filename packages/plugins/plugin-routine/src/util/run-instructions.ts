@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import { RunInstructions } from '@dxos/assistant-toolkit/operations';
 import { Ref } from '@dxos/echo';
 
 /** A ref to the shared RunInstructions operation in the registry (resolved via the registry, not the database). */

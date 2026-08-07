@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Chat } from '@dxos/assistant-toolkit';
+import { Chat } from '@dxos/assistant-toolkit/types';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
