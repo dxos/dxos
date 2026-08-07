@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { RUN_AGAIN_MESSAGE, Trace } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, Trace } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
 
@@ -77,7 +77,7 @@ describe('groupIntoRuns', () => {
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
       eventOutcome: 'failure',
-      eventError: RUN_AGAIN_MESSAGE,
+      eventErrorCode: RUN_AGAIN_ERROR_CODE,
       timestamp: 2000,
     });
     const runs = groupIntoRuns([start, end], new Set([TRIGGER_ID]));
@@ -90,7 +90,7 @@ describe('groupIntoRuns', () => {
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
       eventOutcome: 'failure',
-      eventError: RUN_AGAIN_MESSAGE,
+      eventErrorCode: RUN_AGAIN_ERROR_CODE,
       timestamp: 1000,
     });
     const failure = makeMessage({
@@ -98,7 +98,7 @@ describe('groupIntoRuns', () => {
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
       eventOutcome: 'failure',
-      eventError: 'Network unavailable',
+      eventErrorCode: 'NetworkError',
       timestamp: 2000,
     });
     const runs = groupIntoRuns([incomplete, failure], new Set([TRIGGER_ID]));
@@ -161,14 +161,14 @@ function makeMessage(opts: {
   triggerEntityId?: EntityId;
   eventType?: string;
   eventOutcome?: string;
-  eventError?: string;
+  eventErrorCode?: string;
   timestamp?: number;
 }): Trace.Message {
   const event = {
     type: opts.eventType ?? Trace.OperationStart.key,
     timestamp: opts.timestamp ?? Date.now(),
     data: opts.eventOutcome
-      ? { key: 'test', outcome: opts.eventOutcome, ...(opts.eventError && { error: opts.eventError }) }
+      ? { key: 'test', outcome: opts.eventOutcome, ...(opts.eventErrorCode && { errorCode: opts.eventErrorCode }) }
       : { key: 'test' },
   } as Trace.Event;
   return Obj.make(Trace.Message, {

@@ -12,7 +12,7 @@ import * as Struct from 'effect/Struct';
 
 import { AGENT_PROCESS_KEY } from '@dxos/agent-runtime';
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, RUN_AGAIN_MESSAGE, Trace } from '@dxos/compute';
+import { Process, RUN_AGAIN_ERROR_CODE, Trace } from '@dxos/compute';
 import { Annotation } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
@@ -333,9 +333,9 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       return undefined;
     }
     // A `RunAgainError` (Operation.runAgain) is a scheduler yield, not a hard error: the trace records
-    // it as a failure carrying the run-again message, but it will be re-invoked. Detect it here and
-    // present it as a distinct warn-level state rather than folding it into failure.
-    const incomplete = event.data.outcome === 'failure' && event.data.error === RUN_AGAIN_MESSAGE;
+    // it as a failure tagged with the run-again error code, but it will be re-invoked. Detect it here
+    // and present it as a distinct warn-level state rather than folding it into failure.
+    const incomplete = event.data.outcome === 'failure' && event.data.errorCode === RUN_AGAIN_ERROR_CODE;
     const presentation =
       event.data.outcome === 'success'
         ? { icon: ICONS.operationEndSuccess.icon, level: ICONS.operationEndSuccess.level, suffix: '' }

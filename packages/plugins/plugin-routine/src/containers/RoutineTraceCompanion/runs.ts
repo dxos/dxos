@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RUN_AGAIN_MESSAGE, Trace } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, Trace } from '@dxos/compute';
 import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
@@ -104,13 +104,13 @@ export const groupIntoRuns = (
     const duration = lastTimestamp - startedAt;
 
     // Determine status from OperationEnd events. Precedence: failure beats incomplete beats success.
-    // A `RunAgainError` (Operation.runAgain) is recorded as a failure carrying the run-again message,
-    // but the run will be re-invoked — surface it as `incomplete`, neither success nor hard failure.
+    // A `RunAgainError` (Operation.runAgain) is recorded as a failure tagged with the run-again error
+    // code, but the run will be re-invoked — surface it as `incomplete`, neither success nor hard failure.
     let status: RunStatus = 'pending';
     for (const evt of allEvents) {
       if (Trace.isOfType(Trace.OperationEnd, evt)) {
         if (evt.data.outcome === 'failure') {
-          if (evt.data.error === RUN_AGAIN_MESSAGE) {
+          if (evt.data.errorCode === RUN_AGAIN_ERROR_CODE) {
             status = 'incomplete';
             continue;
           }

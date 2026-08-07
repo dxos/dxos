@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
-import { Process, RUN_AGAIN_MESSAGE, Trace } from '@dxos/compute';
+import { Process, RUN_AGAIN_ERROR_CODE, Trace } from '@dxos/compute';
 import { EntityId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
@@ -906,8 +906,8 @@ describe('buildExecutionGraph scenarios', () => {
   });
 
   /**
-   * A `RunAgainError` (Operation.runAgain) is recorded as a `failure` carrying the run-again message.
-   * The UI detects this and presents it as a warn-level ` - Incomplete` state, never as an error.
+   * A `RunAgainError` (Operation.runAgain) is recorded as a `failure` tagged with the run-again error
+   * code. The UI detects this and presents it as a warn-level ` - Incomplete` state, never as an error.
    */
   test('run-again failure renders as a warn-level incomplete commit, not an error', ({ expect }) => {
     const messages = collectTraceEvents(
@@ -919,7 +919,8 @@ describe('buildExecutionGraph scenarios', () => {
             key: 'sync',
             name: 'Sync Google Mail',
             outcome: 'failure',
-            error: RUN_AGAIN_MESSAGE,
+            error: 'Run again',
+            errorCode: RUN_AGAIN_ERROR_CODE,
           });
         }),
       ),
@@ -932,7 +933,7 @@ describe('buildExecutionGraph scenarios', () => {
   });
 
   /**
-   * A genuine operation failure (any error other than the run-again message) still renders as an error.
+   * A genuine operation failure (any error code other than the run-again one) still renders as an error.
    */
   test('non-run-again failure still renders as an error commit', ({ expect }) => {
     const messages = collectTraceEvents(
@@ -945,6 +946,7 @@ describe('buildExecutionGraph scenarios', () => {
             name: 'Sync Google Mail',
             outcome: 'failure',
             error: 'Network unavailable',
+            errorCode: 'NetworkError',
           });
         }),
       ),
