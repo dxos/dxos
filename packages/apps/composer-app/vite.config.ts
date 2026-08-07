@@ -31,11 +31,10 @@ import { traceBootLeak } from './src/vite/trace-boot-leak';
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
-// DX_PLUGIN_SET=minimal (serve-min task) or =barebones (memory-floor profiling) swaps the full
-// plugin registry for the corresponding plugin-defs.<set>.tsx without touching main.tsx.
-const pluginSet = ['minimal', 'barebones'].find((set) => set === process.env.DX_PLUGIN_SET);
-const isMinimalPluginSet = pluginSet != null;
-const pluginSetFile = pluginSet ? `src/plugin-defs.${pluginSet}.tsx` : 'src/plugin-defs.tsx';
+// DX_PLUGIN_SET=minimal (serve-min task) swaps the full plugin registry for
+// plugin-defs.minimal.tsx without touching main.tsx.
+const isMinimalPluginSet = process.env.DX_PLUGIN_SET === 'minimal';
+const pluginSetFile = isMinimalPluginSet ? 'src/plugin-defs.minimal.tsx' : 'src/plugin-defs.tsx';
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');

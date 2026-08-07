@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import hero from '../../../assets/hero.webp?url';
+import hero from '../../assets/hero.webp?url';
 
 /**
- * Dialog-overlay styling for the welcome screen. Kept apart from `Welcome.tsx` so the onboarding
+ * Dialog-overlay styling for the welcome screen. Apart from the screen itself so the onboarding
  * manager — which runs in every tab to decide whether onboarding is needed — can reference the
  * overlay without pulling the screen's component tree into its chunk.
  */

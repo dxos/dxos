@@ -151,3 +151,5 @@ export const TimeSeries = (props: CustomPanelProps<{}>) => {
 //     return this.values.length === 0 ? 0 : this.sum / this.values.length;
 //   }
 // }
+
+export default TimeSeries;

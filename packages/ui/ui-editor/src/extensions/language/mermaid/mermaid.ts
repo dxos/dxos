@@ -2,43 +2,54 @@
 // Copyright 2026 DXOS.org
 //
 
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
-import { type Extension } from '@codemirror/state';
-import { flowchartTags, mermaid as mermaidLanguage, mermaidTags } from 'codemirror-lang-mermaid';
-
-export type MermaidHighlightOptions = {};
+import { LanguageDescription, syntaxHighlighting } from '@codemirror/language';
+import { Compartment, type Extension } from '@codemirror/state';
+import { type EditorView, ViewPlugin } from '@codemirror/view';
 
 /**
- * `codemirror-lang-mermaid` emits its own tags rather than the standard `@lezer/highlight` ones, so
- * no default highlight style matches them and the source renders unstyled without this.
- *
- * Only the distinctions worth drawing are styled — header, connectors, labels, comments — and the
- * rest inherits, as in `markdownHighlightStyle`. Classes are semantic theme tokens so the palette
- * follows light/dark rather than pinning syntax hues.
+ * Mermaid fenced-code support. `codemirror-lang-mermaid` ships its parser tables in the same module
+ * as its tags (~165 KB), so both the language and its highlight style load on the first document
+ * that actually contains a mermaid fence rather than with the editor.
  */
-export const mermaidHighlightStyle = (_options: MermaidHighlightOptions = {}) =>
-  HighlightStyle.define([
-    // `flowchart`/`graph` and its direction, plus the `subgraph`/`end` keywords.
-    {
-      tag: [mermaidTags.diagramName, flowchartTags.diagramName, flowchartTags.keyword, flowchartTags.orientation],
-      class: 'text-primary-500',
-    },
-    // Connectors recede; the nodes they join are the content. `link` is the arrow itself (`-->`),
-    // so it must not be underlined — that reads as a hyperlink.
-    { tag: [flowchartTags.link, flowchartTags.nodeEdge], class: 'text-subdued' },
-    // Labels, on nodes and on edges. Node ids are left inheriting, as the backbone of the source.
-    {
-      tag: [flowchartTags.nodeText, flowchartTags.nodeEdgeText, flowchartTags.string, flowchartTags.number],
-      class: 'text-accent',
-    },
-    { tag: [flowchartTags.lineComment], class: 'text-description' },
-  ]);
+const highlightCompartment = new Compartment();
 
-/**
- * Mermaid language support for a document that is entirely mermaid. For a fenced block inside
- * markdown use `createMarkdownExtensions`, which registers mermaid as a fenced-code language.
- */
-export const createMermaidExtensions = (options: MermaidHighlightOptions = {}): Extension[] => [
-  mermaidLanguage(),
-  syntaxHighlighting(mermaidHighlightStyle(options)),
+/** Views carrying the lazy highlighting slot, reconfigured once the grammar loads. */
+const pendingViews = new Set<EditorView>();
+let highlightingLoaded = false;
+
+const installHighlighting = async (): Promise<void> => {
+  if (highlightingLoaded) {
+    return;
+  }
+  highlightingLoaded = true;
+  const { mermaidHighlightStyle } = await import('./highlight');
+  const extension = syntaxHighlighting(mermaidHighlightStyle());
+  for (const view of pendingViews) {
+    view.dispatch({ effects: highlightCompartment.reconfigure(extension) });
+  }
+  pendingViews.clear();
+};
+
+/** CodeMirror calls `load` when it first parses a mermaid fence. */
+export const mermaidLanguageDescription = LanguageDescription.of({
+  name: 'mermaid',
+  alias: ['mermaid'],
+  extensions: ['mmd'],
+  load: async () => {
+    const [{ mermaid }] = await Promise.all([import('codemirror-lang-mermaid'), installHighlighting()]);
+    return mermaid();
+  },
+});
+
+/** Slot that receives the mermaid highlight style once the grammar loads. */
+export const mermaidHighlighting = (): Extension => [
+  highlightCompartment.of([]),
+  ViewPlugin.define((view) => {
+    if (!highlightingLoaded) {
+      pendingViews.add(view);
+    }
+    return {
+      destroy: () => pendingViews.delete(view),
+    };
+  }),
 ];

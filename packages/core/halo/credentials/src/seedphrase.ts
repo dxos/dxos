@@ -10,18 +10,22 @@ import { type KeyPair } from '@dxos/keys';
  * bip39 carries the full wordlist set (~185 KB) and is only reachable while creating or recovering
  * an identity, so it loads on demand rather than riding this barrel into every boot graph.
  */
-const bip39 = () => import('bip39');
+const loadBip39 = () => import('bip39');
 
 /**
  * Generate bip39 seed phrase (aka mnemonic).
  */
-export const generateSeedPhrase = async (): Promise<string> => (await bip39()).generateMnemonic();
+export const generateSeedPhrase = async (): Promise<string> => {
+  const { generateMnemonic } = await loadBip39();
+  return generateMnemonic();
+};
 
 /**
  * Generate key pair from seed phrase.
  */
 export const keyPairFromSeedPhrase = async (seedPhrase: string): Promise<KeyPair> => {
   invariant(seedPhrase);
-  const seed = (await bip39()).mnemonicToSeedSync(seedPhrase);
+  const { mnemonicToSeedSync } = await loadBip39();
+  const seed = mnemonicToSeedSync(seedPhrase);
   return createKeyPair(seed);
 };

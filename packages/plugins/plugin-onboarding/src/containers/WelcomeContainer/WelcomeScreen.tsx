@@ -14,14 +14,12 @@ import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 
-import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../credentials';
-import { useForceDarkTheme } from '../hooks';
-import { meta } from '../meta';
-import { OnboardingOperation } from '../operations';
-import { translations } from '../translations';
+import { joinWaitlist, login, redeemAccountInvitation, validateInvitationCode } from '../../credentials';
+import { useForceDarkTheme } from '../../hooks';
+import { meta } from '../../meta';
+import { OnboardingOperation } from '../../operations';
+import { translations } from '../../translations';
 import { Welcome, type WelcomeError, WelcomeState, passkeyError } from './Welcome';
-
-export { WELCOME_SCREEN } from './keys';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const client = useClient();

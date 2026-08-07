@@ -22,7 +22,7 @@ import { Button, DropdownMenu, Icon, Input, ThemedClassName, useTranslation } fr
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../meta';
+import { meta } from '../../../meta';
 import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail, validInvitationCode } from './types';
 
 const supportsPasskeys =
@@ -38,8 +38,6 @@ const errorMessageKeys: Record<WelcomeError, string> = {
   'passkey-rejected': 'passkey-rejected-error.message',
   'passkey-failed': 'passkey-failed-error.message',
 };
-
-export { OVERLAY_CLASSES, OVERLAY_STYLE } from './overlay';
 
 // Flat, full-width tabs with a bottom border that highlights the active one.
 const tabClassNames =

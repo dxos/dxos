@@ -35,8 +35,6 @@ const parseUrl = (url: string): URL | undefined => {
   }
 };
 
-export { ABOUT_DIALOG } from '../keys';
-
 export const AboutDialog = () => {
   const { t } = useTranslation(meta.profile.key);
   const config = useConfig();

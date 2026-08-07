@@ -18,8 +18,7 @@ import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { WELCOME_SCREEN } from './components/keys';
-import { OVERLAY_CLASSES, OVERLAY_STYLE } from './components/Welcome/overlay';
+import { OVERLAY_CLASSES, OVERLAY_STYLE, WELCOME_SCREEN } from './constants';
 import { meta } from './meta';
 import { queryAllCredentials, removeQueryParamByValue } from './util';
 
