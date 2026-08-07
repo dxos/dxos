@@ -325,12 +325,12 @@ jobs:
             git push -f origin "refs/tags/$tag"
           done
 
-      # Only the environments someone is waiting on: `dev` and `production` are dispatched by hand, so a
-      # result is owed to whoever pressed the button. `nightly` runs unattended every day and `staging` is
-      # unused — neither is news. Outcome only; the deploy is no longer slow enough for a "started" ping to
-      # earn its place.
+      # Every environment but `nightly`: a dispatched deploy is sporadic, so its success is news to whoever
+      # pressed the button. Nightly lands at the same time every day and can be assumed to have worked —
+      # its failure still notifies below. No "started" ping either way; the deploy is no longer slow enough
+      # for one to earn its place.
       - name: Notify Discord — deploy succeeded
-        if: success() && (env.DEPLOY_ENV == 'dev' || env.DEPLOY_ENV == 'production')
+        if: success() && env.DEPLOY_ENV != 'nightly'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
@@ -340,10 +340,12 @@ jobs:
             '{content: (":white_check_mark: Deployed **" + $app + "** to `" + $env + "`\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
+      # Unconditional, nightly included — a silent nightly is only safe to read as success if a broken one
+      # says so.
       - name: Notify Discord — deploy failed
         # Skip when it was the "app targets this environment" check that failed — that's an invalid
         # app/environment combo caught before any deploy was attempted, not a real deploy failure.
-        if: failure() && steps.validate.conclusion == 'success' && (env.DEPLOY_ENV == 'dev' || env.DEPLOY_ENV == 'production')
+        if: failure() && steps.validate.conclusion == 'success'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
