@@ -458,7 +458,7 @@ const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).mapFiel
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
 const DelegationsCell = StorageService.cell(
-  Schema.parseJson(Schema.Array(Delegation).mapFields(Struct.map(Schema.mutableKey))),
+  Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
 

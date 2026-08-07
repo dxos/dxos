@@ -503,12 +503,14 @@ export const QueryFromClause_ = Schema.Struct({
     [
       [
         [
-          Schema.TaggedStruct('scope', {
-            scopes: Schema.Array(Schema.suspend(() => Scope)),
-          }),
-          Schema.TaggedStruct('query', {
-            query: Schema.suspend(() => Query),
-          }),
+          [
+            Schema.TaggedStruct('scope', {
+              scopes: Schema.Array(Schema.suspend(() => Scope)),
+            }),
+            Schema.TaggedStruct('query', {
+              query: Schema.suspend(() => Query),
+            }),
+          ],
         ],
       ],
     ],

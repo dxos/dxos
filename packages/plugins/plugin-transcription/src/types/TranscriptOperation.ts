@@ -106,7 +106,7 @@ export const SentenceNormalizationInput = Schema.Struct({
 export type SentenceNormalizationInputType = Schema.Schema.Type<typeof SentenceNormalizationInput>;
 
 export const SentenceNormalizationOutput = Schema.Struct({
-  sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).mapFields(Struct.map(Schema.mutableKey)).annotate({
+  sentences: Schema.Array(MessageWithRangeId.pipe(Schema.mutable)).pipe(Schema.mutable).annotate({
     description: 'The sentences of the transcript.',
   }),
 });

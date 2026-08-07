@@ -17,7 +17,7 @@ import { Form } from '../../../Form';
 import { SelectOptionField } from './SelectOptionField';
 
 const TestSchema = Schema.Struct({
-  options: Schema.Array(SelectOption).mapFields(Struct.map(Schema.mutableKey)),
+  options: Schema.Array(SelectOption).pipe(Schema.mutable),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 const DefaultStory = () => {

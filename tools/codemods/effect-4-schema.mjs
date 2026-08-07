@@ -195,8 +195,15 @@ const mapCalls = (source, name, rewrite) => {
       end++;
     }
     const inner = source.slice(at + needle.length, end - 1);
-    out += source.slice(index, at) + rewrite(inner);
-    index = end;
+    const after = source.slice(end);
+    const replacement = rewrite(inner, after);
+    // A rewriter that consumed a trailing suffix signals it by not re-emitting the call verbatim.
+    const claimed =
+      replacement.endsWith('.mapFields(Struct.map(Schema.mutableKey))') && after.startsWith('.pipe(Schema.mutable)')
+        ? '.pipe(Schema.mutable)'.length
+        : 0;
+    out += source.slice(index, at) + replacement;
+    index = end + claimed;
   }
 };
 
@@ -324,12 +331,13 @@ for (const file of files) {
 
   // v4's `mutable` applies to arrays and records only. A struct's fields are made mutable per
   // key, and a union's members carry their own mutability, so the wrapper is dropped there.
-  source = source.replace(
-    /Schema\.Struct\(([\s\S]*?)\)\.pipe\(Schema\.mutable\)/g,
-    (_match, inner) => (
-      bump('Struct .pipe(mutable)'),
-      `Schema.Struct(${inner}).mapFields(Struct.map(Schema.mutableKey))`
-    ),
+  // Uses the walker: a non-greedy regex here matched an inner array's `.pipe(Schema.mutable)`
+  // as though it closed the outer struct.
+  const MUTABLE_SUFFIX = '.pipe(Schema.mutable)';
+  source = mapCalls(source, 'Struct', (inner, after) =>
+    after.startsWith(MUTABLE_SUFFIX)
+      ? (bump('Struct .pipe(mutable)'), `Schema.Struct(${inner}).mapFields(Struct.map(Schema.mutableKey))`)
+      : `Schema.Struct(${inner})`,
   );
   source = source.replace(/\]\)\.pipe\(Schema\.mutable\)/g, () => (bump('Union .pipe(mutable)'), '])'));
 
