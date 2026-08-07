@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
@@ -65,6 +66,59 @@ describe('groupIntoRuns', () => {
     expect(runs[0].status).toBe('failure');
   });
 
+  test('marks run as incomplete when OperationEnd is a run-again failure', ({ expect }) => {
+    const start = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationStart.key,
+      timestamp: 1000,
+    });
+    const end = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'failure',
+      eventErrorCode: RUN_AGAIN_ERROR_CODE,
+      timestamp: 2000,
+    });
+    const runs = groupIntoRuns([start, end], new Set([TRIGGER_ID]));
+    expect(runs[0].status).toBe('incomplete');
+  });
+
+  test('marks run as incomplete for a legacy run-again failure (message only, no errorCode)', ({ expect }) => {
+    const end = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'failure',
+      eventError: RUN_AGAIN_MESSAGE,
+      timestamp: 2000,
+    });
+    const runs = groupIntoRuns([end], new Set([TRIGGER_ID]));
+    expect(runs[0].status).toBe('incomplete');
+  });
+
+  test('a genuine failure beats a run-again incomplete', ({ expect }) => {
+    const incomplete = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'failure',
+      eventErrorCode: RUN_AGAIN_ERROR_CODE,
+      timestamp: 1000,
+    });
+    const failure = makeMessage({
+      pid: 'p1',
+      triggerEntityId: TRIGGER_ID,
+      eventType: Trace.OperationEnd.key,
+      eventOutcome: 'failure',
+      eventErrorCode: 'NetworkError',
+      timestamp: 2000,
+    });
+    const runs = groupIntoRuns([incomplete, failure], new Set([TRIGGER_ID]));
+    expect(runs[0].status).toBe('failure');
+  });
+
   test('marks run as pending when no OperationEnd event present', ({ expect }) => {
     const start = makeMessage({ pid: 'p1', triggerEntityId: TRIGGER_ID, timestamp: 1000 });
     const runs = groupIntoRuns([start], new Set([TRIGGER_ID]));
@@ -121,12 +175,21 @@ function makeMessage(opts: {
   triggerEntityId?: EntityId;
   eventType?: string;
   eventOutcome?: string;
+  eventErrorCode?: string;
+  eventError?: string;
   timestamp?: number;
 }): Trace.Message {
   const event = {
     type: opts.eventType ?? Trace.OperationStart.key,
     timestamp: opts.timestamp ?? Date.now(),
-    data: opts.eventOutcome ? { key: 'test', outcome: opts.eventOutcome } : { key: 'test' },
+    data: opts.eventOutcome
+      ? {
+          key: 'test',
+          outcome: opts.eventOutcome,
+          ...(opts.eventErrorCode && { errorCode: opts.eventErrorCode }),
+          ...(opts.eventError && { error: opts.eventError }),
+        }
+      : { key: 'test' },
   } as Trace.Event;
   return Obj.make(Trace.Message, {
     meta: {
