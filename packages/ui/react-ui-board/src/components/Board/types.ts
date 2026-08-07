@@ -19,7 +19,7 @@ export const Position = Schema.Struct({
 
 export type Position = Schema.Schema.Type<typeof Position>;
 
-export const CellLayout = Schema.extend(Position, Size.mapFields(Struct.map(Schema.optional)));
+export const CellLayout = Position.pipe(Schema.fieldsAssign(Size.mapFields(Struct.map(Schema.optional)).fields));
 export type CellLayout = Schema.Schema.Type<typeof CellLayout>;
 
 export const BoardLayout = Schema.Struct({
@@ -29,7 +29,8 @@ export const BoardLayout = Schema.Struct({
     height: Schema.Number,
   }),
 
-  cells: Schema.mutable(Schema.Record(Schema.String, CellLayout)),
+  // v4 restricts `mutable` to arrays; a mutable object property is expressed per key.
+  cells: Schema.mutableKey(Schema.Record(Schema.String, CellLayout)),
 });
 
 export type BoardLayout = Schema.Schema.Type<typeof BoardLayout>;

@@ -77,9 +77,9 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
 
   // Declarations (Ref, and the branded formats) carry their identity in the AST identifier.
   if (SchemaAST.isDeclaration(source.type)) {
-    // `getIdentifierAnnotation` returns an Option, and comparing the Options' string forms makes two
-    // MISSING identifiers compare equal — which would map unrelated declarations to each other.
-    const identifier = (ast: SchemaAST.AST) => Option.getOrUndefined(SchemaAST.getIdentifierAnnotation(ast));
+    // Two absent identifiers must not compare equal, or unrelated declarations would map to each
+    // other; the explicit `undefined` check below is what prevents that.
+    const identifier = (ast: SchemaAST.AST) => SchemaAST.getIdentifierAnnotation(ast);
     const sourceIdentifier = identifier(source.type);
     return sourceIdentifier !== undefined && sourceIdentifier === identifier(target.type);
   }

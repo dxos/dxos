@@ -16,7 +16,7 @@ import { Annotation, type Entity, Obj } from '@dxos/echo';
 /** Overlay values for every lens applied to an object: `lensId -> { property -> value }`. */
 export const OverlayAnnotation = Annotation.make({
   id: 'org.dxos.annotation.lens.overlay',
-  schema: Schema.Record(Schema.String, Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+  schema: Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown)),
 });
 
 type Overlays = Record<string, Record<string, unknown>>;
