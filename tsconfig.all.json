@@ -274,9 +274,6 @@
       "path": "packages/common/keys/tsconfig.json"
     },
     {
-      "path": "packages/common/kv-store/tsconfig.json"
-    },
-    {
       "path": "packages/core/compute/link/tsconfig.json"
     },
     {

@@ -577,7 +577,7 @@ jobs:
 
   # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
   # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
-  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `classic-level`'s native addon —
+  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `better-sqlite3`'s native addon —
   # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
   # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
   cli-foreign:

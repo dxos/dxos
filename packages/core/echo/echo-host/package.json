@@ -59,7 +59,6 @@
     "@dxos/index-core": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
-    "@dxos/kv-store": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
@@ -73,8 +72,7 @@
     "@effect/sql-sqlite-node": "catalog:",
     "bs58check": "catalog:",
     "effect": "catalog:",
-    "fast-deep-equal": "catalog:",
-    "level-transcoder": "catalog:"
+    "fast-deep-equal": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",

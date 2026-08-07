@@ -328,7 +328,7 @@ export class EchoHost extends Resource {
    * `_ctx.disposed` checks prevent `runBlocking` from being entered against a
    * disposed context — which would throw `ContextDisposedError` and escape as
    * an unhandled rejection at the fire-and-forget originating caller. Other
-   * `Resource` methods in this codebase (e.g. `LevelDBStorageAdapter.load`)
+   * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
    */
   async updateIndexes(): Promise<void> {
