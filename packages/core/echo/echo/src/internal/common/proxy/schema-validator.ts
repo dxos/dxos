@@ -26,22 +26,21 @@ export class SchemaValidator {
       }
       visitAll(typeAstList);
     } else if (SchemaAST.isTupleType(schema.ast)) {
-      const positionalTypes = schema.ast.elements.map((t) => t.type);
-      const allTypes = positionalTypes.concat(schema.ast.rest.map((t) => t.type));
+      const allTypes = [...schema.ast.elements, ...schema.ast.rest];
       visitAll(allTypes);
     } else if (SchemaAST.isTypeLiteral(schema.ast)) {
       visitAll(SchemaAST.getPropertySignatures(schema.ast).map((p) => p.type));
     }
   }
 
-  public static hasTypeAnnotation(rootObjectSchema: Schema.Top, property: string, annotation: symbol): boolean {
+  public static hasTypeAnnotation(rootObjectSchema: Schema.Top, property: string, annotation: string): boolean {
     try {
       let type = this.getPropertySchema(rootObjectSchema, [property]);
       if (SchemaAST.isTupleType(type.ast)) {
         type = this.getPropertySchema(rootObjectSchema, [property, '0']);
       }
 
-      return type.ast.annotations[annotation] != null;
+      return SchemaAST.getAnnotation(type.ast, annotation) != null;
     } catch {
       return false;
     }
@@ -65,14 +64,14 @@ export class SchemaValidator {
         if (propertyType == null) {
           const indexSignatureType = getIndexSignatureValueType(schema.ast);
           if (indexSignatureType != null) {
-            schema = Schema.make(indexSignatureType).annotate(indexSignatureType.annotations);
+            schema = Schema.make<Schema.Top>(indexSignatureType);
             continue;
           }
 
           throw new TypeError(`Unknown property: ${formatPropertyPath([...propertyPath.slice(0, i), propertyName])}`);
         }
 
-        schema = Schema.make(propertyType).annotate(propertyType.annotations);
+        schema = Schema.make<Schema.Top>(propertyType);
       }
     }
 
@@ -108,14 +107,14 @@ export class SchemaValidator {
           throw new TypeError(`Unknown property: ${formatPropertyPath(propertyPath)}`);
         }
 
-        const indexSchema = Schema.make(indexSignatureType).annotate(indexSignatureType.annotations);
+        const indexSchema = Schema.make<Schema.Top>(indexSignatureType);
         this.assertExactProperties(indexSchema, value[key], getProperty, propertyPath);
         continue;
       }
 
       const propertySignature = propertySignatures.find((property) => String(property.name) === key);
       invariant(propertySignature, 'Property signature must exist.');
-      const propertySchema = Schema.make(propertySignature.type).annotate(propertySignature.type.annotations);
+      const propertySchema = Schema.make<Schema.Top>(propertySignature.type);
       this.assertExactProperties(propertySchema, value[key], getProperty, propertyPath);
     }
   }
@@ -180,13 +179,13 @@ export class SchemaValidator {
     if (propertyType == null) {
       const indexSignatureType = getIndexSignatureValueType(schema.ast);
       if (indexSignatureType != null) {
-        return Schema.make(indexSignatureType).annotate(indexSignatureType.annotations);
+        return Schema.make<Schema.Top>(indexSignatureType);
       }
 
       throw new TypeError(`Unknown property: ${String(prop)}`);
     }
 
-    return Schema.make(propertyType).annotate(propertyType.annotations);
+    return Schema.make<Schema.Top>(propertyType);
   }
 }
 
@@ -203,12 +202,10 @@ const getArrayElementSchema = (tupleAst: SchemaAST.TupleType, property: string |
     return Schema.Number;
   }
   if (elementIndex < tupleAst.elements.length) {
-    const elementType = tupleAst.elements[elementIndex].type;
-    return Schema.make(elementType).annotate(elementType.annotations);
+    return Schema.make<Schema.Top>(tupleAst.elements[elementIndex]);
   }
 
-  const restType = tupleAst.rest;
-  return Schema.make(restType[0].type).annotate(restType[0].annotations);
+  return Schema.make<Schema.Top>(tupleAst.rest[0]);
 };
 
 const flattenUnion = (typeAst: SchemaAST.AST): SchemaAST.AST[] =>
@@ -217,7 +214,7 @@ const flattenUnion = (typeAst: SchemaAST.AST): SchemaAST.AST[] =>
 const getProperties = (
   typeAst: SchemaAST.AST,
   getTargetPropertyFn: (propertyName: string) => any,
-): SchemaAST.PropertySignature[] => {
+): ReadonlyArray<SchemaAST.PropertySignature> => {
   const astCandidates = flattenUnion(typeAst);
   const typeAstList = astCandidates.filter((type) => SchemaAST.isTypeLiteral(type)) as SchemaAST.TypeLiteral[];
   if (typeAstList.length === 0) {
@@ -317,7 +314,7 @@ const unwrapAst = (rootAst: SchemaAST.AST, predicate?: (ast: SchemaAST.AST) => b
     }
 
     if (SchemaAST.isSuspend(ast)) {
-      ast = ast.f();
+      ast = ast.thunk();
     } else {
       return predicate == null ? ast : null;
     }

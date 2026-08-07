@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Equal from 'effect/Equal';
 import * as Hash from 'effect/Hash';
 import * as Option from 'effect/Option';
-import * as ParseResult from 'effect/ParseResult';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
+import * as SchemaIssue from 'effect/SchemaIssue';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 import type * as Types from 'effect/Types';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 
@@ -72,13 +73,11 @@ export type RefereneAST = {
 };
 
 export const getReferenceAst = (ast: SchemaAST.AST): RefereneAST | undefined => {
-  if (ast._tag !== 'Declaration' || !ast.annotations[ReferenceAnnotationId]) {
+  const reference = SchemaAST.getAnnotation<{ typename: string; version: string }>(ast, ReferenceAnnotationId);
+  if (ast._tag !== 'Declaration' || !reference) {
     return undefined;
   }
-  return {
-    typename: (ast.annotations[ReferenceAnnotationId] as any).typename,
-    version: (ast.annotations[ReferenceAnnotationId] as any).version,
-  };
+  return { typename: reference.typename, version: reference.version };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -274,7 +273,7 @@ Ref.isRefSchema = (schema: Schema.Codec<any, any>): schema is RefSchema<any> => 
 };
 
 Ref.isRefSchemaAST = (ast: SchemaAST.AST): boolean => {
-  return SchemaAST.getAnnotation(ast, ReferenceAnnotationId).pipe(Option.isSome);
+  return SchemaAST.getAnnotation(ast, ReferenceAnnotationId) !== undefined;
 };
 
 Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
@@ -303,6 +302,9 @@ export type JsonSchemaReferenceInfo = {
   schemaVersion?: string;
 };
 
+/** Wire form of a reference: the `{ '/': uri }` shape stored in the Automerge document. */
+const EncodedReferenceSchema = Schema.declare<EncodedReference>(EncodedReference.isEncodedReference);
+
 /**
  * @internal
  */
@@ -324,47 +326,44 @@ export const createEchoReferenceSchema = (
     schemaVersion: version,
   };
 
+  // Effect 4 splits what v3's three-parameter `declare` did into two steps: `declare` states the
+  // decoded type, `encodeTo` attaches the wire form and the transformation between them.
   // TODO(dmaretskyi): Add name and description.
-  const refSchema = Schema.declare<Ref<any>, EncodedReference, []>(
-    [],
-    {
-      encode: () => {
-        return (value) =>
-          Effect.gen(function* () {
-            if (Ref.isRef(value)) {
-              return EncodedReference.fromURI((value as Ref<any>).uri);
-            } else if (EncodedReference.isEncodedReference(value)) {
-              return value;
-            }
-            throw new Error('Invalid reference');
-          });
-      },
-      decode: () => {
-        return (value) =>
-          Effect.gen(function* () {
-            const dbService = yield* Effect.serviceOption(Database.Service);
+  const refSchema = Schema.declare<Ref<any>>(Ref.isRef)
+    .pipe(
+      Schema.encodeTo(
+        EncodedReferenceSchema,
+        SchemaTransformation.transformOrFail({
+          decode: (encoded) =>
+            Effect.gen(function* () {
+              const dbService = yield* Effect.serviceOption(Database.Service);
+              // Widened because the runtime value is not always the declared encoded shape:
+              // `Schema.is` routes an already-decoded `Ref` back through here.
+              const candidate: unknown = encoded;
 
-            // TODO(dmaretskyi): This branch seems to be taken by Schema.is
-            if (Ref.isRef(value)) {
-              if (Option.isSome(dbService)) {
-                return dbService.value.db.makeRef(value.uri);
-              } else {
-                return value;
+              if (Ref.isRef(candidate)) {
+                return Option.isSome(dbService) ? dbService.value.db.makeRef(candidate.uri) : candidate;
               }
-            }
+              if (!EncodedReference.isEncodedReference(candidate)) {
+                return yield* Effect.fail(new SchemaIssue.InvalidValue(undefined, candidate));
+              }
 
-            if (!EncodedReference.isEncodedReference(value)) {
-              return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
+              const uri = EncodedReference.toURI(candidate);
+              return Option.isSome(dbService) ? dbService.value.db.makeRef(uri) : Ref.fromURI(uri);
+            }),
+          encode: (value) => {
+            const candidate: unknown = value;
+            if (Ref.isRef(candidate)) {
+              return Effect.succeed(EncodedReference.fromURI(candidate.uri));
             }
-            if (Option.isSome(dbService)) {
-              return dbService.value.db.makeRef(EncodedReference.toURI(value));
-            } else {
-              return Ref.fromURI(EncodedReference.toURI(value));
-            }
-          });
-      },
-    },
-    {
+            return EncodedReference.isEncodedReference(candidate)
+              ? Effect.succeed(candidate)
+              : Effect.fail(new SchemaIssue.InvalidValue(undefined, candidate));
+          },
+        }),
+      ),
+    )
+    .annotate({
       jsonSchema: {
         // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
         $id: JSON_SCHEMA_ECHO_REF_ID,
@@ -375,19 +374,15 @@ export const createEchoReferenceSchema = (
         typename: typename ?? '',
         version,
       },
-    },
-  );
+    });
 
   return refSchema;
 };
 
-const getSchemaExpectedName = (ast: SchemaAST.Annotated): string | undefined => {
-  return SchemaAST.getIdentifierAnnotation(ast).pipe(
-    Option.orElse(() => SchemaAST.getTitleAnnotation(ast)),
-    Option.orElse(() => SchemaAST.getDescriptionAnnotation(ast)),
-    Option.getOrElse(() => undefined),
-  );
-};
+const getSchemaExpectedName = (ast: SchemaAST.AST): string | undefined =>
+  (SchemaAST.getIdentifierAnnotation(ast) ??
+    SchemaAST.getTitleAnnotation(ast) ??
+    SchemaAST.getDescriptionAnnotation(ast)) as string | undefined;
 
 /**
  * Load-source ceiling for a resolution request. Cheaper tiers are always probed first; the
