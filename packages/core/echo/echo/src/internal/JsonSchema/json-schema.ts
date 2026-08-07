@@ -163,6 +163,26 @@ const _toJsonSchemaAST = (
   return normalizeJsonSchema(jsonSchema);
 };
 
+/**
+ * Drops the `undefined` member Effect 4 adds to an optional property's type.
+ *
+ * v4 models `Schema.optional` as `T | undefined` and serializes that as `anyOf: [T, null]`. ECHO's
+ * wire contract states an optional property as the bare type, omitted from `required` -- readers
+ * (including the LLM tool surface) key off `required`, not a null union.
+ */
+const stripUndefinedMember = (ast: SchemaAST.AST): SchemaAST.AST => {
+  if (!SchemaAST.isUnion(ast)) {
+    return ast;
+  }
+  const defined = ast.types.filter((type) => !SchemaAST.isUndefinedKeyword(type));
+  if (defined.length === ast.types.length) {
+    return ast;
+  }
+  return defined.length === 1
+    ? SchemaAST.annotate(defined[0], ast.annotations ?? {})
+    : new SchemaAST.Union(defined, ast.mode, ast.annotations, ast.checks, ast.encoding, ast.context);
+};
+
 const withEchoRefinements = (
   ast: SchemaAST.AST,
   path: string | undefined,
@@ -211,7 +231,7 @@ const withEchoRefinements = (
     // Add property order annotations
     recursiveResult = SchemaEx.mapAst(ast, (ast, key) =>
       withEchoRefinements(
-        ast,
+        stripUndefinedMember(ast),
         path && typeof key === 'string' ? `${path}/${key}` : undefined,
         suspendCache,
         inProgress,
@@ -348,8 +368,11 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
 
-  // log.info('toEffectSchema', { root, annotations });
-  result = result.annotate(annotations);
+  // Skipped when empty: v4 records the empty object rather than leaving `annotations` undefined,
+  // which makes a round-tripped node structurally different from a freshly built one.
+  if (Object.keys(annotations).length > 0) {
+    result = result.annotate(annotations);
+  }
 
   return result;
 };
@@ -369,9 +392,11 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
       immutableIdField = toEffectSchema(value, defs);
     } else {
       // TODO(burdon): Mutable cast.
+      // `optionalKey`, not `optional`: the latter adds `| undefined` to the value type, and in v4
+      // that union is already carried by the serialized type -- wrapping again nests a second one.
       (fields as any)[key] = root.required?.includes(key)
         ? toEffectSchema(value, defs)
-        : Schema.optional(toEffectSchema(value, defs));
+        : Schema.optionalKey(toEffectSchema(value, defs));
     }
   }
 
@@ -407,7 +432,7 @@ const objectToEffectSchema = (root: JsonSchemaType, defs: JsonSchemaType['$defs'
   }
 
   const annotations = jsonSchemaFieldsToAnnotations(root);
-  return schema.annotate(annotations) as any;
+  return (Object.keys(annotations).length > 0 ? schema.annotate(annotations) : schema) as any;
 };
 
 const anyToEffectSchema = (root: JSONSchema.JsonSchema): Schema.Codec<any, any> => {
@@ -576,7 +601,47 @@ const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): Schema
  * Fixes field order.
  * Sets `$schema` prop.
  */
+/**
+ * Inlines the `allOf` wrapper Effect 4 emits for checks.
+ *
+ * v3 merged a refinement's keywords into the node; v4 nests them under `allOf`. ECHO's wire contract
+ * -- which the LLM tool surface reads directly -- states constraints at the property's top level,
+ * so the branches are merged back in. Only pure keyword branches are inlined; anything carrying its
+ * own `type` or `$ref` is a real composition and stays put.
+ */
+const inlineAllOf = (node: Record<string, any>): Record<string, any> => {
+  if (!Array.isArray(node.allOf)) {
+    return node;
+  }
+  const inlinable = node.allOf.filter(
+    (branch: any) => branch && typeof branch === 'object' && !('type' in branch) && !('$ref' in branch),
+  );
+  if (inlinable.length !== node.allOf.length) {
+    return node;
+  }
+  const { allOf, ...rest } = node;
+  return Object.assign(rest, ...inlinable);
+};
+
+/** Applies {@link inlineAllOf} to a node and every nested schema position. */
+const inlineAllOfDeep = (node: any): any => {
+  if (Array.isArray(node)) {
+    return node.map(inlineAllOfDeep);
+  }
+  if (!node || typeof node !== 'object') {
+    return node;
+  }
+  const inlined = inlineAllOf(node);
+  for (const [key, value] of Object.entries(inlined)) {
+    if (value && typeof value === 'object') {
+      inlined[key] = inlineAllOfDeep(value);
+    }
+  }
+  return inlined;
+};
+
 const normalizeJsonSchema = (jsonSchema: Types.DeepMutable<JsonSchemaType>): Types.DeepMutable<JsonSchemaType> => {
+  jsonSchema = inlineAllOfDeep(jsonSchema);
   if (jsonSchema.properties && 'id' in jsonSchema.properties) {
     jsonSchema.properties = orderKeys(jsonSchema.properties, ['id']); // Put id first.
   }
