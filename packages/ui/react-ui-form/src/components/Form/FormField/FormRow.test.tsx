@@ -4,7 +4,7 @@
 
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
-import { afterEach, describe, test } from 'vitest';
+import { afterEach, describe, test, vi } from 'vitest';
 
 import { ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
 
@@ -36,6 +36,19 @@ describe('FormFieldLabel', () => {
     const trigger = screen.getByRole('button', { name: 'Description' });
     fireEvent.pointerMove(trigger, { pointerType: 'mouse' });
     await waitFor(() => expect(screen.getByRole('tooltip')).toHaveTextContent('The full legal name.'));
+  });
+
+  test('clicking the affordance does not trigger the label row (e.g. a collapse toggle)', ({ expect }) => {
+    const onClick = vi.fn();
+    render(<FormFieldLabel standalone label='Address' description='Where they live.' onClick={onClick} />, {
+      wrapper: Wrapper,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Description' }));
+    expect(onClick).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByText('Address'));
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   test('omits the affordance when the field has no description', ({ expect }) => {
