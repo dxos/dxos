@@ -171,7 +171,7 @@ const createValue = <S extends Type.AnyObj>(
       probability = 0.5,
       args = [],
     } = typeof annotation === 'string' ? { generator: annotation } : annotation;
-    if (!property.isOptional || force || randomBoolean(probability)) {
+    if (!SchemaAST.isOptional(property.type) || force || randomBoolean(probability)) {
       const fn = getDeep<(...args: any[]) => any>(generator, generatorName.split('.'));
       if (!fn) {
         log.warn('unknown generator', { generatorName });
@@ -182,7 +182,7 @@ const createValue = <S extends Type.AnyObj>(
   }
 
   // TODO(dmaretskyi): Support generating nested objects here; or generator via type.
-  if (!property.isOptional) {
+  if (!SchemaAST.isOptional(property.type)) {
     if (SchemaEx.isArrayType(property.type)) {
       return [];
     } else if (SchemaEx.isNestedType(property.type)) {
@@ -204,7 +204,7 @@ export const createReferences = <S extends Type.AnyObj>(schema: S, db: Database.
     const refsToSet: Array<{ name: PropertyKey; ref: any }> = [];
 
     for (const property of SchemaEx.getProperties(Type.getSchema(schema).ast)) {
-      if (!property.isOptional || randomBoolean()) {
+      if (!SchemaAST.isOptional(property.type) || randomBoolean()) {
         if (Ref.isRefType(property.type)) {
           const jsonSchema = SchemaEx.findAnnotation<JsonSchemaType>(property.type, SchemaAST.JSONSchemaAnnotationId);
           if (jsonSchema) {

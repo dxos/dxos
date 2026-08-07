@@ -92,6 +92,6 @@ export const resolveLayoutField = (schema: Schema.Schema<any>, name: string): Re
     leafName: segments[segments.length - 1],
     title,
     labelType: labelled ? labelType : undefined,
-    required: !prop.isOptional,
+    required: !SchemaAST.isOptional(prop.type),
   };
 };

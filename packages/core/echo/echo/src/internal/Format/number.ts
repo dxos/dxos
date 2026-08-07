@@ -26,7 +26,7 @@ export const DecimalPrecision = Schema.transform(Schema.Number, Schema.Number, {
   title: 'Number of digits',
 });
 
-export const CurrencyAnnotationId = Symbol.for('@dxos/schema/annotation/Currency');
+export const CurrencyAnnotationId = '@dxos/schema/annotation/Currency';
 
 export type CurrencyAnnotation = {
   decimals?: number;

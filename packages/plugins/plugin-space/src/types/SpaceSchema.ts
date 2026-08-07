@@ -153,8 +153,8 @@ export type CreateObject = (
 ) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
-export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
-export const HueAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Hue');
+export const IconAnnotationId = '@dxos/plugin-space/annotation/Icon';
+export const HueAnnotationId = '@dxos/plugin-space/annotation/Hue';
 
 // TOOD(burdon): Use SpacePropertiesSchema.
 export const SpaceForm = Schema.Struct({

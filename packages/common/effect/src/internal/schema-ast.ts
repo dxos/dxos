@@ -121,8 +121,20 @@ export const getIdentifierAnnotation = annotationGetter(IdentifierAnnotationId);
 export const getDefaultAnnotation = annotationGetter(DefaultAnnotationId);
 export const getJSONSchemaAnnotation = annotationGetter(JSONSchemaAnnotationId);
 
-/** v3 returned an `Option`; v4 annotations are a plain record, so this returns the value. */
-export const getAnnotation =
-  <T>(key: string) =>
-  (ast: SchemaAST.AST): T | undefined =>
-    resolveAnnotations(ast)?.[key] as T | undefined;
+/**
+ * Reads one annotation by key.
+ *
+ * v3 returned an `Option`; v4 annotations are a plain record, so this returns the value or
+ * `undefined`. Dual like the Effect APIs it replaces, since call sites use both orders.
+ */
+export const getAnnotation: {
+  <T>(key: string): (ast: SchemaAST.AST) => T | undefined;
+  <T>(ast: SchemaAST.AST, key: string): T | undefined;
+} = (<T>(...args: [string] | [SchemaAST.AST, string]) => {
+  if (args.length === 2) {
+    const [ast, key] = args;
+    return resolveAnnotations(ast)?.[key] as T | undefined;
+  }
+  const [key] = args;
+  return (ast: SchemaAST.AST): T | undefined => resolveAnnotations(ast)?.[key] as T | undefined;
+}) as typeof getAnnotation;

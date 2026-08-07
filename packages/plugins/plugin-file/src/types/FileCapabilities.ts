@@ -38,7 +38,7 @@ export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Sett
 );
 
 export namespace FileAction {
-  export const UploadAnnotationId = Symbol.for(`${meta.profile.key}.annotation.upload`);
+  export const UploadAnnotationId = `${meta.profile.key}.annotation.upload`;
 
   export const CreateFileSchema = Schema.Struct({
     file: Schema.instanceOf(File).annotate({

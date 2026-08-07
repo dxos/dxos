@@ -53,7 +53,7 @@ const unwrapOptionalType = (type: SchemaAST.AST): SchemaAST.AST => {
 
 const propertyBaseType = (property: SchemaAST.PropertySignature): SchemaAST.AST => {
   const encoded = SchemaAST.encodedBoundAST(property.type);
-  const unwrapped = property.isOptional && SchemaAST.isUnion(encoded) ? encoded.types[0]! : encoded;
+  const unwrapped = SchemaAST.isOptional(property.type) && SchemaAST.isUnion(encoded) ? encoded.types[0]! : encoded;
   return reduceRefinements(unwrapped);
 };
 

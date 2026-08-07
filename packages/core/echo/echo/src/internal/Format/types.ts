@@ -52,7 +52,7 @@ export const getTypeEnum = (property: JsonSchemaType): TypeEnum | undefined => {
  * https://json-schema.org/understanding-json-schema/reference/schema
  * https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
  */
-export const FormatAnnotationId = Symbol.for('@dxos/schema/annotation/Format');
+export const FormatAnnotationId = '@dxos/schema/annotation/Format';
 
 export const FormatAnnotation = createAnnotationHelper<TypeFormat>(FormatAnnotationId);
 
@@ -178,7 +178,7 @@ export const formatToType: Record<TypeFormat, TypeEnum> = {
 /**
  * Allowed value options for select.
  */
-export const OptionsAnnotationId = Symbol.for('@dxos/schema/annotation/Options');
+export const OptionsAnnotationId = '@dxos/schema/annotation/Options';
 
 // TODO(wittjosiah): Reconcile with `SelectOption`.
 export type Options = string | number;

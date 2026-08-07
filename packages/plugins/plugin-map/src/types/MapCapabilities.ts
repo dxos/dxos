@@ -75,4 +75,4 @@ export type MarkerProvider = {
 export const MarkerProvider = Capability.make<MarkerProvider>()(`${meta.profile.key}.capability.markerProvider`);
 
 // TODO(wittjosiah): Factor out?
-export const LocationAnnotationId = Symbol.for('@dxos/plugin-map/annotation/Location');
+export const LocationAnnotationId = '@dxos/plugin-map/annotation/Location';

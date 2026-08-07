@@ -16,7 +16,7 @@ import * as SpaceForm from '@dxos/plugin-space/SpaceForm';
  */
 
 // TODO(wittjosiah): Factor out?
-export const PivotColumnAnnotationId = Symbol.for('@dxos/plugin-kanban/annotation/PivotColumn');
+export const PivotColumnAnnotationId = '@dxos/plugin-kanban/annotation/PivotColumn';
 
 /**
  * Settings common to every Kanban (view or items). Rendered as form fields

@@ -281,7 +281,9 @@ const getTypeDiscriminators = (typeAstList: SchemaAST.TypeLiteral[]): SchemaAST.
     .flatMap(SchemaAST.getPropertySignatures)
     .filter((p) => SchemaAST.isLiteral(p.type));
   const propertyName = discriminatorPropCandidates[0].name;
-  const isValidDiscriminator = discriminatorPropCandidates.every((p) => p.name === propertyName && !p.isOptional);
+  const isValidDiscriminator = discriminatorPropCandidates.every(
+    (p) => p.name === propertyName && !SchemaAST.isOptional(p.type),
+  );
   const everyTypeHasDiscriminator = discriminatorPropCandidates.length === typeAstList.length;
   const isDiscriminatedUnion = isValidDiscriminator && everyTypeHasDiscriminator;
   invariant(isDiscriminatedUnion, 'type ambiguity: every type in a union must have a single unique-literal field');

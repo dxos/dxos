@@ -131,7 +131,7 @@ export const promptForSchemaInput = Effect.fn(function* (
   const optionalProperties: typeof properties = [];
 
   for (const prop of properties) {
-    if (prop.isOptional) {
+    if (SchemaAST.isOptional(prop.type)) {
       optionalProperties.push(prop);
     } else {
       requiredProperties.push(prop);
@@ -144,7 +144,7 @@ export const promptForSchemaInput = Effect.fn(function* (
     return {
       prop,
       key,
-      isRequired: !prop.isOptional,
+      isRequired: !SchemaAST.isOptional(prop.type),
     };
   });
 

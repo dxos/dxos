@@ -40,10 +40,12 @@ export interface AnnotationHelper<T> {
  */
 // TODO(dmaretskyi): Rename to createSystemAnnotationHelper.
 // TODO(dmaretskyi): REconcile with Annotation.make.
-export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
+export const createAnnotationHelper = <T>(id: string): AnnotationHelper<T> => {
   return {
-    get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
-    getFromAst: (ast) => SchemaAST.getAnnotation(ast, id),
+    // Effect 4's own accessor returns `T | undefined`; this helper stays `Option`-shaped because
+    // that is DXOS's API and `Option` is unchanged in v4 -- only the boundary needed adapting.
+    get: (schema) => Option.fromNullishOr(SchemaAST.getAnnotation<T>(schema.ast, id)),
+    getFromAst: (ast) => Option.fromNullishOr(SchemaAST.getAnnotation<T>(ast, id)),
     set:
       (value) =>
       <S extends Schema.Top>(schema: S): S =>
@@ -56,7 +58,7 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
  */
 // TODO(wittjosiah): Is there a way to do this as a generic?
 export const unwrapOptional = (property: SchemaAST.PropertySignature) => {
-  if (!property.isOptional || !SchemaAST.isUnion(property.type)) {
+  if (!SchemaAST.isOptional(property.type) || !SchemaAST.isUnion(property.type)) {
     return property;
   }
 

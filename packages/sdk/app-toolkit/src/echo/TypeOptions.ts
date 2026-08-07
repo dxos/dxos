@@ -23,7 +23,7 @@ export type TypeInputOptions = Schema.Schema.Type<typeof TypeInputOptions>;
 /**
  * Used in forms to identify the field representing an object's type and determine which types are shown as options.
  */
-export const TypeInputOptionsAnnotationId = Symbol.for('@dxos/schema/annotation/TypeInputOptions');
+export const TypeInputOptionsAnnotationId = '@dxos/schema/annotation/TypeInputOptions';
 export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOptions>(TypeInputOptionsAnnotationId);
 
 /**

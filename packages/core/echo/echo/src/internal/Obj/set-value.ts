@@ -101,7 +101,7 @@ const getRequiredProperties = (ast: SchemaAST.AST | undefined): SchemaEx.SchemaP
   const properties = SchemaEx.getProperties(ast);
 
   // Filter to only required properties (where isOptional === false).
-  return properties.filter((p) => !p.isOptional);
+  return properties.filter((p) => !SchemaAST.isOptional(p.type));
 };
 
 /**

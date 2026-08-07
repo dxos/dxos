@@ -10,7 +10,7 @@ import { SchemaAST, SchemaEx } from '@dxos/effect';
 
 /** The property's type with an optional `T | undefined` union unwrapped to its inner `T`. */
 const unwrapOptional = (prop: SchemaAST.PropertySignature): SchemaAST.AST => {
-  if (!prop.isOptional || !SchemaAST.isUnion(prop.type)) {
+  if (!SchemaAST.isOptional(prop.type) || !SchemaAST.isUnion(prop.type)) {
     return prop.type;
   }
   // Drop the `undefined` member, preserving the remaining union (don't collapse `A | B | undefined` to `A`).
