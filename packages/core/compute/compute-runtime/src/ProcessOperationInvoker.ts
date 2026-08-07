@@ -243,7 +243,7 @@ export const make = (opts: {
     }).pipe(
       Effect.tapCause((cause) =>
         Effect.sync(() => {
-          if (Cause.isInterruptedOnly(cause)) {
+          if (Cause.hasInterruptsOnly(cause)) {
             return;
           }
           log.error('operation invocation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
@@ -299,7 +299,7 @@ export const make = (opts: {
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
         Effect.tapCause((cause) =>
           Effect.sync(() => {
-            if (Cause.isInterruptedOnly(cause)) {
+            if (Cause.hasInterruptsOnly(cause)) {
               log.warn('scheduled operation interrupted', { opKey: op.meta.key });
             } else {
               log.error('scheduled operation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });

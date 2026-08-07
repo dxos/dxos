@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import * as RpcClient from '@effect/rpc/RpcClient';
 import * as Cause from 'effect/Cause';
 import type * as Clock from 'effect/Clock';
 import type * as Context from 'effect/Context';
@@ -20,6 +19,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { Atom, type AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
@@ -660,7 +660,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
               recordWall();
               // Do NOT remove the event on a pure interruption — the scope was closed for
               // suspend/restart, so the event must stay in the mailbox for re-delivery.
-              if (eventSeq !== undefined && !Cause.isInterruptedOnly(cause)) {
+              if (eventSeq !== undefined && !Cause.hasInterruptsOnly(cause)) {
                 yield* this.#persistence.removeEvent(eventSeq);
               }
               yield* this.#handleError(cause);

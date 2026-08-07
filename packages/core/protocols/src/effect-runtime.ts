@@ -42,7 +42,7 @@ export const runServiceCall = <A>(
     if (Exit.isSuccess(exit)) {
       return exit.value;
     }
-    if (Cause.isInterruptedOnly(exit.cause)) {
+    if (Cause.hasInterruptsOnly(exit.cause)) {
       throw new RpcClosedError();
     }
     throw EffectEx.causeToError(exit.cause);
@@ -80,7 +80,7 @@ export const subscribeStream = <A>(
   const fiber = stream.pipe(
     Stream.runForEach((value) => Effect.sync(() => onData(value))),
     Effect.matchCause({
-      onFailure: (cause) => finish(Cause.isInterruptedOnly(cause) ? undefined : EffectEx.causeToError(cause)),
+      onFailure: (cause) => finish(Cause.hasInterruptsOnly(cause) ? undefined : EffectEx.causeToError(cause)),
       onSuccess: () => finish(),
     }),
     Runtime.runFork(runtime),

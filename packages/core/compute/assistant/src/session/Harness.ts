@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import type * as RpcClient from '@effect/rpc/RpcClient';
 import * as Context from 'effect/Context';
 import * as DateTime from 'effect/DateTime';
 import * as Effect from 'effect/Effect';
@@ -12,6 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import type * as Runtime from 'effect/Runtime';
 import type * as Scope from 'effect/Scope';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import { ServiceNotAvailableError } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';

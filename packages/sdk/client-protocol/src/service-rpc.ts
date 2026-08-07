@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as EffectRpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
-import * as RpcSchema from '@effect/rpc/RpcSchema';
-import * as RpcServer from '@effect/rpc/RpcServer';
-import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
+import type * as EffectRpc from 'effect/unstable/rpc/Rpc';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcSchema from 'effect/unstable/rpc/RpcSchema';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream as PbStream } from '@dxos/codec-protobuf/stream';
@@ -427,7 +427,7 @@ export const streamToPbStream = <T>(runtime: Runtime.Runtime<never>, stream: Str
       Stream.runForEach((item) => Effect.sync(() => next(item))),
       Effect.matchCauseEffect({
         onFailure: (cause) =>
-          Effect.sync(() => close(Cause.isInterruptedOnly(cause) ? undefined : toError(Cause.squash(cause)))),
+          Effect.sync(() => close(Cause.hasInterruptsOnly(cause) ? undefined : toError(Cause.squash(cause)))),
         onSuccess: () => Effect.sync(() => close()),
       }),
       Runtime.runFork(runtime),

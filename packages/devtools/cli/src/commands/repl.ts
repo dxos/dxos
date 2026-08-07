@@ -85,7 +85,7 @@ export const repl = Command.make(
           // stays alive for the next prompt.
           yield* dispatch([...argvPrefix, ...tokens]).pipe(
             Effect.catchCause((cause) =>
-              Cause.isInterruptedOnly(cause) ? Effect.void : Console.error(Cause.pretty(cause)),
+              Cause.hasInterruptsOnly(cause) ? Effect.void : Console.error(Cause.pretty(cause)),
             ),
           );
         }

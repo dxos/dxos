@@ -4,7 +4,7 @@
 
 import type * as Cause from 'effect/Cause';
 import * as Config from 'effect/Config';
-import type * as ConfigError from 'effect/ConfigError';
+import type * as ConfigError from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';

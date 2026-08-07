@@ -132,7 +132,7 @@ export class InvocationTraceEndEvent extends Type.makeObject<InvocationTraceEndE
     // TODO(burdon): Remove ms suffix.
     timestamp: Schema.Number,
 
-    outcome: Schema.Enums(InvocationOutcome),
+    outcome: Schema.Enum(InvocationOutcome),
 
     error: Schema.optional(SerializedError),
   }),

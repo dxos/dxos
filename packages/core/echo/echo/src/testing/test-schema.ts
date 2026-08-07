@@ -175,7 +175,7 @@ export namespace TestSchema {
             title: Schema.String,
             description: Schema.String,
             contacts: Schema.Array(Ref.Ref(Person)),
-            type: Schema.Enums(RecordType),
+            type: Schema.Enum(RecordType),
           }),
         ),
       ),

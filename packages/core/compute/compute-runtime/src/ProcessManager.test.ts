@@ -3,8 +3,6 @@
 //
 
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import { describe, it } from '@effect/vitest';
 import * as Cause from 'effect/Cause';
 import * as Chunk from 'effect/Chunk';
@@ -22,6 +20,8 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
 import { AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { RUN_AGAIN_ERROR_CODE, RunAgainError, ServiceNotAvailableError } from '@dxos/compute';
 import * as Cancellation from '@dxos/compute/Cancellation';
@@ -663,7 +663,7 @@ describe('ManagerImpl', () => {
       const exit = yield* Fiber.join(collectFiber).pipe(Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
       if (Exit.isFailure(exit)) {
-        expect(Cause.isInterruptedOnly(exit.cause)).toEqual(true);
+        expect(Cause.hasInterruptsOnly(exit.cause)).toEqual(true);
       }
     }, Effect.provide(TestLayer)),
   );

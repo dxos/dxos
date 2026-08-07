@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { serviceError } from './service-rpc.ts';
 import { mutableArray } from './service-schemas.ts';
@@ -24,7 +24,7 @@ import { mutableArray } from './service-schemas.ts';
 /**
  * Index match strategy (`dxos.echo.indexing.IndexKind.Kind`).
  */
-export const IndexKindKind = Schema.Enums({
+export const IndexKindKind = Schema.Enum({
   SCHEMA_MATCH: 0,
   FIELD_MATCH: 1,
   FULL_TEXT: 2,
@@ -52,7 +52,7 @@ export interface IndexConfig extends Schema.Schema.Type<typeof IndexConfig> {}
 /**
  * Query result delivery mode (`dxos.echo.query.QueryReactivity`).
  */
-export const QueryReactivity = Schema.Enums({
+export const QueryReactivity = Schema.Enum({
   /** Returns a single result. */
   ONE_SHOT: 0,
   /** Returns the initial result and then incremental reactive updates when the data source changes. */

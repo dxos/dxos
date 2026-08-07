@@ -122,8 +122,8 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       space: SpaceSchema,
-      type: Schema.Enums(Invitation.Type),
-      authMethod: Schema.Enums(Invitation.AuthMethod),
+      type: Schema.Enum(Invitation.Type),
+      authMethod: Schema.Enum(Invitation.AuthMethod),
       multiUse: Schema.Boolean,
       target: Schema.optional(Schema.String),
     }),
@@ -316,7 +316,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       space: SpaceSchema,
-      format: Schema.Enums(SpaceArchive.Format),
+      format: Schema.Enum(SpaceArchive.Format),
     }),
     output: Schema.Void,
   });

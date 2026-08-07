@@ -274,7 +274,7 @@ export type UploadFunctionRequest = {
 /**
  * Note: Do not change the values of these enums, this values are stored in the FunctionVersions database.
  */
-export const FunctionRuntimeKind = Schema.Enums({
+export const FunctionRuntimeKind = Schema.Enum({
   // https://developers.cloudflare.com/cloudflare-for-platforms/workers-for-platforms/
   WORKERS_FOR_PLATFORMS: 'WORKERS_FOR_PLATFORMS',
   // https://developers.cloudflare.com/workers/runtime-apis/bindings/worker-loader/
@@ -345,7 +345,7 @@ export enum OAuthProvider {
 export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transition:email'] as const;
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
-  provider: Schema.Enums(OAuthProvider),
+  provider: Schema.Enum(OAuthProvider),
   spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),

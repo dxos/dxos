@@ -330,7 +330,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
       ),
     );
 
-    expect(Exit.isFailure(exit) && Cause.isInterruptedOnly(exit.cause)).toBe(true);
+    expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true);
     expect(statusUpdates.at(-1)?.message).toBe(PROGRESS_STATUS_CANCELLED);
     expect(statusUpdates.at(-1)?.progress?.key).toBe(createSyncProgressKey(mailbox));
   });

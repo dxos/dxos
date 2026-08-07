@@ -126,7 +126,7 @@ const program = Effect.gen(function* () {
 
 BunRuntime.runMain(program, {
   teardown: (exit, onExit) => {
-    const exitCode = Exit.isFailure(exit) && !Cause.isInterruptedOnly(exit.cause) ? 1 : 0;
+    const exitCode = Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause) ? 1 : 0;
     onExit(exitCode);
     if (FORCE_EXIT) {
       process.exit(exitCode);

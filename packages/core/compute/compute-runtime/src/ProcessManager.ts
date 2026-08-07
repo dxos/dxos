@@ -5,10 +5,6 @@
 // @import-as-namespace
 
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import * as Rpc from '@effect/rpc/Rpc';
-import * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
-import * as RpcTest from '@effect/rpc/RpcTest';
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -20,6 +16,10 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { Atom, AtomRegistry as Registry } from 'effect/unstable/reactivity';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';

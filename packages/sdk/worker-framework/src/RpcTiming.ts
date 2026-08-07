@@ -5,13 +5,13 @@
 // @import-as-namespace
 
 import * as Headers from '@effect/platform/Headers';
-import type * as Rpc from '@effect/rpc/Rpc';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
-import * as RpcMiddleware from '@effect/rpc/RpcMiddleware';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import type * as Rpc from 'effect/unstable/rpc/Rpc';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
+import * as RpcMiddleware from 'effect/unstable/rpc/RpcMiddleware';
 
 import { log } from '@dxos/log';
 

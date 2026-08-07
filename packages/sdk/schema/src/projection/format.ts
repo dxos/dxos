@@ -66,7 +66,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
   [Format.TypeFormat.None]: Schema.extend(
     BaseProperty,
     Schema.Struct({
-      type: Schema.Enums(TypeEnum),
+      type: Schema.Enum(TypeEnum),
       format: Schema.Literal(Format.TypeFormat.None) as Schema.Schema<Format.TypeFormat>,
     }),
   ).pipe(Schema.mutable),

@@ -2,17 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as RpcClient from '@effect/rpc/RpcClient';
 import * as RpcClientError from '@effect/rpc/RpcClientError';
-import * as RpcMessage from '@effect/rpc/RpcMessage';
-import * as RpcSerialization from '@effect/rpc/RpcSerialization';
-import * as RpcServer from '@effect/rpc/RpcServer';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Mailbox from 'effect/Queue';
 import type * as Scope from 'effect/Scope';
+import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcMessage from 'effect/unstable/rpc/RpcMessage';
+import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
+import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { log } from '@dxos/log';
 

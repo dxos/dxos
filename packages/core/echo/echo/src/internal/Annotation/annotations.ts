@@ -117,7 +117,7 @@ export const TypeAnnotationId = Symbol.for('@dxos/schema/annotation/Type');
 export const TypeAnnotation = Schema.extend(
   TypeMeta,
   Schema.Struct({
-    kind: Schema.Enums(EntityKind),
+    kind: Schema.Enum(EntityKind),
 
     /**
      * If this is a relation, the schema of the source object.

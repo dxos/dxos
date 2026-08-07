@@ -156,7 +156,7 @@ describe('Pipeline.run overflow', () => {
       yield* Fiber.join(aborter);
       const result = yield* Fiber.join(pipeline);
       invariant(Exit.isFailure(result), 'pipeline should fail');
-      invariant(Cause.isInterrupted(result.cause), 'pipeline should be interrupted');
+      invariant(Cause.hasInterrupts(result.cause), 'pipeline should be interrupted');
     }),
   );
 

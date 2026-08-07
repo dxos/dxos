@@ -2,8 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import type * as RpcServer from '@effect/rpc/RpcServer';
 import * as Context_ from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -11,6 +9,8 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 import * as Reactivity from 'effect/unstable/reactivity/Reactivity';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
 import type * as SqlClient from 'effect/unstable/sql/SqlClient';
 
 import { Trigger } from '@dxos/async';

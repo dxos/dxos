@@ -1262,7 +1262,7 @@ describe('PluginManager', () => {
       assert.isTrue(shutdownResult);
       assert.isTrue(Exit.isFailure(activationExit));
       if (Exit.isFailure(activationExit)) {
-        assert.isTrue(Cause.isInterruptedOnly(activationExit.cause));
+        assert.isTrue(Cause.hasInterruptsOnly(activationExit.cause));
       }
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
       assert.deepStrictEqual(manager.getActive(), []);

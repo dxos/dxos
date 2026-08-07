@@ -173,7 +173,7 @@ export default Capability.makeModule(
           Effect.provide(clientLayer),
           Effect.matchCauseEffect({
             onFailure: (cause) =>
-              Cause.isInterruptedOnly(cause)
+              Cause.hasInterruptsOnly(cause)
                 ? Effect.sync(() => log.info('ollama pull finished', { name, cancelled: true }))
                 : Effect.gen(function* () {
                     const message = formatError(Cause.squash(cause));

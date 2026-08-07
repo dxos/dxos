@@ -49,6 +49,19 @@ const MODULES = {
   '@effect/sql': 'effect/unstable/sql',
   '@effect/experimental/Reactivity': 'effect/unstable/reactivity/Reactivity',
   '@effect/experimental': 'effect/unstable',
+  // @effect/rpc was absorbed into core too.
+  '@effect/rpc/Rpc': 'effect/unstable/rpc/Rpc',
+  '@effect/rpc/RpcGroup': 'effect/unstable/rpc/RpcGroup',
+  '@effect/rpc/RpcClient': 'effect/unstable/rpc/RpcClient',
+  '@effect/rpc/RpcServer': 'effect/unstable/rpc/RpcServer',
+  '@effect/rpc/RpcTest': 'effect/unstable/rpc/RpcTest',
+  '@effect/rpc/RpcSerialization': 'effect/unstable/rpc/RpcSerialization',
+  '@effect/rpc/RpcMiddleware': 'effect/unstable/rpc/RpcMiddleware',
+  '@effect/rpc/RpcSchema': 'effect/unstable/rpc/RpcSchema',
+  '@effect/rpc/RpcMessage': 'effect/unstable/rpc/RpcMessage',
+  '@effect/rpc': 'effect/unstable/rpc',
+  // ConfigError folded into Config.
+  'effect/ConfigError': 'effect/Config',
 };
 
 /** Namespace-qualified member renames, applied only to the matching namespace. */
@@ -83,6 +96,14 @@ const MEMBERS = {
   },
   Scope: {
     extend: 'provide',
+  },
+  Cause: {
+    isInterruptedOnly: 'hasInterruptsOnly',
+    isInterrupted: 'hasInterrupts',
+  },
+  Schema: {
+    // v4 dropped the plural.
+    Enums: 'Enum',
   },
   // `Either` is `Result` in v4; its predicates renamed with it.
   Either: {

@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import type * as RpcServer from '@effect/rpc/RpcServer';
 import * as Effect from 'effect/Effect';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import type * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { Trigger } from '@dxos/async';
 import { ClientRpcServer, PROXY_CONNECTION_TIMEOUT, makeBridgeServiceClientOverProtocol } from '@dxos/client-protocol';

@@ -347,7 +347,7 @@ export class AiChatProcessor {
       // preserved as a clean Error rather than an opaque FiberFailure.
       const exit = await this._runtime.runPromise(Fiber.await(this.#requestFiber));
       if (Exit.isFailure(exit)) {
-        if (Cause.isInterruptedOnly(exit.cause)) {
+        if (Cause.hasInterruptsOnly(exit.cause)) {
           this.#discardStreaming();
           return;
         }

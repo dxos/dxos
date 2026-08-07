@@ -67,8 +67,8 @@ export const ExportColumnSchema = Schema.Struct({
   title: Schema.String,
   // `Format.TypeEnum`/`Format.TypeFormat` are string enums; encoding them as plain Number/String
   // would diverge from the `ExportColumn` consumer type and reject the values the table projection emits.
-  type: Schema.optional(Schema.Enums(Format.TypeEnum)),
-  format: Schema.optional(Schema.Enums(Format.TypeFormat)),
+  type: Schema.optional(Schema.Enum(Format.TypeEnum)),
+  format: Schema.optional(Schema.Enum(Format.TypeFormat)),
   referencePath: Schema.optional(Schema.Any),
 });
 

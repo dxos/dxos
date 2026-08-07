@@ -127,7 +127,7 @@ export enum EntityKind {
   Type = 'type',
 }
 
-export const EntityKindSchema = Schema.Enums(EntityKind);
+export const EntityKindSchema = Schema.Enum(EntityKind);
 
 /**
  * Typename for generic object references (Type.Obj / Ref.Ref(Obj.Unknown)).

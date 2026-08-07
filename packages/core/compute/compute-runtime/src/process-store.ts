@@ -57,7 +57,7 @@ export const PersistedProcess = Schema.Struct({
     conversation: Schema.optional(Schema.String),
   }),
   parentId: Schema.NullOr(Process.ID),
-  state: Schema.Enums(Process.State),
+  state: Schema.Enum(Process.State),
   alarmDueAt: Schema.NullOr(Schema.Number),
   events: Schema.Array(PersistedEvent),
 });

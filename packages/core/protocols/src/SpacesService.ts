@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Rpc from '@effect/rpc/Rpc';
-import type * as RpcClient from '@effect/rpc/RpcClient';
-import * as RpcGroup from '@effect/rpc/RpcGroup';
 import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
+import * as Rpc from 'effect/unstable/rpc/Rpc';
+import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { protoMessage, serviceError } from './service-rpc.ts';
 import { mutableArray, publicKey } from './service-schemas.ts';
@@ -15,7 +15,7 @@ import { mutableArray, publicKey } from './service-schemas.ts';
 // RPC message schemas.
 //
 
-export const MembershipPolicy = Schema.Enums({
+export const MembershipPolicy = Schema.Enum({
   INVITE: 0,
   LOCKED: 1,
 });
@@ -27,7 +27,7 @@ export const CreateSpaceRequest = Schema.Struct({
 });
 export interface CreateSpaceRequest extends Schema.Schema.Type<typeof CreateSpaceRequest> {}
 
-export const SpaceState = Schema.Enums({
+export const SpaceState = Schema.Enum({
   INVALID: 0,
   SPACE_CLOSED: 1,
   SPACE_INACTIVE: 2,
@@ -41,7 +41,7 @@ export const SpaceState = Schema.Enums({
 });
 export type SpaceState = Schema.Schema.Type<typeof SpaceState>;
 
-export const EdgeReplicationSetting = Schema.Enums({
+export const EdgeReplicationSetting = Schema.Enum({
   DISABLED: 0,
   ENABLED: 1,
 });
@@ -90,7 +90,7 @@ export interface QueryCredentialsRequest extends Schema.Schema.Type<typeof Query
  * - REPLACE_AUTOMERGE_ROOT: Replace the current automerge root with a new one specified by the user.
  * - MIGRATE_REFERENCES_TO_DXN: Upgrade references data structure.
  */
-export const Migration = Schema.Enums({
+export const Migration = Schema.Enum({
   NONE: 0,
   INIT_AUTOMERGE: 1,
   PRUNE_AUTOMERGE_ROOT_HISTORY: 2,
@@ -114,7 +114,7 @@ export interface CreateEpochRequest extends Schema.Schema.Type<typeof CreateEpoc
 // `frames()` accessor), which cannot be modeled as an inline Effect struct, so the response stays
 // protobuf-encoded (`protoMessage`).
 
-export const SpaceMemberRole = Schema.Enums({
+export const SpaceMemberRole = Schema.Enum({
   INVALID: 0,
   ADMIN: 1,
   EDITOR: 2,
@@ -148,7 +148,7 @@ export interface JoinBySpaceKeyRequest extends Schema.Schema.Type<typeof JoinByS
  * - BINARY: Tar-based binary archive (default).
  * - JSON: JSON encoding of {@link dxos.echo.db.SerializedSpace}.
  */
-export const SpaceArchiveFormat = Schema.Enums({
+export const SpaceArchiveFormat = Schema.Enum({
   BINARY: 0,
   JSON: 1,
 });

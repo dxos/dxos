@@ -522,7 +522,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       } else {
         // TODO(wittjosiah): A fiber interrupt (e.g. a scheduled timer fire colliding with an in-flight
         //   `runAgain` retry, or the dispatcher stopping) reaches here and arms a failure cooldown. An
-        //   interrupt is not a genuine failure — distinguish `Cause.isInterrupted(result.cause)` and
+        //   interrupt is not a genuine failure — distinguish `Cause.hasInterrupts(result.cause)` and
         //   treat it as neutral (re-schedulable, no cooldown) instead.
         const cooldownMs = Duration.toMillis(this._failureCooldown);
         const until = new Date(this.getCurrentTime().getTime() + cooldownMs);

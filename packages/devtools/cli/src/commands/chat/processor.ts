@@ -77,7 +77,7 @@ export class ChatProcessor {
     );
 
     const response = await fiber.pipe(Fiber.join, Effect.runPromiseExit);
-    if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
+    if (!Exit.isSuccess(response) && !Cause.hasInterruptsOnly(response.cause)) {
       const cause = Cause.pretty(response.cause);
       log.error('request failed', { cause });
       throw new Error(cause);
