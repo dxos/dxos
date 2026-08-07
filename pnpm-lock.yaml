@@ -7326,9 +7326,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/client-services':
-        specifier: workspace:*
-        version: link:../../sdk/client-services
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../common/codec-protobuf

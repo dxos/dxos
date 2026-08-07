@@ -35,7 +35,6 @@
     "@automerge/automerge-repo-storage-indexeddb": "catalog:",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
-    "@dxos/client-services": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/config": "workspace:*",
