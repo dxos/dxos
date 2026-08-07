@@ -191,7 +191,7 @@ DXOS is **trunk-based**: `main` is the only long-lived integration branch.
 - Work happens on feature branches that merge to `main` via PRs; the **Check** workflow (build, test, lint, fmt) must pass. External contributors fork and PR from their fork.
 - Feature branches are **squashed** on merge, keeping `main` linear.
 - Consumer-relevant changes carry a `.changeset/*.md` — see the [changeset authoring guide](./agents/instructions/changesets.md). PR titles and commit messages use `scope: description`.
-- `labs` / `staging` / `production` are **deploy environments**, not long-lived branches — you deploy a chosen commit to one via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
+- `dev` / `nightly` / `staging` / `production` are **deploy environments**, not long-lived branches — `nightly` deploys `main`'s tip daily on a schedule, the rest deploy a chosen commit via the Deploy Apps workflow, and "what's deployed where" is tracked by floating `<app>/<environment>` git tags.
 
 Full design (versioning policy, publish groups, cross-repo contract): [`.github/RELEASE-SPEC.md`](./.github/RELEASE-SPEC.md).
 
@@ -209,30 +209,32 @@ Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/c
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 
-Because these tags are force-moved on every deploy, a plain `git pull`/`git fetch` will reject them once your local clone has a stale copy (`! [rejected] composer/labs -> composer/labs (would clobber existing tag)`). Turn off automatic tag-following once per clone so routine fetches stay quiet:
+Because these tags are force-moved on every deploy, a plain `git pull`/`git fetch` will reject them once your local clone has a stale copy (`! [rejected] composer/nightly -> composer/nightly (would clobber existing tag)`). Turn off automatic tag-following once per clone so routine fetches stay quiet:
 
 ```bash
 git config remote.origin.tagOpt --no-tags
 ```
 
-You can still pull a specific one on demand: `git fetch origin tag composer/labs --force` (still needs
+You can still pull a specific one on demand: `git fetch origin tag composer/nightly --force` (still needs
 `--force` — an explicit fetch doesn't skip the clobber check, only the automatic tag-following does), or
 check without touching local refs at all: `git ls-remote --tags origin 'composer/*'`.
 
-| Env            | Trigger                | Apps               | Notes                                    |
-| -------------- | ---------------------- | ------------------ | ---------------------------------------- |
-| **main**       | auto on push to `main` | all `main`-enabled | rolling preview; no native build         |
-| **labs**       | manual → `labs`        | composer           | prerelease Tauri build; iOS → TestFlight |
-| **staging**    | manual → `staging`     | composer + docs    | prerelease Tauri build                   |
-| **production** | manual → `production`  | all                | cuts a versioned Composer release        |
+| Env            | URL                      | EDGE         | Trigger                           | Apps                  | Notes                                    |
+| -------------- | ------------------------ | ------------ | --------------------------------- | --------------------- | ---------------------------------------- |
+| **dev**        | `composer-dev…`          | EDGE nightly | manual → `dev`                    | composer              | prerelease Tauri build; iOS → TestFlight |
+| **nightly**    | `nightly.composer.space` | EDGE prod    | auto, 08:00 UTC daily from `main` | all `nightly`-enabled | dogfood build; no native build           |
+| **staging**    | `staging.composer.space` | EDGE prod    | manual → `staging`                | composer + docs       | kept, deliberately unused                |
+| **production** | `composer.space`         | EDGE prod    | manual → `production`             | all                   | cuts a versioned Composer release        |
+
+Local dev talks to EDGE nightly by default; point it at EDGE dev or a local EDGE with `DX_EDGE_BASE_URL`.
 
 **Composer is the only versioned app.** A **production** deploy also cuts its release: the `release` job bumps `composer-app`/`crx` by the dispatch's `bump` input, commits to `main`, tags `composer-v<x>`, then builds + deploys that commit (web + desktop + iOS via `deploy-tauri.yaml`, CrabNebula). This is the only path that advances Composer's version — it is not a Changesets package.
 
-**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`labs` \| `staging` \| `production`, default `labs`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
+**Triggering a deploy with `gh`.** The `workflow_dispatch` inputs are `environment` (`dev` \| `nightly` \| `staging` \| `production`, default `dev`), `app` (`all` default, or one of `composer` / `docs` / `storybook` / `todomvc` / `tasks` / `testbench`), and `bump` (`patch` \| `minor` \| `major`, used only by the production Composer release). `--ref` selects the commit to deploy — it defaults to `main`, and also determines which version of the workflow runs.
 
 ```bash
-# Composer → labs (the default env). `app` defaults to `all`, which for labs is just composer.
-gh workflow run deploy-apps.yml -f environment=labs
+# Composer → dev (the default env). `app` defaults to `all`, which for dev is just composer.
+gh workflow run deploy-apps.yml -f environment=dev
 
 # Composer + docs → staging.
 gh workflow run deploy-apps.yml -f environment=staging
@@ -251,25 +253,25 @@ gh run list --workflow=deploy-apps.yml --limit 1
 gh run watch
 ```
 
-Handy as aliases — e.g. `gh alias set deploy-labs 'workflow run deploy-apps.yml -f environment=labs'`, then just `gh deploy-labs`.
+Handy as aliases — e.g. `gh alias set deploy-dev 'workflow run deploy-apps.yml -f environment=dev'`, then just `gh deploy-dev`.
 
-**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-main`) applies only there. `remote` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it; `dev` always requires an app (there's no "all" for local `wrangler dev`). Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-nightly`) applies only there. `remote` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it; `dev` always requires an app (there's no "all" for local `wrangler dev`). Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
 
 ```bash
-# Push secrets to every app that has a labs env (currently just composer).
-pnpm secrets remote labs
+# Push secrets to every app that has a dev env (currently just composer).
+pnpm secrets remote dev
 
 # Push secrets to one specific Worker.
 pnpm secrets remote staging docs
 
 # See what would be pushed, for the whole environment, without making any change.
-pnpm secrets remote main --dry-run
+pnpm secrets remote nightly --dry-run
 
 # Write .dev.vars for local `wrangler dev` (app is required).
 pnpm secrets dev composer
 
 # Target a different 1Password item.
-pnpm secrets remote labs --item "some other item"
+pnpm secrets remote dev --item "some other item"
 ```
 
 ### New npm packages

@@ -433,6 +433,7 @@ jobs:
     timeout-minutes: 90
     env:
       DX_ENVIRONMENT: ci
+      # EDGE nightly. TODO(wittjosiah): `wss://nightly.dxos.network/` after the EDGE rename (DX-1150).
       DX_EDGE_BASE_URL: 'wss://main.dxos.network/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false

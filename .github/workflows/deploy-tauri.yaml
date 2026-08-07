@@ -1,7 +1,7 @@
 name: Composer Tauri Release
 
-# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job) for the labs/staging/production
-# environments, alongside the Composer web deploy. Not standalone (no workflow_dispatch): to run it, dispatch
+# Reusable workflow — invoked only by deploy-apps.yml (its `tauri` job) on a manual dispatch, alongside
+# the Composer web deploy. Not standalone (no workflow_dispatch): to run it, dispatch
 # Deploy Apps with app=composer. Multi-job/multi-runner (ubuntu draft/publish + macOS desktop + macOS iOS),
 # so it's a reusable workflow, not a composite action. The CrabNebula channel is derived from the
 # `environment` input; the desktop version comes from composer-app's package.json.
@@ -9,7 +9,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: Target environment (labs | staging | production).
+        description: Target environment (dev | nightly | staging | production).
         type: string
         required: true
       ref:
@@ -65,7 +65,7 @@ jobs:
         run: |
           # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
           # job for a production release, current otherwise. Production ships the clean version to the `main`
-          # CrabNebula channel; labs/staging get a unique per-commit prerelease tagged with the env name
+          # CrabNebula channel; every other env gets a unique per-commit prerelease tagged with the env name
           # (which selects its channel).
           BASE=$(jq -r '.version' packages/apps/composer-app/package.json)
           if [ "${{ inputs.environment }}" = "production" ]; then
@@ -76,7 +76,7 @@ jobs:
           echo "version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "Tauri version: $NEW_VERSION (env=${{ inputs.environment }})"
           # CFBundleVersion (Apple's build number) must be plain digits separated by dots — our prerelease
-          # suffix (e.g. "-labs.abc1234") fails that even after Tauri's own semver-prerelease stripping, so
+          # suffix (e.g. "-dev.abc1234") fails that even after Tauri's own semver-prerelease stripping, so
           # override it separately with the always-numeric, always-increasing run number.
           echo "ios_bundle_version=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
@@ -439,7 +439,7 @@ jobs:
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
         # TODO(wittjosiah): Switch to staging? Need to figure out TestFlight -> App Store release process.
-        if: inputs.environment == 'labs'
+        if: inputs.environment == 'dev'
         run: |
           xcrun altool \
             --upload-app \

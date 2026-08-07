@@ -8,7 +8,7 @@
 // (`wrangler secret put`).
 //
 // The 1Password item's fields are matched by section label: a field in a section named "shared" applies to
-// every target; a field in a section matching the raw Cloudflare Worker name (e.g. "composer-main", from
+// every target; a field in a section matching the raw Cloudflare Worker name (e.g. "composer-nightly", from
 // wrangler.jsonc's `env.<env>.name`) applies only there. Only CONCEALED fields are read.
 //
 // Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses) — the account associated
@@ -32,9 +32,9 @@
 // since the name can be renamed/retitled in 1Password but the UUID never changes.
 //
 // Examples:
-//   node scripts/secrets.mjs dev composer
+//   node scripts/secrets.mjs dev composer          # `dev` the MODE — writes .dev.vars for `wrangler dev`
+//   node scripts/secrets.mjs remote dev composer   # `dev` the ENVIRONMENT — pushes to the composer-dev Worker
 //   node scripts/secrets.mjs remote staging
-//   node scripts/secrets.mjs remote staging composer
 
 import JSON5 from 'json5';
 import { execFileSync, execSync } from 'node:child_process';

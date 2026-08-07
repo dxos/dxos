@@ -3,8 +3,8 @@ name: Deploy Apps
 # Single workflow for all app deploys. The deployable apps are listed in scripts/apps.mjs (a package dir
 # per app); everything else — Worker name, bundle task, output dir, and which environments it targets — is
 # derived from that app's `wrangler.jsonc`. The app set for an env follows its config's `env.*` sections:
-# main → all main-enabled apps (auto on push); labs → composer; staging → composer + docs; production → all.
-# Fully decoupled from npm publishing.
+# nightly → all nightly-enabled apps (auto, daily); dev → composer; staging → composer + docs;
+# production → all. Fully decoupled from npm publishing.
 #
 # Production additionally cuts a versioned Composer release (bump composer-app/crx, commit to main, tag
 # composer-v<x>) — the ONLY path that advances Composer's version (Composer is not in Changesets). The other
@@ -14,22 +14,23 @@ name: Deploy Apps
 # The `plan` job resolves the environment + which jobs run into named booleans, so every other job's `if:`
 # is a plain `needs.plan.outputs.<flag> == 'true'` instead of an inline boolean soup.
 #
-# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>` (non-main). No
-# GitHub Environments.
+# "What's deployed where" is tracked by per-app floating git tags `<app>/<environment>`. No GitHub
+# Environments.
 
 on:
-  push:
-    branches:
-      - main
+  # Nightly: `main`'s tip, once a day, rather than a deploy per commit. 08:00 UTC = 03:00 EST / 04:00 EDT
+  # (cron has no timezone, so the wall-clock hour shifts by one across US DST).
+  schedule:
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       environment:
-        # Defaults the app set (each app's wrangler.jsonc `env.*`): labs → composer, staging → composer +
-        # docs, production → all. Choose the commit via the branch/tag selector.
+        # Defaults the app set (each app's wrangler.jsonc `env.*`): dev → composer, nightly → all,
+        # staging → composer + docs, production → all. Choose the commit via the branch/tag selector.
         description: Target environment
         type: choice
-        options: [labs, staging, production]
-        default: labs
+        options: [dev, nightly, staging, production]
+        default: dev
       app:
         # Optional — deploy a single app instead of the whole environment (e.g. a docs hotfix to
         # production); still tagged per-app. `all` (default) deploys every app the environment targets.
@@ -47,7 +48,7 @@ on:
 
 concurrency:
   # One in-flight deploy per environment.
-  group: deploy-${{ inputs.environment || 'main' }}
+  group: deploy-${{ inputs.environment || 'nightly' }}
   cancel-in-progress: true
 
 permissions:
@@ -55,11 +56,11 @@ permissions:
 
 jobs:
   # Resolve the run into named booleans so downstream `if:` conditions stay readable. Outputs:
-  #   env      — resolved environment (main | labs | staging | production).
+  #   env      — resolved environment (dev | nightly | staging | production).
   #   app      — app to deploy, or `all`.
   #   release  — cut a versioned Composer release (production + Composer in the set).
-  #   bundle   — build the shared Composer bundle (Composer + a labs/staging/production env).
-  #   tauri    — signed native build (bundle + a manual dispatch, i.e. not a branch push).
+  #   bundle   — build the shared Composer bundle (Composer in the set).
+  #   tauri    — signed native build (bundle + a manual dispatch, i.e. not the nightly schedule).
   plan:
     if: github.repository == 'dxos/dxos'
     runs-on: ubuntu-latest
@@ -74,24 +75,21 @@ jobs:
         env:
           IN_ENV: ${{ inputs.environment }}
           IN_APP: ${{ inputs.app }}
-          REF_NAME: ${{ github.ref_name }}
           EVENT: ${{ github.event_name }}
         run: |
-          # Resolve the environment: the dispatch input, else `main` on main and `labs` on any other push.
-          env="$IN_ENV"
-          if [ -z "$env" ]; then if [ "$REF_NAME" = main ]; then env=main; else env=labs; fi; fi
+          # Resolve the environment: the dispatch input, else `nightly` (the scheduled run).
+          env="${IN_ENV:-nightly}"
           app="${IN_APP:-all}"
 
           # Does Composer participate? (drives release / bundle / tauri).
           composer=false; if [ "$app" = all ] || [ "$app" = composer ]; then composer=true; fi
-          # labs/staging/production get the shared Composer bundle + native build; main/other do not.
-          named=false; case "$env" in labs | staging | production) named=true ;; esac
-          # Manual dispatch vs a branch push (gates the signed native build).
+          # Manual dispatch vs the nightly schedule (gates the signed native build — one per day is too
+          # costly for a macOS runner, so nightly ships web-only unless dispatched by hand).
           dispatched=false; if [ "$EVENT" = workflow_dispatch ]; then dispatched=true; fi
 
           release=false; if [ "$env" = production ] && [ "$composer" = true ]; then release=true; fi
-          bundle=false;  if [ "$named" = true ] && [ "$composer" = true ]; then bundle=true; fi
-          tauri=false;   if [ "$named" = true ] && [ "$composer" = true ] && [ "$dispatched" = true ]; then tauri=true; fi
+          bundle="$composer"
+          tauri=false;   if [ "$composer" = true ] && [ "$dispatched" = true ]; then tauri=true; fi
 
           {
             echo "env=$env"
@@ -232,7 +230,7 @@ jobs:
 
   deploy:
     needs: [plan, release, build-bundle]
-    # Run once the prep jobs succeeded or were skipped (main / static-only); skip only on a failure.
+    # Run once the prep jobs succeeded or were skipped (static-only app sets); skip only on a failure.
     if: ${{ !cancelled() && needs.plan.result == 'success' && needs.release.result != 'failure' && needs.build-bundle.result != 'failure' }}
     permissions:
       contents: write # Force-updates the per-app `<app>/<env>` deploy pointer tags.
@@ -276,7 +274,6 @@ jobs:
           fi
 
       - name: Notify Discord — deploy started
-        if: env.DEPLOY_ENV != 'main'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
@@ -326,11 +323,11 @@ jobs:
         env:
           NODE_ENV: production
 
-      # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). `main` is the
-      # branch tip (auto-deployed on push) so it carries no tag; every other env tags each app it deployed —
-      # per-app even for `all`, so an individual redeploy (hotfix) moves only that app's tag.
+      # Floating pointer to the SHA deployed for each app+env (the branch-pointer replacement). Every env
+      # tags each app it deployed — per-app even for `all`, so an individual redeploy (hotfix) moves only
+      # that app's tag. Nightly carries one too: it is a daily snapshot of `main`, not `main` itself, so
+      # the branch tip is no longer an answer to "what is on nightly?".
       - name: Update deploy pointer tags
-        if: env.DEPLOY_ENV != 'main'
         run: |
           for app in $(.github/workflows/scripts/apps.mjs "$DEPLOY_ENV" "$DEPLOY_APP"); do
             tag="${app}/${DEPLOY_ENV}"
@@ -339,7 +336,7 @@ jobs:
           done
 
       - name: Notify Discord — deploy succeeded
-        if: success() && env.DEPLOY_ENV != 'main'
+        if: success()
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
@@ -352,7 +349,7 @@ jobs:
       - name: Notify Discord — deploy failed
         # Skip when it was the "app targets this environment" check that failed — that's an invalid
         # app/environment combo caught before any deploy was attempted, not a real deploy failure.
-        if: failure() && env.DEPLOY_ENV != 'main' && steps.validate.conclusion == 'success'
+        if: failure() && steps.validate.conclusion == 'success'
         continue-on-error: true
         env:
           DX_DISCORD_WEBHOOK_URL: ${{ secrets.DX_DISCORD_WEBHOOK_URL }}
@@ -362,9 +359,9 @@ jobs:
             '{content: (":x: Deploy of **" + $app + "** to `" + $env + "` failed\nRun: " + $url)}')
           curl -sS --fail-with-body -X POST "$DX_DISCORD_WEBHOOK_URL" -H "Content-Type: application/json" -d "$payload"
 
-  # Desktop/mobile build for Composer, for the named environments (not `main` — a signed build per push is
-  # too costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
-  # Store Connect happens on `labs` only. On production it builds the bumped release commit.
+  # Desktop/mobile build for Composer, on manual dispatch only (a signed build per scheduled nightly is too
+  # costly). CrabNebula channel is derived from the environment inside the reusable workflow; iOS → App
+  # Store Connect happens on `dev` only. On production it builds the bumped release commit.
   tauri:
     needs: [plan, release, build-bundle]
     if: ${{ !cancelled() && needs.release.result != 'failure' && needs.build-bundle.result == 'success' && needs.plan.outputs.tauri == 'true' }}

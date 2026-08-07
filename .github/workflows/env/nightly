@@ -14,6 +14,6 @@ IPFS_API_SECRET=${IPFS_API_SECRET}
 # End common vars
 DX_PWA=false
 DX_MINIFY=true
-DX_EDGE_ECHO_REPLICATOR=true
-DX_LABS=true
+# Nightly runs against EDGE production — same backend as composer.space, so a dogfooder's data is
+# the data they see in production.
 DX_EDGE_BASE_URL="https://dxos.network/"
