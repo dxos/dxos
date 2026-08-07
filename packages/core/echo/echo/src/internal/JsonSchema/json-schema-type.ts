@@ -21,10 +21,7 @@ const NonNegativeInteger = Schema.Number.pipe(Schema.check(Schema.isGreaterThanO
 
 const StringArray = Schema.Array(Schema.String);
 
-const JsonSchemaOrBoolean = Schema.Union(
-  Schema.suspend(() => JsonSchemaType),
-  Schema.Boolean,
-);
+const JsonSchemaOrBoolean = Schema.Union([Schema.suspend(() => JsonSchemaType), Schema.Boolean]);
 
 /**
  * Go under the `annotations` property.
@@ -222,17 +219,9 @@ const _JsonSchemaType = Schema.Struct({
 
   minLength: Schema.optional(NonNegativeInteger),
   items: Schema.optional(
-    Schema.Union(
-      Schema.suspend(() => JsonSchemaType),
-      Schema.Array(Schema.suspend(() => JsonSchemaType)),
-    ),
+    Schema.Union([Schema.suspend(() => JsonSchemaType), Schema.Array(Schema.suspend(() => JsonSchemaType))]),
   ),
-  additionalItems: Schema.optional(
-    Schema.Union(
-      Schema.suspend(() => JsonSchemaType),
-      Schema.Boolean,
-    ),
-  ),
+  additionalItems: Schema.optional(Schema.Union([Schema.suspend(() => JsonSchemaType), Schema.Boolean])),
   maxItems: Schema.optional(NonNegativeInteger),
   minItems: Schema.optional(NonNegativeInteger),
   uniqueItems: Schema.optional(Schema.Boolean),

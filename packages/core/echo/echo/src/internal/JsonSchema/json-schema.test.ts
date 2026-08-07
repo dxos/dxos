@@ -303,7 +303,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(schema);
     log('schema', { jsonSchema });
 
-    (Schema.asserts(JsonSchemaType) as any)(jsonSchema);
+    Schema.asserts(JsonSchemaType, jsonSchema);
   });
 
   test('reference with title annotation', () => {

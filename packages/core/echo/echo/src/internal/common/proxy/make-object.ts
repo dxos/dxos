@@ -46,13 +46,16 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | S
 // TODO(dmaretskyi): Invert generics (generic over schema) to have better error messages.
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject = <T extends AnyProperties>(
-  schema: Schema.Codec<T, any, never>,
+  // Matches what this forwards to. Effect 4's `Schema.Schema<T>` pins only `Type` and leaves the
+  // service channels open, so narrowing to `Codec<T, any, never>` here rejected ordinary callers
+  // and needed a cast to get past.
+  schema: Schema.Schema<T>,
   obj: NoInfer<MakeObjectProps<T>>,
   meta?: Partial<EntityMeta>,
   typeSource?: TypeSource,
 ): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema as Schema.Codec<T, any>, typeSource);
+  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema, typeSource);
 };
 
 const createReactiveObject = <T extends AnyProperties>(

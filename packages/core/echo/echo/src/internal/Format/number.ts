@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { FormatAnnotation, TypeFormat } from './types';
 
@@ -18,11 +19,15 @@ const encodeMultiple =
 /**
  * Convert number of digits to multipleOf annotation.
  */
-export const DecimalPrecision = Schema.transform(Schema.Number, Schema.Number, {
-  strict: true,
-  encode: (value) => encodeMultipleOf(value),
-  decode: (value) => Math.log10(1 / value),
-}).annotate({
+export const DecimalPrecision = Schema.Number.pipe(
+  Schema.decodeTo(
+    Schema.Number,
+    SchemaTransformation.transform({
+      encode: (value: number) => encodeMultipleOf(value),
+      decode: (value: number) => Math.log10(1 / value),
+    }),
+  ),
+).annotate({
   title: 'Number of digits',
 });
 

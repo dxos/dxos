@@ -12,12 +12,8 @@ import { createAnnotationHelper } from '../Annotation';
 import { type JsonSchemaType } from '../JsonSchema';
 
 // TODO(burdon): Rename PropertyType.
-export type ScalarType =
-  | JSONSchema.JsonSchema7Object
-  | JSONSchema.JsonSchema7String
-  | JSONSchema.JsonSchema7Number
-  | JSONSchema.JsonSchema7Boolean
-  | JSONSchema.JsonSchema7Ref;
+// Effect 4 consolidated the individual draft-07 node interfaces into one `JsonSchema` model.
+export type ScalarType = JSONSchema.JsonSchema;
 
 // TODO(burdon): Rename ValueType and change to disciminated union.
 // export type ValueType = 'array' | 'object' | 'string' | 'number' | 'boolean' | 'ref';
@@ -58,7 +54,7 @@ export const FormatAnnotation = createAnnotationHelper<TypeFormat>(FormatAnnotat
 
 /** @deprecated */
 export const getFormatAnnotation = (node: SchemaAST.AST): TypeFormat | undefined =>
-  Function.pipe(SchemaAST.getAnnotation<TypeFormat>(FormatAnnotationId)(node), Option.getOrUndefined);
+  SchemaAST.getAnnotation<TypeFormat>(node, FormatAnnotationId);
 
 // TODO(burdon): Rename Format; Change to discriminated union?
 export enum TypeFormat {
@@ -186,4 +182,4 @@ export const OptionsAnnotation = createAnnotationHelper<Options[]>(OptionsAnnota
 
 /** @deprecated */
 export const getOptionsAnnotation = (node: SchemaAST.AST): Options[] | undefined =>
-  Function.pipe(SchemaAST.getAnnotation<Options[]>(OptionsAnnotationId)(node), Option.getOrUndefined);
+  SchemaAST.getAnnotation<Options[]>(node, OptionsAnnotationId);

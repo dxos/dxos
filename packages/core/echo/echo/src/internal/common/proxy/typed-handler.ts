@@ -568,7 +568,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
     const schema = SchemaValidator.getTargetPropertySchema(target, prop);
-    const _ = Schema.asserts(schema)(value);
+    Schema.asserts(schema, value);
     SchemaValidator.assertExactProperties(schema, value, (path) => getDeep(value, path));
     if (isValidProxyTarget(value)) {
       setSchemaProperties(value, schema);
@@ -677,7 +677,7 @@ const setSchemaProperties = (obj: any, schema: Schema.Top, typeSource?: TypeSour
 
 // Accepts any encoded type: the typed handler operates on the decoded representation, so schemas
 // whose encoded form differs (e.g. refs encode as `{ '/': uri }`) are valid here.
-export const prepareTypedTarget = <T>(target: T, schema: Schema.Codec<T, any>, typeSource?: TypeSource) => {
+export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
   // log.info('prepareTypedTarget', { target, schema });
   validateAndReactifyTarget(target, schema);
   setSchemaProperties(target, schema, typeSource);
@@ -687,13 +687,13 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Codec<T, any>, t
  * Validate a target against its schema and convert nested arrays to `ReactiveArray`. Shared by
  * {@link prepareTypedTarget} and {@link prepareDecodedTypedTarget}.
  */
-export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Codec<T, any>) => {
+export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Schema<T>) => {
   if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
   }
 
   SchemaValidator.validateSchema(schema);
-  const _ = Schema.asserts(schema)(target);
+  Schema.asserts(schema, target);
   SchemaValidator.assertExactProperties(schema, target, (path) => getDeep(target, path));
   makeArraysReactive(target);
 };
@@ -704,7 +704,7 @@ export const validateAndReactifyTarget = <T>(target: T, schema: Schema.Codec<T, 
  * (see `objectFromJSON`). Validates and reactifies as usual, then stamps `SchemaId`/`TypeId` on
  * nested records/arrays only, leaving the target's own (locked) stamps untouched.
  */
-export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Codec<T, any>) => {
+export const prepareDecodedTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
   validateAndReactifyTarget(target, schema);
   setSchemaProperties(target, schema, undefined, true);
 };
