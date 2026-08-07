@@ -267,8 +267,11 @@ export class AppManager {
     }
 
     // The caller may re-submit, and reopening the dialog while the old one is still up would target
-    // the wrong tree.
-    await form.waitFor({ state: 'detached', timeout: 10_000 });
+    // the wrong tree. 30s rather than 10s: closing the dialog waits on the space actually being
+    // created, which took longer than 10s on firefox in run 31149685264. This wait is not the test's
+    // assertion — the caller's count check is — so being generous here costs nothing but delays a
+    // genuine "dialog never closed" failure.
+    await form.waitFor({ state: 'detached', timeout: 30_000 });
   }
 
   async joinSpace(): Promise<void> {

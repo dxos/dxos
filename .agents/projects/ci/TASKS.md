@@ -109,7 +109,7 @@ originate on this branch; a green Check elsewhere is likely green the same way.
       9/9.
 - [ ] **`stories-projects`** — `FactSummaries`, `SenderLedger` and `SenderResearch` `Test` stories
       all fail with `operation invocation failed {opKey:
-    dxn:org.dxos.plugin.projects.operation.create, cause: "Error: Process produced no output"}`.
+  dxn:org.dxos.plugin.projects.operation.create, cause: "Error: Process produced no output"}`.
       2 of 3 in CI, 3 of 3 locally. These are the CI-runnable stories — the model-dependent variants
       are tagged `!test` — so this is a regression in the operation stack, not a missing service.
       Owned by plugin-projects, not by this work.
