@@ -12214,6 +12214,9 @@ importers:
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
+      '@tauri-apps/plugin-dialog':
+        specifier: 'catalog:'
+        version: 2.7.2
       '@tauri-apps/plugin-os':
         specifier: 'catalog:'
         version: 2.3.2

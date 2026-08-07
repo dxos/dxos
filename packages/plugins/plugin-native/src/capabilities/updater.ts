@@ -5,6 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import { ask } from '@tauri-apps/plugin-dialog';
 import { type } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
 import * as Duration from 'effect/Duration';
@@ -34,6 +35,26 @@ const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 const CHANNEL_NAME: Record<Settings.UpdateChannel, string> = { stable: 'main', nightly: 'nightly' };
 
 const DEFAULT_CHANNEL: Settings.UpdateChannel = 'stable';
+
+/**
+ * Copy for the system confirm shown before a switch. Not translated: it comes from the OS dialog,
+ * which renders before the app can be sure a translation bundle is loaded, and the switch is a
+ * destructive-ish action that must read correctly regardless.
+ */
+const CHANNEL_PROMPT: Record<Settings.UpdateChannel, { title: string; message: string; okLabel: string }> = {
+  nightly: {
+    title: 'Switch to Nightly?',
+    message:
+      'Composer will download and install the latest nightly build now. Nightly is published daily from unreleased work and may be unstable.',
+    okLabel: 'Switch to Nightly',
+  },
+  stable: {
+    title: 'Switch to Stable?',
+    message:
+      'Composer will download and install the latest released build now. That build is older than the nightly you are running, and anything the newer build wrote stays on disk.',
+    okLabel: 'Switch to Stable',
+  },
+};
 
 type UpdateInfo = { version: string; currentVersion: string };
 
@@ -191,11 +212,25 @@ export default Capability.makeModule(
       relaunch: async () => {
         await relaunch();
       },
-      // Persist first so a failed install still leaves the user on the channel they chose, then
-      // force the move: the target channel's latest build is a downgrade whenever it trails the
-      // running one, which is the normal case going nightly -> stable, and no periodic check would
-      // ever offer it.
+      // Confirmed before anything moves: the switch installs immediately rather than at the next
+      // check, and going back to stable replaces the running build with an older one.
       switchChannel: async (channel) => {
+        if (channel === currentChannel()) {
+          return;
+        }
+        const confirmed = await ask(CHANNEL_PROMPT[channel].message, {
+          title: CHANNEL_PROMPT[channel].title,
+          kind: 'warning',
+          okLabel: CHANNEL_PROMPT[channel].okLabel,
+        });
+        if (!confirmed) {
+          return;
+        }
+
+        // Persist first so a failed install still leaves the user on the channel they chose, then
+        // force the move: the target channel's latest build is a downgrade whenever it trails the
+        // running one, which is the normal case going nightly -> stable, and no periodic check
+        // would ever offer it.
         registry.set(settingsAtom, { ...registry.get(settingsAtom), updateChannel: channel });
         if (!enabled) {
           return;

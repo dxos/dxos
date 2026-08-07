@@ -113,6 +113,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
     "@tauri-apps/plugin-process": "catalog:",
     "@tauri-apps/plugin-shell": "catalog:",
