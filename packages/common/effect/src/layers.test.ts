@@ -64,7 +64,7 @@ class ServerPlugin {
   #runtime = ManagedRuntime.make(ServerLive);
 
   readonly clientConfigLayer = Layer.effectContext(
-    this.#runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(ClientConfig)))),
+    this.#runtime.contextEffect.pipe(Effect.map((context) => Context.pick(ClientConfig)(context))),
   );
 
   async dispose() {

@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Runtime from 'effect/Runtime';
@@ -143,7 +144,7 @@ describe('DynamicRuntime', () => {
       });
 
       const fiber = runtime.runFork(program);
-      const exit = await runAndForwardErrors(fiber.await);
+      const [exit] = await runAndForwardErrors(Fiber.awaitAll([fiber]));
       expect(Exit.isSuccess(exit)).toBe(true);
       if (Exit.isSuccess(exit)) {
         expect(exit.value).toEqual(['result: SELECT * FROM users']);
@@ -163,7 +164,7 @@ describe('DynamicRuntime', () => {
         const db = yield* Database;
         return yield* db.query('test');
       });
-      const result = await Runtime.runPromise(rt)(program);
+      const result = await Effect.runPromise(Effect.provideContext(program, rt));
       expect(result).toEqual(['result: test']);
     });
 

@@ -23,7 +23,7 @@ it.effect.skip(
         void runAndForwardErrors(Fiber.interrupt(resultFiber));
       }, 2_000);
 
-      const result = yield* resultFiber;
+      const result = yield* Fiber.join(resultFiber);
       console.log({ result });
     },
     Effect.catchCause((cause) => {
