@@ -72,7 +72,7 @@ export const makeClient = <G>(
 ): Effect.Effect<unknown, never, Scope.Scope> =>
   makeClientOverProtocol(
     RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
-      Layer.provide(BrowserWorker.layerPlatform(() => port)),
+      Layer.provide(BrowserWorker.layer(() => port)),
     ),
     group,
     options,

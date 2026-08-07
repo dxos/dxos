@@ -3,7 +3,6 @@
 //
 
 import * as Predicate from 'effect/Predicate';
-import * as Runtime from 'effect/Runtime';
 
 import { DeferredTask, Event, UpdateScheduler } from '@dxos/async';
 import { Context } from '@dxos/context';

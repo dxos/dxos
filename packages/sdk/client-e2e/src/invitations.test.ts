@@ -705,7 +705,7 @@ const createInvitationsApi = async (
   return { manager, service, metadata };
 };
 
-const invitationsApiScopes: Scope.CloseableScope[] = [];
+const invitationsApiScopes: Scope.Closeable[] = [];
 
 afterAll(async () => {
   await Promise.all(invitationsApiScopes.map((scope) => EffectEx.runPromise(Scope.close(scope, Exit.void))));

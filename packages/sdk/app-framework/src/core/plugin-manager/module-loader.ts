@@ -71,7 +71,7 @@ export const yieldToHost: Effect.Effect<void> = Effect.suspend(() => {
 export class ModuleLoader {
   readonly #memo = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   readonly #semaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
-  readonly #scopes = new Map<string, Scope.CloseableScope>();
+  readonly #scopes = new Map<string, Scope.Closeable>();
   readonly #contributed = new Map<string, Capability.Any[]>();
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
@@ -325,7 +325,7 @@ export class ModuleLoader {
   #runActivation(
     module: Plugin.PluginModule,
     parentEvent: string,
-    scope: Scope.CloseableScope,
+    scope: Scope.Closeable,
   ): Effect.Effect<Capability.Any[], Error, Plugin.Service> {
     return Effect.gen(this, function* () {
       log('loading module', { module: module.id, parentEvent });

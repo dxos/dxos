@@ -346,7 +346,7 @@ export const ATPROTO_OAUTH_SCOPES = ['atproto', 'transition:generic', 'transitio
 
 export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   provider: Schema.Enum(OAuthProvider),
-  spaceId: Schema.String.pipe(Schema.filter(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
+  spaceId: Schema.String.pipe(Schema.refine(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect

@@ -45,7 +45,7 @@ export type PingMeasurement = {
  */
 export class CounterConnection extends Resource {
   readonly #connection: Client.Connection;
-  #scope: Scope.CloseableScope | undefined;
+  #scope: Scope.Closeable | undefined;
   #rpc: CounterRpc | undefined;
   readonly #subscribeCleanups = new Set<() => Promise<void>>();
   #sessionInfo: CounterSessionInfo | undefined;

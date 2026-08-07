@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as EffectStream from 'effect/Stream';
 
 import { raise } from '@dxos/debug';
+import { EffectEx } from '@dxos/effect';
 import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
@@ -39,7 +40,7 @@ export class DataServiceImpl implements DataService.Handlers {
   ) {}
 
   ['DataService.subscribe'](request: SubscribeRequest): EffectStream.Stream<BatchedDocumentUpdates, Error> {
-    return EffectStream.async<BatchedDocumentUpdates, Error>((emit) => {
+    return EffectEx.streamFromEmitter<BatchedDocumentUpdates, Error>((emit) => {
       try {
         invariant(SpaceId.isValid(request.spaceId));
         const next = (msg: BatchedDocumentUpdates) => {

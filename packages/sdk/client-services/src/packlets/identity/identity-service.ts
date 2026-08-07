@@ -7,6 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
+import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type KeyringApi } from '@dxos/keyring';
 import {
@@ -49,7 +50,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService.Han
   }
 
   ['IdentityService.queryIdentity'](): EffectStream.Stream<QueryIdentityResponse, Error> {
-    return EffectStream.async<QueryIdentityResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QueryIdentityResponse, Error>((emit) => {
       // Omit `identity` entirely when absent: an explicit `undefined` would still drive the optional
       // protobuf codec, which dereferences the missing message and throws.
       const emitNext = () => {

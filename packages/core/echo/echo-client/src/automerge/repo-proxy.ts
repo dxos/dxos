@@ -4,7 +4,6 @@
 
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
-import * as Runtime from 'effect/Runtime';
 
 import { Event, UpdateScheduler, sleep } from '@dxos/async';
 import { type Struct } from '@dxos/codec-protobuf';

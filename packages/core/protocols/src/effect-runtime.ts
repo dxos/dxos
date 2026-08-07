@@ -6,7 +6,6 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Runtime from 'effect/Runtime';
 import * as Stream from 'effect/Stream';
 
 import { EffectEx } from '@dxos/effect';
@@ -31,15 +30,17 @@ export const runServiceCall = <A>(
     ? effect.pipe(
         Effect.timeoutOrElse({
           duration: options.timeout,
-          onTimeout: () =>
-            new TimeoutError({
-              message: `RPC timeout: ${options.label ?? 'call'}`,
-              context: { timeout: options.timeout },
-            }),
+          orElse: () =>
+            Effect.fail(
+              new TimeoutError({
+                message: `RPC timeout: ${options.label ?? 'call'}`,
+                context: { timeout: options.timeout },
+              }),
+            ),
         }),
       )
     : effect;
-  return Runtime.runPromiseExit(runtime)(call).then((exit) => {
+  return Effect.runPromiseExit(Effect.provideContext(call, runtime)).then((exit) => {
     if (Exit.isSuccess(exit)) {
       return exit.value;
     }
@@ -84,10 +85,11 @@ export const subscribeStream = <A>(
       onFailure: (cause) => finish(Cause.hasInterruptsOnly(cause) ? undefined : EffectEx.causeToError(cause)),
       onSuccess: () => finish(),
     }),
-    Runtime.runFork(runtime),
+    Effect.provideContext(runtime),
+    Effect.runFork,
   );
   return () => {
     done = true;
-    fiber.unsafeInterruptAsFork(fiber.id());
+    fiber.interruptUnsafe();
   };
 };

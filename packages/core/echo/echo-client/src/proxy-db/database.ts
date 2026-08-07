@@ -3,7 +3,6 @@
 //
 
 import { type Heads } from '@automerge/automerge';
-import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 

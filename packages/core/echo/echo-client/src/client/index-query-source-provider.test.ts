@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Runtime from 'effect/Runtime';
 import * as EffectScope from 'effect/Scope';
-import * as Stream from 'effect/Stream';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Event } from '@dxos/async';
@@ -58,7 +57,7 @@ describe('IndexQuerySource', () => {
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) => {
         calls.push(request);
-        return Stream.async<QueryResponse>((emit) => {
+        return EffectEx.streamFromEmitter<QueryResponse>((emit) => {
           queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
         });
       },
@@ -98,7 +97,7 @@ describe('IndexQuerySource', () => {
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) => {
         calls.push(request);
-        return Stream.async<QueryResponse>((emit) => {
+        return EffectEx.streamFromEmitter<QueryResponse>((emit) => {
           queueMicrotask(() => void emit.single({ queryId: request.queryId, results: [] }));
         });
       },
@@ -141,7 +140,7 @@ describe('IndexQuerySource', () => {
     const service = await makeQueryClient({
       'QueryService.setConfig': () => Effect.void,
       'QueryService.execQuery': (request) =>
-        Stream.async<QueryResponse>((streamEmit) => {
+        EffectEx.streamFromEmitter<QueryResponse>((streamEmit) => {
           emit = (results) => void streamEmit.single({ queryId: request.queryId, results });
         }),
       'QueryService.reindex': () => Effect.void,

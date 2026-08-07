@@ -27,7 +27,7 @@ import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
  */
 export class ClientServicesProxy implements ClientServicesProvider {
   readonly closed = new Event<Error | undefined>();
-  private _scope?: Scope.CloseableScope;
+  private _scope?: Scope.Closeable;
   private _rpc?: ClientServicesRpc;
   private _services?: Partial<ClientServices>;
 

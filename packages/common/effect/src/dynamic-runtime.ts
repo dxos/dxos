@@ -8,7 +8,6 @@ import * as Exit from 'effect/Exit';
 import type * as Fiber from 'effect/Fiber';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
 
 import { unwrapExit } from './internal/errors';
 

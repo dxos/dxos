@@ -38,9 +38,9 @@ describe('makeInProcessClient', () => {
   test('bridges class-instance handlers (prototype methods) to a client', ({ expect }) =>
     Effect.gen(function* () {
       const client = yield* makeInProcessClient(TestRpcs, new TestHandlers());
-      const sum = yield* client.Test.add({ a: 4, b: 5 });
+      const sum = yield* client['Test.add']({ a: 4, b: 5 });
       expect(sum).toEqual(9);
-      const counted = yield* client.Test.count({ to: 2 }).pipe(Stream.runCollect);
+      const counted = yield* client['Test.count']({ to: 2 }).pipe(Stream.runCollect);
       expect([...counted]).toEqual([1, 2]);
     }).pipe(Effect.scoped, EffectEx.runPromise));
 
@@ -48,10 +48,10 @@ describe('makeInProcessClient', () => {
     Effect.gen(function* () {
       const client = yield* makeInProcessClient(TestRpcs, handlers);
 
-      const sum = yield* client.Test.add({ a: 2, b: 3 });
+      const sum = yield* client['Test.add']({ a: 2, b: 3 });
       expect(sum).toEqual(5);
 
-      const counted = yield* client.Test.count({ to: 3 }).pipe(Stream.runCollect);
+      const counted = yield* client['Test.count']({ to: 3 }).pipe(Stream.runCollect);
       expect([...counted]).toEqual([1, 2, 3]);
     }).pipe(Effect.scoped, EffectEx.runPromise));
 });

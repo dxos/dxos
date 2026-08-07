@@ -3,7 +3,6 @@
 //
 
 import * as Array from 'effect/Array';
-import * as Runtime from 'effect/Runtime';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';

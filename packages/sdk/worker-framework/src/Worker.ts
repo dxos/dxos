@@ -25,7 +25,7 @@ const sessionProtocols = (clientToWorker: MessagePort, workerToClient: MessagePo
   Layer.merge(
     RpcServer.layerProtocolWorkerRunner.pipe(Layer.provide(BrowserWorkerRunner.layerMessagePort(clientToWorker))),
     RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
-      Layer.provide(BrowserWorker.layerPlatform(() => workerToClient)),
+      Layer.provide(BrowserWorker.layer(() => workerToClient)),
     ),
   );
 

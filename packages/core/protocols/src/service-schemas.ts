@@ -3,20 +3,21 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaTransformation from 'effect/SchemaTransformation';
 
 import { PublicKey } from '@dxos/keys';
 
 /**
  * Effect schema for `dxos.keys.PublicKey`, encoded as raw key bytes on the wire.
  */
-export const publicKey: Schema.Codec<PublicKey, Uint8Array> = Schema.transform(
-  Schema.Uint8Array,
-  Schema.instanceOf(PublicKey),
-  {
-    strict: true,
-    decode: (bytes) => PublicKey.from(bytes),
-    encode: (key) => key.asUint8Array(),
-  },
+export const publicKey: Schema.Codec<PublicKey, Uint8Array> = Schema.Uint8Array.pipe(
+  Schema.decodeTo(
+    Schema.instanceOf(PublicKey),
+    SchemaTransformation.transform({
+      decode: (bytes) => PublicKey.from(bytes),
+      encode: (key) => key.asUint8Array(),
+    }),
+  ),
 );
 
 /**

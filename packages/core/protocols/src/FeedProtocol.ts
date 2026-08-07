@@ -275,32 +275,37 @@ export const AppendResponse = Schema.Struct({
 export interface AppendResponse extends Schema.Schema.Type<typeof AppendResponse> {}
 
 /**
+ * Routing envelope carried by every protocol message.
+ *
+ * Spread into each union member rather than applied with a combinator: Effect 4 dropped the
+ * union-distributing `Schema.extend`, and spreading keeps each member a plain `TaggedStruct`.
+ */
+const envelopeFields = {
+  senderPeerId: Schema.UndefinedOr(Schema.String),
+  /**
+   * Could be undefined if the recipient could be assumed from the context.
+   */
+  recipientPeerId: Schema.UndefinedOr(Schema.String),
+};
+
+/**
  * Tagged transport message union for queue protocol RPC traffic.
  */
 export const ProtocolMessage = Schema.Union([
-  Schema.TaggedStruct('QueryRequest', QueryRequest.fields),
-  Schema.TaggedStruct('QueryResponse', QueryResponse.fields),
-  Schema.TaggedStruct('SubscribeRequest', SubscribeRequest.fields),
-  Schema.TaggedStruct('SubscribeResponse', SubscribeResponse.fields),
-  Schema.TaggedStruct('AppendRequest', AppendRequest.fields),
-  Schema.TaggedStruct('AppendResponse', AppendResponse.fields),
+  Schema.TaggedStruct('QueryRequest', { ...QueryRequest.fields, ...envelopeFields }),
+  Schema.TaggedStruct('QueryResponse', { ...QueryResponse.fields, ...envelopeFields }),
+  Schema.TaggedStruct('SubscribeRequest', { ...SubscribeRequest.fields, ...envelopeFields }),
+  Schema.TaggedStruct('SubscribeResponse', { ...SubscribeResponse.fields, ...envelopeFields }),
+  Schema.TaggedStruct('AppendRequest', { ...AppendRequest.fields, ...envelopeFields }),
+  Schema.TaggedStruct('AppendResponse', { ...AppendResponse.fields, ...envelopeFields }),
   Schema.TaggedStruct('Error', {
     /**
      * Human-readable error message.
      */
     message: Schema.String,
+    ...envelopeFields,
   }),
-]).pipe(
-  Schema.extend(
-    Schema.Struct({
-      senderPeerId: Schema.UndefinedOr(Schema.String),
-      /**
-       * Could be undefined if the recipient could be assumed from the context.
-       */
-      recipientPeerId: Schema.UndefinedOr(Schema.String),
-    }),
-  ),
-);
+]);
 export type ProtocolMessage = Schema.Schema.Type<typeof ProtocolMessage>;
 
 /**

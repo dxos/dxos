@@ -91,7 +91,7 @@ export class EchoTestPeer extends Resource {
   private _echoHost!: EchoHost;
   private _echoClient!: EchoClient;
   /** Owns the in-process effect-rpc clients bridged from the host handlers. */
-  private _serviceScope?: Scope.CloseableScope;
+  private _serviceScope?: Scope.Closeable;
   private _lastDatabaseSpaceKey?: PublicKey = undefined;
   private _lastDatabaseRootUrl?: string = undefined;
 

@@ -168,7 +168,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
   }
 
   ['SpacesService.querySpaces'](): EffectStream.Stream<QuerySpacesResponse, Error> {
-    return EffectStream.async<QuerySpacesResponse, Error>((emit) => {
+    return EffectEx.streamFromEmitter<QuerySpacesResponse, Error>((emit) => {
       const ctx = Context.default();
       const scheduler = new UpdateScheduler(
         ctx,
@@ -248,7 +248,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     spaceKey,
     channel,
   }: SubscribeMessagesRequest): EffectStream.Stream<GossipMessage, Error> {
-    return EffectStream.async<GossipMessage, Error>((emit) => {
+    return EffectEx.streamFromEmitter<GossipMessage, Error>((emit) => {
       const ctx = Context.default();
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
@@ -267,7 +267,7 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
     spaceKey,
     noTail,
   }: QueryCredentialsRequest): EffectStream.Stream<Credential, Error> {
-    return EffectStream.async<Credential, Error>((emit) => {
+    return EffectEx.streamFromEmitter<Credential, Error>((emit) => {
       const ctx = Context.default();
       const space = this._spaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 

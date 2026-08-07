@@ -107,7 +107,7 @@ export const makeWorkerRuntime = ({
   let stopped = false;
   let sessionForNetworking: WorkerSession | undefined;
   let config: Config;
-  let serviceScope: Scope.CloseableScope | undefined;
+  let serviceScope: Scope.Closeable | undefined;
 
   if (sqliteLayer) {
     log.warn('Using testing SQLite layer');

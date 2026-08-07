@@ -138,7 +138,7 @@ export class LocalClientServices implements ClientServicesProvider {
   };
 
   private _isOpen = false;
-  private _serviceScope?: Scope.CloseableScope;
+  private _serviceScope?: Scope.Closeable;
   private _rpc?: ClientServicesRpc;
   private _services?: Partial<ClientServices>;
 

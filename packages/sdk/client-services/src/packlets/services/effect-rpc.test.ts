@@ -251,7 +251,7 @@ describe('effect-rpc tests', () => {
       yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer), Effect.forkScoped);
 
       const clientLayer = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => port1)),
+        Layer.provide(BrowserWorker.layer(() => port1)),
       );
 
       yield* Effect.gen(function* () {
@@ -291,7 +291,7 @@ describe('effect-rpc tests', () => {
       yield* RpcServer.make(TestGroup, { disableTracing: true }).pipe(Effect.provide(serverLayer2), Effect.forkScoped);
 
       const clientLayer1 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel1.port1)),
+        Layer.provide(BrowserWorker.layer(() => channel1.port1)),
       );
 
       yield* Effect.gen(function* () {
@@ -301,7 +301,7 @@ describe('effect-rpc tests', () => {
       }).pipe(Effect.provide(clientLayer1));
 
       const clientLayer2 = RpcClient.layerProtocolWorker({ size: 1 }).pipe(
-        Layer.provide(BrowserWorker.layerPlatform(() => channel2.port1)),
+        Layer.provide(BrowserWorker.layer(() => channel2.port1)),
       );
 
       yield* Effect.gen(function* () {

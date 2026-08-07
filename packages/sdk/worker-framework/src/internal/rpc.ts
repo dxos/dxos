@@ -41,7 +41,7 @@ export const makeClient = <G>(
     const timingEnabled = RpcTiming.isEnabled(options?.timing);
     const rpcGroup = timingEnabled ? RpcTiming.applyMiddleware(asRpcGroup(group)) : asRpcGroup(group);
     const protocol = RpcClient.layerProtocolWorker({ size: 1, concurrency: WORKER_CLIENT_CONCURRENCY }).pipe(
-      Layer.provide(BrowserWorker.layerPlatform(() => port)),
+      Layer.provide(BrowserWorker.layer(() => port)),
     );
     const protocolLayer = timingEnabled ? protocol.pipe(Layer.provideMerge(RpcTiming.clientLayer())) : protocol;
     const context = yield* Layer.build(protocolLayer);

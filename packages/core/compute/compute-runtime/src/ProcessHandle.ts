@@ -152,7 +152,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   readonly #callbacks: Process.Callbacks<I, O, R, any>;
-  readonly #scope: Scope.CloseableScope;
+  readonly #scope: Scope.Closeable;
   readonly #registry: Registry.AtomRegistry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: StorageService.Service;
@@ -169,7 +169,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     readonly pid: Process.ID,
     parentId: Process.ID | null,
     callbacks: Process.Callbacks<I, O, R, any>,
-    scope: Scope.CloseableScope,
+    scope: Scope.Closeable,
     services: Context.Context<R | Process.BaseServices>,
     registry: Registry.AtomRegistry,
     outputQueue: Queue.Queue<OutputItem<O>>,

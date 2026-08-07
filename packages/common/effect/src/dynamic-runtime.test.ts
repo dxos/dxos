@@ -8,7 +8,6 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Runtime from 'effect/Runtime';
 import { describe, expect, test } from 'vitest';
 
 import * as DynamicRuntime from './dynamic-runtime';
