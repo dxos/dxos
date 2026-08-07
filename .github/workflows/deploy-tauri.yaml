@@ -75,9 +75,18 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           # composer-app/package.json is the source of truth for the version: bumped by deploy-apps' release
-          # job for a production release, current otherwise. Production ships the clean version to the `main`
-          # CrabNebula channel; every other env gets a prerelease tagged with the env name (which selects its
-          # channel) and a build number — the same shape as an iOS build number under a fixed version.
+          # job for a production release, current otherwise. Production ships that version clean to the
+          # `main` CrabNebula channel; every other env gets a prerelease tagged with the env name (which
+          # selects its channel) and a build number — the same shape as an iOS build number under a fixed
+          # version.
+          #
+          # Non-production builds are numbered against the NEXT patch, not the shipped one: a prerelease
+          # always sorts below its own release, so `0.10.4-nightly.N` against a shipped 0.10.4 would make
+          # every nightly look like a downgrade and nobody on stable could ever move to it. Numbering the
+          # nightly line 0.10.5-nightly.N puts it ahead of the stable it is built from, which is what a
+          # bleeding edge should be. Moving the other way stays a downgrade by construction: the latest
+          # stable always sorts below the nightly running it, so anything offering a move back to stable has
+          # to force the install rather than wait for a check to notice.
           #
           # The build number must be numeric and increasing because the updater compares semver, where a
           # prerelease identifier sorts ASCII-lexically unless it is all digits (a commit SHA there would
@@ -91,6 +100,7 @@ jobs:
           if [ "$ENVIRONMENT" = production ]; then
             NEW_VERSION="$BASE"
           else
+            BASE=$(semver -i patch "$BASE")
             PREFIX="composer-${ENVIRONMENT}-${BASE}-"
             # Claim the number by pushing its tag: the loser of a race is rejected (the tag already exists)
             # and recounts, so two runs can never ship the same build number. `concurrency` already
