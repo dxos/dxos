@@ -49,34 +49,24 @@ const RefText = Schema.Struct({
  *   (e.g. `hiveBookUri`); dropped on decode.
  */
 export const Adapter: Schema.Schema<Adapter> = Schema.Union([
-  [
-    [
-      [
-        [
-          [
-            Schema.Struct({ kind: Schema.Literal('scalar'), wire: Schema.String, echo: Path }),
-            Schema.Struct({ kind: Schema.Literal('array'), wire: Schema.String, echo: Path, separator: Schema.String }),
-            Schema.Struct({ kind: Schema.Literal('ref'), wire: Schema.String, echo: Path, ref: RefText }),
-            Schema.Struct({ kind: Schema.Literal('meta'), wire: Schema.String, metaField: Schema.String }),
-            Schema.Struct({ kind: Schema.Literal('prefix'), wire: Schema.String, echo: Path, prefix: Schema.String }),
-            Schema.Struct({ kind: Schema.Literal('dateOnly'), wire: Schema.String, echo: Path }),
-            Schema.Struct({
-              kind: Schema.Literal('timestamp'),
-              wire: Schema.String,
-              echo: Path,
-              fallbackMeta: Schema.optional(Schema.String),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal('struct'),
-              wire: Schema.String,
-              fields: Schema.Array(Schema.suspend(() => Adapter)),
-            }),
-            Schema.Struct({ kind: Schema.Literal('derive'), wire: Schema.String, from: Path, template: Schema.String }),
-          ],
-        ],
-      ],
-    ],
-  ],
+  Schema.Struct({ kind: Schema.Literal('scalar'), wire: Schema.String, echo: Path }),
+  Schema.Struct({ kind: Schema.Literal('array'), wire: Schema.String, echo: Path, separator: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal('ref'), wire: Schema.String, echo: Path, ref: RefText }),
+  Schema.Struct({ kind: Schema.Literal('meta'), wire: Schema.String, metaField: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal('prefix'), wire: Schema.String, echo: Path, prefix: Schema.String }),
+  Schema.Struct({ kind: Schema.Literal('dateOnly'), wire: Schema.String, echo: Path }),
+  Schema.Struct({
+    kind: Schema.Literal('timestamp'),
+    wire: Schema.String,
+    echo: Path,
+    fallbackMeta: Schema.optional(Schema.String),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('struct'),
+    wire: Schema.String,
+    fields: Schema.Array(Schema.suspend(() => Adapter)),
+  }),
+  Schema.Struct({ kind: Schema.Literal('derive'), wire: Schema.String, from: Path, template: Schema.String }),
 ]);
 
 export type Adapter =

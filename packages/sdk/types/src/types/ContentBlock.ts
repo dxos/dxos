@@ -160,7 +160,7 @@ export type ToolResult = Schema.Schema.Type<typeof ToolResult>;
  * Useful for returning images and files.
  */
 export const ContentBlockResult = Schema.TaggedStruct('~@dxos/types/ContentBlock.ContentBlockResult', {
-  content: Schema.Array(Schema.Union([[Text, Schema.suspend(() => Image), Schema.suspend(() => File)]])),
+  content: Schema.Array(Schema.Union([Text, Schema.suspend(() => Image), Schema.suspend(() => File)])),
 });
 export interface ContentBlockResult extends Schema.Schema.Type<typeof ContentBlockResult> {}
 

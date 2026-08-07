@@ -500,22 +500,12 @@ export const QueryFromClause_ = Schema.Struct({
   type: Schema.Literal('from'),
   query: Schema.suspend(() => Query),
   from: Schema.Union([
-    [
-      [
-        [
-          [
-            [
-              Schema.TaggedStruct('scope', {
-                scopes: Schema.Array(Schema.suspend(() => Scope)),
-              }),
-              Schema.TaggedStruct('query', {
-                query: Schema.suspend(() => Query),
-              }),
-            ],
-          ],
-        ],
-      ],
-    ],
+    Schema.TaggedStruct('scope', {
+      scopes: Schema.Array(Schema.suspend(() => Scope)),
+    }),
+    Schema.TaggedStruct('query', {
+      query: Schema.suspend(() => Query),
+    }),
   ]),
 });
 export interface QueryFromClause extends Schema.Schema.Type<typeof QueryFromClause_> {}

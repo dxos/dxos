@@ -27,7 +27,7 @@ import protobuf from 'protobufjs';
 
 export interface ProtoRegistry {
   /** Look up a message schema by its fully-qualified name, e.g. 'dxos.config.Config'. */
-  get(fullyQualifiedName: string): Schema.Schema<any>;
+  get(fullyQualifiedName: string): Schema.Codec<any>;
   /** List every registered message type in declaration order. */
   list(): readonly string[];
   /**
@@ -53,7 +53,7 @@ export const parseProto = (source: string): ProtoRegistry => {
   parsed.root.resolveAll();
 
   const { messages, enums } = collectDeclarations(parsed.root);
-  const schemas = new Map<string, Schema.Schema<any>>();
+  const schemas = new Map<string, Schema.Codec<any>>();
   const building = new Set<string>();
 
   // Build a message's schema on demand. Cross-references that aren't in a
@@ -63,7 +63,7 @@ export const parseProto = (source: string): ProtoRegistry => {
   // genuine cycles (a message that transitively references itself, like
   // `Module.deps: repeated Module`) get wrapped in `Schema.suspend` to
   // break the recursion.
-  const buildMessage = (fullName: string): Schema.Schema<any> => {
+  const buildMessage = (fullName: string): Schema.Codec<any> => {
     const cached = schemas.get(fullName);
     if (cached) {
       return cached;
@@ -82,7 +82,7 @@ export const parseProto = (source: string): ProtoRegistry => {
       throw new Error(`effect-proto: unknown message type "${fullName}"`);
     }
     building.add(fullName);
-    const fields: Record<string, Schema.PropertySignature<'?:', any, never, '?:', any, false, never>> = {};
+    const fields: Record<string, Schema.ConstraintCodec<any, any>> = {};
     for (const field of type.fieldsArray) {
       const jsonName = protobuf.util.camelCase(field.name);
       const base = fieldToSchema(field, buildMessage);
@@ -171,7 +171,7 @@ const stripLeadingDot = (name: string): string => (name.startsWith('.') ? name.s
  * references, which returns the concrete struct schema for already-built
  * targets and `Schema.suspend` for in-progress (cyclic) ones.
  */
-const fieldToSchema = (field: protobuf.Field, resolveRef: (fq: string) => Schema.Schema<any>): Schema.Schema<any> => {
+const fieldToSchema = (field: protobuf.Field, resolveRef: (fq: string) => Schema.Codec<any>): Schema.Codec<any> => {
   // Fail fast on `map<K, V>` -- protobufjs models these specially (synthetic
   // entry message + repeated field) and an Effect Schema needs `Schema.Record`,
   // which we haven't wired up yet. Silent fall-through here would produce a
@@ -215,10 +215,10 @@ const fieldToSchema = (field: protobuf.Field, resolveRef: (fq: string) => Schema
  * fully-qualified name is attached as an `identifier` annotation; consumers
  * resolve the name<->value map via `ProtoRegistry.getEnum(fq)`.
  */
-const enumToSchema = (e: protobuf.Enum): Schema.Schema<any> => {
+const enumToSchema = (e: protobuf.Enum): Schema.Codec<any> => {
   // proto3 enums are guaranteed to have at least one value (the zero entry).
   const values = Object.values(e.values) as [number, ...number[]];
-  return Schema.Literal(...values).annotate({
+  return Schema.Literals(values).annotate({
     identifier: stripLeadingDot(e.fullName),
   });
 };
@@ -228,7 +228,7 @@ const enumToSchema = (e: protobuf.Enum): Schema.Schema<any> => {
  * surface as base-10 strings because the codec is configured with
  * `longs: String`. Bytes likewise become base64 strings (`bytes: String`).
  */
-const SCALAR_SCHEMAS: Record<string, Schema.Schema<any>> = {
+const SCALAR_SCHEMAS: Record<string, Schema.Codec<any>> = {
   string: Schema.String,
   bool: Schema.Boolean,
   int32: Schema.Number,
@@ -251,7 +251,7 @@ const SCALAR_SCHEMAS: Record<string, Schema.Schema<any>> = {
  * config.proto uses. We don't model their internal structure — we model
  * the runtime JSON shape that protobufjs decodes to.
  */
-const WELL_KNOWN_SCHEMAS: Record<string, Schema.Schema<any>> = {
+const WELL_KNOWN_SCHEMAS: Record<string, Schema.Codec<any>> = {
   'google.protobuf.Any': Schema.Unknown,
   'google.protobuf.Struct': Schema.Record(Schema.String, Schema.Unknown),
   'google.protobuf.Value': Schema.Unknown,
