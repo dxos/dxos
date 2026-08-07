@@ -85,9 +85,9 @@ export type Name<T extends string> = [string] extends [T]
  * the {@link Name} type for schema fields that hold a bare NSID (e.g. a model id passed to a creator
  * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
  */
-export const NameSchema: Schema.Schema<string, string> = Schema.String.pipe(
-  Schema.filter((value) => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: () => 'Invalid NSID name' }),
-  Schema.annotations({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
+export const NameSchema: Schema.Codec<string, string> = Schema.String.pipe(
+  Schema.refine((value): value is string => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: 'Invalid NSID name' }),
+  Schema.annotate({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
 );
 
 /**
@@ -162,11 +162,11 @@ export const getVersion = (dxn: DXN): string | undefined => {
 // without the encode/decode types diverging. `Schema.filter` produces a refinement with
 // `Encoded = string`; we narrow the encoded form too with `as unknown as` since the runtime
 // representation is identical (a branded string).
-const Schema_: Schema.Schema<DXN, DXN> = Schema.String.pipe(
-  Schema.filter((value): value is DXN => isDXN(value), { message: () => 'Invalid DXN' }),
-  Schema.annotations({
+const Schema_: Schema.Codec<DXN, DXN> = Schema.String.pipe(
+  Schema.refine((value): value is DXN => isDXN(value), { message: 'Invalid DXN' }),
+  Schema.annotate({
     title: 'DXN',
     description: 'DXN URI: dxn:<nsid>[:<version>]',
   }),
-) as unknown as Schema.Schema<DXN, DXN>;
+) as unknown as Schema.Codec<DXN, DXN>;
 export { Schema_ as Schema };

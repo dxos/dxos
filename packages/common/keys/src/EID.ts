@@ -157,13 +157,13 @@ export const equals = (a: EID, b: EID): boolean => parse(a) === parse(b);
 // schemas without the encode/decode types diverging. `Schema.filter` produces a refinement
 // with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
 // runtime representation is identical (a branded string).
-const Schema_: Schema.Schema<EID, EID> = Schema.String.pipe(
-  Schema.filter((value): value is EID => isEID(value), {
-    message: () => 'Invalid EID: must start with echo:',
+const Schema_: Schema.Codec<EID, EID> = Schema.String.pipe(
+  Schema.refine((value): value is EID => isEID(value), {
+    message: 'Invalid EID: must start with echo:',
   }),
-  Schema.annotations({
+  Schema.annotate({
     title: 'EID',
     description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:///<objectId>',
   }),
-) as unknown as Schema.Schema<EID, EID>;
+) as unknown as Schema.Codec<EID, EID>;
 export { Schema_ as Schema };

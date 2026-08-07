@@ -29,30 +29,37 @@ const isValid = (value: unknown): value is SpaceId => {
 // TODO(burdon): Use effect branded type?
 export type SpaceId = string & { __SpaceId: true };
 
-export const SpaceId: Schema.Schema<SpaceId, string> & {
+const SpaceIdSchema = Schema.String.pipe(Schema.refine((value): value is SpaceId => isValid(value)));
+
+// Effect 4 schemas are values rather than extensible classes, so the statics are merged onto the
+// schema instead of declared on a subclass.
+export const SpaceId: Schema.Codec<SpaceId, string> & {
   byteLength: number;
   encode: (value: Uint8Array) => SpaceId;
   decode: (value: SpaceId) => Uint8Array;
   isValid: (value: unknown) => value is SpaceId;
   make: (value: string) => SpaceId;
   random: () => SpaceId;
-} = class extends Schema.String.pipe(Schema.filter(isValid)) {
-  static byteLength = 20;
+} = Object.assign(SpaceIdSchema as unknown as Schema.Codec<SpaceId, string>, {
+  byteLength: 20,
 
-  static encode = (value: Uint8Array): SpaceId => {
+  encode: (value: Uint8Array): SpaceId => {
     invariant(value instanceof Uint8Array, 'Invalid type');
     invariant(value.length === SpaceId.byteLength, 'Invalid length');
     return (MULTIBASE_PREFIX + base32Encode(value, 'RFC4648')) as SpaceId;
-  };
+  },
 
-  static decode = (value: SpaceId): Uint8Array => {
+  decode: (value: SpaceId): Uint8Array => {
     invariant(value.startsWith(MULTIBASE_PREFIX), 'Invalid multibase32 encoding');
     return new Uint8Array(base32Decode(value.slice(1), 'RFC4648'));
-  };
+  },
 
-  static isValid = isValid;
+  isValid,
 
-  static random = (): SpaceId => {
-    return SpaceId.encode(randomBytes(SpaceId.byteLength));
-  };
-};
+  make: (value: string): SpaceId => {
+    invariant(isValid(value), 'Invalid SpaceId');
+    return value;
+  },
+
+  random: (): SpaceId => SpaceId.encode(randomBytes(SpaceId.byteLength)),
+});

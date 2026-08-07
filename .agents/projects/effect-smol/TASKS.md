@@ -105,7 +105,7 @@ not a regression to chase.
       **`pnpm install` resolves cleanly under strict peers** — the first hard gate of Phase 2.
 - [x] **Take a compiler-derived error census** — `moon exec --on-failure continue :build`.
       NOTE: a failing package skips everything downstream, so a census only ever measures the
-      current *frontier*, never the whole repo. First frontier: 150 errors / 56 files across
+      current _frontier_, never the whole repo. First frontier: 150 errors / 56 files across
       5 packages (`keys`, `effect-atom-solid`, `effect-zod`, `crx-protocol`,
       `vendor-kbn-handlebars`). `@dxos/keys` is the deep one — 30 errors, all Schema renames.
 - [x] **Build the Tier 1 codemod** — `tools/codemods/effect-4-tier1.mjs`, applied:
