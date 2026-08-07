@@ -1,6 +1,6 @@
 # effect-smol — Tasks
 
-_Resume: Stage 2b — port `@dxos/keys` (30 Schema-rename errors), then re-census; the frontier moves package by package. Uncommitted: none. Last: stage 2a — v4 dependency graph resolves under strict peers, Tier 1 codemod applied (1,143 rewrites)._
+_Resume: Stage 2b — clear the 9-package frontier (`effect` facade first, it gates most of the repo), then re-census. Uncommitted: none. Last: `@dxos/keys` ported (66 tests green) and the Tier 3 Schema codemod applied (1,539 rewrites)._
 
 Migrate `dxos/dxos` from Effect 3 to Effect 4, then `dxos/edge`. The _why_, the decisions
 (D1–D7) and the findings (F1–F4) live in [DESIGN.md](./DESIGN.md) — this file is the ledger.
@@ -121,7 +121,34 @@ not a regression to chase.
       Deliberately excluded: anything needing judgement (Schema variadic→array, `Context.Tag`→
       `ServiceMap.Service`, layer memoization). Zero `@effect-atom` references left in source.
 
-### Stage 2b: the port
+### Stage 2b: the port — IN PROGRESS
+
+The frontier moves one package at a time: a failing package skips everything downstream, so each
+cleared package _raises_ the visible error count rather than lowering it. Progression so far —
+5 packages / 122 errors → (keys ported) 9 packages / 552 → (Schema codemod) 9 packages / 528.
+
+- [x] **Port `@dxos/keys`** — 30 errors → 0, 66 tests pass (`cd308198`). Establishes the idioms the
+      rest of the port repeats: `Schema.Schema<A,I>`→`Codec`, `filter`→`refine` (messages are
+      strings now, not thunks), `annotations`→`annotate`, `pattern`→`check(isPattern)`,
+      `SchemaClass`→`Codec`, `JSONSchema.make`→`SchemaRepresentation.toJsonSchemaDocument`, and
+      `class Foo extends Schema…{static}` → schema value + `Object.assign`'d statics, since v4
+      schemas are values rather than extensible classes.
+- [x] **Tier 3 codemod** — `tools/codemods/effect-4-schema.mjs`, 1,539 rewrites / 330 files
+      (`4fa9dd1a`). Formatting verified clean.
+- [ ] **Variadic → array constructors** (~277 sites) — `Union(a,b)`→`Union([a,b])`,
+      `Literal`→`Literals`, `Tuple`. **Needs a TypeScript AST tool** (ts-morph/jscodeshift): a
+      hand-rolled paren scanner matched inside a commented-out block and relocated a closing
+      bracket ~180 lines away, corrupting two files. Comment/string masking fixed one failure
+      class but not the other, so the transform was removed rather than shipped.
+- [ ] **Clear the remaining frontier**: `effect` (the SchemaAST facade — 45 of its 60 symbols are
+      gone in v4, which is exactly the localized breakage Phase 1 bought), `graph`, `halo`,
+      `react-hooks`, `sql-sqlite`, `effect-zod`, `crx-protocol`, `effect-atom-solid`.
+- [ ] **Replace `effect/GlobalValue`** (removed in v4; 4 call sites) — a DXOS-owned helper over a
+      `globalThis` symbol map is the faithful drop-in.
+- [ ] **Absorbed-module imports**: `@effect/sql/*` (~23), `@effect/experimental/Reactivity` (4),
+      `@effect/opentelemetry/Tracer` — these moved under `effect/unstable/*` and need per-module
+      mapping, not a blanket rename.
+- [ ] **`effect/ConfigError`** (3) — folded into `effect/Config` in v4.
 
 - [ ] **Tier 1 — mechanical rewrites** (~2–3 wks): module paths, API renames, the 433 atom files.
 - [ ] **Tier 2 — services and runtime** (~3–6 wks): `Context.Tag` → `ServiceMap.Service` (126 class
