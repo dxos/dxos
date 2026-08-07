@@ -59,7 +59,7 @@ export const EchoObjectSchema: {
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Object, typename, version } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
-      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+      ...makeTypeJsonSchemaAnnotation({
         kind: EntityKind.Object,
         typename,
         version,

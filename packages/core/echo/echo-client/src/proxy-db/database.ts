@@ -430,7 +430,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       schema.annotate({
         [TypeAnnotationId]: meta,
         [TypeIdentifierAnnotationId]: typeId,
-        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+        ...makeTypeJsonSchemaAnnotation({
           identifier: typeId,
           kind: meta.kind,
           typename: meta.typename,

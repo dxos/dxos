@@ -185,7 +185,7 @@ const persistentEntitySchema: Schema.Codec<AnyProperties, any> = (() => {
   });
   const ast = SchemaAST.annotate(struct.ast, {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
-    [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
+    ...makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
   });
   return Schema.make<Schema.Codec<AnyProperties, any>>(ast);
 })();

@@ -154,7 +154,7 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
       } satisfies TypeAnnotation,
       // TODO(dmaretskyi): TypeIdentifierAnnotationId?
 
-      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+      ...makeTypeJsonSchemaAnnotation({
         kind: EntityKind.Relation,
         typename,
         version,

@@ -58,7 +58,7 @@ export const EchoTypeKindSchema: {
     const ast = SchemaAST.annotate(schemaWithId.ast, {
       ...self.ast.annotations,
       [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
-      [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+      ...makeTypeJsonSchemaAnnotation({
         kind: EntityKind.Type,
         typename,
         version,

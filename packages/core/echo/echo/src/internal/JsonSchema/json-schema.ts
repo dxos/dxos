@@ -120,6 +120,30 @@ export const toJsonSchema = (
   return jsonSchema;
 };
 
+/**
+ * Annotation keys the ECHO encoder emits into JSON schema.
+ *
+ * Effect 4 dropped v3's merged `jsonSchema` annotation; custom keys are annotated directly and
+ * whitelisted here. Deliberately not a broad predicate -- upstream keeps its own annotations on the
+ * same record and a permissive filter would leak them into persisted schemas.
+ */
+const ECHO_JSON_SCHEMA_KEYS = new Set([
+  '$id',
+  'entityKind',
+  'typename',
+  'version',
+  'relationSource',
+  'relationTarget',
+  'propertyOrder',
+  '$ref',
+  'reference',
+  ECHO_ANNOTATIONS_NS_KEY,
+  ECHO_ANNOTATIONS_NS_DEPRECATED_KEY,
+]);
+
+const isEchoJsonSchemaKey = (key: string): boolean =>
+  ECHO_JSON_SCHEMA_KEYS.has(key) || Object.hasOwn(CustomAnnotations, key);
+
 const _toJsonSchemaAST = (
   ast: SchemaAST.AST,
   inProgress: Set<SchemaAST.AST> = new Set(),
@@ -128,7 +152,9 @@ const _toJsonSchemaAST = (
   // Effect 4 replaced `fromAST` with a document generator that returns the root schema and its
   // definitions separately; `withEchoRefinements` inlines suspends as `#`-refs, so `definitions` is
   // normally empty -- carried over as `$defs` rather than dropped so nothing can vanish silently.
-  const { schema, definitions } = Schema.toJsonSchemaDocument(Schema.make(withRefinements));
+  const { schema, definitions } = Schema.toJsonSchemaDocument(Schema.make(withRefinements), {
+    includeAnnotationKey: isEchoJsonSchemaKey,
+  });
   const jsonSchema = {
     ...schema,
     ...(Object.keys(definitions).length > 0 ? { $defs: definitions } : {}),
@@ -515,16 +541,19 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   const typeAnnotation = decodeTypeAnnotation(schema);
   if (typeAnnotation) {
     annotations[TypeAnnotationId] = typeAnnotation;
-    annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
-      // $id is the typename DXN — the schema's type identity. The storage EID (if any)
-      // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
-      identifier: DXN.make(typeAnnotation.typename, typeAnnotation.version),
-      kind: typeAnnotation.kind,
-      typename: typeAnnotation.typename,
-      version: typeAnnotation.version,
-      relationSource: typeAnnotation.sourceSchema,
-      relationTarget: typeAnnotation.targetSchema,
-    });
+    Object.assign(
+      annotations,
+      makeTypeJsonSchemaAnnotation({
+        // $id is the typename DXN — the schema's type identity. The storage EID (if any)
+        // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
+        identifier: DXN.make(typeAnnotation.typename, typeAnnotation.version),
+        kind: typeAnnotation.kind,
+        typename: typeAnnotation.typename,
+        version: typeAnnotation.version,
+        relationSource: typeAnnotation.sourceSchema,
+        relationTarget: typeAnnotation.targetSchema,
+      }),
+    );
   }
 
   // Custom (at end).
@@ -537,8 +566,11 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   return clearUndefined(annotations);
 };
 
+// The fields are annotated under their own keys rather than nested: Effect 4 emits whitelisted
+// annotation keys straight into the generated schema (see `isEchoJsonSchemaKey`) and no longer
+// merges a `jsonSchema` annotation object.
 const addJsonSchemaFields = (ast: SchemaAST.AST, schema: JsonSchemaType): SchemaAST.AST =>
-  SchemaAST.annotate(ast, { [SchemaAST.JSONSchemaAnnotationId]: schema });
+  SchemaAST.annotate(ast, schema as SchemaAST.Annotations);
 
 /**
  * Fixes field order.

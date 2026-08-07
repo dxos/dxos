@@ -302,8 +302,14 @@ export type JsonSchemaReferenceInfo = {
   schemaVersion?: string;
 };
 
-/** Wire form of a reference: the `{ '/': uri }` shape stored in the Automerge document. */
-const EncodedReferenceSchema = Schema.declare<EncodedReference>(EncodedReference.isEncodedReference);
+/**
+ * Wire form of a reference: the `{ '/': uri }` shape stored in the Automerge document.
+ *
+ * A `Struct` rather than a `declare`: Effect 4 gives declarations no JSON-schema representation, so
+ * a declared encoded side serializes to an opaque placeholder and the reference annotations on the
+ * outer schema never reach the generated document.
+ */
+const EncodedReferenceSchema = Schema.Struct({ '/': Schema.String });
 
 /**
  * @internal
@@ -332,7 +338,14 @@ export const createEchoReferenceSchema = (
   const refSchema = Schema.declare<Ref<any>>(Ref.isRef)
     .pipe(
       Schema.encodeTo(
-        EncodedReferenceSchema,
+        // The JSON-schema keys live on the encoded node: `toJsonSchemaDocument` serializes the
+        // encoded side of a transformed schema and does not see annotations on the type side.
+        EncodedReferenceSchema.annotate({
+          // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
+          $id: JSON_SCHEMA_ECHO_REF_ID,
+          $ref: JSON_SCHEMA_ECHO_REF_ID,
+          reference: referenceInfo,
+        }),
         SchemaTransformation.transformOrFail({
           decode: (encoded) =>
             Effect.gen(function* () {
@@ -364,12 +377,6 @@ export const createEchoReferenceSchema = (
       ),
     )
     .annotate({
-      jsonSchema: {
-        // TODO(dmaretskyi): We should remove `$id` and keep `$ref` with a fully qualified name.
-        $id: JSON_SCHEMA_ECHO_REF_ID,
-        $ref: JSON_SCHEMA_ECHO_REF_ID,
-        reference: referenceInfo,
-      },
       [ReferenceAnnotationId]: {
         typename: typename ?? '',
         version,
