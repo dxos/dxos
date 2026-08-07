@@ -66,8 +66,8 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<SpaceEpheme
   `${meta.profile.key}.capability.ephemeralState`,
 );
 
-/** The space designated as the user's personal space, contributed once `IdentityCreated` has run. */
-export const PersonalSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.personalSpace`);
+/** The space designated as the default target for unscoped content, contributed by `IdentityCreated`. */
+export const DefaultSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.defaultSpace`);
 
 /** The hidden, membership-locked space holding app configuration that replicates across devices. */
 export const SettingsSpace = Capability.makeSingleton<Space>()(`${meta.profile.key}.capability.settingsSpace`);

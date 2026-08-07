@@ -237,10 +237,10 @@ export const translations = [
         'settings.show-hidden.label': 'Show hidden types',
         'settings.show-hidden.description':
           'Include types annotated as hidden (e.g. Tag, View, Feed) in the database section.',
-        'settings.personal-space.label': 'Personal space',
-        'settings.personal-space.description':
-          'Space used by default for content that is not scoped to the space you are in, such as quick entry and chat.',
-        'settings.personal-space.placeholder': 'Select space',
+        'settings.default-space.label': 'Default space',
+        'settings.default-space.description':
+          'Space used for content that is not scoped to the space you are in, such as quick entry and chat.',
+        'settings.default-space.placeholder': 'Select space',
         'settings.space-list.label': 'Spaces',
         'settings.space-list.description': 'Settings for each space you belong to.',
         'settings.open-settings.label': 'Open settings',

@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof CompleteOAuthRegistration> = Complet
 
       const edgeClient = createEdgeHttpClient(client);
 
-      const personalSpace = AppSpace.getPersonalSpace(client);
+      const personalSpace = AppSpace.getDefaultSpace(client);
       invariant(personalSpace, 'Personal space not found.');
       const spaceKey = personalSpace.key.toHex();
 

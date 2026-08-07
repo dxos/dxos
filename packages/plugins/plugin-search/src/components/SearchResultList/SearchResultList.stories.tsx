@@ -94,10 +94,10 @@ const meta = {
           types: [Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               for (const { from, subject, body } of SAMPLE_MESSAGES) {
-                personalSpace.db.add(
+                defaultSpace.db.add(
                   Message.make({
                     sender: { email: from.email, name: from.name },
                     blocks: [{ _tag: 'text', text: body }],
@@ -105,7 +105,7 @@ const meta = {
                   }),
                 );
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
       ],

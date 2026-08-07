@@ -19,9 +19,9 @@ export type SpaceSettingsProps = {
   onOpenSpaceSettings?: (space: Space) => void;
   settings?: Settings.Settings;
   onSettingsChange?: (updater: (prev: Settings.Settings) => Settings.Settings) => void;
-  /** Id of the space currently designated as the personal space. */
-  personalSpaceId?: string;
-  onPersonalSpaceChange?: (spaceId: string) => void;
+  /** Id of the space currently designated as the default. */
+  defaultSpaceId?: string;
+  onDefaultSpaceChange?: (spaceId: string) => void;
 };
 
 export const SpaceSettings = ({
@@ -29,8 +29,8 @@ export const SpaceSettings = ({
   onOpenSpaceSettings,
   settings,
   onSettingsChange,
-  personalSpaceId,
-  onPersonalSpaceChange,
+  defaultSpaceId,
+  onDefaultSpaceChange,
 }: SpaceSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
 
@@ -50,13 +50,13 @@ export const SpaceSettings = ({
             </Form.Row>
           </Form.Section>
           <Form.Section title={t('space-settings.label')} description={t('space-settings.description')}>
-            <Form.Row label={t('settings.personal-space.label')} description={t('settings.personal-space.description')}>
+            <Form.Row label={t('settings.default-space.label')} description={t('settings.default-space.description')}>
               <Select.Root
-                value={personalSpaceId}
-                onValueChange={(value) => onPersonalSpaceChange?.(value)}
-                disabled={!onPersonalSpaceChange}
+                value={defaultSpaceId}
+                onValueChange={(value) => onDefaultSpaceChange?.(value)}
+                disabled={!onDefaultSpaceChange}
               >
-                <Select.TriggerButton placeholder={t('settings.personal-space.placeholder')} />
+                <Select.TriggerButton placeholder={t('settings.default-space.placeholder')} />
                 <Select.Portal>
                   <Select.Content>
                     <Select.Viewport>

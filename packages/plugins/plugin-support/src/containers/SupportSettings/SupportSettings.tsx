@@ -34,7 +34,7 @@ export const SupportSettings = ({ subject }: SupportSettingsProps) => {
   const { invokePromise } = useOperationInvoker();
   // Depend on the space list so the flag resolves once the settings space is created or migrated in.
   const spaces = useSpaces();
-  const personal = useMemo(() => AppSpace.getPersonalSpace(client), [client, spaces]);
+  const personal = useMemo(() => AppSpace.getDefaultSpace(client), [client, spaces]);
   const settingsProperties = useMemo(() => AppSpace.getSettingsSpace(client)?.properties, [client, spaces]);
   const [properties, updateProperties] = useObject(settingsProperties);
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);

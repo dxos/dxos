@@ -261,7 +261,7 @@ export const resolveSession = (options: ResolveSessionOptions) =>
  */
 const resolvePersonalSpaceSession = (client: Client) =>
   Effect.gen(function* () {
-    const space = AppSpace.getPersonalSpace(client);
+    const space = AppSpace.getDefaultSpace(client);
     if (!space) {
       return undefined;
     }

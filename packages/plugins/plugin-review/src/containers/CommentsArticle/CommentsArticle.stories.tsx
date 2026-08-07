@@ -135,7 +135,7 @@ const StoryAppGraphBuilder = Capability.inlineModule(
           if (!client.initialized) {
             return [];
           }
-          const space = AppSpace.getPersonalSpace(client);
+          const space = AppSpace.getDefaultSpace(client);
           if (!space) {
             return [];
           }
@@ -223,22 +223,22 @@ const meta = {
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
               const doc = Markdown.make({ name: 'Sample', content: SAMPLE_CONTENT });
-              personalSpace.db.add(doc);
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              defaultSpace.db.add(doc);
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               if (args.seedComments) {
                 const text = yield* Effect.promise(() => doc.content.load());
-                seedComments(personalSpace, doc, text);
-                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+                seedComments(defaultSpace, doc, text);
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }
 
               if (args.seedAgentSuggestions) {
                 const text = yield* Effect.promise(() => doc.content.load());
                 invariant(text, 'document content not loaded');
                 yield* Effect.promise(() => seedAgentSuggestions(doc, text));
-                yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+                yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }
             }),
         }),

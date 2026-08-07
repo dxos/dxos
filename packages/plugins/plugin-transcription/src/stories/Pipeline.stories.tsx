@@ -109,7 +109,7 @@ const StoryGraphPlugin = () =>
                 // removed while this reactive connector recomputes once more (use `getAll`, not the
                 // throwing `get`).
                 const [client] = capabilities.getAll(ClientCapabilities.Client);
-                const space = client && AppSpace.getPersonalSpace(client);
+                const space = client && AppSpace.getDefaultSpace(client);
                 if (!space) {
                   return [];
                 }
@@ -318,12 +318,12 @@ const meta = {
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               // Vector indexes so extraction can link recognized Person/Organization names.
               yield* enableQueryIndexes(client.services.services);
-              yield* Effect.promise(() => seedTestData(personalSpace));
-              personalSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => seedTestData(defaultSpace));
+              defaultSpace.db.add(Markdown.make({ name: 'Transcript', content: SAMPLE_CONTENT }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         SpacePlugin({}),

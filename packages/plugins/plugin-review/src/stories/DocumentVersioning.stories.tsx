@@ -285,11 +285,11 @@ const meta = {
           types: [Markdown.Document, Text.Text, Thread.Thread, Message.Message, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
-              currentDoc = personalSpace.db.add(
+              const { defaultSpace } = yield* initializeIdentity(client, { displayName: 'Alice Mercer' });
+              currentDoc = defaultSpace.db.add(
                 Markdown.make({ name: 'Versioning', content: context.args.content ?? '' }),
               );
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Seeded before mount so a manual story opens already reviewable — the same state the
               // play-driven stories build up step by step, without a play mutating it first.
@@ -298,9 +298,9 @@ const meta = {
               }
               if (context.parameters?.ambientReview) {
                 const text = yield* Effect.promise(() => currentDoc!.content.load());
-                seedComments(personalSpace, currentDoc!, text, [COMMENT_ANCHOR]);
+                seedComments(defaultSpace, currentDoc!, text, [COMMENT_ANCHOR]);
               }
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         SpacePlugin({}),

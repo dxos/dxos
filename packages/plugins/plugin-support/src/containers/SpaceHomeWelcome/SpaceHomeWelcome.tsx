@@ -30,7 +30,7 @@ type SpaceScopedProps = {
  */
 export const SpaceHomeWelcome = ({ space }: SpaceScopedProps) => {
   const client = useClient();
-  const isPersonal = !!space && space.id === AppSpace.getPersonalSpace(client)?.id;
+  const isPersonal = !!space && space.id === AppSpace.getDefaultSpace(client)?.id;
   const [dismissed] = useWelcomeDismissed();
   if (!isPersonal) {
     return null;

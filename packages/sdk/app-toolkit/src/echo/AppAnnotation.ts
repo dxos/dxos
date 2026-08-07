@@ -18,11 +18,11 @@ export const RootCollectionAnnotation = Annotation.make({
 });
 
 /**
- * Id of the space the user has designated as their personal space. Stored on the settings space's
+ * Id of the space the user has designated as their default space. Stored on the settings space's
  * `properties` so the choice replicates across devices and can be repointed at any space.
  */
-export const PersonalSpaceAnnotation = Annotation.make({
-  id: 'org.dxos.space.personalSpace',
+export const DefaultSpaceAnnotation = Annotation.make({
+  id: 'org.dxos.space.defaultSpace',
   schema: Schema.String,
 });
 

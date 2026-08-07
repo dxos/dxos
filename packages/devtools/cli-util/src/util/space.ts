@@ -26,7 +26,7 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     return Option.getOrElse(spaceId, () => {
-      const personal = AppSpace.getPersonalSpace(client);
+      const personal = AppSpace.getDefaultSpace(client);
       if (!personal) {
         throw new Error('No space ID provided and no personal space found.');
       }
@@ -55,7 +55,7 @@ export const spaceLayer = (
       }
       return spaceId$.pipe(
         Option.flatMap((id) => Option.fromNullable(client.spaces.get(id))),
-        Option.orElse(() => Option.fromNullable(AppSpace.getPersonalSpace(client))),
+        Option.orElse(() => Option.fromNullable(AppSpace.getDefaultSpace(client))),
         Option.orElse(() => Option.fromNullable(client.spaces.get()[0])),
       );
     };

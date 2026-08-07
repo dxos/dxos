@@ -57,8 +57,8 @@ export const CreateObjectDialog = ({
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
-  // The settings space holds app configuration only and is never a target for new objects.
-  const spaces = useSpaces().filter((space) => !AppSpace.isSettingsSpace(space));
+  // Spaces the app manages on the user's behalf are never targets for new objects.
+  const spaces = useSpaces().filter((space) => AppSpace.isVisibleSpace(space));
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);

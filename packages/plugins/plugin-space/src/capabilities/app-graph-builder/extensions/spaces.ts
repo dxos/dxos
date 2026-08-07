@@ -120,7 +120,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
               }
@@ -135,7 +135,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: `${SpaceOperation.ExportSpace.meta.key}.json`,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
               }
@@ -150,7 +150,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
               }
@@ -169,7 +169,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getPersonalSpace(client);
+              const space = AppSpace.getActiveSpace(client, capabilities) ?? AppSpace.getDefaultSpace(client);
               if (space) {
                 yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
               }
@@ -251,12 +251,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => spaceStates[idx] === SpaceState.SPACE_READY)
-              // Internal spaces (settings, filesystem mirrors) carry a tag and are hidden; the
-              // legacy personal tag stays allowed so pre-migration profiles keep their space.
-              .filter(
-                (space) =>
-                  space.tags.length === 0 || AppSpace.isLegacyPersonalSpace(space) || AppSpace.isExemplarSpace(space),
-              )
+              .filter((space) => AppSpace.isVisibleSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,

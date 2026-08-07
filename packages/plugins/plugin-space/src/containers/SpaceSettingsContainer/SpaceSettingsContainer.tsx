@@ -86,8 +86,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     [space.properties.name, space.properties.icon, space.properties.hue, isPrivate, edgeReplication],
   );
 
-  // The personal space is the fallback target for unscoped content, so deleting it is not offered.
-  const personal = space.id === AppSpace.getPersonalSpace(client)?.id;
+  // The default space is the fallback target for unscoped content, so deleting it is not offered.
+  const isDefaultSpace = space.id === AppSpace.getDefaultSpace(client)?.id;
 
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
@@ -163,8 +163,8 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
-    await Promise.all(repairs.map((repair) => repair({ space, isDefault: personal })));
-  }, [space, repairs, personal]);
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: isDefaultSpace })));
+  }, [space, repairs, isDefaultSpace]);
 
   const handleResetHome = useCallback(() => AppSpace.resetHomeVisibility(space), [space]);
 
@@ -174,9 +174,9 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     try {
       await invokePromise(SpaceOperation.Delete, { space });
       setDeleteConfirmOpen(false);
-      const personalSpace = AppSpace.getPersonalSpace(client);
-      if (personalSpace) {
-        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (defaultSpace) {
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(defaultSpace.id) });
       }
     } catch (err) {
       log.catch(err, { stage: 'delete: invocation rejected', spaceId: space.id });
@@ -249,7 +249,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             </Form.Row>
           </Form.Section>
 
-          {!personal && (
+          {!isDefaultSpace && (
             <Form.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
               <Form.Row label={t('delete-space.title')} description={t('delete-space.description')}>
                 <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

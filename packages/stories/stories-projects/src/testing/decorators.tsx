@@ -159,19 +159,19 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
         ],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            const { personalSpace } = yield* initializeIdentity(client);
+            const { defaultSpace } = yield* initializeIdentity(client);
             yield* Effect.promise(async () => {
-              const mailbox = personalSpace.db.add(Mailbox.make({ name: mailboxName }));
+              const mailbox = defaultSpace.db.add(Mailbox.make({ name: mailboxName }));
               if (messages && messages.count > 0) {
                 const feed = await mailbox.feed.tryLoad();
                 const built = new Builder()
-                  .createMessages(messages.count, { links: { db: personalSpace.db }, threads: messages.threads ?? 3 })
+                  .createMessages(messages.count, { links: { db: defaultSpace.db }, threads: messages.threads ?? 3 })
                   .build();
                 await EffectEx.runAndForwardErrors(
-                  Feed.append(feed!, built.messages).pipe(Effect.provide(Database.layer(personalSpace.db))),
+                  Feed.append(feed!, built.messages).pipe(Effect.provide(Database.layer(defaultSpace.db))),
                 );
               }
-              await personalSpace.db.flush({ indexes: true });
+              await defaultSpace.db.flush({ indexes: true });
             });
           }),
       }),

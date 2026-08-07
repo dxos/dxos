@@ -15,8 +15,6 @@ import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ClientOperation } from '#operations';
 
@@ -44,24 +42,7 @@ export const handler = Effect.fn(function* ({
     yield* invoke(ClientOperation.CreateAgent);
   }
 
-  // Create the settings space (app configuration) and the personal space for the CLI identity.
-  const settingsSpace = yield* Effect.promise(() =>
-    client.spaces.create(
-      { name: 'Settings' },
-      { tags: [AppSpace.SETTINGS_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED },
-    ),
-  );
-  yield* Effect.promise(() => settingsSpace.waitUntilReady());
-  // The settings space carries the personal-space designation and app config, so it has to follow
-  // the identity across devices just like the personal space does.
-  yield* Effect.promise(() => settingsSpace.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-
-  const space = yield* Effect.promise(() =>
-    client.spaces.create({ name: 'Personal' }, { membershipPolicy: MembershipPolicy.LOCKED }),
-  );
-  yield* Effect.promise(() => space.waitUntilReady());
-  yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-  AppSpace.setPersonalSpaceId(settingsSpace, space.id);
+  const { defaultSpace: space } = yield* AppSpace.setupIdentitySpaces(client);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {

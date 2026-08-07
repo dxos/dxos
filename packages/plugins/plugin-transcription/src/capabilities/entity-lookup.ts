@@ -21,7 +21,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const lookup: EntityLookup = async (noun, context) => {
       const client = capabilities.get(ClientCapabilities.Client);
-      const space = AppSpace.getPersonalSpace(client);
+      const space = AppSpace.getDefaultSpace(client);
       if (!space) {
         return [];
       }

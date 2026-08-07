@@ -14,6 +14,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { SubscriptionList } from '@dxos/async';
+import { type Client } from '@dxos/client';
 import { Annotation, Collection, Obj, Type } from '@dxos/echo';
 import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,20 +31,51 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceOperation } from '#operations';
 
-import { ensureSettingsSpace, migrateToSettingsSpace } from '../settings-space';
+import { migrateToSettingsSpace } from '../migrations/settings-space';
 import * as SpaceCapabilities from '../types/SpaceCapabilities';
+import { ensureSettingsSpace } from '../util/settings-space';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
 const isEchoRef = (id: string) => id.startsWith('echo:/');
 
+/**
+ * Resolve the designated default space, waiting for the designation if it has not landed yet.
+ *
+ * `setupIdentitySpaces` writes it onto the settings space only after `client.spaces.create` has
+ * already published that space to the space list, so a cold boot can observe the settings space
+ * before it carries a designation.
+ */
+const awaitDefaultSpace = (client: Client, settingsSpace: Space): Effect.Effect<Space> =>
+  Effect.async<Space>((resume) => {
+    const resolve = () => {
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (defaultSpace) {
+        resume(Effect.succeed(defaultSpace));
+        return true;
+      }
+      return false;
+    };
+
+    if (resolve()) {
+      return;
+    }
+
+    const unsubscribe = Obj.subscribe(settingsSpace.properties, () => {
+      if (resolve()) {
+        unsubscribe();
+      }
+    });
+    return Effect.sync(unsubscribe);
+  });
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const subscriptions = new SubscriptionList();
     const spaceSubscriptions = new SubscriptionList();
 
-    const { invokePromise } = yield* Capabilities.OperationInvoker;
+    const { invoke, invokePromise } = yield* Capabilities.OperationInvoker;
     const { graph } = yield* AppCapabilities.AppGraph;
     const registry = yield* Capabilities.AtomRegistry;
     const layoutAtom = yield* AppCapabilities.Layout;
@@ -54,112 +86,35 @@ export default Capability.makeModule(
     const haloIdentity = yield* ClientCapabilities.IdentityService;
 
     //
-    // Settings space bootstrap and one-time migration — deferred until a space is found.
+    // Settings space bootstrap — one-shot, deferred until there is something to bootstrap from.
     //
 
-    // Fiber for the one-shot settings-space init Effect; interrupted in cleanup
-    // so it cannot access the db after client.destroy() closes the repo.
-    let settingsSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
-    let settingsSpaceInitialized = false;
+    // Interrupted in cleanup so it cannot touch the db after client.destroy() closes the repo.
+    let initFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
-    // Guards against a second switch while the first invocation is still in flight, since the
-    // layout atom does not reflect it until then.
-    let switchedToPersonalSpace = false;
+    const initSettingsSpace = Effect.gen(function* () {
+      const settingsSpace = yield* ensureSettingsSpace(client);
+      yield* migrateToSettingsSpace({ settingsSpace, legacySpace: AppSpace.resolveLegacyDefaultSpace(client) });
 
-    /**
-     * Land on the personal space when the app booted without a workspace.
-     * Returns false only while the designation has yet to resolve, so the caller knows to retry.
-     */
-    const switchToPersonalSpaceIfDefault = (): boolean => {
-      if (switchedToPersonalSpace) {
-        return true;
+      // Only relevant on a cold boot with no workspace in the deck state.
+      if (registry.get(layoutAtom).workspace === 'default') {
+        const defaultSpace = yield* awaitDefaultSpace(client, settingsSpace);
+        yield* invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(defaultSpace.id) });
       }
-
-      const layout = registry.get(layoutAtom);
-      if (layout.workspace !== 'default') {
-        return true;
-      }
-
-      const personalSpace = AppSpace.getPersonalSpace(client);
-      if (!personalSpace) {
-        return false;
-      }
-
-      switchedToPersonalSpace = true;
-      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(personalSpace.id) });
-      return true;
-    };
-
-    const settingsSpaceInitEffect = (legacySpace: Space | undefined, { fromCredential }: { fromCredential: boolean }) =>
-      Effect.gen(function* () {
-        if (legacySpace) {
-          yield* Effect.promise(() => legacySpace.waitUntilReady());
-          if (fromCredential) {
-            AppSpace.setLegacyPersonalSpace(legacySpace);
-          }
-        }
-
-        const settingsSpace = yield* ensureSettingsSpace(client);
-        yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
-
-        // On a fresh profile this init is triggered by the settings space appearing in the space
-        // list, which happens before `identity-created` writes the personal-space designation onto
-        // its properties — so resolve now if we can, and otherwise wait for that write.
-        if (!switchToPersonalSpaceIfDefault()) {
-          const unsubscribe = Obj.subscribe(settingsSpace.properties, () => {
-            if (switchToPersonalSpaceIfDefault()) {
-              unsubscribe();
-            }
-          });
-          subscriptions.add(unsubscribe);
-        }
-      });
-
-    const startSettingsSpaceInit = (legacySpace: Space | undefined, opts: { fromCredential: boolean }) => {
-      if (settingsSpaceInitialized) {
-        return;
-      }
-      // Set before forking so concurrent subscribe callbacks don't start a second initialization.
-      settingsSpaceInitialized = true;
-      settingsSpaceInitFiber = Effect.runFork(settingsSpaceInitEffect(legacySpace, opts));
-    };
-
-    // Try to resolve a space to migrate from now, or subscribe to find one later. A profile that
-    // already has a settings space still runs the init so the ordering object is repaired if missing.
-    // Initialization is non-blocking so subscriptions wire immediately.
-    const tryStartSettingsSpaceInit = () => {
-      const legacy = AppSpace.resolveLegacyPersonalSpace(client);
-      if (legacy || AppSpace.getSettingsSpace(client)) {
-        startSettingsSpaceInit(legacy?.space, { fromCredential: legacy?.fromCredential ?? false });
-        return true;
-      }
-      return false;
-    };
-
-    // The settings space can be observed before the legacy personal space it should migrate from
-    // (the space list fills incrementally), in which case the init above runs with nothing to
-    // migrate. Re-run the migration when a legacy space turns up while the designation is missing;
-    // `migrateToSettingsSpace` is idempotent, so a fresh profile that will never have one is a no-op.
-    const tryMigrateLateLegacySpace = () => {
-      const settingsSpace = AppSpace.getSettingsSpace(client);
-      if (!settingsSpace || AppSpace.readPersonalSpaceId(settingsSpace)) {
-        return;
-      }
-
-      const legacy = AppSpace.resolveLegacyPersonalSpace(client);
-      if (!legacy) {
-        return;
-      }
-
-      Effect.runFork(migrateToSettingsSpace({ settingsSpace, legacySpace: legacy.space }));
-    };
-
-    tryStartSettingsSpaceInit();
-    const settingsSpaceSub = client.spaces.subscribe(() => {
-      tryStartSettingsSpaceInit();
-      tryMigrateLateLegacySpace();
     });
-    subscriptions.add(() => settingsSpaceSub.unsubscribe());
+
+    // The settings space enters the space list before `setupIdentitySpaces` designates the default
+    // space on it, so a cold boot can reach here with no designation yet — wait for the write.
+    const start = () => {
+      if (initFiber || (!AppSpace.getSettingsSpace(client) && !AppSpace.resolveLegacyDefaultSpace(client))) {
+        return;
+      }
+      initFiber = Effect.runFork(initSettingsSpace);
+    };
+
+    start();
+    const spacesSub = client.spaces.subscribe(start);
+    subscriptions.add(() => spacesSub.unsubscribe());
 
     //
     // Space subscriptions — set up immediately, do not depend on personal space.
@@ -206,12 +161,9 @@ export default Capability.makeModule(
     // Cache space names.
     const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
       // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-      const legacySpaceForMigration = AppSpace.resolveLegacyPersonalSpace(client);
-      if (
-        legacySpaceForMigration?.space &&
-        legacySpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
-      ) {
-        await legacySpaceForMigration.space.internal.migrate();
+      const legacySpace = AppSpace.resolveLegacyDefaultSpace(client);
+      if (legacySpace && legacySpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+        await legacySpace.internal.migrate();
       }
 
       spaces
@@ -410,8 +362,8 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.gen(function* () {
-        if (settingsSpaceInitFiber) {
-          yield* Fiber.interrupt(settingsSpaceInitFiber);
+        if (initFiber) {
+          yield* Fiber.interrupt(initFiber);
         }
         spaceSubscriptions.clear();
         subscriptions.clear();

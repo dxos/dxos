@@ -170,14 +170,14 @@ export default Capability.makeModule(
         actions: (space, get) => {
           const [client] = get(clientCapabilityAtom);
           const settingsProperties = client && AppSpace.getSettingsSpace(client)?.properties;
-          const personalSpace = client && AppSpace.getPersonalSpace(client);
+          const defaultSpace = client && AppSpace.getDefaultSpace(client);
           const properties = settingsProperties ? get(Obj.atom(settingsProperties)) : undefined;
           const isDismissed = properties
             ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
             : false;
           // Without settings-space properties "Hide Welcome" would invoke and silently persist
           // nothing, so the actions stay hidden until the space that stores the flag resolves.
-          const showActions = !!properties && !!personalSpace && space.id === personalSpace.id && !isDismissed;
+          const showActions = !!properties && !!defaultSpace && space.id === defaultSpace.id && !isDismissed;
           if (!showActions) {
             return Effect.succeed([]);
           }

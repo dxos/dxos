@@ -194,9 +194,9 @@ const baseDecorators = (
         types: [Trip.Trip, Segment.Segment, Booking.Booking],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            const { personalSpace } = yield* initializeIdentity(client);
-            seedFn(personalSpace);
-            yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+            const { defaultSpace } = yield* initializeIdentity(client);
+            seedFn(defaultSpace);
+            yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
           }),
       }),
       StorybookPlugin({}),

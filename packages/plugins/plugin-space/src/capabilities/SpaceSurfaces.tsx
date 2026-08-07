@@ -86,12 +86,11 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
   // Subscribe to the settings space properties so the picker reflects changes from other devices.
   const settingsSpace = AppSpace.getSettingsSpace(client);
   const [settingsProperties] = useObject(settingsSpace?.properties);
-  const personalSpaceId = settingsProperties
-    ? Annotation.get(settingsProperties, AppAnnotation.PersonalSpaceAnnotation).pipe(Option.getOrUndefined)
+  const defaultSpaceId = settingsProperties
+    ? Annotation.get(settingsProperties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined)
     : undefined;
 
-  // The settings space is internal; it is never offered as a personal space nor listed for editing.
-  const visibleSpaces = spaces.filter((space) => !AppSpace.isSettingsSpace(space));
+  const visibleSpaces = spaces.filter((space) => AppSpace.isVisibleSpace(space));
 
   return (
     <SpaceSettings
@@ -99,9 +98,9 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
       onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
       settings={settings}
       onSettingsChange={updateSettings}
-      personalSpaceId={personalSpaceId}
-      onPersonalSpaceChange={
-        settingsSpace ? (spaceId: string) => AppSpace.setPersonalSpaceId(settingsSpace, spaceId) : undefined
+      defaultSpaceId={defaultSpaceId}
+      onDefaultSpaceChange={
+        settingsSpace ? (spaceId: string) => AppSpace.setDefaultSpaceId(settingsSpace, spaceId) : undefined
       }
     />
   );

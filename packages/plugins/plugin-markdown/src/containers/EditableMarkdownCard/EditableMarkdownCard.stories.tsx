@@ -61,8 +61,8 @@ const meta: Meta<typeof EditableMarkdownCardStory> = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              personalSpace.db.add(
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(
                 Markdown.make({
                   name: random.lorem.words(3),
                   content: '# Title\n' + random.lorem.paragraphs(3),

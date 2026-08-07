@@ -12,7 +12,7 @@ import { type Label } from '@dxos/ui-types/translations';
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
 
-import type * as SpaceCapabilities from './types/SpaceCapabilities';
+import type * as SpaceCapabilities from '../types/SpaceCapabilities';
 
 //
 // Constants

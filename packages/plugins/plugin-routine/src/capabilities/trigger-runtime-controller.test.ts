@@ -38,12 +38,12 @@ describe('TriggerRuntimeController', () => {
 
     // Creating identity also creates the personal space and emits SpacesReady,
     // which is what gates the TriggerRuntimeController module's activation.
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.waitForEvent(ClientEvents.SpacesReady);
 
-    const dispatcher = await getDispatcher(harness, personalSpace.id);
+    const dispatcher = await getDispatcher(harness, defaultSpace.id);
 
     // Observe the dispatcher's `state` atom (the same surface the UI hook
     // exposes through `useTriggerRuntimeControls`).
@@ -57,13 +57,13 @@ describe('TriggerRuntimeController', () => {
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
       // `triggersDisabled = true` → dispatcher should stop.
-      Obj.update(personalSpace.properties, (properties) => {
+      Obj.update(defaultSpace.properties, (properties) => {
         properties.triggersDisabled = true;
       });
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(false);
 
       // Back to enabled → dispatcher should start again.
-      Obj.update(personalSpace.properties, (properties) => {
+      Obj.update(defaultSpace.properties, (properties) => {
         properties.triggersDisabled = false;
       });
       await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
@@ -80,19 +80,19 @@ describe('TriggerRuntimeController', () => {
       plugins: [ClientPlugin({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.waitForEvent(ClientEvents.SpacesReady);
 
-    const dispatcher = await getDispatcher(harness, personalSpace.id);
+    const dispatcher = await getDispatcher(harness, defaultSpace.id);
 
     await expect.poll(() => harness.registry.get(dispatcher.state).enabled, { timeout: 5_000 }).toBe(true);
 
     // Writing the same enabled state should be a no-op: the controller
     // dedupes via its `lastDisabled` tracker so the dispatcher stays
     // running without an intervening stop/start flicker.
-    Obj.update(personalSpace.properties, (properties) => {
+    Obj.update(defaultSpace.properties, (properties) => {
       properties.triggersDisabled = false;
     });
     // Give any spurious transition a chance to land before we check.

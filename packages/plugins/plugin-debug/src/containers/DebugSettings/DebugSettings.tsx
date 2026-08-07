@@ -67,7 +67,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     download(file, fileName);
 
     if (onUpload) {
-      const personalSpace = AppSpace.getPersonalSpace(client);
+      const personalSpace = AppSpace.getDefaultSpace(client);
       if (!personalSpace) {
         log.error('no personal space available for upload');
         return;

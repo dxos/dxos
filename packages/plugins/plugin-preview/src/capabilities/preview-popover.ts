@@ -81,7 +81,7 @@ export default Capability.makeModule(
       // isn't available, fall through to the personal-space default.
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
-      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getPersonalSpace(client);
+      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
       if (!space) {
         return;
       }
