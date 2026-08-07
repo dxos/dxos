@@ -14,7 +14,11 @@ import * as Subscription from './Subscription';
 // effects on obviously-malformed input. Handle existence is verified implicitly by the publication lookup
 // (an unresolvable handle yields no publications, and a publication is required to submit).
 export const HandleSchema = Schema.String.pipe(
-  Schema.pattern(/^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i),
+  // The regex travels as the `pattern` annotation; the description stays prose, since a form shows it to
+  // people and agents read it as the field's documentation.
+  Schema.pattern(/^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i, {
+    description: 'An atproto handle or DID.',
+  }),
 );
 
 export const isHandle = Schema.is(HandleSchema);

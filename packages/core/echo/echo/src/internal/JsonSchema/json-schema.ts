@@ -269,7 +269,11 @@ export const toEffectSchema = (root: JsonSchemaType, _defs?: JsonSchemaType['$de
       case 'string': {
         result = Schema.String;
         if (root.pattern) {
-          result = result.pipe(Schema.pattern(new RegExp(root.pattern)));
+          // Suppress the description Effect derives from the regex ("a string matching the pattern ^…$"):
+          // a description is shown to people (and to agents) as prose about the field, while the constraint
+          // itself already travels as the `pattern` annotation. The stored `description`, if any, is applied
+          // after this and wins.
+          result = result.pipe(Schema.pattern(new RegExp(root.pattern), { description: undefined }));
         }
         break;
       }

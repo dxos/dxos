@@ -17,7 +17,7 @@ export const Email = Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Email),
   Schema.annotations({
     title: 'Email',
-    description: 'Email address',
+    description: 'Email address.',
     [FormPlaceholderAnnotationId]: 'Email address',
   }),
 );
@@ -55,7 +55,7 @@ export const URL = Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.URL),
   Schema.annotations({
     title: 'URL',
-    description: 'URL',
+    description: 'Web address.',
   }),
 );
 
