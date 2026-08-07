@@ -357,13 +357,13 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           );
 
           // Record per-binding sync status directly on the cursor (value + status in one atomic update).
-          if (syncResult._tag === 'Right') {
+          if (syncResult._tag === 'Success') {
             Cursor.advance(binding, newestTs);
           } else {
             Cursor.recordError(binding, formatSlackSyncFailure(syncResult.left));
           }
 
-          if (syncResult._tag === 'Left') {
+          if (syncResult._tag === 'Failure') {
             log.warn('slack sync: binding failed', { error: syncResult.left });
             return yield* Effect.fail(syncResult.left);
           }
@@ -375,7 +375,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
         ),
       );
 
-      if (outcome._tag === 'Right') {
+      if (outcome._tag === 'Success') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-success.${bindingId}`,
@@ -383,9 +383,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
-        return outcome.right;
+        return outcome.success;
       } else {
-        const message = formatSlackSyncFailure(outcome.left);
+        const message = formatSlackSyncFailure(outcome.failure);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-error.${bindingId}`,
@@ -394,7 +394,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             description: message,
           }),
         );
-        return yield* Effect.fail(outcome.left);
+        return yield* Effect.fail(outcome.failure);
       }
     }, Effect.provide(FetchHttpClient.layer)),
   ),

@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Cause from 'effect/Cause';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { getDispatcher } from '../dispatcher';
 import { closeLineReader, multilinePrompt } from '../util';

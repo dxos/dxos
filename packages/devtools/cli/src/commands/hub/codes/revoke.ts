@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { formatHubError, hubApiRequest } from '../util';
 

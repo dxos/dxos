@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Prompt from '@effect/cli/Prompt';
 import * as Ansi from '@effect/printer-ansi/Ansi';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
+import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { FormBuilder } from '@dxos/cli-util';
 import * as Operation from '@dxos/compute/Operation';

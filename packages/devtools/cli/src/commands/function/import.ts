@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Args from '@effect/cli/Args';
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Args from 'effect/unstable/cli/Argument';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, flushAndSync, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';

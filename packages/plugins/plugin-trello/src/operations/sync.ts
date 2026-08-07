@@ -600,7 +600,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
       // Toasting is UX-only and the layout/capability service isn't always
       // present (tests, server-side invocations). `Effect.ignore` swallows
       // missing-service errors so they don't fail the sync.
-      if (outcome._tag === 'Right') {
+      if (outcome._tag === 'Success') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
@@ -608,9 +608,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
             title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
-        return outcome.right;
+        return outcome.success;
       } else {
-        const message = formatTrelloSyncFailure(outcome.left);
+        const message = formatTrelloSyncFailure(outcome.failure);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
@@ -619,7 +619,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
             description: message,
           }),
         );
-        return yield* Effect.fail(outcome.left);
+        return yield* Effect.fail(outcome.failure);
       }
     }, Effect.provide(FetchHttpClient.layer)),
   ),

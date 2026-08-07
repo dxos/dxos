@@ -577,7 +577,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             let pulledOrganizations = 0;
             const owner = remoteRepo.owner.login;
             const orgResult = yield* Effect.result(GitHubApi.fetchOrg(owner));
-            if (orgResult._tag === 'Right') {
+            if (orgResult._tag === 'Success') {
               const organization = yield* upsertOrganization(orgResult.right);
               pulledOrganizations++;
               const members = yield* GitHubApi.fetchOrgMembers(owner);
@@ -655,7 +655,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
         );
 
         // Write sync state onto the binding.
-        if (outcome._tag === 'Right') {
+        if (outcome._tag === 'Success') {
           Cursor.advance(binding);
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
@@ -664,11 +664,11 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
               title: ['sync-toast.success.label', { ns: meta.profile.key }],
             }),
           );
-          return { pulled: outcome.right.pulled };
+          return { pulled: outcome.success.pulled };
         } else {
-          const message = formatGitHubSyncFailure(outcome.left);
+          const message = formatGitHubSyncFailure(outcome.failure);
           Cursor.recordError(binding, message);
-          log.warn('github sync: binding failed', { error: outcome.left });
+          log.warn('github sync: binding failed', { error: outcome.failure });
           yield* Effect.ignore(
             Operation.invoke(LayoutOperation.AddToast, {
               id: `${meta.profile.key}.sync-error.${bindingId}`,
@@ -677,7 +677,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
               description: message,
             }),
           );
-          return yield* Effect.fail(outcome.left);
+          return yield* Effect.fail(outcome.failure);
         }
       }, Effect.provide(FetchHttpClient.layer)),
     ),

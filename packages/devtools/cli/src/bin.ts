@@ -4,10 +4,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as CliConfig from '@effect/cli/CliConfig';
-import * as Command from '@effect/cli/Command';
-import * as CommandDescriptor from '@effect/cli/CommandDescriptor';
-import * as CommandDirective from '@effect/cli/CommandDirective';
 import * as BunContext from '@effect/platform-bun/BunContext';
 import * as BunRuntime from '@effect/platform-bun/BunRuntime';
 import * as Cause from 'effect/Cause';
@@ -16,6 +12,10 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Logger from 'effect/Logger';
 import * as Option from 'effect/Option';
+import * as CliConfig from 'effect/unstable/cli/CliConfig';
+import * as Command from 'effect/unstable/cli/Command';
+import * as CommandDescriptor from 'effect/unstable/cli/Completions';
+import * as CommandDirective from 'effect/unstable/cli/Completions';
 
 import { createCliApp } from '@dxos/app-framework/cli';
 import { unrefTimeout } from '@dxos/async';

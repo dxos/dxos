@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Options from '@effect/cli/Options';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { BaseError } from '@dxos/errors';
 

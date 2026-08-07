@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
 import { type Key, Type } from '@dxos/echo';

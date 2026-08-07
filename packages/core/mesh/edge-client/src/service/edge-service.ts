@@ -132,7 +132,7 @@ export class EdgeServiceClient {
     }).pipe(
       Effect.timeoutOrElse({
         duration: this.#timeout,
-        orElse: () => new EdgeServiceError({ message: `Request to ${path} timed out` }),
+        orElse: () => Effect.fail(new EdgeServiceError({ message: `Request to ${path} timed out` })),
       }),
     );
   }

@@ -62,7 +62,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
     yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
       Effect.timeoutOrElse({
         duration: Duration.seconds(waitSeconds),
-        orElse: () => new Error('waitUntilReady timed out'),
+        orElse: () => Effect.fail(new Error('waitUntilReady timed out')),
       }),
       Effect.catch(() => Effect.void),
     );

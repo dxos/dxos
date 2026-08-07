@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, FormBuilder, print } from '@dxos/cli-util';
 import { ProfileArchiveEntryType } from '@dxos/protocols';

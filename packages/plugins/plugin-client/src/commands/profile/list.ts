@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Path from 'effect/Path';
+import * as Command from 'effect/unstable/cli/Command';
 import * as Yaml from 'yaml';
 
 import { CommandConfig, printList } from '@dxos/cli-util';

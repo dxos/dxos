@@ -267,10 +267,12 @@ export class ModuleLoader {
                 Effect.timeoutOrElse({
                   duration: this.#activationTimeout,
                   orElse: () =>
-                    new CapabilityNotFoundError({
-                      identifier: capability.identifier,
-                      registered: this.#capabilities.listRegisteredIdentifiers(),
-                    }),
+                    Effect.fail(
+                      new CapabilityNotFoundError({
+                        identifier: capability.identifier,
+                        registered: this.#capabilities.listRegisteredIdentifiers(),
+                      }),
+                    ),
                 }),
               );
         services.set(capability.key, implementation);
@@ -355,9 +357,11 @@ export class ModuleLoader {
         Effect.timeoutOrElse({
           duration: this.#activationTimeout,
           orElse: () =>
-            new PluginTimeoutError({
-              context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
-            }),
+            Effect.fail(
+              new PluginTimeoutError({
+                context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
+              }),
+            ),
         }),
         Effect.timed,
       );

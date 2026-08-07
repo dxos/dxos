@@ -568,13 +568,13 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
           );
 
           // Record per-binding sync status on the binding (the binding IS the cursor).
-          if (syncResult._tag === 'Right') {
+          if (syncResult._tag === 'Success') {
             Cursor.advance(binding);
           } else {
             Cursor.recordError(binding, formatLinearSyncFailure(syncResult.left));
           }
 
-          if (syncResult._tag === 'Left') {
+          if (syncResult._tag === 'Failure') {
             log.warn('linear sync: binding failed', { error: syncResult.left });
             return yield* Effect.fail(syncResult.left);
           }
@@ -596,7 +596,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
         ),
       );
 
-      if (outcome._tag === 'Right') {
+      if (outcome._tag === 'Success') {
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-success.${toastIdSuffix}`,
@@ -604,9 +604,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
             title: ['sync-toast.success.label', { ns: meta.profile.key }],
           }),
         );
-        return outcome.right;
+        return outcome.success;
       } else {
-        const message = formatLinearSyncFailure(outcome.left);
+        const message = formatLinearSyncFailure(outcome.failure);
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
             id: `${meta.profile.key}.sync-error.${toastIdSuffix}`,
@@ -615,7 +615,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
             description: message,
           }),
         );
-        return yield* Effect.fail(outcome.left);
+        return yield* Effect.fail(outcome.failure);
       }
     }, Effect.provide(FetchHttpClient.layer)),
   ),

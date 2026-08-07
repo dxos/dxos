@@ -2,9 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
-import * as PlatformCommand from '@effect/platform/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
@@ -12,7 +9,10 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 import * as Schema from 'effect/Schema';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as PlatformCommand from 'effect/unstable/process/ChildProcess';
 
 import { findDxConfigFile, loadDxConfig } from '@dxos/app-framework/vite-plugin';
 import { type Client, ClientService } from '@dxos/client';

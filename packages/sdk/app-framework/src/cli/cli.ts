@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Command from 'effect/unstable/cli/Command';
 
 import { invariant } from '@dxos/invariant';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Options from '@effect/cli/Options';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { Key } from '@dxos/echo';
 

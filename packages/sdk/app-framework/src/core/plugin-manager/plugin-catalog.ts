@@ -215,7 +215,7 @@ export class PluginCatalog {
           continue;
         }
         const installResult = yield* this.add(next).pipe(Effect.result);
-        if (installResult._tag === 'Left') {
+        if (installResult._tag === 'Failure') {
           this.#state.recordFailure(
             id,
             'load',
@@ -321,8 +321,8 @@ export class PluginCatalog {
           .pipe(
             Effect.result,
             Effect.map((result) => {
-              if (result._tag === 'Left') {
-                this.#state.recordFailure(id, 'activation', result.left);
+              if (result._tag === 'Failure') {
+                this.#state.recordFailure(id, 'activation', result.failure);
               }
             }),
           );
@@ -390,10 +390,12 @@ export class PluginCatalog {
           Effect.timeoutOrElse({
             duration: this.#options.loadTimeout,
             orElse: () =>
-              new Plugin.LazyPluginError({
-                context: { id, reason: 'load-failed' },
-                cause: new PluginTimeoutError({ context: { id, phase: 'load' as PluginFailurePhase } }),
-              }),
+              Effect.fail(
+                new Plugin.LazyPluginError({
+                  context: { id, reason: 'load-failed' },
+                  cause: new PluginTimeoutError({ context: { id, phase: 'load' as PluginFailurePhase } }),
+                }),
+              ),
           }),
         );
         performance.mark(`plugin-load:${id}:end`);

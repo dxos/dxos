@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Command from '@effect/cli/Command';
-import * as Options from '@effect/cli/Options';
 import * as Config from 'effect/Config';
 import * as Layer from 'effect/Layer';
+import * as Command from 'effect/unstable/cli/Command';
+import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';

@@ -847,7 +847,7 @@ export class ActivationScheduler {
                 return;
               }
               const result = yield* this.#activateModule(module, key).pipe(Effect.result);
-              if (result._tag === 'Left') {
+              if (result._tag === 'Failure') {
                 failed.add(module.id);
                 allSucceeded = false;
               }
