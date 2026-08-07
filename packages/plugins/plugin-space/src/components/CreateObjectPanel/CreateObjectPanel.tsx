@@ -169,6 +169,10 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             value={option.id}
             onSelect={() => onChange(option.id)}
             classNames='flex gap-3 items-center px-2 py-2 rounded-xs'
+            // Keyed by typename rather than label: the label is localized and, for database types,
+            // user-authored. e2e used to reach these options by role plus visible text, which the
+            // `browser-e2e-tests` skill forbids and which timed out in run 31138598029.
+            data-testid={`create-object-form.type.${option.id}`}
           >
             <Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}

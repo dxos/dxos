@@ -80,12 +80,7 @@ test.describe('Collection tests', () => {
     await expect(host.getObjectLinks()).toHaveCount(0);
   });
 
-  // TODO(wittjosiah): Failed on chromium in run 31138598029 — 30s timeout in `createObject()`
-  //   (app-manager.ts:327) waiting for `getByRole('listbox').getByText('Collection')`. That selector
-  //   is the anti-pattern the `browser-e2e-tests` skill forbids: role + visible text rather than a
-  //   testid. The fix is a testid on the type-picker option, which also covers every other
-  //   `createObject()` caller — tracked on the stabilization list, not a per-test flake.
-  test.fixme('deletion undo restores collection', async () => {
+  test('deletion undo restores collection', async () => {
     await host.createSpace();
     await host.toggleSection('spacePlugin.collectionsSection');
     await host.createObject({ type: 'Collection' });

@@ -35,6 +35,18 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 // localhost (see OnboardingPlugin `generateExemplarSpace`), which is where e2e tests run.
 export const INITIAL_SPACE_COUNT = 1;
 
+/**
+ * Typenames behind the friendly names the specs pass to `createObject()`. The type-picker option's
+ * testid is keyed by typename because its label is localized, so a spec cannot name it directly.
+ * A name missing here yields `…type.undefined`, which fails on the locator rather than silently.
+ */
+const OBJECT_TYPENAMES: Record<string, string> = {
+  Collection: 'org.dxos.type.collection',
+  Document: 'org.dxos.type.document',
+  Mailbox: 'org.dxos.type.mailbox',
+  Table: 'org.dxos.type.table',
+};
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -192,6 +204,11 @@ export class AppManager {
   //
 
   async createSpace({ timeout = 10_000 }: { timeout?: number } = {}): Promise<void> {
+    // Wait for the rail before counting it. The baseline has to describe a state the app has actually
+    // reached: `init()` only waits for `treeView.userAccount`, so the space list is still empty for a
+    // moment after boot, and a baseline of 0 taken there made every attempt look like it had created
+    // nothing — three of them ran and left four spaces in run 31144928080.
+    await this.getSpaceItems().first().waitFor({ state: 'attached', timeout });
     const initialCount = await this.getSpaceItems().count();
 
     // A closed dialog does not prove a space was created, and `waitForSpaceReady()` cannot tell the
@@ -209,7 +226,9 @@ export class AppManager {
         await expect(this.getSpaceItems()).toHaveCount(initialCount + 1, { timeout });
         break;
       } catch (err) {
-        if (attempt === 3) {
+        // One retry, not three: if the baseline is ever wrong again the cost is a single extra space
+        // rather than a suite-wide cascade.
+        if (attempt === 2) {
           throw err;
         }
       }
@@ -352,7 +371,8 @@ export class AppManager {
       await this.currentWorkspace.getByTestId('spacePlugin.createObject').first().click();
     }
 
-    await this.page.getByRole('listbox').getByText(type).first().click();
+    const option = this.page.getByTestId(`create-object-form.type.${OBJECT_TYPENAMES[type]}`);
+    await option.click({ timeout: 15_000 });
 
     const objectForm = this.page.getByTestId('create-object-form');
     if (!(await objectForm.isVisible())) {
