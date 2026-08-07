@@ -14,8 +14,8 @@ import * as SpaceSchema from '../types/SpaceSchema';
 
 /**
  * Move app configuration out of the legacy personal space and into the settings space: the
- * cross-space ordering, the default-space designation, the space's display name (which used to come
- * from a translation because the space had no name of its own) and its icon hue.
+ * cross-space ordering, the default-space designation, and the space's display name (which used to
+ * come from a translation because the space had no name of its own).
  *
  * Idempotent — every step is a no-op once the settings space already carries the value — so it is
  * safe to re-run when a legacy space is discovered after the settings space.
@@ -48,14 +48,6 @@ export const migrateToSettingsSpace = Effect.fnUntraced(function* ({
   if (!legacySpace.properties.name) {
     Obj.update(legacySpace.properties, (properties) => {
       properties.name = AppSpace.DEFAULT_SPACE_NAME;
-    });
-  }
-
-  // Onboarding used to seed the hue onto `iconHue`, which nothing renders; carry it to the `hue`
-  // the navtree reads so an existing default space keeps the colour it was created with.
-  if (!legacySpace.properties.hue && legacySpace.properties.iconHue) {
-    Obj.update(legacySpace.properties, (properties) => {
-      properties.hue = properties.iconHue;
     });
   }
 });

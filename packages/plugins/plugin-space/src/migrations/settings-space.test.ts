@@ -42,28 +42,6 @@ describe('settings space migration', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('carries the seeded icon hue onto the property the navtree reads', () =>
-    Effect.gen(function* () {
-      const client = yield* ClientService;
-      yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.addTypes([Expando.Expando]));
-
-      const legacySpace = yield* Effect.promise(() =>
-        client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
-      );
-      yield* Effect.promise(() => legacySpace.waitUntilReady());
-      // Onboarding used to write the hue here, where nothing renders it.
-      Obj.update(legacySpace.properties, (properties) => {
-        properties.iconHue = 'violet';
-      });
-
-      const settingsSpace = yield* ensureSettingsSpace(client);
-      yield* migrateToSettingsSpace({ settingsSpace, legacySpace });
-
-      expect(legacySpace.properties.hue).toBe('violet');
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
   it.effect('is idempotent and never overwrites an existing designation', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
