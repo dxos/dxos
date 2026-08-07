@@ -18,7 +18,7 @@ export const Selection = Schema.Union([
   Schema.Struct({
     mode: Schema.Literal('multi'),
     ids: Schema.Array(Schema.String).mapFields(Struct.map(Schema.mutableKey)),
-  }).pipe(Schema.mutable),
+  }).mapFields(Struct.map(Schema.mutableKey)),
   Schema.Struct({
     mode: Schema.Literal('range'),
     from: Schema.optional(Schema.String),
@@ -29,7 +29,7 @@ export const Selection = Schema.Union([
     ranges: Schema.Array(Schema.Struct({ from: Schema.String, to: Schema.String })).mapFields(
       Struct.map(Schema.mutableKey),
     ),
-  }).pipe(Schema.mutable),
+  }).mapFields(Struct.map(Schema.mutableKey)),
 ]);
 
 export type Selection = Schema.Schema.Type<typeof Selection>;

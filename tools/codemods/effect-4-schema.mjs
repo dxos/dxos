@@ -308,12 +308,18 @@ for (const file of files) {
       return `Schema.extend(${inner})`;
     }
     const [base, extension] = parts.map((part) => part.trim());
-    const match = /^Schema\.Struct\(([\s\S]*)\)$/.exec(extension);
-    if (!match) {
-      return `Schema.extend(${inner})`;
+    const literal = /^Schema\.Struct\(([\s\S]*)\)$/.exec(extension);
+    if (literal) {
+      bump('Schema.extend');
+      return `${base}.mapFields(Struct.assign(${literal[1].trim()}))`;
     }
-    bump('Schema.extend');
-    return `${base}.mapFields(Struct.assign(${match[1].trim()}))`;
+    // A named struct schema contributes its `fields`; anything more complex than an identifier
+    // (a call, a pipe) is left alone because the result may not be a struct at all.
+    if (/^[\w$.]+$/.test(extension)) {
+      bump('Schema.extend');
+      return `${base}.mapFields(Struct.assign(${extension}.fields))`;
+    }
+    return `Schema.extend(${inner})`;
   });
 
   // v4's `mutable` applies to arrays and records only. A struct's fields are made mutable per

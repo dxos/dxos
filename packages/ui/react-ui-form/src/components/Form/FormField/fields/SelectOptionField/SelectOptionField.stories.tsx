@@ -18,7 +18,7 @@ import { SelectOptionField } from './SelectOptionField';
 
 const TestSchema = Schema.Struct({
   options: Schema.Array(SelectOption).mapFields(Struct.map(Schema.mutableKey)),
-}).pipe(Schema.mutable);
+}).mapFields(Struct.map(Schema.mutableKey));
 
 const DefaultStory = () => {
   const [values, setValues] = useState<{ options: SelectOption[] }>({

@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { SchemaAST } from '@dxos/effect';
 
@@ -43,7 +44,7 @@ export const buildChannelFormSchema = (
   }
 
   const branches = providers.map((provider) =>
-    Schema.extend(Schema.Struct({ kind: Schema.Literal(provider.kind) }), provider.createFields),
+    Schema.Struct({ kind: Schema.Literal(provider.kind) }).mapFields(Struct.assign(provider.createFields.fields)),
   );
   const backend = branches.length === 1 ? branches[0] : Schema.Union(...branches);
   return Schema.Struct({

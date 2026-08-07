@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Format, Type, View } from '@dxos/echo';
@@ -41,12 +42,9 @@ export const OnTypeAdded = Operation.make({
 
 export const Create = Operation.make({
   meta: { key: makeKey('create'), name: 'Create Table', icon: 'ph--table--regular' },
-  input: Schema.extend(
-    Schema.Struct({
-      db: Database.Database,
-    }),
-    CreateTableSchema,
-  ),
+  input: Schema.Struct({
+    db: Database.Database,
+  }).mapFields(Struct.assign(CreateTableSchema.fields)),
   output: Schema.Struct({
     object: Type.getSchema(Table.Table),
   }),

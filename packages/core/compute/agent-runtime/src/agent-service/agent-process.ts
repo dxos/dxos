@@ -458,7 +458,7 @@ const Delegation = Schema.Struct({ pid: Process.ID, id: Schema.String }).mapFiel
 type Delegation = Schema.Schema.Type<typeof Delegation>;
 
 const DelegationsCell = StorageService.cell(
-  Schema.parseJson(Schema.Array(Delegation).pipe(Schema.mutable)),
+  Schema.parseJson(Schema.Array(Delegation).mapFields(Struct.map(Schema.mutableKey))),
   'delegations',
 ).pipe(StorageService.withDefault(() => []));
 
@@ -469,7 +469,7 @@ const ToolCallState = Schema.Struct({
       // Whether the result was reported to the agent.
       reported: Schema.Boolean,
     }).mapFields(Struct.map(Schema.mutableKey)),
-  ).pipe(Schema.mutable),
+  ).mapFields(Struct.map(Schema.mutableKey)),
 });
 interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
 

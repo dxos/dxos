@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { SchemaAST } from '@dxos/effect';
 
@@ -62,7 +63,7 @@ export const toSimpleTime = (date: Date): SimpleTime => ({
 /**
  * Simple date-time compatible with HF.
  */
-export const SimpleDateTime = Schema.extend(SimpleDate, SimpleTime);
+export const SimpleDateTime = SimpleDate.mapFields(Struct.assign(SimpleTime.fields));
 
 export type SimpleDateTime = Schema.Schema.Type<typeof SimpleDateTime>;
 

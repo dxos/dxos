@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 
 import { SchemaAST } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -13,7 +14,9 @@ export const addFieldsToSchema = (
   fields: Schema.Struct.Fields,
 ): Schema.Schema.AnyNoContext => {
   const schemaExtension = Schema.partial(Schema.Struct(fields));
-  return Schema.extend(schema, schemaExtension).annotate(schema.ast.annotations) as any as Schema.Schema.AnyNoContext;
+  return schema
+    .mapFields(Struct.assign(schemaExtension.fields))
+    .annotate(schema.ast.annotations) as any as Schema.Schema.AnyNoContext;
 };
 
 export const updateFieldsInSchema = (

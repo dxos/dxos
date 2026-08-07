@@ -68,7 +68,7 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Schema<FormatSchem
       type: Schema.Enum(TypeEnum),
       format: Schema.Literal(Format.TypeFormat.None) as Schema.Schema<Format.TypeFormat>,
     }),
-  ).pipe(Schema.mutable),
+  ).mapFields(Struct.map(Schema.mutableKey)),
 
   //
   // Scalars

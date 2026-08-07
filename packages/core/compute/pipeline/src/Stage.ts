@@ -148,7 +148,7 @@ export const track =
         return Stream.concat(
           self.pipe(
             Stream.tap(() => Effect.sync(() => handle.advance())),
-            Stream.tapErrorCause((cause) => Effect.sync(() => handle.fail(Cause.pretty(cause)))),
+            Stream.tapCause((cause) => Effect.sync(() => handle.fail(Cause.pretty(cause)))),
           ),
           Stream.execute(Effect.sync(() => handle.done())),
         );

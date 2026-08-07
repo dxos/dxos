@@ -88,6 +88,7 @@ const MEMBERS = {
     tapErrorCause: 'tapCause',
   },
   Stream: {
+    tapErrorCause: 'tapCause',
     repeatEffect: 'fromEffectRepeat',
     either: 'result',
     catchAll: 'catch',

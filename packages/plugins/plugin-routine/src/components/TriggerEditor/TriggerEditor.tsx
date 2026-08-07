@@ -3,6 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
@@ -38,13 +39,10 @@ const EnabledForm = Type.getSchema(Trigger.Trigger).pipe(Schema.pick('enabled', 
 // Form renders the chosen kind's fields as one flat field set (no nested, bordered sub-fieldset). The kind
 // itself is chosen by `TriggerKindPicker` (a radio-card list) rather than a select. The feed field carries
 // ParentLabelAnnotation so the built-in RefField labels feed options by their parent object (e.g. the mailbox).
-const TimerSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('timer'),
-    cron: Schema.String.pipe(Schema.annotate({ title: 'Schedule (cron)' }), Schema.optional),
-  }),
-  EnabledForm,
-);
+const TimerSpecForm = Schema.Struct({
+  kind: Schema.Literal('timer'),
+  cron: Schema.String.pipe(Schema.annotate({ title: 'Schedule (cron)' }), Schema.optional),
+}).mapFields(Struct.assign(EnabledForm.fields));
 
 const SubscriptionSpecForm = Schema.extend(
   Schema.Struct({
@@ -58,29 +56,20 @@ const SubscriptionSpecForm = Schema.extend(
   EnabledForm,
 );
 
-const WebhookSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('webhook'),
-    method: Schema.String.pipe(Schema.annotate({ title: 'Method' }), Schema.optional),
-    port: Schema.Number.pipe(Schema.annotate({ title: 'Port' }), Schema.optional),
-  }),
-  EnabledForm,
-);
+const WebhookSpecForm = Schema.Struct({
+  kind: Schema.Literal('webhook'),
+  method: Schema.String.pipe(Schema.annotate({ title: 'Method' }), Schema.optional),
+  port: Schema.Number.pipe(Schema.annotate({ title: 'Port' }), Schema.optional),
+}).mapFields(Struct.assign(EnabledForm.fields));
 
-const FeedSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('feed'),
-    feed: Ref.Ref(Feed.Feed).pipe(ParentLabelAnnotation.set(true), Schema.annotate({ title: 'Feed' }), Schema.optional),
-  }),
-  EnabledForm,
-);
+const FeedSpecForm = Schema.Struct({
+  kind: Schema.Literal('feed'),
+  feed: Ref.Ref(Feed.Feed).pipe(ParentLabelAnnotation.set(true), Schema.annotate({ title: 'Feed' }), Schema.optional),
+}).mapFields(Struct.assign(EnabledForm.fields));
 
-const EmailSpecForm = Schema.extend(
-  Schema.Struct({
-    kind: Schema.Literal('email'),
-  }),
-  EnabledForm,
-);
+const EmailSpecForm = Schema.Struct({
+  kind: Schema.Literal('email'),
+}).mapFields(Struct.assign(EnabledForm.fields));
 
 const TriggerForm = Schema.Union([TimerSpecForm, SubscriptionSpecForm, WebhookSpecForm, FeedSpecForm, EmailSpecForm]);
 type TriggerFormValues = Schema.Schema.Type<typeof TriggerForm>;
