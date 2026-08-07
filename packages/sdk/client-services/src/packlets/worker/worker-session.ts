@@ -68,7 +68,7 @@ export class WorkerSession {
       }),
     'WorkerService.stop': () =>
       // Close on the next tick (forked) so the RPC response is delivered before the transport tears down.
-      Effect.forkDaemon(
+      Effect.forkDetach(
         Effect.gen(this, function* () {
           yield* Effect.callback<void>((resume) => {
             setTimeout(() => resume(Effect.void));

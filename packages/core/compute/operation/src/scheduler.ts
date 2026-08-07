@@ -106,11 +106,11 @@ class FollowupSchedulerImpl implements FollowupScheduler {
 
     return Effect.gen(this, function* () {
       // Fork as daemon so it survives parent fiber completion.
-      const fiber = yield* Effect.forkDaemon(effect);
+      const fiber = yield* Effect.forkDetach(effect);
       yield* this._addFiber(fiber);
 
       // When the fiber completes, remove it from tracking.
-      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
+      yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
     });
   };
 
@@ -127,11 +127,11 @@ class FollowupSchedulerImpl implements FollowupScheduler {
 
     return Effect.gen(this, function* () {
       // Fork as daemon so it survives parent fiber completion.
-      const fiber = yield* Effect.forkDaemon(wrappedEffect);
+      const fiber = yield* Effect.forkDetach(wrappedEffect);
       yield* this._addFiber(fiber);
 
       // When the fiber completes, remove it from tracking.
-      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
+      yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this._removeFiber(fiber))));
     });
   };
 

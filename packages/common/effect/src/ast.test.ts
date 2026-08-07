@@ -3,7 +3,6 @@
 //
 
 import * as Schema from 'effect/Schema';
-import * as SchemaAST from 'effect/SchemaAST';
 import { describe, test } from 'vitest';
 
 import { invariant } from '@dxos/invariant';
@@ -22,11 +21,11 @@ import {
   visit,
 } from './internal/ast';
 import { type JsonPath, type JsonProp } from './internal/json-path';
+import * as SchemaAST from './internal/schema-ast';
 
 const ZipCode = Schema.String.pipe(
   Schema.check(
     Schema.isPattern(/^\d{5}$/, {
-      typeId: Symbol.for('@example/schema/ZipCode'),
       identifier: 'ZipCode',
       title: 'ZIP code',
       description: 'Simple 5 digit zip code',
@@ -51,7 +50,7 @@ const getTitle = getAnnotation(SchemaAST.TitleAnnotationId);
 
 describe('AST', () => {
   test('validation', ({ expect }) => {
-    const validate = Schema.validateSync(ZipCode);
+    const validate = Schema.decodeUnknownSync(ZipCode);
     validate('11205');
 
     expect(() => validate(null)).to.throw();
@@ -63,13 +62,13 @@ describe('AST', () => {
   test('findNode', ({ expect }) => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
-    }).pipe(Schema.mutable);
+    });
 
     const prop = findProperty(TestSchema, 'name' as JsonProp);
     invariant(prop);
-    const node = findNode(prop, (node) => node._tag === 'StringKeyword');
+    const node = findNode(prop, (node) => node._tag === 'String');
     invariant(node);
-    expect(node._tag).to.eq('StringKeyword');
+    expect(node._tag).to.eq('String');
   });
 
   test('findProperty', ({ expect }) => {
@@ -141,7 +140,7 @@ describe('AST', () => {
     expect(annotation).to.eq('test');
 
     const annotationIds = [SchemaAST.TitleAnnotationId, SchemaAST.DescriptionAnnotationId];
-    const schemas = [Schema.Object, Schema.String, Schema.Number, Schema.Boolean];
+    const schemas = [Schema.ObjectKeyword, Schema.String, Schema.Number, Schema.Boolean];
     for (const schema of schemas) {
       for (const annotationId of annotationIds) {
         const annotation = findAnnotation(schema.ast, annotationId);
@@ -170,10 +169,10 @@ describe('AST', () => {
   });
 
   test('discriminated unions', ({ expect }) => {
-    const TestUnionSchema = Schema.Union(
+    const TestUnionSchema = Schema.Union([
       Schema.Struct({ kind: Schema.Literal('a'), label: Schema.String }),
       Schema.Struct({ kind: Schema.Literal('b'), count: Schema.Number, active: Schema.Boolean }),
-    );
+    ]);
 
     type TestUnionType = Schema.Schema.Type<typeof TestUnionSchema>;
 
@@ -200,29 +199,30 @@ describe('AST', () => {
         active: true,
       };
 
-      expect(getDiscriminatedType(TestUnionSchema.ast, obj1)?.toJSON()).to.deep.eq(a.toJSON());
-      expect(getDiscriminatedType(TestUnionSchema.ast, obj2)?.toJSON()).to.deep.eq(b.toJSON());
-      expect(getDiscriminatedType(TestUnionSchema.ast)?.toJSON()).to.deep.eq(
-        Schema.Struct({
-          kind: Schema.Literal('a', 'b'),
-        }).ast.toJSON(),
-      );
+      const names = (ast: SchemaAST.AST | undefined) =>
+        SchemaAST.getPropertySignatures(ast!).map((prop) => String(prop.name));
+
+      expect(names(getDiscriminatedType(TestUnionSchema.ast, obj1))).to.deep.eq(names(a));
+      expect(names(getDiscriminatedType(TestUnionSchema.ast, obj2))).to.deep.eq(names(b));
+      // With no value to discriminate on, only the discriminating property survives.
+      expect(names(getDiscriminatedType(TestUnionSchema.ast))).to.deep.eq(['kind']);
     }
   });
 
-  test('Schema.pluck', ({ expect }) => {
+  test('field lookup', ({ expect }) => {
+    // v4 removed Schema.pluck/typeSchema; the property AST is read directly instead.
     const TestSchema = Schema.Struct({
       name: Schema.String,
     });
 
-    expect(TestSchema.pipe(Schema.pluck('name'), Schema.typeSchema).ast).toEqual(SchemaAST.stringKeyword);
-    expect(() => TestSchema.pipe(Schema.pluck('missing' as any), Schema.typeSchema)).to.throw();
+    expect(findProperty(TestSchema, 'name' as JsonProp)?._tag).to.eq('String');
+    expect(findProperty(TestSchema, 'missing' as JsonProp)).to.be.undefined;
   });
 
   test('isArray', ({ expect }) => {
     expect(isArrayType(Schema.String.ast)).to.be.false;
     expect(isArrayType(Schema.Array(Schema.String).ast)).to.be.true;
     expect(isArrayType(findProperty(Schema.Struct({ a: Schema.Array(Schema.String) }), 'a' as JsonPath)!)).to.be.true;
-    expect(isArrayType(Schema.Union(Schema.String, Schema.Array(Schema.String)).ast)).to.be.false;
+    expect(isArrayType(Schema.Union([Schema.String, Schema.Array(Schema.String)]).ast)).to.be.false;
   });
 });

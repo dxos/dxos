@@ -189,7 +189,7 @@ export const useApp = ({
 
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
-      const listener = yield* Effect.forkDaemon(
+      const listener = yield* Effect.forkDetach(
         Queue.take(queue).pipe(
           Effect.tap(({ event, state, module, error: error$ }) =>
             Effect.sync(() => {

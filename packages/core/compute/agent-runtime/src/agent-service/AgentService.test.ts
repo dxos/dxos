@@ -324,7 +324,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         const taskDrainer = yield* Effect.gen(function* () {
           yield* researchService.waitForTaskToAppear();
           yield* researchService.completeOneTask();
-        }).pipe(Effect.forever, Effect.fork);
+        }).pipe(Effect.forever, Effect.forkChild);
 
         let ephemeralEventCount = 0;
         const ephemeralFiber = yield* session.subscribeEphemeral().pipe(
@@ -337,7 +337,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
               }
             }),
           ),
-          Effect.fork,
+          Effect.forkChild,
         );
 
         for (const org of ResearchService.getTestData().organizations) {

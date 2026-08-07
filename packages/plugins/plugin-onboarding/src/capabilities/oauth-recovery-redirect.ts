@@ -120,7 +120,7 @@ export default Capability.makeModule(
         flow: params.error ? 'error' : params.registrationToken ? 'register' : 'recovery',
         error: params.error,
       });
-      yield* Effect.forkDaemon(
+      yield* Effect.forkDetach(
         Effect.gen(function* () {
           const client = yield* Capability.waitFor(ClientCapabilities.Client);
           const invoker = yield* Capability.waitFor(Capabilities.OperationInvoker);

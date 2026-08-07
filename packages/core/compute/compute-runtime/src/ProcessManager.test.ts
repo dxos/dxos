@@ -196,7 +196,7 @@ const makeParentAwaitingChild = () =>
             // Detach child invocation so the alarm handler can block on external completion,
             // matching agent-process awaiting an async tool call at shutdown.
             yield* Deferred.succeed(SlowChildGate.alarmStarted!, undefined);
-            yield* Effect.fork(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
+            yield* Effect.forkChild(invoker.invokeFiber(SlowChild, { value: 1 }).pipe(Effect.asVoid));
             yield* Deferred.await(SlowChildGate.alarmResume!);
             yield* Ref.set(SlowChildGate.alarmHandlerFinished!, true);
             ctx.succeed();
@@ -331,7 +331,7 @@ describe('ManagerImpl', () => {
       const handle = yield* manager.spawn(executable);
       expect(handle.pid).toBeDefined();
 
-      const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+      const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.forkChild);
 
       yield* handle.submitInput({ value: 5 });
 
@@ -463,7 +463,7 @@ describe('ManagerImpl', () => {
             outputCount++;
           }),
         ),
-        Effect.fork,
+        Effect.forkChild,
       );
       {
         yield* handle.runToCompletion();
@@ -658,7 +658,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
       const handle = yield* manager.spawn(makeWaitingExecutable());
-      const collectFiber = yield* handle.runAndExit({ inputs: [] }).pipe(Stream.runCollect, Effect.fork);
+      const collectFiber = yield* handle.runAndExit({ inputs: [] }).pipe(Stream.runCollect, Effect.forkChild);
       yield* Fiber.interrupt(collectFiber);
       const exit = yield* Fiber.join(collectFiber).pipe(Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
@@ -1503,7 +1503,7 @@ describe('durability', () => {
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(blocking);
       // Submit input and fork it (it will block forever in manager A).
-      yield* Effect.fork(handle.submitInput('hello'));
+      yield* Effect.forkChild(handle.submitInput('hello'));
       yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
       yield* managerA.shutdown();
 
@@ -1546,7 +1546,7 @@ describe('durability', () => {
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       // Submit input and let the handler enter the blocked section before shutdown.
-      yield* Effect.fork(handle.submitInput({ value: 1 }));
+      yield* Effect.forkChild(handle.submitInput({ value: 1 }));
       yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
       yield* managerA.shutdown();
 
@@ -1597,7 +1597,7 @@ describe('durability', () => {
       const opProcess = Process.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
-      yield* Effect.fork(handle.submitInput({ value: 1 }));
+      yield* Effect.forkChild(handle.submitInput({ value: 1 }));
       yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 50)));
       yield* managerA.shutdown();
 

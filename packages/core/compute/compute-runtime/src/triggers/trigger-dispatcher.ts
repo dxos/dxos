@@ -388,7 +388,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             );
             return Effect.void;
           }),
-          Effect.forkDaemon,
+          Effect.forkDetach,
         );
       } else {
         return yield* Effect.dieMessage('TriggerDispatcher started in manual time control mode');

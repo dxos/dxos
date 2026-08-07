@@ -622,7 +622,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
           if (eventSeq !== undefined) {
             yield* this.#persistence.removeEvent(eventSeq).pipe(Effect.ignore);
           }
-          return yield* Effect.forkDaemon(Effect.void);
+          return yield* Effect.forkDetach(Effect.void);
         }
         this.#activeHandlers++;
         this.#setStatus(Process.State.RUNNING);

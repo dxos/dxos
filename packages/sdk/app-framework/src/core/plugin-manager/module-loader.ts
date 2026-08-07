@@ -125,7 +125,7 @@ export class ModuleLoader {
         const scope = yield* Scope.make();
 
         // Fork the load to run in background, completing the deferred when done.
-        const fiber = yield* Effect.forkDaemon(
+        const fiber = yield* Effect.forkDetach(
           this.#runActivation(module, parentEvent, scope).pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchCause((cause) =>
@@ -317,7 +317,7 @@ export class ModuleLoader {
         Effect.catch((error) =>
           Effect.sync(() => log.warn('plugin start event failed', { pluginId, error: String(error) })),
         ),
-        Effect.forkDaemon,
+        Effect.forkDetach,
       );
     });
   }
@@ -545,7 +545,7 @@ export const together =
   <R1>(togetherEffect: Effect.Effect<void, never, R1>) =>
   <A, E, R2>(effect: Effect.Effect<A, E, R2>): Effect.Effect<A, E, R1 | R2> =>
     Effect.gen(function* () {
-      const togetherFiber = yield* Effect.fork(togetherEffect);
+      const togetherFiber = yield* Effect.forkChild(togetherEffect);
       const result = yield* effect;
       yield* Fiber.interrupt(togetherFiber);
       return result;

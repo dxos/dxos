@@ -956,7 +956,7 @@ describe('PluginManager', () => {
       yield* manager.enable(SlowPlugin.meta.profile.key);
 
       // Fork the activation so we can control time with TestClock.
-      const activationFiber = yield* Effect.fork(manager.activate(SlowEvent));
+      const activationFiber = yield* Effect.forkChild(manager.activate(SlowEvent));
 
       // Advance time past the 10 second warning threshold.
       yield* TestClock.adjust(Duration.seconds(11));
@@ -1013,8 +1013,8 @@ describe('PluginManager', () => {
       // Fork two concurrent activations with DIFFERENT events.
       // Both events trigger the same module, so both will try to call _loadModule.
       // Without the semaphore, both would start loading the same module.
-      const fiber1 = yield* Effect.fork(manager.activate(EventA));
-      const fiber2 = yield* Effect.fork(manager.activate(EventB));
+      const fiber1 = yield* Effect.forkChild(manager.activate(EventA));
+      const fiber2 = yield* Effect.forkChild(manager.activate(EventB));
 
       // Advance time to let both activations complete.
       yield* TestClock.adjust(Duration.seconds(6));
@@ -1250,10 +1250,10 @@ describe('PluginManager', () => {
       yield* manager.add(testMeta.profile.key);
       yield* manager.enable(testMeta.profile.key);
 
-      const activationFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+      const activationFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
       yield* activationStarted.await;
 
-      const shutdownFiber = yield* Effect.fork(manager.shutdown());
+      const shutdownFiber = yield* Effect.forkChild(manager.shutdown());
       yield* allowActivationToComplete.open;
 
       const shutdownResult = yield* Fiber.join(shutdownFiber);
@@ -1427,7 +1427,7 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key, slowMeta.profile.key],
         });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         // Streaming: the fast plugin's module activates while the slow definition still loads.
         yield* settle(() => manager.capabilities.getAll(String).length > 0);
         assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'fast' }]);
@@ -1479,7 +1479,7 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key, slowMeta.profile.key],
         });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         // Give the streaming pass real turns: the consumer must wait (provider's definition
         // has not registered), not be recorded as a structural MissingProvider failure.
         yield* settle(() => manager.getFailed().length > 0, 30);
@@ -1546,7 +1546,7 @@ describe('PluginManager', () => {
           enabled: [testMeta.profile.key, slowMeta.profile.key],
         });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         // Real turns for the streaming pass: the same-plugin provider lands early, and the
         // snapshotter must NOT ride along with it.
         yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
@@ -1840,7 +1840,7 @@ describe('PluginManager', () => {
         yield* manager.add(SlowPlugin.meta.profile.key);
         yield* manager.enable(SlowPlugin.meta.profile.key);
 
-        const fiber = yield* Effect.fork(manager.activate(SlowEvent));
+        const fiber = yield* Effect.forkChild(manager.activate(SlowEvent));
         // Push past the 2s activation timeout. The forked module fiber is on
         // TestClock too, so the timeout fires deterministically.
         yield* TestClock.adjust(Duration.seconds(3));
@@ -1878,7 +1878,7 @@ describe('PluginManager', () => {
         });
         yield* manager.add(lazyMeta.profile.key);
 
-        const enableFiber = yield* Effect.fork(manager.enable(lazyMeta.profile.key));
+        const enableFiber = yield* Effect.forkChild(manager.enable(lazyMeta.profile.key));
         yield* TestClock.adjust(Duration.seconds(2));
         const exit = yield* Fiber.await(enableFiber);
         assert.isTrue(Exit.isFailure(exit));
@@ -2627,12 +2627,12 @@ describe('PluginManager', () => {
         );
 
         const manager = makeManagerWith(Test);
-        const startFiber = yield* Effect.fork(manager.start());
+        const startFiber = yield* Effect.forkChild(manager.start());
         yield* Deferred.await(providerStarted);
 
         // Fire the event mid-startup: the pull round runs concurrently with the held-open
         // startup round.
-        const eventFiber = yield* Effect.fork(manager.activate(EventX));
+        const eventFiber = yield* Effect.forkChild(manager.activate(EventX));
         // Let the event fiber run to its snapshot (broken) or its provider wait (fixed) before
         // the provider is released — otherwise the race can accidentally resolve correctly.
         yield* Effect.yieldNow().pipe(Effect.repeatN(50));
@@ -3055,13 +3055,13 @@ describe('PluginManager', () => {
         yield* manager.activate(ActivationEvents.Startup);
 
         // Wave A claims the module and blocks in its activate body.
-        const fiberA = yield* Effect.fork(manager.activate(SlowEvent));
+        const fiberA = yield* Effect.forkChild(manager.activate(SlowEvent));
         yield* Deferred.await(started);
 
         // Wave B matches the same module mid-load. The round filters it (`isLoading`), so
         // without the post-pass await B would resolve here — before the handlers exist —
         // breaking the demand-pull contract (a lookup retry then misses and hard-fails).
-        const fiberB = yield* Effect.fork(manager.activate(OtherEvent));
+        const fiberB = yield* Effect.forkChild(manager.activate(OtherEvent));
         for (let i = 0; i < 10; i++) {
           yield* Effect.yieldNow();
         }
@@ -3136,11 +3136,11 @@ describe('PluginManager', () => {
             }
           });
 
-        const startupFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+        const startupFiber = yield* Effect.forkChild(manager.activate(ActivationEvents.Startup));
         yield* settle(() => manager.capabilities.getAll(String).length > 0);
         assert.deepStrictEqual(manager.capabilities.getAll(String), [{ string: 'b' }]);
 
-        const eventFiber = yield* Effect.fork(manager.activate(Event));
+        const eventFiber = yield* Effect.forkChild(manager.activate(Event));
         yield* settle(() => manager.capabilities.getAll(MultiString).length > 0);
         // The contract under test: the pull activates only the event module's own transitive
         // providers (pulledProvider); an unscoped follow-up round would pick up the runnable

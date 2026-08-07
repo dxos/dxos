@@ -106,7 +106,7 @@ const createEventCollector = (invoker: OperationInvoker.OperationInvoker): Effec
           yield* checkWaiter;
         }),
       ),
-      Effect.fork,
+      Effect.forkChild,
     );
 
     // Yield to ensure subscription is established
@@ -177,12 +177,12 @@ describe('OperationInvoker', () => {
       const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]), testRuntime);
 
       // Fork both operations.
-      const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
+      const fiberA = yield* Effect.forkChild(invoker.invoke(Compute, { value: 1 }));
       // Advance clock for first operation (1 * 10ms).
       yield* TestClock.adjust('10 millis');
       const a = yield* Fiber.join(fiberA);
 
-      const fiberB = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiberB = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
       // Advance clock for second operation (2 * 10ms).
       yield* TestClock.adjust('20 millis');
       const b = yield* Fiber.join(fiberB);
@@ -196,8 +196,8 @@ describe('OperationInvoker', () => {
       const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler]), testRuntime);
 
       // Fork both operations concurrently.
-      const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 5 }));
-      const fiberB = yield* Effect.fork(invoker.invoke(Compute, { value: 2 }));
+      const fiberA = yield* Effect.forkChild(invoker.invoke(Compute, { value: 5 }));
+      const fiberB = yield* Effect.forkChild(invoker.invoke(Compute, { value: 2 }));
 
       // Advance clock enough for both (max is 5 * 10ms = 50ms).
       yield* TestClock.adjust('50 millis');

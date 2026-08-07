@@ -115,7 +115,7 @@ export default Capability.makeModule(
       { discard: true, concurrency: 'unbounded' },
     );
 
-    yield* Effect.forkDaemon(restoreFromDiskEffect);
+    yield* Effect.forkDetach(restoreFromDiskEffect);
 
     // Start directory watchers for restored workspaces.
     const currentWorkspaces = registry.get(stateAtom).workspaces;

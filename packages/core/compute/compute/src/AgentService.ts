@@ -73,7 +73,7 @@ export interface Session {
    * Replays buffered events, then streams new ones until the process ends.
    *
    * When forking a collector from a short-lived parent (e.g. `useEffect` +
-   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDaemon} so the
+   * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDetach} so the
    * stream survives after the parent scope closes; interrupt it on dispose.
    */
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;

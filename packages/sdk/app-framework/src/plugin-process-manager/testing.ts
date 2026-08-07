@@ -109,7 +109,7 @@ export const createEventCollector = (invoker: OperationInvoker.OperationInvoker)
     });
 
     // Fork a fiber to consume the invocation stream.
-    const fiber = yield* Effect.fork(
+    const fiber = yield* Effect.forkChild(
       Effect.gen(function* () {
         // Signal that subscription is about to start.
         yield* Deferred.succeed(subscriptionReady, undefined);

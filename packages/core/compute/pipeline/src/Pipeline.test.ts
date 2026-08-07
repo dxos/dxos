@@ -125,7 +125,7 @@ describe('Pipeline.run overflow', () => {
     Effect.fnUntraced(function* ({ expect }) {
       const controller = new AbortController();
       const { sink } = captureSink<number>();
-      const pipeline = yield* Effect.fork(
+      const pipeline = yield* Effect.forkChild(
         Stream.fromIterable(Array.from({ length: 100 }, (_, index) => index)).pipe(
           Stage.map('id', (n) => Effect.succeed(n)),
           Stage.map('sleep', (n) => Effect.sleep('10 millis').pipe(Effect.as(n)), {
@@ -145,7 +145,7 @@ describe('Pipeline.run overflow', () => {
         ),
       );
 
-      const aborter = yield* Effect.fork(
+      const aborter = yield* Effect.forkChild(
         Effect.gen(function* () {
           yield* Effect.sleep('500 millis');
           console.log('aborting');
@@ -166,7 +166,7 @@ describe('Pipeline.run overflow', () => {
       const controller = new AbortController();
       let cancelled = false;
       const { sink } = captureSink<number>();
-      const pipeline = yield* Effect.fork(
+      const pipeline = yield* Effect.forkChild(
         Stream.fromIterable(Array.from({ length: 100 }, (_, index) => index)).pipe(
           Stage.map('sleep', (n) => Effect.sleep('10 millis').pipe(Effect.as(n)), {
             overflow: 'suspend',

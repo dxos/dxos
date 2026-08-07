@@ -39,7 +39,7 @@ export const autoSyncConnection = (
       Effect.catchDefect((defect) =>
         Effect.sync(() => log.warn('auto sync defect', { connectorId: connector.id, defect })),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
       Effect.asVoid,
     );
 };

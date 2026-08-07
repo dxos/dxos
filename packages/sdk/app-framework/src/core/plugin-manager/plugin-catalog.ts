@@ -340,7 +340,7 @@ export class PluginCatalog {
         } else {
           // Tracked so `shutdown()` interrupts an incremental pass still running from the
           // bootstrap enable chain.
-          yield* this.#state.fibers.trackForked(yield* pass.pipe(Effect.forkDaemon));
+          yield* this.#state.fibers.trackForked(yield* pass.pipe(Effect.forkDetach));
         }
       }
 

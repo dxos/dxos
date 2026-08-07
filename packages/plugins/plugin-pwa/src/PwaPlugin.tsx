@@ -88,7 +88,7 @@ const RegisterPwa = Capability.inlineModule(
       await registration?.update();
     }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('service worker update check failed', { error }))));
 
-    const fiber = yield* checkForUpdate.pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDaemon);
+    const fiber = yield* checkForUpdate.pipe(Effect.repeat(Schedule.fixed(UPDATE_CHECK_INTERVAL)), Effect.forkDetach);
 
     yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
     return [];

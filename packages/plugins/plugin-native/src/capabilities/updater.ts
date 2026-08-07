@@ -183,7 +183,7 @@ export default Capability.makeModule(
     const schedule = Schedule.fixed(Duration.hours(1)).pipe(
       Schedule.whileInput((keepChecking: boolean) => keepChecking),
     );
-    const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDaemon);
+    const fiber = yield* backgroundAction.pipe(Effect.repeat(schedule), Effect.forkDetach);
     log.info('updater module initialized, update check scheduled');
 
     // Fiber.interrupt is async and would throw AsyncFiberException if wrapped in Effect.runSync,

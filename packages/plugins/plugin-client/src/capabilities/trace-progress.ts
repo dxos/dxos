@@ -74,7 +74,7 @@ export default Capability.makeModule(
       },
     });
 
-    // TODO(mykola): Possible bug source. Use `Effect.forkDaemon`.
+    // TODO(mykola): Possible bug source. Use `Effect.forkDetach`.
     const fiber = processManagerRuntime.runFork(
       monitor.subscribeToTraceMessages({ type: Trace.StatusUpdate.key }).pipe(
         Stream.runForEach((message) =>

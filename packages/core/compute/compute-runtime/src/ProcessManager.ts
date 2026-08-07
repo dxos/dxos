@@ -116,7 +116,7 @@ export interface Handle<_Input, _Output, _Rpcs extends Rpc.Any> {
    *
    * When consuming this stream from a short-lived parent effect (e.g. React
    * `useEffect` that `runPromise(Effect.forEach(subscribe))` and returns), fork
-   * the collector with {@link Effect.forkDaemon}, not {@link Effect.fork} — the
+   * the collector with {@link Effect.forkDetach}, not {@link Effect.forkChild} — the
    * parent scope closes as soon as `forEach` finishes and interrupts scoped forks
    * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
    * on dispose (see {@link ProcessOperationInvoker.fiberFromProcess}).

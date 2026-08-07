@@ -56,6 +56,9 @@ const MEMBERS = {
     catchSomeCause: 'catchCauseIf',
     tapErrorCause: 'tapCause',
     ignoreLogged: 'ignore',
+    // v4 split forking by lifetime: a child of the current fiber vs. one detached from it.
+    fork: 'forkChild',
+    forkDaemon: 'forkDetach',
   },
   Layer: {
     scoped: 'effect',

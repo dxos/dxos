@@ -164,7 +164,7 @@ export class ActivationScheduler {
       // Tracked: the wave sits behind a wait of up to 15s, and an untracked daemon outlives
       // `shutdown()` — dispatching Idle into a manager that has already reset re-activates
       // modules after teardown.
-      yield* this.#state.fibers.trackForked(yield* this.#activateWhenIdle().pipe(Effect.forkDaemon));
+      yield* this.#state.fibers.trackForked(yield* this.#activateWhenIdle().pipe(Effect.forkDetach));
 
       return this.#state.getActiveIds().length > activeBefore || ranAny;
     });

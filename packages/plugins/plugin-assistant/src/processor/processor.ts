@@ -322,7 +322,7 @@ export class AiChatProcessor {
               }
             }),
           ),
-          Effect.fork,
+          Effect.forkChild,
         );
 
         log('chat processor submitting prompt', { length: requestProp.message.length });

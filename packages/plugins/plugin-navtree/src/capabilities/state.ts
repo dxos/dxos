@@ -147,7 +147,7 @@ export default Capability.makeModule(
         }
         Graph.expand(graph, nodeId, 'child');
       }
-    }).pipe(Effect.forkDaemon);
+    }).pipe(Effect.forkDetach);
 
     yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
     return Capability.contribute(NavTreeCapabilities.State, {

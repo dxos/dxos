@@ -190,7 +190,7 @@ export default Capability.makeModule(
           Effect.ensuring(Effect.sync(() => pullFibers.delete(name))),
         );
 
-        const fiber = yield* Effect.forkDaemon(work);
+        const fiber = yield* Effect.forkDetach(work);
         yield* Effect.sync(() => pullFibers.set(name, fiber));
       });
 

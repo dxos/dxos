@@ -337,7 +337,7 @@ export class FiberTracker {
   trackForked(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       yield* this.track(fiber);
-      yield* Effect.forkDaemon(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
+      yield* Effect.forkDetach(Fiber.await(fiber).pipe(Effect.andThen(() => this.untrack(fiber))));
     });
   }
 

@@ -90,7 +90,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T, never>): Effe
             }),
         }),
       ),
-      Effect.forkDaemon,
+      Effect.forkDetach,
     );
     log('lifecycle: subscribed to outputs', { handle });
     return {
@@ -268,7 +268,7 @@ export const make = (opts: {
         const fiber = yield* invokeRemote<I, O>(op, input).pipe(
           Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
           Effect.ignore,
-          Effect.forkDaemon,
+          Effect.forkDetach,
         );
         pendingFibers.add(fiber);
         fiber.addObserver(() => {
@@ -307,7 +307,7 @@ export const make = (opts: {
           }),
         ),
         Effect.ignore,
-        Effect.forkDaemon,
+        Effect.forkDetach,
       );
       pendingFibers.add(fiber);
       fiber.addObserver(() => {

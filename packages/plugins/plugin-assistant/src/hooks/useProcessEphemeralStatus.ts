@@ -161,7 +161,7 @@ export const useProcessEphemeralStatus = (
               handleEphemeralMessage(message);
             }),
           ),
-          Effect.forkDaemon,
+          Effect.forkDetach,
         );
         if (disposed) {
           yield* Fiber.interrupt(fiber);
