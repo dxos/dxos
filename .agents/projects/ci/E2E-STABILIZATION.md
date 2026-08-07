@@ -146,6 +146,19 @@ The three `Comments tests` delete tests were re-enabled and then **re-deferred**
 chromium run, but their notes cited firefox and webkit, and those browsers took them out again in run 31147977323. Recorded here because it is the general lesson of this pass: a local chromium run clears a
 test only if chromium is where it was failing.
 
+## Where the suite stands
+
+Five consecutive dispatch runs — 29 through 33, all on `af0b657b` — came back with all nine e2e cells
+green, alongside `cli`, `check`, `test`, `workerd`, `e2e-bundle` and `cli-foreign`. `storybook` is red
+in all five on `stories-projects` (see below), which is the one job this work did not clear.
+
+Getting there took 33 iterations, and the last stretch was a long tail rather than a systemic problem:
+at most one cell failed per run, on a different test each time, and two of the reds were regressions of
+my own — a 10s create-space dialog-close wait that firefox exceeded, and an unformatted doc that failed
+`oxfmt --check`. Worth knowing for whoever runs this loop next: `pnpm format` reported success on that
+file while leaving it unformatted, so verify with `oxfmt --check` rather than trusting the formatter's
+exit code.
+
 ## Cache hits can hide deterministic failures
 
 Two `storybook` jobs failed mid-sweep and looked like new flakes. Both reproduced locally on the first
