@@ -128,10 +128,8 @@ export class EdgeAiHttpClient {
             ),
           catch: (cause) => {
             log.error('Failed to fetch', { cause });
-            return new HttpClientError.RequestError({
-              request,
-              reason: 'Transport',
-              cause,
+            return new HttpClientError.HttpClientError({
+              reason: new HttpClientError.TransportError({ request, cause }),
             });
           },
         }).pipe(
@@ -148,14 +146,15 @@ export class EdgeAiHttpClient {
                 Effect.orElseSucceed(() => undefined),
                 Effect.flatMap((body) =>
                   Effect.fail(
-                    new HttpClientError.ResponseError({
-                      request,
-                      response: httpResponse,
-                      reason: 'StatusCode',
-                      cause: new ByokError({
-                        status: response.status,
-                        provider: 'anthropic.com',
-                        message: body?.error?.message ?? 'Authentication failed',
+                    new HttpClientError.HttpClientError({
+                      reason: new HttpClientError.StatusCodeError({
+                        request,
+                        response: httpResponse,
+                        cause: new ByokError({
+                          status: response.status,
+                          provider: 'anthropic.com',
+                          message: body?.error?.message ?? 'Authentication failed',
+                        }),
                       }),
                     }),
                   ),
@@ -171,12 +170,13 @@ export class EdgeAiHttpClient {
                 Effect.orElseSucceed(() => undefined),
                 Effect.flatMap((body) =>
                   Effect.fail(
-                    new HttpClientError.ResponseError({
-                      request,
-                      response: httpResponse,
-                      reason: 'StatusCode',
-                      cause: new UsageQuotaExceededError({
-                        message: body?.error?.message,
+                    new HttpClientError.HttpClientError({
+                      reason: new HttpClientError.StatusCodeError({
+                        request,
+                        response: httpResponse,
+                        cause: new UsageQuotaExceededError({
+                          message: body?.error?.message,
+                        }),
                       }),
                     }),
                   ),

@@ -62,9 +62,12 @@ export const withRetryConfig = (
 
 export const withLogging = <A extends HttpClientResponse.HttpClientResponse, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(
-    Effect.tap((res) => {
-      log.info('response', { status: res.status });
-    }),
+    // v4's `tap` requires an Effect; a bare side effect has to be lifted.
+    Effect.tap((res) =>
+      Effect.sync(() => {
+        log.info('response', { status: res.status });
+      }),
+    ),
   );
 
 /**
