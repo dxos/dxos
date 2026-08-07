@@ -24,10 +24,31 @@ export const copyToClipboard = (text: string): Effect.Effect<void, Error> =>
           command = 'clip';
           args = [];
         } else {
-          // Linux - try xclip or xsel
+          // Linux, where either xclip or xsel may be the one installed.
           command = 'xclip';
           args = ['-selection', 'clipboard'];
         }
+
+        // Reached from both failure paths: a missing xclip emits 'error' and never closes, so
+        // rejecting there directly would skip the fallback on exactly the machines that need it.
+        const fallback = () => {
+          if (platform !== 'linux') {
+            reject(new Error('Failed to copy to clipboard'));
+            return;
+          }
+
+          const proc2 = spawn('xsel', ['--clipboard', '--input']);
+          proc2.stdin?.write(text);
+          proc2.stdin?.end();
+          proc2.on('close', (code2) => {
+            if (code2 === 0) {
+              resolve();
+            } else {
+              reject(new Error('Failed to copy to clipboard'));
+            }
+          });
+          proc2.on('error', reject);
+        };
 
         const proc = spawn(command, args);
         proc.stdin?.write(text);
@@ -37,26 +58,11 @@ export const copyToClipboard = (text: string): Effect.Effect<void, Error> =>
           if (code === 0) {
             resolve();
           } else {
-            // Try xsel as fallback on Linux
-            if (platform === 'linux') {
-              const proc2 = spawn('xsel', ['--clipboard', '--input']);
-              proc2.stdin?.write(text);
-              proc2.stdin?.end();
-              proc2.on('close', (code2) => {
-                if (code2 === 0) {
-                  resolve();
-                } else {
-                  reject(new Error('Failed to copy to clipboard'));
-                }
-              });
-              proc2.on('error', reject);
-            } else {
-              reject(new Error('Failed to copy to clipboard'));
-            }
+            fallback();
           }
         });
 
-        proc.on('error', reject);
+        proc.on('error', fallback);
       });
     },
     catch: (error) => new Error(`Failed to copy to clipboard: ${error}`),
@@ -78,8 +84,10 @@ export const openBrowser = (url: string): Effect.Effect<void, Error> =>
           command = 'open';
           args = [url];
         } else if (platform === 'win32') {
-          command = 'start';
-          args = [url];
+          // `start` is a cmd.exe builtin rather than an executable, so spawning it directly is
+          // ENOENT; the empty title argument keeps a URL from being read as the window title.
+          command = 'cmd.exe';
+          args = ['/c', 'start', '', url];
         } else {
           command = 'xdg-open';
           args = [url];

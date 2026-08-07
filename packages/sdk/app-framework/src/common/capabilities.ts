@@ -74,6 +74,10 @@ export type ReactSurface = Surface.Definition | readonly Surface.Definition[];
  */
 export const ReactSurface = Capability$.make<ReactSurface>()('org.dxos.app-framework.capability.reactSurface');
 
+// The requirement channel stays open: a command's services are supplied partly by the contributing
+// plugin and partly by the host — `CommandConfig` carries the host's global flags and is provided by
+// its root command — so no single side can discharge them all. `CommandServices` in @dxos/cli-util
+// names what a host owes; hosts should type their layer with it.
 export type AnyCommand = Command$.Command<any, any, any, any>;
 
 /**
@@ -84,7 +88,9 @@ export const Command = Capability$.make<AnyCommand>()('org.dxos.app-framework.ca
 /**
  * @category Capability
  */
-export const Layer = Capability$.make<Layer$.Layer<any, any, any>>()('org.dxos.app-framework.capability.layer');
+// The input channel is closed: a contributed layer is merged into whatever a host is assembling, so
+// it has to carry its own requirements rather than expect the host to satisfy them.
+export const Layer = Capability$.make<Layer$.Layer<any, any, never>>()('org.dxos.app-framework.capability.layer');
 
 /**
  * Layer specification contributed by plugins.

@@ -35,7 +35,7 @@ import {
 import { type Graph } from '@dxos/plugin-graph';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 
-import { DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
+import { CliPanel, DebugGraph, DevtoolsOverviewContainer, RegistryPanel } from '#containers';
 
 import * as Devtools from '../types/Devtools';
 import {
@@ -82,6 +82,11 @@ export default Capability.makeModule(
         filter: AppSurface.literal(AppSurface.Article, Devtools.ToolsExplorer),
         component: ToolsExplorer,
         props: () => ({ serverUrl: MCP_SERVER_URL }),
+      }),
+      Surface.create({
+        id: 'cli',
+        filter: AppSurface.literal(AppSurface.Article, Devtools.Cli),
+        component: CliPanel,
       }),
       Surface.create({
         id: 'registry',
