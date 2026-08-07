@@ -149,7 +149,8 @@ export const getOrCreateTraceFeed = Effect.fn('getOrCreateTraceFeed')(function* 
 /**
  * Flush pending trace events to the trace feed.
  */
-export const flush = Effect.serviceFunctionEffect(FeedTraceSink, (_) => _.flush);
+export const flush = (...args: Parameters<Context.Service.Shape<typeof FeedTraceSink>['flush']>) =>
+  FeedTraceSink.use((service) => service.flush(...args));
 
 /**
  * Noop layer that satisfies the FeedTraceSink service without persisting anything.

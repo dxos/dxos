@@ -195,7 +195,7 @@ export const makeWithReferences = async ({
     }).pipe(
       Effect.catchIf(
         (error) => error._tag === 'NoSuchElementError',
-        () => Effect.succeed('Recovering from NoSuchElementException'),
+        () => Effect.succeed('Recovering from NoSuchElementError'),
       ),
       EffectEx.runAndForwardErrors,
     );

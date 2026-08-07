@@ -20,7 +20,7 @@ export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFou
   Effect.gen(function* () {
     const client = yield* ClientService;
     return yield* Option.fromNullishOr(client.spaces.get(spaceId));
-  }).pipe(Effect.catchTag('NoSuchElementException', () => Effect.fail(new SpaceNotFoundError(spaceId))));
+  }).pipe(Effect.catchTag('NoSuchElementError', () => Effect.fail(new SpaceNotFoundError(spaceId))));
 
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {

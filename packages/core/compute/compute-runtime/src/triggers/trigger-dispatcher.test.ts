@@ -121,7 +121,7 @@ const TestHanlers = OperationHandlerSet.make(
       Effect.fn(function* () {
         const counter = yield* Database.query(Filter.type(RetryCounter)).first.pipe(
           Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () => Database.add(Obj.make(RetryCounter, { count: 0 }))),
+          Effect.catchTag('NoSuchElementError', () => Database.add(Obj.make(RetryCounter, { count: 0 }))),
         );
         if (counter.count >= 3) {
           return;

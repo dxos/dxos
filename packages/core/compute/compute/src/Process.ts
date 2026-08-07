@@ -10,6 +10,7 @@ import type * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
 import type { Atom } from 'effect/unstable/reactivity';
@@ -351,7 +352,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     },
     (ctx) =>
       Effect.gen(function* () {
-        const semaphore = yield* Effect.makeSemaphore(1);
+        const semaphore = yield* Semaphore.make(1);
         // The process runtime assumes handlers are idempotent and always re-delivers an input
         // whose handler was interrupted. Non-idempotent operations opt out of that retry here:
         // a re-delivery that observes the durable "started" marker fails instead of repeating

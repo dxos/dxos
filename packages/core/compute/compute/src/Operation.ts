@@ -25,7 +25,7 @@ import type { Operation } from './index';
  * Schema type that accepts any Encoded form but requires no Context.
  * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.
  */
-type Schema<T> = Schema$.Schema<T, any, never>;
+type Schema<T> = Schema$.Codec<T, any, never, never>;
 
 export const DefinitionTypeId = '~@dxos/operation/OperationDefinition' as const;
 export type DefinitionTypeId = typeof DefinitionTypeId;
@@ -647,7 +647,7 @@ export const McpTool = Schema$.Struct({
    * Safety class the server maps to MCP tool hints: `read` is side-effect free (readOnlyHint),
    * `write` mutates space data, `destructive` deletes or is otherwise irreversible.
    */
-  safety: Schema$.Literal('read', 'write', 'destructive'),
+  safety: Schema$.Literals(['read', 'write', 'destructive']),
   /** Aspect/toolset, for server-side filtering (e.g. `/mcp?toolsets=tasks`). */
   aspect: Schema$.optional(Schema$.String),
 });

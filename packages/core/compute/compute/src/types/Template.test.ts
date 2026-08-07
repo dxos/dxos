@@ -155,9 +155,9 @@ describe('Template', () => {
         Effect.runPromise,
       );
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left).toBeInstanceOf(FunctionNotFoundError);
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        expect(result.failure).toBeInstanceOf(FunctionNotFoundError);
       }
     });
   });

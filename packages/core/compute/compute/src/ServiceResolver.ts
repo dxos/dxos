@@ -42,7 +42,8 @@ export const resolve: {
     tag: Tag,
     context: ResolutionContext,
   ): Effect.Effect<Context.Service.Shape<Tag>, ServiceNotAvailableError, Scope.Scope | ServiceResolver>;
-} = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.resolve);
+} = (...args: Parameters<Context.Service.Shape<typeof ServiceResolver>['resolve']>) =>
+  ServiceResolver.use((service) => service.resolve(...args));
 
 export const resolveAll = <const Tags extends readonly Context.Key<any, any>[]>(
   tags: Tags,
@@ -129,20 +130,22 @@ export const fromContext = <Services>(ctx: Context.Context<Services>): ServiceRe
 export const fromRequirements = <const Tags extends readonly Context.Key<any, any>[]>(
   ...tags: Tags
 ): Effect.Effect<ServiceResolver, never, Context.Service.Identifier<Tags[number]>> =>
+  // v4's `contextWith` takes an effect-returning function; the plain-value form is gone.
   Effect.contextWith((parentCtx: Context.Context<any>) => {
     const available = new Set(tags.map((tag) => tag.key));
-    return make((tag, context) =>
-      Effect.gen(function* () {
-        let result: Context.Context<never> = Context.empty() as Context.Context<never>;
-        if (!available.has(tag.key)) {
-          return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
-        }
-        const service = Context.getOption(parentCtx, tag);
-        if (Option.isNone(service)) {
-          return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
-        }
-        return service.value;
-      }),
+    return Effect.succeed(
+      make((tag, context) =>
+        Effect.gen(function* () {
+          if (!available.has(tag.key)) {
+            return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
+          }
+          const service = Context.getOption(parentCtx, tag);
+          if (Option.isNone(service)) {
+            return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
+          }
+          return service.value;
+        }),
+      ),
     );
   });
 
@@ -184,7 +187,7 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
       for (const resolver of resolvers) {
         const single = yield* resolver.resolve(tag, context).pipe(Effect.result);
         if (Result.isSuccess(single)) {
-          return single.right;
+          return single.success;
         }
       }
 

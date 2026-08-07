@@ -138,7 +138,7 @@ export default RunInstructions.pipe(
         return yield* Deferred.poll(resultSink).pipe(
           Effect.flatten,
           Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () =>
+          Effect.catchTag('NoSuchElementError', () =>
             Effect.gen(function* () {
               yield* session
                 .createRequest({
@@ -155,7 +155,7 @@ export default RunInstructions.pipe(
               return yield* Deferred.poll(resultSink).pipe(
                 Effect.flatten,
                 Effect.flatten,
-                Effect.catchTag('NoSuchElementException', () =>
+                Effect.catchTag('NoSuchElementError', () =>
                   Effect.fail(new PromptError('Agent did not signal task completion.', {})),
                 ),
               );

@@ -130,19 +130,19 @@ const connectWithFallback = (
   Effect.gen(function* () {
     const fallbackProtocol = options.protocol === 'sse' ? 'http' : 'sse';
     const primary = yield* connectClient(options.url, options.protocol, options.apiKey).pipe(Effect.result);
-    if (primary._tag === 'Right') {
-      return { client: primary.right, protocol: options.protocol };
+    if (primary._tag === 'Success') {
+      return { client: primary.success, protocol: options.protocol };
     }
-    if (is405(primary.left)) {
+    if (is405(primary.failure)) {
       const fallback = yield* connectClient(options.url, fallbackProtocol, options.apiKey).pipe(Effect.result);
-      if (fallback._tag === 'Right') {
-        return { client: fallback.right, protocol: fallbackProtocol };
+      if (fallback._tag === 'Success') {
+        return { client: fallback.success, protocol: fallbackProtocol };
       }
       return yield* Effect.fail(
         new McpConnectionError({
           url: options.url,
           protocol: fallbackProtocol,
-          message: `Failed to connect via ${fallbackProtocol} after 405 fallback: ${formatCause(fallback.left)}`,
+          message: `Failed to connect via ${fallbackProtocol} after 405 fallback: ${formatCause(fallback.failure)}`,
         }),
       );
     }
@@ -150,7 +150,7 @@ const connectWithFallback = (
       new McpConnectionError({
         url: options.url,
         protocol: options.protocol,
-        message: `Failed to connect via ${options.protocol}: ${formatCause(primary.left)}`,
+        message: `Failed to connect via ${options.protocol}: ${formatCause(primary.failure)}`,
       }),
     );
   });

@@ -79,9 +79,11 @@ export interface Session {
   subscribeEphemeral: () => Stream.Stream<Trace.Message>;
 }
 
-export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
+export const getSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['getSession']>) =>
+  AgentService.use((service) => service.getSession(...args));
 
-export const hydrate = Effect.serviceFunctionEffect(AgentService, (service) => service.hydrate);
+export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentService>['hydrate']>) =>
+  AgentService.use((service) => service.hydrate(...args));
 
 export interface GetSessionOptions {
   readonly model?: DXN.DXN;

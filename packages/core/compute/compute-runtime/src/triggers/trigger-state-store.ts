@@ -32,8 +32,10 @@ export class TriggerStateStore extends Context.Service<
     saveState(state: TriggerState): Effect.Effect<void>;
   }
 >()('@dxos/functions/TriggerStateStore') {
-  static getState = Effect.serviceFunctionEffect(TriggerStateStore, (_) => _.getState);
-  static saveState = Effect.serviceFunctionEffect(TriggerStateStore, (_) => _.saveState);
+  static getState = (...args: Parameters<Context.Service.Shape<typeof TriggerStateStore>['getState']>) =>
+    TriggerStateStore.use((service) => service.getState(...args));
+  static saveState = (...args: Parameters<Context.Service.Shape<typeof TriggerStateStore>['saveState']>) =>
+    TriggerStateStore.use((service) => service.saveState(...args));
 
   static layerKv = Layer.effect(
     TriggerStateStore,

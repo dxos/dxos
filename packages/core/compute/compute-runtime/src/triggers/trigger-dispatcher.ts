@@ -495,9 +495,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
           Stream.runCollect,
           Effect.map(Chunk.head),
           Effect.flatten,
-          Effect.catchTag('NoSuchElementException', () =>
-            Effect.die(new Error('Trigger invocation produced no output')),
-          ),
+          Effect.catchTag('NoSuchElementError', () => Effect.die(new Error('Trigger invocation produced no output'))),
         );
       }).pipe(this._concurrencyLimiter.withPermits(1), Effect.exit);
 
