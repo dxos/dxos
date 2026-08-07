@@ -66,23 +66,38 @@ Chrome's number is renderer process footprint, not JS heap.
 > (unbounded performance.measure accumulation; guard design sketch in git
 > history) if either is ever revisited.
 
-## Phase 5: Core boot-execution reduction (biggest lever, ~-150–250 MB)
+## Phase 5: Core boot-execution reduction — REFRAMED by census (2026-08-06)
 
-The resting footprint tracks the boot peak: barebones still compiles 370k
-functions and runs their module bodies (registrations, schemas, Effect
-layers), and Chrome decommits lazily. Defer EXECUTION (not just download) of
-core code until first use — continuation of startup-latency's demand-driven
-activation applied to core.
+Boot census (`boot-census.mjs`: precise coverage + sourcemap attribution +
+module-activation marks, full prod build, ready+150 s): **465 chunks /
+10.0 MB JS loaded; every loaded chunk executes its top level (zero
+fetched-but-never-run chunks); 111 module activations across only 17
+plugins** (core + markdown) — enabled-but-unvisited content plugins activate
+nothing. Startup-latency's demand gating is working as designed; there is no
+dead-code load to remove at chunk granularity.
+
+Consequence: the floor is the _cost of executing_ a legitimate 10 MB
+(V8 compile artifacts, Effect/Schema object graphs — 120k Contexts, 43k
+SchemaClass closures — plus wasm + DOM), not stray loading. Remaining angles:
 
 ### Tasks
 
-- [ ] **Per-module boot cost census** — extend the startup profiler to
-      attribute heap/code bytes per module at ready (barebones bundle as the
-      control); rank core modules by cost.
-- [ ] **Defer top offenders** — move heavy core module bodies (schema
-      construction, layer building, registries) behind first-use; verify no
-      startup-latency regression (check-startup-budget).
-- [ ] **Re-measure the tier curve** after each tranche; ratchet a budget once
+- [x] **Boot census tool + first run** — results above; boot-census.json
+      saved; tool in memory-harness.
+- [ ] **Audit oddball boot deps** (small but questionable at ready):
+      fast-check 94 KB (property-testing lib in prod boot!), emoji-mart
+      data+lib ~483 KB, @effect/ai-anthropic 48 KB + @modelcontextprotocol/sdk
+      71 KB (assistant not activated), ajv 97 KB, react-syntax-highlighter
+      79 KB, bip39 185 KB, protobufjs 99 KB. Trace importers; defer where
+      wrong.
+- [ ] **Function-level dead-code pass** — rerun census with detailed
+      coverage (root-range excluded) to see unexecuted bytes _within_ loaded
+      chunks; today's % is only meaningful at was-evaluated granularity.
+- [ ] **Per-KB execution cost** — the deep question: 10 MB source →
+      ~200 MB+ heap/code; measure what Effect schema/layer construction
+      contributes at boot and whether it can lazify (jdw's call — core
+      architecture).
+- [ ] **Re-measure the tier curve** after any change; ratchet a budget once
       the number settles.
 
 ## Phase 6: Idle-churn elimination (settles committed slack, ~-100–300 MB)
