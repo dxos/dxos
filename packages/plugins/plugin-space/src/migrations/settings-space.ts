@@ -8,7 +8,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 
-import { ensureSpacesOrder, readSpacesOrder } from '../util/settings-space';
+import { ensureSpacesOrder, readSpacesOrder, writeSpacesOrder } from '../util/settings-space';
 
 /**
  * Move app configuration out of the legacy personal space and into the settings space: the
@@ -36,9 +36,7 @@ export const migrateToSettingsSpace = Effect.fnUntraced(function* ({
   // into an empty one rather than treating its existence as proof the migration already ran.
   const legacyOrder = yield* readSpacesOrder(legacySpace);
   if (ordering && legacyOrder.length > 0 && (yield* readSpacesOrder(settingsSpace)).length === 0) {
-    Obj.update(ordering, (ordering) => {
-      (ordering as unknown as Record<string, unknown>).order = legacyOrder;
-    });
+    writeSpacesOrder(ordering, legacyOrder);
   }
 
   if (!AppSpace.readDefaultSpaceId(settingsSpace)) {

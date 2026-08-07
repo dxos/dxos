@@ -9,7 +9,6 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
 import { Expando } from '@dxos/schema';
 
 import * as SpaceSchema from '../types/SpaceSchema';
@@ -17,7 +16,7 @@ import { ensureSettingsSpace, readSpacesOrder } from '../util/settings-space';
 import { migrateToSettingsSpace } from './settings-space';
 
 describe('settings space migration', () => {
-  it('designates the legacy space and carries its ordering across', () =>
+  it.effect('designates the legacy space and carries its ordering across', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
@@ -40,9 +39,10 @@ describe('settings space migration', () => {
       expect(yield* readSpacesOrder(settingsSpace)).toEqual(order);
       expect(legacySpace.properties.name).toBe(AppSpace.DEFAULT_SPACE_NAME);
       expect(AppSpace.getDefaultSpace(client)?.id).toBe(legacySpace.id);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-  it('is idempotent and never overwrites an existing designation', () =>
+  it.effect('is idempotent and never overwrites an existing designation', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
@@ -64,9 +64,10 @@ describe('settings space migration', () => {
       // The user's choice wins, and a space that already has a name keeps it.
       expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBe(chosen.id);
       expect(legacySpace.properties.name).toBe('Renamed');
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-  it('recovers a legacy space discovered after the settings space', () =>
+  it.effect('recovers a legacy space discovered after the settings space', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
@@ -90,9 +91,10 @@ describe('settings space migration', () => {
 
       expect(AppSpace.readDefaultSpaceId(settingsSpace)).toBe(legacySpace.id);
       expect(yield* readSpacesOrder(settingsSpace)).toEqual(order);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer)),
+  );
 
-  it('creates the ordering object for a profile with nothing to migrate', () =>
+  it.effect('creates the ordering object for a profile with nothing to migrate', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
@@ -103,5 +105,6 @@ describe('settings space migration', () => {
       yield* migrateToSettingsSpace({ settingsSpace, legacySpace: undefined });
 
       expect(yield* readSpacesOrder(settingsSpace)).toEqual([]);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, EffectEx.runAndForwardErrors));
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });

@@ -25,7 +25,7 @@ export const IdentityCreated = Capability.lazyModule(
   {
     requires: [ClientCapabilities.Client],
     provides: [SpaceCapabilities.DefaultSpace, SpaceCapabilities.SettingsSpace],
-    // Runtime event: the personal and settings spaces are created when a local identity is created, not at startup.
+    // Runtime event: the default and settings spaces are created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
   },
   () => import('./identity-created'),

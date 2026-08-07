@@ -209,9 +209,10 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
 
-        // Cross-space ordering lives in the settings space; before it exists (or before the
-        // migration has run) spaces simply render in their natural order.
+        // Cross-space ordering lives in the settings space; until it exists and opens (or before
+        // the migration has run) spaces simply render in their natural order.
         const settingsSpace = AppSpace.getSettingsSpace(client);
+        const orderingSpace = settingsSpace?.state.get() === SpaceState.SPACE_READY ? settingsSpace : undefined;
 
         const [settingsAtom] = get(settingsCapAtom);
         if (!settingsAtom) {
@@ -222,8 +223,8 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = settingsSpace
-            ? get(settingsSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom)
+          const [spacesOrder] = orderingSpace
+            ? get(orderingSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).atom)
             : [undefined];
           const [appGraph] = get(appGraphAtom);
           if (!appGraph) {

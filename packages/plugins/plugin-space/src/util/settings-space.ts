@@ -46,9 +46,7 @@ export const ensureSettingsSpace = Effect.fnUntraced(function* (client: Client) 
  * space ids.
  */
 export const ensureSpacesOrder = Effect.fnUntraced(function* (settingsSpace: Space) {
-  const [existing] = yield* Effect.promise(() =>
-    settingsSpace.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).run(),
-  );
+  const existing = yield* findSpacesOrder(settingsSpace);
   if (existing) {
     return existing;
   }
@@ -56,20 +54,40 @@ export const ensureSpacesOrder = Effect.fnUntraced(function* (settingsSpace: Spa
   return yield* Effect.try(() =>
     settingsSpace.db.add(Obj.make(Expando.Expando, { key: SpaceSchema.SHARED, order: [] })),
   ).pipe(
-    // The space may have been destroyed (e.g. during test teardown) between the query and the add.
-    Effect.catchAll((err) =>
+    // Only a closing space is expected (e.g. test teardown between the query and the add); any
+    // other failure means the ordering did not persist and must not read to the migration as done.
+    Effect.catchIf(isSpaceClosingError, (err) =>
       Effect.sync(() => log.warn('Failed to initialize spaces order, space may be closing', { err })),
     ),
   );
 });
 
-/** Read the persisted cross-space ordering out of a space, or `[]` when it has none. */
-export const readSpacesOrder = Effect.fnUntraced(function* (space: Space) {
+/** The ordering Expando held by a space, or `undefined` when it has none. */
+export const findSpacesOrder = Effect.fnUntraced(function* (space: Space) {
   const [ordering] = yield* Effect.promise(() =>
     space.db.query(Filter.type(Expando.Expando, { key: SpaceSchema.SHARED })).run(),
   );
+  return ordering;
+});
 
-  // Expando is untyped by construction, so the persisted shape is validated rather than asserted.
-  const order: unknown = ordering && (ordering as Record<string, unknown>).order;
+/**
+ * Read the persisted cross-space ordering, or `[]` when absent.
+ * This and {@link writeSpacesOrder} are the only places that know the Expando's shape — it is
+ * untyped by construction, so the persisted value is validated rather than asserted.
+ */
+export const readSpacesOrder = Effect.fnUntraced(function* (space: Space) {
+  const ordering = yield* findSpacesOrder(space);
+  const order: unknown = ordering && (ordering as unknown as Record<string, unknown>).order;
   return Array.isArray(order) ? order.filter((id): id is string => typeof id === 'string') : [];
 });
+
+/** Overwrite the ordering held by an ordering Expando. Pairs with {@link readSpacesOrder}. */
+export const writeSpacesOrder = (ordering: Obj.Any, order: string[]): void => {
+  Obj.update(ordering, (ordering) => {
+    (ordering as unknown as Record<string, unknown>).order = order;
+  });
+};
+
+/** A destroyed or closing space rejects writes; anything else is a real database failure. */
+const isSpaceClosingError = (err: unknown): boolean =>
+  /clos|destroy/i.test(err instanceof Error ? err.message : String(err));

@@ -67,12 +67,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logStore, onUpload }
     download(file, fileName);
 
     if (onUpload) {
-      const personalSpace = AppSpace.getDefaultSpace(client);
-      if (!personalSpace) {
-        log.error('no personal space available for upload');
+      const defaultSpace = AppSpace.getDefaultSpace(client);
+      if (!defaultSpace) {
+        log.error('no default space available for upload');
         return;
       }
-      const info = await onUpload(personalSpace.db, new File([file], fileName));
+      const info = await onUpload(defaultSpace.db, new File([file], fileName));
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;

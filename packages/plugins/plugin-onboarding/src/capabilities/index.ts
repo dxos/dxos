@@ -24,7 +24,7 @@ export const DefaultContent = Capability.lazyModule(
       SpaceCapabilities.DefaultSpace,
     ],
     provides: [],
-    // Runtime event: the personal space exists once identity is created, not at startup.
+    // Runtime event: the default space exists once identity is created, not at startup.
     // `requires: [SpaceCapabilities.DefaultSpace]` orders this after plugin-space's
     // `IdentityCreated` module within the same event wave.
     activatesOn: ClientEvents.IdentityCreated,
