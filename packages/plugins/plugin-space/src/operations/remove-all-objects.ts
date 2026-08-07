@@ -15,9 +15,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveAllObjects> = S
     Effect.fnUntraced(function* () {
       const objects = yield* Database.query(Query.select(Filter.everything())).run;
       const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
-      const rootCollection = properties
-        ? Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)?.target
+      // Loaded (not read via `.target`, which is undefined for an unloaded ref) before computing the
+      // removal set, so an annotated-but-unresolvable root collection fails before any mutation.
+      const rootCollectionRef = properties
+        ? Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrUndefined)
         : undefined;
+      const rootCollection = rootCollectionRef ? yield* Database.load(rootCollectionRef) : undefined;
 
       const removed = objects.filter(
         (object) => !Obj.instanceOf(SpaceProperties, object) && object.id !== rootCollection?.id,
