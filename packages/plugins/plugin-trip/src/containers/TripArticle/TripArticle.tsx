@@ -289,7 +289,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
           <Panel.Root>
             <Panel.Toolbar>
               <Menu.Root {...menuActions} attendableId={attendableId}>
-                <Menu.Toolbar />
+                <Menu.Toolbar>
+                  <Menu.Items />
+                </Menu.Toolbar>
               </Menu.Root>
             </Panel.Toolbar>
             <Panel.Content asChild>

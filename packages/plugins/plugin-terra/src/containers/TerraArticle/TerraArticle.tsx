@@ -351,6 +351,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       <Panel.Root role={role}>
         <Panel.Toolbar asChild classNames='dx-container'>
           <Menu.Toolbar>
+            <Menu.Items />
             <div className='grow' />
             {view === 'camera' && (
               <CameraTargetSelect definitions={definitions} value={cameraTarget?.id} onChange={setSelectedId} />

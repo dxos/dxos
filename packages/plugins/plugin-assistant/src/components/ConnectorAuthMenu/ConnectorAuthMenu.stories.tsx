@@ -121,7 +121,9 @@ const ToolbarStory = () => {
   return (
     <div className='p-4 border border-separator rounded-sm'>
       <Menu.Root {...menuActions} onAction={runAction} attendableId={TOOLBAR_NODE_ID} alwaysActive>
-        <Menu.Toolbar />
+        <Menu.Toolbar>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     </div>
   );

@@ -61,7 +61,9 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
   return (
     <ElevationProvider elevation={role === SECTION_ROLE ? 'positioned' : 'base'}>
       <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
-        <Menu.Toolbar classNames={classNames} />
+        <Menu.Toolbar classNames={classNames}>
+          <Menu.Items />
+        </Menu.Toolbar>
       </Menu.Root>
     </ElevationProvider>
   );
