@@ -181,13 +181,7 @@ export default Capability.makeModule(
     subscriptions.add(() => lastActiveCleanup?.());
 
     // Cache space names.
-    const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
-      // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
-      const legacySpace = AppSpace.resolveLegacyDefaultSpace(client);
-      if (legacySpace && legacySpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-        await legacySpace.internal.migrate();
-      }
-
+    const spaceNamesSub = client.spaces.subscribe((spaces) => {
       spaces
         .filter((space) => space.state.get() === SpaceState.SPACE_READY)
         .forEach((space) => {

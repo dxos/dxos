@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { type Space } from '@dxos/client/echo';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Expando } from '@dxos/schema';
@@ -18,7 +18,7 @@ import * as SpaceSchema from '../types/SpaceSchema';
  * come from a translation because the space had no name of its own).
  *
  * Idempotent — every step is a no-op once the settings space already carries the value — so it is
- * safe to re-run when a legacy space is discovered after the settings space.
+ * safe to re-run when a legacy space is discovered after the settings space, or migrated later.
  */
 export const migrateToSettingsSpace = Effect.fnUntraced(function* ({
   settingsSpace,
@@ -28,11 +28,11 @@ export const migrateToSettingsSpace = Effect.fnUntraced(function* ({
   legacySpace?: Space;
 }) {
   const ordering = yield* ensureSpacesOrder(settingsSpace);
-  if (!legacySpace) {
+  // A legacy space awaiting SDK migration never opens, so defer rather than wait on it: the user
+  // migrates it like any other space, and the resulting state change re-runs this.
+  if (!legacySpace || legacySpace.state.get() !== SpaceState.SPACE_READY) {
     return;
   }
-
-  yield* Effect.promise(() => legacySpace.waitUntilReady());
 
   // An earlier pass may have created the ordering before the legacy space resolved, so transfer
   // into an empty one rather than treating its existence as proof the migration already ran.
