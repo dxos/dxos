@@ -28,7 +28,13 @@ const navigateToNewDocument = async (app: AppManager) => {
 //   (60s expires during setup, since host and guest each boot composer): both tests get past setup
 //   and then fail at one point, the guest's `space-auth-code-input` staying disabled because the
 //   invitation never leaves `connectingSpaceInvitation`. So what to fix is composer's invitation
-//   connect step on non-chromium, and the gate can come off once that lands.
+//   connect step on non-chromium, and the gate can come off once that lands. Instrumenting both
+//   pages puts the next attempt's starting points at `network-manager/src/swarm/connection.ts:187`
+//   (logged by host and guest), `client-services` `notarization-plugin.ts:325` (likewise), and a
+//   guest-side error at `compute-runtime/src/ProcessOperationInvoker.ts:249`. Ignore the
+//   `'allow-presentation' is an invalid sandbox flag` errors that flood webkit's console during
+//   this flow — they come from `MediaPlayer`'s iframe sandbox and have nothing to do with
+//   invitations.
 test.describe('Collaboration tests', () => {
   let host: AppManager;
   let guest: AppManager;
