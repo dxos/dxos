@@ -497,12 +497,10 @@ jobs:
       # https://tauri.app/distribute/app-store/#ios
       - name: Upload assets to App Store Connect
         run: |
-          # Tauri names the artifact after `productName`, which cn-config rewrites per environment.
-          product_name=$(jq -r '.productName' packages/apps/composer-app/src-tauri/tauri.conf.json)
           xcrun altool \
             --upload-app \
             --type ios \
-            --file "./packages/apps/composer-app/src-tauri/gen/apple/build/arm64/${product_name}.ipa" \
+            --file "./packages/apps/composer-app/src-tauri/gen/apple/build/arm64/Composer.ipa" \
             --apiKey $APPLE_API_KEY \
             --apiIssuer $APPLE_API_ISSUER
         env:
