@@ -90,3 +90,30 @@ CI without a retry.
       reason for the three that have none.
 - [ ] **Tier 2**, then **Tier 3** — shared-cause groups first (halo `joinNewIdentity()`, comments
       deletion, todomvc replication), then the product bugs and hard races.
+
+## Phase 4: Storybook failures the cache was hiding
+
+Restoring the `@opentui` platform packages changed `pnpm-lock.yaml`, which is an input to nearly
+every moon task, so it invalidated the whole cache graph. The `storybook` job had been passing on
+cached entries, and each run since has exposed another deterministic, pre-existing failure. None
+originate on this branch; a green Check elsewhere is likely green the same way.
+
+- [x] **`plugin-assistant › AssistantSettings › Default`** — the story renders a component that
+      reads a capability through `useOptionalCapability`, which raises without a
+      `PluginManagerContext` rather than returning undefined, so it could not render. Fixed with a
+      `withPluginManager` decorator; 47/47.
+- [x] **`plugin-tasks › Convert To Task`** — asserted a sub-pixel spread across every `.cm-line`,
+      but the editor's first line carries the content's top padding in its bounding box (56px vs
+      32px), so it could not pass whatever the anchor chip did. Instrumenting it showed the chip's
+      line at 32px — the property under test was holding. Now compares against one plain sibling;
+      9/9.
+- [ ] **`stories-projects`** — `FactSummaries`, `SenderLedger` and `SenderResearch` `Test` stories
+      all fail with `operation invocation failed {opKey:
+    dxn:org.dxos.plugin.projects.operation.create, cause: "Error: Process produced no output"}`.
+      2 of 3 in CI, 3 of 3 locally. These are the CI-runnable stories — the model-dependent variants
+      are tagged `!test` — so this is a regression in the operation stack, not a missing service.
+      Owned by plugin-projects, not by this work.
+- [ ] **Decide whether the cache should be able to hide this.** A task whose inputs have not changed
+      is not re-run, which is the point; but it means a deterministic failure can sit green for as
+      long as nothing upstream of it moves. Worth a periodic uncached run of `:test-storybook` on
+      main rather than discovering the backlog the next time a lockfile changes.
