@@ -663,6 +663,34 @@ const collapseEchoRef = (node: Record<string, any>): Record<string, any> => {
   return rest;
 };
 
+/** The string forms Effect 4 adds to `Schema.Number` so non-finite values survive JSON. */
+const NON_FINITE_LITERALS = ['Infinity', '-Infinity', 'NaN'];
+
+/**
+ * Collapses v4's `number | non-finite-string` union back to a plain number.
+ *
+ * ECHO never stored non-finite numbers, and leaving the union in place breaks round-trip fidelity:
+ * a `Schema.Number` field would come back as a union after one serialize/deserialize cycle, and
+ * again on the next.
+ */
+const collapseNumberUnion = (node: Record<string, any>): Record<string, any> => {
+  if (!Array.isArray(node.anyOf) || node.anyOf.length !== 2) {
+    return node;
+  }
+  const [first, second] = node.anyOf as [Record<string, any>, Record<string, any>];
+  const isNumber = first?.type === 'number' && Object.keys(first).length === 1;
+  const isNonFinite =
+    second?.type === 'string' &&
+    Array.isArray(second.enum) &&
+    second.enum.length === NON_FINITE_LITERALS.length &&
+    NON_FINITE_LITERALS.every((literal) => second.enum.includes(literal));
+  if (!isNumber || !isNonFinite) {
+    return node;
+  }
+  const { anyOf, ...rest } = node;
+  return { ...rest, type: 'number' };
+};
+
 /** Applies {@link inlineAllOf} to a node and every nested schema position. */
 const inlineAllOfDeep = (node: any): any => {
   if (Array.isArray(node)) {
@@ -671,7 +699,7 @@ const inlineAllOfDeep = (node: any): any => {
   if (!node || typeof node !== 'object') {
     return node;
   }
-  const inlined = collapseEchoRef(inlineAllOf(node));
+  const inlined = collapseNumberUnion(collapseEchoRef(inlineAllOf(node)));
   for (const [key, value] of Object.entries(inlined)) {
     if (value && typeof value === 'object') {
       inlined[key] = inlineAllOfDeep(value);
