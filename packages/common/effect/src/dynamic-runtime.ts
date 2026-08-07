@@ -15,12 +15,12 @@ import { unwrapExit } from './internal/errors';
 /**
  * Helper type to construct a union of tag identifiers from an array of tags.
  */
-export type TagsToContext<Tags extends ReadonlyArray<Context.Tag<any, any>>> = Tags extends readonly [
+export type TagsToContext<Tags extends ReadonlyArray<Context.Key<any, any>>> = Tags extends readonly [
   infer Head,
   ...infer Tail,
 ]
-  ? Head extends Context.Tag<infer Id, any>
-    ? Tail extends ReadonlyArray<Context.Tag<any, any>>
+  ? Head extends Context.Key<infer Id, any>
+    ? Tail extends ReadonlyArray<Context.Key<any, any>>
       ? Id | TagsToContext<Tail>
       : Id
     : never
@@ -30,7 +30,7 @@ export type TagsToContext<Tags extends ReadonlyArray<Context.Tag<any, any>>> = T
  * A runtime wrapper that validates required tags are available at runtime
  * while providing type-level guarantees that effects require those tags.
  */
-export interface DynamicRuntime<Tags extends ReadonlyArray<Context.Tag<any, any>>> {
+export interface DynamicRuntime<Tags extends ReadonlyArray<Context.Key<any, any>>> {
   /**
    * Run an effect as a promise that requires the specified tags.
    */
@@ -54,12 +54,12 @@ export interface DynamicRuntime<Tags extends ReadonlyArray<Context.Tag<any, any>
   /**
    * Fork an effect that requires the specified tags.
    */
-  readonly runFork: <A, E>(effect: Effect.Effect<A, E, TagsToContext<Tags>>) => Fiber.RuntimeFiber<A, E>;
+  readonly runFork: <A, E>(effect: Effect.Effect<A, E, TagsToContext<Tags>>) => Fiber.Fiber<A, E>;
 
   /**
    * Get the runtime as an effect that requires the specified tags.
    */
-  readonly runtimeEffect: Effect.Effect<Runtime.Runtime<TagsToContext<Tags>>, never, never>;
+  readonly runtimeEffect: Effect.Effect<Context.Context<TagsToContext<Tags>>, never, never>;
 
   /**
    * Dispose the underlying managed runtime.
@@ -75,7 +75,7 @@ export interface DynamicRuntime<Tags extends ReadonlyArray<Context.Tag<any, any>
 /**
  * Validate that all required tags are present in the runtime context.
  */
-const validateTags = <Tags extends ReadonlyArray<Context.Tag<any, any>>>(
+const validateTags = <Tags extends ReadonlyArray<Context.Key<any, any>>>(
   context: Context.Context<any>,
   tags: Tags,
 ): Effect.Effect<void> =>
@@ -96,7 +96,7 @@ const validateTags = <Tags extends ReadonlyArray<Context.Tag<any, any>>>(
 /**
  * Create a dynamic runtime from a managed runtime and validate required tags.
  */
-export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
+export function make<const Tags extends ReadonlyArray<Context.Key<any, any>>>(
   managedRuntime: ManagedRuntime.ManagedRuntime<any, any> | ManagedRuntime.ManagedRuntime<never, never>,
   tags: Tags,
 ): DynamicRuntime<Tags> {
@@ -104,18 +104,18 @@ export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
   const managedRuntimeAny = managedRuntime as ManagedRuntime.ManagedRuntime<any, any>;
 
   // Cache for the validated runtime - once resolved, can be used synchronously.
-  let cachedRuntime: Runtime.Runtime<RequiredContext> | undefined;
+  let cachedRuntime: Context.Context<RequiredContext> | undefined;
 
   // Cache validated runtime for async operations.
-  let validatedRuntimePromise: Promise<Runtime.Runtime<RequiredContext>> | undefined;
+  let validatedRuntimePromise: Promise<Context.Context<RequiredContext>> | undefined;
 
-  const getValidatedRuntimeAsync = async (): Promise<Runtime.Runtime<RequiredContext>> => {
+  const getValidatedRuntimeAsync = async (): Promise<Context.Context<RequiredContext>> => {
     if (!validatedRuntimePromise) {
       validatedRuntimePromise = managedRuntimeAny.runPromise(
         Effect.gen(function* () {
-          const rt = yield* managedRuntimeAny.runtimeEffect;
-          yield* validateTags(rt.context, tags);
-          return rt as Runtime.Runtime<RequiredContext>;
+          const rt = yield* managedRuntimeAny.contextEffect;
+          yield* validateTags(rt, tags);
+          return rt as Context.Context<RequiredContext>;
         }),
       );
     }
@@ -123,12 +123,12 @@ export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
   };
 
   // Get validated runtime for sync operations.
-  const getValidatedRuntime = (): Runtime.Runtime<RequiredContext> => {
+  const getValidatedRuntime = (): Context.Context<RequiredContext> => {
     const validationExit = managedRuntimeAny.runSyncExit(
       Effect.gen(function* () {
-        const rt = yield* managedRuntimeAny.runtimeEffect;
-        yield* validateTags(rt.context, tags);
-        return rt as Runtime.Runtime<RequiredContext>;
+        const rt = yield* managedRuntimeAny.contextEffect;
+        yield* validateTags(rt, tags);
+        return rt as Context.Context<RequiredContext>;
       }),
     );
     return unwrapExit(validationExit);
@@ -138,47 +138,47 @@ export function make<const Tags extends ReadonlyArray<Context.Tag<any, any>>>(
     managedRuntime: managedRuntimeAny,
     runPromise: async <A, E>(effect: Effect.Effect<A, E, RequiredContext>): Promise<A> => {
       const runtime = await getValidatedRuntimeAsync();
-      return Runtime.runPromise(runtime)(effect);
+      return Effect.runPromise(Effect.provideContext(effect, runtime));
     },
     runSync: <A, E>(effect: Effect.Effect<A, E, RequiredContext>): A => {
       const runtime = getValidatedRuntime();
-      return Runtime.runSync(runtime)(effect);
+      return Effect.runSync(Effect.provideContext(effect, runtime));
     },
     runSyncExit: <A, E>(effect: Effect.Effect<A, E, RequiredContext>): Exit.Exit<A, E> => {
       const validationExit = managedRuntimeAny.runSyncExit(
         Effect.gen(function* () {
-          const rt = yield* managedRuntimeAny.runtimeEffect;
-          yield* validateTags(rt.context, tags);
-          return rt as Runtime.Runtime<RequiredContext>;
+          const rt = yield* managedRuntimeAny.contextEffect;
+          yield* validateTags(rt, tags);
+          return rt as Context.Context<RequiredContext>;
         }),
       );
       if (Exit.isSuccess(validationExit)) {
         const runtime = validationExit.value;
-        return Runtime.runSyncExit(runtime)(effect);
+        return Effect.runSyncExit(Effect.provideContext(effect, runtime));
       }
       return validationExit as Exit.Exit<A, E>;
     },
     runPromiseExit: async <A, E>(effect: Effect.Effect<A, E, RequiredContext>): Promise<Exit.Exit<A, E>> => {
       try {
         const runtime = await getValidatedRuntimeAsync();
-        return Runtime.runPromiseExit(runtime)(effect);
+        return Effect.runPromiseExit(Effect.provideContext(effect, runtime));
       } catch (error) {
         // If validation failed, return a failure exit
         return Exit.die(error);
       }
     },
-    runFork: <A, E>(effect: Effect.Effect<A, E, RequiredContext>): Fiber.RuntimeFiber<A, E> => {
+    runFork: <A, E>(effect: Effect.Effect<A, E, RequiredContext>): Fiber.Fiber<A, E> => {
       const runtime = getValidatedRuntime();
-      return Runtime.runFork(runtime)(effect);
+      return Effect.runFork(Effect.provideContext(effect, runtime));
     },
     runtimeEffect: Effect.gen(function* () {
       // Return cached runtime if available.
       if (cachedRuntime) {
         return cachedRuntime;
       }
-      const rt = yield* managedRuntimeAny.runtimeEffect;
-      yield* validateTags(rt.context, tags);
-      const runtime = rt as Runtime.Runtime<RequiredContext>;
+      const rt = yield* managedRuntimeAny.contextEffect;
+      yield* validateTags(rt, tags);
+      const runtime = rt as Context.Context<RequiredContext>;
       // Cache for future sync calls.
       cachedRuntime = runtime;
       return runtime;
