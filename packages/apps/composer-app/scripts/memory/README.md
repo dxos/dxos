@@ -83,5 +83,6 @@ node scripts/memory/memory-dump.mjs http://localhost:4173 --wait1 60 --wait2 480
 node scripts/memory/retainers.mjs ./tmp/snaps/baseline-page.heapsnapshot --min 400000
 ```
 
-Snapshots and traces are large; write them somewhere ignored, not into the
-package.
+Snapshots, traces and result files are large and are build output; write them
+somewhere ignored, not into the package. `measure.mjs` defaults its result to
+`./tmp/memory-last-run.json` under the working directory (`--out` to override).

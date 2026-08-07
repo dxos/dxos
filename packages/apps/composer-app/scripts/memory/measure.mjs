@@ -9,7 +9,7 @@
  * dedicated / service workers) over per-target CDP websockets, forcing a GC
  * before each reading so numbers reflect live objects, not garbage.
  *
- * Usage: node measure.mjs [url] [--soak <seconds>] [--snapshot <dir>] [--keep-open]
+ * Usage: node measure.mjs [url] [--soak <seconds>] [--snapshot <dir>] [--out <file>] [--keep-open]
  */
 
 import { chromium } from '@playwright/test';
@@ -21,6 +21,8 @@ const soakIdx = process.argv.indexOf('--soak');
 const soakSeconds = soakIdx > 0 ? parseInt(process.argv[soakIdx + 1], 10) : 0;
 const snapIdx = process.argv.indexOf('--snapshot');
 const snapshotDir = snapIdx > 0 ? process.argv[snapIdx + 1] : null;
+const outIdx = process.argv.indexOf('--out');
+const resultPath = path.resolve(outIdx > 0 ? process.argv[outIdx + 1] : './tmp/memory-last-run.json');
 
 const DEBUG_PORT = 9333;
 const MB = (bytes) => +(bytes / (1024 * 1024)).toFixed(1);
@@ -190,7 +192,11 @@ if (snapshotDir) {
   }
 }
 
-writeFileSync(path.join(import.meta.dirname, 'last-run.json'), JSON.stringify(results.flat(), null, 2));
+// Under the working directory, not the package: a result written next to the script lands in the
+// repo and fails the format check.
+mkdirSync(path.dirname(resultPath), { recursive: true });
+writeFileSync(resultPath, JSON.stringify(results.flat(), null, 2));
+console.log(`results written to ${resultPath}`);
 
 if (process.argv.includes('--keep-open')) {
   console.log('keeping browser open (ctrl-c to exit)');
