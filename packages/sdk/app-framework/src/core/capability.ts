@@ -37,7 +37,7 @@ export class Service extends Context.Service<Service, CapabilityManager.Capabili
  */
 export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValue.globalValue(
   Symbol.for('@dxos/app-framework/Capability/CurrentModuleId'),
-  () => FiberRef.unsafeMake<string | undefined>(undefined),
+  () => FiberRef.makeUnsafe<string | undefined>(undefined),
 );
 
 /**
@@ -48,7 +48,7 @@ export const CurrentModuleId: FiberRef.FiberRef<string | undefined> = GlobalValu
  */
 export const ActivatingModuleIds: FiberRef.FiberRef<ReadonlySet<string>> = GlobalValue.globalValue(
   Symbol.for('@dxos/app-framework/Capability/ActivatingModuleIds'),
-  () => FiberRef.unsafeMake<ReadonlySet<string>>(new Set<string>()),
+  () => FiberRef.makeUnsafe<ReadonlySet<string>>(new Set<string>()),
 );
 
 /**
@@ -125,7 +125,7 @@ export const atomByModule = <T>(
 /**
  * Constructs a layer that will request its interface implementation from the capability manager.
  */
-export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I, T>): Layer.Layer<I, never, Service> =>
+export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Key<I, T>): Layer.Layer<I, never, Service> =>
   Layer.effect(tag, get(interfaceDef).pipe(Effect.orDie));
 
 /**
@@ -225,7 +225,7 @@ export interface Contributions<T> {
 // must be assignable from every concrete `Tag<Example, "the.actual.nsid">`; defaulting to `string`
 // would reject all of them since neither is a subtype of the other under invariance.
 export interface Tag<T, S extends string = any>
-  extends Context.Tag<CapabilityIdentifier<S, 'single'>, T>, InterfaceDef<T> {
+  extends Context.Key<CapabilityIdentifier<S, 'single'>, T>, InterfaceDef<T> {
   readonly arity: 'single';
 }
 
@@ -233,7 +233,7 @@ export interface Tag<T, S extends string = any>
  * A multi (registry) capability: `yield* tag` yields the live {@link Contributions} view.
  */
 export interface MultiTag<T, S extends string = any>
-  extends Context.Tag<CapabilityIdentifier<S, 'multi'>, Contributions<T>>, InterfaceDef<T> {
+  extends Context.Key<CapabilityIdentifier<S, 'multi'>, Contributions<T>>, InterfaceDef<T> {
   readonly arity: 'multi';
 }
 

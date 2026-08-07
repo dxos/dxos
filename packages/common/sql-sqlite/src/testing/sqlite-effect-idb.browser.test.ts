@@ -94,7 +94,7 @@ export const makeIdb = (
             return;
           }
           const id = String(Number(rowid));
-          reactivity.unsafeInvalidate({ [table]: [id] });
+          reactivity.invalidateUnsafe({ [table]: [id] });
         });
       }
 
@@ -150,7 +150,7 @@ export const makeIdb = (
           }
           return Stream.suspend(() => Stream.fromIteratorSucceed(stream()[Symbol.iterator]())).pipe(
             transformRows
-              ? Stream.mapChunks((chunk) => Chunk.unsafeFromArray(transformRows(Chunk.toReadonlyArray(chunk))))
+              ? Stream.mapChunks((chunk) => Chunk.fromArrayUnsafe(transformRows(Chunk.toReadonlyArray(chunk))))
               : Function.identity,
             Stream.mapError((cause) => new SqlError.SqlError({ cause, message: 'Failed to execute statement' })),
           );

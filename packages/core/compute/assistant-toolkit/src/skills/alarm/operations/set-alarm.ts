@@ -25,7 +25,7 @@ export default SetAlarm.pipe(
       if (Result.isFailure(resolved)) {
         return resolved.left;
       }
-      const wakeAt = DateTime.unsafeMake(resolved.right);
+      const wakeAt = DateTime.makeUnsafe(resolved.right);
       yield* Harness.setAlarm({ at: wakeAt, message: message ?? null });
       return `Alarm scheduled to wake you at ${new Date(resolved.right).toISOString()}.`;
     }),

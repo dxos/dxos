@@ -301,7 +301,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
     this._internalTime = options.startingTime ?? new Date();
     this._maxConcurrency = options.maxConcurrency ?? DEFAULT_MAX_CONCURRENCY;
     this._failureCooldown = options.failureCooldown ?? DEFAULT_FAILURE_COOLDOWN;
-    this._concurrencyLimiter = Effect.unsafeMakeSemaphore(this._maxConcurrency);
+    this._concurrencyLimiter = Effect.makeSemaphoreUnsafe(this._maxConcurrency);
   }
 
   private _isInCooldown = (triggerId: string): boolean => {

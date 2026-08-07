@@ -88,7 +88,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<any, any>[];
 }
 
 /**

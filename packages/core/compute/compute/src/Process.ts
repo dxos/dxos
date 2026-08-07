@@ -219,7 +219,7 @@ export interface Process<
    */
   readonly name?: string;
 
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<any, any>[];
 
   // Runtime RPC group, stored as `any`. `RpcGroup`/`RpcClient` are invariant in their type
   // argument (and `Callbacks.rpcHandlers` is contravariant in it), so referencing `_Rpcs` in the
@@ -263,7 +263,7 @@ export interface MakeProcessOpts {
 
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
-  readonly services: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Key<any, any>[];
   readonly rpcs?: RpcGroup.RpcGroup<any>;
 }
 

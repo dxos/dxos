@@ -128,6 +128,23 @@ const MEMBERS = {
  * `Either` is `Result` in v4, so a namespace import bound to `Either` keeps working only if the
  * binding is renamed too -- otherwise `Either.right` silently reads as a member of `Result`.
  */
+/**
+ * v4 moved the `unsafe` marker from a prefix to a suffix across the whole library. Only the
+ * members that exist under the new spelling are listed; a `unsafeFoo` with no `fooUnsafe` is left
+ * alone rather than renamed into something that does not exist.
+ */
+const UNSAFE_SUFFIX = {
+  unsafeFromArray: 'fromArrayUnsafe',
+  unsafeGet: 'getUnsafe',
+  unsafeHead: 'headUnsafe',
+  unsafeLast: 'lastUnsafe',
+  unsafeMake: 'makeUnsafe',
+  unsafeMakeSemaphore: 'makeSemaphoreUnsafe',
+  unsafeOffer: 'offerUnsafe',
+  unsafeInvalidate: 'invalidateUnsafe',
+  unsafeRegister: 'registerUnsafe',
+};
+
 const NAMESPACE_BINDINGS = {
   Either: { binding: 'Result', module: 'effect/Result' },
   Registry: { binding: 'AtomRegistry', module: 'effect/unstable/reactivity/AtomRegistry' },
@@ -173,6 +190,13 @@ for (const file of files) {
       source = source.replace(new RegExp(`\\b${from}\\.`, 'g'), () => (bump(`binding ${from}`), `${binding}.`));
     }
   }
+
+  for (const [from, to] of Object.entries(UNSAFE_SUFFIX)) {
+    source = source.replace(new RegExp(`\\.${from}\\b`, 'g'), () => (bump(`.${from}`), `.${to}`));
+  }
+
+  // `Context.Tag<Id, Shape>` is the service-key TYPE; v4 calls it `Context.Key`.
+  source = source.replace(/\bContext\.Tag</g, () => (bump('Context.Tag<'), 'Context.Key<'));
 
   for (const [namespace, renames] of Object.entries(MEMBERS)) {
     for (const [from, to] of Object.entries(renames)) {

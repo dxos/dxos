@@ -508,7 +508,7 @@ describe('Agent Service', { tags: ['model-fixture'] }, () => {
         // void result proves the control-plane wiring end-to-end (persistence semantics are covered
         // by the AlarmManager unit tests).
         const now = yield* Clock.currentTimeMillis;
-        const at = DateTime.unsafeMake(now + Duration.toMillis(Duration.hours(1)));
+        const at = DateTime.makeUnsafe(now + Duration.toMillis(Duration.hours(1)));
         yield* handle.rpc.setAlarm({ at, message: 'finish the report' });
 
         // The RPC did not fail the process; it remains live and ready for the conversation to resume.

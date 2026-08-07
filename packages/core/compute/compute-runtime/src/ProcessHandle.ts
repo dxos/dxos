@@ -278,7 +278,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   pushEphemeral(event: Trace.Message): void {
     this.#ephemeralBuffer.push(event);
     for (const queue of this.#ephemeralSubscribers) {
-      Queue.unsafeOffer(queue, Option.some(event));
+      Queue.offerUnsafe(queue, Option.some(event));
     }
   }
   subscribeEphemeral(): Stream.Stream<Trace.Message> {
@@ -340,9 +340,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       this.#setStatus(state);
       // Clears in-memory timer only; does NOT touch persisted alarmDueAt.
       this.#clearAlarm();
-      Queue.unsafeOffer(this.#outputQueue, Option.none());
+      Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
-        Queue.unsafeOffer(queue, Option.none());
+        Queue.offerUnsafe(queue, Option.none());
       }
       this.#ephemeralSubscribers.length = 0;
       yield* Scope.close(this.#scope, Exit.void);
@@ -586,7 +586,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     log('lifecycle: submit output', { pid: this.pid });
     this.#outputCount++;
     this.#onStatusChanged?.();
-    Queue.unsafeOffer(this.#outputQueue, Option.some(output));
+    Queue.offerUnsafe(this.#outputQueue, Option.some(output));
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
@@ -728,9 +728,9 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     return Effect.gen(this, function* () {
       log('lifecycle: cleanup');
       this.#clearAlarm();
-      Queue.unsafeOffer(this.#outputQueue, Option.none());
+      Queue.offerUnsafe(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
-        Queue.unsafeOffer(queue, Option.none());
+        Queue.offerUnsafe(queue, Option.none());
       }
       this.#ephemeralSubscribers.length = 0;
       yield* this.#storage.clear();

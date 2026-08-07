@@ -274,7 +274,7 @@ export class ModuleLoader {
               );
         services.set(capability.key, implementation);
       }
-      return Context.unsafeMake(services);
+      return Context.makeUnsafe(services);
     });
   }
 

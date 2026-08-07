@@ -26,7 +26,7 @@ export interface ServiceResolver {
    * Resolve a set of services identified by their tags.
    * Returns a Context containing all requested services, or fails with ServiceNotAvailableError.
    */
-  resolve<Tag extends Context.Tag<any, any>>(
+  resolve<Tag extends Context.Key<any, any>>(
     tag: Tag,
     context: ResolutionContext,
   ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope>;
@@ -38,13 +38,13 @@ export interface ServiceResolver {
 export const ServiceResolver = Context.GenericTag<ServiceResolver>('@dxos/functions/ServiceResolver');
 
 export const resolve: {
-  <Tag extends Context.Tag<any, any>>(
+  <Tag extends Context.Key<any, any>>(
     tag: Tag,
     context: ResolutionContext,
   ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope | ServiceResolver>;
 } = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.resolve);
 
-export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
+export const resolveAll = <const Tags extends readonly Context.Key<any, any>[]>(
   tags: Tags,
   context: ResolutionContext,
 ): Effect.Effect<Context.Context<Tags[number]>, ServiceNotAvailableError, Scope.Scope | ServiceResolver> =>
@@ -82,7 +82,7 @@ export interface ResolutionContext {
 }
 
 export const succeed = <I, S>(
-  tag: Context.Tag<I, S>,
+  tag: Context.Key<I, S>,
   getService: (context: ResolutionContext) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
 ): ServiceResolver => {
   return make((tag1, context) => {
@@ -99,7 +99,7 @@ export const succeed = <I, S>(
  */
 export const make = (
   resolveFn: <I, S>(
-    tag: Context.Tag<I, S>,
+    tag: Context.Key<I, S>,
     context: ResolutionContext,
   ) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
 ): ServiceResolver => ({
@@ -126,7 +126,7 @@ export const fromContext = <Services>(ctx: Context.Context<Services>): ServiceRe
  * Create a ServiceResolver that resolves tags from the current Effect context.
  * Only the specified tags are available; requests for other tags fail.
  */
-export const fromRequirements = <const Tags extends readonly Context.Tag<any, any>[]>(
+export const fromRequirements = <const Tags extends readonly Context.Key<any, any>[]>(
   ...tags: Tags
 ): Effect.Effect<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
   Effect.contextWith((parentCtx: Context.Context<any>) => {
@@ -149,7 +149,7 @@ export const fromRequirements = <const Tags extends readonly Context.Tag<any, an
 /**
  * Like {@link fromRequirements} but returns a Layer that provides ServiceResolver.
  */
-export const layerRequirements = <const Tags extends readonly Context.Tag<any, any>[]>(
+export const layerRequirements = <const Tags extends readonly Context.Key<any, any>[]>(
   ...tags: Tags
 ): Layer.Layer<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
   Layer.effect(ServiceResolver, fromRequirements(...tags));
@@ -168,7 +168,7 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
  * );
  * ```
  */
-export const provide = <const Tags extends readonly Context.Tag<any, any>[]>(
+export const provide = <const Tags extends readonly Context.Key<any, any>[]>(
   context: ResolutionContext,
   ...tags: Tags
 ): Layer.Layer<Context.Tag.Identifier<Tags[number]>, ServiceNotAvailableError, ServiceResolver> =>

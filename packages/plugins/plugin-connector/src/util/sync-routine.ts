@@ -53,7 +53,7 @@ export const createSyncRoutine = ({
       return Deferred.await(inFlight);
     }
 
-    const deferred = Deferred.unsafeMake<Trigger.Trigger>(FiberId.none);
+    const deferred = Deferred.makeUnsafe<Trigger.Trigger>(FiberId.none);
     creating.set(cursor.id, deferred);
     return createRoutine({ target, cursor, operation, spec, remote }).pipe(
       // Waiters see the same outcome, including a defect, rather than hanging on the deferred.

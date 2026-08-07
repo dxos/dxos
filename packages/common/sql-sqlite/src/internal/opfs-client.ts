@@ -166,7 +166,7 @@ export const makeOpfs = (
           if (!table) {
             return;
           }
-          reactivity.unsafeInvalidate({ [table]: [String(Number(rowid))] });
+          reactivity.invalidateUnsafe({ [table]: [String(Number(rowid))] });
         });
       }
 
@@ -233,7 +233,7 @@ export const makeOpfs = (
 
           return Stream.suspend(() => Stream.fromIteratorSucceed(stream()[Symbol.iterator]())).pipe(
             rowTransform
-              ? Stream.mapChunks((chunk) => Chunk.unsafeFromArray(rowTransform(Chunk.toReadonlyArray(chunk))))
+              ? Stream.mapChunks((chunk) => Chunk.fromArrayUnsafe(rowTransform(Chunk.toReadonlyArray(chunk))))
               : identity,
             Stream.mapError((cause) => {
               log('sqlite error', { error: cause, sql, params });

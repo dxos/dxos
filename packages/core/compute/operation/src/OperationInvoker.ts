@@ -124,7 +124,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
    * Get or create a DynamicRuntime for the given service tags.
    * Caches instances to allow runtime caching to work across invocations.
    */
-  private _getDynamicRuntime(services: readonly Context.Tag<any, any>[]): DynamicRuntime.DynamicRuntime<any> {
+  private _getDynamicRuntime(services: readonly Context.Key<any, any>[]): DynamicRuntime.DynamicRuntime<any> {
     const cacheKey = services
       .map((s) => s.key)
       .sort()

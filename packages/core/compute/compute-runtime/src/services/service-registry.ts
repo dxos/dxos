@@ -11,7 +11,7 @@ import { ServiceNotAvailableError } from '@dxos/compute';
 
 export namespace ServiceRegistry {
   export interface Service {
-    resolve: <T extends Context.Tag<any, any>>(tag: T) => Option.Option<Context.Tag.Service<T>>;
+    resolve: <T extends Context.Key<any, any>>(tag: T) => Option.Option<Context.Tag.Service<T>>;
   }
 }
 
@@ -24,7 +24,7 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
    * @throws {@link ServiceNotAvailableError} if the service is not found.
    * @returns Effect that resolve to the service.
    */
-  static resolve: <T extends Context.Tag<any, any>>(
+  static resolve: <T extends Context.Key<any, any>>(
     tag: T,
   ) => Effect.Effect<T, ServiceNotAvailableError, ServiceRegistry> = (tag) =>
     ServiceRegistry.pipe(
@@ -33,7 +33,7 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
     );
 
   static provide: {
-    <Tags extends [Context.Tag<any, any>, ...Context.Tag<any, any>[]]>(
+    <Tags extends [Context.Key<any, any>, ...Context.Key<any, any>[]]>(
       ...tags: Tags
     ): <A, E, R>(
       effect: Effect.Effect<A, E, R>,
@@ -46,7 +46,7 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
     (Function.flow as any)(...tags.map((tag) => Effect.provideServiceEffect(tag, ServiceRegistry.resolve(tag))));
 
   static provideOrDie: {
-    <Tags extends [Context.Tag<any, any>, ...Context.Tag<any, any>[]]>(
+    <Tags extends [Context.Key<any, any>, ...Context.Key<any, any>[]]>(
       ...tags: Tags
     ): <A, E, R>(
       effect: Effect.Effect<A, E, R>,

@@ -33,7 +33,7 @@ const subscribePort = (port: RpcPort) =>
   Effect.gen(function* () {
     const mailbox = yield* Mailbox.make<Uint8Array>();
     const unsubscribe = port.subscribe((message) => {
-      mailbox.unsafeOffer(message);
+      mailbox.offerUnsafe(message);
     });
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
@@ -65,7 +65,7 @@ export const makeProtocolRpcPortClient = (
 ): Effect.Effect<RpcClient.Protocol['Type'], never, Scope.Scope> =>
   RpcClient.Protocol.make(
     Effect.fnUntraced(function* (writeResponse) {
-      const parser = RpcSerialization.msgPack.unsafeMake();
+      const parser = RpcSerialization.msgPack.makeUnsafe();
       const mailbox = yield* subscribePort(port);
 
       const decodeFrame = (frame: Uint8Array) =>
@@ -138,7 +138,7 @@ export const makeProtocolRpcPortServer = (
 ): Effect.Effect<RpcServer.Protocol['Type'], never, Scope.Scope> =>
   RpcServer.Protocol.make(
     Effect.fnUntraced(function* (writeRequest) {
-      const parser = RpcSerialization.msgPack.unsafeMake();
+      const parser = RpcSerialization.msgPack.makeUnsafe();
       const mailbox = yield* subscribePort(port);
       const disconnects = yield* Mailbox.make<number>();
       const clientId = 0;

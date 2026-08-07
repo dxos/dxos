@@ -35,7 +35,7 @@ export const useProcessManagerRuntime = (): Capabilities.ProcessManagerRuntime =
  * space-scoped services like `Database.Service`) without each call site having
  * to thread the id through manually.
  */
-export const useSpaceCallback = <const Tags extends readonly Context.Tag<any, any>[], T>(
+export const useSpaceCallback = <const Tags extends readonly Context.Key<any, any>[], T>(
   spaceId: SpaceId | undefined,
   tags: Tags,
   fn: () => Effect.Effect<T, any, Context.Tag.Identifier<Tags[number]> | Capabilities.ProcessManagerRuntimeServices>,
@@ -59,7 +59,7 @@ export const useSpaceCallback = <const Tags extends readonly Context.Tag<any, an
  * Suspensefully resolve a single space-scoped service via the
  * {@link Capabilities.ProcessManagerRuntime}'s service resolver.
  */
-export const useSpaceService = <T extends Context.Tag<any, any>>(
+export const useSpaceService = <T extends Context.Key<any, any>>(
   tag: T,
   spaceId: SpaceId | undefined,
 ): Context.Tag.Service<T> | undefined => {

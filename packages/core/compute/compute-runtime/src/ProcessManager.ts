@@ -401,7 +401,7 @@ export class ProcessManagerImpl implements Manager {
    */
   #pushEphemeralToHub(message: Trace.Message): void {
     for (const queue of this.#traceSubscribers) {
-      Queue.unsafeOffer(queue, message);
+      Queue.offerUnsafe(queue, message);
     }
   }
 
@@ -600,7 +600,7 @@ export class ProcessManagerImpl implements Manager {
         ProcessOperationInvoker.Service.key,
         Cancellation.Service.key,
       ]);
-      const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
+      const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
@@ -810,7 +810,7 @@ export class ProcessManagerImpl implements Manager {
         ProcessOperationInvoker.Service.key,
         Cancellation.Service.key,
       ]);
-      const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
+      const externalServices = definition.services.filter((tag: Context.Key<any, any>) => !builtinTagKeys.has(tag.key));
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
