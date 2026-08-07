@@ -216,3 +216,34 @@ remembering when reading a green Check: it can be reporting cache hits rather th
 Two CI-hygiene changes make the remaining signal trustworthy: `retries: 0`, so a flake fails loudly
 instead of costing 3× the runtime; and `quarantine: false` on the Trunk uploader, after two cells in
 run 31111016212 reported success while a test failed.
+
+## Session addendum — 2026-08-07 evening
+
+- **`comments › delete message` first layer fixed:** the reply composer had no testid, so
+  `Thread.addMessage`/`createComment` reached it as the _last_ `role=textbox` and sometimes typed
+  into an existing message body instead. `Thread.Textbox` now carries `thread.reply` and the
+  helpers share `getReplyInput`. All three webkit repeats clear the add step. The test stays
+  deferred on what that exposed: `thread.message.delete` resolves and then loops
+  "not stable"/"detached" — the message row re-renders continuously, likely the same family as
+  `undo delete thread`'s cm-comment flap on firefox in run 31215927769 (which sits in the branch's
+  own plugin-review delete path — the anchor-race fix reduced, not eliminated, the churn).
+  A delegated investigation is instrumenting the loop; suspect list starts with comment-sync's
+  updateListener writing `thread.name` back per doc change.
+- **Stale-bundle trap, second occurrence:** the reply-composer fix was wrongly reverted once
+  because verification ran against a bundle that never contained it. Rule: after editing a
+  library, `moon run <lib>:build --force` before `bundle-e2e`, or the verdict is meaningless.
+  Now recorded in the cloud-sandbox skill.
+- **Kanban `rearrange columns` (webkit):** the index-space suspicion in
+  `useKanbanColumnEventHandler` is arithmetically refuted (`arrayMove` inserts post-removal, same
+  space as visible-item locations). The pass/fail delta means the resolved drop target was one
+  column right of the aim; the remaining candidate is the board sliding under the cursor between
+  aim and release. Next: capture `Root.onDrop`'s resolved target on a failing run (diag spec
+  drafted, runs solo — timing-sensitive measurements share the machine with nothing).
+- **Chromium now runs in the cloud sandbox:** `e2ePreset` gains sandbox-gated
+  `--ssl-version-max=tls1.2` + `$HTTPS_PROXY` proxying (the egress proxy resets Chromium's TLS 1.3
+  ClientHello — see the new `cloud-sandbox` skill). First chromium sample: todomvc
+  `filter active tasks` fails 3/3 at the invitation auth-code step locally, matching its CI
+  failure — parked until worklist items 1–2 are done.
+- **Overclaim corrected:** `selecting comment highlights thread and vice versa` passes on webkit
+  ×3; the earlier Tier-3 note calling it a _verified_ product gap rested on chromium alone and
+  overstated. Browser-dependent behaviour still points at product, but "verified" was wrong.
