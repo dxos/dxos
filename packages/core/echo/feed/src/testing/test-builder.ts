@@ -97,11 +97,11 @@ export class TestBuilder extends Resource {
     if (handleEffect == null) {
       return Effect.die(new Error(`TestPeer has no handler: ${msg.recipientPeerId}`));
     }
-    return Effect.promise(() => RuntimeProvider.runPromise(peer.runtime.runtimeEffect)(handleEffect));
+    return Effect.promise(() => RuntimeProvider.runPromise(peer.runtime.contextEffect)(handleEffect));
   }
 }
 
-const loggingTransformer: Statement.Statement.Transformer = (stmt, _make, _, _span) =>
+const loggingTransformer: Statement.Transformer = (stmt, _make, _, _span) =>
   Effect.sync(() => {
     const [sql, params] = stmt.compile();
     console.log(sql.trim());
@@ -136,7 +136,7 @@ export class TestPeer extends Resource {
     this.#peerId = actorId;
     this.#feedStore = new FeedStore({ localActorId: actorId, assignPositions: isServer });
     const baseLayer = layerMemory.pipe(
-      Layer.provide(logSql ? Statement.setTransformer(loggingTransformer) : Layer.empty),
+      Layer.provide(logSql ? Layer.succeed(Statement.CurrentTransformer, loggingTransformer) : Layer.empty),
     );
     const transactionLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
     this.#runtime = ManagedRuntime.make(Layer.merge(baseLayer, transactionLayer).pipe(Layer.orDie));
@@ -177,7 +177,7 @@ export class TestPeer extends Resource {
   }
 
   protected override async _open(): Promise<void> {
-    await this.#feedStore.migrate().pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+    await this.#feedStore.migrate().pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   protected override async _close(): Promise<void> {
@@ -188,36 +188,36 @@ export class TestPeer extends Resource {
     return Effect.gen(function* () {
       const sql = yield* SqlExport.SqlExport;
       return yield* sql.export;
-    }).pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+    }).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   getSyncState({ spaceId, feedNamespace }: { spaceId: SpaceId; feedNamespace: string }) {
     return this.#feedStore
       .getSyncState({ spaceId, feedNamespace })
-      .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   query(req: QueryRequest) {
-    return this.#feedStore.query(req).pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+    return this.#feedStore.query(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   append(req: AppendRequest) {
-    return this.#feedStore.append(req).pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+    return this.#feedStore.append(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   appendLocal(req: Parameters<FeedStore['appendLocal']>[0]) {
-    return this.#feedStore.appendLocal(req).pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+    return this.#feedStore.appendLocal(req).pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   pull({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
     return this.#client!
       .pull(Context.default(), { spaceId, feedNamespace, limit })
-      .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 
   push({ spaceId, feedNamespace, limit = 10 }: { spaceId: SpaceId; feedNamespace: string; limit?: number }) {
     return this.#client!
       .push(Context.default(), { spaceId, feedNamespace, limit })
-      .pipe(RuntimeProvider.runPromise(this.#runtime.runtimeEffect));
+      .pipe(RuntimeProvider.runPromise(this.#runtime.contextEffect));
   }
 }

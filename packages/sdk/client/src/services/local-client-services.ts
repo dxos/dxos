@@ -245,7 +245,7 @@ export class LocalClientServices implements ClientServicesProvider {
 
     this._host = new ClientServicesHost({
       ...this._params,
-      runtime: this._runtime.runtimeEffect,
+      runtime: this._runtime.contextEffect,
       callbacks: {
         ...this._params.callbacks,
         onReset: async () => {

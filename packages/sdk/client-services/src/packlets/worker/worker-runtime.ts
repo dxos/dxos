@@ -147,7 +147,7 @@ export const makeWorkerRuntime = ({
         await EffectEx.runPromise(stop());
       },
     },
-    runtime: runtime.runtimeEffect,
+    runtime: runtime.contextEffect,
     runtimeProps: {
       // Auto-activate spaces that were previously active after leader changeover.
       autoActivateSpaces: true,

@@ -72,7 +72,7 @@ describe('Skill binding resolution (registry refs)', () => {
         yield* Effect.promise(() => reader.open()).pipe(
           Effect.timeoutOrElse({
             duration: Duration.seconds(3),
-            onTimeout: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
+            orElse: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
           }),
         );
 
@@ -121,7 +121,7 @@ describe('Skill binding resolution (registry refs)', () => {
         yield* Effect.promise(() => reader.open()).pipe(
           Effect.timeoutOrElse({
             duration: Duration.seconds(3),
-            onTimeout: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
+            orElse: () => new Error('TIMED OUT resolving bound skill on feed re-read'),
           }),
         );
 

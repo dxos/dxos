@@ -147,7 +147,7 @@ export class EchoTestPeer extends Resource {
     // persistent runtime context, then provide those services into a new runtime that
     // recreates only the transaction layer.
     const persistedSqlLayer = Layer.unwrapEffect(
-      this._persistentRuntime.runtimeEffect.pipe(
+      this._persistentRuntime.contextEffect.pipe(
         Effect.map((runtime) =>
           Layer.merge(
             Layer.succeed(SqlClient.SqlClient, EffectContext.get(runtime.context, SqlClient.SqlClient)),
@@ -168,7 +168,7 @@ export class EchoTestPeer extends Resource {
     this._managedRuntime = this._createManagedRuntime();
 
     this._echoHost = new EchoHost({
-      runtime: this._managedRuntime.runtimeEffect,
+      runtime: this._managedRuntime.contextEffect,
       assignQueuePositions: this._assignQueuePositions,
     });
     this._clients.clear();

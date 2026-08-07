@@ -112,7 +112,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
       } else {
         setStatus('invalid');
         // A defect (unexpected throw) leaves no typed failure — fall back to a generic message.
-        setError(Option.getOrUndefined(Cause.failureOption(exit.cause))?.message ?? 'Connection test failed.');
+        setError(Option.getOrUndefined(Cause.findErrorOption(exit.cause))?.message ?? 'Connection test failed.');
       }
     },
     [connection, connector, testConnection, accessToken, accessTokenSnapshot?.token, db?.spaceId, runTest, nonce],

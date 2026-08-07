@@ -389,7 +389,7 @@ export class PluginCatalog {
           // `enable(id)` and (transitively) the manager's initialization.
           Effect.timeoutOrElse({
             duration: this.#options.loadTimeout,
-            onTimeout: () =>
+            orElse: () =>
               new Plugin.LazyPluginError({
                 context: { id, reason: 'load-failed' },
                 cause: new PluginTimeoutError({ context: { id, phase: 'load' as PluginFailurePhase } }),

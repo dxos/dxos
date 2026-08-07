@@ -134,14 +134,17 @@ export class SyncClient {
       Deferred.await(deferred).pipe(
         Effect.timeoutOrElse({
           duration: timeoutMs,
-          onTimeout: () =>
-            new SyncRpcTimeoutError({
-              requestId,
-              spaceId: meta.spaceId,
-              feedNamespace: meta.feedNamespace,
-              rpcTag: meta.rpcTag,
-              timeoutMs,
-            }),
+          // v4's `orElse` returns an Effect, where v3's `onTimeout` returned the error value.
+          orElse: () =>
+            Effect.fail(
+              new SyncRpcTimeoutError({
+                requestId,
+                spaceId: meta.spaceId,
+                feedNamespace: meta.feedNamespace,
+                rpcTag: meta.rpcTag,
+                timeoutMs,
+              }),
+            ),
         }),
         Effect.tapError((cause) =>
           Effect.sync(() => {

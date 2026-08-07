@@ -61,7 +61,7 @@ export class ClientServicesProxy implements ClientServicesProvider {
           Scope.provide(scope),
           Effect.timeoutOrElse({
             duration: this._timeout,
-            onTimeout: () =>
+            orElse: () =>
               new RemoteServiceConnectionTimeout({
                 message: 'Failed to establish rpc connection',
                 context: { timeout: this._timeout },

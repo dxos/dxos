@@ -1689,7 +1689,7 @@ describe('PluginManager', () => {
         const exit = yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         assert.isTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
-          const failure = Cause.failureOption(exit.cause);
+          const failure = Cause.findErrorOption(exit.cause);
           assert.isTrue(failure._tag === 'Some');
           if (failure._tag === 'Some') {
             assert.isTrue(Plugin.LazyPluginError.is(failure.value));
@@ -1771,7 +1771,7 @@ describe('PluginManager', () => {
         const exit = yield* Effect.exit(manager.enable(lazyMeta.profile.key));
         assert.isTrue(Exit.isFailure(exit));
         if (Exit.isFailure(exit)) {
-          const failure = Cause.failureOption(exit.cause);
+          const failure = Cause.findErrorOption(exit.cause);
           assert.isTrue(failure._tag === 'Some');
           if (failure._tag === 'Some') {
             assert.isTrue(Plugin.LazyPluginError.is(failure.value));
@@ -1885,7 +1885,7 @@ describe('PluginManager', () => {
 
         // The wrapped `LazyPluginError` carries the timeout error as its cause.
         if (Exit.isFailure(exit)) {
-          const failure = Cause.failureOption(exit.cause);
+          const failure = Cause.findErrorOption(exit.cause);
           if (failure._tag === 'Some') {
             assert.isTrue(Plugin.LazyPluginError.is(failure.value));
             const lazyError = failure.value as Plugin.LazyPluginError;

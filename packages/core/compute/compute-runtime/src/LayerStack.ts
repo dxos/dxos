@@ -122,7 +122,7 @@ export class LayerStack {
         yield* newSlice.init(requirements as Context.Context<unknown>).pipe(
           Effect.tapCause((cause) =>
             Effect.sync(() => {
-              const failure = Cause.failureOption(cause);
+              const failure = Cause.findErrorOption(cause);
               const missingKey =
                 Option.isSome(failure) && failure.value._tag === 'ServiceNotAvailable'
                   ? (failure.value.context as { service?: string }).service
@@ -623,7 +623,7 @@ class Slice {
       const runtime = ManagedRuntime.make(combinedLayer as Layer.Layer<unknown, unknown, never>);
 
       const exit = yield* Effect.gen({ self: this }, function* () {
-        const rt = yield* runtime.runtimeEffect;
+        const rt = yield* runtime.contextEffect;
         const providedTags = newLayers.flatMap((layer) => layer.provides);
         const materialized = yield* Effect.context().pipe(
           Effect.map(Context.pick(...providedTags)),
@@ -635,7 +635,7 @@ class Slice {
 
       if (Exit.isFailure(exit)) {
         yield* Effect.tryPromise(() => runtime.dispose()).pipe(Effect.orDie);
-        const failure = Cause.failureOption(exit.cause);
+        const failure = Cause.findErrorOption(exit.cause);
         if (Option.isSome(failure) && failure.value instanceof ServiceNotAvailableError) {
           return yield* Effect.fail(failure.value);
         }

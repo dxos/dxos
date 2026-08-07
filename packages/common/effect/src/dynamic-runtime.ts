@@ -58,7 +58,7 @@ export interface DynamicRuntime<Tags extends ReadonlyArray<Context.Key<any, any>
   /**
    * Get the runtime as an effect that requires the specified tags.
    */
-  readonly runtimeEffect: Effect.Effect<Context.Context<TagsToContext<Tags>>, never, never>;
+  readonly contextEffect: Effect.Effect<Context.Context<TagsToContext<Tags>>, never, never>;
 
   /**
    * Dispose the underlying managed runtime.
@@ -170,7 +170,7 @@ export function make<const Tags extends ReadonlyArray<Context.Key<any, any>>>(
       const runtime = getValidatedRuntime();
       return Effect.runFork(Effect.provideContext(effect, runtime));
     },
-    runtimeEffect: Effect.gen(function* () {
+    contextEffect: Effect.gen(function* () {
       // Return cached runtime if available.
       if (cachedRuntime) {
         return cachedRuntime;
@@ -184,7 +184,7 @@ export function make<const Tags extends ReadonlyArray<Context.Key<any, any>>>(
     }).pipe(
       Effect.catch(() =>
         // This should never happen since validateTags uses Effect.die
-        Effect.die(new Error('Unexpected error in runtimeEffect validation')),
+        Effect.die(new Error('Unexpected error in contextEffect validation')),
       ),
     ),
     dispose: async (): Promise<void> => {

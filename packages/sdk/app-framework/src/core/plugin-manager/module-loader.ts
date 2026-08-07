@@ -265,7 +265,7 @@ export class ModuleLoader {
             : yield* this.#capabilities.waitFor(capability).pipe(
                 Effect.timeoutOrElse({
                   duration: this.#activationTimeout,
-                  onTimeout: () =>
+                  orElse: () =>
                     new CapabilityNotFoundError({
                       identifier: capability.identifier,
                       registered: this.#capabilities.listRegisteredIdentifiers(),
@@ -353,7 +353,7 @@ export class ModuleLoader {
         // the plugin and surfaced as `PluginTimeoutError`.
         Effect.timeoutOrElse({
           duration: this.#activationTimeout,
-          onTimeout: () =>
+          orElse: () =>
             new PluginTimeoutError({
               context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
             }),

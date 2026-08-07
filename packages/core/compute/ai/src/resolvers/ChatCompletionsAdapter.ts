@@ -599,7 +599,7 @@ export const make = (model: string) =>
             Effect.flatMap((req) => httpClient.execute(req).pipe(Effect.flatMap((res) => res.json))),
             Effect.timeoutOrElse({
               duration: requestTimeout,
-              onTimeout: () =>
+              orElse: () =>
                 new AiError.HttpRequestError({
                   module: 'ChatCompletionsClient',
                   method: 'generateText',
@@ -687,7 +687,7 @@ export const make = (model: string) =>
               Effect.flatMap((req) => httpClient.execute(req)),
               Effect.timeoutOrElse({
                 duration: requestTimeout,
-                onTimeout: () =>
+                orElse: () =>
                   new AiError.HttpRequestError({
                     module: 'ChatCompletionsClient',
                     method: 'streamText',
@@ -952,7 +952,7 @@ const withIdleTimeout =
         const timedPull: Effect.Effect<Chunk.Chunk<A>, Option.Option<E | E2>, R> = pull.pipe(
           Effect.timeoutOrElse({
             duration: timeout,
-            onTimeout: (): Option.Option<E | E2> => Option.some(onTimeout()),
+            orElse: (): Option.Option<E | E2> => Option.some(onTimeout()),
           }),
         );
         return Stream.repeatEffectChunkOption(timedPull);

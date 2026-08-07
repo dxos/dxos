@@ -42,7 +42,7 @@ export default Capability.makeModule(
 
     // Layer for the sidecar but the lifecycle is managed by the runtime.
     const sidecarLayer = Layer.effectContext(
-      runtime.runtimeEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(OllamaSidecar)))),
+      runtime.contextEffect.pipe(Effect.map((rt) => rt.context.pipe(Context.pick(OllamaSidecar)))),
     );
 
     const admin = OllamaAdmin.make({ endpoint: OLLAMA_HOST });

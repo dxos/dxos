@@ -30,7 +30,7 @@ export const createTestSqliteRuntime = (filename = ':memory:'): TestSqliteRuntim
   const txLayer = SqlTransaction.layer.pipe(Layer.provide(baseLayer));
   const rt = ManagedRuntime.make(Layer.merge(baseLayer, txLayer).pipe(Layer.orDie));
   return {
-    runtime: rt.runtimeEffect,
+    runtime: rt.contextEffect,
     dispose: () => rt.dispose(),
   };
 };

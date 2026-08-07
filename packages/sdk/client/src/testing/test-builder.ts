@@ -102,7 +102,7 @@ export class TestBuilder {
     const services = new ClientServicesHost({
       config: this.config,
       runtimeProps,
-      runtime: runtime.runtimeEffect,
+      runtime: runtime.contextEffect,
       ...this.networking,
     });
 

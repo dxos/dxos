@@ -150,13 +150,13 @@ describe('DynamicRuntime', () => {
       }
     });
 
-    test('runtimeEffect returns runtime with correct context', async () => {
+    test('contextEffect returns runtime with correct context', async () => {
       const layer = Layer.succeed(Database, {
         query: (sql: string) => Effect.succeed([`result: ${sql}`]),
       });
       const runtime = DynamicRuntime.make(ManagedRuntime.make(layer), [Database]);
 
-      const rt = await runtime.runPromise(runtime.runtimeEffect);
+      const rt = await runtime.runPromise(runtime.contextEffect);
       expect(rt).toBeDefined();
       // Verify we can use the runtime directly
       const program = Effect.gen(function* () {
@@ -324,11 +324,11 @@ describe('DynamicRuntime', () => {
       expect(() => runtime.runFork(program)).toThrow(/Missing required tags in runtime: Database/);
     });
 
-    test('runtimeEffect with missing tags throws error', async () => {
+    test('contextEffect with missing tags throws error', async () => {
       const layer = Layer.empty; // No tags provided
       const runtime = DynamicRuntime.make(ManagedRuntime.make(layer), [Database]);
 
-      await expect(runtime.runPromise(runtime.runtimeEffect)).rejects.toThrow(
+      await expect(runtime.runPromise(runtime.contextEffect)).rejects.toThrow(
         /Missing required tags in runtime: Database/,
       );
     });

@@ -80,7 +80,7 @@ const toPersistedChildEvent = (event: Process.ChildEvent<unknown>) =>
  */
 const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {
   const message = Cause.pretty(cause);
-  const value = Cause.failureOption(cause).pipe(
+  const value = Cause.findErrorOption(cause).pipe(
     Option.orElse(() => Cause.dieOption(cause)),
     Option.getOrNull,
   );

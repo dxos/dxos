@@ -193,7 +193,7 @@ class TestHarnessImpl implements TestHarness {
       this.manager.capabilities.waitFor(iface).pipe(
         Effect.timeoutOrElse({
           duration: Duration.millis(timeout),
-          onTimeout: () => timeoutError(iface.identifier),
+          orElse: () => timeoutError(iface.identifier),
         }),
       ),
     );
@@ -220,7 +220,7 @@ class TestHarnessImpl implements TestHarness {
       Effect.scoped,
       Effect.timeoutOrElse({
         duration: Duration.millis(timeout),
-        onTimeout: () => timeoutError(key),
+        orElse: () => timeoutError(key),
       }),
     );
 

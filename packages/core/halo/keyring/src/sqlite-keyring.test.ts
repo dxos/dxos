@@ -18,7 +18,7 @@ import { SqliteKeyring } from './sqlite-keyring';
 const makeRuntime = () => {
   const rt = ManagedRuntime.make(SqlTransaction.layer.pipe(Layer.provideMerge(sqliteLayerMemory)).pipe(Layer.orDie));
   onTestFinished(() => rt.dispose());
-  return rt.runtimeEffect;
+  return rt.contextEffect;
 };
 
 describe('SqliteKeyring', () => {

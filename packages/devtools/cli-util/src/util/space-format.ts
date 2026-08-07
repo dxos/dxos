@@ -39,7 +39,7 @@ const tryWithFallback = <T>(label: string, run: () => Promise<T>, fallback: T) =
   Effect.tryPromise(run).pipe(
     Effect.timeoutOrElse({
       duration: Duration.seconds(READ_TIMEOUT_SECONDS),
-      onTimeout: () => new Error(`${label} timed out`),
+      orElse: () => new Error(`${label} timed out`),
     }),
     Effect.catch(() => Effect.succeed(fallback)),
   );
@@ -62,7 +62,7 @@ export const formatSpace = Effect.fn(function* (space: Space, options: FormatSpa
     yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
       Effect.timeoutOrElse({
         duration: Duration.seconds(waitSeconds),
-        onTimeout: () => new Error('waitUntilReady timed out'),
+        orElse: () => new Error('waitUntilReady timed out'),
       }),
       Effect.catch(() => Effect.void),
     );

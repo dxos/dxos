@@ -53,7 +53,7 @@ export const handler = Effect.fn(function* ({ spaceId, output, format }: ExportA
   yield* Effect.tryPromise(() => space.waitUntilReady()).pipe(
     Effect.timeoutOrElse({
       duration: SPACE_READY_TIMEOUT,
-      onTimeout: () => new SpaceNotReadyError({ context: { spaceId: resolvedSpaceId } }),
+      orElse: () => new SpaceNotReadyError({ context: { spaceId: resolvedSpaceId } }),
     }),
   );
 

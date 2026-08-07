@@ -301,7 +301,7 @@ export function createEvalRunner<I, O, D>(
     const timedRun = run.pipe(
       Effect.timeoutOrElse({
         duration: timeoutMillis,
-        onTimeout: () => new EvalTimeoutError({ millis: timeoutMillis }),
+        orElse: () => new EvalTimeoutError({ millis: timeoutMillis }),
       }),
     );
 
@@ -318,7 +318,7 @@ export function createEvalRunner<I, O, D>(
     // instructed" — a timeout, harness setup/disposal problem, or other infrastructure failure
     // means the run never got far enough to demonstrate anything, so it must propagate as a real
     // error instead of being silently scored as a pass.
-    if (Option.exists(Cause.failureOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
+    if (Option.exists(Cause.findErrorOption(exit.cause), (error) => error instanceof AgentRunFailure)) {
       return { failed: true };
     }
     return EffectEx.unwrapExit(exit);
