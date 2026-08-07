@@ -29,7 +29,6 @@
     "react-json-tree": "catalog:"
   },
   "devDependencies": {
-    "@babel/core": "catalog:",
     "@dxos/test-utils": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

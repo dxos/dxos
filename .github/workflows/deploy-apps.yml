@@ -213,6 +213,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          remote-cache: 'false'
 
       # Build only — the artifact is deployed by `deploy` and embedded by the tauri jobs.
       - name: Build Composer bundle
@@ -256,6 +258,8 @@ jobs:
       # Needed before "Check app targets this environment" — apps.mjs imports json5 from node_modules.
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          remote-cache: 'false'
 
       # Catches e.g. `app=storybook-react` on an environment it doesn't define (no env.staging/labs) —
       # before this existed, bundle-env.mjs/deploy-env.mjs silently no-op'd and the job still went green

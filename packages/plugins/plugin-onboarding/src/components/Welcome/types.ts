@@ -10,7 +10,12 @@ import { type MaybePromise } from '@dxos/util';
  * Which failure the screen is currently reporting. Only one login method is on screen at a time, so
  * one field is enough; the reason selects both the message and the control it renders under.
  */
-export type WelcomeError = 'email' | 'oauth' | `passkey-${PasskeyFailure}`;
+export type WelcomeError =
+  | 'email'
+  | 'account-exists'
+  | 'email-check-unavailable'
+  | 'oauth'
+  | `passkey-${PasskeyFailure}`;
 
 export const passkeyError = (failure: PasskeyFailure): WelcomeError => `passkey-${failure}`;
 

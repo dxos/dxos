@@ -50,12 +50,6 @@
     },
     {
       "path": "../edge-compute"
-    },
-    {
-      "path": "../functions-runtime-cloudflare"
-    },
-    {
-      "path": "../operation"
     }
   ]
 }

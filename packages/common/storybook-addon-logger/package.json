@@ -41,6 +41,7 @@
   "dependencies": {
     "@dxos/log": "workspace:*",
     "@storybook/icons": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "storybook": "catalog:"
   },
   "devDependencies": {

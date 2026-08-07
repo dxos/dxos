@@ -19,13 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/keys"
-    },
-    {
       "path": "../../common/log"
-    },
-    {
-      "path": "../../common/storybook-utils"
     },
     {
       "path": "../../common/util"
@@ -41,9 +35,6 @@
     },
     {
       "path": "../../ui/ui-theme"
-    },
-    {
-      "path": "../plugin-testing"
     }
   ]
 }

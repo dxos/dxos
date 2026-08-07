@@ -1,0 +1,25 @@
+[Unit]
+Description=moon remote cache (bazel-remote, mTLS)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# --tls_ca_file is what makes this mTLS rather than plain TLS: without it the server would
+# accept any client, and the cache is reachable from the public internet.
+ExecStart=/usr/local/bin/bazel-remote \
+  --dir /var/cache/moon \
+  --max_size 100 \
+  --storage_mode zstd \
+  --grpc_address 0.0.0.0:9092 \
+  --http_address 0.0.0.0:9093 \
+  --tls_cert_file /etc/bazel-remote/server.pem \
+  --tls_key_file /etc/bazel-remote/server.key \
+  --tls_ca_file /etc/bazel-remote/ca.pem \
+  --min_tls_version 1.2 \
+  --enable_endpoint_metrics
+Restart=always
+RestartSec=2
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

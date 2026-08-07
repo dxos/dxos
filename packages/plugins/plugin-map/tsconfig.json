@@ -23,22 +23,10 @@
       "path": "../../common/effect"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/keys"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/util"
-    },
-    {
-      "path": "../../core/compute/ai"
-    },
-    {
-      "path": "../../core/compute/assistant"
     },
     {
       "path": "../../core/compute/compute"

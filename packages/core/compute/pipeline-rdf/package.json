@@ -42,7 +42,6 @@
   "dependencies": {
     "@comunica/query-sparql-rdfjs": "catalog:",
     "@dxos/ai": "workspace:*",
-    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -58,7 +57,6 @@
     "sparqljs": "catalog:"
   },
   "devDependencies": {
-    "@dxos/echo-client": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
