@@ -29,6 +29,6 @@ export default Capability.makeModule(
       }
     });
 
-    return [Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace)];
+    return Capability.contribute(SpaceCapabilities.DefaultSpace, defaultSpace);
   }),
 );
