@@ -76,9 +76,9 @@ const getAccountEmail = (token: string, account: string | undefined) =>
 
 /** `HttpClient.filterStatusOk` failure whose response is a 401/403 — an actual rejected grant. */
 const isGoogleAuthRejection = (error: unknown): boolean =>
-  Predicate.isRecord(error) &&
+  Predicate.isObject(error) &&
   error._tag === 'ResponseError' &&
-  Predicate.isRecord(error.response) &&
+  Predicate.isObject(error.response) &&
   (error.response.status === 401 || error.response.status === 403);
 
 /**

@@ -45,7 +45,7 @@ describe('mapMessage', () => {
 
       // When no contact is resolved, the contact key should be absent from the serialized sender.
       // Having an explicit `contact: undefined` causes protobuf (google.protobuf.Struct)
-      // to encode it as `null`, which then fails Schema.decodeUnknown on queue load.
+      // to encode it as `null`, which then fails Schema.decodeUnknownEffect on queue load.
       expect('contact' in json.sender).toBe(false);
     }, Effect.provide(InboxResolver.Mock())),
   );
@@ -67,7 +67,7 @@ describe('mapMessage', () => {
       const { '@type': _, '@meta': __, ...rawData } = json;
 
       // This reproduces the ParseError that QueueImpl hits during refresh:
-      //   Schema.decodeUnknown rejects null for optional Ref<Person> (expects undefined).
+      //   Schema.decodeUnknownEffect rejects null for optional Ref<Person> (expects undefined).
       const decoded = Schema.decodeUnknownResult(Type.getSchema(Message.Message))(rawData);
       expect(decoded._tag).toBe('Left');
     }, Effect.provide(InboxResolver.Mock())),

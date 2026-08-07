@@ -141,17 +141,17 @@ export class LinearCredentials extends Context.Service<LinearCredentials, Linear
 
 type LinearEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | LinearGraphQLError,
+  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | LinearGraphQLError,
   HttpClient.HttpClient | LinearCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | LinearGraphQLError,
+  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | LinearGraphQLError,
 ): boolean => {
   if (error instanceof ParseResult.ParseError || LinearGraphQLError.is(error)) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
   if (error._tag === 'RequestError') {
@@ -193,11 +193,11 @@ const linearGraphQL = <T>(
     const creds = yield* LinearCredentials;
     const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
     const request = withAuth(HttpClientRequest.post(LINEAR_API_URL), creds).pipe(
-      HttpClientRequest.bodyUnsafeJson({ query, variables }),
+      HttpClientRequest.bodyJsonUnsafe({ query, variables }),
     );
     const envelopeSchema = GraphQLEnvelope(dataSchema);
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(envelopeSchema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(envelopeSchema))),
       Effect.flatMap((envelope) => {
         if (envelope.errors && envelope.errors.length > 0) {
           return Effect.fail(new LinearGraphQLError({ context: { messages: envelope.errors.map((e) => e.message) } }));

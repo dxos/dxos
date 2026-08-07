@@ -34,10 +34,10 @@ export const admin = Command.make('admin', {
       Option.map(adminKey, (value) => (overrides.DX_HUB_API_KEY = value));
       Option.map(edgeUrl, (value) => (overrides.DX_EDGE_BASE_URL = value));
 
-      const childProvider = ConfigProvider.fromJson(overrides);
+      const childProvider = ConfigProvider.fromUnknown(overrides);
       const provider = childProvider.pipe(ConfigProvider.orElse(() => parentProvider));
 
       return Layer.setConfigProvider(provider);
-    }, Layer.unwrapEffect),
+    }, Layer.unwrap),
   ),
 );

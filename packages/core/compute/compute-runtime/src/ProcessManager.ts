@@ -377,7 +377,7 @@ export class ProcessManagerImpl implements Manager {
       processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
       processTreeAtom: this.#processTreeAtom,
       subscribeToTraceMessages: (filter: Trace.Filter): Stream.Stream<Trace.Message> =>
-        Stream.unwrapScoped(
+        Stream.unwrap(
           Effect.gen({ self: this }, function* () {
             const queue = yield* Effect.acquireRelease(Queue.unbounded<Trace.Message>(), (queue) =>
               Effect.sync(() => {
@@ -1111,7 +1111,7 @@ export const layer = (opts?: {
   | Registry.AtomRegistry
   | Trace.TraceSink
 > =>
-  Layer.scopedContext(
+  Layer.effectContext(
     Effect.gen(function* () {
       const kvStore = yield* KeyValueStore.KeyValueStore;
       const serviceResolver = yield* ServiceResolver.ServiceResolver;

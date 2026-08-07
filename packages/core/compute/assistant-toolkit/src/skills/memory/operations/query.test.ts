@@ -65,7 +65,7 @@ describe('QueryMemories', () => {
 });
 
 const titles = (results: readonly unknown[]) =>
-  Schema.decodeUnknown(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
+  Schema.decodeUnknownEffect(Schema.Array(Schema.Struct({ title: Schema.String })))(results).pipe(
     Effect.map((rows) => rows.map((row) => row.title)),
   );
 

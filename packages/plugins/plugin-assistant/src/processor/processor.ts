@@ -180,7 +180,7 @@ export class AiChatProcessor {
   readonly #finalizedIds = new Set<string>();
 
   /** Currently active request fiber. */
-  #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
+  #requestFiber: Fiber.Fiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
   #lastRequest: ProcessorRequest | undefined;

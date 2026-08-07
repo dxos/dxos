@@ -225,7 +225,7 @@ export class JmapMailApi extends Context.Service<JmapMailApi, JmapMailApiService
           }),
         emailGet: (_target, ids) =>
           Effect.sync(() => ({
-            list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullable),
+            list: ids.map((id) => byId.get(id)).filter(Predicate.isNotNullish),
             state: dataset.state,
           })),
         // Chains the change-log steps from `sinceState`, honoring `maxChanges`: it stops before a step

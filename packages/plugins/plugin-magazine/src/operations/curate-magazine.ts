@@ -127,7 +127,7 @@ const selectPostIds = (
     };
 
     return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
-      Effect.flatMap(Schema.decodeUnknown(Magazine.CurationOutput)),
+      Effect.flatMap(Schema.decodeUnknownEffect(Magazine.CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catch((error) =>
         Effect.sync(() => {

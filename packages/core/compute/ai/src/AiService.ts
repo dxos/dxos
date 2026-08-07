@@ -59,7 +59,7 @@ export const model: {
 ): Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, AiService> =>
   AiService.pipe(
     Effect.map((_) => _.model(DXN.make(model), options)),
-    Layer.unwrapEffect,
+    Layer.unwrap,
   );
 
 export const notAvailable = Layer.succeed(AiService, {

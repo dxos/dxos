@@ -122,17 +122,17 @@ const toDraftBody = (input: Publisher.PublisherDraftInput): Record<string, unkno
 
 type TypefullyEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | Publisher.PublisherError,
+  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | Publisher.PublisherError,
   HttpClient.HttpClient | TypefullyCredentials
 >;
 
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | Publisher.PublisherError,
+  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | Publisher.PublisherError,
 ): boolean => {
   if (error instanceof ParseResult.ParseError || error instanceof Publisher.PublisherError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
   if (error._tag === 'RequestError') {
@@ -178,7 +178,7 @@ const execute = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema
             catch: () => new Publisher.PublisherError(`Typefully returned non-JSON: ${text.slice(0, 500)}`),
           }).pipe(
             Effect.flatMap((json) =>
-              Schema.decodeUnknown(schema)(json).pipe(
+              Schema.decodeUnknownEffect(schema)(json).pipe(
                 Effect.mapError(
                   (error) =>
                     new Publisher.PublisherError(
@@ -236,7 +236,7 @@ const createDraftEffect = (input: Publisher.PublisherDraftInput): TypefullyEffec
     Effect.flatMap((socialSetId) =>
       execute(
         HttpClientRequest.post(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts`).pipe(
-          HttpClientRequest.bodyUnsafeJson(toDraftBody(input)),
+          HttpClientRequest.bodyJsonUnsafe(toDraftBody(input)),
         ),
         TypefullyDraftResponse,
       ),
@@ -253,7 +253,7 @@ const updateDraftEffect = (
     Effect.flatMap((socialSetId) =>
       execute(
         HttpClientRequest.patch(`${TYPEFULLY_API_URL}/social-sets/${socialSetId}/drafts/${id}`).pipe(
-          HttpClientRequest.bodyUnsafeJson(toDraftBody(input)),
+          HttpClientRequest.bodyJsonUnsafe(toDraftBody(input)),
         ),
         TypefullyDraftResponse,
       ),

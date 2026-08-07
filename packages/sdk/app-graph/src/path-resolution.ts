@@ -197,7 +197,7 @@ const resolveKeyId = async (
   workspace: string,
   extensions: ReadonlyArray<KeyedExtension>,
   id: string,
-  wait?: Duration.DurationInput,
+  wait?: Duration.Input,
 ): Promise<string | null> => {
   // 1. Static segments: an exact candidate, no search (type sections, database/inbox objects, etc.).
   const idSegments = id.split(builder.urlGrammar.tailSeparator);
@@ -352,7 +352,7 @@ export type ResolveUrlOptions = {
    * the answer differs: a pair whose object is known to exist is merely late, while one nothing
    * vouches for is absent and must not hold up the restore. Return `undefined` to read immediately.
    */
-  readonly wait?: (pairIndex: number) => Duration.DurationInput | undefined;
+  readonly wait?: (pairIndex: number) => Duration.Input | undefined;
 };
 
 export const resolveUrl = (

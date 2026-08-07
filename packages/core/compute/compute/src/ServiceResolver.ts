@@ -172,7 +172,7 @@ export const provide = <const Tags extends readonly Context.Key<any, any>[]>(
   context: ResolutionContext,
   ...tags: Tags
 ): Layer.Layer<Context.Tag.Identifier<Tags[number]>, ServiceNotAvailableError, ServiceResolver> =>
-  Layer.scopedContext(resolveAll(tags, context));
+  Layer.effectContext(resolveAll(tags, context));
 
 /**
  * Compose multiple resolvers left to right. Earlier resolvers take precedence:

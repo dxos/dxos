@@ -96,7 +96,7 @@ export const createDiagnostics = async (
       // Trace metrics.
       // TODO(burdon): Move here from logging service?
       invariant(clientServices.LoggingService, 'SystemService is not available.');
-      diagnostics.metrics = await getFirstStreamValue(clientServices['LoggingService.queryMetrics']({}), {
+      diagnostics.metrics = await getFirstStreamValue(clientServices.LoggingService.queryMetrics({}), {
         timeout: DEFAULT_TIMEOUT,
       }).catch(() => undefined);
     })(),

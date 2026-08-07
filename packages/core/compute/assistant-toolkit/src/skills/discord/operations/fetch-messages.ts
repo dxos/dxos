@@ -26,7 +26,7 @@ import { Message } from '@dxos/types';
 
 import { FetchMessages, TimeRange } from './definitions';
 
-const DiscordConfigFromCredential = Layer.unwrapEffect(
+const DiscordConfigFromCredential = Layer.unwrap(
   Effect.gen(function* () {
     return DiscordConfig.layer({
       token: yield* Credential.CredentialsService.getApiKey({ service: 'discord.com' }),

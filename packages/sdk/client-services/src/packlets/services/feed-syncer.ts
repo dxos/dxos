@@ -156,7 +156,8 @@ export class FeedSyncer extends Resource {
             try: () => cborXdecode(msg.payload!.value),
             catch: (error) => new Error(`Failed to decode feed sync message: ${error}`),
           });
-          const payload = yield* Schema.validate(FeedProtocol.ProtocolMessage)(decoded);
+          // v4 dropped `Schema.validate`; decoding through the type side is the equivalent.
+          const payload = yield* Schema.decodeEffect(Schema.toType(FeedProtocol.ProtocolMessage))(decoded);
           yield* this.#syncClient.handleMessage(payload);
         }).pipe(
           Effect.tapError((cause) =>

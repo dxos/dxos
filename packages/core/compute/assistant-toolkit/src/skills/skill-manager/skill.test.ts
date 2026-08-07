@@ -35,7 +35,7 @@ class TestConversation extends Context.Service<TestConversation, { conversation:
   '@dxos/assistant-toolkit/TestConversation',
 ) {}
 
-const ConversationHarnessLayer = Layer.unwrapScoped(
+const ConversationHarnessLayer = Layer.unwrap(
   Effect.gen(function* () {
     const feed = yield* Database.add(Feed.make());
     const conversation = Obj.getURI(feed);

@@ -87,7 +87,7 @@ export type ListRecordsEntry = Schema.Schema.Type<typeof ListRecordsEntrySchema>
 const decodeJson =
   <T>(schema: Schema.Schema<T>) =>
   (response: HttpClientResponse.HttpClientResponse) =>
-    Effect.flatMap(response.json, Schema.decodeUnknown(schema));
+    Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema));
 
 /** GET an XRPC endpoint and decode the JSON response. */
 const xrpcGet = <T>(url: string, query: Record<string, string>, schema: Schema.Schema<T>) =>

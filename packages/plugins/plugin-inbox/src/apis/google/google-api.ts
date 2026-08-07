@@ -68,7 +68,7 @@ export const makeGoogleApiRequest = Effect.fn('makeGoogleApiRequest')(function* 
     Effect.withSpan('GoogleApiRequest'),
   );
 
-  const errorPayload = Predicate.isRecord(body) && Predicate.isRecord(body.error) ? body.error : undefined;
+  const errorPayload = Predicate.isObject(body) && Predicate.isObject(body.error) ? body.error : undefined;
   if (status < 200 || status >= 300 || errorPayload) {
     // Google mirrors the HTTP status in `error.code`; fall back to the transport status when the body
     // is not the expected JSON error shape (e.g. an HTML error page).

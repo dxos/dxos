@@ -31,7 +31,7 @@ type Requirements = HttpClient.HttpClient | GoogleCredentials | Credential.Crede
 export type GoogleMailApiError =
   | GoogleApiError
   | HttpClientError.HttpClientError
-  | Cause.TimeoutException
+  | Cause.TimeoutError
   | GoogleMail.GoogleError
   | ParseResult.ParseError;
 

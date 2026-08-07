@@ -23,7 +23,7 @@ export const mapAiError = (err: AiError.AiError): Effect.Effect<AiError.AiError>
     const cause = err.cause;
     if (HttpClientError.isHttpClientError(cause) && cause.reason === 'StatusCode') {
       const body = yield* cause.response.json.pipe(
-        Effect.flatMap(Schema.decodeUnknown(AnthropicErrorResponse, { exact: false })),
+        Effect.flatMap(Schema.decodeUnknownEffect(AnthropicErrorResponse, { exact: false })),
       );
 
       const parsedCause = new AiModelError({

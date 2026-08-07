@@ -84,14 +84,14 @@ const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info
     Option.orElse(() => Cause.dieOption(cause)),
     Option.getOrNull,
   );
-  if (!Predicate.isRecord(value)) {
+  if (!Predicate.isObject(value)) {
     return { message };
   }
   return {
     name: typeof value.name === 'string' ? value.name : undefined,
     message: typeof value.message === 'string' ? value.message : message,
     stack: typeof value.stack === 'string' ? value.stack : undefined,
-    context: Predicate.isRecord(value.context) ? value.context : undefined,
+    context: Predicate.isObject(value.context) ? value.context : undefined,
   };
 };
 
@@ -143,7 +143,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
   // Fiber running the pending alarm `Effect.sleep`. Driven by the ambient `Clock`, so alarms honor
   // a `TestClock` under tests and use real time in production. `null` when no alarm is pending or
   // once the sleep has elapsed and the handler is running.
-  #alarmFiber: Fiber.RuntimeFiber<void> | null = null;
+  #alarmFiber: Fiber.Fiber<void> | null = null;
   // True from the moment a fired alarm clears #alarmFiber until its handler starts running. A 0ms
   // alarm fires on the next microtask, which can precede the completion of the handler that
   // scheduled it; without this flag #handlerCompleted would see no pending alarm and settle to IDLE,
@@ -611,7 +611,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
     name: string,
     fn: () => Effect.Effect<void, never, R | Process.BaseServices>,
     eventSeq?: number,
-  ): Effect.Effect<Fiber.RuntimeFiber<void>> {
+  ): Effect.Effect<Fiber.Fiber<void>> {
     return Effect.uninterruptibleMask((restore) =>
       Effect.gen({ self: this }, function* () {
         // Secondary guard: the primary guard in requestChildEvent is synchronous, but the

@@ -75,13 +75,13 @@ export class ModuleLoader {
   readonly #contributed = new Map<string, Capability.Any[]>();
   readonly #state: ManagerState;
   readonly #capabilities: CapabilityManager.CapabilityManager;
-  readonly #activationTimeout: Duration.DurationInput;
+  readonly #activationTimeout: Duration.Input;
   readonly #yieldToHost: Effect.Effect<void>;
 
   constructor(
     state: ManagerState,
     capabilities: CapabilityManager.CapabilityManager,
-    activationTimeout: Duration.DurationInput,
+    activationTimeout: Duration.Input,
     /** Injected so the host yield is explicit at the composition root, and swappable in tests. */
     yieldToHostEffect: Effect.Effect<void> = yieldToHost,
   ) {
@@ -518,7 +518,7 @@ export class ModuleLoader {
         registeredCapabilities: this.#capabilities.listRegisteredIdentifiers(),
         error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
-        isDefect: !Cause.isFailure(cause),
+        isDefect: !Cause.hasFails(cause),
       });
       const normalizedError = error instanceof Error ? error : new Error(String(error));
       const pluginId = this.#state.pluginIdOfModule(module.id);

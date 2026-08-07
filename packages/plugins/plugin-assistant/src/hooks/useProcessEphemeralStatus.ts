@@ -91,7 +91,7 @@ export const useProcessEphemeralStatus = (
   const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
   const [status, setStatus] = useState<string | undefined>();
-  const fibersRef = useRef<Fiber.RuntimeFiber<void, unknown>[]>([]);
+  const fibersRef = useRef<Fiber.Fiber<void, unknown>[]>([]);
 
   const subscribePidsKey = useMemo(() => {
     if (!agentPid) {

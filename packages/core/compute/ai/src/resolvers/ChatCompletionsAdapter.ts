@@ -946,7 +946,7 @@ export const make = (model: string) =>
 const withIdleTimeout =
   <E2>(timeout: Duration.Duration, onTimeout: () => E2) =>
   <A, E, R>(stream: Stream.Stream<A, E, R>): Stream.Stream<A, E | E2, R> =>
-    Stream.unwrapScoped(
+    Stream.unwrap(
       Effect.gen(function* () {
         const pull = yield* Stream.toPull(stream);
         const timedPull: Effect.Effect<Chunk.Chunk<A>, Option.Option<E | E2>, R> = pull.pipe(

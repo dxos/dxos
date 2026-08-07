@@ -301,7 +301,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 .pipe(
                   Effect.onExit((exit) =>
                     Trace.write(AgentRequestEnd, {
-                      status: Exit.isSuccess(exit) ? 'success' : Exit.isInterrupted(exit) ? 'interrupted' : 'error',
+                      status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',
                       error: Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined,
                     }),
                   ),
@@ -718,7 +718,7 @@ const ToolExecutionService = ({
   toolCallManager,
   feed,
 }: ToolExecutionServiceOptions) =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.gen(function* () {
       const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       return makeToolExecutionService({

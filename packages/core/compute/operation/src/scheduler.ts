@@ -63,7 +63,7 @@ export interface FollowupScheduler {
 //
 
 type FollowupState = {
-  fibers: HashSet.HashSet<Fiber.RuntimeFiber<unknown, unknown>>;
+  fibers: HashSet.HashSet<Fiber.Fiber<unknown, unknown>>;
 };
 
 //
@@ -80,11 +80,11 @@ class FollowupSchedulerImpl implements FollowupScheduler {
     this._state = Effect.runSync(Ref.make<FollowupState>({ fibers: HashSet.empty() }));
   }
 
-  private _addFiber(fiber: Fiber.RuntimeFiber<unknown, unknown>): Effect.Effect<void> {
+  private _addFiber(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
     return Ref.update(this._state, (s) => ({ fibers: HashSet.add(s.fibers, fiber) }));
   }
 
-  private _removeFiber(fiber: Fiber.RuntimeFiber<unknown, unknown>): Effect.Effect<void> {
+  private _removeFiber(fiber: Fiber.Fiber<unknown, unknown>): Effect.Effect<void> {
     return Ref.update(this._state, (s) => ({ fibers: HashSet.remove(s.fibers, fiber) }));
   }
 

@@ -54,7 +54,7 @@ describe.runIf(TOKEN)('JMAP live', { timeout: 30_000 }, () => {
         limit: 5,
       });
       const { list: emails } = yield* JmapMail.emailGet(target, ids);
-      const mapped = (yield* Effect.forEach(emails, (email) => mapEmail(email))).filter(Predicate.isNotNullable);
+      const mapped = (yield* Effect.forEach(emails, (email) => mapEmail(email))).filter(Predicate.isNotNullish);
 
       console.log(`JMAP live: ${folders.length} folders, ${ids.length} inbox ids, ${mapped.length} mapped messages`);
       expect(Array.isArray(ids)).toBe(true);

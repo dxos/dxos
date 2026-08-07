@@ -160,7 +160,7 @@ export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHub
 
 type GitHubEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError,
   HttpClient.HttpClient | GitHubCredentials
 >;
 
@@ -173,13 +173,11 @@ type GitHubEffect<T> = Effect.Effect<
  *  - TimeoutException: yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
-): boolean => {
+const shouldRetry = (error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError): boolean => {
   if (error instanceof ParseResult.ParseError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
   if (error._tag === 'RequestError') {
@@ -223,7 +221,7 @@ const githubRequest = <T>(
       HttpClient.filterStatusOk,
     );
     return yield* clientNoTracer.execute(withAuth(build(), creds)).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
@@ -284,7 +282,7 @@ const githubPaginated = <T>(
         Effect.flatMap((res) =>
           Effect.gen(function* () {
             const body = yield* res.json;
-            const decoded = yield* Schema.decodeUnknown(arraySchema)(body);
+            const decoded = yield* Schema.decodeUnknownEffect(arraySchema)(body);
             return { decoded, link: res.headers['link'] };
           }),
         ),
@@ -411,9 +409,9 @@ const githubPatch = <T>(
       HttpClient.withTracerDisabledWhen(() => true),
       HttpClient.filterStatusOk,
     );
-    const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyUnsafeJson(body));
+    const request = withAuth(build(), creds).pipe(HttpClientRequest.bodyJsonUnsafe(body));
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),

@@ -171,7 +171,7 @@ export const toSubscriptionPostInput = (item: FeedViewPost) => {
 
 type RequestEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutError,
   HttpClient.HttpClient
 >;
 
@@ -186,12 +186,12 @@ type RequestEffect<T> = Effect.Effect<
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  error: HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutError,
 ): boolean => {
   if (error instanceof ParseResult.ParseError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
   if (error._tag === 'HttpBodyError') {
@@ -220,7 +220,7 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     return yield* httpClient.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
@@ -397,7 +397,7 @@ const packageCredentials = (accessToken: AccessToken.AccessToken, db: Database.D
 
 type AuthedEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | HttpBody.HttpBodyError | ParseResult.ParseError | Cause.TimeoutError,
   HttpClient.HttpClient | Credentials
 >;
 

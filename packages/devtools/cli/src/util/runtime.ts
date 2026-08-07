@@ -98,7 +98,7 @@ export const chatLayer = ({
     Layer.provideMerge(credentialsLayerFromDatabase()),
     // Resolves server-custodied tokens through EDGE; the client is only touched when one is hit.
     Layer.provideMerge(
-      Layer.unwrapEffect(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
+      Layer.unwrap(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
     ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(Trace.writerLayerNoop),

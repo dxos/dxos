@@ -49,7 +49,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMailbox> = Inb
                   err: Cause.squash(cause),
                   messageId: message.id,
                   extractorId,
-                  isDefect: !Cause.isFailure(cause),
+                  isDefect: !Cause.hasFails(cause),
                 });
               }),
             ),

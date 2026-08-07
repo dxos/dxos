@@ -19,7 +19,7 @@ import { type PluginFailurePhase, PluginTimeoutError } from './manager-types';
 /** Host configuration passed through from `ManagerOptions`. */
 export type PluginCatalogOptions = {
   pluginLoader: (id: string) => Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, Error>;
-  loadTimeout: Duration.DurationInput;
+  loadTimeout: Duration.Input;
   onRemove?: (id: string) => Effect.Effect<void, unknown>;
 };
 

@@ -62,10 +62,12 @@ export class ClientServicesProxy implements ClientServicesProvider {
           Effect.timeoutOrElse({
             duration: this._timeout,
             orElse: () =>
-              new RemoteServiceConnectionTimeout({
-                message: 'Failed to establish rpc connection',
-                context: { timeout: this._timeout },
-              }),
+              Effect.fail(
+                new RemoteServiceConnectionTimeout({
+                  message: 'Failed to establish rpc connection',
+                  context: { timeout: this._timeout },
+                }),
+              ),
           }),
         ),
       );

@@ -30,7 +30,7 @@ export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: s
     .pipe(Effect.catchTag('SystemError', () => Effect.succeed('[]')));
 
   const raw = Yaml.parse(content);
-  const parsed = yield* Schema.decodeUnknown(PluginsSchema)(raw ?? []).pipe(
+  const parsed = yield* Schema.decodeUnknownEffect(PluginsSchema)(raw ?? []).pipe(
     Effect.catch(() => Effect.succeed([] as string[])),
   );
 

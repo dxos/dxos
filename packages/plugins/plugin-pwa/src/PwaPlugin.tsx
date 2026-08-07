@@ -38,7 +38,7 @@ type PrecacheProgress = {
 };
 
 const isPrecacheProgress = (data: unknown): data is PrecacheProgress =>
-  Predicate.isRecord(data) && data.type === PRECACHE_PROGRESS;
+  Predicate.isObject(data) && data.type === PRECACHE_PROGRESS;
 
 const RegisterPwa = Capability.inlineModule(
   'RegisterPwa',

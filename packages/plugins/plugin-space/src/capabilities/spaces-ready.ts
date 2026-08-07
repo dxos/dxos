@@ -60,7 +60,7 @@ export default Capability.makeModule(
 
     // Fiber for the one-shot personal-space init Effect; interrupted in cleanup
     // so it cannot access the db after client.destroy() closes the repo.
-    let personalSpaceInitFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
+    let personalSpaceInitFiber: Fiber.Fiber<void, unknown> | undefined;
     let personalSpaceInitialized = false;
 
     const personalSpaceInitEffect = (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) =>

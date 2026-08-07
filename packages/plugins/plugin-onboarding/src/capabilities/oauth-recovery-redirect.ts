@@ -92,7 +92,7 @@ const deleteSnapshot = (accessTokenId: string | undefined): void => {
  * lives in its `.error` property, so unwrap it before logging or it is silently lost.
  */
 const describeError = (error: unknown): string => {
-  const cause = Cause.isUnknownException(error) ? error.error : error;
+  const cause = Cause.isUnknownError(error) ? error.error : error;
   return cause instanceof Error ? cause.message : String(cause);
 };
 

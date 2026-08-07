@@ -101,7 +101,7 @@ export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
   never,
   Operation.Service | OpaqueToolkit.OpaqueToolkitProvider
 > => {
-  return Layer.unwrapEffect(
+  return Layer.unwrap(
     Effect.gen(function* () {
       const operationInvoker = yield* Operation.Service;
 

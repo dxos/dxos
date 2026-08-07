@@ -43,7 +43,7 @@ export const makeDiscordLayerFromToken = (token: string): Layer.Layer<DiscordRES
 export const makeDiscordLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
       const accessToken = yield* Database.load(connection.accessToken);
@@ -71,7 +71,7 @@ export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<Discor
 export const makeDiscordUserLayer = (
   connectionRef: Ref.Ref<Connection.Connection>,
 ): Layer.Layer<DiscordREST, Err.EntityNotFoundError> =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
       const accessToken = yield* Database.load(connection.accessToken);

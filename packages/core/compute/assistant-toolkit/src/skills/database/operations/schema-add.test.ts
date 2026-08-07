@@ -36,7 +36,7 @@ describe('SchemaAdd', () => {
       // The tool parameter is typed as an object so the model emits the JSON Schema as an object.
       // An unconstrained parameter let some models emit a JSON-encoded string, which then corrupted
       // the created type; a non-object is now rejected at the tool-call boundary.
-      const decode = Schema.decodeUnknown(SchemaAdd.input);
+      const decode = Schema.decodeUnknownEffect(SchemaAdd.input);
       const base = { name: 'Project', typename: 'com.example.type.project' };
 
       const fromObject = yield* decode({ ...base, jsonSchema: PROJECT_JSON_SCHEMA });

@@ -56,7 +56,7 @@ const getIPData = Effect.fn(function* (config: Config) {
   const data = yield* HttpClientRequest.get(`https://api.ipdata.co?api-key=${IPDATA_API_KEY}`).pipe(
     httpClientNoTrace.execute,
     Effect.flatMap((res) => res.json),
-    Effect.flatMap(Schema.decodeUnknown(IPData)),
+    Effect.flatMap(Schema.decodeUnknownEffect(IPData)),
     // On failure fall back to stale cache rather than emitting no tags.
     Effect.catch((err) =>
       Effect.sync(() => {

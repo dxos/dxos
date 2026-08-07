@@ -401,7 +401,7 @@ const applyOverrides = <T>(base: Partial<T>, overrides: Record<SchemaEx.JsonPath
 
 // Copied from `@dxos/echo` (internal `Obj.valuesEqual`): references compare by target URI, arrays and plain
 // object-shaped property bags (excluding `id`) compare recursively, and leaves fall back to Effect `Equal.equals`,
-// which is structural by default in Effect 4. Effect's `Schema.equivalence` is not a safe substitute — it returns false-positive
+// which is structural by default in Effect 4. Effect's `Schema.toEquivalence` is not a safe substitute — it returns false-positive
 // equality for dynamic/union/ref-array schemas, which would silently prune edits.
 // TODO(wittjosiah): Factor out into a shared util rather than duplicating echo's internal implementation.
 const valuesEqual = (left: unknown, right: unknown): boolean => {

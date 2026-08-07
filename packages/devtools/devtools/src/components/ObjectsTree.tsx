@@ -329,7 +329,7 @@ const DEFAULT_OBJECT_ICON = 'ph--cube--regular';
 const DEFAULT_RELATION_ICON = 'ph--link--regular';
 
 const itemOrder: Order.Order<ObjectsTreeItem> = Order.mapInput(
-  Order.number,
+  Order.Number,
   Match.type<ObjectsTreeItem>().pipe(
     Match.when({ type: 'object' }, () => 0),
     Match.when({ type: 'outgoing-relation' }, () => 1),

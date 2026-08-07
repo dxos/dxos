@@ -193,7 +193,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
 
         const tags = targetArray
           .map(getLabel)
-          .filter(Predicate.isNotNullable)
+          .filter(Predicate.isNotNullish)
           .map((title) => {
             return `<span class="dx-tag" data-hue="neutral">${title}</span>`;
           })

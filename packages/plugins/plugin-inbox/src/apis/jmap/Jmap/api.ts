@@ -79,7 +79,7 @@ export const jmapRequest = (
 
     const executed = HttpClientRequest.post(apiUrl).pipe(
       HttpClientRequest.setHeader('accept', 'application/json'),
-      HttpClientRequest.bodyUnsafeJson(body),
+      HttpClientRequest.bodyJsonUnsafe(body),
       httpClientWithTracerDisabled.execute,
       Effect.flatMap(decodeJsonOrFail(Response)),
       Effect.timeout(REQUEST_TIMEOUT),
@@ -106,7 +106,7 @@ export const getMethodResponse = <A, I, R>(
 
   const [name, args] = entry;
   if (name === 'error') {
-    return Schema.decodeUnknown(MethodError)(args).pipe(
+    return Schema.decodeUnknownEffect(MethodError)(args).pipe(
       Effect.matchEffect({
         onFailure: () => Effect.fail(new JmapApiError(undefined, `JMAP method error (${callId}).`)),
         onSuccess: (error) => Effect.fail(new JmapApiError(undefined, error.description ?? error.type, error.type)),
@@ -114,7 +114,7 @@ export const getMethodResponse = <A, I, R>(
     );
   }
 
-  return Schema.decodeUnknown(schema)(args).pipe(Effect.mapError(asJmapApiError));
+  return Schema.decodeUnknownEffect(schema)(args).pipe(Effect.mapError(asJmapApiError));
 };
 
 /** Decodes a 2xx JSON body against `schema`; a >=400 status fails with the (truncated) body text. */

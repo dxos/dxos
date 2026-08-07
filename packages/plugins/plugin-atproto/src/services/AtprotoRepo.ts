@@ -160,7 +160,7 @@ const rkeyFromUri = (uri: string): string => uri.slice(uri.lastIndexOf('/') + 1)
 
 const getJson = <A>(client: HttpClient.HttpClient, url: string, schema: Schema.Schema<A>) =>
   client.execute(HttpClientRequest.get(url)).pipe(
-    Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknown(schema))),
+    Effect.flatMap((response) => Effect.flatMap(response.json, Schema.decodeUnknownEffect(schema))),
     Effect.scoped,
   );
 
@@ -264,7 +264,7 @@ const proxyWrite = <A>(
             new AtprotoRepoError({ message: `${nsid} failed (${response.status})${text ? `: ${text}` : ''}` }),
           );
         }
-        return yield* Schema.decodeUnknown(schema)(yield* response.json);
+        return yield* Schema.decodeUnknownEffect(schema)(yield* response.json);
       }),
     ),
     Effect.scoped,

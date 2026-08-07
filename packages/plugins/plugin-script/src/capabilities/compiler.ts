@@ -67,7 +67,7 @@ const fetchRuntimeModules = Effect.fnUntraced(function* () {
   const manifest = yield* HttpClient.get(new URL('manifest.json', SCRIPT_PACKAGES_BUCKET)).pipe(
     Effect.flatMap((_) => _.json),
     Effect.flatMap(
-      Schema.decodeUnknown(
+      Schema.decodeUnknownEffect(
         Schema.Struct({
           files: Schema.Array(
             Schema.Struct({

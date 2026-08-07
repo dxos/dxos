@@ -143,7 +143,7 @@ export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Key<I,
 export const layerWith = <T, A, E, R>(
   interfaceDef: InterfaceDef<T>,
   build: (value: T) => Layer.Layer<A, E, R>,
-): Layer.Layer<A, E, R | Service> => Layer.unwrapEffect(get(interfaceDef).pipe(Effect.orDie, Effect.map(build)));
+): Layer.Layer<A, E, R | Service> => Layer.unwrap(get(interfaceDef).pipe(Effect.orDie, Effect.map(build)));
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 

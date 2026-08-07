@@ -89,7 +89,7 @@ const lastSession = (profile: string): Effect.Effect<McpSession | undefined, Mcp
 
 /** Persisted sessions are decoded rather than trusted: the file is user-editable state. */
 export const decodeSession = (raw: string, label: string): Effect.Effect<McpSession, McpSessionError, never> =>
-  Schema.decodeUnknown(Schema.parseJson(McpSessionSchema))(raw).pipe(
+  Schema.decodeUnknownEffect(Schema.parseJson(McpSessionSchema))(raw).pipe(
     Effect.mapError(
       (error) =>
         new McpSessionError({

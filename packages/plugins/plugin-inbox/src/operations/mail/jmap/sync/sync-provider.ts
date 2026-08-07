@@ -439,7 +439,7 @@ const jmapEmailsForIds = (
             options.onRetrieved?.();
             return list[0];
           }),
-        ).pipe(Stream.filter(Predicate.isNotNullable)),
+        ).pipe(Stream.filter(Predicate.isNotNullish)),
       { concurrency: JMAP_SYNC_CONFIG.fetchConcurrency, bufferSize: 10 },
     ),
   );

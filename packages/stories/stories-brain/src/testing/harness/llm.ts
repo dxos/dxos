@@ -19,7 +19,7 @@ const RETRY = Schedule.intersect(Schedule.exponential('2 seconds'), Schedule.rec
 // times out degrades to empty and scores as *inaccurate*, conflating "slow" with "bad". Give it room
 // to finish — latency is measured separately, so slowness is captured honestly rather than as failure.
 // `LLM_TIMEOUT` (seconds) overrides; the overnight driver raises it well above any real completion.
-const DEFAULT_TIMEOUT: Duration.DurationInput = process.env.LLM_TIMEOUT
+const DEFAULT_TIMEOUT: Duration.Input = process.env.LLM_TIMEOUT
   ? `${Math.max(1, Number(process.env.LLM_TIMEOUT))} seconds`
   : '60 seconds';
 
@@ -34,7 +34,7 @@ export const generateText = (
   model: string,
   provider: DXN.DXN,
   prompt: string,
-  timeout: Duration.DurationInput = DEFAULT_TIMEOUT,
+  timeout: Duration.Input = DEFAULT_TIMEOUT,
 ): Effect.Effect<string, never, AiService.AiService> =>
   Effect.gen(function* () {
     const service = yield* AiService.AiService;

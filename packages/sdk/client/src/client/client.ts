@@ -3,7 +3,6 @@
 //
 
 import * as EffectContext from 'effect/Context';
-import * as Runtime from 'effect/Runtime';
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, MulticastObservable, Trigger, synchronized } from '@dxos/async';

@@ -248,7 +248,7 @@ const echoHostLayer = (options: { useSubduction?: boolean }) =>
     }),
   ).pipe(
     Layer.provideMerge(
-      Layer.unwrapEffect(
+      Layer.unwrap(
         Effect.gen(function* () {
           const identityManager = yield* IdentityManagerService;
           const spaceManager = yield* SpaceManagerService;

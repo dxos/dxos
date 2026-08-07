@@ -82,10 +82,9 @@ export interface WorkerRuntimeService {
 /**
  * Context tag for the dedicated-worker runtime service. Provided by {@link layerWorkerRuntime}.
  */
-export class WorkerRuntime extends Context_.Tag('@dxos/client-services/WorkerRuntime')<
-  WorkerRuntime,
-  WorkerRuntimeService
->() {}
+export class WorkerRuntime extends Context_.Service<WorkerRuntime, WorkerRuntimeService>()(
+  '@dxos/client-services/WorkerRuntime',
+) {}
 
 /**
  * Constructs the {@link WorkerRuntimeService}. The SQLite {@link ManagedRuntime} and

@@ -24,13 +24,13 @@ export const hub = Command.make('hub', {
       const parentProvider = yield* Effect.configProviderWith(Effect.succeed);
 
       const childProvider = Option.match(apiKey, {
-        onNone: () => ConfigProvider.fromJson({}),
-        onSome: (apiKey) => ConfigProvider.fromJson({ DX_HUB_API_KEY: apiKey }),
+        onNone: () => ConfigProvider.fromUnknown({}),
+        onSome: (apiKey) => ConfigProvider.fromUnknown({ DX_HUB_API_KEY: apiKey }),
       });
 
       const provider = childProvider.pipe(ConfigProvider.orElse(() => parentProvider));
 
       return Layer.setConfigProvider(provider);
-    }, Layer.unwrapEffect),
+    }, Layer.unwrap),
   ),
 );

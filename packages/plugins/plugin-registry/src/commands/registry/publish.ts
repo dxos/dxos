@@ -119,7 +119,7 @@ export const publish = Command.make(
           return yield* Effect.fail(new Error(`manifest.json not found in ${outdir}. Did the build run?`));
         }
         const manifestRaw = yield* fs.readFileString(manifestPath);
-        const manifest: Manifest = yield* Schema.decodeUnknown(ManifestSchema)(JSON.parse(manifestRaw));
+        const manifest: Manifest = yield* Schema.decodeUnknownEffect(ManifestSchema)(JSON.parse(manifestRaw));
         const key = manifest.key;
         const version = manifest.version;
         const manifestHash = `sha256-${yield* Effect.promise(() => sha256Base64(new TextEncoder().encode(manifestRaw)))}`;

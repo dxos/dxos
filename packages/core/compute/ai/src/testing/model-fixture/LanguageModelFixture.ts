@@ -491,7 +491,7 @@ export const make = (options: MakeProps): Effect.Effect<LanguageModel.Service> =
                     return chunk;
                   }),
                 ),
-                Stream.onDone(() =>
+                Stream.onEnd(() =>
                   Effect.gen(function* () {
                     const conversation: FixtureConversation = {
                       parameters: getFixtureConversationParameters(options.modelName, true, params),
@@ -690,7 +690,7 @@ class FixtureStore {
       }));
       return Function.pipe(
         scored,
-        Array.sortBy(Order.mapInput(Order.number, (entry) => entry.distance)),
+        Array.sortBy(Order.mapInput(Order.Number, (entry) => entry.distance)),
         Array.map((entry) => entry.conversation),
         Option.fromIterable,
       );

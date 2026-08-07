@@ -232,13 +232,13 @@ export const setNotifyOverride = (override: NotifyOverride): { notifyOverride: N
 
 /** Extracts a {@link NotifyOverride} from a failed process's `error` (`Process.Info.error`, a `SerializedError` whose `context` carries it), if present. */
 export const getNotifyOverride = (failure: unknown): NotifyOverride | null => {
-  if (!Predicate.isRecord(failure) || !Predicate.isRecord(failure.context)) {
+  if (!Predicate.isObject(failure) || !Predicate.isObject(failure.context)) {
     return null;
   }
   const override = failure.context.notifyOverride;
-  // `context` is an untyped bag on a foreign error value; `Predicate.isRecord` is the only structural
+  // `context` is an untyped bag on a foreign error value; `Predicate.isObject` is the only structural
   // check available at this boundary, so the field shape beyond "is a record" can't be verified.
-  return Predicate.isRecord(override) ? (override as NotifyOverride) : null;
+  return Predicate.isObject(override) ? (override as NotifyOverride) : null;
 };
 
 export const AddToast = Operation.make({

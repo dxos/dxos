@@ -150,7 +150,7 @@ export class SlackCredentials extends Context.Service<SlackCredentials, SlackCre
 
 type SlackEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | SlackApiError,
+  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | SlackApiError,
   HttpClient.HttpClient | SlackCredentials
 >;
 
@@ -170,7 +170,7 @@ type SlackEffect<T> = Effect.Effect<
  *  - SlackApiError: no — body-level "ok: false" is an application error, not transient.
  */
 const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException | SlackApiError,
+  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError | SlackApiError,
 ): boolean => {
   if (error instanceof ParseResult.ParseError) {
     return false;
@@ -178,7 +178,7 @@ const shouldRetry = (
   if (SlackApiError.is(error)) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
   if (error._tag === 'RequestError') {
@@ -209,7 +209,7 @@ const runRequest = <T extends { ok: boolean; error?: string }>(
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.flatMap((body) =>
         body.ok ? Effect.succeed(body) : Effect.fail(new SlackApiError({ context: { code: body.error ?? 'unknown' } })),
       ),

@@ -44,14 +44,14 @@ export class FeedTraceSink extends Context.Service<
  * writer, and exposes it as {@link FeedTraceSink}. Requires ambient
  * {@link Database.Service} (per-space).
  */
-export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = Layer.scopedContext(
+export const layerLive: Layer.Layer<FeedTraceSink, never, Database.Service> = Layer.effectContext(
   Effect.gen(function* () {
     const feed = yield* getOrCreateTraceFeed();
 
     const runtime = yield* Effect.runtime<Database.Service>();
     let buffer: Trace.Message[] = [];
     let flushMore = false;
-    let flushFiber: Fiber.RuntimeFiber<void> | undefined;
+    let flushFiber: Fiber.Fiber<void> | undefined;
 
     const scheduleFlush = () => {
       flushMore = true;

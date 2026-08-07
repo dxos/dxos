@@ -217,7 +217,7 @@ interface ToolExecutionServiceOptions {
 }
 
 const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
-  Layer.unwrapEffect(
+  Layer.unwrap(
     Effect.gen(function* () {
       const operationInvoker = yield* Operation.Service;
       return makeToolExecutionService({

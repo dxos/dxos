@@ -30,7 +30,7 @@ const clientContext = (client: Client): Context.Context<HaloServices> =>
  * so each test that provides this layer gets an isolated peer.
  */
 export const makeClientLayer = (options?: { identity?: boolean }): Layer.Layer<HaloServices> =>
-  Layer.scopedContext(
+  Layer.effectContext(
     Effect.gen(function* () {
       const client = new Client({ services: new TestBuilder().createLocalClientServices() });
       yield* Effect.addFinalizer(() => Effect.promise(() => client.destroy()));

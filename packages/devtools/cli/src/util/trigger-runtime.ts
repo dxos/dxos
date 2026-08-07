@@ -57,7 +57,7 @@ export const triggerRuntimeLayer = ({
   ClientService | ConfigService | FileSystem.FileSystem
 > => {
   // Set up KeyValueStore for trigger state storage
-  const kvStoreLayer = Layer.unwrapEffect(
+  const kvStoreLayer = Layer.unwrap(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const storagePath = getProfilePath(DX_DATA, profile, 'trigger-state');
@@ -73,7 +73,7 @@ export const triggerRuntimeLayer = ({
   const triggerStateStoreLayer = TriggerStateStore.layerKv.pipe(Layer.provide(kvStoreLayer));
 
   // Build on top of chat layer, adding trigger-specific services
-  return Layer.unwrapEffect(
+  return Layer.unwrap(
     Effect.gen(function* () {
       // Use the same merged toolkit as chat.
       const toolkit = OpaqueToolkit.merge(...toolkits);

@@ -156,7 +156,7 @@ const ControlsModuleContainer = ({ space }: { space: Space }) => {
             setAnalyzing(false);
           }
           void refreshFacts();
-          if (Exit.isFailure(exit) && !Exit.isInterrupted(exit)) {
+          if (Exit.isFailure(exit) && !Exit.hasInterrupts(exit)) {
             log.warn('pipeline failed', { cause: exit.cause });
           }
         },

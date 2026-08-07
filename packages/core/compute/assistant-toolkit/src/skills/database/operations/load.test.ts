@@ -28,7 +28,7 @@ describe('Load', () => {
 
         const loaded = yield* Operation.invoke(Load, { refs: [Ref.make(organization), Ref.make(person)] });
 
-        const rows = yield* Schema.decodeUnknown(Schema.Array(Schema.Struct({ id: Schema.String })))(loaded);
+        const rows = yield* Schema.decodeUnknownEffect(Schema.Array(Schema.Struct({ id: Schema.String })))(loaded);
         expect(rows.map((row) => row.id)).toEqual([organization.id, person.id]);
       },
       Effect.provide(OperationTestLayer),

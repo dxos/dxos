@@ -65,7 +65,9 @@ let skipped = 0;
 for (const file of files) {
   const before = readFileSync(file, 'utf-8');
   const source = before.replace(pattern, (match, receiver, access, service, method) => {
-    if (receiver === 'services') {
+    // `services` / `clientServices` / `#services` name the deprecated protobuf-shaped map, not a
+    // client. Its methods really are nested, so the tag rewrite would break them.
+    if (/services$/i.test(receiver)) {
       skipped += 1;
       return match;
     }

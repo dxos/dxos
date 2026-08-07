@@ -119,14 +119,14 @@ export type ManagerOptions = {
    * atom and auto-disabled so a stuck remote host can't stall app boot.
    * Defaults to 30 seconds; pass `Duration.infinity` to disable.
    */
-  loadTimeout?: Duration.DurationInput;
+  loadTimeout?: Duration.Input;
   /**
    * Maximum time allowed for a single module's `activate()` Effect to settle.
    * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
    * plugin is recorded on `failed` and auto-disabled. Defaults to 30 seconds;
    * pass `Duration.infinity` to disable.
    */
-  activationTimeout?: Duration.DurationInput;
+  activationTimeout?: Duration.Input;
 };
 
 /**
@@ -290,7 +290,7 @@ class ManagerImpl implements PluginManager {
   private readonly _catalog: PluginCatalog;
   private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   /** The failure-supervision fiber; stopped by `shutdown`, restarted by `_withRuntime`. */
-  private _supervisor: Fiber.RuntimeFiber<never> | undefined;
+  private _supervisor: Fiber.Fiber<never> | undefined;
 
   constructor({
     pluginLoader,

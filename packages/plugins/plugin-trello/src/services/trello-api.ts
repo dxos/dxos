@@ -178,7 +178,7 @@ const authParams = (
 
 type TrelloEffect<T> = Effect.Effect<
   T,
-  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
+  HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError,
   HttpClient.HttpClient | TrelloCredentials
 >;
 
@@ -191,13 +191,11 @@ type TrelloEffect<T> = Effect.Effect<
  *  - TimeoutException (the request didn't complete in the allotted window): yes.
  *  - Schema decode failures (`ParseError`): no — payload won't become valid on retry.
  */
-const shouldRetry = (
-  error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutException,
-): boolean => {
+const shouldRetry = (error: HttpClientError.HttpClientError | ParseResult.ParseError | Cause.TimeoutError): boolean => {
   if (error instanceof ParseResult.ParseError) {
     return false;
   }
-  if (Cause.isTimeoutException(error)) {
+  if (Cause.isTimeoutError(error)) {
     return true;
   }
   if (error._tag === 'RequestError') {
@@ -229,7 +227,7 @@ const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Sch
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknown(schema))),
+      Effect.flatMap((res) => Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema))),
       Effect.timeout('15 seconds'),
       Effect.retry({
         schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),

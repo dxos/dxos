@@ -566,7 +566,7 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(
               outlineProp ??
               Option.fromNullishOr(chat).pipe(
                 Option.map((_) => get(Obj.atom(_))),
-                Option.flatMapNullable((_) => _?.outline?.atom),
+                Option.flatMapNullishOr((_) => _?.outline?.atom),
                 Option.map(get),
                 Option.getOrUndefined,
               ),

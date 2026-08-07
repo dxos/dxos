@@ -37,7 +37,6 @@ import {
 import { Filter, Obj } from '@dxos/echo';
 import { type DatabaseImpl, type EchoClient, type EchoDatabase, type SpaceSyncState } from '@dxos/echo-client';
 import { isEdgePeerId } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -676,7 +675,8 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _getCredentials(): Promise<Credential[]> {
-    const credentials = await EffectEx.runInRuntime(this._runtime)(
+    const credentials = await runServiceCall(
+      this._runtime,
       this._clientServices.rpc['SpacesService.queryCredentials']({ spaceKey: this.key, noTail: true }).pipe(
         EffectStream.runCollect,
       ),

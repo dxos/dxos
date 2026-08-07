@@ -151,7 +151,7 @@ export const make = ({ endpoint = DEFAULT_OLLAMA_ENDPOINT }: Options = {}): Admi
   const unload: Admin['unload'] = (name) => setKeepAlive(name, 0);
 
   const pull: Admin['pull'] = (name) =>
-    Stream.unwrapScoped(
+    Stream.unwrap(
       Effect.gen(function* () {
         const client = yield* ollamaHttpClient;
         const request = yield* HttpClientRequest.post(`${endpoint}/api/pull`).pipe(

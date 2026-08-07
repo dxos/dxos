@@ -20,13 +20,15 @@ export const createEdgeIdentity = (client: Client): EdgeIdentity => {
     identityDid: identity.did,
     peerKey: device.deviceKey.toHex(),
     presentCredentials: async ({ challenge }) => {
-      const identityService = client.services.rpc.IdentityService;
-      const authCredential = await runServiceCall(Context.empty(), identityService.createAuthCredential(undefined), {
-        label: 'IdentityService.createAuthCredential',
-      });
+      const rpc = client.services.rpc;
+      const authCredential = await runServiceCall(
+        Context.empty(),
+        rpc['IdentityService.createAuthCredential'](undefined),
+        { label: 'IdentityService.createAuthCredential' },
+      );
       return runServiceCall(
         Context.empty(),
-        identityService.signPresentation({
+        rpc['IdentityService.signPresentation']({
           presentation: { credentials: [authCredential] },
           nonce: challenge,
         }),

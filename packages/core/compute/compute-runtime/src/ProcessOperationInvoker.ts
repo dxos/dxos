@@ -118,7 +118,7 @@ export const make = (opts: {
 }): Operation.OperationService & OperationInvoker.OperationInvokerInternal & ProcessOperationInvoker => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
-  const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
+  const pendingFibers = new Set<Fiber.Fiber<any>>();
   const fiberCache = new Map<Process.ID, OperationFiber<any>>();
 
   // Dispatches an operation to the remote (EDGE) runtime, keyed by its deployment id. Used when an
@@ -363,7 +363,7 @@ export const layer: Layer.Layer<
   Operation.Service | Service,
   never,
   ProcessManagerService | OperationHandlerSet.OperationHandlerProvider
-> = Layer.unwrapEffect(
+> = Layer.unwrap(
   Effect.gen(function* () {
     const manager = yield* ProcessManagerService;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;

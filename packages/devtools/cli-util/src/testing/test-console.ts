@@ -81,7 +81,7 @@ export namespace TestConsole {
   const setConsole = Effect.gen(function* () {
     const { console } = yield* TestConsole;
     return Console.setConsole(console);
-  }).pipe(Layer.unwrapEffect);
+  }).pipe(Layer.unwrap);
 
   export const layer = Layer.provideMerge(setConsole, testConsole);
 }

@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 const isStream = (value: any): value is Stream.Stream<any> =>
-  Predicate.hasProperty(value, Stream.StreamTypeId) && Predicate.isObject(value[Stream.StreamTypeId]);
+  Predicate.hasProperty(value, Stream.TypeId) && Predicate.isObject(value[Stream.TypeId]);
 
 // "API-type" style borrowed from effect
 export interface StreamSchema<Item extends Schema.Codec<any, any>> extends Schema.Schema<

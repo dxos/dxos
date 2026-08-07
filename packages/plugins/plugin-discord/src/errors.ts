@@ -37,21 +37,21 @@ type DfxRatelimitedResponseShape = {
 const hasDiscordErrorFields = (
   error: Record<string, unknown>,
 ): error is { cause: { code?: number; message?: string }; response: { status: number } } =>
-  Predicate.isRecord(error.cause) &&
-  Predicate.isRecord(error.response) &&
+  Predicate.isObject(error.cause) &&
+  Predicate.isObject(error.response) &&
   typeof (error.response as { status?: unknown }).status === 'number';
 
 export const isDiscordErrorResponse = (error: unknown): error is DfxErrorResponseShape =>
-  Predicate.isRecord(error) && error._tag === 'ErrorResponse' && hasDiscordErrorFields(error);
+  Predicate.isObject(error) && error._tag === 'ErrorResponse' && hasDiscordErrorFields(error);
 
 export const isDiscordRatelimited = (error: unknown): error is DfxRatelimitedResponseShape =>
-  Predicate.isRecord(error) && error._tag === 'RatelimitedResponse' && hasDiscordErrorFields(error);
+  Predicate.isObject(error) && error._tag === 'RatelimitedResponse' && hasDiscordErrorFields(error);
 
 /** Read the HTTP status from a dfx Discord error if present. */
 export const discordErrorStatus = (error: unknown): number | undefined => {
   if (
-    Predicate.isRecord(error) &&
-    Predicate.isRecord((error as { response?: unknown }).response) &&
+    Predicate.isObject(error) &&
+    Predicate.isObject((error as { response?: unknown }).response) &&
     typeof (error as { response: { status?: unknown } }).response.status === 'number'
   ) {
     return (error as { response: { status: number } }).response.status;
@@ -77,8 +77,8 @@ export const formatDiscordSyncFailure = (error: unknown): string => {
     const keys = Object.keys(error.context);
     return keys.length > 0 ? `${error.name}: ${JSON.stringify(error.context)}` : error.name;
   }
-  if (Predicate.isRecord(error) && typeof error._tag === 'string') {
-    if (error._tag === 'ResponseError' && Predicate.isRecord(error.response) && 'status' in error.response) {
+  if (Predicate.isObject(error) && typeof error._tag === 'string') {
+    if (error._tag === 'ResponseError' && Predicate.isObject(error.response) && 'status' in error.response) {
       return `HTTP ${error.response.status}`;
     }
     return error._tag;

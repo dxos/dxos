@@ -765,7 +765,7 @@ const removeUnsatisfiedServerToolCalls = (prompt: Prompt.Prompt): Prompt.Prompt 
  */
 const groupAssistantMessages: (messages: readonly Message.Message[]) => readonly Message.Message[] = flow(
   (messages) =>
-    Array.isNonEmptyReadonlyArray(messages)
+    Array.isReadonlyArrayNonEmpty(messages)
       ? Array.groupWith((a: Message.Message, b: Message.Message) => a.sender.role === b.sender.role)(messages)
       : [],
   Array.map(mergeMessages),

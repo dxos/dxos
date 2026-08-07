@@ -101,7 +101,7 @@ export default Capability.makeModule(
       effect.pipe(Effect.provide(clientLayer), Effect.result, Effect.map(Result.mapLeft((error) => error.message)));
 
     // In-flight pull fibers, so a pull can be cancelled via interruption.
-    const pullFibers = new Map<string, Fiber.RuntimeFiber<void>>();
+    const pullFibers = new Map<string, Fiber.Fiber<void>>();
 
     // Refresh only the loaded-into-memory set (cheap; no spawn). Logs load/unload transitions so the
     // console reflects which model is resident when a chat request triggers a load.
@@ -318,17 +318,16 @@ class OllamaSidecar extends Context.Service<
   );
 }
 
-const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, never, OllamaSidecar> =
-  Layer.unwrapEffect(
-    Effect.gen(function* () {
-      const { endpoint } = yield* OllamaSidecar;
-      return OllamaResolver.make({
-        endpoint,
-        provider: Provider.builtIn.id,
-        transformClient: HttpClient.withTracerPropagation(false),
-      });
-    }),
-  ).pipe(Layer.provide(FetchHttpClient.layer));
+const OllamaSidecarModelResolver: Layer.Layer<AiModelResolver.AiModelResolver, never, OllamaSidecar> = Layer.unwrap(
+  Effect.gen(function* () {
+    const { endpoint } = yield* OllamaSidecar;
+    return OllamaResolver.make({
+      endpoint,
+      provider: Provider.builtIn.id,
+      transformClient: HttpClient.withTracerPropagation(false),
+    });
+  }),
+).pipe(Layer.provide(FetchHttpClient.layer));
 
 const formatError = (error: unknown): string =>
   typeof error === 'string' ? error : error instanceof Error ? error.message : String(error);
