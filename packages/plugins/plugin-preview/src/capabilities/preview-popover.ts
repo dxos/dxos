@@ -78,10 +78,10 @@ export default Capability.makeModule(
       // Layout is optional: in standalone harnesses (Storybook, tests) no plugin contributes
       // `AppCapabilities.Layout`, and `getAll` returns an empty array. Reading `registry.get(undefined)`
       // would crash inside Atom's identity check (`'~atom/Serializable' in undefined`). When layout
-      // isn't available, fall through to the personal-space default.
+      // isn't available, fall through to the default space.
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const spaceId = layoutAtom && GraphPath.getSpaceIdFromPath(registry.get(layoutAtom).workspace);
-      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getPersonalSpace(client);
+      const space = (spaceId && client.spaces.get(spaceId)) ?? AppSpace.getDefaultSpace(client);
       if (!space) {
         return;
       }

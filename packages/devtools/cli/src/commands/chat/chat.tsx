@@ -107,7 +107,8 @@ export const chat = Command.make(
         yield* Console.error('No HALO identity configured. Run `dx account login` first.');
         return;
       }
-      const space = AppSpace.getPersonalSpace(client) ?? client.spaces.get()[0];
+      // Not the raw first space: the settings space is created first and holds app config only.
+      const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get().find(AppSpace.isVisibleSpace);
       if (!space) {
         yield* Console.error(
           'No space available for chat. Run `dx account login` or `dx space create --name "<name>"`.',

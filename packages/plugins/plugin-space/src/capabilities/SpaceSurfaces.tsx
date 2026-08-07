@@ -11,9 +11,11 @@ import React, { type Ref } from 'react';
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { useActiveSpace, useHomeVisibility, useSettingsSpace, useSettingsSpaceProperties } from '@dxos/app-toolkit/ui';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { getTypeURIFromQuery } from '@dxos/schema';
 
@@ -80,12 +82,34 @@ export const SpaceSettingsSurface = ({ subject }: SpaceSettingsSurfaceProps) => 
   const { invokePromise } = useOperationInvoker();
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
 
+  const settingsSpace = useSettingsSpace();
+  const [settingsProperties] = useSettingsSpaceProperties();
+  const defaultSpaceId = settingsProperties
+    ? Annotation.get(settingsProperties, AppAnnotation.DefaultSpaceAnnotation).pipe(Option.getOrUndefined)
+    : undefined;
+
+  const visibleSpaces = spaces.filter((space) => AppSpace.isVisibleSpace(space));
+  // The default space holds integration credentials (the Atmosphere `AccessToken` written by OAuth
+  // registration), so designating a shareable space would widen their audience. The space already
+  // designated stays listed whatever its policy — a profile migrated from an unlocked personal
+  // space would otherwise see an empty picker rather than its own current choice.
+  // TODO(wittjosiah): Offer every visible space once OAuth registration no longer stores
+  //  credentials in the default space.
+  const eligibleSpaces = visibleSpaces.filter(
+    (space) => space.membershipPolicy === MembershipPolicy.LOCKED || space.id === defaultSpaceId,
+  );
+
   return (
     <SpaceSettings
-      spaces={spaces}
+      spaces={visibleSpaces}
+      eligibleDefaultSpaces={eligibleSpaces}
       onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
       settings={settings}
       onSettingsChange={updateSettings}
+      defaultSpaceId={defaultSpaceId}
+      onDefaultSpaceChange={
+        settingsSpace ? (spaceId: string) => AppSpace.setDefaultSpaceId(settingsSpace, spaceId) : undefined
+      }
     />
   );
 };

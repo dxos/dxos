@@ -39,7 +39,7 @@ test.describe('HALO tests', () => {
     await host.createSpace();
 
     await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
-    // The guest has only its own personal space until it joins the host's identity.
+    // The guest has only its own default space until it joins the host's identity.
     await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT);
 
     await host.openUserDevices();

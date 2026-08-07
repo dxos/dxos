@@ -204,14 +204,9 @@ const buildPluginManagerOptions = ({
 
             yield* Effect.promise(() => client.halo.createIdentity());
 
-            // Tag the space as personal: plugin-space only contributes space graph nodes (and thus
-            // the collection/object nodes that back object-scoped actions like the comment toolbar)
-            // when a personal space exists. Tags cannot be added retroactively, so set it at creation
-            // — the `options` (2nd) argument carries tags, distinct from the space's properties.
-            const space = yield* Effect.promise(() =>
-              client.spaces.create({}, { tags: [AppSpace.PERSONAL_SPACE_TAG] }),
-            );
-            yield* Effect.promise(() => space.waitUntilReady());
+            // Object-scoped actions (e.g. the comment toolbar) resolve a default space, so stories
+            // bootstrap the same pair of spaces the app creates on first run.
+            const { defaultSpace: space } = yield* AppSpace.setupIdentitySpaces(client);
 
             // Add tokens.
             for (const accessToken of accessTokens) {
@@ -493,7 +488,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capabilities.OperationInvoker;
       const client = yield* ClientCapabilities.Client;
-      const space = client.spaces.get()[0];
+      // Not `spaces.get()[0]`: the settings space is created first, and story content belongs in
+      // the default space.
+      const space = AppSpace.getDefaultSpace(client) ?? client.spaces.get()[0];
       invariant(space, 'No space available after initialization.');
 
       // Ensure workspace is set. NOTE: the active workspace that surfaces read via

@@ -263,13 +263,13 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
           (testHarness) => Effect.promise(() => testHarness.dispose()),
         );
 
-        const { personalSpace } = yield* Effect.promise(() =>
+        const { defaultSpace } = yield* Effect.promise(() =>
           EffectEx.runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client))),
         );
-        yield* logTraceEvents(harness, personalSpace.id);
+        yield* logTraceEvents(harness, defaultSpace.id);
 
         const exit = yield* Effect.promise(() =>
-          runInstructions(harness, instructions, model, personalSpace.id, options.sessionChat),
+          runInstructions(harness, instructions, model, defaultSpace.id, options.sessionChat),
         ).pipe(
           Effect.flatMap((output: OutputSchema) => {
             const missedCriteria = pipe(

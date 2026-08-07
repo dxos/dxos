@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
+import { CreateAtom, GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -15,6 +15,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Space, isSpace } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Obj } from '@dxos/echo';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention';
 import { Position } from '@dxos/util';
@@ -46,6 +47,9 @@ export default Capability.makeModule(
     // dependency and re-evaluates when the setting changes or the capability lands (dependency
     // modules contribute individually, not batched per wave).
     const settingsCapabilityAtom = yield* Capability.atom(SupportCapabilities.Settings);
+    // Hoisted so the Home toolbar actions re-evaluate once the client (and with it the settings
+    // space holding the dismissed flag) lands.
+    const clientCapabilityAtom = yield* Capability.atom(ClientCapabilities.Client);
 
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
@@ -155,7 +159,7 @@ export default Capability.makeModule(
 
       // Home article toolbar actions: Start tour + Hide Welcome. Matched on the Home node (created
       // by plugin-space: type === SpaceSchema.SPACE_HOME_NODE_TYPE, space on properties.space). The actions are
-      // conditional on the personal space and the welcome not being dismissed — read reactively via
+      // conditional on the default space and the welcome not being dismissed — read reactively via
       // the space properties atom so the actions appear/disappear live without a React re-render cycle.
       GraphBuilder.createExtension({
         id: 'spaceHomeActions',
@@ -164,11 +168,19 @@ export default Capability.makeModule(
           return node.type === SpaceSchema.SPACE_HOME_NODE_TYPE && isSpace(space) ? Option.some(space) : Option.none();
         },
         actions: (space, get) => {
-          const properties = space.properties ? get(Obj.atom(space.properties)) : undefined;
+          const [client] = get(clientCapabilityAtom);
+          // Both spaces are resolved from the space list, which fills incrementally — subscribe to
+          // it so the actions appear once the settings space lands rather than staying hidden.
+          const spaces = client && get(CreateAtom.fromObservable(client.spaces));
+          const settingsProperties = spaces && AppSpace.getSettingsSpace(client)?.properties;
+          const defaultSpace = spaces && AppSpace.getDefaultSpace(client);
+          const properties = settingsProperties ? get(Obj.atom(settingsProperties)) : undefined;
           const isDismissed = properties
             ? Annotation.get(properties, WelcomeDismissedAnnotation).pipe(Option.getOrElse(() => false))
             : false;
-          const showActions = AppSpace.isPersonalSpace(space) && !isDismissed;
+          // Without settings-space properties "Hide Welcome" would invoke and silently persist
+          // nothing, so the actions stay hidden until the space that stores the flag resolves.
+          const showActions = !!properties && !!defaultSpace && space.id === defaultSpace.id && !isDismissed;
           if (!showActions) {
             return Effect.succeed([]);
           }
@@ -191,7 +203,7 @@ export default Capability.makeModule(
             Node.makeAction({
               id: HelpOperation.HideWelcome.meta.key,
               data: Effect.fnUntraced(function* () {
-                yield* Operation.invoke(HelpOperation.HideWelcome, { space });
+                yield* Operation.invoke(HelpOperation.HideWelcome);
               }),
               properties: {
                 label: HIDE_WELCOME_LABEL,

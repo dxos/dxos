@@ -104,15 +104,15 @@ const meta = {
           types: [Organization.Organization, Person.Person, HasConnection.HasConnection],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() =>
-                generateConnectedOrgs(personalSpace, generator, {
+                generateConnectedOrgs(defaultSpace, generator, {
                   organizationCount: 16,
                   personCount: 24,
                   connectionCount: 22,
                 }),
               );
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
       ],

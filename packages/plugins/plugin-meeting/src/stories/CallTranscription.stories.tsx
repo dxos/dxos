@@ -167,15 +167,15 @@ const meta = {
           }),
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               // The Meeting hub owns notes + summary + transcript; the MeetingArticle reads them.
-              const transcriptFeed = personalSpace.db.add(Feed.make());
-              const transcript = personalSpace.db.add(Transcript.make(Ref.make(transcriptFeed)));
-              const meetingNotes = personalSpace.db.add(Text.make({ content: '' }));
-              const meetingSummary = personalSpace.db.add(Text.make({ content: '' }));
+              const transcriptFeed = defaultSpace.db.add(Feed.make());
+              const transcript = defaultSpace.db.add(Transcript.make(Ref.make(transcriptFeed)));
+              const meetingNotes = defaultSpace.db.add(Text.make({ content: '' }));
+              const meetingSummary = defaultSpace.db.add(Text.make({ content: '' }));
 
-              personalSpace.db.add(
+              defaultSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   name: 'Standup',
                   participants: [],
@@ -185,7 +185,7 @@ const meta = {
                 }),
               );
 
-              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
         StorybookPlugin({}),

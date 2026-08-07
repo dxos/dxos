@@ -61,14 +61,14 @@ describe('AssistantPlugin', () => {
     expect(harness.manager.getActive()).toContain(moduleId('SkillDefinition'));
 
     // Space-affinity LayerSpec — resolution requires a space context.
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.runPromise(
       Effect.gen(function* () {
         const aiService = yield* AiService.AiService;
         expect(aiService).toBeDefined();
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService))),
     );
   });
 
@@ -84,7 +84,7 @@ describe('AssistantPlugin', () => {
       ],
     });
 
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
     await harness.runPromise(
@@ -96,7 +96,7 @@ describe('AssistantPlugin', () => {
       }).pipe(
         Effect.provide(
           AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
-            Layer.provideMerge(ServiceResolver.provide({ space: personalSpace.id }, AiService.AiService)),
+            Layer.provideMerge(ServiceResolver.provide({ space: defaultSpace.id }, AiService.AiService)),
           ),
         ),
       ),
@@ -117,7 +117,7 @@ describe('AssistantPlugin', () => {
       ],
     });
 
-    const { personalSpace } = await EffectEx.runAndForwardErrors(
+    const { defaultSpace } = await EffectEx.runAndForwardErrors(
       initializeIdentity(harness.get(ClientCapabilities.Client)),
     );
 
@@ -140,10 +140,10 @@ describe('AssistantPlugin', () => {
             },
             model: DXN.make('com.anthropic.model.claude-haiku-4-5.default'),
           },
-          { spaceId: personalSpace.id },
+          { spaceId: defaultSpace.id },
         );
         expect(result).toEqual({ capital: 'paris' });
-      }).pipe(Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service))),
+      }).pipe(Effect.provide(ServiceResolver.provide({ space: defaultSpace.id }, Database.Service))),
     );
   });
 
@@ -163,7 +163,7 @@ describe('AssistantPlugin', () => {
         ],
       });
 
-      const { personalSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
+      const { defaultSpace } = await initializeIdentity(harness.get(ClientCapabilities.Client)).pipe(
         EffectEx.runAndForwardErrors,
       );
 
@@ -187,7 +187,7 @@ describe('AssistantPlugin', () => {
         }).pipe(
           Effect.provide(
             ServiceResolver.provide(
-              { space: personalSpace.id },
+              { space: defaultSpace.id },
               Database.Service,
               AgentService.AgentService,
               Registry.Service,

@@ -28,7 +28,7 @@ const meta = {
       // plugins' command modules in — the same path the app takes.
       plugins: [
         ...corePlugins(),
-        // The identity brings a personal space, which is what the commands resolve against.
+        // The identity brings a default space, which is what the commands resolve against.
         ClientPlugin({ onClientInitialized: ({ client }) => Effect.asVoid(initializeIdentity(client)) }),
         StorybookPlugin({}),
         // The real plugin, so the story covers it actually contributing its commands.
