@@ -69,7 +69,7 @@ const getPropertyAST = (ast: SchemaAST.AST | undefined, propertyName: string): S
     const properties = SchemaEx.getProperties(ast);
     const property = properties.find((p) => p.name.toString() === propertyName);
     if (property) {
-      return SchemaEx.getBaseType(property).type;
+      return property.type;
     }
   }
 
@@ -101,7 +101,7 @@ const getRequiredProperties = (ast: SchemaAST.AST | undefined): SchemaEx.SchemaP
   const properties = SchemaEx.getProperties(ast);
 
   // Filter to only required properties (where isOptional === false).
-  return properties.filter((p) => !SchemaAST.isOptional(p.type));
+  return properties.filter((p) => !p.isOptional);
 };
 
 /**
@@ -117,16 +117,22 @@ const getDefaultValueForType = (ast: SchemaAST.AST | undefined): any => {
   }
 
   const defaultValue = SchemaAST.getDefaultAnnotation(ast);
-  if (Option.isSome(defaultValue)) {
-    return defaultValue.value;
+  if (defaultValue !== undefined) {
+    return defaultValue;
   }
 
-  return Match.value(ast).pipe(
-    Match.when({ _tag: 'StringKeyword' }, () => ''),
-    Match.when({ _tag: 'NumberKeyword' }, () => 0),
-    Match.when({ _tag: 'BooleanKeyword' }, () => false),
-    Match.orElse(() => undefined),
-  );
+  // A plain switch rather than `Match.when({ _tag })`: matching an object pattern against Effect 4's
+  // mutually recursive AST union expands into a mapped type the checker cannot resolve.
+  switch (ast._tag) {
+    case 'String':
+      return '';
+    case 'Number':
+      return 0;
+    case 'Boolean':
+      return false;
+    default:
+      return undefined;
+  }
 };
 
 /**

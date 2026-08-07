@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
 // QueryAST is referenced indirectly through `Type.InstanceType<typeof TableSchema>`
@@ -59,17 +58,14 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
         continue;
       }
 
-      Match.type<SchemaAST.AST>().pipe(
-        Match.when({ _tag: 'BooleanKeyword' }, () => {
+      // A plain switch rather than `Match.when({ _tag })`: matching an object pattern against
+      // Effect 4's mutually recursive AST union expands into a mapped type the checker cannot resolve.
+      switch (property.type._tag) {
+        case 'Boolean':
+        case 'Number':
           table.sizes[name] = 100;
-        }),
-        Match.when({ _tag: 'NumberKeyword' }, () => {
-          table.sizes[name] = 100;
-        }),
-        Match.orElse(() => {
-          // Noop.
-        }),
-      )(property.type);
+          break;
+      }
     }
   }
 

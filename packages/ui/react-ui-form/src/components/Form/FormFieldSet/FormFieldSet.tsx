@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation } from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import { SchemaEx } from '@dxos/effect';
 import { type Merge } from '@dxos/util';
 
 import { type FieldContext } from '#types';
@@ -90,7 +90,7 @@ export const FormFieldSet = ({
               type={property.type}
               name={name}
               path={[...(path ?? []), name]}
-              required={!SchemaAST.isOptional(property.type)}
+              required={!property.isOptional}
               readonly={readonly}
               layout={layout}
               projection={projection}
