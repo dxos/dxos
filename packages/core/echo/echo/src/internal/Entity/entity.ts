@@ -22,6 +22,7 @@ import {
   SchemaKindId,
   StaticTypeSchemaSlot,
 } from '../common/types';
+import { type AnyProperties } from '../common/types/base';
 import { type EntityMeta } from '../common/types/meta';
 import { JsonSchemaType } from '../JsonSchema/json-schema-type';
 
@@ -174,7 +175,7 @@ export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
  */
 // TODO(wittjosiah): Reconcile with `TypeSchema` (`Type/type-schema.ts`).
 //   Both describe the same `org.dxos.type.schema` shape.
-const persistentEntitySchema: Schema.Top = (() => {
+const persistentEntitySchema: Schema.Codec<AnyProperties, any> = (() => {
   const typename = DXN.getName(TypeMetaSchemaDXN);
   const version = DXN.getVersion(TypeMetaSchemaDXN)!;
   const struct = Schema.Struct({
@@ -186,7 +187,7 @@ const persistentEntitySchema: Schema.Top = (() => {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
     [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
   });
-  return Schema.make(ast);
+  return Schema.make<Schema.Codec<AnyProperties, any>>(ast);
 })();
 
 /**
@@ -219,11 +220,17 @@ export const makeEchoTypeSchema = <
   explicitId?: EntityId,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
   // Source Effect Schema describing the user's type — cached for `Type.getSchema`.
-  const sourceSchema = Schema.make<
-    EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
-    EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
-    Schema.Schema.Context<Self>
-  >(ast);
+  // v4's `Schema.make` takes the whole schema type as one parameter, and a schema exposes its
+  // channels as properties rather than through `Schema.Schema.*` helpers.
+  const sourceSchema =
+    Schema.make<
+      Schema.Codec<
+        EchoTypeSchemaProps<Self['Type']>,
+        EchoTypeSchemaProps<Self['Encoded']>,
+        Self['DecodingServices'],
+        Self['EncodingServices']
+      >
+    >(ast);
 
   // `typename` / `version` route through `EntityMeta` (`key` / `version`) — the
   // canonical registry-provenance pair — not data fields. `keys` is empty for

@@ -9,12 +9,15 @@ import { getNumericConstraints } from './numeric-constraints';
 
 describe('getNumericConstraints', () => {
   test('reads min/max from Schema.between (bounds live on separate nested refinements)', ({ expect }) => {
-    const { ast } = Schema.Number.pipe(Schema.check(Schema.isBetween(0, 23)));
+    const { ast } = Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 })));
     expect(getNumericConstraints(ast)).toEqual({ min: 0, max: 23, integer: false });
   });
 
   test('detects integer from Schema.int', ({ expect }) => {
-    const { ast } = Schema.Number.pipe(Schema.check(Schema.isInt()), Schema.check(Schema.isBetween(0, 23)));
+    const { ast } = Schema.Number.pipe(
+      Schema.check(Schema.isInt()),
+      Schema.check(Schema.isBetween({ minimum: 0, maximum: 23 })),
+    );
     expect(getNumericConstraints(ast)).toEqual({ min: 0, max: 23, integer: true });
   });
 

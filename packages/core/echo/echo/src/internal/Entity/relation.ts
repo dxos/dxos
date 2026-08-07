@@ -139,7 +139,9 @@ export const EchoRelationSchema = <Source extends RelationEndpoint, Target exten
     // Extract fields from the schema if available (Struct schemas have .fields).
     const fields = ((self as any).fields ?? {}) as Fields;
 
-    const schemaWithId = self.mapFields(Struct.assign({ id: Schema.String }));
+    // Rebuilt from the extracted fields: `mapFields` is a `Struct` method and `self` is a generic
+    // `Schema.Top`, so the id is folded in rather than assigned onto the schema value.
+    const schemaWithId = Schema.Struct({ ...fields, id: Schema.String });
     const ast = SchemaAST.annotate(schemaWithId.ast, {
       // TODO(dmaretskyi): `extend` kills the annotations.
       ...self.ast.annotations,

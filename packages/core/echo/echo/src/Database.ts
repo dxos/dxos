@@ -5,6 +5,7 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
@@ -324,7 +325,7 @@ export const isDatabase = (obj: unknown): obj is Database => {
   return obj ? typeof obj === 'object' && TypeId in obj && obj[TypeId] === TypeId : false;
 };
 
-export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((space) => isDatabase(space)));
+export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.refine(isDatabase));
 
 /**
  * Effect service tag for Database dependency injection.
@@ -349,7 +350,7 @@ export const notAvailable = Layer.succeed(Service, {
 /**
  * Creates a Database service instance from a Database.
  */
-export const makeService = (db: Database): Context.Tag.Service<Service> => {
+export const makeService = (db: Database): Service['Service'] => {
   return {
     get db() {
       return db;
@@ -560,10 +561,10 @@ export const getSyncState = (options?: GetSyncStateOptions): Effect.Effect<SyncS
  * Subscribe to sync state changes.
  */
 export const subscribeToSyncState = (options?: GetSyncStateOptions): Stream.Stream<SyncState, never, Service> =>
-  Stream.asyncScoped((emit) =>
+  Stream.callback<SyncState, never, Service>((queue) =>
     Effect.gen(function* () {
       const { db } = yield* Service;
-      const cleanup = db.subscribeToSyncState((state) => emit.single(state), options);
+      const cleanup = db.subscribeToSyncState((state) => Queue.offerUnsafe(queue, state), options);
       yield* Effect.addFinalizer(() => Effect.sync(cleanup));
     }),
   );

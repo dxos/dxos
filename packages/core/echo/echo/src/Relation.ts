@@ -62,10 +62,10 @@ export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
  * ```
  */
 // TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
-export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record(Schema.String, Schema.Unknown)),
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.StructWithRest(
+  Schema.Struct({ id: Schema.String }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+).pipe(
   Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Relation,

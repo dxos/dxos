@@ -16,7 +16,7 @@ export const Factuality = Schema.Struct({
   value: FactualityValue,
   polarity: Schema.Literals(['+', '-', '?']),
   /** Model confidence 0..1. */
-  confidence: Schema.optional(Schema.Number.pipe(Schema.check(Schema.isBetween(0, 1)))),
+  confidence: Schema.optional(Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 })))),
   nature: Schema.optional(Schema.Literals(['epistemic', 'aleatory'])),
 });
 export interface Factuality extends Schema.Schema.Type<typeof Factuality> {}

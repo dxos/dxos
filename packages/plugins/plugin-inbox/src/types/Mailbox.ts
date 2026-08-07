@@ -46,7 +46,7 @@ export class Mailbox extends Type.makeObject<Mailbox>(DXN.make('org.dxos.type.ma
     tags: Ref.Ref(TagIndex.TagIndex).pipe(FormInputAnnotation.set(false)),
     extractors: Schema.Struct({
       enabled: Schema.Array(Schema.String),
-      threshold: Schema.Number.pipe(Schema.check(Schema.isBetween(0, 1))),
+      threshold: Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))),
     }).pipe(FormInputAnnotation.set(false), Schema.optional),
     // Exclusion filters (see {@link Filter}) honored across the UI, sync, and analysis — messages
     // matching any filter are hidden and never committed / enriched.

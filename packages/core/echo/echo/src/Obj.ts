@@ -71,10 +71,10 @@ export interface Unknown extends BaseObj {}
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
 //   Effect Schema normalizes proxy objects to plain objects before calling filter predicates.
 //   Possible approaches: custom Schema.declare, AST manipulation, or upstream contribution.
-export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.Struct({
-  id: Schema.String,
-}).pipe(
-  Schema.extend(Schema.Record(Schema.String, Schema.Unknown)),
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Object> = Schema.StructWithRest(
+  Schema.Struct({ id: Schema.String }),
+  [Schema.Record(Schema.String, Schema.Unknown)],
+).pipe(
   Schema.annotate({
     [internal.TypeAnnotationId]: {
       kind: Entity.Kind.Object,

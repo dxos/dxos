@@ -54,7 +54,7 @@ export const QueryFacts = Operation.make({
     ),
     source: Schema.optional(Schema.String.annotate({ description: 'Source DXN the facts were extracted from.' })),
     minConfidence: Schema.optional(
-      Schema.Number.pipe(Schema.check(Schema.isBetween(0, 1))).annotate({
+      Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: 0, maximum: 1 }))).annotate({
         description: 'Lower bound (0..1) on factuality confidence.',
       }),
     ),
