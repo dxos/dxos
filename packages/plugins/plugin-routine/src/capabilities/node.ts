@@ -12,6 +12,7 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import * as RoutineCapabilities from '../types/RoutineCapabilities';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'));
+export const Commands = AppCapability.commands(() => import('./commands'));
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs'), {
   name: 'LayerSpecs',
   provides: [Capabilities.TraceSink],

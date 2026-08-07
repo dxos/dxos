@@ -198,7 +198,6 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/cli": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "effect": "catalog:",

@@ -21,14 +21,22 @@ plugin _is_; this covers _when_ its modules run.
   has passed remains eligible in every later round. That is what lets a consumer activate when a
   provider from some other wave finally lands.
 
-## The four waves
+## The waves
 
-| Wave                      | Fired by                                  | Carries                                                                  |
-| ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
-| `Startup`                 | `PluginManager.start()`                   | The boot path — client, layout, deck, space, graph                       |
-| `Idle`                    | the host, once the app is ready           | Registration-only contributions — graph builders, handler sets, settings |
-| `SurfacesRequested(role)` | a `Surface` for that role first rendering | Surface modules that declared `roles`                                    |
-| `<plugin>.event.start`    | that plugin's first surface contributing  | The rest of that plugin's feature modules                                |
+| Wave                      | Fired by                                     | Carries                                                                  |
+| ------------------------- | -------------------------------------------- | ------------------------------------------------------------------------ |
+| `Startup`                 | `PluginManager.start()`                      | The boot path — client, layout, deck, space, graph                       |
+| `Idle`                    | the host, once the app is ready              | Registration-only contributions — graph builders, handler sets, settings |
+| `SurfacesRequested(role)` | a `Surface` for that role first rendering    | Surface modules that declared `roles`                                    |
+| `CommandsRequested`       | whoever is about to build a CLI command tree | `AppCapability.commands` modules                                         |
+| `<plugin>.event.start`    | that plugin's first surface contributing     | The rest of that plugin's feature modules                                |
+
+`CommandsRequested` is a demand wave with two hosts rather than one. The `dx` binary fires it
+inside `createCliApp` and awaits it, because a command tree is read once and a command still
+activating at that moment would be missing from the binary's help; the devtools terminal fires it
+when its panel mounts and lets its reactive read pick commands up as they land. Gating on demand
+rather than `Startup` is what keeps a plugin's command graph — and everything it pulls in — off
+the browser's critical path for the sessions that never open a terminal.
 
 ## Sequence
 
@@ -123,7 +131,7 @@ Three mechanisms move work off it:
 Demand comes from the UI, so environments that render nothing produce none of it. A headless
 harness mounts no surfaces and a story mounts exactly one, so both would otherwise sit at whatever
 the startup pass activated. `activateDemandGatedModules` (in `./testing`) substitutes for that by
-firing the idle wave and every plugin's start event unconditionally.
+firing the idle wave, `CommandsRequested`, and every plugin's start event unconditionally.
 
 The cost is that **storybook cannot catch demand-gating regressions** — a module gated behind a
 surface nobody renders still passes there. Only the runtime modules-at-ready budget covers that
