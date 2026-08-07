@@ -36,6 +36,13 @@ const workspaceUrl = (workspace: string) => `${INITIAL_URL.replace(/\/$/, '')}/$
 export const INITIAL_SPACE_COUNT = 1;
 
 /**
+ * Budget for `joinNewIdentity()` to come back up on the join dialog. It spans a storage reset, a full
+ * page load and an app boot — post-reset boot alone measures ~8-11s — so it is sized well above the
+ * 30s `actionTimeout` a single interaction gets. Both callers set a test timeout above this.
+ */
+const JOIN_IDENTITY_BOOT_TIMEOUT = 60_000;
+
+/**
  * Typenames behind the friendly names the specs pass to `createObject()`. The type-picker option's
  * testid is keyed by typename because its label is localized, so a spec cannot name it directly.
  * A name missing here yields `…type.undefined`, which fails on the locator rather than silently.
@@ -150,6 +157,16 @@ export class AppManager {
     await this.page.getByTestId('devicesContainer.joinExisting').click();
     await this.page.getByTestId('join-new-identity.reset-identity-input').fill(confirmInput);
     await this.page.getByTestId('join-new-identity.reset-identity-confirm').click();
+
+    // Confirming runs `client.reset()` and reloads into the join dialog, so this returns mid-boot.
+    // Leaving that to the caller's first action hides a whole reset + page load + app boot inside a
+    // `fill()`, which is bounded by the preset's 30s `actionTimeout` — a fixed deadline, despite the
+    // note this replaces claiming otherwise. That is what timed out on `halo-invitation-input` in
+    // runs 31131235658 and 31137756950. Wait for the input the reload is supposed to produce, with a
+    // budget sized to the boot rather than to a single interaction.
+    await this.shell.shell
+      .getByTestId('halo-invitation-input')
+      .waitFor({ state: 'visible', timeout: JOIN_IDENTITY_BOOT_TIMEOUT });
   }
 
   async shareSpace(): Promise<void> {
